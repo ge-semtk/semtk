@@ -1,0 +1,38 @@
+{
+  "name": "highcharts-amd",
+  "author": "highslide-software",
+  "description": "Highcharts JS is a JavaScript charting library based on SVG and VML rendering.",
+  "version": "3.1.2",
+  "main": [
+    "js/highcharts.src.js",
+    "js/highstock.src.js",
+    "js/highcharts-more.src.js"
+  ],
+  "ignore": [
+    "components",
+    "css",
+    "node_modules",
+    "test",
+    ".*",
+    "Gruntfile.js",
+    "exporting-server",
+    "fiddles",
+    "gfx",
+    "lib",
+    "samples",
+    "studies",
+    "tools",
+    "ant",
+    "build.*",
+    "invalidations.txt",
+    "whats-new.htm",
+    "parts.js",
+    "parts",
+    "parts-more",
+    "*.debug.js",
+    "debug.php"
+  ],
+  "dependencies": {
+    "jquery": "https://github.com/components/jquery.git#~1.10.2"
+  }
+}

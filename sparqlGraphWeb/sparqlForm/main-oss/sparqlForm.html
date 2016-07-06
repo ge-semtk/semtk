@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>SparqlForm</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For third-generation iPad with high-resolution Retina display: -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144"
+	href="../../iidx-oss/components/brandkit/favicon/favicon-144px.png">
+
+<!-- For iPhone with high-resolution Retina display: -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114"
+	href="../../iidx-oss/components/brandkit/favicon/favicon-114px.png">
+
+<!-- For first- and second-generation iPad: -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72"
+	href="../../iidx-oss/mponents/brandkit/favicon/favicon-72px.png">
+
+<!-- For non-Retina iPhone, iPod Touch, and Android 2.1+ devices: -->
+<link rel="apple-touch-icon-precomposed"
+	href="../../iidx-oss/components/brandkit/favicon/favicon.png">
+
+<link rel="icon"
+	href="../../iidx-oss/components/brandkit/favicon/favicon.ico">
+<link href="../../iidx-oss/css/iids.css" rel="stylesheet" type="text/css">
+<link href="../../iidx-oss/css/responsive.css" rel="stylesheet"
+	type="text/css">
+<!--  PEC TODO use the iids modal dialog.  This action item is a carry-over from sparqlGraph.html -->
+<link rel="stylesheet" type="text/css" href="../../sparqlGraph/css/modaldialog.css" />
+
+<!--[if lt IE 9]>
+	  <link id="theme-ie" href="../../iidx-oss/css/ie.css" rel="stylesheet" type="text/css">
+	<![endif]-->
+
+<!--  For the tree -->
+<link rel='stylesheet' type='text/css' href='../../sparqlGraph/dynatree-1.2.5/skin/ui.dynatree.css'>
+
+<!--  iidx -->
+<script src="../../iidx-oss/components/modernizr/modernizr.js"></script>
+<script src="../../iidx-oss/components/requirejs/require.js"></script>
+<script src="../../iidx-oss/js/require.config.js"></script>
+
+<!-- logging -->
+<script type="text/javascript" src="KDLEasyLoggerConfig.js"></script>
+
+<script type="text/javascript" src="../../sparqlGraph/js/requiresetup.js"></script>
+<script>
+requireConfigSparqlgraph( 
+		"../../sparqlGraph",
+		{
+			baseUrl : '../../iidx-oss',
+			paths : {
+				"sparqlform" : "../sparqlForm",
+				"local" :      "../sparqlForm/main-oss"
+		}
+});
+
+toggleCheckbox = function(id) {
+	var elem = document.getElementById(id);
+	if (elem.checked == true) {
+		elem.checked = false;
+	} else {
+		elem.checked = true;
+	}
+};
+
+</script>
+
+<!--  main javascript for this page -->
+<script src="../../sparqlGraph/js/sparqlform.js"></script>
+<script src="./sparqlformlocal.js"></script>
+
+</head>
+<body onload="onLoad()">
+
+
+	<!--
+    The navbar is where you place your primary page navigation.
+    By including the iids/js/iids.js file in your page and
+    adhering to this DOM/class structure your navbar becomes
+    collapsable. This improves the experience for users on
+    smaller screens.
+    -->
+	<!---------------  Top Nav Bar --------------->
+	<div class="navbar navbar-static-top">
+		<!--  Header -->
+		<div class="navbar-inner">
+			<div class="container">
+				<a class="brand" href="#"></span> <span id="titleSpan">SPARQLform <small><i>powered by</i> GE Research Knowledge Discovery Lab</small></span></a>  
+			</div>
+		</div>
+
+		<!---------------  Menu ---------------> 
+		<div class="primary-navbar nav-collapse">
+			<div class="container">
+				<ul class="nav">
+					<li class="dropdown"><a href="#" data-toggle="dropdown">File<i class="icon-chevron-down"></i></a>
+						<ul class="dropdown-menu pull-right">
+							<li><a href="javascript:doFileLoad();">Load...</a></li>
+						</ul>
+					</li>
+					<li class="dropdown"><a href="#" data-toggle="dropdown">Query<i class="icon-chevron-down"></i></a>
+						<ul class="dropdown-menu pull-right">
+							<li><a href="javascript:doQueryUpload();">Upload...</a></li>
+							<li><a href="javascript:doQueryDownload();">Download...</a></li>
+							<li><hr></li>
+							<li><a href="javascript:chkboxAvoidMicroSvc.checked = ! chkboxAvoidMicroSvc.checked; doAvoidQueryMicroservice(chkboxAvoidMicroSvc.checked);"><input type="checkbox" disabled="disabled" id="chkboxAvoidMicroSvc" style="vertical-align:top;"> Query Directly</a></li>
+						</ul>
+					</li>
+					<li class="dropdown"><a href="#" data-toggle="dropdown">Help<i class="icon-chevron-down"></i></a>
+						<ul class="dropdown-menu pull-right">
+							<li><a href="javascript:avoidQueryMicroservice();">Query Directly</a></li>
+							<li><a href="javascript:doTest();">Test</a></li>
+							<li><a href="javascript:doAbout();">About...</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- This container will hold our primary page content. -->
+	<div id="pageContainer" class="container">
+
+		<div class="page-header">
+			<p>
+		</div>
+
+		<div class="row">
+			<!------------  Left: choices / tree ------------>
+			<section class="span4">
+				<div class="module sidebar">
+					<!-- Our sidebar -->
+					<header class="module-header">
+						<h2>Choices</h2>
+					</header>
+					<!------------  button toolbar ------------>
+					<form class="form-search">
+						<div class="input-append">
+							<input type="text" id="search" class="input-medium search-query"
+								align="left">
+							<button class="btn btn-icon"
+								onclick="javascript:doTreeSearch(); return false;">
+								<i class="icon-search"></i>
+							</button>
+							<button class="btn btn-icon"
+								onclick="javascript:doTreeSearchClear(); return false;">
+								<i class="icon-remove"></i>
+							</button>
+						</div>
+						<br>
+						<table width="100%">
+							<tr>
+								<td align="left">
+									<button class="btn btn-disabled" id="btnTreeExpand"
+										onclick="javascript:doTreeExpand(); return false;" disabled>Expand</button>
+									<button class="btn btn-disabled" id="btnTreeCollapse"
+										onclick="javascript:doTreeCollapse(); return false;" disabled>Collapse</button>
+									<input type="checkbox" class='checkbox' id="chkShowAll"
+									onclick="javascript:doTreeShowAllButton();" unchecked>
+									Show All </input>
+								</td>
+
+							</tr>
+						</table>
+					</form>
+					<div id="treeWrapperOutside" class="outsidewrap">
+						<div id="treeWrapper"
+							class="treewrap ui-corner-all ui-widget-content">
+							<div id="treeDiv"></div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!------------  Right: form ------------>
+			<!-- PEC TODO can't get this to align height-wise.  Find docs on all the section and div styles -->
+			<!-- PEC TODO DND does not work due to the word "module" in the outside div -->
+
+			<section class="span8" style="" id='sectionRight'>
+				<div class="module primary-content">
+					<!--  DND BUG = "module" -->
+					<!-- Our primary content -->
+					<header class="module-header">
+						<h2>Query</h2>
+					</header>
+					<div id='formDiv'>
+						<table id='formTable' cellpadding="5"></table>
+						<datalist id='varNameDatalist'></datalist>
+						<div id='constraintsHeaderDiv'></div>
+						<table id='constraintsTable' cellpadding="0"></table>   
+					
+						<hr>
+						<div class="btn-group">
+							<button class="btn"             id="btnFormSave"    onclick="javascript:doQueryDownload(); return false;">Save</button>
+							<button class="btn"             id="btnFormClear"   onclick="javascript:doClearFormBut(); return false;">Clear</button>
+							<button class="btn btn-primary" id="btnFormExecute" onclick="javascript:doRunQueryBut(); return false;" >Run</button>
+						<div>
+					</div>
+				</div>
+			</section>
+		</div>
+		<div id="status">
+			<font color='red'>Loading page...</font>
+		</div>
+
+		<!--
+	    Scripts, with the exception of modernizr, go at the bottom of the page
+	    to improve load time.
+	    -->
+		<script type="text/javascript">
+		<!-- PEC TODO DND works but visual is bad.  see DND BUG above -->
+			require([ 'jquery', 'sparqlgraph/jquery/jquery-ui-1.10.4.min' ],
+					function() {
+						$("#sectionRight").droppable({
+							hoverClass : "hover",
+							addClasses : true,
+							over : function(event, ui) {
+								console.log("over");
+							},
+							drop : function(event, ui) {
+								console.log("drop");
+								drop(event);
+							},
+						});
+					});
+		</script>
+
+
+		<!--  Needed for menus.  Hard to find documentation for this btw. -->
+		<script type="text/javascript">
+			require([ 'modules' ], function($) {
+				$('.module.collapsible').collapsible();
+			});
+		</script>
+		<script type="text/javascript">
+			require([ 'jquery', 'modules' ], function($) {
+				$('.module.collapsible').collapsible();
+			});
+		</script>
+
+
+		<script src="../../iidx-oss/components/respond/respond.src.js"></script>
+        
+		<!------------ canvas ------------>
+		<style>
+div.treewrap {
+	border: 1px solid gray;
+	height: 100%;
+	width: 100%;
+	resize: vertical;
+	overflow: auto;
+	background-color: white;
+	float: left;
+}
+
+div.canvaswrap {
+	border: 1px solid gray;
+	background-color: white;
+	height: 100%;
+	width: auto;
+	overflow: auto;
+	visibility: not hidden;
+}
+
+div.canvas {
+	border: 1px solid gray;
+	background-height: 700px;
+	width: 1000px;
+	height: 700px;
+	overflow: hidden;
+	float: left;
+}
+</style>
+
+
+		<!-- RESULTS Section -->
+		<section class="module collapsible">
+			<header class="module-header">Results</header>
+			<div class="module-body collapse in">
+				<div id="hrefDiv"></div>
+				<div id="gridDiv" class="overflow-x: auto"></div>
+			</div>
+		</section>
+		<br>
+
+		<!-- DEBUG Section -->
+		<div id="canvas" style="display:none"></div>
+			
+		<div><footer class="module-footer"><small><center>
+		<a href="https://github.com/ge-semtk/semtk" target="_blank">Github</a> 
+			&nbsp;&nbsp;|&nbsp;&nbsp;
+			<a href="https://github.com/ge-semtk/semtk/issues" target="_blank">Issues</a>
+			&nbsp;&nbsp;|&nbsp;&nbsp;
+			<a href="#" onclick="doAbout(); return false;">Legal</a></p>
+  		</center></small></footer></div>
+
+		<script type="text/javascript">
+			// ======= drag-and-drop version of query-loading =======
+
+			noOpHandler = function(evt) {
+				evt.stopPropagation();
+				evt.preventDefault();
+			};
+
+			fileDrop = function(evt) {
+				// drag-and-drop handler for files
+				noOpHandler(evt);
+				var files = evt.dataTransfer.files;
+				if (gNodeGroup.getNodeCount() == 0
+						|| confirm("Clearing current query to load new one.")) {
+					if (files.length == 1 && files[0].name.indexOf(".json") > 0) {
+						var fname = files[0].name;
+						doQueryLoadFile(files[0]);
+					} else {
+						alert("To load a query, drop a single .json file.");
+					}
+				}
+
+			};
+			// Paul's html5 voodoo:  to allow json files to be dropped
+			var dropbox = document.getElementById("pageContainer");
+			dropbox.addEventListener("dragenter", noOpHandler, false);
+			dropbox.addEventListener("dragexit", noOpHandler, false);
+			dropbox.addEventListener("dragover", noOpHandler, false);
+			dropbox.addEventListener("drop", fileDrop, false);
+			// End html5 voodoo
+		</script>
+
+		<!------------  Invisible stuff ------------>
+		<div id="modaldialog"></div>
+		<input type="file" id="fileInput" style="display: none">
+</body>
+</html>

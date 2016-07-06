@@ -1,0 +1,197 @@
+@import "ge-bootstrap/less/ge-bootstrap.less";
+@import "variables.less";
+@import "datepicker.less";
+/*!
+ * Datepicker for Bootstrap (lights off)
+ *
+ * Copyright 2012 Stefan Petre
+ * Improvements by Nayana Rane
+ * Licensed under the Apache License v2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ */
+
+.datepicker {
+	
+	background-color: lighten(@black, 11.5%);
+	border-color: lighten(@black, 11.5%);
+	
+	table tr td {
+		&.day:hover {
+			background: @grayLighter;
+			color: @black;
+			cursor: pointer;
+		}
+    	&.day {
+      		font-weight: 300;
+      		color: @gray; //added for days - current month
+    	}
+		&.old,
+		&.new {
+			color: @grayDark;//changed for days from prev and newxt months
+			font-weight: 300;
+		}
+		
+		&.disabled,
+		&.disabled:hover {
+			font-weight: normal;
+			background: none;
+			color: @grayLight;
+			cursor: default;
+		}
+		&.today,
+		&.today:hover,
+		&.today.disabled,
+		&.today.disabled:hover {
+			background-color: transparent;
+			color: @blue;
+			font-weight: 500;
+		}
+		&.range,
+		&.range:hover,
+		&.range.disabled,
+		&.range.disabled:hover {
+			background:@grayLighter;
+			.border-radius(0);
+		}
+		&.range.today,
+		&.range.today:hover,
+		&.range.today.disabled,
+		&.range.today.disabled:hover {
+			@todayBackground: mix(@orange, @grayLighter);
+			.buttonBackground(@todayBackground, spin(@todayBackground, 20));
+			.border-radius(0);
+		}
+		&.selected,
+		&.selected:hover,
+		&.selected.disabled,
+		&.selected.disabled:hover {
+			background-color: @blue;
+			color: #fff;
+			text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+		}
+		&.active,
+		&.active:hover,
+		&.active.disabled,
+		&.active.disabled:hover {
+			background-color: @blue;
+      font-weight: 300;
+			color: white !important;
+			text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+		}
+		span {
+			display: block;
+			width: 23%;
+			height: 54px;
+			line-height: 54px;
+			float: left;
+			margin: 1%;
+			cursor: pointer;
+			.border-radius(4px);
+			&:hover {
+				background: @grayLighter;
+			}
+			&.disabled,
+			&.disabled:hover {
+				background:none;
+				color: @grayLight;
+				cursor: default;
+			}
+			&.active,
+			&.active:hover,
+			&.active.disabled,
+			&.active.disabled:hover {
+				background-color: @blue;
+				color: white !important;
+				text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+			}
+			&.old {
+				color: @grayLight;
+			}
+		}
+	}
+
+	
+	thead tr:first-child th,
+	tfoot tr:first-child th {
+		cursor: pointer;
+		&:hover{
+			background: @grayLighter;
+		}
+	}
+	.dow {
+		//border-top: 1px solid #ddd !important;
+		color: @gray; //added for days of week
+	}
+
+	
+}
+
+
+
+/* start GE style additions:
+ *
+ * Trying to be unobtrusive as possible
+ *
+ */
+
+/* Override Table Header (Month/Year and arrows) */
+
+.datepicker table > thead > tr:nth-child(1) > th:nth-child(2) {
+	/*color: @grayDarkest;*/
+	font-weight: 500;
+ 	font-size: 14px;
+ 	color:@gray;
+	&:hover{
+			color: @grayDarkest;
+	} 	
+  
+}
+
+
+
+/* end GE style overrides */
+
+/*
+* overrides button css
+*/
+// Basic buttons
+/*
+.btn {
+	background-color: lighten(@grayDarkest, 5%);
+	border-color: lighten(@grayDarkest, 5%);
+		
+	 &:hover,
+  	 &.hover {
+ 	 	background-color: lighten(@grayDarkest, 5%);
+		border-color: lighten(@grayDarkest, 5%);
+	}
+	
+}
+*/
+
+
+
+
+/*
+* overrides input[type=text] css
+*/
+
+// Text inputs
+/*
+input[type="text"]{
+	color: @grayLightest;
+    background-color : @black;
+    border-color: lighten(@grayDarkest, 5%);
+    .border-radius(4px);
+}
+
+
+input[type="text"]{
+  &:focus,
+  &.focused {
+    color: @grayLightest;
+    border-color: @blue;
+  }
+}
+*/

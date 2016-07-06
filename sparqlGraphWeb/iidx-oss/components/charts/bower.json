@@ -1,0 +1,22 @@
+{
+  "name": "charts",
+  "version": "0.6.0",
+  "main": [
+    "js/charts.js",
+    "less/charts.less"
+  ],
+  "ignore": [
+    "components",
+    "css",
+    "node_modules",
+    "test",
+    ".*",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "brandkit": "git://devcloud.sw.ge.com/source/scm/dxc/brandkit#~1.1.0",
+    "highcharts-amd": "git://devcloud.sw.ge.com/source/scm/dxc/highcharts-amd#~3.1.0",
+    "requirejs": "~2.1.6",
+    "jquery": "~1.10.0"
+  }
+}

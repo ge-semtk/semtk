@@ -1,0 +1,7 @@
+optimizing a range coder
+------------------------
+
+- Instead of Math.floor(a / b), use (a / b) | 0.  Only works if you need signed integers.  If you need unsigned, have to compare < 0
+- Instead of ((a & 0xFFFFFF) * 256), use, a <<= 8; if (a < 0) a += 0x100000000;
+- Constants don't need to be hardcoded most of the time
+- 

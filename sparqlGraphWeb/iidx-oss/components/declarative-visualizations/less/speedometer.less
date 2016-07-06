@@ -1,0 +1,48 @@
+// Dependencies
+// --------------------------------------------------
+
+@import "brandkit/less/brandkit.less";
+
+
+// Styles
+// --------------------------------------------------
+
+[data-visualization="speedometer"] {
+  height: 120px;
+  margin-bottom: 20px;
+  width: 100%;
+  path.bg {
+    fill: #e7e5e7;
+  }
+  .gradient-color-1 {
+    stop-color: #1483B2;
+  }
+  .gradient-color-2 {
+    stop-color: #25AAE1;
+  }
+  &.notice {
+    .gradient-color-1 {
+      stop-color: #D8BB27;
+    }
+    .gradient-color-2 {
+      stop-color: #FBDA06;
+    }
+  }
+  &.warning {
+    .gradient-color-1 {
+      stop-color: #D07931;
+    }
+    .gradient-color-2 {
+      stop-color: #F58624;
+    }
+  }
+  &.danger {
+    .gradient-color-1 {
+      stop-color: #C62F27;
+    }
+    .gradient-color-2 {
+      stop-color: #EE3D2C;
+    }
+  }
+}
+

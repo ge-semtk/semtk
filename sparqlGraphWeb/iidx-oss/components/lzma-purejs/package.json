@@ -1,0 +1,63 @@
+{
+  "name": "lzma-purejs",
+  "version": "0.9.3",
+  "author": {
+    "name": "Gary Linscott, Juan Mellado, C. Scott Ananian"
+  },
+  "description": "pure JavaScript LZMA de/compression, for node.js, volo, and the browser.",
+  "keywords": [
+    "lzma",
+    "compression",
+    "decompression"
+  ],
+  "main": "main",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cscott/lzma-purejs.git"
+  },
+  "license": "BSD",
+  "bin": {
+    "lzmajs": "./bin/lzmajs"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "amdefine": "~0.1.0",
+    "commander": "~2.0.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.13.0",
+    "fibers": "~1.0.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "amd": {},
+  "volo": {},
+  "readme": "# lzmajs\n\n[![Build Status][1]][2] [![dependency status][3]][4] [![dev dependency status][5]][6]\n\n`lzmajs` is a fast pure-JavaScript implementation of LZMA\ncompression/decompression.  It was originally written by Gary Linscott\nbased on decompression code by Juan Mellado and the 7-Zip SDK.\nC. Scott Ananian started by cleaning up the source code and packaging\nit for `node` and `volo`, then moved on to more extensive refactoring\nand validation against the upstream Java implementation, adding\ntest cases, etc.\n\n## How to install\n\n```\nnpm install lzma-purejs\n```\nor\n```\nvolo add cscott/lzma-purejs\n```\n\nThis package uses\n[Typed Arrays](https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays)\nand so requires node.js >= 0.5.5.  Full browser compatibility table\nis available at [caniuse.com](http://caniuse.com/typedarrays); briefly:\nIE 10, Firefox 4, Chrome 7, or Safari 5.1.\n\n## Testing\n\n```\nnpm install\nnpm test\n```\n\n## Usage\n\nThere is a binary available in bin:\n```\n$ bin/lzmajs --help\n$ echo \"Test me\" | bin/lzmajs -z > test.lzma\n$ bin/lzmajs -d test.lzma\nTest me\n```\n\nFrom JavaScript:\n```\nvar lzmajs = require('lzma-purejs');\nvar data = new Buffer('Example data', 'utf8');\nvar compressed = lzma.compressFile(data);\nvar uncompressed = lzma.uncompressFile(compressed);\n// convert from array back to string\nvar data2 = new Buffer(uncompressed).toString('utf8');\nconsole.log(data2);\n```\nThere is a streaming interface as well.\n\nSee the tests in the `tests/` directory for further usage examples.\n\n## Documentation\n\n`require('lzma-purejs')` returns a `lzmajs` object.  It contains two main\nmethods.  The first is a function accepting one, two, three or four\nparameters:\n\n`lzmajs.compressFile = function(input, [output], [Number compressionLevel] or [props], [progress])`\n\nThe `input` argument can be a \"stream\" object (which must implement the\n`readByte` method), or a `Uint8Array`, `Buffer`, or array.\n\nIf you omit the second argument, `compressFile` will return a JavaScript\narray containing the byte values of the compressed data.  If you pass\na second argument, it must be a \"stream\" object (which must implement the\n`writeByte` method).\n\nThe third argument may be omitted, or a number between 1 and 9 indicating\na compression level (1 being largest/fastest compression and 9 being\nsmallest/slowest compression), or else an object with fields specifying\nspecific lzma encoder parameters; see `lib/Util.js` for details.\n\nThe fourth argument, if present, is a callback which will be invoked\nmultiple times as `progress(inSize, outSize)`, where inSize is the number of\ninput stream bytes which have currently been processed, and outSize is the\ncorresponding number of output bytes which have been generated.\n\nThe second exported method is a function accepting one or two parameters:\n\n`lzmajs.decompressFile = function(input, [output])`\n\nThe `input` parameter is as above.\n\nIf you omit the second argument, `decompressFile` will return a\n`Uint8Array`, `Buffer` or JavaScript array with the decompressed\ndata, depending on what your platform supports.  For most modern\nplatforms (modern browsers, recent node.js releases) the returned\nvalue will be a `Uint8Array`.\n\nIf you provide the second argument, it must be a \"stream\", implementing\nthe `writeByte` method.\n\n## Asynchronous streaming\n\nSee the `test/stream.js` for sample code using the `fibers` package\nto implement an asynchronous de/compression interface.\n\n## Related projects\n\n* http://code.google.com/p/js-lzma Decompression code by Juan Mellado\n* http://code.google.com/p/gwt-lzma/ and https://github.com/nmrugg/LZMA-JS\n  are ports of the original Java code in the 7-Zip SDK\n  using the GWT Java-to-JavaScript compiler.\n\n## License\n\n> Copyright (c) 2011 Gary Linscott\n>\n> Copyright (c) 2011-2012 Juan Mellado\n>\n> Copyright (c) 2013 C. Scott Ananian\n>\n> All rights reserved.\n>\n> Permission is hereby granted, free of charge, to any person obtaining a copy\n> of this software and associated documentation files (the \"Software\"), to deal\n> in the Software without restriction, including without limitation the rights\n> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n> copies of the Software, and to permit persons to whom the Software is\n> furnished to do so, subject to the following conditions:\n>\n> The above copyright notice and this permission notice shall be included in\n> all copies or substantial portions of the Software.\n>\n> THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n> THE SOFTWARE.\n\n[1]: https://travis-ci.org/cscott/lzma-purejs.png\n[2]: https://travis-ci.org/cscott/lzma-purejs\n[3]: https://david-dm.org/cscott/lzma-purejs.png\n[4]: https://david-dm.org/cscott/lzma-purejs\n[5]: https://david-dm.org/cscott/lzma-purejs/dev-status.png\n[6]: https://david-dm.org/cscott/lzma-purejs#info=devDependencies\n",
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/cscott/lzma-purejs/issues"
+  },
+  "_id": "lzma-purejs@0.9.3",
+  "dist": {
+    "shasum": "c8917e894b1b4db5c865b927df864edde759ccde",
+    "tarball": "http://registry.npmjs.org/lzma-purejs/-/lzma-purejs-0.9.3.tgz"
+  },
+  "_from": "lzma-purejs@*",
+  "_npmVersion": "1.3.11",
+  "_npmUser": {
+    "name": "cscott",
+    "email": "cscott@cscott.net"
+  },
+  "maintainers": [
+    {
+      "name": "cscott",
+      "email": "cscott@cscott.net"
+    }
+  ],
+  "_shasum": "c8917e894b1b4db5c865b927df864edde759ccde",
+  "_resolved": "https://registry.npmjs.org/lzma-purejs/-/lzma-purejs-0.9.3.tgz",
+  "homepage": "https://github.com/cscott/lzma-purejs"
+}

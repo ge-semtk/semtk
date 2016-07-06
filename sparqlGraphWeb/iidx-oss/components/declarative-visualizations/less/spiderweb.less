@@ -1,0 +1,26 @@
+// Dependencies
+// --------------------------------------------------
+
+@import "brandkit/less/brandkit.less";
+@import "variables.less";
+
+
+// Styles
+// --------------------------------------------------
+
+[data-visualization="spiderweb"] {
+  font-family: @sansFontFamily;
+  .line-tick,
+  .outline {
+    fill: none;
+    stroke: @grayLighter;
+    stroke-width: 1;
+  }
+  .web {
+    stroke: none;
+    fill: @blue;
+  }
+  .legend {
+    font-family: @sansFontFamily !important;
+  }
+}

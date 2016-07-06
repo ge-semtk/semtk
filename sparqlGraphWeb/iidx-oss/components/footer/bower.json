@@ -1,0 +1,24 @@
+{
+  "name": "footer",
+  "version": "1.0.0",
+  "main": [
+    "less/iidx-footer.less",
+    "less/responsive.less"
+  ],
+  "ignore": [
+    ".*",
+    "npm-debug.log",
+    "Gruntfile.js",
+    "package.json",
+    "components",
+    "css",
+    "node_modules",
+    "test",
+    "js/require.config.js"
+  ],
+  "dependencies": {
+    "ge-bootstrap": "git+https://devcloud.sw.ge.com/source/scm/dxc/ge-bootstrap#~1.1.3",
+    "requirejs": "~2.1.6",
+    "jquery": "~1.10.0"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "declarative-visualizations",
+  "description": "Declarative data visualizations are graphs and other diagrams which invoke SVG images from the D3 library using simple, declarative HTML.",
+  "version": "1.0.3",
+  "main": [
+    "js/declarative-visualizations.js",
+    "less/declarative-visualizations.less",
+    "less/responsive.less"
+  ],
+  "ignore": [
+    "components",
+    "css",
+    "node_modules",
+    "test",
+    ".*",
+    "Gruntfile.js",
+    "js/require.config.js"
+  ],
+  "dependencies": {
+    "ge-bootstrap": "git://devcloud.sw.ge.com/source/scm/dxc/ge-bootstrap#~1.3.0",
+    "d3-amd": "git://devcloud.sw.ge.com/source/scm/dxc/d3-amd#~3.2.3",
+    "requirejs": "~2.1.6",
+    "jquery": "~1.10.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "responsive-emitter",
+  "description": "Listens to window resize events and trigger proprietary jQuery events for Bootstrap responsive thresholds.",
+  "version": "0.8.1",
+  "main": [
+    "js/responsive-emitter.js"
+  ],
+  "ignore": [
+    "test",
+    ".*",
+    "Gruntfile"
+  ],
+  "dependencies": {
+    "ge-bootstrap": "git+https://devcloud.sw.ge.com/source/scm/dxc/ge-bootstrap#~1.1",
+    "requirejs": "~2.1.6",
+    "jquery": "~1.10.0",
+    "respond": "https://github.com/GeneralElectric/Respond.git#~1.2.1"
+  }
+}

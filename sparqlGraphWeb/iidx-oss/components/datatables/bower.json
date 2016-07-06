@@ -1,0 +1,8 @@
+{
+    "name": "shim-data-tables",
+    "version": "1.9.4",
+    "main": "dist/OpenLayers.js",
+    "devDependencies": {
+        "datatables": "~1.9.4"
+    }
+}
