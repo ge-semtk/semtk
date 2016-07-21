@@ -34,6 +34,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		var ModalIidx = function (optUniqueId) {
 			// optUniqueId is the html element id.  Only needed if there is a conflict or nested modals.
 			this.id = (typeof optUniqueId !== "undefined") ? optUniqueId : "myModal";
+			this.div = null;
 		};
 		
 		ModalIidx.CONSTANT = "text";
@@ -90,23 +91,23 @@ define([	// properly require.config'ed   bootstrap-modal
 				showOK : function (headerText, bodyDOM, callback) {
 					// show a modal with header, body and callback.
 					
-					var modal = this.createModalDiv();
+					this.div = this.createModalDiv();
 					
 					if (headerText && headerText.length > 0) {
 						var header = this.createHeader(headerText);
-						modal.appendChild(header);
+						this.div.appendChild(header);
 					}
 					
 					//----- body -----
 					var body = document.createElement("div");
 					body.className="modal-body";
 					body.appendChild(bodyDOM);
-					modal.appendChild(body);
+					this.div.appendChild(body);
 					
 					var footer = this.createOKFooter(callback);
-					modal.appendChild(footer);
+					this.div.appendChild(footer);
 					
-					$('#'+this.id).modal('show');
+					$(this.div).modal('show');
 				},
 				
 				showOKCancel : function (headerText, bodyDOM, validate, callbackSuccess, callbackCancel, optOkButtonText) {
@@ -116,21 +117,21 @@ define([	// properly require.config'ed   bootstrap-modal
 					//      null : call callbackSuccess
 					
 					var okButText = (typeof optOkButtonText == "undefined") ? "OK" : optOkButtonText;
-					var modal = this.createModalDiv();
+					this.div = this.createModalDiv();
 					
 					var header = this.createHeader(headerText);
-					modal.appendChild(header);
+					this.div.appendChild(header);
 					
 					//----- body -----
 					var body = document.createElement("div");
 					body.className="modal-body";
 					body.appendChild(bodyDOM);
-					modal.appendChild(body);
+					this.div.appendChild(body);
 					
 					var footer = this.createFooter("Cancel", callbackCancel, okButText, validate, callbackSuccess);
-					modal.appendChild(footer);
+					this.div.appendChild(footer);
 					
-					$('#' + this.id).modal('show');
+					$(this.div).modal('show');
 				},
 				
 				showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback) {
@@ -140,21 +141,21 @@ define([	// properly require.config'ed   bootstrap-modal
 					//      null : call callbackSuccess
 					
 					var okButText = (typeof optOkButtonText == "undefined") ? "OK" : optOkButtonText;
-					var modal = this.createModalDiv();
+					this.div = this.createModalDiv();
 					
 					var header = this.createHeader(headerText);
-					modal.appendChild(header);
+					this.div.appendChild(header);
 					
 					//----- body -----
 					var body = document.createElement("div");
 					body.className="modal-body";
 					body.appendChild(bodyDOM);
-					modal.appendChild(body);
+					this.div.appendChild(body);
 					
 					var footer = this.createClearCancelSubmitFooter(clearCallback, validateCallback, submitCallback);
-					modal.appendChild(footer);
+					this.div.appendChild(footer);
 					
-					$('#' + this.id).modal('show');
+					$(this.div).modal('show');
 				},
 				
 				createModalDiv : function () {
@@ -198,7 +199,7 @@ define([	// properly require.config'ed   bootstrap-modal
 					a.innerHTML = "OK";
 					a.onclick = function () {
 						callback();
-						$('#'+this.id).modal('hide');
+						$(this.div).modal('hide');
 					}.bind(this);
 					footer.appendChild(a);
 					
@@ -212,16 +213,19 @@ define([	// properly require.config'ed   bootstrap-modal
 					
 					var a1 = document.createElement("a");
 					a1.className = "btn";
-					a1.setAttribute("data-dismiss", "modal");
+					//a1.setAttribute("data-dismiss", "modal");
 					a1.innerHTML = "Clear";
-					a1.onclick = clearCallback;
+					a1.onclick = function () {
+						clearCallback();
+						return false;
+					}
 					footer.appendChild(a1);
 					
 					var a2 = document.createElement("a");
 					a2.className = "btn btn-danger";
 					a2.innerHTML = "Cancel";
 					a2.onclick = function () {
-						$('#'+this.id).modal('hide');
+						$(this.div).modal('hide');
 					}.bind(this);
 					footer.appendChild(a2);
 					
@@ -234,7 +238,7 @@ define([	// properly require.config'ed   bootstrap-modal
 							alert(msg);
 						} else {
 							submitCallback();
-							$('#'+this.id).modal('hide');
+							$(this.div).modal('hide');
 						}
 					}.bind(this);
 					footer.appendChild(a3);
@@ -262,7 +266,7 @@ define([	// properly require.config'ed   bootstrap-modal
 							alert(msg);
 						} else {
 							callback2();
-							$('#'+this.id).modal('hide');
+							$(this.div).modal('hide');
 						}
 					}.bind(this);
 					footer.appendChild(a2);

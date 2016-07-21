@@ -235,6 +235,7 @@ public class HiveServiceRestController {
 			HiveConnector oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password);
 			System.out.println("Hive query: " + query);
 			Table table = oc.query(query);
+			System.out.println("Returning num rows: " + (table != null ? String.valueOf(table.getNumRows()) : "<null>"));
 			tableResultSet.addResults(table);
 			tableResultSet.setSuccess(true);
 

@@ -1,14 +1,4 @@
-parent_name,parent_age,child_names,street_name,has_pool,pet_names,extra
-Robert,40,robbie,Rockington St,yes,Ruff,
-Robert,40,robbie,Rockington St,yes,Rocky,
-Robert,40,ronnie,Rockington St,yes,Ruff,
-Robert,40,ronnie,Rockington St,yes,Rocky,
-Robert,40,rhonda,Rockington St,yes,Ruff,
-Robert,40,rhonda,Rockington St,yes,Rocky,
-Barbara,35,billy,Barbington Ave,no,Bambam,
-Barbara,35,billy,Barbington Ave,no,Buffy,
-Barbara,35,billy,Barbington Ave,no,Bippy,
-Barbara,35,babs,Barbington Ave,no,Bambam,
-Barbara,35,babs,Barbington Ave,no,Buffy,
-Barbara,35,babs,Barbington Ave,no,Bippy,
-Michael,39,mikey,Marlington Dr,no,,
+parent_name,parent_age,has_pool,pet_name
+robert,40,YES,
+barbara,,NO,Bippy
+michael,39,NO,Snulls

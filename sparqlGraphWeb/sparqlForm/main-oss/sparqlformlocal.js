@@ -30,6 +30,7 @@ require([	'local/sparqlformconfig',
          	'sparqlgraph/js/msiclientquery',
          	'sparqlgraph/js/msiresultset',
          	'sparqlgraph/js/modaliidx',
+         	'sparqlgraph/js/modalitemdialog',
          	
          	'jquery',
 		
@@ -45,7 +46,7 @@ require([	'local/sparqlformconfig',
 
 		],
 
-	function(Config, MsiClientQuery, MsiResultSet, ModalIidx, $) {
+	function(Config, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, $) {
 	
 
 		//----- e d c ------/
@@ -87,8 +88,25 @@ require([	'local/sparqlformconfig',
 		};
 		
 		//----- Constraint (as in Belmont Constraint) dialog -----//
+		launchConstraintDialog = function(item, failureCallback, ghostItem, ghostNodegroup) {
+			// new tries to check and set optional when item is a SNode instead of propItem
+			// constraints are untested
+			
+			var clientOrInterface;
+			
+			if (gAvoidQueryMicroserviceFlag) {
+				clientOrInterface = gConn.getDataInterface();
+			}
+			else {
+				clientOrInterface = new MsiClientQuery(Config.services.query.url, gConn.getDataInterface(), failureCallback);
+			}
+			
+			var dialog= new ModalItemDialog(item, gNodeGroup, clientOrInterface, itemDialogCallback, {}, ghostItem, ghostNodegroup);    
+			dialog.show(true);
+		};
 		
-		launchConstraintDialog = function(item, sparql, textId, failureCallback) {
+		
+		launchConstraintDialogOLD = function(item, sparql, textId, failureCallback) {
 			
 			var clientOrInterface;
 			
@@ -101,6 +119,7 @@ require([	'local/sparqlformconfig',
 			
 			gConstraintDialog.constraintDialog(item, sparql, clientOrInterface, filterDialogCallback.bind(window, textId, item), true);
 		}
+		
 		
 		doAbout = function() {
 			ModalIidx.alert("About SparqlForm", Config.help.aboutHtml + "<br>" + Config.help.legalNoticeHtml);

@@ -32,11 +32,11 @@ public class NodeItem {
 	// believes it is linked to...
 
 	private ArrayList<Node> nodes = new ArrayList<Node>();
-	private String keyName = null;
-	private String valueType = null;
-	private String valueTypeURI = null;
-	private String connectedBy = null;
-	private String uriConnectBy = null;
+	private String keyName = "";
+	private String valueType = "";
+	private String valueTypeURI = "";
+	private String connectedBy = "";
+	private String uriConnectBy = "";
 	private Boolean isOptional = false;
 	private Boolean connected = false;
 	

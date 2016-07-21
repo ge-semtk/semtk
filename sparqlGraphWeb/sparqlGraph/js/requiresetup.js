@@ -46,7 +46,16 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.shim['bootstrap-datepicker'] =  {
 			deps : [ 'jquery' ]
 		};
+	config.shim['bootstrap-modal'] =  {
+			deps : [ 'jquery' ]
+		};
+	config.shim['bootstrap-popover'] =  {
+			deps : [ 'jquery', 'bootstrap-tooltip' ]
+		};
 	config.shim['bootstrap-timepicker'] =  {
+			deps : [ 'jquery' ]
+		};
+	config.shim['bootstrap-transition'] =  {
 			deps : [ 'jquery' ]
 		};
 	config.shim['jsonp'] =  {

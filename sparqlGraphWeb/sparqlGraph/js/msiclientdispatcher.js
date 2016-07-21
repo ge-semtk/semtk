@@ -37,13 +37,12 @@ define([	// properly require.config'ed   bootstrap-modal
 		
 		
 		MsiClientDispatcher.prototype = {
-				
 			
 			execQueryFromNodegroup : function (conn, nodegroup, constraintSet, successCallback) {
 				var nodeGroupString = JSON.stringify ({
 					"sparqlConn" : conn.toJson(),
 					"sNodeGroup" : nodegroup.toJson(),
-				}).replace(/"/g, '\\"');
+				}).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 				
 				var constraintSetStr = constraintSet ? JSON.stringify(constraintSet.toJson()).replace(/"/g, '\\"') : "";
 				
@@ -57,7 +56,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				var nodeGroupString = JSON.stringify ({
 					"sparqlConn" : conn.toJson(),
 					"sNodeGroup" : nodegroup.toJson(),
-				}).replace(/"/g, '\\"');
+				}).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 				
 				var myData = '{  "jsonRenderedNodeGroup" : "' + nodeGroupString +  '" }';
 				

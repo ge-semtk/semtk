@@ -102,7 +102,7 @@ public abstract class RestClient extends Client {
 		if(responseTxt.length() < 500){
 			System.err.println("RestClient received: " + responseTxt);
 		}else{
-			System.err.println("RestClient received: " + responseTxt.substring(0,99) + "... (" + responseTxt.length() + " chars)");
+			System.err.println("RestClient received: " + responseTxt.substring(0,200) + "... (" + responseTxt.length() + " chars)");
 		}
 		
 		JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);

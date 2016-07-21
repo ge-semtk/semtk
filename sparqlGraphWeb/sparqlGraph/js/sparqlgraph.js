@@ -69,8 +69,7 @@
 	    	
 	    	 // set up the node group
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
-	        gNodeGroup.setRangeSetter(rangeDialogue, true);
-	        gNodeGroup.setReturnNameSetter(returnNameDialogue, true); 
+	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"), 
@@ -222,13 +221,42 @@
     	         function (ModalIidx) {
 					ModalIidx.alert(title, msgHtml);
 				});
-    }
+    };
+    
     logAndThrow = function (msg) {
     		kdlLogAndThrow(msg);
-    }
+    };
+    
     logNewWindow = function (msg) {
     		kdlLogNewWindow(msg);
-    }
+    };
+    
+    // application-specific property editing
+    launchPropertyItemDialog = function (propItem, draculaLabel) {
+    	require([ 'sparqlgraph/js/modalitemdialog',
+	            ], function (ModalItemDialog) {
+    		
+    		var dialog= new ModalItemDialog(propItem, gNodeGroup, getQueryClientOrInterface(), propertyItemDialogCallback,
+    				                        {"draculaLabel" : draculaLabel}
+    		                                );
+    		dialog.show();
+		});
+    };
+    
+    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, data) {
+    	
+    	console.log("propertyItemDialogCallback " + sparqlID + " " + optionalFlag + " " + constraintStr);
+    	
+    	// Note: ModalItemDialog validates that sparqlID is legal
+    	
+    	// update the property
+    	propItem.setReturnName(sparqlID);
+    	propItem.setIsOptional(optionalFlag);
+    	propItem.setConstraints(constraintStr);
+    	
+    	// PEC TODO: pass draculaLabel through the dialog
+    	displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
+    };
     
     downloadFile = function (data, filename) {
     	// build an anchor and click on it
@@ -251,7 +279,7 @@
     doLoad = function() {
     	logEvent("SG Menu: File->Load");
     	gLoadDialog.loadDialog(gConn, doLoadConnection);
-    }
+    };
     
     //**** Start new load code *****//
     doLoadOInfoSuccess = function() {
@@ -266,7 +294,7 @@
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
 
 		logEvent("SG Load Success");
-    }
+    };
     
     doLoadFailure = function(msg) {
     	logAndAlert(msg);
@@ -278,7 +306,7 @@
     	gMappingTab.updateNodegroup(gNodeGroup);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
  		// retains gConn
-    }
+    };
     
     doLoadConnection = function(connProfile, optCallback) {
     	// Callback from the load dialog
@@ -309,7 +337,11 @@
 				gOInfo.load(gConn.getDomain(), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
     		}
     	});
-    }
+    };
+    
+    getQueryClientOrInterface = function() {
+    	return gAvoidQueryMicroserviceFlag ? gConn.getDataInterface() : gQueryClient;
+    };
     
     doQueryLoadFile = function (file) {
     	var r = new FileReader();

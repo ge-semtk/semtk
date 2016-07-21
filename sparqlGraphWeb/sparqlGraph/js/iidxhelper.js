@@ -40,7 +40,7 @@ define([	// properly require.config'ed
 			var ret = base + "_" + String(IIDXHelper.counter);
 			IIDXHelper.counter += 1;
 			return ret;
-		},
+		};
 		
 		IIDXHelper.buildInlineForm = function () {
 			var form = document.createElement("form");
@@ -54,6 +54,15 @@ define([	// properly require.config'ed
 			form.className = "form-horizontal";
 			form.onsubmit = function(){return false;};    // NOTE: forms shouldn't submit automatically on ENTER
 			return form;
+		};
+		
+		IIDXHelper.createVAlignedCheckbox = function () {
+			var checkbox = document.createElement("input");
+			checkbox.type = "checkbox";
+			checkbox.style.verticalAlign = "middle";
+			checkbox.style.position = "relative";
+			checkbox.style.bottom = ".25em";
+			return checkbox;
 		};
 		
 		IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {

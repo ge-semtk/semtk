@@ -78,13 +78,15 @@ SparqlFormatter.prototype = {
 	    return String(str).replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\n');
 	},
 	
-	tagSparqlID : function(str, id) {
-		var ret = str;  //make more descriptive
-		// search for id with a illigal char afterwards, so we don't match part
-		// of a longer id
-		var re = new RegExp("(\\" + id + ")(" + this.PAT_ILLEGAL_ID_CHAR + ")",
-				"g");
-		ret = ret.replace(re, this.ID_TAG + "$2");
+	tagSparqlID : function(sparql, id) {
+		var ret = sparql;  
+		
+		if (ret !== "" && id !== "") {
+			// search for id with a illegal char afterwards, so we don't match part
+			// of a longer id
+			var re = new RegExp("(\\" + id + ")(" + this.PAT_ILLEGAL_ID_CHAR + ")", "g");
+			ret = ret.replace(re, this.ID_TAG + "$2");
+		}
 		return ret;
 	},
 
@@ -99,6 +101,7 @@ SparqlFormatter.prototype = {
 		// prefixes removed.
 		// if optionalReservedNameHash: make sure returned name is not already
 		// in optionalReservedNameHash
+		// Return name is not reserved.  It is still a s
 
 		// first catch any garbage and return ""
 		if (suggestion == "" || suggestion == "?") {
@@ -579,39 +582,32 @@ PropertyItem.prototype = {
 		if (this.hasConstraints())
 			bitmap += 2;
 		return bitmap;
-	}
-};
+	},
+	
+	setReturnName : function(retName) {
+		// callback from setting the return name
+		// caller must check that retName is legal and work it out with the GUI if
+		// not.
 
-var setRangeAsynchWorker = function(propItm, constraint, draculaLabel) {
-	propItm.setConstraints(constraint);
-	displayLabelOptions(draculaLabel, propItm.getDisplayOptions());
-};
+		var curName = this.getSparqlID(); // current name w/o the "?"
 
-var setRetNameAsynchWorker = function(propItm, retName, draculaLabel) {
-	// callback from setting the return name
-	// caller must check that retName is legal and work it out with the GUI if
-	// not.
+		// if user entered an empty name, they don't want it returned anymore
+		if (retName == "") {
+			this.setIsReturned(false);
+			freeUnusedSparqlID(this);
 
-	var curName = propItm.getSparqlID(); // current name w/o the "?"
+			// else user entered a real name
+		} else {
+			this.setIsReturned(true);
+			// if name changed: free old one and grab new one
+			if (retName != curName) {
+				gNodeGroup.freeSparqlID(curName);
+				gNodeGroup.reserveSparqlID(retName);
+				this.setSparqlID(retName);
+			}
 
-	// if user entered an empty name, they don't want it returned anymore
-	if (retName == "") {
-		propItm.setIsReturned(false);
-		freeUnusedSparqlID(propItm);
-
-		// else user entered a real name
-	} else {
-		propItm.setIsReturned(true);
-		// if name changed: free old one and grab new one
-		if (retName != curName) {
-			gNodeGroup.freeSparqlID(curName);
-			gNodeGroup.reserveSparqlID(retName);
-			propItm.setSparqlID(retName);
 		}
-
-	}
-
-	displayLabelOptions(draculaLabel, propItm.getDisplayOptions());
+	},
 };
 
 var freeUnusedSparqlID = function(item) {
@@ -625,13 +621,6 @@ var freeUnusedSparqlID = function(item) {
 	}
 };
 
-var constrainClassAsynchWorker = function(snode, constraint, draculaLabel) {
-	snode.setValueConstraint(constraint);
-	displayLabelOptions(draculaLabel, snode.getDisplayOptions());
-};
-
-// note that nameClassAsynchWorker() is currently not Asynch, and you can't name
-// the class yet, only return it. so there is no worker for it
 
 /* to set nodes */
 var setNode = function(SNode) { // set up the node itself. this includes the
@@ -685,10 +674,6 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 	}
 	this.node = setNode(this); // the dracula node used in this Semantic Node.
 								// this is the thing that gets drawn
-	this.rangeSetter = null;
-	this.isRangeSetterAsync = false;
-	this.returnNameSetter = null;
-	this.isReturnNameSetterAsync = false;
 	this.removalTag = false;
 	this.nodeGrp = nodeGroup; // a reference to the node group itself. this
 								// will be used for deletions
@@ -769,14 +754,6 @@ SemanticNode.prototype = {
 			this.nodeList[i].removeSNode(nd);
 		}
 	},
-	// set values used by the SemanticNode
-	setRangeSetter : function(rs, as) {
-		this.rangeSetter = rs;
-		this.isRangeSetterAsync = as;
-	},
-	getRangeSetter : function() {
-		return this.rangeSetter;
-	},
 	buildFilterConstraint : function(op, val) {
 		// build but don't set a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -792,20 +769,6 @@ SemanticNode.prototype = {
 	},
 	getSparqlID : function() {
 		return this.SparqlID;
-	},
-
-	setReturnNameSetter : function(rs, as) {
-		this.returnNameSetter = rs;
-		this.isReturnNameSetterAsync = as;
-	},
-	getReturnNameSetter : function() {
-		return this.returnNameSetter;
-	},
-	getRangeSetterAsync : function() {
-		return this.isRangeSetterAsync;
-	},
-	getReturnNameSetterAsync : function() {
-		return this.isReturnNameSetterAsync;
 	},
 	setIsReturned : function(val) {
 		this.isReturned = val;
@@ -835,18 +798,6 @@ SemanticNode.prototype = {
 	},
 	getNode : function() {
 		return this.node;
-	},
-	getReturnedProps : function() {
-		alert("getReturnedProps looks deprecated 3/19/2015");
-		var retprops = [];
-		var t = this.propList.length;
-		for (var s = 0; s < t; s++) {
-			if (this.propList[s].getIsReturned()) {
-				retprops.push(this.NodeName + ":" + this.propList[s].getKeyName());
-			}
-		}
-
-		return retprops;
 	},
 	getPropsForSparql : function(forceRet) {
 		// return properties needed for a SPARQLquery
@@ -1128,31 +1079,12 @@ SemanticNode.prototype = {
 	getNodeName : function() {
 		return this.NodeName;
 	},
-	setReturnedProp : function(propName, retDecision, draculaLabel) {
-		// find the property by name and set whether to return it.
-		var i = this.propList.length;
-		for (var h = 0; h < i; h++) {
-			var kprop = this.propList[h];
-			var nome = kprop.getKeyName() + " : " + kprop.getValueType();
-			if (nome == propName) {
-
-				if (this.isReturnNameSetterAsync) {
-					// callback code
-					this.returnNameSetter(kprop.getKeyName(), kprop
-							.getSparqlID(), setRetNameAsynchWorker, kprop,
-							draculaLabel);
-				} else {
-					var retname = this.returnNameSetter(kprop, kprop
-							.getSparqlID());
-					gNodeGroup.freeSparqlID(kprop.getSparqlID);
-					gNodeGroup.reserveSparqlID(retName);
-					propItm.setReturnName(retname);
-				}
-				break;
-
-			}
-		}
+	
+	callAsyncPropEditor : function (propKeyname, draculaLabel) {
+		var propItem = this.getPropertyByKeyname(propKeyname);
+		this.nodeGrp.asyncPropEditor(propItem, draculaLabel);
 	},
+	
 	addClassToCanvas : function(nItemIndex, propName) {
 		// callback adds a link to nodeItem[nItemIndex] to the canvas 
 	
@@ -1165,37 +1097,6 @@ SemanticNode.prototype = {
 		this.nodeGrp.addOneNode(newNode, this, null, connURI);
 		this.nodeGrp.drawNodes();
 		
-	},
-	
-	setRangeOnProp : function(propName, draculaLabel) {
-		// find the property by name and then edit its constraints.
-		var i = this.propList.length;
-		for (var h = 0; h < i; h++) {
-			var kprop = this.propList[h];
-			var nome = kprop.getKeyName() + " : " + kprop.getValueType();
-			// console.log("checking prop: <" + nome + "> against: <" + propName
-			// + ">");
-
-			if (nome == propName) {
-				// get existing
-				var currConstraint = kprop.getConstraints();
-				// replace them
-				if (this.isRangeSetterAsync) {
-					// callback code
-					this.rangeSetter(setRangeAsynchWorker, kprop, draculaLabel);
-				} 
-
-				break;
-			}
-		}
-	},
-
-	setRangeOnType : function(lt) {
-		// put a constraint on the type of this node.
-
-		if (this.isRangeSetterAsync) {
-			this.rangeSetter(constrainClassAsynchWorker, this, lt);
-		} 
 	},
 
 	toggleReturnType : function(lt) {
@@ -1262,6 +1163,7 @@ var SemanticNodeGroup = function(width, height, divName) {
 	this.isRangeSetterAsync = false;
 	this.returnNameSetter = '';
 	this.isReturnNameSetterAsync = false;
+	this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
 	this.height = height;
 	this.width = width;
 	this.sparqlNameHash = {};
@@ -1521,14 +1423,11 @@ SemanticNodeGroup.prototype = {
 		this.canvasOInfo = oInfo;
 	},
 	
-	setRangeSetter : function(rangeFunct, asyncTrue) {
-		this.rangeSetter = rangeFunct;
-		this.isRangeSetterAsync = asyncTrue;
+	setAsyncPropEditor : function (func) {
+		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
+		this.asyncPropEditor = func;
 	},
-	setReturnNameSetter : function(nameFunct, asyncTrue) {
-		this.returnNameSetter = nameFunct;
-		this.isReturnNameSetterAsync = asyncTrue;
-	},
+	
 	getNodeCount : function() {
 		return this.SNodeList.length;
 	},
@@ -1592,10 +1491,6 @@ SemanticNodeGroup.prototype = {
 
 		this.reserveNodeSparqlIDs(newNode);
 
-		// give the node to link the rangesetter
-		newNode.setRangeSetter(this.rangeSetter, this.isRangeSetterAsync);
-		newNode.setReturnNameSetter(this.returnNameSetter,
-				this.isReturnNameSetterAsync);
 		this.SNodeList.push(newNode);
 
 		// create the link to or from existingNode, if there is one
@@ -2221,23 +2116,6 @@ SemanticNodeGroup.prototype = {
 			}
 		}
 		return retval;
-	},
-	/*
-	 * JUSTIN: this gets the node by the URI. we really have to move this over
-	 * to using the SPARQLID instead. the original design was not intended to
-	 * allow more than one of a given type of node on the graph. the newer
-	 * version allows this to happen. also, this only returns the first instance
-	 * found.
-	 */
-	getNode : function(uri) {
-		// gets first node by uri, or null if it doesn't exist
-		alert("Assertion failed:  SNodeList.getNode() is deprecated.");
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			if (this.SNodeList[i].getURI() == uri) {
-				return this.SNodeList[i];
-			}
-		}
-		return null;
 	},
 
 	getNodesByURI : function(uri) {

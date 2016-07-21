@@ -143,6 +143,10 @@ public class PropertyItem extends Returnable {
 		this.isReturned = b;
 	}
 	
+	public void setIsOptional(boolean b){
+		this.isOptional = b;
+	}
+	
 	public void addConstraint(String str) {
 		this.constraints = new ValueConstraint(str);
 	}

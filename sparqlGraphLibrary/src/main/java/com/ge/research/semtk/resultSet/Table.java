@@ -207,13 +207,19 @@ public class Table {
 		}
 		
 		// gather rows
+		String s;
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
 		JSONArray rowsJson = (JSONArray) jsonObj.get(JSON_KEY_ROWS);
 		for(int i = 0; i < rowsJson.size(); i++){
 			ArrayList<String> row = new ArrayList<String>();
 			JSONArray rowJson = (JSONArray) rowsJson.get(i);
 			for(int j = 0; j < rowJson.size(); j++){
-				row.add(rowJson.get(j).toString());
+				s = (String) rowJson.get(j);
+				if(s != null){
+					row.add(s);
+				}else{
+					row.add("null"); 
+				}
 			}
 			rows.add(row);
 		}

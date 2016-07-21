@@ -115,7 +115,7 @@ define([	// properly require.config'ed
 					select.options.add(option);
 					
 					// select if it matches iTrans
-					if (this.iTrans && this.iTrans.getType() == valueList[i]) {
+					if (this.iTrans && this.iTrans.getType() == select.options[i].value) {
 						select.selectedIndex = i;
 					}
 				}

@@ -1,1 +1,1 @@
-{"LOWERCASE":["child_names","has_pool"],"SPLIT":{"pet_names":"##","child_names":"~"}}
+{"LOWERCASE":["child_names","has_pool"],"SPLIT":{"pet_names":"##","child_names":"~"},"REMOVE_NULLS":"true"}

@@ -312,7 +312,7 @@ Graph.Renderer.Raphael.prototype = {
                 var fillVal = "90-#A9C6FF:5-#EEF4FF:100";   // blue gradient
                 fillVal = "#E7E7EB";
                 var rect = r.rect(0, 0, 50, 80).attr({fill: fillVal, stroke: "#020200", "stroke-width": 2});
-
+                rect.attr({"cursor": "move"});
                 /* set DOM node ID */
                 rect.node.id = node.label || node.id;
                 
@@ -342,17 +342,28 @@ Graph.Renderer.Raphael.prototype = {
                 	// add stub for the delete and minimize functions
                 	
                 	var cntrl = r.text(5,5, "\u274E");
-                	cntrl.attr({"font-size": 10, "font-family": "Arial, Helvetica, sans-serif", "fill" : "#000000", "stroke-width": 3});
+                	cntrl.attr({"font-size": 12, "font-family": "Arial, Helvetica, sans-serif", "fill" : "black", "stroke-width": 3});
                 	// {"fill" : "#0000FF", "stroke-width": 3}
                 	cntrl.attr({"x" : getLineX(cntrl.getBBox().width, hMargin)});
                 	
                 	cntrl.node.ondblclick = (function (i) { 
             	    	// alert("implement delete to remove :" + node.id );
             	    	// node.hide();	// makes the removal actually work. 
-            	    	node.parentSNode.removeFromNodeGroup(false);		
+            	    	//node.parentSNode.removeFromNodeGroup(false);		
             	   // 	removeNode(node.id);
-            	    	node.parentSNode.nodeGrp.drawNodes();
+            	    	//node.parentSNode.nodeGrp.drawNodes();
             	    });
+                	
+                	cntrl.node.onmousedown = function (e) {
+            			registerMouseDown(e);
+            		};
+            		
+            		cntrl.node.onmouseup = function (pnode, e) {
+            			if (mouseUpIsLeftClick(e)) {
+            				pnode.parentSNode.removeFromNodeGroup(false);		
+                     	    pnode.parentSNode.nodeGrp.drawNodes();
+            			}
+            		}.bind("blank_this", node);
                 	
                 	// add the title
                 	
@@ -362,19 +373,16 @@ Graph.Renderer.Raphael.prototype = {
                 	lt.attr({"x" : getLineX(lt.getBBox().width, hMargin)});
                 	displayLabelOptions(lt, node.parentSNode.getDisplayOptions());
                 	
-                	lt.node.ondblclick = (function (i) { 
-            	    	// alert("i want to return :" +  tester + " from " + node.id + " " + node.parentSNode.getURI() );
-            	    	
-            		  	node.parentSNode.toggleReturnType(lt);
-            	    	
-            	    });
-                	
-                	// Set up context menu for class title
-            		lt.node.oncontextmenu = (function() {
-            			// constrain class instance    
-        			    node.parentSNode.setRangeOnType(lt);
-
-            		});
+                	lt.node.onmousedown = function (e) {
+            			registerMouseDown(e);
+            		};
+            		
+            		lt.node.onmouseup = function (pnode, e) {
+            			if (mouseUpIsLeftClick(e)) {
+            				node.parentSNode.toggleReturnType(lt);
+            			}
+            		}.bind("blank_this", node);
+            		
                 	labelN.push(cntrl);
         			cntrl.attr({"y" : getLineY(0, vMargin, labelN)});
 
@@ -424,7 +432,11 @@ Graph.Renderer.Raphael.prototype = {
 
         shape.attr({"fill-opacity": .6});
         /* re-reference to the node an element belongs to, needed for dragging all elements of a node */
-        shape.items.forEach(function(item){ item.set = shape; item.node.style.cursor = "move"; });
+        shape.items.forEach(function(item){ 
+        	item.set = shape; 
+        	if (item.type == "rect") {item.node.style.cursor = "move";}
+        	else {item.node.style.cursor = "pointer"}; 
+        });
         shape.mousedown(this.dragger);
 
         var box = shape.getBBox();
@@ -805,15 +817,31 @@ if (!Array.prototype.forEach)
     }
   };
 }
-var buildGraphNodeLabels = function(propLabel, r, i, hMargin, vMargin, labelN, psize, node, isproperty){
+
+// Resolve trouble I'm having separating drags from single clicks
+// note:  e.which = 1 means left click
+var gMouseDownLoc = "";
+
+var buildMouseLocation = function(e) {
+	return e.clientX.toString() + ":" + e.clientY.toString();
+};
+var registerMouseDown = function(e) {
+	if (e.which == 1) {
+		gMouseDownLoc = buildMouseLocation(e);
+	}
+};
+var mouseUpIsLeftClick = function(e) {
+	return (e.which == 1 && buildMouseLocation(e) == gMouseDownLoc);
+};
+
+var buildGraphNodeLabels = function(propLabelStr, r, i, hMargin, vMargin, labelN, psize, node, isproperty){
 	// this method builds the actual labels used in the stacked boxes that represent each of the 
 	// classes shown in the UI. it also attaches callbacks to  make various operations work.
 
-	var l = r.text(5,5, "\u2610 " + propLabel );
-	labelN.push(l);          		
-    l.attr({"x" : getLineX(l.getBBox().width, hMargin)});
-    l.attr({"y" : getLineY(psize + i + 2, vMargin, labelN)});
-    var tester = propLabel;
+	var itemLabel = r.text(5,5, "\u2610 " + propLabelStr );
+	labelN.push(itemLabel);          		
+    itemLabel.attr({"x" : getLineX(itemLabel.getBBox().width, hMargin)});
+    itemLabel.attr({"y" : getLineY(psize + i + 2, vMargin, labelN)});
     
     // the folowing code declares the callbacks as un-named methods to cheat around 
     // not being able to directly reference the original generator from the callback call.
@@ -825,28 +853,34 @@ var buildGraphNodeLabels = function(propLabel, r, i, hMargin, vMargin, labelN, p
     
     
     if(isproperty){
-    	// double-click a property : we want the query to return it
-	    l.node.ondblclick = (function (i) { 
-	    	//alert("i want to return :" +  tester + " from " + node.id + " " + node.parentSNode.getURI() );
-	    	node.parentSNode.setReturnedProp(tester, true, l);
-		    });
-	    // right-click a property : we want to constrain it
-		l.node.oncontextmenu = function() {
-
-		    node.parentSNode.setRangeOnProp(tester, l);
-		    
-		    return false; /* prevent context menu from popping up */
+		
+		itemLabel.node.onmousedown = function (e) {
+			registerMouseDown(e);
 		};
+		
+		itemLabel.node.onmouseup = function (pItemLabel, pPropLabelStr, pNode, e) {
+			if (mouseUpIsLeftClick(e)) {
+				//NEW Single click:  todo cursor
+				var keyname = propLabelStr.split(" ")[0];
+		    	pNode.parentSNode.callAsyncPropEditor(keyname, pItemLabel); 
+			}
+		}.bind("blank_this", itemLabel, propLabelStr, node);
+		
     } else {
 
-        l.node.ondblclick = function (index, evt) { 
-	    	
-	    	node.parentSNode.addClassToCanvas(index, tester);
-	    	// ADD BACK THE COLOR when addClassToCanvas actually does something !!  CYFTLUC-25
-	    	// l.attr({"fill" : "#FF0000", "stroke-width": 3});
-	    	// set this value for return
+		itemLabel.node.onmousedown = function (e) {
+			registerMouseDown(e);
+		};
+		
+		itemLabel.node.onmouseup = function (index, e) { 
+			if (mouseUpIsLeftClick(e)) {
+		    	node.parentSNode.addClassToCanvas(index, propLabelStr);
+		    	
+		    	// TODO: need code to un-color this when paths SNodes are deleted
+		    	//itemLabel.attr({"fill" : "#FF0000", "stroke-width": 3});	
+			}
     	
 		}.bind("non-this", i);
     }
-    return l;
+    return itemLabel;
 }

@@ -16,13 +16,6 @@
  ** limitations under the License.
  */
 
-// not-quite-asynchronous-enough cache of stuff needed for callbacks
-var globalConstraintCallback = null;
-var globalObjtoSet = null;
-var globalDraculaLabel = null;
-
-var globalReturnNameCallback = null;
-var globalObjtoSetRetName = null;
 
 //global from sparqlGraph.html
 var globalModalDialogue = null;      
@@ -30,49 +23,8 @@ var gConn;
 var gAvoidQueryMicroserviceFlag;
 
 
-
 //-----  Intermediate "glue" callbacks change dialog callbacks to Belmont callbacks and hold onto some params in globals
-var attributeNameCallback = function (arr) {
-	console.log("setting constraints in callback");
-	globalConstraintCallback(globalObjtoSet, arr[0], globalDraculaLabel);
-};
 
-var attributeConstraintCallback = function (arr) {
-	
-	console.log("setting return name in callback");
-	var retName;
-	
-	// if return name is not ""
-	if (arr[0].length > 0) {
-		//  make sure it has "?" 
-		if (arr[0][0] == "?") {
-			retName = arr[0];
-		} else {
-			retName = "?" + arr[0];
-		}
-		
-		// if it is a new name
-		if (retName != globalObjtoSetRetName.getSparqlID()) {
-			var f = new SparqlFormatter();
-			// make sure new name is legal
-			var newName = f.genSparqlID(retName, gNodeGroup.sparqlNameHash);
-			if (newName != retName) {
-				alert("Using " + newName + " instead.");
-			}
-			retName = newName;
-		}
-	} else {
-		retName = "";
-	}
-	
-	globalReturnNameCallback(globalObjtoSetRetName, retName, globalDraculaLabel);
-};
-
-// PEC TODO: not called.  Do you really care if we occasionally reserve a SparqlID?
-var attributeConstraintClearCallback = function() {
-	// undo any sparqlID generation that might have happened in RangeDialog and isn't needed since user hit "Clear"
-	freeUnusedSparqlID(globalObjtoSetRetName);
-};
 
 var returnPropertiesAsString = function(oClass){
 	var strVal = '';
@@ -142,63 +94,4 @@ var dropCallback = function(val) {
 	gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
 	gNodeGroup.drawNodes();
   	guiGraphNonEmpty();
-};
-
-
-
-var rangeDialogue = function(callbackfunct, objToSetConstraintsFor, draculaLabel){
-	require(['sparqlgraph/js/msiclientquery',
-	         'jquery', 
-	         'jsonp'], function(MsiClientQuery) {
-		
-		// objToSetconstraintsFor can be an PropertyItem or a SemanticNode
-		// save the callback and the object in globals
-		globalConstraintCallback = callbackfunct;
-		globalObjtoSet = objToSetConstraintsFor;
-		globalDraculaLabel = draculaLabel;
-		
-		// suggest default return name
-		// PropItems may not have a SparqlID, so generate one if it empty
-			
-		var id = objToSetConstraintsFor.getSparqlID();
-		if (id == null || id == "") {
-			f = new SparqlFormatter();
-			id = f.genSparqlID(objToSetConstraintsFor.getKeyName(), gNodeGroup.sparqlNameHash);
-			
-			// give the obj its sparqlID so that the query will work
-			objToSetConstraintsFor.setSparqlID(id);
-			gNodeGroup.reserveSparqlID(id);
-		}
-	
-		var sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_CONSTRAINT, false, 100, objToSetConstraintsFor);
-		
-		// get query interface
-		var dataInterface = null;
-		if (gAvoidQueryMicroserviceFlag) {
-			// query directly
-			dataInterface= gConn.getDataInterface();
-		} else {
-			// query microservice
-			dataInterface = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(), logAndAlert);
-		}
-		
-		// launch the dialog
-		gConstraintDialog.constraintDialog(objToSetConstraintsFor, sparql, dataInterface, attributeNameCallback);
-	});
-};
-
-
-
-var returnNameDialogue = function (propName, currentReturnName, callbackfunct, objToSetReturnNameFor, draculaLabel){
-	globalReturnNameCallback = callbackfunct;
-	globalObjtoSetRetName = objToSetReturnNameFor;    //SemanticNode or PropertyItem
-	globalDraculaLabel = draculaLabel;
-
-	if (currentReturnName == null || currentReturnName == "") {
-		f = new SparqlFormatter();
-		currentReturnName = f.genSparqlID(propName, gNodeGroup.sparqlNameHash);
-	}
-	globalModalDialogue.textFieldDialog("Enter return name for " + propName, "Submit", ["return name"], [currentReturnName.slice(1)], attributeConstraintCallback, 52);
-	
-	
 };

@@ -20,6 +20,7 @@ package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -639,16 +640,27 @@ public class NodeGroup {
 	}
 
 	private ArrayList<Node> getOrderedNodeList() throws Exception {
-		ArrayList<Node> nodeList = new ArrayList<Node>();
+		ArrayList<Node> ret = new ArrayList<Node>();
 		
 		ArrayList<Node> headList = this.getHeadNodes();
 		
 		for (Node n : headList) {
-			nodeList.add(n);
-			nodeList.addAll(this.getSubNodes(n));
+			ret.add(n);
+			ret.addAll(this.getSubNodes(n));
 		}
 		
-		return nodeList;
+		ArrayList<Node> ret2 = new ArrayList<Node>();
+		Hashtable hash = new Hashtable();
+		
+		// remove duplicates from ret
+		for (Node n : ret) {
+			if (hash.get(n.getSparqlID()) == null) {
+				ret2.add(n);
+				hash.put(n.getSparqlID(), 1);
+			}
+		}
+		
+		return ret2;
 	}
 	
 	public void pruneAllUnused () {

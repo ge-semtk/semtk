@@ -42,6 +42,7 @@ public class DataCleaner {
 	// keys for json cleaning spec
 	public final static String JSON_KEY_SPLIT = "SPLIT";
 	public final static String JSON_KEY_LOWERCASE = "LOWERCASE";
+	public final static String JSON_KEY_REMOVE_NULLS = "REMOVE_NULLS";
 	
 	private final static String[] UNSUPPORTED_SPLIT_DELIMITERS = {"\n","^"," "}; // noticed that these don't work so disallow them for now...add to this list as we find more		
 
@@ -53,8 +54,9 @@ public class DataCleaner {
 
 	// store setup info about how to clean	TODO add more as needed
 	private HashMap<String,String> columnsToSplit = new HashMap<String,String>(); // key is column header, value is split delimiter (e.g. ~)	
-	private HashSet<String> columnsToLowerCase = new HashSet<String>(); // key is column header
-
+	private HashSet<String> columnsToLowerCase = new HashSet<String>(); // key is column header	
+	private boolean removeNulls = false;  // if true, replace all occurrences of "null" string (as a whole entry) with ""
+	
 	// store counts
 	private int numRowsProcessed;		// num original records 
 	private int numRowsProduced;		// num cleaned records produced
@@ -73,7 +75,7 @@ public class DataCleaner {
 	 * Constructor that takes the cleaning spec as JSON
 	 * @param dataset the dataset to clean
 	 * @param cleanedFilePathStr the file to write cleaned data to
-	 * @param cleanSpecJson the cleaning spec in JSON format, e.g. {"LOWERCASE":["child_names","has_pool"],"SPLIT":{"pet_names":"##","child_names":"~"}}
+	 * @param cleanSpecJson the cleaning spec in JSON format, e.g. {"LOWERCASE":["child_names","has_pool"],"SPLIT":{"pet_names":"##","child_names":"~"},"REMOVE_NULLS":"true"}
 	 */
 	public DataCleaner(Dataset dataset, String cleanedFilePathStr, JSONObject cleanSpecJson) throws Exception {
 		this.dataset = dataset;		
@@ -112,6 +114,15 @@ public class DataCleaner {
 				addSplit(s, (String)splitObj.get(s));
 			}
 		}
+		
+		// add remove nulls specs
+		String removeNullsVal = (String) cleanSpecJson.get(JSON_KEY_REMOVE_NULLS);
+		if(removeNullsVal != null){
+			if(removeNullsVal.toString().toLowerCase().equals("true")){
+				removeNulls = true;
+			}
+		}
+		
 	}
 
 
@@ -157,6 +168,15 @@ public class DataCleaner {
 		columnsToLowerCase.add(columnHeader);
 	}
 
+	
+	/**
+	 * Specify removing nulls or not
+	 * @param removeNulls true to remove nulls, else false
+	 * @throws Exception 
+	 */
+	public void addRemoveNulls(boolean removeNulls) throws Exception{
+		this.removeNulls = removeNulls;
+	}
 
 
 	/**
@@ -210,9 +230,14 @@ public class DataCleaner {
 		// perform to lower case
 		row = performLowerCase(row);
 
+		// remove nulls
+		if(removeNulls){
+			row = performRemoveNulls(row);
+		}
+		
 		// perform splits
 		ArrayList<ArrayList<String>> rowsToWrite = performSplits(row);
-
+		
 		// write to CSV
 		for(ArrayList<String> rowToWrite : rowsToWrite){
 			this.csvPrinter.printRecord(rowToWrite);
@@ -235,6 +260,23 @@ public class DataCleaner {
 
 			if(columnsToLowerCase.contains(header)){
 				row.set(i, value.toLowerCase());
+			}
+		}
+		return row;
+	}	
+	
+	
+	/**
+	 * Take a row of data and remove null strings
+	 * @param row the input row of data
+	 * @return cleaned rows of data
+	 */
+	private ArrayList<String> performRemoveNulls(ArrayList<String> row){
+		String value;
+		for(int i = 0; i < row.size(); i++){  // for each value in the row			
+			value = row.get(i);
+			if(value.trim().equalsIgnoreCase("null")){  // if's null string
+				row.set(i,"");  // change to empty string
 			}
 		}
 		return row;

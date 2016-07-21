@@ -62,7 +62,6 @@ require([
 			'sparqlgraph/js/belmont',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/js/modalconstraintdialog',
 			'sparqlgraph/js/modaldialog',
 			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
 		],
@@ -247,7 +246,7 @@ require([
 			// callback for filter buttons on the form
 			
 			// add a constraint to a SparqlID->property
-			var r = getFormRow(rowId);
+			var row = getFormRow(rowId);
 			var sNode;
 			var item;
 			var tmpSNode;
@@ -256,32 +255,32 @@ require([
 			
 			// ==== find the item in both copies of the nodegroup:  item and tmpItem ====
 				// if there's a child node
-			if (r.childNodeID !== "") {
-				sNode = gNodeGroup.getNodeBySparqlID(r.childNodeID);
+			if (row.childNodeID !== "") {
+				sNode = gNodeGroup.getNodeBySparqlID(row.childNodeID);
 				item = sNode;
 				
-				tmpSNode = tmpNodeGroup.getNodeBySparqlID(r.childNodeID);
+				tmpSNode = tmpNodeGroup.getNodeBySparqlID(row.childNodeID);
 				tmpItem = tmpSNode;
 
 				// if there's a parent node and property
-			} else if (r.itemKeyName !== "") {
-				sNode = gNodeGroup.getNodeBySparqlID(r.parentNodeID);
-				item = sNode.getPropertyByKeyname(r.itemKeyName);
+			} else if (row.itemKeyName !== "") {
+				sNode = gNodeGroup.getNodeBySparqlID(row.parentNodeID);
+				item = sNode.getPropertyByKeyname(row.itemKeyName);
 				
-				tmpSNode = tmpNodeGroup.getNodeBySparqlID(r.parentNodeID);
-				tmpItem = tmpSNode.getPropertyByKeyname(r.itemKeyName);
+				tmpSNode = tmpNodeGroup.getNodeBySparqlID(row.parentNodeID);
+				tmpItem = tmpSNode.getPropertyByKeyname(row.itemKeyName);
 
 				// else there's only a parent node
 			} else {
-				sNode = gNodeGroup.getNodeBySparqlID(r.parentNodeID);
+				sNode = gNodeGroup.getNodeBySparqlID(row.parentNodeID);
 				item = sNode;
 				
-				tmpSNode = tmpNodeGroup.getNodeBySparqlID(r.parentNodeID);
+				tmpSNode = tmpNodeGroup.getNodeBySparqlID(row.parentNodeID);
 				tmpItem = tmpSNode;
 			}
 
 			// Can't filter a trigger class.  Quietly return
-			if (isOntTriggerClassName(r.parentNodeID) || isOntTriggerClassName(r.childNodeID))
+			if (isOntTriggerClassName(row.parentNodeID) || isOntTriggerClassName(row.childNodeID))
 				return;
 
 			// prepare a query for the constraint dialog
@@ -291,9 +290,10 @@ require([
 			showDebug("Constraining " + sNode.getSparqlID() + "->" + item.getSparqlID(), tmpNodeGroup);
 			kdlLogEvent("SF: Filter Button", "Node", sNode.getURI(), "itemSparqlID", item.getSparqlID());
 			
-			launchConstraintDialog(item, sparql, textId, alertUser);
+			launchConstraintDialog(item, alertUser, tmpItem, tmpNodeGroup);
 			
 		};
+
 		doTreeSearch = function() {
 			//gOTree.find($("#search").val());
 			gOTree.powerSearch($("#search").val());
@@ -464,7 +464,22 @@ require([
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 		
-
+		itemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, dataUnused) {
+			   
+	    	// Note: ModalItemDialog validates that sparqlID is legal
+	    	
+	    	// snodes don't allow these
+	    	if (propItem.setReturnName) propItem.setReturnName(sparqlID);
+	    	if (propItem.setIsOptional) propItem.setIsOptional(optionalFlag);
+	    	
+	    	propItem.setConstraints(constraintStr);
+	    	
+	    	formConstraintsUpdateTable();
+	    	
+	    	kdlLogEvent("SF: Filtered", "sparqlId", sparqlID, "constraints", constraintStr);
+	    };
+	    
+		// DEPRECATED: used with modalconstraintdialog
 		filterDialogCallback = function(textId, item, constraintArr) {
 			item.setConstraints(constraintArr[0]);
 

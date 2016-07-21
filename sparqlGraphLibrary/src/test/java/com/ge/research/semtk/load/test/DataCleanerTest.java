@@ -46,7 +46,7 @@ public class DataCleanerTest {
 		
 		try {	
 			
-			String cleaningSpecJsonStr = "{\"" + DataCleaner.JSON_KEY_LOWERCASE + "\":[\"child_names\",\"has_pool\"],\"" + DataCleaner.JSON_KEY_SPLIT + "\":{\"pet_names\":\"##\",\"child_names\":\"~\"}}";			
+			String cleaningSpecJsonStr = "{\"" + DataCleaner.JSON_KEY_LOWERCASE + "\":[\"child_names\",\"has_pool\"],\"" + DataCleaner.JSON_KEY_SPLIT + "\":{\"pet_names\":\"##\",\"child_names\":\"~\"},\"REMOVE_NULLS\":\"false\"}";			
 			JSONObject cleaningSpecJson = (JSONObject) (new JSONParser()).parse(cleaningSpecJsonStr);
 			
 			Dataset dataset = new CSVDataset(originalFilePathStr, false);
@@ -96,6 +96,46 @@ public class DataCleanerTest {
 	}	
 	
 	
+	@SuppressWarnings("unchecked")
+	@Test 
+	public void test_RemoveNulls() throws IOException {
+
+		String originalFilePathStr = "src/test/resources/datacleanertest-input-nulls.csv";
+		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		BufferedReader reader = null;
+		
+		try {	
+			
+			JSONObject cleaningSpecJson = Utility.getJSONObjectFromFilePath("src/test/resources/datacleanertest-spec-nulls.json");
+			
+			Dataset dataset = new CSVDataset(originalFilePathStr, false);
+			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			
+			// do the cleaning
+			int cleanedRows = cleaner.cleanData();
+			
+			// check results
+			assertEquals(cleanedRows,3);
+			reader = new BufferedReader(new FileReader(cleanedFilePathStr));
+			String s = reader.readLine();
+			assertEquals(s,"parent_name,parent_age,has_pool,pet_name");
+			s = reader.readLine();
+			assertEquals(s,"robert,40,YES,");
+			s = reader.readLine();
+			assertEquals(s,"barbara,,NO,Bippy");
+			s = reader.readLine();
+			assertEquals(s, "michael,39,NO,Snulls");
+			s = reader.readLine();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		} finally {
+			if(reader != null){	reader.close(); }
+		}
+	}	
+	
+	
 	@Test 
 	public void test_WithoutJSONSpecs() throws IOException {
 
@@ -110,6 +150,7 @@ public class DataCleanerTest {
 			cleaner.addToLowerCase("child_names");
 			cleaner.addToLowerCase("has_pool");
 			cleaner.addSplit("pet_names","##");
+			cleaner.addRemoveNulls(false);
 			
 			// do the cleaning
 			int cleanedRows = cleaner.cleanData();

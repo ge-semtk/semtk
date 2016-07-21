@@ -390,16 +390,19 @@ public abstract class SparqlEndpointInterface {
 		try{ 
 			this.response = (JSONObject) new JSONParser().parse(responseTxt);
 		}catch(Exception e){
+			entity.getContent().close();
 			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
 		}
 		JSONObject interimObj = new JSONObject(this.response);
 		
 		if (this.response == null) {
 			System.err.println("the response could not be transformed into json");
+			entity.getContent().close();
 			return null;
 		}
 		else{
-			JSONObject procResp = getResultsFromResponse(interimObj, resultType);			
+			JSONObject procResp = getResultsFromResponse(interimObj, resultType);	
+			entity.getContent().close();
 			return procResp;
 		}
 	}	
@@ -467,6 +470,7 @@ public abstract class SparqlEndpointInterface {
 		try{
 			resp = (JSONObject) JSONValue.parse(responseTxt);
 		}catch(Exception e){
+			entity.getContent().close();
 			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
 		}
 		
@@ -474,11 +478,15 @@ public abstract class SparqlEndpointInterface {
 			System.err.println("the response could not be transformed into json");
 
 			if(responseTxt.contains("Error")){
+				entity.getContent().close();
 				throw new Exception(responseTxt); }
+			entity.getContent().close();
 			return null;
 		}
 		else{
 			JSONObject procResp = getResultsFromResponse(resp, resultType);
+			entity.getContent().close();
+
 			return procResp;
 		}
 	}
@@ -569,6 +577,7 @@ public abstract class SparqlEndpointInterface {
 			ret.setSuccess(false);
 			ret.addRationaleMessage(responseTxt);
 		}
+		entity.getContent().close();
 		return ret.toJson();
 	}
 	
@@ -615,6 +624,7 @@ System.out.println ("URL: " + url);
 		}
 	    
 		JSONObject interimObj = new JSONObject(this.response);
+		rd.close();   // close the reader
 
 		if (this.response == null) {
 			System.err.println("the response could not be transformed into json");

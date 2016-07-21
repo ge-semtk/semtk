@@ -468,10 +468,10 @@ define([	// properly require.config'ed
 											}
 										}.bind(this);
 					elem.ondrop = this.ondropTextItem.bind(this);
-					
+					elem.onclick = function(){};
 				} else {
 					// you can edit the originals
-					elem.ondblclick = this.launchTextModal.bind(this, elem);  
+					elem.onclick = this.launchTextModal.bind(this, elem);  
 				}
 									
 				return elem;
@@ -534,13 +534,14 @@ define([	// properly require.config'ed
 									
 				span.ondrop = this.ondropTransformItem.bind(this);
 				
-				// add the callback
-				span.ondblclick = function (ev) { 
-					this.launchTransformModal(ev.target); 
-				}.bind(this);
+				
 				
 				if (isCopyFlag) {
-					//
+					// copies are not editable
+					span.onclick = function(){};
+				} else {
+					// originals are editable
+					span.onclick = function (ev) { this.launchTransformModal(ev.target); }.bind(this);
 				}
 				
 				return span;
@@ -816,9 +817,6 @@ define([	// properly require.config'ed
 										}.bind(this);
 					span.ondrop = this.ondropColItem.bind(this);
 				}
-				
-				// test double-click
-				//span.ondblclick = alert.bind("test");  //new Function('alert("selected ' + span.innerHTML.replace(/["']/,"") + '");');
 				
 				return span;
 			},
