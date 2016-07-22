@@ -19,6 +19,7 @@
 // SparqlGraph config variables
 // GOAL: everything that changes with deployment is in here
 
+//VERSION: 84
 var g = {
 	help : {
 		buildHtml : "SPARQLgraph build 752 on 2016-06-08",
