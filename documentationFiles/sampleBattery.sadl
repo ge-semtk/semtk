@@ -1,0 +1,14 @@
+uri "http://kdl.ge.com/batterydemo" alias changeme version "$Revision:$ Last modified on   $Date:$". 
+
+
+Color is a class, must be one of {red, white, blue}.
+
+Cell is a class, 
+	described by cellId with a single value of type string,
+	described by color with a single value of type Color.
+	
+Battery is a class,
+	described by name with a single value of type string,
+	described by cell with values of type Cell.
+	 
+	 

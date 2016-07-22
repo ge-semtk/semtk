@@ -55,8 +55,9 @@ do
         DIR=${d%?}   # remove trailing /
         if [ $DIR == "ROOT" ]; then
                 # Allow other files to remain in ROOT
+                mkdir -p $SPARQLGRAPHWEB/$DIR
                 echo cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
-                echo cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
+                cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
         else
                 # Wipe out and replace other known dirs
                 echo rm -rf $WEBAPPS/$DIR
