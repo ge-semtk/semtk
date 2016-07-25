@@ -70,9 +70,9 @@ do
                 CURRENT_VERSION=($(grep VERSION $CURRENT))
                 SAVED_VERSION=($(grep VERSION $SAVED))
 
-                if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then
-                        echo cp $CURRENT $SAVED
-                        cp $CURRENT $SAVED
+                if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then 
+                        echo cp $SAVED $CURRENT
+                        cp $SAVED $CURRENT
                 else
                         echo WARNING: these files need to be manually merged to keep local configuration:
                         echo "        $SAVED"
