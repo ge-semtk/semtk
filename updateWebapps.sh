@@ -23,16 +23,6 @@ TMP=$SEMTK/tmp
 rm -rf $TMP
 mkdir $TMP
 
-# maddening case-fixing
-if [ -e $SPARQLGRAPHWEB/sparqlForm/main-OSS ]; then
-        echo mv $SPARQLGRAPHWEB/sparqlForm/main-OSS $SPARQLGRAPHWEB/sparqlForm/main-oss
-        mv $SPARQLGRAPHWEB/sparqlForm/main-OSS $SPARQLGRAPHWEB/sparqlForm/main-oss
-fi
-if [ -e $SPARQLGRAPHWEB/sparqlGraph/main-OSS ]; then
-        echo mv $SPARQLGRAPHWEB/sparqlGraph/main-OSS $SPARQLGRAPHWEB/sparqlGraph/main-oss
-        mv $SPARQLGRAPHWEB/sparqlGraph/main-OSS $SPARQLGRAPHWEB/sparqlGraph/main-oss
-fi
-
 # define array of versioned files
 declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js" "sparqlForm/main-oss/sparqlformconfig.js")
 
