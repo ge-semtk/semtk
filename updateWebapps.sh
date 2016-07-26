@@ -24,7 +24,10 @@ rm -rf $TMP
 mkdir $TMP
 
 # define array of versioned files
-declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js" "sparqlForm/main-oss/sparqlformconfig.js")
+declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
+                      "sparqlGraph/main-oss/KDLEasyLoggerConfigOss.js" 
+                      "sparqlForm/main-oss/sparqlformconfig.js"
+                      "sparqlForm/main-oss/KDLEasyLoggerConfig.js")
 
 # copy versioned files to $TMP
 for v in "${VERSIONED[@]}"
