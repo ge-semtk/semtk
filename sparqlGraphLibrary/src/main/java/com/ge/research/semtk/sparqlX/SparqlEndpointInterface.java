@@ -577,7 +577,7 @@ public abstract class SparqlEndpointInterface {
 			ret.setSuccess(false);
 			ret.addRationaleMessage(responseTxt);
 		}
-		entity.getContent().close();
+		resp_entity.getContent().close();
 		return ret.toJson();
 	}
 	
