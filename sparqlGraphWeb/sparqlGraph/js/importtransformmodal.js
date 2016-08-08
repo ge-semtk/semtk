@@ -175,12 +175,19 @@ define([	// properly require.config'ed
 				var type = document.getElementById("tm_type_select").value;
 				var arg1 = document.getElementById("tm_arg1_text").value;
 				var arg2 = document.getElementById("tm_arg2_text").value;
+				var argNames = ImportTransform.getArgNames(type);
 				
 				if (name.length < 1) {
 					return "Name can not be empty.";
-				} else if (arg1.length < 1) {
-					return "Arg 1 can not be empty.";
-				} else {
+				} else if (arg1.length < 1 && argNames[0].length > 0) {
+					return "Arg '"+ argNames[0] + "' can not be empty.";
+				}
+				// TODO: right now, only replaceAll has a second arg and it IS allowed to be null
+				//       This needs better generalization.
+				// else if (arg2.length < 1 && argNames[1].length > 0) {
+				//	return "Arg "+ argNames[1] + " can not be empty.";
+				//} 
+				else {
 					return null;
 				}
 			},

@@ -128,6 +128,11 @@ define([	// properly require.config'ed
 		    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 		},
 		
+		IIDXHelper.regexSafe = function(str) {
+			// thanks stack overflow: http://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
+			return String(str).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+		},
+		
 		IIDXHelper.unhideControlGroup = function () {
 			// state can be "error" "warning" "success" or ""
 			group.style.visibility = "";

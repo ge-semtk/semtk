@@ -290,7 +290,7 @@ require([
 			showDebug("Constraining " + sNode.getSparqlID() + "->" + item.getSparqlID(), tmpNodeGroup);
 			kdlLogEvent("SF: Filter Button", "Node", sNode.getURI(), "itemSparqlID", item.getSparqlID());
 			
-			launchConstraintDialog(item, alertUser, tmpItem, tmpNodeGroup);
+			launchConstraintDialog(item, alertUser, tmpItem, tmpNodeGroup, textId);
 			
 		};
 
@@ -464,16 +464,22 @@ require([
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 		
-		itemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, dataUnused) {
-			   
+		itemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, data) {
+			// data.textId is the html element id that holds the filter icon
+			
 	    	// Note: ModalItemDialog validates that sparqlID is legal
 	    	
 	    	// snodes don't allow these
 	    	if (propItem.setReturnName) propItem.setReturnName(sparqlID);
 	    	if (propItem.setIsOptional) propItem.setIsOptional(optionalFlag);
 	    	
-	    	propItem.setConstraints(constraintStr);
+	    	if (constraintStr.length > 0) {
+	    		document.getElementById(data.textId).innerHTML = FORM_CONSTRAINED_ICON;
+	    	} else {
+	    		document.getElementById(data.textId).innerHTML = FORM_UNCONSTRAINED_ICON;
+	    	}
 	    	
+	    	propItem.setConstraints(constraintStr);
 	    	formConstraintsUpdateTable();
 	    	
 	    	kdlLogEvent("SF: Filtered", "sparqlId", sparqlID, "constraints", constraintStr);

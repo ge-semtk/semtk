@@ -2,6 +2,6 @@
 # semtk
 Semantics Toolkit.   Auto-SPARQL-query generation.  Drag-and-drop ingestion.
 
-Please take a look at the Wiki:
-* [SemTk Home](https://github.com/ge-semtk/semtk/wiki/Home)
-* [Installation](https://github.com/ge-semtk/semtk/wiki/Docs:Installing)
+Try out the web apps at:  [semtk.research.ge.com](http://semtk.research.ge.com).
+
+Full info is in the [wiki](https://github.com/ge-semtk/semtk/wiki/Home)

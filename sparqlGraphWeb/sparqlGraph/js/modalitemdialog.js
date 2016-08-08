@@ -31,17 +31,21 @@
 define([	// properly require.config'ed
         	'sparqlgraph/js/iidxhelper',
         	'sparqlgraph/js/modaliidx',
+        	'jquery',
         	
 			// shimmed
         	'sparqlgraph/js/belmont',
+        	'bootstrap/bootstrap-tooltip',
+        	'bootstrap/bootstrap-transition'
 			
 		],
-	function(IIDXHelper, ModalIidx) {
+	function(IIDXHelper, ModalIidx, $) {
 	
 		var ModalItemDialog = function(item, nodegroup, clientOrInterface, callback, data, optGhostItem, optGhostNodegroup) {
-			// callback(item, sparqlID, optionalFlag, constraintStr)
+			// callback(item, sparqlID, optionalFlag, constraintStr, data)
 			//          where sparqlID and contraintStr could be ""
 			// data.draculaLabel
+			// data.textId
 			//
 			// GHOST ITEM and NODEGROUP:
 			//  GhostNodegroup : copy of nodegroup with changes made (e.g. remove trigger class in sparqlForm)
@@ -58,6 +62,8 @@ define([	// properly require.config'ed
 			
 			this.ghostItem = typeof optGhostItem === "undefined" ? false : optGhostItem;
 			this.ghostNodegroup = typeof optGhostNodegroup === "undefined" ? false : optGhostNodegroup;
+			
+			this.sparqlformFlag = false;
 		};
 		
 		
@@ -101,9 +107,11 @@ define([	// properly require.config'ed
 				// clear button
 				
 				// uncheck "return"
-				var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
-				returnCheck.checked = false;
-				this.returnCheckOnClick();   // handles any disabling fields
+				if (! this.sparqlformFlag) {
+					var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
+					returnCheck.checked = false;
+					this.returnCheckOnClick();   // handles any disabling fields
+				}
 				
 				// uncheck "optional"
 				var optionalCheck = this.getFieldElement(ModalItemDialog.OPTIONAL);
@@ -261,7 +269,7 @@ define([	// properly require.config'ed
 				// populate the SELECT with given parallel arrays of names and values
 				var select = this.getFieldElement(ModalItemDialog.SELECT);
 				var textVal = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
-				
+				var valuesFlag = (textVal.search("VALUES ") > -1);
 				select.options.length = 0;
 				
 				for (var i=0; i < element.length; i++) {
@@ -273,8 +281,11 @@ define([	// properly require.config'ed
 					el.value = element[i].val;
 					
 					// check to see if it should be selected
-					if (textVal.search("['<]" + element[i].val + "['>]") > -1) {
-						el.selected = true;
+					if (valuesFlag) {
+						var searchFor = "['<]" + IIDXHelper.regexSafe(element[i].val) + "['>]";
+						if (textVal.search(searchFor) > -1) {
+							el.selected = true;
+						}
 					}
 					
 					// add element
@@ -342,9 +353,10 @@ define([	// properly require.config'ed
 			
 			
 			
-			show : function (optModeFlag) {
-				var modeFlag = typeof optModeFlag == "undefined" ? false : optModeFlag;
-				// modeFlag: sparqlForm mode
+			show : function (optSparqlformFlag) {
+				if (typeof optSparqlformFlag != "undefined") {
+					this.sparqlformFlag = optSparqlformFlag;
+				}
 				 
 				var dom = document.createElement("fieldset");
 				var elem;
@@ -367,7 +379,7 @@ define([	// properly require.config'ed
 				tr = document.createElement("tr");
 				table.appendChild(tr);
 				
-				// row 1 col 1
+				// row 1 col 1:  "Name: "
 				td = document.createElement("td");
 				td.style.verticalAlign = "top";
 				tr.appendChild(td);
@@ -375,7 +387,7 @@ define([	// properly require.config'ed
 				elem.appendChild(document.createTextNode("Name: " ) );
 				td.appendChild(elem);
 				
-				// row 1 col 2
+				// row 1 col 2   "text input box"
 				td = document.createElement("td");
 				tr.appendChild(td);
 				
@@ -393,22 +405,20 @@ define([	// properly require.config'ed
 				sparqlIDTxt.value = sparqlID.slice(1);
 				sparqlIDTxt.onfocus    = this.sparqlIDOnFocus.bind(this);
 				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
-				sparqlIDTxt.disabled = modeFlag;
+				sparqlIDTxt.style.disabled = this.sparqlformFlag;
 				td.appendChild(sparqlIDTxt);
 							
-				// row 1 col 3
+				// row 1 col 3  "returned checkbox"
 				td = document.createElement("td");
 				td.style.verticalAlign = "top";
 				tr.appendChild(td);
 				
-				// optional checkbox
+				// return checkbox
 				returnCheck = IIDXHelper.createVAlignedCheckbox();
 				returnCheck.classList.add("btn");
 				returnCheck.id = this.getFieldID(ModalItemDialog.RETURN_CHECK);
 				returnCheck.checked = this.item.getIsReturned();
 				returnCheck.onclick = this.returnCheckOnClick.bind(this);
-				returnCheck.disabled = modeFlag;
-
 				
 				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 				td.appendChild(returnCheck);
@@ -432,6 +442,7 @@ define([	// properly require.config'ed
 				tr.appendChild(td);
 				
 				// optional checkbox
+				
 				optionalCheck = IIDXHelper.createVAlignedCheckbox();
 				optionalCheck.id = this.getFieldID(ModalItemDialog.OPTIONAL);
 				// snode doesn't have isOptional
@@ -446,9 +457,30 @@ define([	// properly require.config'ed
 				}.bind(this);
 				
 				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-				td.appendChild(optionalCheck)
-				td.appendChild(document.createTextNode(" optional"));
-				
+
+				// Top section is handled totally differently with sparqlformFlag
+				if (this.sparqlformFlag) {
+					// create a right-justified div just for optional
+					var div = document.createElement("div");
+					div.align = "right";
+					
+					// add tooltip
+					optionalCheck.title = "Match rows missing this value. NOTE: still under development.";
+					optionalCheck.setAttribute("rel", "tooltip");	
+					
+					// assemble
+					div.appendChild(optionalCheck)
+					div.appendChild(document.createTextNode(" optional"));
+					dom.appendChild(div);
+					
+					// make top table invisible
+					table.style.display = "none";
+					
+				} else {
+					// normal operation: put optional check into the top table
+					td.appendChild(optionalCheck)
+					td.appendChild(document.createTextNode(" optional"));
+				}
 				
 				// Constraint
 				elem = document.createElement("b");
@@ -490,13 +522,13 @@ define([	// properly require.config'ed
 				elem.id = "btnSuggest";
 				elem.type = "button";
 				elem.onclick = this.query.bind(this);
-				if (modeFlag) {
+				if (this.sparqlformFlag) {
 					elem.style.display = "none";   // hide the "Suggest" button if suggestions have already been generated
 				}
 				elem.innerHTML = "Suggest Values";
 				div.appendChild(elem);
 				
-				if (modeFlag) {
+				if (this.sparqlformFlag) {
 					div.appendChild(document.createTextNode(" "));
 				}
 				
@@ -518,7 +550,7 @@ define([	// properly require.config'ed
 				
 				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this));   
 				
-				if (modeFlag) {
+				if (this.sparqlformFlag) {
 					this.query();
 				} else {
 					// Set returned if it looks like this dialog is totally empty
@@ -527,6 +559,9 @@ define([	// properly require.config'ed
 						this.returnCheckOnClick();
 					}
 				}
+				
+				// tooltips
+				$("#" + this.getFieldID(ModalItemDialog.OPTIONAL)).tooltip({placement: "left"});
 			},
 			
 			// ------ manage unique id's ------

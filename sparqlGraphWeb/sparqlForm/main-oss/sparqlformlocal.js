@@ -88,7 +88,7 @@ require([	'local/sparqlformconfig',
 		};
 		
 		//----- Constraint (as in Belmont Constraint) dialog -----//
-		launchConstraintDialog = function(item, failureCallback, ghostItem, ghostNodegroup) {
+		launchConstraintDialog = function(item, failureCallback, ghostItem, ghostNodegroup, textId) {
 			// new tries to check and set optional when item is a SNode instead of propItem
 			// constraints are untested
 			
@@ -101,7 +101,7 @@ require([	'local/sparqlformconfig',
 				clientOrInterface = new MsiClientQuery(Config.services.query.url, gConn.getDataInterface(), failureCallback);
 			}
 			
-			var dialog= new ModalItemDialog(item, gNodeGroup, clientOrInterface, itemDialogCallback, {}, ghostItem, ghostNodegroup);    
+			var dialog= new ModalItemDialog(item, gNodeGroup, clientOrInterface, itemDialogCallback, { "textId" : textId }, ghostItem, ghostNodegroup);    
 			dialog.show(true);
 		};
 		

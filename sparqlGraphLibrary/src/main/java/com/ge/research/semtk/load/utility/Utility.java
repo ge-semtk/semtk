@@ -23,11 +23,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -38,6 +40,28 @@ import com.ge.research.semtk.load.utility.Utility;
  * Utility methods
  */
 public abstract class Utility {
+	
+	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
+	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
+
+	static{
+		// supported input date formats 
+		/**
+		 *  Please keep the wiki up to date
+		 *  https://github.com/ge-semtk/semtk/wiki/Ingestion-type-handling
+		 */
+		
+		DATE_FORMATTERS.add(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+		DATE_FORMATTERS.add(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+		DATE_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		
+		DATETIME_FORMATTERS.add(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"));
+		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"));
+		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
+		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+	}
 	
 	/**
 	 * Determine if two String arrays have the same elements, ignoring order
@@ -110,5 +134,60 @@ public abstract class Utility {
 	 */
 	//public static String[] getColNamesFromJSONTemplate(JSONObject json){
 	// MOVED TO ImportSpecHandler	
+	
+	
+	/**
+	 * Create a SPARQL-friendly string (e.g. 2011-12-03T10:15:30) from a date time string. 
+	 */
+	public static String getSPARQLDateTimeString(String s) throws Exception{
+
+		// ISO_OFFSET_DATE_TIME is the only valid format with timezone
+		// Try it first
+		// If it succeeds then return as-is, since it is also valid SPARQL
+		try{
+			ZonedDateTime zonedObj = ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+			return s;
+		} catch (Exception e) {
+        	// move on
+        }
+		
+		// try all formatters until find one that works
+		for (DateTimeFormatter formatter : DATETIME_FORMATTERS){  
+	        try{        	
+	        	LocalDateTime dateObj = LocalDateTime.parse(s, formatter);
+	        	return dateObj.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);				 
+	        }catch (Exception e) {
+	        	// try the next one
+	        }
+		}			
+		
+		// none of the datetime formatters worked.  Try formatting as date and appending T00:00:00
+		try{
+			s = getSPARQLDateString(s); 
+			s += "T00:00:00";
+			return s; 
+		}catch(Exception e){
+			// move on 
+		}
+		
+		throw new Exception("Cannot parse " + s + " using available formatters");
+	}
+	
+	/**
+	 * Create a SPARQL-friendly string (e.g. 2011-12-03) from a date string
+	 */
+	public static String getSPARQLDateString(String s) throws Exception{
+
+		// try all formatters until find one that works
+		for (DateTimeFormatter formatter : DATE_FORMATTERS){  
+	        try{        	
+	        	LocalDate dateObj = LocalDate.parse(s, formatter);
+				return dateObj.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); 	
+	        }catch (Exception e) {
+	        	// try the next one
+	        }
+		}				
+		throw new Exception("Cannot parse " + s + " using available formatters");
+	}
 	
 }

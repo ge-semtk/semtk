@@ -43,21 +43,27 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.paths["sparqlgraph"] = p;
 	
 	// shims
-	config.shim['bootstrap-datepicker'] =  {
+
+	//config.shim['bootstrap-ge'] = {
+	//		deps : [ 'jquery' ]
+	//}
+	config.shim['bootstrap/bootstrap-modal'] = {
 			deps : [ 'jquery' ]
-		};
-	config.shim['bootstrap-modal'] =  {
+	}
+	config.shim['bootstrap/bootstrap-datepicker'] = {
 			deps : [ 'jquery' ]
-		};
-	config.shim['bootstrap-popover'] =  {
-			deps : [ 'jquery', 'bootstrap-tooltip' ]
-		};
-	config.shim['bootstrap-timepicker'] =  {
+	}
+	config.shim['bootstrap/bootstrap-tooltip'] = {
 			deps : [ 'jquery' ]
-		};
-	config.shim['bootstrap-transition'] =  {
+	}
+	config.shim['bootstrap/bootstrap-transition'] = {
 			deps : [ 'jquery' ]
-		};
+	}
+	config.shim['bootstrap/bootstrap-popover'] = {
+			deps : [ 'bootstrap/bootstrap-tooltip',
+			         'jquery' ]
+	}
+	//
 	config.shim['jsonp'] =  {
 			deps : [ 'jquery' ]
 		};
@@ -86,7 +92,11 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 		      ]
 		};
 	config.shim['sparqlgraph/js/modalloaddialog'] =  {
-			deps : [ 'sparqlgraph/js/cookiemanager' ],
+			deps : [ 'sparqlgraph/js/cookiemanager',
+			         //
+			         'bootstrap/bootstrap-tooltip',
+			         'bootstrap/bootstrap-transition'],
+			         //'ge-bootstrap'],
 			exports: 'ModalLoadDialog',
 		};
 	config.shim['sparqlgraph/js/sparqlconnection'] =  {

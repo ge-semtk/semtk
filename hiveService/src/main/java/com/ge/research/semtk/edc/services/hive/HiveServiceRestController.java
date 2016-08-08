@@ -66,6 +66,26 @@ public class HiveServiceRestController {
 	}
 
 	/**
+	 * Execute count number of rows of a specific table in Hive
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/countRows", method= RequestMethod.POST)
+	public JSONObject countRows(@RequestBody HiveServiceCountRowsRequestBody requestBody){
+		String query = "select count(*) as " + requestBody.table + "_count from " + requestBody.table;
+		return runQuery (requestBody, query);
+	}
+
+	/**
+	 * Return random sampling of rows from a specific table in Hive
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/randomSampling", method= RequestMethod.POST)
+	public JSONObject randomSampling(@RequestBody HiveServiceRandomSamplingRequestBody requestBody){
+		String query = "select * from " + requestBody.table + " distribute by rand() sort by rand() limit " + requestBody.numRows;
+		return runQuery (requestBody, query);
+	}
+
+	/**
 	 * Get full row of data where a specific column has min or max value in Hive
 	 */
 	@CrossOrigin

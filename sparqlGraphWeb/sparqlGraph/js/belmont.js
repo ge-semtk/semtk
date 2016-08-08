@@ -242,10 +242,16 @@ SparqlFormatter.prototype = {
 			return;
 			
 		} else if (itemType == "date") {
-			if (!v) v = '2015-12-25';
+			if (!v) v = '1/21/2003';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + ' "' + v + '"^^<http://www.w3.org/2001/XMLSchema#date>)';
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^<http://www.w3.org/2001/XMLSchema#date>)";
+			
+		} else if (itemType == "dateTime") {
+			if (!v) v = '2011-12-03T10:15:30';
+			if (!op) op = "=";
+
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
 			
 		} else{
 			if (!v) v = 'something';

@@ -33,6 +33,12 @@
         <script type="text/javascript" src="../sparqlconnection.js"></script>
  */
 
+/* 
+ * Paul  Aug 2016
+ * This is an early old-fashioned dialog with plenty of bad features.
+ * Most dialogs have been updated to use ModalIidx, DOM, .bind(), require.js ... other things we now consider "normal"
+ * varName, really?
+ */
 
 
 var ModalLoadDialog = function(document, varName) {
@@ -66,17 +72,17 @@ var ModalLoadDialog = function(document, varName) {
 						<label class=radio><input type="radio" name="mdServer" id="mdTypeVirtuoso" onClick="%VAR.callbackServerType();" value="V" checked>Virtuoso</label>\
 						<label class=radio><input type="radio" name="mdServer" id="mdTypeGE" onClick="%VAR.callbackServerType();" value="G">QueryServer</label>\
 					</div></div> \
-					<div class="control-group"><label class="control-label">Domain:</label>          <div class="controls"><input type="text" class="input-xlarge"  id="mdDomain"></div></div>\
+					<div class="control-group"><label class="control-label">Domain:</label>          <div class="controls"><input title="URI prefix of model" rel="tooltip" type="text" class="input-xlarge"  id="mdDomain"></div></div>\
 \
 					<legend>Data Endpoint</legend>\
 					<div class="control-group"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdDataServerURL"></div></div>\
 					<div class="control-group"><label class="control-label">KS URL:</label>   <div class="controls"><input type="text" class="input-xlarge disabled" disabled id="mdDataKsURL"></div></div>\
-					<div class="control-group"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge"  id="mdDataSource"></div></div>\
+					<div class="control-group"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge" id="mdDataSource" title="Sub-graph or dataset containing the data" rel="tooltip"></div></div>\
 \
 					<legend>Ontology Endpoint</legend>\
 					<div class="control-group"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdOntologyServerURL"></div></div>\
 					<div class="control-group"><label class="control-label">KS URL:</label>   <div class="controls"><input type="text" class="input-xlarge disabled" disabled  id="mdOntologyKsURL"></div></div>\
-					<div class="control-group"><label class="control-label" id="mdSDS1">Dataset:</label><div class="controls"><input type="text" class="input-xlarge"  id="mdOntologySource"></div></div>\
+					<div class="control-group"><label class="control-label" id="mdSDS1">Dataset:</label><div class="controls"><input type="text" class="input-xlarge"  id="mdOntologySource"  title="Sub-graph or dataset containing the model" rel="tooltip"></div></div>\
 \
 				</fieldset>\
 				</form>\
@@ -130,6 +136,9 @@ ModalLoadDialog.prototype = {
 		// callback(sparqlconnection)
 		this.callback = callback;
 		this.div.innerHTML = this.html;
+		
+		$("[rel='tooltip']").tooltip();		
+		
 		this.readProfiles(curConn);
 		this.show();
 	},
@@ -387,8 +396,9 @@ ModalLoadDialog.prototype = {
 		var select = this.document.getElementById("mdSelectProfiles");
 		
 		// load all the connections from cookies
-		do {
+		while (cookieStr != null) {
 			profile = new SparqlConnection(cookieStr);
+			
 			// does this cookied profile match curConn.  
 			// 'True' indicates we want to ignore the curConn profile name.
 			if (curConn && curConn.equals(profile, true)) {
@@ -398,7 +408,8 @@ ModalLoadDialog.prototype = {
 			
 			i += 1;
 			cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
-		} while (cookieStr != null);
+		} 
+		
 		this.sortProfiles();
 		
 		// if there is a connection loaded, make sure it is in the cookies

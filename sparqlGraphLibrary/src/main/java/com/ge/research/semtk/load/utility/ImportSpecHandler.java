@@ -20,14 +20,13 @@ package com.ge.research.semtk.load.utility;
 
 import java.sql.Time;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -51,6 +50,7 @@ public class ImportSpecHandler {
 	HashMap<String, Integer> colsUsed = new HashMap<String, Integer>();    // count of cols used.  Only includes counts > 0
 	
 	UriResolver uriResolver;
+	
 	
 	public ImportSpecHandler(JSONObject spec, OntologyInfo oInf) throws Exception {
 		this.importspec = spec;
@@ -227,7 +227,7 @@ public class ImportSpecHandler {
 								instanceValue = SparqlToXUtils.safeSparqlString(instanceValue);
 							}
 				
-							this.checkDataType(instanceValue, pi.getValueType());						
+							instanceValue = this.validateDataType(instanceValue, pi.getValueType());						
 							pi.addInstanceValue(instanceValue);
 						}
 						break;
@@ -414,19 +414,28 @@ public class ImportSpecHandler {
 		return retval;
 	}
 
+	/**
+	 * Check that an input string is loadable as a certain SPARQL data type, and tweak it if necessary.
+	 * Throws exception if not.
+	 * Expects to only get the last part of the type, e.g. "float"
+	 */
 	@SuppressWarnings("deprecation")
-	private void checkDataType(String input, String expectedSparqlGraphType) throws Exception{
-		 // throws exception if the type is bad/ not convertable. 
-		 // we are expecting to just get the last part of the type. for example: "float"
-		 
-		 
+	private static String validateDataType(String input, String expectedSparqlGraphType) throws Exception{
+		 		 
 		 //   string | boolean | decimal | int | integer | negativeInteger | nonNegativeInteger | 
 		 //   positiveInteger | nonPositiveInteger | long | float | double | duration | 
 		 //   dateTime | time | date | unsignedByte | unsignedInt | anySimpleType |
 		 //   gYearMonth | gYear | gMonthDay;
 		 
+		
+		/**
+		 *  Please keep the wiki up to date
+		 *  https://github.com/ge-semtk/semtk/wiki/Ingestion-type-handling
+		 */
+		String ret = input;
+		
 		 if(expectedSparqlGraphType.equalsIgnoreCase("string")){
-			 return;
+			 
 		 }
 		 else if(expectedSparqlGraphType.equalsIgnoreCase("boolean")){
 			 try{
@@ -538,9 +547,8 @@ public class ImportSpecHandler {
 			 }
 		 }
 		 else if(expectedSparqlGraphType.equalsIgnoreCase("dateTime")){
-			 // not sure this check works either.
-			 try{
-				 Date.parse(input);
+			 try{				 
+				 return Utility.getSPARQLDateTimeString(input);				 				 
 			 }
 			 catch(Exception e){
 				 throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
@@ -556,7 +564,7 @@ public class ImportSpecHandler {
 		 }
 		 else if(expectedSparqlGraphType.equalsIgnoreCase("date")){
 			 try{
-				 Date.parse(input);
+				 return Utility.getSPARQLDateString(input);				 
 			 }
 			 catch(Exception e){
 				 throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
@@ -605,7 +613,7 @@ public class ImportSpecHandler {
 			 String[] all = input.split("-");
 			 // check them all
 			 if(all.length != 2){ throw new Exception("month-day did not have two parts."); }
-			 if(all[0].length() != 2 && all[1].length() != 2){ throw new Exception("month-day format was wrong. " + input + " given was not YYYY-MM"); }
+			 if(all[0].length() != 2 && all[1].length() != 2){ throw new Exception("month-day format was wrong. " + input + " given was not MM-dd"); }
 			 }
 			 catch(Exception e){
 				 throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
@@ -614,5 +622,8 @@ public class ImportSpecHandler {
 		 else {
 			 	// assume it is cool for now.
 		 }
+		 
+		 return ret;
 	 }
+	
 }
