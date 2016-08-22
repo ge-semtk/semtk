@@ -15,10 +15,6 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-
-/**
- **   Deprecated.  Used by legacy applications.   Use htmlformgroup.js
- */
 	/*
 	 *  Documentation on external controls.  In other words, choice elements outside the HTMLForm that might control it.
 	 *       So the "external control", not in HtmlFormGroup, changes the value of some "internal control" which is part of HtmlFormGroup
@@ -38,9 +34,7 @@
 	 *           - this will use (2) to fetch the values and (3) to set new ones.
 	 */
 	
-	var HtmlFormGroup = function(document, g_conn, g_fields, g_query, statusFunc, alertFunc, preQueryCallback, postQueryCallback, doneUpdatingCallback, optDefaultHash, optGetFlag) {
-		// DEPRECATED
-		//
+	var HtmlFormGroup = function(document, g_conn, g_fields, g_query, statusFunc, alertFunc, preQueryCallback, postQueryCallback, doneUpdatingCallback, optDefaultHash, optGetFlag, optDontRunFlag) {
 		// set up the connection, load the form, call the callback
 		//
 		// preQueryCallback() - called before any query.  Good time to update any choice elements in the HtmlFormGroup, and disable buttons.
@@ -51,6 +45,7 @@
 		//                  }
 		//                    values may be "text|val".   If no colon, then the entire value is used as both text and value
 	    //                    illegal values are ignored.
+		// optDontRunFlag - skip the count and run queries.  Just keep controls and nodegroup up to date.
 		// DOCUMENTATION:
 		//     see UBL  formsetup.js
 		//     older possibly out-of-date examples are in turbineeng/src/main/ui/trend-datastore/js/config.js
@@ -70,6 +65,7 @@
 		this.doneUpdatingCallback = doneUpdatingCallback;
 		this.defaultHash = (typeof optDefaultHash === 'undefined' ? null : optDefaultHash);
 		this.getFlag = (typeof optGetFlag === 'undefined' ? false : optGetFlag);
+		this.dontRunFlag = (typeof optDontRunFlag === 'undefined' ? false : optDontRunFlag);
 
 		this.outstandingQueries = 0;
 		
@@ -181,6 +177,7 @@
 		// execute the query I've been building & constraining
 		// PEC TODO: callback should be this.postQueryCallback, and NOT a parameter
 		runQuery : function() {
+			if (this.dontRunFlag) {return;}
 			
 			var tmpNodeGroup = this.nodeGroup.deepCopy();
 			this.addQueryReturns(tmpNodeGroup);   
@@ -789,6 +786,7 @@
 					
 				// single selects: choose the first one
 				} else {
+					// PEC Strange buggish...afraid to touch for the sake of UBL
 					ret = element.value;
 				}
 				
@@ -1334,6 +1332,8 @@
 		
 		// count the number of files matching the current constraints
 		runCountQuery : function() {
+			if (this.dontRunFlag) {return;}
+
 			this.displayCount("***");
 			
 			var tmpNodeGroup = this.nodeGroup.deepCopy();

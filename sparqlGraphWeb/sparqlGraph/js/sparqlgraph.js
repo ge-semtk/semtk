@@ -51,10 +51,13 @@
     
     // READY FUNCTION 
     $('document').ready(function(){
+    
     	document.getElementById("upload-tab-but").disabled = true;
     	document.getElementById("mapping-tab-but").disabled = true;
     	
-    	initDynatree();    // PEC PONDER:  why does this fail if we put it inside the require.
+    	// checkBrowser();
+    	
+    	initDynatree(); 
     	initCanvas();
     	
 	    require([ 'sparqlgraph/js/mappingtab',
@@ -102,6 +105,14 @@
 	   	    
 		});
     });
+    
+    checkBrowser = function() {
+     	// Detect Browser
+    	var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+        if (! isFirefox) {
+        	logAndAlert("This application uses right-clicks, which may be blocked by this browser.<br>Firefox is recommended.")
+        }
+    };
     
     initCanvas = function() {
     	$("#canvas").droppable({

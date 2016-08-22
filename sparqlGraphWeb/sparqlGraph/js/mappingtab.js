@@ -67,7 +67,7 @@ define([	// properly require.config'ed
 		    this.csvFile = null;
 		    this.csvCallback = csvCallback;
 		    this.alertCallback = alertCallback;          //  alert(htmlMessage, optTitleText)
-		    
+		    this.dragEvTargetId = null;
 		    this.elemHash = {};     // elemHash[elem.id] = the ImportSpec object
 		                            //   column names    before drag-and-drop - ImportColumn
 		                            //   text names      before drag-and-drop - ImportText
@@ -324,8 +324,11 @@ define([	// properly require.config'ed
 
 					if (this.isUriRowDroppable(ev)) {
 						ev.preventDefault(); 
-					} 
-					ev.stopPropagation();
+						ev.stopPropagation();
+					} else {
+						return false;
+					}
+					
 				}.bind(this);
 
 				cell.ondrop = this.ondropUriRow.bind(this);
@@ -455,6 +458,7 @@ define([	// properly require.config'ed
 
 				elem.draggable = true;
 				elem.ondragstart = this.dragStart.bind(this);
+				elem.ondragend = this.dragEnd.bind(this);
 				
 				if (copyFlag) {
 					// you can drop things onto a copy
@@ -520,6 +524,8 @@ define([	// properly require.config'ed
 				span.style.marginLeft="0.5em";
 				span.draggable = true;
 				span.ondragstart = this.dragStart.bind(this);
+				span.ondragend = this.dragEnd.bind(this);
+
 				
 				// drop
 				span.ondragover = 	function (ev) { 
@@ -802,6 +808,8 @@ define([	// properly require.config'ed
 				span.style.marginLeft="0.5em";
 				span.draggable = true;
 				span.ondragstart = this.dragStart.bind(this);
+				span.ondragend = this.dragEnd.bind(this);
+
 				
 				// drop
 				if (isCopyFlag) {
@@ -848,8 +856,16 @@ define([	// properly require.config'ed
 			},
 			
 			dragStart : function (ev) {
+				console.log("drag start " + ev.target.id);
 			    ev.dataTransfer.setData("elementId", ev.target.id);
+			    this.dragEvTargetId = ev.target.id;
 			},
+			
+			dragEnd : function (ev) {
+				console.log("drag end " + ev.target.id);
+				this.dragEvTargetId = null;
+			},
+			
 			
 			prepDropElement : function (dragElem) {
 				// when something is about to be dropped,
@@ -910,7 +926,8 @@ define([	// properly require.config'ed
 			
 			ondropUriRow : function (ev) {
 				 
-				 var id = ev.dataTransfer.getData("elementId");   // local element ID
+				 var id = this.dragEvTargetId;   // local element ID
+				 if (id == null) { return; }
 				 
 				 var dragElem = document.getElementById(id);
 				 var rowElem = ev.currentTarget;
@@ -945,7 +962,9 @@ define([	// properly require.config'ed
 			},
 			
 			ondropTextItem : function (ev) {
-				var id = ev.dataTransfer.getData("elementId");   // local element ID
+				var id = this.dragEvTargetId;   // local element ID
+				if (id == null) { return; }
+				
 				var elem = document.getElementById(id);
 				var insertBefore = ev.currentTarget;
 				
@@ -960,7 +979,9 @@ define([	// properly require.config'ed
 			},
 			
 			ondropColItem : function (ev) {
-				var id = ev.dataTransfer.getData("elementId");   // local element ID
+				var id = this.dragEvTargetId;   // local element ID
+				if (id == null) { return; }
+				
 				var dragElem = document.getElementById(id);
 				var targetElem = ev.currentTarget;
 
@@ -990,7 +1011,9 @@ define([	// properly require.config'ed
 				// only transforms drop on transforms, so dragElem and targetElem are both transforms
 				
 				
-				var id = ev.dataTransfer.getData("elementId");   // local element ID
+				var id = this.dragEvTargetId;   // local element ID
+				if (id == null) { return; }
+				
 				var dragElem = document.getElementById(id);
 				var targetElem = ev.currentTarget;
 				var colElem = targetElem.parentNode;
@@ -1025,7 +1048,9 @@ define([	// properly require.config'ed
 			},
 			
 			ondropTrash : function (ev) {
-			    var id = ev.dataTransfer.getData("elementId");
+			    var id = this.dragEvTargetId;
+			    if (id == null) { return; }
+			    
 			    var dragElem = document.getElementById(id);
 			    var dragParent = dragElem.parentNode;
 
@@ -1072,8 +1097,9 @@ define([	// properly require.config'ed
 			
 			// ======= what is droppable on what ======= 
 			isUriRowDroppable: function (ev) {
+				console.log("isUriRowDroppable ev.target.id=" + ev.target.id + " this.dragEvTargetId=" + this.dragEvTargetId);
 				// if dragged thing is col or text or textTool
-				var id = ev.dataTransfer.getData("elementId");
+				var id = this.dragEvTargetId;
 				if (id) {
 					var elem = document.getElementById(id);
 					// new text, any col item, any text item,  NOT transforms
@@ -1085,7 +1111,7 @@ define([	// properly require.config'ed
 			},
 			
 			isColDroppable: function (ev) {
-				var id = ev.dataTransfer.getData("elementId");
+				var id = this.dragEvTargetId;
 				if (id == null) { return false; }
 				
 				var elem = document.getElementById(id);
@@ -1111,7 +1137,7 @@ define([	// properly require.config'ed
 			},
 			
 			isDroppableFile : function (ev) {
-				var id = ev.dataTransfer.getData("elementId");
+				var id = this.dragEvTargetId;
 				if (id) {
 					// if we gave it an elementId then it isn't external
 					return false;
@@ -1125,7 +1151,7 @@ define([	// properly require.config'ed
 	
 			isTrashable : function (ev) {
 				// 
-				var id = ev.dataTransfer.getData("elementId");
+				var id = this.dragEvTargetId;
 				if (id) {
 
 					var elem = document.getElementById(id);

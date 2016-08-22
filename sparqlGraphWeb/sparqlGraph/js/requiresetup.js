@@ -44,9 +44,9 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	
 	// shims
 
-	//config.shim['bootstrap-ge'] = {
-	//		deps : [ 'jquery' ]
-	//}
+	config.shim['ge-bootstrap'] = {
+			deps : [ 'jquery' ]
+	}
 	config.shim['bootstrap/bootstrap-modal'] = {
 			deps : [ 'jquery' ]
 	}

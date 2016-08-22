@@ -53,6 +53,11 @@
 	<!-- LOGGING  -->
 	<script type="text/javascript" src="KDLEasyLoggerConfigOss.js"></script>
 	
+	 <!-- long-term trouble with require.js unless I do this -->
+	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-modal.js"></script>
+	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-tooltip.js"></script>
+	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-transition.js"></script>
+	
 	<!-- These should be removed -->
 	<script type="text/javascript" src="../js/sparqlserverinterface.js"></script>
 	<script type="text/javascript" src='../js/ontologytree.js'></script>
@@ -64,9 +69,6 @@
 	<script type="text/javascript" src="../js/modalconstraintdialog.js"></script>	
 	<script type="text/javascript" src="../js/modaldialog.js"></script>		
 
-	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-tooltip.js"></script>
-	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-transition.js"></script>
-
 	<!--  require.js -->
 	<script src="../../iidx-oss/components/requirejs/require.js"></script>
 	<script src="../../iidx-oss/js/require.config.js"></script>
@@ -75,68 +77,57 @@
 	
 	<script type="text/javascript">
 
-	require.config({
-		baseUrl : '../../iidx-oss',
-  		paths: {
-    		"jsonp": "../sparqlGraph/jquery/jquery.jsonp-2.3.0.min",
-    		"sparqlgraph": "../sparqlGraph",
-    		"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
-      	},
-  		
-  		shim : {
-  		}
-	});
-    
-	requirejs.onError = function (err) {
-	    if (err.requireType === 'timeout') {
-	        alert("Require.js page loading time-out. (Try reloading the page)  \nError: "+err);
-	    } 
-	    else {
-	        throw err;
-	    }   
-	};
+		require.config({
+			baseUrl : '../../iidx-oss',
+	  		paths: {
+	    		"jsonp": "../sparqlGraph/jquery/jquery.jsonp-2.3.0.min",
+	    		"sparqlgraph": "../sparqlGraph",
+	    		"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
+	      	},
+	  		
+	  		shim : {
+	  		}
+		});
+	    
+		requirejs.onError = function (err) {
+		    if (err.requireType === 'timeout') {
+		        alert("Require.js page loading time-out. (Try reloading the page)  \nError: "+err);
+		    } 
+		    else {
+		        throw err;
+		    }   
+		};
 	</script>
 	<!-- TODO Use iids table -->
 	<style type="text/css">
-	.tg  {border-collapse:collapse;border-spacing:0;border-color:#999;}
-	.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:#999;color:#444;background-color:#DFF4FF;border-top-width:1px;border-bottom-width:1px;}
-	.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:#999;color:#000000;background-color:#9CDEFF;border-top-width:1px;border-bottom-width:1px;}
-	.tg .tg-e3zv{font-weight:bold}
-	.tgembed {width:100%;}
+		.tg  {border-collapse:collapse;border-spacing:0;border-color:#999;}
+		.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:#999;color:#444;background-color:#DFF4FF;border-top-width:1px;border-bottom-width:1px;}
+		.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:#999;color:#000000;background-color:#9CDEFF;border-top-width:1px;border-bottom-width:1px;}
+		.tg .tg-e3zv{font-weight:bold}
+		.tgembed {width:100%;}
 	</style>
 	
-    <script type="text/javascript">
-    
- 	// Detect Browser
-	var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-    if (! isFirefox) {
-    	logAndAlert("This application uses right-clicks, which may be blocked by this browser.<br>Firefox is recommended.")
-    }
-
-
-</script>
-
-<script>
-// =========== custom for OSS version =========
-doAbout = function() {
-	logAndAlert(g.help.buildHtml + '<br>' + g.help.aboutHtml + '<br>' + g.help.legalNoticeHtml, 'About SPARQLgraph');
-}
-
-doHelp = function () {
-	var url = g.help.url.base + "#" + g.help.url[gCurrentTab];
-	window.open(url);
-}
-
-doHelpBlog = function () {
-	var url = g.help.url.blog;
-	window.open(url);
-}
-
-doHelpSparqlGraph = function () {
-	var url = g.help.url.base;
-	window.open(url);
-}
-</script>
+	<script>
+		// =========== custom for OSS version =========
+		doAbout = function() {
+			logAndAlert(g.help.buildHtml + '<br>' + g.help.aboutHtml + '<br>' + g.help.legalNoticeHtml, 'About SPARQLgraph');
+		}
+		
+		doHelp = function () {
+			var url = g.help.url.base + "#" + g.help.url[gCurrentTab];
+			window.open(url);
+		}
+		
+		doHelpBlog = function () {
+			var url = g.help.url.blog;
+			window.open(url);
+		}
+		
+		doHelpSparqlGraph = function () {
+			var url = g.help.url.base;
+			window.open(url);
+		}
+	</script>
 		
 	<!-- Right justification for spans -->
     <style type="text/css">
@@ -283,8 +274,8 @@ doHelpSparqlGraph = function () {
 					}
 				</style>
 					
-				<div id="treeCanvasWrapper" class="outsidewrap">
-					<div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content" > 
+				<div id="treeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
+					<div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content">
 						<div id="treeDiv" ></div>
 				    </div>
 					<div id="canvasWrapper" class="canvaswrap">

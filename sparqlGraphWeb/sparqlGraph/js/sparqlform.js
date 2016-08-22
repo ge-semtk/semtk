@@ -106,6 +106,9 @@ require([
 
 		
 		initOTree = function() {
+			// turn this into a stub if some version of a program has no OTree
+			if (document.getElementById("treeDiv") == null) return;
+			
 			// Attach the dynatree widget to an existing <div id="tree"> element
 			// and pass the tree options as an argument to the dynatree() function:
 	
