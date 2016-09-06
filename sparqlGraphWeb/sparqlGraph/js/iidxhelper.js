@@ -128,6 +128,10 @@ define([	// properly require.config'ed
 		    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 		},
 		
+		IIDXHelper.isFirefox = function () {
+			return (navigator.userAgent.toLowerCase().indexOf('firefox') > -1);
+		},
+		
 		IIDXHelper.regexSafe = function(str) {
 			// thanks stack overflow: http://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
 			return String(str).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');

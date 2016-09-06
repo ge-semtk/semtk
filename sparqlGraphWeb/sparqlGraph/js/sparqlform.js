@@ -205,13 +205,22 @@ require([
 
 			// ========= invisible keys =========
 			// Key #0: rowId
-			row.insertCell(-1).innerHTML = gRowId;
+			var c;
+			c=row.insertCell(-1);
+			c.style.display="none";
+			c.innerHTML = gRowId;
 			// Key #1: sparqlID of class added or class containing the item added
-			row.insertCell(-1).innerHTML = (parentSNode !== null) ? parentSNode.getSparqlID() : "";
+			c=row.insertCell(-1);
+			c.style.display="none";
+			c.innerHTML = (parentSNode !== null) ? parentSNode.getSparqlID() : "";
 			// Key #2: if this is a propertyItem or nodeItem, the item's keyname
-			row.insertCell(-1).innerHTML = (itemKeyName !== null) ? itemKeyName : "";
+			c=row.insertCell(-1);
+			c.style.display="none";
+			c.innerHTML = (itemKeyName !== null) ? itemKeyName : "";
 			// key #3: if the item is a nodeItem, then the child node
-			row.insertCell(-1).innerHTML = (childSNode !== null) ? childSNode.getSparqlID() : "";
+			c=row.insertCell(-1);
+			c.style.display="none";
+			c.innerHTML = (childSNode !== null) ? childSNode.getSparqlID() : "";
 
 			// ========= visible stuff =========
 			// label for user
@@ -398,10 +407,6 @@ require([
 		initForm = function() {
 			gRowId = 0;
 			var table = document.getElementById("formTable");
-			table.innerHTML = '<col style="visibility:collapse;"/> '
-					+ '<col style="visibility:collapse;"/> '
-					+ '<col style="visibility:collapse;"/> '
-					+ '<col style="visibility:collapse;"/>  ';
 			
 			formConstraintsNew();
 			formConstraintsInit();

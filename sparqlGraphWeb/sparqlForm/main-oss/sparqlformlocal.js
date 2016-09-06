@@ -264,13 +264,7 @@ require([	'local/sparqlformconfig',
 		// ****   Start on load proceedure ****
 	
 		onLoad = function () {
-			// check for firefox
-			var is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-			if (!is_firefox) {
-				alertUser("Only FireFox is currently supported.");
-				return;
-			}
-			
+			// In the past:  isFirefox() was done here
 			initAvoidQueryMicroservice();
 			
 			// globals
