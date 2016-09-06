@@ -52,6 +52,10 @@ define([	// properly require.config'ed   bootstrap-modal
 				return this.xhr.hasOwnProperty("table");
 			},
 			
+			getColumnName : function (x) {
+				return this.getTable().col_names[0];
+			},
+			
 			getGeneralResultHtml : function () { 
 				// build GeneralResultSet html
 				
@@ -291,6 +295,25 @@ define([	// properly require.config'ed   bootstrap-modal
 			tableDownloadCsv : function () {
 				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv");
 			},
+			
+			sort : function(colName) {
+				
+				var col = this.getTable().col_names.indexOf(colName);
+
+				this.xhr.table["@table"].rows = this.xhr.table["@table"].rows.sort(function(a,b) {
+					// a row with only an optional value that is "null" comes back from virtuoso as a totally empty row
+					try {
+					    if ( a[col].value < b[col].value )
+					        return -1; 
+					    if ( a[col].value > b[col].value ) 
+					        return 1;  
+					    return 0;
+					} catch(err) {
+						return 1;
+					}
+				} ); 
+				
+			}, 
 			
 			putTableResultsDatagridInDiv : function (div, headerHtml, optFinishedCallback) {
 				

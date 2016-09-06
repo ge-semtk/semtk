@@ -242,6 +242,21 @@
     		kdlLogNewWindow(msg);
     };
     
+    // application-specific sub-class choosing
+    subclassChooserDialog = function (oInfo, classUri, callback) {
+    	var subClassUris = [classUri];
+    	subClassUris.concat(oInfo.getSubclassNames(classUri));
+    	
+    	if (subClassUris.length == 1) { 
+    		return callback(classUri); 
+    		
+    	} else {
+    		
+    	}
+    	
+    	
+    };
+    
     // application-specific property editing
     launchPropertyItemDialog = function (propItem, draculaLabel) {
     	require([ 'sparqlgraph/js/modalitemdialog',

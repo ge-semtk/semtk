@@ -130,8 +130,9 @@ define([	'sparqlgraph/js/msiresultset',
 					//    (1) file over 1 meg
 					// Return errorHTML or null
 					var errorHTML = null;
+					var value;
 					
-					for (var value of formdata.values()) {
+					for (value of formdata.values()) {
 						if (value instanceof File) {
 							var file = value;
 							if (file.size > 1000000) {
