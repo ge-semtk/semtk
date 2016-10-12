@@ -265,6 +265,12 @@ define([	// properly require.config'ed   bootstrap-modal
 						}
 					}
 					
+					// change undefined to empty strings so the datagrid doesn't crash
+					for (var j=0; j < row.length; j++) {
+						if (row[j] === undefined) {
+							row[j] = "";
+						}
+					}
 					rows.push(row);
 				}
 				
@@ -303,9 +309,9 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.xhr.table["@table"].rows = this.xhr.table["@table"].rows.sort(function(a,b) {
 					// a row with only an optional value that is "null" comes back from virtuoso as a totally empty row
 					try {
-					    if ( a[col].value < b[col].value )
+					    if ( a[col] < b[col] )
 					        return -1; 
-					    if ( a[col].value > b[col].value ) 
+					    if ( a[col] > b[col] ) 
 					        return 1;  
 					    return 0;
 					} catch(err) {
@@ -346,6 +352,11 @@ define([	// properly require.config'ed   bootstrap-modal
 				} else {
 					return table.rows.length;
 				}
+			},
+			
+			getColumnCount : function () {
+				
+				return this.getTable().col_names.length;
 			},
 			
 			getStatusMessage : function () {

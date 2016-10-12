@@ -35,7 +35,6 @@
     // drag stuff
     var gDragLabel = "hi";
     var gLoadDialog;
-    var gConstraintDialog;
     
     var gNodeGroup = null;
     var gOInfoLoadTime = "";
@@ -68,11 +67,11 @@
 	    	// create the modal dialogue 
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
 	    	globalModalDialogue = new ModalDialog(document, "globalModalDialogue");
-	    	gConstraintDialog = new ModalConstraintDialog(document, "gConstraintDialog");
 	    	
 	    	 // set up the node group
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
+	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
 	        
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"), 
@@ -269,10 +268,18 @@
 		});
     };
     
-    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, data) {
-    	
-    	console.log("propertyItemDialogCallback " + sparqlID + " " + optionalFlag + " " + constraintStr);
-    	
+    launchSNodeItemDialog = function (snodeItem, draculaLabel) {
+    	require([ 'sparqlgraph/js/modalitemdialog',
+  	            ], function (ModalItemDialog) {
+      		
+      		var dialog= new ModalItemDialog(snodeItem, gNodeGroup, getQueryClientOrInterface(), snodeItemDialogCallback,
+      				                        {"draculaLabel" : draculaLabel}
+      		                                );
+      		dialog.show();
+  		});
+     };
+    
+    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// update the property
@@ -282,6 +289,38 @@
     	
     	// PEC TODO: pass draculaLabel through the dialog
     	displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
+    };
+    
+    snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, constraintStr, data) {    	
+    	// Note: ModalItemDialog validates that sparqlID is legal
+    	
+    	// don't un-set an SNode's sparqlID
+    	if (sparqlID == "") {
+    		snodeItem.setIsReturned(false);
+    	} else {
+    		snodeItem.setSparqlID(sparqlID);
+        	snodeItem.setIsReturned(true);
+    	}
+    	
+    	// optional snode, so find nodeItem: optItem
+    	var optItem = gNodeGroup.itemGetOptionalItem(snodeItem);
+		if (optItem != null) {
+			// If optional then set to right direction
+			if (optionalFlag) {
+				optItem.setIsOptional(  (snodeItem.nodeList.indexOf(optItem) > -1) ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_TRUE);
+			// Only enforce the false if INCOMING optional was true
+			} else {
+				if (gNodeGroup.isIncomingOptional(snodeItem, optItem)) {
+					optItem.setIsOptional(NodeItem.OPTIONAL_FALSE);
+				}
+			}
+		}
+		
+    	// constraints
+    	snodeItem.setConstraints(constraintStr);
+    	
+    	// PEC TODO: pass draculaLabel through the dialog
+    	displayLabelOptions(data.draculaLabel, snodeItem.getDisplayOptions());
     };
     
     downloadFile = function (data, filename) {
@@ -537,7 +576,14 @@
 	
    	
    	doTest = function () {
-   		gAvoidQueryMicroserviceFlag = true;
+   		
+	   	 // test move OptionalsUpstream and generateSparql2
+   		
+	   	 var qElem = document.getElementById("queryText");
+	   	 gNodeGroup.expandOptionalSubgraphs();
+	     document.getElementById('queryText').value = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 50);
+	
+	     guiQueryNonEmpty();	
    	};
     
     doTestMsi = function () {

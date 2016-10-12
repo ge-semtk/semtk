@@ -57,45 +57,53 @@ public class CSVDataLoaderRunner {
 	 */
 	public static void main(String[] args) throws Exception{
 		
-		// get arguments
-		if(args.length != 5){
-			throw new Exception("Invalid argument list.  Usage: main(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, batchSize)");
-		}
-		String templateJSONFilePath = args[0];
-		String sparqlEndpointUser = args[1];
-		String sparqlEndpointPassword = args[2];
-		String dataCSVFilePath = args[3];	
-		String batchSize = args[4];
-		
-		// validate arguments
-		if(!templateJSONFilePath.endsWith(".json")){
-			throw new Exception("Error: Template file " + templateJSONFilePath + " is not a JSON file");
-		}
-		if(!dataCSVFilePath.endsWith(".csv")){
-			throw new Exception("Error: Data file " + dataCSVFilePath + " is not a CSV file");
-		}
-		
 		try{
-			int batchSizeInt = Integer.parseInt(batchSize);
-			if(batchSizeInt < 1 || batchSizeInt > 100){
-				throw (new Exception(""));
+		
+			// get arguments
+			if(args.length != 5){
+				throw new Exception("Invalid argument list.  Usage: main(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, batchSize)");
 			}
-		}catch(Exception e){
-			throw new Exception("Error: Invalid batch size: " + batchSize);
-		}
-				
-		System.out.println("--------- Load data from CSV... ---------------------------------------");
-		System.out.println("Template:   " + templateJSONFilePath);
-		System.out.println("CSV file:   " + dataCSVFilePath);
-		System.out.println("Batch size: " + batchSize);	
+			String templateJSONFilePath = args[0];
+			String sparqlEndpointUser = args[1];
+			String sparqlEndpointPassword = args[2];
+			String dataCSVFilePath = args[3];	
+			String batchSize = args[4];
+			
+			// validate arguments
+			if(!templateJSONFilePath.endsWith(".json")){
+				throw new Exception("Error: Template file " + templateJSONFilePath + " is not a JSON file");
+			}
+			if(!dataCSVFilePath.endsWith(".csv")){
+				throw new Exception("Error: Data file " + dataCSVFilePath + " is not a CSV file");
+			}
+			
+			try{
+				int batchSizeInt = Integer.parseInt(batchSize);
+				if(batchSizeInt < 1 || batchSizeInt > 100){
+					throw (new Exception(""));
+				}
+			}catch(Exception e){
+				throw new Exception("Error: Invalid batch size: " + batchSize);
+			}
+					
+			System.out.println("--------- Load data from CSV... ---------------------------------------");
+			System.out.println("Template:   " + templateJSONFilePath);
+			System.out.println("CSV file:   " + dataCSVFilePath);
+			System.out.println("Batch size: " + batchSize);	
+			
+			try{
+				new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize));
+			}catch(Exception e){
+				e.printStackTrace();
+				System.exit(1); // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
+			}
+			System.exit(0);  // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
 		
-		try{
-			new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize));
 		}catch(Exception e){
+			System.out.println(e.getMessage());
 			e.printStackTrace();
-			System.exit(1); // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
+			System.exit(1);  // need this to catch errors in the calling script
 		}
-		System.exit(0);  // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
 	}
 	
 

@@ -339,7 +339,29 @@ public class Node extends Returnable {
 		return this.nodes;
 	}
 	
-
+	public int countReturns () {
+		int ret = this.getIsReturned() ? 1 : 0;
+		
+		for (PropertyItem p : this.props) {
+			ret += (p.getIsReturned() ? 1 : 0);
+		}
+		
+		return ret;
+	}
+	
+	public int getReturnedCount () {
+		int ret = 0;
+		if (this.getIsReturned()) {
+			ret += 1;
+		}
+		for (PropertyItem p : this.getPropertyItems()) {
+			if (p.getIsReturned()) {
+				ret += 1;
+			}
+		}
+		return ret;
+	}
+	
 	public ArrayList<PropertyItem> getConstrainedPropertyObjects() {
 		ArrayList<PropertyItem> constrainedProperties = new ArrayList<PropertyItem>();
 		

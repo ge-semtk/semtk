@@ -47,9 +47,9 @@ public class LoggerRestClient {
 	
 	private LoggerClientConfig conf	= null;			// used to coordinate all the actual writing. 
 	private Stack parentEventStack = new Stack<UUID>();		// this may be used in the long run.
-	private UUID sessionID = UUID.randomUUID();		// the ID that is used for the logging session. 
+	private String sessionID = UUID.randomUUID().toString();		// the ID that is used for the logging session.
 	private long sequenceNumber = -1;				// starts at -1 because the first call will result in it being set to zero
-	
+	private String user;
 	
 	public LoggerRestClient(LoggerClientConfig conf){
 		this.conf = conf;
@@ -155,13 +155,16 @@ public class LoggerRestClient {
 		paramsJson.put("URL", this.URL_PLACEHOLDER);
 		paramsJson.put("Main", action);
 		paramsJson.put("Details", bigDetailsString);
-		paramsJson.put("Session", this.sessionID.toString());
+		paramsJson.put("Session", this.sessionID);
 		paramsJson.put("EventID", eventID.toString());
 		paramsJson.put("Task", highLevelTask);
 		paramsJson.put("LogSeq", this.getNextSeqNumber() + "" );
 		if(useParent){
 			paramsJson.put("Parent", this.parentEventStack.peek().toString());
-		}		
+		}
+		if (user != null) {
+			paramsJson.put("SSO", this.user);
+		}
 		
 		HttpEntity entity = new ByteArrayEntity(paramsJson.toJSONString().getBytes("UTF-8"));
 		//httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
@@ -310,6 +313,22 @@ public class LoggerRestClient {
 			eee.printStackTrace();
 		}
 		return logger;
+	}
+
+	public String getSessionID() {
+		return sessionID;
+	}
+
+	public void setSessionID(String sessionID) {
+		this.sessionID = sessionID;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
 	}
 }
 

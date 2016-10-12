@@ -36,7 +36,8 @@ define([	// properly require.config'ed
 			this.use = 0;
 		};
 		
-		ImportTransform.TRANSFORMS = [ 	["Replace All",  "replaceAll",  "search", "replace"],
+		ImportTransform.TRANSFORMS = [ 	["Hash","hashCode","",""],
+		                               	["Replace All",  "replaceAll",  "search", "replace"],
 		                              	["To Uppercase", "toUpperCase", "",       ""],
 		                              	["To Lowercase", "toLowerCase", "",       ""]
 									 ];

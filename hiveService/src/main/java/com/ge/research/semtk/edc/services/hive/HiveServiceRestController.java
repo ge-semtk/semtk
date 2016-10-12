@@ -242,8 +242,14 @@ public class HiveServiceRestController {
 	 * Execute query in Hive
 	 */
 	private JSONObject runQuery (HiveServiceRequestBody requestBody, String query) {
-		query = setStmt + " " + query;
-
+		
+		// prepend statement to set execution engine (should be mr/tez/spark - Hive itself will give a nice error if not)
+		String setStmtExecutionEngine = "";  
+		if(props.getExecutionEngine() != null && !props.getExecutionEngine().trim().isEmpty()){ // if property missing or blank, then don't include this clause
+			setStmtExecutionEngine = "set hive.execution.engine=" + props.getExecutionEngine().trim() + ";";
+		}
+		query = setStmt + " " + setStmtExecutionEngine + " " + query;
+		
 		TableResultSet tableResultSet = new TableResultSet();
 
 		// get credentials from property file

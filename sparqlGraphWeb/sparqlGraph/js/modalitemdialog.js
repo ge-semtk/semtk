@@ -445,9 +445,21 @@ define([	// properly require.config'ed
 				
 				optionalCheck = IIDXHelper.createVAlignedCheckbox();
 				optionalCheck.id = this.getFieldID(ModalItemDialog.OPTIONAL);
-				// snode doesn't have isOptional
-				if (this.item.getIsOptional) {
-					optionalCheck.checked = this.item.getIsOptional();
+				
+				// change snode into connecting nodeItem, or null
+				var optItem = this.nodegroup.itemGetOptionalItem(this.item);
+				if (optItem != null) {
+					if (this.item.getItemType() == "PropertyItem") {
+						optionalCheck.checked = optItem.getIsOptional();
+					} else {
+						// nodeItem is optional if INCOMING optional
+						if (this.item.nodeList.indexOf(optItem) > -1) {
+							optionalCheck.checked = (optItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE);
+						} else {
+							optionalCheck.checked = (optItem.getIsOptional() == NodeItem.OPTIONAL_TRUE);
+						}
+					}
+					optionalCheck.disabled = false;
 				} else {
 					optionalCheck.disabled = true;
 				}
@@ -456,6 +468,11 @@ define([	// properly require.config'ed
 					e.value = e.checked;  
 				}.bind(this);
 				
+				// set tooltip on optional if it is a connected nodeItem
+				if (optItem != null && optItem != this.item && ! this.sparqlformFlag) {
+					optionalCheck.title = "Set incoming edge optional: " + optItem.getKeyName();
+					optionalCheck.setAttribute("rel", "tooltip");	
+				}
 				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 
 				// Top section is handled totally differently with sparqlformFlag
@@ -463,10 +480,6 @@ define([	// properly require.config'ed
 					// create a right-justified div just for optional
 					var div = document.createElement("div");
 					div.align = "right";
-					
-					// add tooltip
-					optionalCheck.title = "Match rows missing this value. NOTE: still under development.";
-					optionalCheck.setAttribute("rel", "tooltip");	
 					
 					// assemble
 					div.appendChild(optionalCheck)

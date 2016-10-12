@@ -38,43 +38,51 @@ public class OwlLoader {
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws Exception{
 		
-		// get arguments
-		if(args.length != 4){
-			throw new Exception("Invalid argument list.  Usage: main(connectionJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, owlFilePath)");
-		}
-		String connectionJSONFilePath = args[0];  // this file is used to get the SPARQL connection info
-		String sparqlEndpointUser = args[1];
-		String sparqlEndpointPassword = args[2];
-		String owlFilePath = args[3];	
-		
-		// validate arguments
-		if(!connectionJSONFilePath.endsWith(".json")){
-			throw new Exception("Error: Connection file " + connectionJSONFilePath + " is not a JSON file");
-		}
-		if(!owlFilePath.endsWith(".owl")){
-			throw new Exception("Error: Data file " + owlFilePath + " is not an OWL file");
-		}
-		
-		// get the SPARQL endpoint interface
-		SparqlEndpointInterface sei;
 		try{
-			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(connectionJSONFilePath));
-			sei = sgJson.getSparqlConn().getOntologyInterface();
-			sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
+		
+			// get arguments
+			if(args.length != 4){
+				throw new Exception("Invalid argument list.  Usage: main(connectionJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, owlFilePath)");
+			}
+			String connectionJSONFilePath = args[0];  // this file is used to get the SPARQL connection info
+			String sparqlEndpointUser = args[1];
+			String sparqlEndpointPassword = args[2];
+			String owlFilePath = args[3];	
 			
-			System.out.println("Ontology Dataset: " + sei.getDataset());
+			// validate arguments
+			if(!connectionJSONFilePath.endsWith(".json")){
+				throw new Exception("Error: Connection file " + connectionJSONFilePath + " is not a JSON file");
+			}
+			if(!owlFilePath.endsWith(".owl")){
+				throw new Exception("Error: Data file " + owlFilePath + " is not an OWL file");
+			}
+			
+			// get the SPARQL endpoint interface
+			SparqlEndpointInterface sei;
+			try{
+				SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(connectionJSONFilePath));
+				sei = sgJson.getSparqlConn().getOntologyInterface();
+				sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
+				
+				System.out.println("Ontology Dataset: " + sei.getDataset());
+			}catch(Exception e){
+				throw new Exception("Cannot get SPARQL connection: " + e.getMessage());
+			}
+	
+			// upload the OWL
+			try{	
+				File owlFile = new File(owlFilePath);
+				byte[] owlFileBytes = Files.readAllBytes(owlFile.toPath());
+				sei.executeAuthUploadOwl(owlFileBytes);			
+				System.out.println("Loaded OWL: " + owlFilePath);			
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		
 		}catch(Exception e){
-			throw new Exception("Cannot get SPARQL connection: " + e.getMessage());
-		}
-
-		// upload the OWL
-		try{	
-			File owlFile = new File(owlFilePath);
-			byte[] owlFileBytes = Files.readAllBytes(owlFile.toPath());
-			sei.executeAuthUploadOwl(owlFileBytes);			
-			System.out.println("Loaded OWL: " + owlFilePath);			
-		}catch(Exception e){
+			System.out.println(e.getMessage());
 			e.printStackTrace();
+			System.exit(1);  // need this to catch errors in the calling script
 		}
 	}
 		

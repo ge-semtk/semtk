@@ -308,9 +308,14 @@ var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
 		this.Connected = false; // toggled if a connection between this node and
 								// the Semantic node owning the NodeItem list are linked.
 		this.UriConnectBy = '';
-		this.isOptional = false;
+		this.isOptional = NodeItem.OPTIONAL_FALSE;
 	}
 };
+
+NodeItem.OPTIONAL_FALSE = 0;
+NodeItem.OPTIONAL_TRUE = 1;       // everything "downstream" of this nodeItem is optional
+NodeItem.OPTIONAL_REVERSE = -1;   // everything "upstream"   of this nodeItem is optional
+
 // the functions used by the node item to keep things in order
 NodeItem.prototype = {
 	toJson : function() {
@@ -347,7 +352,7 @@ NodeItem.prototype = {
 		this.ConnectBy = jObj.ConnectBy;
 		this.Connected = jObj.Connected;
 		this.UriConnectBy = jObj.UriConnectBy;
-		this.isOptional = jObj.isOptional;
+		this.setIsOptional(jObj.isOptional);   
 	},
 	// set values used by the NodeItem.
 	setKeyName : function(strName) {
@@ -368,8 +373,15 @@ NodeItem.prototype = {
 	setUriConnectBy : function(strConnName) {
 		this.UriConnectBy = strConnName;
 	},
-	setIsOptional : function(bool) {
-		this.isOptional = bool;
+	setIsOptional : function(val) {
+		// manage backwards compatibility to boolean isOptional
+		if (val == NodeItem.OPTIONAL_TRUE || val == NodeItem.OPTIONAL_FALSE || val == NodeItem.OPTIONAL_REVERSE) { 
+			this.isOptional = val; 
+		} else if (val) {
+			this.isOptional = NodeItem.OPTIONAL_TRUE;
+		} else {
+			this.isOptional = NodeItem.OPTIONAL_FALSE;
+		}
 	},
 	setSNodes : function(snode) {
 		this.SNodes.push(snode);
@@ -398,6 +410,7 @@ NodeItem.prototype = {
 		return this.UriConnectBy;
 	},
 	getIsOptional : function() {
+		this.setIsOptional(this.isOptional);  // fixes backwards compatibility
 		return this.isOptional;
 	},
 	getDisplayOptions : function() {
@@ -419,7 +432,11 @@ NodeItem.prototype = {
 			this.Connected = false;
 		}
 
-	}
+	},
+	
+	getItemType : function () {
+		return "NodeItem";
+	},
 };
 
 /* the property item */
@@ -456,7 +473,7 @@ PropertyItem.prototype = {
 			fullURIName : this.fullURIName,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
-			isOptional : this.isOptional,
+			isOptional : this.getIsOptional(),
 			instanceValues : this.instanceValues,
 		};
 		return ret;
@@ -563,6 +580,7 @@ PropertyItem.prototype = {
 		return this.isReturned;
 	},
 	getIsOptional : function() {
+		// boolean for PropertyItems
 		return this.isOptional;
 	},
 	getConstraints : function() {
@@ -613,6 +631,10 @@ PropertyItem.prototype = {
 			}
 
 		}
+	},
+	
+	getItemType : function () {
+		return "PropertyItem";
 	},
 };
 
@@ -835,7 +857,17 @@ SemanticNode.prototype = {
 		return false;
 	},
 	
-	getConstrainedPropsObjs: function () {
+	countReturns : function () {
+		var ret = this.getIsReturned() ? 1 : 0;
+		
+		for (var i = 0; i < this.propList.length; i++) {
+			ret += (this.propList[i].getIsReturned() ? 1 : 0);
+		}
+		
+		return ret;
+	},
+	
+	getConstrainedPropertyItems: function () {
         var retprops = [];
         var t = this.propList.length;
         for (var s = 0; s < t; s++) {
@@ -846,7 +878,7 @@ SemanticNode.prototype = {
         return retprops;
     },
 
-	getReturnedPropsObjs : function() {
+	getReturnedPropertyItems : function() {
 		var retprops = [];
 		var t = this.propList.length;
 		for (var s = 0; s < t; s++) {
@@ -856,7 +888,20 @@ SemanticNode.prototype = {
 		}
 		return retprops;
 	},
-    getConstrainedPropsObjs: function () {
+	
+	getReturnedCount : function() {
+		var ret = 0;
+		if (this.getIsReturned()) {
+			ret += 1;
+		}
+		for (var i=0; i < this.propList.length; i++) {
+			if (this.propList[i].getIsReturned()) {
+				ret += 1;
+			}
+		}
+		return ret;
+	},
+    getConstrainedPropertyItems: function () {
         var retprops = [];
         var t = this.propList.length;
         for (var s = 0; s < t; s++) {
@@ -1041,6 +1086,7 @@ SemanticNode.prototype = {
 			}
 		}
 		alert("Internal error in SemanticNode.setConnection().  Couldn't find node item connection: " + this.getSparqlID() + "->" + connectionUri);
+		return null;
 	},
 	setPList : function(lst) {
 		this.propList = lst;
@@ -1085,10 +1131,17 @@ SemanticNode.prototype = {
 	getNodeName : function() {
 		return this.NodeName;
 	},
-	
+
 	callAsyncPropEditor : function (propKeyname, draculaLabel) {
 		var propItem = this.getPropertyByKeyname(propKeyname);
 		this.nodeGrp.asyncPropEditor(propItem, draculaLabel);
+	},
+	callAsyncSNodeEditor : function (draculaLabel) {
+		this.nodeGrp.asyncSNodeEditor(this, draculaLabel);
+	},
+	callAsyncNodeEditor : function (nodeKeyname, draculaLabel) {
+		var nodeItem = this.getNodeItemByKeyname(nodeKeyname);
+		this.nodeGrp.asyncNodeEditor(nodeItem, draculaLabel);
 	},
 	
 	addClassToCanvas : function(nItemIndex, propName) {
@@ -1156,6 +1209,10 @@ SemanticNode.prototype = {
 		this.propList.push(prop);
 		return prop;
 	},
+
+	getItemType : function () {
+		return "SemanticNode";
+	},
 };
 
 /* the semantic node group */
@@ -1170,6 +1227,9 @@ var SemanticNodeGroup = function(width, height, divName) {
 	this.returnNameSetter = '';
 	this.isReturnNameSetterAsync = false;
 	this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
+	this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
+	this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
+	
 	this.height = height;
 	this.width = width;
 	this.sparqlNameHash = {};
@@ -1433,6 +1493,14 @@ SemanticNodeGroup.prototype = {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
 		this.asyncPropEditor = func;
 	},
+	setAsyncNodeEditor : function (func) {
+		// func(nodeItem) will edit the property 
+		this.asyncNodeEditor = func;
+	},
+	setAsyncSNodeEditor : function (func) {
+		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
+		this.asyncSNodeEditor = func;
+	},
 	
 	getNodeCount : function() {
 		return this.SNodeList.length;
@@ -1478,7 +1546,7 @@ SemanticNodeGroup.prototype = {
 		this.reserveSparqlID(id);
 
 		// all the properties
-		var props = snode.getReturnedPropsObjs();
+		var props = snode.getReturnedPropertyItems();
 		for (var i = 0; i < props.length; i++) {
 			id = props[i].getSparqlID();
 			if (id in this.sparqlNameHash) {
@@ -1494,6 +1562,8 @@ SemanticNodeGroup.prototype = {
 		// newNode is a SemanticNode. Link it to existingNodeUri
 		// if existingNode != null, then either linkFromNewUri or linkToNewUri
 		// should also be non-null
+		//
+		// return the nodeItem (or null if there was an error)
 
 		this.reserveNodeSparqlIDs(newNode);
 
@@ -1501,13 +1571,13 @@ SemanticNodeGroup.prototype = {
 
 		// create the link to or from existingNode, if there is one
 		if (linkFromNewUri) {
-			newNode.setConnection(existingNode, linkFromNewUri);
+			return newNode.setConnection(existingNode, linkFromNewUri);
 		} else if (linkToNewUri) {
-			existingNode.setConnection(newNode, linkToNewUri);
+			return existingNode.setConnection(newNode, linkToNewUri);
 		} else {
 			// no existing node to link to.
 			// presume / hope the canvas is empty
-			// add a check here?
+			return null;
 		}
 
 	},
@@ -1531,8 +1601,7 @@ SemanticNodeGroup.prototype = {
 		//               if reverseFlag, then connect
 		var reverseFlag = (typeof optReverseFlag === 'undefined') ? false : optReverseFlag;
 		
-		// optionalFlag:  if set, path must have all links in forward direction, e.g.: anchor->a->b-> ... ->new node
-		//                        and first link will be optional
+		// optionalFlag:  if set, the first link will be optional
 		var optionalFlag = (typeof optOptionalFlag  === "undefined") ? false : optOptionalFlag;
 		
 		// add the first class in the path
@@ -1553,10 +1622,6 @@ SemanticNodeGroup.prototype = {
 				this.addOneNode(node1, lastNode, null, attUri);
 				lastNode = node1;
 				
-				if (optionalFlag) {
-					alert("Internal error in belmont.js:AddPath(): SparqlGraph is not smart enough\nto add an optional path with links pointing away from the new node.\nAdding path without optional flag.");
-					optionalFlag = false;
-				}
 			// else this hop in path is class0--hasX-->lastAdded
 			} else {
 				node0 = this.returnBelmontSemanticNode(class0Uri, oInfo);
@@ -1569,24 +1634,24 @@ SemanticNodeGroup.prototype = {
 		var class0Uri = path.getClass0Name(pathLen - 1);
 		var class1Uri = path.getClass1Name(pathLen - 1);
 		var attUri = path.getAttributeName(pathLen - 1);
+		var nodeItem;
 
 		// link diabolical case from anchor node to last node in path
 		if (class0Uri === class1Uri && reverseFlag ) {
-			anchorNode.setConnection(lastNode, attUri);
+			nodeItem = anchorNode.setConnection(lastNode, attUri);
 			if (optionalFlag) {
-				alert("Internal error in belmont.js:AddPath(): SparqlGraph is not smart enough\nto add an optional path with links pointing away from the new node.\nAdding path without optional flag.");
-			}
-		// normal link from last node to anchor node
+				nodeItem.setIsOptional(NodeItem.OPTIONAL_REVERSE);
+			}		// normal link from last node to anchor node
 		} else if (anchorNode.getURI() == class1Uri) {
-			lastNode.setConnection(anchorNode, attUri);
+			nodeItem = lastNode.setConnection(anchorNode, attUri);
 			if (optionalFlag) {
-				alert("Internal error in belmont.js:AddPath(): SparqlGraph is not smart enough\nto add an optional path with links pointing away from the new node.\nAdding path without optional flag.");
+				nodeItem.setIsOptional(NodeItem.OPTIONAL_REVERSE);
 			}
 		// normal link from anchor node to last node
 		} else {
 			var nodeItem = anchorNode.setConnection(lastNode, attUri);
 			if (optionalFlag) {
-				nodeItem.setIsOptional(true);
+				nodeItem.setIsOptional(NodeItem.OPTIONAL_TRUE);
 			}
 		}
 		return retNode;
@@ -1640,7 +1705,17 @@ SemanticNodeGroup.prototype = {
 	getSNodeList : function() {
 		return this.SNodeList;
 	},
-
+	
+	getAllNodeItems : function() {
+		ret = [];
+		for (var i=0; i < this.SNodeList.length; i++) {
+			for (var j=0; j < this.SNodeList[i].nodeList.length; j++) {
+				ret.push(this.SNodeList[i].nodeList[j]);
+			}
+		}
+		return ret;
+	},
+	
 	getSubNodes : function(topNode) {
 		// recursive function returns topNode and all it's sub-nodes in a top
 		// down breadth-first search
@@ -1657,6 +1732,7 @@ SemanticNodeGroup.prototype = {
 	},
 
 	getHeadNodes : function () {
+		// DEPRECATED
 		// get nodes with no incoming connections
 		// SparqlGraph should evolve to the point where these are not guaranteed to exist.
 		var nodeCount = this.SNodeList.length;
@@ -1684,6 +1760,125 @@ SemanticNodeGroup.prototype = {
 		}
 		
 		return ret;
+	},
+	
+	getNextHeadNode : function (skipNodes) {
+		
+		// peacefully return null if there are no nodes left
+		if (skipNodes.length == this.SNodeList.length) {
+			return null;
+		}
+		
+		var optHash = this.calcOptionalHash(skipNodes);
+		var linkHash = this.calcIncomingLinkHash(skipNodes);
+		
+		var retID = null;
+		var minLinks;
+		
+		// both hashes have same keys: loop through valid snode SparqlID's
+		for (var id in optHash) {
+			// find nodes that are not optional
+			if (optHash[id] == 0) {
+				// choose node with lowest number of incoming links
+				if (retID == null || linkHash[id] < minLinks) {
+					retID = id;
+					minLinks = linkHash[id];
+					// be efficient
+					if (minLinks == 0) { break; }
+				}
+			}
+		}
+		
+		// throw an error if no nodes have optHash == 0
+		if (retID == null) {
+			alert("Internal error in belmont.js getHeadNextHeadNode(): No head nodes found. Probable cause: no non-optional semantic nodes.");
+			throw "Internal error.";
+		}
+		
+		return this.getNodeBySparqlID(retID);
+	},
+	
+	calcIncomingLinkHash : function (skipNodes) {
+		// so linkHash[snode.getSparqlID()] == count of incoming nodeItem links
+		
+		var linkHash = {};
+		
+		// initialize hash
+		for (var i=0; i < this.SNodeList.length; i++) {
+			var snode = this.SNodeList[i];
+			if (skipNodes.indexOf(snode) == -1) {
+				linkHash[snode.getSparqlID()] = 0;
+			}
+		}
+		
+		// loop through all snodes
+		for (var i=0; i < this.SNodeList.length; i++) {
+			var snode = this.SNodeList[i];
+			
+			if (skipNodes.indexOf(snode) == -1) {
+				
+				// loop through all nodeItems
+				for (var n=0; n < snode.nodeList.length; n++) {
+					var nodeItem = snode.nodeList[n];
+					
+					for (var c=0; c < nodeItem.SNodes.length; c++) {
+						// increment hash[sparqlID] for each incoming link
+						linkHash[nodeItem.SNodes[c].getSparqlID()] += 1;
+					}
+				}
+			}
+		}
+		return linkHash;
+	},
+	
+	calcOptionalHash : function(skipNodes) {
+		
+		// ---- set optHash ----
+		// so optHash[snode.getSparqlID()] == count of nodeItems indicating this node is optional
+		
+		var optHash = {};
+		// initialize optHash
+		for (var i=0; i < this.SNodeList.length; i++) {
+			var snode = this.SNodeList[i];
+			if (skipNodes.indexOf(snode) == -1) {
+				optHash[snode.getSparqlID()] = 0;
+			}
+		}
+		
+		// loop through all snodes
+		for (var i=0; i < this.SNodeList.length; i++) {
+			var snode = this.SNodeList[i];
+			
+			if (skipNodes.indexOf(snode) == -1) {
+				// loop through all nodeItems
+				for (var n=0; n < snode.nodeList.length; n++) {
+					var nodeItem = snode.nodeList[n];
+					
+					// if found an optional nodeItem
+					var opt = nodeItem.getIsOptional();
+					if (opt) {
+						var subGraph = [];
+						// get subGraph(s) on the optional side of the nodeItem
+						if (opt == NodeItem.OPTIONAL_TRUE) {
+							for (var j=0; j < nodeItem.SNodes.length; j++) {
+								subGraph = subGraph.concat(this.getSubGraph(nodeItem.SNodes[j], [snode]));
+							}
+						} else if (opt == NodeItem.OPTIONAL_REVERSE) {
+							for (var j=0; j < nodeItem.SNodes.length; j++) {
+								subGraph = subGraph.concat(this.getSubGraph(snode, [nodeItem.SNodes[j]]));
+							}
+						}
+						
+						// increment every node on the optional side of the nodeItem
+						for (var k=0; k < subGraph.length; k++) {
+							optHash[subGraph[k].getSparqlID()] += 1;
+						}
+					}
+				}
+			}
+		}
+		
+		return optHash;
 	},
 	
 	getOrderedNodeList : function() {
@@ -1717,14 +1912,16 @@ SemanticNodeGroup.prototype = {
 		// if one parent hasSon SonClass connects to sNode, then [SonClass]
 		// if multiple parents then list..
 		var ret = [];
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			var nodeItems = this.SNodeList[i].getConnectingNodeItems(sNode);
-			for (j=0; j < nodeItems.length; j++) {
+		
+		var nodeItems = this.getConnectingNodeItems(sNode);
+		for (j=0; j < nodeItems.length; j++) {
+			if (nodeItems[j].getIsOptional() != NodeItem.OPTIONAL_REVERSE) {
 				var uriValType = nodeItems[j].getUriValueType();
 				if (ret.indexOf(uriValType) < 0)
 					ret.push(uriValType);
 			}
 		}
+		
 		return ret;
 	},
 
@@ -1753,6 +1950,38 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 	
+	getAllConnectedNodeItems : function(sNode) {
+		var ret = [];
+		
+		// SNode knows who it points too
+		ret = ret.concat(sNode.nodeList);
+		
+		// nodegroup knows which nodes point to startSNode
+		ret = ret.concat(this.getConnectingNodeItems(sNode));
+
+		return ret;
+	},
+	
+	getAllConnectedConnectedNodeItems : function(sNode) {
+		// get the connectedNodeItems that are actually in use
+		var ret = [];
+		var temp = this.getAllConnectedNodeItems(sNode);
+		for (var i=0; i < temp.length; i++) {
+			if (temp[i].getConnected()) {
+				ret.push(temp[i]);
+			}
+		}
+		return ret;
+	},
+	
+	getNodeItemParentSNode : function(nodeItem) {
+		for (var i=0; i < this.SNodeList.length; i++) {
+			if (this.SNodeList[i].nodeList.indexOf(nodeItem) > -1) {
+				return this.SNodeList[i];
+			}
+		}
+	},
+	
 	getAllConnectedNodes : function(sNode) {
 		// get any node with connection TO or FROM this sNode
 		var ret = [];
@@ -1763,6 +1992,26 @@ SemanticNodeGroup.prototype = {
 		// nodegroup knows which nodes point to startSNode
 		ret = ret.concat(this.getConnectingNodes(sNode));
 
+		return ret;
+	},
+	
+	getNodeItemsBetween(sNode1, sNode2) {
+		// return a list of node items between the two nodes
+		// Ahead of the curve: supports multiple links between snodes
+		var ret = [];
+		
+		for (var i=0; i < sNode1.nodeList.length; i++) {
+			if (sNode1.nodeList[i].SNodes.indexOf(sNode2) > -1) {
+				ret.push(sNode1.nodeList[i]);
+			}
+		}
+		
+		for (var i=0; i < sNode2.nodeList.length; i++) {
+			if (sNode2.nodeList[i].SNodes.indexOf(sNode1) > -1) {
+				ret.push(sNode2.nodeList[i]);
+			}
+		}
+		
 		return ret;
 	},
 	
@@ -1780,6 +2029,7 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 	
+	
 	tabIndent : function (tab) {
 		return tab + "   ";
 	},
@@ -1790,22 +2040,36 @@ SemanticNodeGroup.prototype = {
 	generateSparqlConstruct : function() {   
 		var tab = "    ";
 		var sparql = "construct {\n";
-		
-		var headNodes = this.getHeadNodes();
+		var queryType = SemanticNodeGroup.QUERY_CONSTRUCT;
+
 		var doneNodes = [];
-		for (var i=0; i < headNodes.length; i++) {
-			sparql += this.generateSparqlSubtreeClauses(SemanticNodeGroup.QUERY_CONSTRUCT, headNodes[i], null, doneNodes, tab, false); // generate a clean set of the relationshps using our sparql IDs. 
-			                                                                                                                            // we want to omit constraints here. 
+		var headNode = this.getNextHeadNode(doneNodes);
+		while (headNode != null) {
+			sparql += this.generateSparqlSubgraphClauses(queryType, 
+														headNode, 
+														null,    // skip nodeItem.  Null means do them all.
+														null,    // no targetObj
+														doneNodes, 
+														tab);
+			headNode = this.getNextHeadNode(doneNodes);
 		}
+		
 		sparql += "}\n";
 
 		// jm: borrowed from "GenerateSparql"				
 		sparql += " where {\n";
 
-		var headNodes = this.getHeadNodes();
-		var doneNodes = [];
-		for (var i=0; i < headNodes.length; i++) {
-			sparql += this.generateSparqlSubtreeClauses(SemanticNodeGroup.QUERY_CONSTRUCT_WHERE, headNodes[i], null, doneNodes, tab, false);  // used to generate the whjere clause as if we had a distinct query to get bac values of interest
+		queryType = SemanticNodeGroup.QUERY_CONSTRUCT;
+		doneNodes = [];
+		headNode = this.getNextHeadNode(doneNodes);
+		while (headNode != null) {
+			sparql += this.generateSparqlSubgraphClauses(queryType, 
+														headNode, 
+														null,    // skip nodeItem.  Null means do them all.
+														null,    // no targetObj
+														doneNodes, 
+														tab);
+			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
 		sparql += "}\n";
@@ -1857,7 +2121,7 @@ SemanticNodeGroup.prototype = {
 				whereSparql += "   BIND (<" + this.SNodeList[i].getInstanceValue() + "> AS " + sparqlId + ").\n";
 				
 			} else {
-				var propList = this.SNodeList[i].getConstrainedPropsObjs();
+				var propList = this.SNodeList[i].getConstrainedPropertyItems();
 				
 				
 				if (propList.length > 0) {
@@ -1895,24 +2159,19 @@ SemanticNodeGroup.prototype = {
 		//     QUERY_CONSTRAINT - select distinct values for a specific node or prop item (targetObj) after removing any existing constraints
 		//     QUERY_COUNT - count results.  If targetObj the use that as the only object of "select distinct".  
 		//
-		// optionalFlag - over simplistic flag to make every attribute optional.
-		// This should be done attribute-by-attribute. CYFTLUC-56
-		//
 		// limit - if > 0 then add LIMIT clause to the SPARQL
 		//
-		// targetObj - if not (null/undefined/0/false/'') then it should be a
-		// SemanticNode or a PropertyItem
+		// targetObj - if not (null/undefined/0/false/'') then it should be a SemanticNode or a PropertyItem
 		//    QUERY_CONSTRAINT - must be set.   Return all legal values for this.   Remove constraints.
         //    QUERY_COUNT - if set, count results of entire query but only this distinct return value
 		//
+		// optKeepTargetConstraints - keep constraints on the target object (default false)
+		//
 		// Error handling: For each error, inserts a comment at the beginning.
-		// #Error: explanation
+		//    #Error: explanation
 		
-		// change optional param(s) to null not defined
 		var targetObj = (typeof(optTargetObj) === 'undefined') ? null : optTargetObj;
 		var keepTargetConstraints = (typeof(optKeepTargetConstraints) === 'undefined') ? false : optKeepTargetConstraints;
-
-		
 		var tab = this.tabIndent("");
 		var fmt = new SparqlFormatter();
 
@@ -1960,15 +2219,16 @@ SemanticNodeGroup.prototype = {
 
 		sparql += " where {\n";
 
-		var headNodes = this.getHeadNodes();
 		var doneNodes = [];
-		for (var i=0; i < headNodes.length; i++) {
-			sparql += this.generateSparqlSubtreeClauses(queryType, 
-														headNodes[i], 
+		var headNode = this.getNextHeadNode(doneNodes);
+		while (headNode != null) {
+			sparql += this.generateSparqlSubgraphClauses(queryType, 
+														headNode, 
+														null,    // skip nodeItem.  Null means do them all.
 														keepTargetConstraints ? null : targetObj, 
 														doneNodes, 
-														tab, 
-														optionalFlag);
+														tab);
+			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
 		sparql += "}\n";
@@ -1989,11 +2249,20 @@ SemanticNodeGroup.prototype = {
 		return sparql;
 	},
 	
-	generateSparqlSubtreeClauses : function (queryType, snode, targetObj, doneNodes, tab, optionalFlag) {
+	generateSparqlSubgraphClauses : function (queryType, snode, skipNodeItem, targetObj, doneNodes, tab) {
 		// recursively generate sparql clauses for nodes in a subtree
+		//
+		// queryType -    same as generateSparql
+		// snode - starting point in subgraph.
+		// skipNodeItem - nodeItem that got us here.  Don't cross it when calculating subgraph.
+		// targetObj -    same as generateSparql
+		// doneNodes - snodes already processed.  Hitting one means there's a loop.  Updated as a side-effect.
+		// tab -          same as generateSparql
+		// optionalFlag - deprecated
 		
 		// done if snode is already in the doneNodes list
 		if (doneNodes.indexOf(snode) > -1) {
+			console.log("SemanticNodeGroup.generateSparqlSubgraphClauses() detected a loop in the query.")
 			return "";
 		} else {
 			doneNodes.push(snode);
@@ -2014,8 +2283,8 @@ SemanticNodeGroup.prototype = {
 		// PropItems: generate sparql for property and constraints
 		var props = snode.getPropsForSparql(targetObj);
 		for (var l = 0; l < props.length; l++) {
-			// backwards compatibility optionalFlag
-			if ((optionalFlag || props[l].getIsOptional() ) && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+			
+			if (props[l].getIsOptional() && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {
 				sparql += tab + "optional {\n";
 				tab = this.tabIndent(tab);
 			}
@@ -2033,9 +2302,9 @@ SemanticNodeGroup.prototype = {
 					tab = this.tabOutdent(tab);
 				}
 			}
-
-			// backwards compatible to optionalFlag
-			if ((optionalFlag || props[l].getIsOptional()) && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+			
+			// close optional block.
+			if (props[l].getIsOptional() && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {
 				tab = this.tabOutdent(tab);
 				sparql += tab + "}\n";
 			}
@@ -2048,41 +2317,80 @@ SemanticNodeGroup.prototype = {
 				sparql += tab + snode.getValueConstraint() + ".\n";
 			}
 		}
-
 		
 		// Recursively process NodeItem sub tree
 		for (var i=0; i < snode.nodeList.length; i++) {
-			var nodeItem = snode.nodeList[i];
+			var nItem = snode.nodeList[i];
 			
-			// open optional
-			if (nodeItem.getIsOptional() && nodeItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
-				sparql += tab + "optional {\n";
-				tab = this.tabIndent(tab);
-			}
+			if (nItem != skipNodeItem) {
 			
-			// each nodeItem might point to multiple children
-			for (var j=0; j < nodeItem.SNodes.length; j++) {
-				var domainNode = nodeItem.SNodes[j];
-
-				sparql += "\n";
+				// open optional
+				if (nItem.getIsOptional() == NodeItem.OPTIONAL_TRUE && nItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+					sparql += tab + "optional {\n";
+					tab = this.tabIndent(tab);
+				}
 				
-				// node connection, then recursive call
-				sparql += tab + snode.getSparqlID() + " <" + nodeItem.getURIConnectBy() + "> " + domainNode.getSparqlID() + ".\n";
-				tab = this.tabIndent(tab);
-				sparql += this.generateSparqlSubtreeClauses(queryType, domainNode, targetObj, doneNodes, tab, optionalFlag);
-				tab = this.tabOutdent(tab);
+				// each nItem might point to multiple children
+				for (var j=0; j < nItem.SNodes.length; j++) {
+					var domainNode = nItem.SNodes[j];
+	
+					sparql += "\n";
+					
+					// node connection, then recursive call
+					sparql += tab + snode.getSparqlID() + " <" + nItem.getURIConnectBy() + "> " + domainNode.getSparqlID() + ".\n";
+					tab = this.tabIndent(tab);
+					// RECURSION
+					sparql += this.generateSparqlSubgraphClauses(queryType, domainNode, nItem, targetObj, doneNodes, tab);
+					tab = this.tabOutdent(tab);
+				}
+				
+				// close optional
+				if (nItem.getIsOptional() == NodeItem.OPTIONAL_TRUE && nItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+					tab = this.tabOutdent(tab);
+					sparql += tab + "}\n";
+				}
 			}
+		}
+		
+		// Recursively process incoming nItems
+		var incomingNItems = this.getConnectingNodeItems(snode);
+		
+		for (var i=0; i < incomingNItems.length; i++) {
+			var nItem = incomingNItems[i];
 			
-			// close optional
-			if (nodeItem.getIsOptional() && nodeItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+			if (nItem != skipNodeItem) {
+			
+				// open optional
+				if (nItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE && nItem.SNodes.length > 0  && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {
+					sparql += tab + "optional {\n";
+					tab = this.tabIndent(tab);
+				}
+				
+				var incomingSNode = this.getNodeItemParentSNode(nItem);
+				
+				// the incoming connection
+				if (incomingSNode != null) {
+					sparql += "\n";
+					sparql += tab + incomingSNode.getSparqlID() + " <" + nItem.getURIConnectBy() + "> " + snode.getSparqlID() + ".\n";
+					tab = this.tabIndent(tab);
+				}
+				
+				// RECURSION
+				sparql += this.generateSparqlSubgraphClauses(queryType, incomingSNode, nItem, targetObj, doneNodes, tab);
 				tab = this.tabOutdent(tab);
-				sparql += tab + "}\n";
+				
+				// close optional
+				if (nItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE && nItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+					tab = this.tabOutdent(tab);
+					sparql += tab + "}\n";
+				}
 			}
 		}
 		
 		return sparql;
-	}, 
-		generateSparqlTypeClause : function(node, TAB) {
+	},
+	
+	generateSparqlTypeClause : function(node, TAB) {
 		// Generates SPARQL to constrain the type of this node if
 		// There is no edge that constrains it's type OR
 		// the edge(s) that constrain it don't actually include it (they're all
@@ -2110,7 +2418,126 @@ SemanticNodeGroup.prototype = {
 		}
 		return sparql;
 	},
-
+	
+	expandOptionalSubgraphs : function() {
+		// Find nodes with only optional returns
+		// and add incoming optional nodeItem so that entire snode is optional
+		// then move the optional nodeItem outward until some non-optional return is found
+		// this way the "whole chain" becomes optional.
+		// Leave original optionals in place
+		
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			var snode = this.SNodeList[i];
+			
+			// count optional and non-optional returns properties
+			var optRet = 0;
+			var nonOptRet = snode.getIsReturned() ? 1 : 0;
+			var retProps = snode.getReturnedPropertyItems();
+			for (var j=0; j < retProps.length; j++) {
+				var prop = retProps[j];
+				if (prop.getIsOptional()) {
+					optRet += 1;
+				} else {
+					nonOptRet += 1;
+				}
+			}
+			
+			// if all returned props are optional
+			if (optRet > 0 && nonOptRet == 0) {		
+				var connectedSnodes = this.getAllConnectedNodes(snode);
+				
+				// if there's only one snode connected
+				if (connectedSnodes.length == 1) {
+					var otherSnode = connectedSnodes[0];
+					var nodeItems = this.getNodeItemsBetween(snode, otherSnode);
+					
+					// if it's only connected once from snode to otherSnode 
+					// and connection is non-optional
+					if (nodeItems.length == 1 && nodeItems[0].getIsOptional() == NodeItem.OPTIONAL_FALSE) {
+						var nodeItem = nodeItems[0];
+						
+						// make the nodeItem optional inward
+						if (snode.nodeList.indexOf(nodeItem) > -1) {
+							nodeItem.setIsOptional(NodeItem.OPTIONAL_REVERSE);
+						} else {
+							nodeItem.setIsOptional(NodeItem.OPTIONAL_TRUE);
+						}
+					}
+				}
+			}
+		}
+		
+		// now move optional nodeItems as far away from subgraph leafs as possible
+		var changedFlag = true;
+		while (changedFlag) {
+			changedFlag = false;
+			
+			// loop through all snodes
+			for (var i = 0; i < this.SNodeList.length; i++) {
+				var snode = this.SNodeList[i];
+				
+				var nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				var retItems = snode.getReturnedPropertyItems();
+				for (var p=0; p < retItems.length; p++) {
+					var pItem = retItems[p];
+					if (! pItem.getIsOptional()) {
+						nonOptReturnCount++;
+					}
+				}
+				
+				// sort all connecting node items by their optional status: none, in, out
+				var normItems = [];
+				var optOutItems = [];
+				var optInItems= [];
+				
+				var connItems = this.getAllConnectedNodeItems(snode); 
+				for (var n=0; n < connItems.length; n++) {
+					var nItem = connItems[n];
+					if (nItem.getConnected()) {
+						var opt = nItem.getIsOptional();
+						
+						if (opt == NodeItem.OPTIONAL_FALSE) {
+							normItems.push(nItem);
+							
+						} else if (snode.nodeList.indexOf(nItem) > -1) {
+							if (opt == NodeItem.OPTIONAL_TRUE) {
+								optOutItems.push(nItem);
+							} else {
+								optInItems.push(nItem);
+							}
+								
+						} else {
+							if (opt == NodeItem.OPTIONAL_REVERSE) {
+								optOutItems.push(nItem);
+							} else {
+								optInItems.push(nItem);
+							}
+								
+						}
+					}
+				}
+				
+				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length > 0 && optInItems.length == 0) {
+				
+					// set the single normal nodeItem to incoming optional
+					var n = normItems[0];
+					if (snode.nodeList.indexOf(n) > -1) {
+						n.setIsOptional(NodeItem.OPTIONAL_REVERSE);
+					} else {
+						n.setIsOptional(NodeItem.OPTIONAL_TRUE);
+					}
+					
+					// if there is only one outgoing optional, than it can be set to non-optional for performance
+					if (optOutItems.length == 1) {
+						optOutItems[0].setIsOptional(NodeItem.OPTIONAL_FALSE);
+					}
+					
+					changedFlag = true;
+				}
+			}
+		}
+	},
+	
 	alreadyExists : function(SNode) {
 		var retval = false;
 		var namedSNode = SNode.getNodeName();
@@ -2248,28 +2675,6 @@ SemanticNodeGroup.prototype = {
 
 	},
 	
-	countSubtreeConstraints : function(nd) {
-		// how many constraints are in this node and its sub-nodes;
-		var ret = 0;
-		var subNodeList = this.getSubNodes(nd);
-		var sNodeList = [ nd ].concat(subNodeList);
-
-		// for each node
-		for (var i = 0; i < sNodeList.length; i++) {
-			// is node constrained
-			if (sNodeList[i].getConstraints() != "") {
-				ret += 1;
-			}
-			// for each propItem
-			for (var j = 0; j < sNodeList[i].propList.length; j++) {
-				// is nodeItem constrained
-				if (sNodeList[i].propList[j].getConstraints() != "") {
-					ret += 1;
-				}
-			}
-		}
-		return ret;
-	},
 
 	deleteNode : function(nd, recurse) {
 		// delete a given node (nd), usually at its request.
@@ -2312,62 +2717,6 @@ SemanticNodeGroup.prototype = {
 		this.drawNodes();
 	},
 
-	getUnusedSubGraph : function(snode) {
-		// find entire subgraph of connected nodes
-		// where "unused" means no constraints or returned
-		var ret = [];
-		
-		if (! snode.isUsed()) {
-			var subNodes = gNodeGroup.getAllConnectedNodes(snode);
-			var subGraphs = [];
-			var needSubTree = [];
-			var needSubTreeCount = 0;
-			
-			// build a subGraph for every connection
-			for (var i=0; i<subNodes.length; i++) {
-				subGraphs[i] = gNodeGroup.getSubGraph(subNodes[i], [snode]);
-				needSubTree[i] = 0;
-				// check to see if the subGraph contains any constraints or returns
-				for (var j=0; j < subGraphs[i].length; j++) {
-					if (subGraphs[i][j].isUsed()) {
-						needSubTree[i] = 1;
-						needSubTreeCount += 1;
-						break;
-					}
-				}
-				if (needSubTreeCount > 1) break;
-			}
-			
-			// if only one subGraph has nodes that are constrained or returned
-			if (needSubTreeCount < 2) {
-				
-				// delete any subGraph with no returned or constrained nodes
-				for (var i=0; i < subGraphs.length; i++) {
-					if (!needSubTree[i]) {
-						for (var j=0; j < subGraphs[i].length; j++) {
-							this.deleteNode(subGraphs[i][j], false);
-						}
-					}
-				}
-				
-				// delete the target node
-				this.deleteNode(snode, false);
-				
-				return ret;
-			}
-		}
-		return ret;
-	},
-	
-	delSubGraph : function (snode, stopList) {
-		// deletes a node and all it's connecting subGraphs stopping at node(s) in stopList
-		// in "old-fashioned" thinking, if stopList contains a node's "parent", then this would delete node and all children.
-		var subGraph = this.getSubGraph(snode, stopList);
-		for (var i=0; i < subGraph.length; i++) {
-			gNodeGroup.deleteNode(subGraph[i], false);
-		}
-		gNodeGroup.deleteNode(snode);
-	},
 	
 	pruneUnusedSubGraph : function(snode) {
 		// deletes a node if 
@@ -2530,4 +2879,43 @@ SemanticNodeGroup.prototype = {
 		return prop;
 	},
 	
+	itemGetOptionalItem : function(item) {
+		// GUI assistant function:
+		// input item:  semanticNode, nodeItem, propItem
+		// returns:     nodeItem, propItem, null
+		//
+		// if item is a nodeItem or propItem item then just return it
+		// But it it's an sNode then try to find a single nodeItem connecting it.
+		// That will returned.
+		// If snode with 0 or multiple connecting nodeItems then return null.
+		
+		// if this can have optional, then return it.  all set.
+		if (item.getItemType() != "SemanticNode") { 
+			return item;
+		
+		} else {
+			// this is an snode
+			var connSnodes = this.getAllConnectedConnectedNodeItems(item);
+			if (connSnodes.length == 1) {
+				return connSnodes[0];
+			}
+		}
+		return null;
+	},
+	
+	isIncomingOptional(snode, nodeItem) {
+		// does nodeItem make snode optional  ("incoming optional")
+		if (snode.nodeList.indexOf(nodeItem) > -1) {
+			// outgoing nodeItem, OPTIONAL_REVERSE
+			if (nodeItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE) {
+				return true;
+			}
+		} else if (nodeItem.getSNodes().indexOf(snode) > -1) {
+			// incoming nodeItem, OPTIONAL_TRUE
+			if (nodeItem.getIsOptional() == NodeItem.OPTIONAL_TRUE) {
+				return true;
+			}
+		}
+		return false;
+	},
 };

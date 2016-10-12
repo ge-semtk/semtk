@@ -7,8 +7,8 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>sparqlGraphLibrary</artifactId>
-
-	<repositories>
+    
+    <repositories>
 		<!-- need cloudera repository to retrieve hadoop-client 2.5.0-cdh5.3.0 -->
 		<repository>
 			<id>cloudera</id>

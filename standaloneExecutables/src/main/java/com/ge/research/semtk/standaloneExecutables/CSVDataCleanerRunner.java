@@ -34,57 +34,65 @@ import com.ge.research.semtk.load.utility.Utility;
 public class CSVDataCleanerRunner {
 	
 	public static void main(String[] args) throws Exception{
-		
-		// get arguments
-		if(args.length != 3){
-			throw new Exception("Invalid argument list.  Usage: main(inputCsvFilePath, outputCsvFilePath, cleaningSpecJsonFilePath)");
-		}
-		String inputCsvFilePath = args[0];
-		String outputCsvFilePath = args[1];
-		String cleaningSpecJsonFilePath = args[2];
-		
-		// validate arguments
-		if(!inputCsvFilePath.endsWith(".csv")){
-			throw new Exception("Error: Data file " + inputCsvFilePath + " is not a CSV file");
-		}
-		if(!outputCsvFilePath.endsWith(".csv")){
-			throw new Exception("Error: Data file " + outputCsvFilePath + " is not a CSV file");
-		}
-		if(!cleaningSpecJsonFilePath.endsWith(".json")){
-			throw new Exception("Error: Template file " + cleaningSpecJsonFilePath + " is not a JSON file");
-		}	
-		
-		System.out.println("--------- Clean CSV data... ---------------------------------------");
-		System.out.println("Input CSV file:            " + inputCsvFilePath);
-		System.out.println("Output CSV file:           " + outputCsvFilePath);
-		System.out.println("Cleaning spec JSON file:   " + cleaningSpecJsonFilePath);
-		
-		// create the dataset
-		Dataset dataset = null;
+
 		try{
-			dataset = new CSVDataset(inputCsvFilePath, false);
-		}catch(Exception e){
-			throw new Exception("Could not instantiate CSV dataset: " + e.getMessage());
-		}
 		
-		// load the cleaning spec 
-		JSONObject cleaningSpecJson;
-		try{
-			cleaningSpecJson = Utility.getJSONObjectFromFilePath(cleaningSpecJsonFilePath);
-			System.out.println("Cleaning spec JSON:" + cleaningSpecJson.toString());
+			// get arguments
+			if(args.length != 3){
+				throw new Exception("Invalid argument list.  Usage: main(inputCsvFilePath, outputCsvFilePath, cleaningSpecJsonFilePath)");
+			}
+			String inputCsvFilePath = args[0];
+			String outputCsvFilePath = args[1];
+			String cleaningSpecJsonFilePath = args[2];
+			
+			// validate arguments
+			if(!inputCsvFilePath.endsWith(".csv")){
+				throw new Exception("Error: Data file " + inputCsvFilePath + " is not a CSV file");
+			}
+			if(!outputCsvFilePath.endsWith(".csv")){
+				throw new Exception("Error: Data file " + outputCsvFilePath + " is not a CSV file");
+			}
+			if(!cleaningSpecJsonFilePath.endsWith(".json")){
+				throw new Exception("Error: Template file " + cleaningSpecJsonFilePath + " is not a JSON file");
+			}	
+			
+			System.out.println("--------- Clean CSV data... ---------------------------------------");
+			System.out.println("Input CSV file:            " + inputCsvFilePath);
+			System.out.println("Output CSV file:           " + outputCsvFilePath);
+			System.out.println("Cleaning spec JSON file:   " + cleaningSpecJsonFilePath);
+			
+			// create the dataset
+			Dataset dataset = null;
+			try{
+				dataset = new CSVDataset(inputCsvFilePath, false);
+			}catch(Exception e){
+				throw new Exception("Could not instantiate CSV dataset: " + e.getMessage());
+			}
+			
+			// load the cleaning spec 
+			JSONObject cleaningSpecJson;
+			try{
+				cleaningSpecJson = Utility.getJSONObjectFromFilePath(cleaningSpecJsonFilePath);
+				System.out.println("Cleaning spec JSON:" + cleaningSpecJson.toString());
+			}catch(Exception e){
+				throw new Exception("Could not load cleaning spec: " + e.getMessage());
+			}
+					
+			// clean the data
+			try{			
+				DataCleaner cleaner = new DataCleaner(dataset, outputCsvFilePath, cleaningSpecJson);
+				int numCleanRecordsProduced = cleaner.cleanData();
+				System.out.println("Wrote " + numCleanRecordsProduced + " cleaned records to " + outputCsvFilePath);				
+			}catch(Exception e){
+				e.printStackTrace();
+				throw new Exception("Could not clean data: " + e.getMessage());
+			}			
+		
 		}catch(Exception e){
-			throw new Exception("Could not load cleaning spec: " + e.getMessage());
-		}
-				
-		// clean the data
-		try{			
-			DataCleaner cleaner = new DataCleaner(dataset, outputCsvFilePath, cleaningSpecJson);
-			int numCleanRecordsProduced = cleaner.cleanData();
-			System.out.println("Wrote " + numCleanRecordsProduced + " cleaned records to " + outputCsvFilePath);				
-		}catch(Exception e){
+			System.out.println(e.getMessage());
 			e.printStackTrace();
-			throw new Exception("Could not clean data: " + e.getMessage());
-		}						
+			System.exit(1);  // need this to catch errors in the calling script
+		}
 		
 	}
 		

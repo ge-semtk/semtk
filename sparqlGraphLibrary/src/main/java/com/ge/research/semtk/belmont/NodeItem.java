@@ -30,14 +30,17 @@ import com.ge.research.semtk.belmont.NodeGroup;
 public class NodeItem {
 	// this is the class that controls the access to nodes that a given belmont node 
 	// believes it is linked to...
-
+	public static int OPTIONAL_FALSE = 0;
+	public static int OPTIONAL_TRUE = 1;
+	public static int OPTIONAL_REVERSE = -1;
+	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 	private String keyName = "";
 	private String valueType = "";
 	private String valueTypeURI = "";
 	private String connectedBy = "";
 	private String uriConnectBy = "";
-	private Boolean isOptional = false;
+	private int isOptional = NodeItem.OPTIONAL_FALSE;
 	private Boolean connected = false;
 	
 	/**
@@ -59,7 +62,7 @@ public class NodeItem {
 		this.valueType = next.get("ValueType").toString();
 		this.connectedBy = next.get("ConnectBy").toString();
 		this.uriConnectBy = next.get("UriConnectBy").toString();
-		this.isOptional = (Boolean)next.get("isOptional");
+		this.setIsOptionalBackwardsCompatible(next.get("isOptional").toString());
 		this.connected = (Boolean)next.get("Connected");
 		
 		// add the list of nodes this item attaches to on the far end. 
@@ -139,7 +142,7 @@ public class NodeItem {
 		return this.uriConnectBy;
 	}
 
-	public boolean getIsOptional() {
+	public int getIsOptional() {
 		return this.isOptional;
 	}
 	
@@ -150,8 +153,18 @@ public class NodeItem {
 		}
 	}
 
-	public void setIsOptional(Boolean isOptional) {
-		this.isOptional = isOptional;
+	public void setIsOptional(int val) {
+		this.isOptional = val;
 	}
 	
+	public void setIsOptionalBackwardsCompatible(String str) {
+		// handle old or new isOptional
+		try {
+			// new: integer
+			this.setIsOptional(Integer.parseInt(str));
+		} catch (Exception e) {
+			// old: boolean
+			this.setIsOptional(Boolean.parseBoolean(str) ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE);
+		}
+	}
 }

@@ -27,6 +27,7 @@ public class HiveProperties {
 
 	private String username; 
 	private String password;
+	private String executionEngine;  // e.g. mr/tez/spark or blank to not specify
 	
 	public void setUsername(String username){
 		this.username = username;
@@ -36,11 +37,19 @@ public class HiveProperties {
 		this.password = password;
 	}
 	
+	public void setExecutionEngine(String executionEngine){
+		this.executionEngine = executionEngine;
+	}
+	
 	public String getUsername(){
 		return username;
 	}
 	
 	public String getPassword(){
 		return password;
+	}
+	
+	public String getExecutionEngine(){
+		return executionEngine;
 	}
 }

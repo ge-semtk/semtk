@@ -37,7 +37,6 @@ var gExtNodeGroup = null;
 var gOInfo = null;
 var gOTree = null;
 var gDragNode = null;
-var gConstraintDialog = null;
 var gSparqlResults = null;
 var gSparqlEdc = null;
 var gFormConstraint = null;
@@ -297,7 +296,7 @@ require([
 
 			// prepare a query for the constraint dialog
 			removeTrigger(tmpNodeGroup);
-			var sparql = tmpNodeGroup.generateSparql(SemanticNodeGroup.QUERY_CONSTRAINT, false, 500, tmpItem);
+			tmpNodeGroup.expandOptionalSubgraphs();
 			
 			showDebug("Constraining " + sNode.getSparqlID() + "->" + item.getSparqlID(), tmpNodeGroup);
 			kdlLogEvent("SF: Filter Button", "Node", sNode.getURI(), "itemSparqlID", item.getSparqlID());
@@ -407,6 +406,7 @@ require([
 		initForm = function() {
 			gRowId = 0;
 			var table = document.getElementById("formTable");
+			table.innerHTML = "";
 			
 			formConstraintsNew();
 			formConstraintsInit();
@@ -472,14 +472,35 @@ require([
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 		
-		itemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, data) {
+		itemDialogCallback = function(item, sparqlID, optionalFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
 			
 	    	// Note: ModalItemDialog validates that sparqlID is legal
 	    	
 	    	// snodes don't allow these
-	    	if (propItem.setReturnName) propItem.setReturnName(sparqlID);
-	    	if (propItem.setIsOptional) propItem.setIsOptional(optionalFlag);
+	    	if (item.setReturnName) item.setReturnName(sparqlID);
+	    	
+	    	// Optional
+	    	if (item.getItemType() == "PropertyItem") {
+	    		item.setIsOptional(optionalFlag);
+	    	} else if (item.getItemType() == "NodeItem") {
+	    		alert("Internal Error in sparqlForm.js itemDialogCallback():  item is a nodeItem.  Not implemented");
+	    	} else {
+	    		// if item is an snode and there is an optItem (connecting NodeItem)
+	    		// set optional based on direction of the connection
+	        	var optItem = gNodeGroup.itemGetOptionalItem(item);
+	    		if (optItem != null) {
+	    			// If optional then set to right direction
+	    			if (optionalFlag) {
+	    				optItem.setIsOptional(  (item.nodeList.indexOf(optItem) > -1) ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_TRUE);
+	    			// Only enforce the false if INCOMING optional was true
+	    			} else {
+	    				if (gNodeGroup.isIncomingOptional(item, optItem)) {
+	    					optItem.setIsOptional(NodeItem.OPTIONAL_FALSE);
+	    				}
+	    			}
+	    		}
+	    	}
 	    	
 	    	if (constraintStr.length > 0) {
 	    		document.getElementById(data.textId).innerHTML = FORM_CONSTRAINED_ICON;
@@ -487,7 +508,7 @@ require([
 	    		document.getElementById(data.textId).innerHTML = FORM_UNCONSTRAINED_ICON;
 	    	}
 	    	
-	    	propItem.setConstraints(constraintStr);
+	    	item.setConstraints(constraintStr);
 	    	formConstraintsUpdateTable();
 	    	
 	    	kdlLogEvent("SF: Filtered", "sparqlId", sparqlID, "constraints", constraintStr);
@@ -552,6 +573,7 @@ require([
 			// delete row from form
 			// and corresponding nodes from the gNodeGroup
 			var r = getFormRow(rowId);
+			var item;
 
 			r.table.deleteRow(r.rowNum);
 
@@ -782,9 +804,9 @@ require([
 			return text;
 		};
 
-		alertUser = function(msg, optTitle) {
-			ModalIidx.alert( (typeof optTitle == "undefined" ? "Alert" : optTitle),   msg);
-			kdlLogEvent("SF: alert", "message", msg);
+		alertUser = function(msgHtml, optTitle) {
+			ModalIidx.alert( (typeof optTitle == "undefined" ? "Alert" : optTitle),   msgHtml);
+			kdlLogEvent("SF: alert", "message", msgHtml);
 		};
 
 	}

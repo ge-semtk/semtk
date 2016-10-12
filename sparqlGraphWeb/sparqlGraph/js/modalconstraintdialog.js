@@ -29,6 +29,9 @@
  */
 
 var ModalConstraintDialog = function(document, varName) {
+	// DEPRECATED
+	console.log("Using deprecated ModalConstraintDialog.   Use ModalItemDialog instead.");
+	
 	// strangely, "varName" is the name of the variable holding this dialog in your HTML
 	// "divId" is the id of a <div> somewhere (anywhere) in your HTML that is otherwise unused
 	// sorry.  We all had to learn javascript at some time.  No resources to fix this now.

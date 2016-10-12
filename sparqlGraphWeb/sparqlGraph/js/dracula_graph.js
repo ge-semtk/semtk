@@ -379,7 +379,8 @@ Graph.Renderer.Raphael.prototype = {
             		
             		lt.node.onmouseup = function (pnode, e) {
             			if (mouseUpIsLeftClick(e)) {
-            				node.parentSNode.toggleReturnType(lt);
+            				//node.parentSNode.toggleReturnType(lt);
+            		    	pnode.parentSNode.callAsyncSNodeEditor(lt); 
             			}
             		}.bind("blank_this", node);
             		
@@ -447,6 +448,7 @@ Graph.Renderer.Raphael.prototype = {
     },
     drawEdge: function(edge) {
         /* if this edge already exists the other way around and is undirected */
+    	
         if(edge.backedge)
             return;
         if(edge.source.hidden || edge.target.hidden) {
@@ -459,6 +461,7 @@ Graph.Renderer.Raphael.prototype = {
             edge.connection = this.r.connection(edge.source.shape, edge.target.shape, edge.style);
             return;
         }
+        
         //FIXME showing doesn't work well
         edge.connection.fg.show();
         edge.connection.bg && edge.connection.bg.show();
@@ -860,7 +863,6 @@ var buildGraphNodeLabels = function(propLabelStr, r, i, hMargin, vMargin, labelN
 		
 		itemLabel.node.onmouseup = function (pItemLabel, pPropLabelStr, pNode, e) {
 			if (mouseUpIsLeftClick(e)) {
-				//NEW Single click:  todo cursor
 				var keyname = propLabelStr.split(" ")[0];
 		    	pNode.parentSNode.callAsyncPropEditor(keyname, pItemLabel); 
 			}

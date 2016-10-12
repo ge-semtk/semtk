@@ -50,16 +50,27 @@ require([	'sparqlgraph/js/sparqlform',
 			require(['custom/customconfig'],
 				function(Global) {
 					g = Global;
-					
+					var fullURL = window.location.toString();
+					var customURL = fullURL.substring(0, fullURL.lastIndexOf("/") + 1) + gCustom + "/customDiv.html";
 					kdlLogEvent("Custom: Page Load");
 					
-					// load customDiv.html
-					$("#customDiv").load(gCustom + "/customDiv.html", {},
-					    function (responseText, textStatus, req) {
-					        if (textStatus == "error") {
-					    		alert("Bad 'form' parameter on URL.  Can't find file: " + gCustom + "/customDiv.html");
-					        }
-					});
+					// this is a little funky, but jquery .load() generates a "forbidden 403" in Chrome.
+					$.ajax({
+						  // will not work for jsonp or cross domain requests, will force success to run before
+						  // other code
+						  async: false,
+						  url: customURL,
+						  dataType: "html",
+						  success: function(data) {
+							  document.getElementById("customDiv").innerHTML = data;
+						  },
+						  error: function() {
+					    	  alert("Bad 'form' parameter on URL.  Can't find file: " + customURL);
+						  }
+						});
+					
+					setupFileDrop();
+					
 					gConnSetup();   // sparqlform.js
 					
 					refreshHtmlFormGroup();
@@ -68,14 +79,17 @@ require([	'sparqlgraph/js/sparqlform',
 			
 		};
 		
-		refreshHtmlFormGroup = function () {
+		refreshHtmlFormGroup = function (optValHash) {
+			var valHash = (typeof optValHash === "undefined") ? undefined: optValHash;
+			
 			clearResults();
 			
 			formConstraintsNew();
 			formConstraintsInit();
 			
 			var queryClient = new MsiClientQuery(Config.services.query.url, gConn.getDataInterface());
-			gHtmlFormGroup = new HtmlFormGroup(this.document, queryClient, g.conn.domain, g.fields, g.query, setStatus, alertUser, beforeUpdatingCallback, doneUpdatingCallback,  undefined, false);
+			var getFlag = false;
+			gHtmlFormGroup = new HtmlFormGroup(this.document, queryClient, g.conn.domain, g.fields, g.query, setStatus, alertUser, beforeUpdatingCallback, doneUpdatingCallback,  valHash, getFlag);
 			
 		};
 		
@@ -121,6 +135,63 @@ require([	'sparqlgraph/js/sparqlform',
 			g.doneUpdatingCallback();
 		};
 		
+		downloadValues = function() {
+			var j = gHtmlFormGroup.getValueHash();
+			downloadFile(JSON.stringify(j), gCustom + ".json");
+			kdlLogEvent("Download values");
+		};
+		
+		uploadValues = function() {
+			// get a file and upload values from it
+			var fileInput = document.getElementById("fileInput");
+			fileInput.addEventListener('change', uploadValuesLoadEvt, false);
+			fileInput.click();
+		};
+		
+		uploadValuesFile = function(file) {
+			// reads json file, clears form, loads new one
+			var r = new FileReader();
+
+			r.onload = function() {
+				var payload;
+				try {
+					payload = JSON.parse(r.result);
+				} catch (e) {
+					alertUser("Error parsing the JSON values file: \n" + e);
+					return;
+				}
+
+				gHtmlFormGroup.setValuesFromHash(payload);
+
+			};
+			r.readAsText(file);
+
+		};
+
+		uploadValuesLoadEvt = function(evt) {
+			// fileInput callback to load values
+			uploadValuesFile(evt.target.files[0]);
+		};
+		
+		uploadValuesDropEvt = function(evt) {
+			noOpHandler(evt);
+			var files = evt.dataTransfer.files;
+			uploadValuesFile(files[0]);
+		};
+		
+		noOpHandler = function(evt) {
+			evt.stopPropagation();
+			evt.preventDefault();
+		};
+		
+		setupFileDrop = function() {
+			// Paul's html5 voodoo:  to allow json files to be dropped
+			var dropbox = document.getElementById("pageContainer");
+			dropbox.addEventListener("dragenter", noOpHandler, false);
+			dropbox.addEventListener("dragexit", noOpHandler, false);
+			dropbox.addEventListener("dragover", noOpHandler, false);
+			dropbox.addEventListener("drop", uploadValuesDropEvt, false);
+		};
 	}
 
 );

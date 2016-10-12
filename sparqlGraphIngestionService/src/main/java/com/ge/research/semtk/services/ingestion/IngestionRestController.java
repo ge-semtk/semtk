@@ -144,7 +144,8 @@ public class IngestionRestController {
 			}
 			
 			if(dataFileContent != null){
-				System.err.println("data size :"  + templateContent.length());
+				System.err.println("data size :"  + dataFileContent.length());
+				System.err.println(dataFileContent);
 			}
 			else{
 				System.err.println("data content was null");

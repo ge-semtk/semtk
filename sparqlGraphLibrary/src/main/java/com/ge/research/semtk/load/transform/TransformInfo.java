@@ -35,7 +35,7 @@ public class TransformInfo {
 		tMap.put("replaceAll", new String[]{"2", ReplaceAllTransform.class.getCanonicalName()});
 		tMap.put("toUpperCase", new String[]{"0", ToUpperCaseTransform.class.getCanonicalName()});
 		tMap.put("toLowerCase", new String[]{"0", ToLowerCaseTransform.class.getCanonicalName()});
-
+		tMap.put("hashCode", new String[]{"0", HashTransform.class.getCanonicalName()});
 		
 		// add to the static mapping. 
 		transformList = tMap; // set it.

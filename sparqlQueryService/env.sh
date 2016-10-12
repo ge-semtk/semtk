@@ -1,0 +1,8 @@
+#!/bin/bash
+
+export DOCKER_REGISTRY=$DOCKER_REGISTRY
+export VERSION=$UBL_VERSION
+export COMPOSE_PROJECT_NAME=host
+
+export QUERY_PORT=8830
+

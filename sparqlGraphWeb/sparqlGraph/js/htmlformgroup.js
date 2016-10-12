@@ -46,6 +46,7 @@ define([	// properly require.config'ed
 		var HtmlFormGroup = function(document, queryClient, domain, g_fields, g_query, statusFunc, alertFunc, beforeUpdatingCallback, doneUpdatingCallback, optDefaultHash, optGetFlag) {
 			// set up the connection, load the form, call the callback
 			//
+			// alertFunc(msgHTML, optTitle)
 			// beforeUpdatingCallback() - called before any query.  Good time to update any choice elements in the HtmlFormGroup, and disable buttons.
 			// doneUpdatingCallback() - called after the last query returns.  Good time to re-enable buttons.
 			// optDefaultHash = {"choiceElementId": ["val1", "val2"],  
@@ -66,6 +67,7 @@ define([	// properly require.config'ed
 			this.document = document;
 			this.queryClient = queryClient;
 			this.domain = domain;
+			this.alert = alertFunc;
 			
 			this.query = null;
 			this.fields = null;
@@ -129,37 +131,47 @@ define([	// properly require.config'ed
 				
 				
 				if (this.defaultHash === null) {return;}
+				var badIdList = [];
 				
 				// loop through the defaultHash
 				for (var id in this.defaultHash) {
 					var element = this.document.getElementById(id);
 					var val = this.defaultHash[id];
 					
-					// for selects, add option(s) and select them
-					if (element.nodeName === "SELECT" || element.nodeName === "DIV") {
-						if (Array.isArray(val)) {
-							for (var i=0; i < val.length; i++) {
-								var splitVal = val[i].split("|");
-								this.choiceAddOption(element, 
-													 splitVal[0], 
-													 (splitVal.length > 1) ? splitVal[1] : splitVal[0], 
-													 true);
-							}
-						} else {
-							var splitVal = val.split("|");
-							this.choiceAddOption(element, 
-									 splitVal[0], 
-									 (splitVal.length > 1) ? splitVal[2] : splitval[1], 
-									 true);
-						}
-						
-					// for non-selects, just set the value
+					if (element === null) {
+						badIdList.push(id);
 					} else {
-						element.value = val;
+						// for selects, add option(s) and select them
+						if (element.nodeName === "SELECT" || element.nodeName === "DIV") {
+							if (Array.isArray(val)) {
+								for (var i=0; i < val.length; i++) {
+									var splitVal = val[i].split("|");
+									this.choiceAddOption(element, 
+														 splitVal[0], 
+														 (splitVal.length > 1) ? splitVal[1] : splitVal[0], 
+														 true);
+								}
+							} else {
+								var splitVal = val.split("|");
+								this.choiceAddOption(element, 
+										 splitVal[0], 
+										 (splitVal.length > 1) ? splitVal[2] : splitval[1], 
+										 true);
+							}
+							
+						// for non-selects, just set the value
+						} else {
+							element.value = val;
+						}
+						this.fieldChanged(id, false);
 					}
-					this.fieldChanged(id, false);
 				}
 				
+				// if hash came from the wrong form, load whatever is possible (by element.id)
+				// and throw an error warning about the rest.
+				if (badIdList.length != 0) {
+					this.alert("Attempted to load values from a different form.<br>Skipping: " + badIdList.toString(), "Incomplete load");
+				}
 			},
 			
 			// execute the query I've been building & constraining
@@ -185,13 +197,39 @@ define([	// properly require.config'ed
 	
 						// no callbacks for "DIV":  GUI designer is responsible for calling runChangedCallback(div_element)
 						
-						//element.addEventListener("blur", function() { alert("onblurC"); }, true);
+						//element.addEventListener("blur", function() { this.alert("onblurC"); }, true);
 					} else {
 						element.onchange = new Function('this.fieldChanged("' + id + '", true); return true;').bind(this);
 					}
 					
 				}
 				
+			},
+			
+			getValueHash : function() {
+				// generate a value hash suitable for the constructor
+				// i.e. save the state of this form
+				var ret = {};
+				for (var i = 0; i < this.fields.length; i++) {
+					var element = this.document.getElementById(this.fields[i].elementId);
+					
+					ret[this.fields[i].elementId] = this.choiceGetValue(element);
+				}
+				return ret;
+			},
+			
+			setValuesFromHash : function(valHash) {
+				for (var i = 0; i < this.fields.length; i++) {
+					var element = this.document.getElementById(this.fields[i].elementId);
+					var id = element.id;
+					
+					if (id in valHash) {
+						this.choiceSetValue(element, valHash[id]);
+					} else {
+						this.choiceSetValue(element, []);
+					}
+					
+				}
 			},
 			
 			runChangedCallback : function (element) {
@@ -272,7 +310,7 @@ define([	// properly require.config'ed
 					
 					// check for bad uri
 					if (! this.oInfo.containsClass(uri)) {
-						alert("HtmlForm.buildNodeGroup() Internal error: class does not exist in ontology info: " + uri);
+						this.alert("HtmlForm.buildNodeGroup() Internal error: class does not exist in ontology info: " + uri);
 						throw("internal error in htmlform.js");
 					}
 					
@@ -297,12 +335,12 @@ define([	// properly require.config'ed
 						if (!prop) {
 							
 							if (! f.prop.hasOwnProperty("nonDomainType")) {
-								alert("Internal error in buildNodeGroup(): " + f.name + " property " + keyName + "isn't found and doesn't have nonDomainType property.");
+								this.alert("Internal error in buildNodeGroup(): " + f.name + " property " + keyName + "isn't found and doesn't have nonDomainType property.");
 								throw "internal error";
 							} 
 							
 							if (! f.prop.hasOwnProperty("nonDomainRelationURI") ){
-								alert("Internal error in buildNodeGroup(): " + f.name + " property " + keyName + "isn't found and doesn't have nonDomainRelationURI property.");
+								this.alert("Internal error in buildNodeGroup(): " + f.name + " property " + keyName + "isn't found and doesn't have nonDomainRelationURI property.");
 								throw "internal error";
 							}  
 							
@@ -318,7 +356,7 @@ define([	// properly require.config'ed
 						if (prop.getSparqlID() !== suggestedID) {
 							var actualID = this.nodeGroup.changeSparqlID(prop, suggestedID);
 							if (actualID !== suggestedID) {
-								alert("Internal error: tried to build sparqlID return '" + suggestedID + "' but got '" + actualID + "'.");
+								this.alert("Internal error: tried to build sparqlID return '" + suggestedID + "' but got '" + actualID + "'.");
 								return null;
 							}
 						}
@@ -330,7 +368,7 @@ define([	// properly require.config'ed
 						if (snode.getSparqlID() !== suggestedID) {
 							var actualID = this.nodeGroup.changeSparqlID(snode, suggestedID);
 							if (actualID !== suggestedID) {
-								alert("Internal error: tried to build sparqlID return '" + suggestedID + "' but got '" + actualID + "'.");
+								this.alert("Internal error: tried to build sparqlID return '" + suggestedID + "' but got '" + actualID + "'.");
 								return null;
 							}
 						}
@@ -391,7 +429,7 @@ define([	// properly require.config'ed
 							if (snode.getSparqlID() !== targetID) {
 								var newID = nodeGroup.changeSparqlID(snode, targetID);
 								if (newID !== targetID) {
-									alert("Internal error in addQueryReturns(): tried to build sparqlID return '" + targetID + "' but got '" + newID + "'.");
+									this.alert("Internal error in addQueryReturns(): tried to build sparqlID return '" + targetID + "' but got '" + newID + "'.");
 									return null;
 								}
 							}
@@ -424,12 +462,12 @@ define([	// properly require.config'ed
 									prop = nodeGroup.addSubclassPropertyByURI(snode, retlist[i].props[j].subclassPropURI, this.oInfo);
 									
 									if (!prop) {
-										alert("Internal error in addQueryReturns(): can't find subclass property '" + retlist[i].props[j].subclassPropURI + "' of '" + retlist[0].classURI + "'");
+										this.alert("Internal error in addQueryReturns(): can't find subclass property '" + retlist[i].props[j].subclassPropURI + "' of '" + retlist[0].classURI + "'");
 										return null;
 									}
 									
 								} else {
-									alert("Internal error in addQueryReturns(): can't find property '" + keyName + "' of '" + retlist[0].classURI + "'");
+									this.alert("Internal error in addQueryReturns(): can't find property '" + keyName + "' of '" + retlist[0].classURI + "'");
 									return null;
 								}
 							}
@@ -438,7 +476,7 @@ define([	// properly require.config'ed
 							if (prop.getSparqlID() !== targetID) {
 								var newID = nodeGroup.changeSparqlID(prop, targetID);
 								if (newID !== targetID) {
-									alert("Internal error in addQueryReturns(): tried to build sparqlID return '" + targetID + "' but got '" + newID + "'.");
+									this.alert("Internal error in addQueryReturns(): tried to build sparqlID return '" + targetID + "' but got '" + newID + "'.");
 									return null;
 								}
 							}
@@ -588,7 +626,7 @@ define([	// properly require.config'ed
 				var suggestedID = "?" + f.elementId.replace(/-/g,'_');
 				var actualID = iNodeGroup.changeSparqlID(item, suggestedID);
 				if (actualID != suggestedID) {
-					alert("Internal error in updateAllChoices(): can't set sparqlID to: " + suggestedID + ". Got: " + actualID);
+					this.alert("Internal error in updateAllChoices(): can't set sparqlID to: " + suggestedID + ". Got: " + actualID);
 					return null;
 				}
 				
@@ -615,7 +653,7 @@ define([	// properly require.config'ed
 				var suggestedID = "?" + f.elementId.replace(/-/g,'_');
 				var actualID = tmpNodeGroup.changeSparqlID(item, suggestedID);
 				if (actualID != suggestedID) {
-					alert("Internal error in updateAllChoices(): can't set sparqlID to: " + suggestedID + ". Got: " + actualID);
+					this.alert("Internal error in updateAllChoices(): can't set sparqlID to: " + suggestedID + ". Got: " + actualID);
 					return null;
 				}
 				
@@ -646,7 +684,7 @@ define([	// properly require.config'ed
 				}
 			},
 			
-			 registerQueryCall : function()  {
+			registerQueryCall : function()  {
 				 // increment count of outstanding queries
 				this.outstandingQueries += 1;
 			},
@@ -854,10 +892,12 @@ define([	// properly require.config'ed
 					element.value = val;
 				}
 			
-				// add any values that weren't in the select as selected/disabled
+				// weren't in the select 
 				for (var i=0; i < disable_choices.length; i++) {
-					var text = this.getOptionText(element, disable_choices[i]);
-					this.choiceAddOption(element, text, disable_choices[i], true, true);
+					// previous behavior: add as as selected/disabled
+					//var text = this.getOptionText(element, disable_choices[i]);
+					//this.choiceAddOption(element, text, disable_choices[i], true, true);
+					this.alert("Can't set " + element.id + " to '" + disable_choices[i] + "'.", "Error setting value");
 				}
 				
 				return ret;
@@ -889,7 +929,7 @@ define([	// properly require.config'ed
 					element.appendChild(this.document.createElement("br"));
 					 
 				} else {
-						alert("Internal error in htmlform.js:choiceAddOption(): element is not a select: id=" + element.id);
+						this.alert("Internal error in htmlform.js:choiceAddOption(): element is not a select: id=" + element.id);
 						throw "Internal error";
 				}
 			},
@@ -899,33 +939,6 @@ define([	// properly require.config'ed
 				if (element.nodeName === "DIV") { return true;}
 				
 				return false;
-			},
-			
-			choiceLegalValSubset : function(element, valList) {
-				alert("HtmlForm.choiceLegalValSubset() is DEPRECATED");
-				// return subset of valList that is still a legal option in a MULTIPLE element
-				var ret = [];
-				if (element.nodeName == "SELECT") {
-					for (var i=0; i < element.length; i++) {
-					    var opt = element.options[i];
-					    if (valList.indexOf(opt.value) > -1) {
-					      	ret.push(opt.value);
-					    }
-					}
-					
-				}  else if (element.nodeName === "DIV") {
-					var checks = document.querySelectorAll('#' + element.id + ' input[type="checkbox"]');
-					 
-					for(var i =0; i< checks.length; i++) {
-						if (valList.indexOf(checks[i].value) > -1) {
-					      	ret.push(checks[i].value);
-					    }
-					}
-					 
-				} else {
-					throw "Internal error in htmlform.js:choiceLegalValSubset(): element is not multi-selectable: id=" + element.id;
-				}
-				return ret;
 			},
 			
 			choiceIsEmpty : function(element) {
@@ -940,7 +953,7 @@ define([	// properly require.config'ed
 				
 				// check results of this link in the chain
 				if (res != null && !res.isSuccess()) {
-					alert("Internal error: field-initialization query failed for: " + this.fields[this.curField].name);
+					this.alert("Internal error: field-initialization query failed for: " + this.fields[this.curField].name);
 					this.choiceUnBusy(element);
 					console.log("-----------" + new Date() + "------------\n" +
 						    "callbackSetChoices(): unSuccessful return for " + ((res.getColumnCount() > 0) ? res.getColumnName(0).replace(/_/g,'-') : "<unknown>") + "\n" +
@@ -951,7 +964,7 @@ define([	// properly require.config'ed
 				
 				// log empty results
 				if (res.getRowCount() == 0) {
-					//alert("DEBUG: Zero choices returned for: " + res.getColumnNames());
+					//this.alert("DEBUG: Zero choices returned for: " + res.getColumnNames());
 					console.log("-----------" + new Date() + "------------\n" +
 							    "Zero returns (could be OK or a server error) for " + ((res.getColumnCount() > 0) ? res.getColumnName(0).replace(/_/g,'-') : "<unknown>") + "\n" +
 							    JSON.stringify(res.jsonObj));
@@ -963,7 +976,7 @@ define([	// properly require.config'ed
 				var elementId = res.getColumnName(0).replace(/_/g,'-');
 				var element = this.document.getElementById(elementId);
 				if (! element) {
-					alert("Internal error in callbackSetChoices(): Can't find html element: " + elementId);
+					this.alert("Internal error in callbackSetChoices(): Can't find html element: " + elementId);
 					this.choiceUnBusy(element);
 					this.registerQueryReturn();
 					return null;
@@ -1029,7 +1042,7 @@ define([	// properly require.config'ed
 					
 					item = this.getFieldsConstrainItem(f, this.nodeGroup);
 					if (! item ) {
-						alert("Internal error in readFormConstraint(): can't find constraint item for: " + elementId);
+						this.alert("Internal error in readFormConstraint(): can't find constraint item for: " + elementId);
 						return null;
 					}
 					
@@ -1057,7 +1070,7 @@ define([	// properly require.config'ed
 					
 					var item = this.getFieldsConstrainItem(f, this.nodeGroup);
 					if (! item ) {
-						alert("Internal error in readFormConstraint(): can't find constraint item for: " + elementId);
+						this.alert("Internal error in readFormConstraint(): can't find constraint item for: " + elementId);
 						return null;
 					}
 					
@@ -1102,7 +1115,7 @@ define([	// properly require.config'ed
 				}
 				
 				if (! f.hasOwnProperty("constraintType")) {
-					alert("Config error found in getFieldsConstrainItem.  Field has no constraintType: " + f.name);
+					this.alert("Config error found in getFieldsConstrainItem.  Field has no constraintType: " + f.name);
 					return null;
 				}
 				
@@ -1152,7 +1165,7 @@ define([	// properly require.config'ed
 						// if it isn't there, that's ok.  It might be skipForConstraint or something.
 					} else if (snodes.length > 1) {
 						// if it's there more than once then it's a problem
-						alert("Internal error in HtmlFormGroup.pruneNodeGroup: found more than one instance of " + uri);
+						this.alert("Internal error in HtmlFormGroup.pruneNodeGroup: found more than one instance of " + uri);
 						throw "Internal error";
 						return;
 					} else {
@@ -1189,7 +1202,7 @@ define([	// properly require.config'ed
 						return this.fields[i];
 					}
 				}
-				alert("Internal error in getFieldByElementId: elementID is missing from config: " + elementId);
+				this.alert("Internal error in getFieldByElementId: elementID is missing from config: " + elementId);
 				return null;
 			},
 			
@@ -1206,7 +1219,7 @@ define([	// properly require.config'ed
 			
 			getFieldClassURI : function (f) {
 				if (! f.hasOwnProperty("classURI")) {
-					alert("Internal error in getFieldClassURI(): object has no classURI");
+					this.alert("Internal error in getFieldClassURI(): object has no classURI");
 					return null;
 				}
 				// get the uri
@@ -1219,7 +1232,7 @@ define([	// properly require.config'ed
 					
 					var element = this.document.getElementById(elementId);
 					if (!element) {
-						alert("Internal error in getFieldClassURI(): illegal field classURI: " + uri + ".  Can't find html element: " + elementId);
+						this.alert("Internal error in getFieldClassURI(): illegal field classURI: " + uri + ".  Can't find html element: " + elementId);
 						return null;
 					}
 					uri = element.value;
@@ -1258,7 +1271,7 @@ define([	// properly require.config'ed
 				// get the one node whose superclass is uri.  Handle errors.
 				var snodes = nodeGroup.getNodesBySuperclassURI(uri, oInfo);
 				if (snodes.length != 1) {
-					alert("Internal error in " + callerStr + ": Expecting 1 but found " + snodes.length + " node(s) with superclass URI=" + uri);
+					this.alert("Internal error in " + callerStr + ": Expecting 1 but found " + snodes.length + " node(s) with superclass URI=" + uri);
 					throw "Internal error";
 					return null;
 				} else {

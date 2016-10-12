@@ -40,7 +40,6 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/js/cookiemanager',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/js/modalconstraintdialog',
 			'sparqlgraph/js/modaldialog',
 			'sparqlgraph/js/modalloaddialog',
 
@@ -105,22 +104,6 @@ require([	'local/sparqlformconfig',
 			dialog.show(true);
 		};
 		
-		
-		launchConstraintDialogOLD = function(item, sparql, textId, failureCallback) {
-			
-			var clientOrInterface;
-			
-			if (gAvoidQueryMicroserviceFlag) {
-				clientOrInterface = gConn.getDataInterface();
-			}
-			else {
-				clientOrInterface = new MsiClientQuery(Config.services.query.url, gConn.getDataInterface(), failureCallback);
-			}
-			
-			gConstraintDialog.constraintDialog(item, sparql, clientOrInterface, filterDialogCallback.bind(window, textId, item), true);
-		}
-		
-		
 		doAbout = function() {
 			ModalIidx.alert("About SparqlForm", Config.help.aboutHtml + "<br>" + Config.help.legalNoticeHtml);
 		};
@@ -137,7 +120,11 @@ require([	'local/sparqlformconfig',
 
 			kdlLogEvent("SF: Query");
 			
-			var query = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 0);
+			// special handling of optional paths
+			var ndgp2 = gNodeGroup.deepCopy();
+			ndgp2.expandOptionalSubgraphs();
+			
+			var query = ndgp2.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 0);
 			if (gAvoidQueryMicroserviceFlag) {
 				/* Old non-microservice code */
 				gConn.getDataInterface().executeAndParse(query, doQueryCallback);
@@ -211,7 +198,6 @@ require([	'local/sparqlformconfig',
     		initForm(); 
 			clearResults();
 			enableButton('btnFormExecute'); // browser sometimes caches this disabled if user reloaded while a query is running.  wow.
-			gConstraintDialog = new ModalConstraintDialog(document, "gConstraintDialog");
 			gOInfo = new OntologyInfo();
     		
 	    	// Get connection info from dialog return value

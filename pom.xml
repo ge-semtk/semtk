@@ -6,9 +6,9 @@
   <packaging>pom</packaging>
 
   <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.3.1.RELEASE</version>
+    <groupId>com.ge.research.semtk</groupId>
+    <artifactId>sparqlgraph</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
   </parent>
 
 
