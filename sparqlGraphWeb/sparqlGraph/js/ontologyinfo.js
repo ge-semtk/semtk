@@ -301,6 +301,16 @@ OntologyInfo.prototype = {
 		return ret;
 	},
 	
+	getInheritedPropertyByKeyname(ontClass, propName) {
+		var props = this.getInheritedProperties(ontClass);
+		for (var i=0; i < props.length; i++) {
+			if (props[i].getNameStr(true) == propName) {
+				return props[i];
+			}
+		}
+		return null;
+	},
+	
 	getDescendantProperties : function(ontClass) {
 		// return properties in subclasses
 		
@@ -416,72 +426,61 @@ OntologyInfo.prototype = {
 			PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#>              \
         \
 			select distinct ?Class ?Property ?Range {              \
-			{?Class rdf:type owl:Class. \
-		    ?Property rdfs:domain ?Class filter regex(str(?Class),"^' + domain + '").              \
-			?Property rdfs:range ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			?Property rdfs:domain ?x.              \
-			?x owl:unionOf ?y.              \
-			?y list:member ?Class filter regex(str(?Class),"^' + domain + '").              \
-			?Property rdfs:range ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-			UNION              \
-            \              \              \              \
-			{?Class rdf:type owl:Class. \
-			?Property rdfs:domain ?Class filter regex(str(?Class),"^' + domain + '").              \
-			?Property rdfs:range ?x.              \
-			?x owl:unionOf ?y.              \
-			?y list:member ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			?Property rdfs:domain ?x.              \
-			?x owl:unionOf ?y.              \
-			?y list:member ?Class filter regex(str(?Class),"^' + domain + '").              \
-			?Property rdfs:range ?x1.              \
-			?x1 owl:unionOf ?y1.              \
-			?y1 list:member ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-			?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
-			?x owl:onClass ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-			?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y.              \
-			 ?y owl:unionOf ?z. ?z list:member ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-             \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			 ?x1 owl:unionOf ?x2. ?x2 list:member ?Class filter regex(str(?Class),"^' + domain + '").              \
-			?x1 rdfs:subClassOf ?x .              \
-			?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y.              \
-			 ?y owl:unionOf ?z. ?z list:member ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}        \               \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			 ?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-			?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
-			?x owl:someValuesFrom ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-			UNION              \
-            \
-			{?Class rdf:type owl:Class. \
-			?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-			?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
-			?x owl:allValuesFrom ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).}              \
-            \
-	}';
+			{ \
+			    ?Class rdf:type owl:Class. \
+			    ?Property rdfs:domain ?Class filter regex(str(?Class),"^' + domain + '").              \
+				?Property rdfs:range ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
+			} UNION {             \
+				?Class rdf:type owl:Class. \
+				?Property rdfs:domain ?x.              \
+				?x owl:unionOf ?y.              \
+				?y rdf:rest* ?Rest0. ?Rest0 rdf:first ?Class filter regex(str(?Class),"^' + domain + '").              \
+				?Property rdfs:range ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).             \
+			} UNION {             \
+				?Class rdf:type owl:Class. \
+				?Property rdfs:domain ?Class filter regex(str(?Class),"^' + domain + '").              \
+				?Property rdfs:range ?x.              \
+				?x owl:unionOf ?y.              \
+				?y rdf:rest* ?Rest1. ?Rest1 rdf:first ?Range  filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
+			} UNION {             \
+				?Class rdf:type owl:Class. \
+				?Property rdfs:domain ?x.              \
+				?x owl:unionOf ?y.              \
+				?y rdf:rest* ?Rest2. ?Rest2 rdf:first ?Class filter regex(str(?Class),"^' + domain + '").              \
+				?Property rdfs:range ?x1.              \
+				?x1 owl:unionOf ?y1.              \
+				?y1 rdf:rest* ?Rest3. ?Rest3 rdf:first ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
+			} UNION {             \
+				?Class rdf:type owl:Class. \
+				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
+				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
+				?x owl:onClass ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
+			} UNION {             \
+				?Class rdf:type owl:Class. \
+				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
+				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y.              \
+				?y owl:unionOf ?z. \
+				?z rdf:rest* ?Rest4. ?Rest4 rdf:first ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
+			} UNION {             \
+				?Class rdf:type owl:Class. \
+				?x1 owl:unionOf ?x2. \
+				?x2 rdf:rest* ?Rest5. ?Rest5 rdf:first ?Class filter regex(str(?Class),"^' + domain + '").              \
+				?x1 rdfs:subClassOf ?x .              \
+				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y.              \
+				?y owl:unionOf ?z. \
+				?z rdf:rest* ?Rest6. ?Rest6 rdf:first ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).        \               \
+			} UNION {              \
+				?Class rdf:type owl:Class. \
+				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
+				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
+				?x owl:someValuesFrom ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
+			} UNION {              \
+				?Class rdf:type owl:Class. \
+				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
+				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
+				?x owl:allValuesFrom ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")). \
+			}              \
+		}';
 	},
 	
 	loadProperties : function(res) {

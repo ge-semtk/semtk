@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.http.HttpEntity;
@@ -86,7 +87,8 @@ public abstract class SparqlEndpointInterface {
 	// results types to request
 	private static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	private static final String CONTENTTYPE_JSON_LD = "application/x-json+ld";
-	
+	private static final int MAX_QUERY_TRIES = 3;
+
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private static URLStreamHandler handler = null; // set only by unit tests
 
@@ -99,7 +101,7 @@ public abstract class SparqlEndpointInterface {
 	protected String port = null;
 	protected String dataset = "";
 
-	
+
 	/**
 	 * Constructor
 	 * @param serverAndPort e.g. "http://vesuvius37.crd.ge.com:2420"
@@ -329,16 +331,32 @@ public abstract class SparqlEndpointInterface {
 	 * @return a JSONObject wrapping the results
 	 */
 	public JSONObject executeQuery(String query, SparqlResultTypes resultType) throws Exception {
-		
-		if(this.userName !=null && this.password != null){
-			return executeQueryAuthPost(query, resultType);
-		}else{
-			if(resultType == SparqlResultTypes.CONFIRM){ 
-				throw new Exception("Username and password are required to execute a query with resultType " + resultType.toString());
+
+		int tryCount = 0;
+		// Keep trying the query until it succeeds or reaches a 
+		// maximum number of tries, which is checked for in the 
+		// exception catch
+		while (true) {
+			tryCount++;
+			try {
+				if(this.userName !=null && this.password != null){
+					return executeQueryAuthPost(query, resultType);
+				}else{
+					if(resultType == SparqlResultTypes.CONFIRM){ 
+						throw new Exception("Username and password are required to execute a query with resultType " + resultType.toString());
+					}
+					return executeQueryPost(query, resultType);
+				}
+			} catch (Exception e) {
+				if (tryCount >= MAX_QUERY_TRIES) {
+					throw e;
+				} else {	// else unnecessary, but makes code easier to read
+					System.out.println ("SPARQL query failed.  Sleeping 2 seconds and trying again...");
+					TimeUnit.SECONDS.sleep (2); // sleep 2 seconds and try again
+				}
 			}
-			return executeQueryPost(query, resultType);
 		}
-	}	
+	}
 
 	public JSONObject executeTestQuery() throws Exception {
 		final String sparql = "select ?Concept where {[] a ?Concept} LIMIT 1";

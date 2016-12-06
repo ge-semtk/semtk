@@ -32,6 +32,7 @@ import java.util.Set;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 
@@ -72,11 +73,17 @@ public class CSVDataset extends Dataset {
 		CSVParser parser = getParser(new StringReader(this.csvString));
 		this.recordIterator = parser.iterator();
 		
-		// get and set the header info
+		// get and set the headr info
 		Map<String, Integer> headerMap = parser.getHeaderMap();		
-		this.headers = new String[headerMap.size()];		
+		this.headers = new String[headerMap.size()];	
+		
+		// TODO: this test was causing other problems so it was removed.
+		if (false) {
+			throw new Exception("Duplicate or empty column headers on CSV file");
+		}
+		
 		for (String s : headerMap.keySet()) {
-			int location = headerMap.get(s);			
+			int location = headerMap.get(s);		
 			this.headers[location] = s;
 		}		
 	}
@@ -120,10 +127,14 @@ public class CSVDataset extends Dataset {
 			}
 		}
 		
+		// print all the headers we find
+		Set<String> parserHeaders = parser.getHeaderMap().keySet();
 	}
 	
 	private CSVParser getParser(Reader reader) throws Exception{
-		return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).parse(reader));
+		// return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).parse(reader));
+		return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).withQuote('"').withEscape('\\').withIgnoreEmptyLines(true).parse(reader)); // changed toward handling quotes in stream. the were breaking
+																										// solution suggestion: http://stackoverflow.com/questions/26729799/invalid-char-between-encapsulated-token-and-delimiter-in-apache-commons-csv-libr
 	}
 	
 	@Override
@@ -142,18 +153,29 @@ public class CSVDataset extends Dataset {
 				ArrayList<String> currRow = new ArrayList<String>();
 				record = this.recordIterator.next();
                 if(record.size() == 1 && record.get(0).trim().isEmpty()) {
+                	System.out.println("Empty CSV row, continuing...");
                 	continue;  // this is an empty line, skip it
                 }
 				
 				for(int j = 0; j < headers.length; j++){
 					// add the next entry to the list. 
+					try{
 					currRow.add(record.get(headers[j]) );
+					}
+					catch( Exception eee){
+						System.out.println("exception getting data for header");
+					}
 				}
 				rows.add(currRow);
 			}catch(NoSuchElementException e){
+//				System.out.println("ran into an exception for a missing element when getting records.... out of rows.");
 				break; // got to the end of the file
 			}
-		}		
+		}	
+		
+		// what is the count of Rows we want to return?
+//		System.out.println("number of CSV rows returned this run: " + rows.size());
+		
 		return rows;
 	}
 	

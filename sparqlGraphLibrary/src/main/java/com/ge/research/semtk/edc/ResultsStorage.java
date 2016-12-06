@@ -22,23 +22,19 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.Reader;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.UUID;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
+import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.resultSet.Table;
 
 
@@ -47,6 +43,7 @@ import com.ge.research.semtk.resultSet.Table;
  * Splits stored files into sample and full files
  */
 public class ResultsStorage {
+	
 	private URL baseURL = null;
 	private String fileLocation = null;
 	
@@ -92,6 +89,20 @@ public class ResultsStorage {
 		URL[] ret = { getURL(samplename), getURL(fullname) };
 		return ret;
 	}
+
+	public URL[] storeCsvFileIncremental(String contents, int sampleRows, String jobID, int segment) throws Exception {
+		
+		Boolean newSample = true;
+		if(segment > 0){ newSample = false; }
+		
+		String fullname = storeFileIncrement(jobID, contents, "csv");
+		
+		String samplename = storeTruncatedFileIncrementalJson(jobID, contents, sampleRows + 1, "csv", newSample);
+		
+		URL[] ret = { getURL(samplename), getURL(fullname) };
+		return ret;
+	}
+	
 	
 	/**
 	 * Store any file with no sample file, no format changing, etc.
@@ -125,6 +136,59 @@ public class ResultsStorage {
 		
 		return storeFile(truncated, fileExtension);
 	}
+
+
+	private String storeTruncatedFileIncrementalJson(String jobID, String contents, int sampleLines, String fileExtension, Boolean generateNewSample) throws Exception {
+		
+		// make jobID contain a "_sample" tag so that it does not have the same name as the regular result:
+		jobID = jobID + "_sample";
+		
+		if(generateNewSample){
+			
+			System.out.println("generation of sample called.");
+			
+			// assumptions: 
+			// 1. the first row (as in up to the first newline) are column headers.
+			// 2. the rest of the set is remaining rows.
+			
+			Dataset ds = new CSVDataset(contents, true);
+		
+			String[] headers = ds.getColumnNamesinOrder().toArray(new String[ds.getColumnNamesinOrder().size()]);
+			
+			// set up some dummy column types. for convenience, they are all strings. 
+			String[] headerTypes = new String[headers.length];
+			for(int colnum = 0; colnum < headers.length; colnum += 1){ 
+				headerTypes[colnum] = "string";
+			}
+			
+			ArrayList<ArrayList<String>> temp = new ArrayList<ArrayList<String>>();
+			
+			while(true && temp.size() < sampleLines){
+				try{
+					ArrayList<ArrayList<String>> curr = ds.getNextRecords(1);
+					for(int y = 0; y < curr.size(); y += 1){
+						temp.add(curr.get(y));
+					}
+					if(curr.size() == 0){ break; }
+				}
+				catch(Exception e){
+					break;
+				}
+				
+			}
+			
+			// build a table to store results.
+			Table tbl = new Table(headers, headerTypes, temp);
+			String sampleSet = tbl.toJson().toString();
+			
+			return storeFileIncrement(jobID, sampleSet, fileExtension);
+		}
+		else
+		{
+			return ("results_" + jobID + "." + fileExtension);
+		}
+	}
+
 	
 	/**
 	 * store a file in this.fileLocation
@@ -144,6 +208,25 @@ public class ResultsStorage {
 			writer.write(contents);
 		} finally {
 			writer.close();
+		}
+		
+		return filename;
+	}
+
+	private String storeFileIncrement(String jobID, String contents, String fileExtension) throws Exception {
+		
+		String filename = "results_" + jobID + "." + fileExtension;
+		Path path = Paths.get(fileLocation, filename);
+		//File fullFile = path.toFile();
+		
+		try {
+			  Files.write(path, contents.getBytes(), StandardOpenOption.APPEND);
+		}
+		catch(NoSuchFileException nosuchfile){
+			Files.write(path, contents.getBytes(), StandardOpenOption.CREATE);
+			  
+		} finally {
+	
 		}
 		
 		return filename;

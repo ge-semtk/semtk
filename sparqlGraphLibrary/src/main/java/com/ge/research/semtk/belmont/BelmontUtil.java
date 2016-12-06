@@ -164,18 +164,29 @@ public class BelmontUtil {
 		
 		Matcher m = null;
 		
+		HashMap<String,Integer> prefixHash = new HashMap<String,Integer>();
+		
 		while ((m = pattern.matcher(retval)) != null && m.find()) {
 		
 			String prefixAll = m.group(1);
 			String prefix0 = m.group(2);
 			String prefix1 = m.group(3);
+			String prefixName = null;
+			// count how many times this prefix has occurred
+			if (prefixHash.containsKey(prefix1)) {
+				prefixHash.put(prefix1, prefixHash.get(prefix1) + 1);
+				prefixName = prefix1 + prefixHash.get(prefix1);
+			} else {
+				prefixHash.put(prefix1, 0);
+				prefixName = prefix1;
+			}
 			
-			prefixes = prefixes + "prefix " + prefix1 + ":<" + prefix0 + "/"
+			prefixes = prefixes + "prefix " + prefixName + ":<" + prefix0 + "/"
 					+ prefix1 + "#>\n";
 			
 			String pattern2 = "<" + prefixAll + "#([^>]+)>";
 			
-			String replace = prefix1 + ":$1";
+			String replace = prefixName + ":$1";
 			
 			String last = retval;
 			

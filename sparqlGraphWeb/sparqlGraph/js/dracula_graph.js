@@ -208,7 +208,7 @@ Graph.Renderer.Raphael = function(element, graph, width, height) {
     this.height = height || 400;
     var selfRef = this;
     this.r = Raphael(element, this.width, this.height);
-    this.radius = 40; /* max dimension of a node */
+    this.radius = 100; /* max dimension of a node */
     this.graph = graph;
     this.mouse_in = false;
 
@@ -276,8 +276,10 @@ Graph.Renderer.Raphael.prototype = {
     draw: function() {
         this.factorX = (this.width - 2 * this.radius) / (this.graph.layoutMaxX - this.graph.layoutMinX);
         this.factorY = (this.height - 2 * this.radius) / (this.graph.layoutMaxY - this.graph.layoutMinY);
-        for (i in this.graph.nodes) {
-            this.drawNode(this.graph.nodes[i]);
+        
+        var keys = Object.keys(this.graph.nodes);            // PEC changed loop due to bug in original (missing "var") and unexplainable javascript behavior
+        for (var k=0; k < keys.length; k++) {
+            this.drawNode(this.graph.nodes[keys[k]]);
         }
         for (var i = 0; i < this.graph.edges.length; i++) {
             this.drawEdge(this.graph.edges[i]);
@@ -469,9 +471,11 @@ Graph.Renderer.Raphael.prototype = {
     }
 };
 Graph.Layout = {};
-Graph.Layout.Spring = function(graph) {
+Graph.Layout.Spring = function(graph, width, height) {
+    this.width = width || 400;
+    this.height = height || 400;
     this.graph = graph;
-    this.iterations = 500;
+    this.iterations =  10;
     this.maxRepulsiveForceDistance = 6;
     this.k = 2;
     this.c = 0.01;
@@ -479,6 +483,35 @@ Graph.Layout.Spring = function(graph) {
     this.layout();
 };
 Graph.Layout.Spring.prototype = {
+		
+	iterate :  function(n, renderer, callback) {
+		 console.log(n);
+		 
+		 this.layoutIteration(); 
+		 this.layoutCalcBounds();
+		 renderer.draw();
+		 
+		 // recursion with a timer to break the thread to the GUi
+		 if (n==50) {
+			 // last time, clear layout information
+			 // like none of this ever happened.
+			 this.layoutClear();
+			 callback();
+			 return
+		 } else {
+			 setTimeout(this.iterate.bind(this, n+1, renderer, callback), 50);
+		 }
+	},
+		
+	// PEC: I added this to do iterative layout/draw so it looks cool
+	layoutLive : function (renderer, callback) {
+		 
+		 this.layoutPrepare();      // it would be nice to start where nodes are, but mapping is tricky
+		 
+		 this.iterate(0, renderer, callback);
+		 
+	},
+	
     layout: function() {
         this.layoutPrepare();
         for (var i = 0; i < this.iterations; i++) {
@@ -488,12 +521,30 @@ Graph.Layout.Spring.prototype = {
     },
     
     layoutPrepare: function() {
-        for (i in this.graph.nodes) {
-            var node = this.graph.nodes[i];
+    	var keys = Object.keys(this.graph.nodes);
+        for (var i=0; i < keys.length; i++) {
+            var node = this.graph.nodes[keys[i]];   // PEC fixed loop syntax bug
+            
             node.layoutPosX = 0;
             node.layoutPosY = 0;
             node.layoutForceX = 0;
             node.layoutForceY = 0;
+           
+        }
+        
+    },
+    
+    // PEC: I added this to allow a single layout then revert to un-layout behavior
+    layoutClear: function() {
+    	var keys = Object.keys(this.graph.nodes);
+        for (var i=0; i < keys.length; i++) {
+            var node = this.graph.nodes[keys[i]];   // PEC fixed loop syntax bug
+            
+            node.layoutPosX = undefined;
+            node.layoutPosY = undefined;
+            node.layoutForceX = undefined;
+            node.layoutForceY = undefined;
+           
         }
         
     },
@@ -660,6 +711,10 @@ Graph.Layout.Ordered.prototype = {
 // called from belmont and internally
 // This design could use some further improvement
 // -Paul
+changeLabelText = function(label, newText) {
+	label.attr({"text" : label.attrs.text.slice(0,1) + newText});
+};
+
 displayLabelOptions = function (label, displayBitmap) {
 	// this code was added to Graph Dracula to allow the recoloring of label text
 	// based on the selected actions. it is not default behavior.

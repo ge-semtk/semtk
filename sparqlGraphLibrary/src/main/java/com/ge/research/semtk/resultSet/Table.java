@@ -20,8 +20,8 @@ package com.ge.research.semtk.resultSet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -42,6 +42,7 @@ public class Table {
 	private String[] columnNames;
 	private String[] columnTypes;
 	private ArrayList<ArrayList<String>> rows;   
+	private HashMap<String, Integer> columnPositionInfo = new HashMap<String, Integer>();
 	
 	public Table(String[] cols, String[] colTypes, ArrayList<ArrayList<String>> rows) throws Exception{
 		
@@ -68,6 +69,14 @@ public class Table {
 		}
 		this.columnNames = cols;
 		this.columnTypes = colTypes;
+		
+		int colNum = 0;
+		// add all of the columns to the hash so we can make lookups faster.
+		for(String c : cols){
+			columnPositionInfo.put(c, colNum);
+			colNum++;
+		}
+		
 	}
 	
 	public int getNumRows(){
@@ -150,7 +159,11 @@ public class Table {
 	 * Get the index for a given column name, or -1 if does not exist
 	 */
 	public int getColumnIndex(String colName){
-		return ArrayUtils.indexOf(this.columnNames, colName);
+		int retval = -1;
+		if(this.columnPositionInfo.get(colName) != null){
+			retval = this.columnPositionInfo.get(colName);
+		}		
+		return retval;
 	}
 	
 	/**
@@ -165,6 +178,28 @@ public class Table {
 	 */
 	public ArrayList<String> getRow(int rowNum){
 		return this.rows.get(rowNum);
+	}
+	
+	/**
+	 * Get a single table row by index, and convert it to a string.
+	 * @param rowNum
+	 * @return
+	 */
+	public String getRowAsCSVString(int rowNum){
+		StringBuilder sb = new StringBuilder();
+		for(String s : this.getRow(rowNum)) {
+			if(s.indexOf(",") > -1){
+				sb.append("\"").append(s).append("\",");  // if the element contains a comma, wrap in quotes				
+			}else{
+				sb.append(s).append(",");
+			}
+		}
+		sb.setLength(sb.length() - 1); // strip off the tailing comma
+		return sb.toString();
+	}
+	
+	public String getCell(int row, int col) {
+		return this.rows.get(row).get(col);
 	}
 	
 	/**
@@ -248,14 +283,8 @@ public class Table {
 		buf.append("\n");
 
 		// gather data rows
-		for (ArrayList<String> row : this.getRows()) {
-			for (String e : row) {
-				if(e.indexOf(",") > -1){
-					e = "\"" + e + "\"";  // if the element contains a comma, wrap in quotes				
-				}
-				buf.append(e).append(",");
-			}
-			buf.setLength(buf.length() - 1); // strip off the tailing comma
+		for(int i = 0; i < this.getNumRows(); i++){	
+			buf.append(getRowAsCSVString(i));			
 			buf.append("\n");
 		}		
 		
@@ -273,14 +302,36 @@ public class Table {
 		
 		// collect data rows in a JSONArray
 		try {
-			for (ArrayList<String> row : this.getRows()) {
-				JSONArray currRow = new JSONArray();
-				for (String colName : this.columnNames) {
-					currRow.add(row.get(getColumnIndex(colName)));
+/*			for (ArrayList<String> row : this.getRows()) {
+				if(row != null){   // do not include null rows...
+					JSONArray currRow = new JSONArray();
+					for (String colName : this.columnNames) {
+						currRow.add(row.get(getColumnIndex(colName)));
+					}
+					allRows.add(currRow);
+					rowCount += 1;
 				}
-				allRows.add(currRow);
-				rowCount += 1;
 			}
+*/
+			// we can do this faster. 
+			int counter = 0;
+			Integer[] columnNumbersInOrderIwanted = new Integer[this.columnNames.length];
+			for (String colName : this.columnNames) {
+				columnNumbersInOrderIwanted[counter] = getColumnIndex(colName);
+				counter++;
+			}
+			
+			for (ArrayList<String> row : this.getRows()) {
+				if(row != null){   // do not include null rows...
+					JSONArray currRow = new JSONArray();
+					for (Integer k : columnNumbersInOrderIwanted) {
+						currRow.add(row.get(k));
+					}
+					allRows.add(currRow);
+					rowCount += 1;
+				}
+			}
+			
 		} catch(Exception e){
 			throw new Exception("Unable to collect row data for JSON table result set: " + e.getMessage());
 		}

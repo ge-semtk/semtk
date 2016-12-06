@@ -28,6 +28,10 @@ RUN apt-get upgrade -y
 # Install basic tools
 RUN apt-get install -y curl wget unzip vim-tiny nano
 
+# Install External Root CA certificate
+COPY cert/* /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
 RUN mkdir -p /localadm/kdl-query
 
 COPY target/*.jar /localadm/kdl-query

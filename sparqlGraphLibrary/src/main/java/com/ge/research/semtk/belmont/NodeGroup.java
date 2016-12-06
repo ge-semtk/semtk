@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.UUID;
 
+import org.apache.commons.lang.text.StrBuilder;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -50,9 +51,15 @@ public class NodeGroup {
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 	public ArrayList<Node> orphanOnCreate = new ArrayList<Node>();
+	private HashMap<String, String> prefixHash = new HashMap<String, String>();
+	private int prefixNumberStart = 0;
 	
 	public NodeGroup(){
 		this.sparqlNameHash = new HashMap<String, String>();
+	}
+	
+	public int getPrefixNumberStart(){
+		return this.prefixNumberStart;
 	}
 	
 	/**
@@ -225,6 +232,130 @@ public class NodeGroup {
 		NodeGroup copy = new NodeGroup();
 		copy.addJsonEncodedNodeGroup(nodegroup.toJson());
 		return copy;
+	}
+	
+	private String getPrefixedUri(String originalUri) throws Exception{
+		String retval = "";
+		if(originalUri == null ){
+			throw new Exception("prefixed URI " + originalUri + " does not seem to contain a proper prefix.");
+		}
+		else if(originalUri.indexOf("#") == -1 ){
+			return originalUri;
+		}
+		else{
+			// get the chunks and build the prefixed string.
+			String[] chunks = originalUri.split("#");
+			String pre = this.prefixHash.get(chunks[0]);
+			
+			if(chunks.length > 1 ){
+				retval = pre + ":" + chunks[1];
+			}
+			else{
+				retval = pre + ":";
+			}
+		}
+		
+		return retval;
+	}
+	
+	public void addToPrefixHash(String prefixedUri){
+		// from the incoming string, remove the local fragment and then try to add the rest to the prefix hash.
+		if(prefixedUri == null){ return; }
+		if(!prefixedUri.contains("#")){ return; }
+		
+		String[] chunks = prefixedUri.split("#");
+		
+		// found a new prefix
+		if(!this.prefixHash.containsKey(chunks[0])) {
+			// create a new prefix name
+			String [] fragments = chunks[0].split("/");
+			String newPrefixName = fragments[fragments.length - 1];
+			// make sure new prefix name is unique
+			if (this.prefixHash.containsValue(newPrefixName)) {
+				int i=0;
+				while (this.prefixHash.containsValue(newPrefixName + "_" + i)) {
+					i++;
+				}
+				newPrefixName = newPrefixName + "_" + i;
+			}
+			
+			//String newPrefixName = "pre_" + this.prefixNumberStart;
+			this.prefixNumberStart += 1;  // also obsolete I think
+			
+			this.prefixHash.put(chunks[0], newPrefixName);
+			
+			System.err.println("adding prefix: " + newPrefixName + " with key " + chunks[0] + " from input " + prefixedUri);
+		}
+	}
+	
+	public void rebuildPrefixHash(HashMap<String, String> startingMap){
+		
+		this.prefixHash = new HashMap<String, String>();		// x out the old map.
+		
+		this.prefixHash = startingMap;							// replace it.
+		this.prefixNumberStart = startingMap.size();
+		addAllToPrefixHash();
+		
+	}
+	
+	private void addAllToPrefixHash(){
+
+		this.addToPrefixHash(UriResolver.DEFAULT_URI_PREFIX);   // make sure to force the inclusion of the old ones.
+		this.addToPrefixHash("http://www.w3.org/2001/XMLSchema#");
+		
+		for(Node n : this.nodes){
+
+			if(n.getInstanceValue() != null && n.getInstanceValue().contains("#")){
+				this.addToPrefixHash(n.getInstanceValue());
+			}			
+			// add the prefix for each node.
+			this.addToPrefixHash(n.getFullUriName());
+			// add the URIs for the properties as well:
+			for(PropertyItem pi : n.getPropertyItems()){
+				this.addToPrefixHash(pi.getUriRelationship());
+			}
+			// add the URIs for the node items
+			for(NodeItem ni : n.getNodeItemList()){
+				this.addToPrefixHash(ni.getUriConnectBy());
+			}
+		}
+
+	}
+	
+	public HashMap<String, String> getPrefixHash(){
+		
+		if(this.prefixHash != null && this.prefixHash.size() != 0){
+			return this.prefixHash;
+		}
+		else{
+			this.buildPrefixHash();		// create something to send.
+			return this.prefixHash;
+		}
+		
+	}
+	
+	public void buildPrefixHash(){
+		
+		if(this.prefixHash.size() != 0){
+			return;
+		}
+		else{
+		// if possible, add the default prefix and user prefix:
+			addAllToPrefixHash();
+		}
+	}
+	
+	public String generateSparqlPrefix(){
+		StringBuilder retval = new StringBuilder();
+		
+		// check that it is built!
+		if(this.prefixHash.size() == 0) { this.buildPrefixHash(); }
+		
+		for(String k : this.prefixHash.keySet()){
+			retval.append("prefix ").append(this.prefixHash.get(k)).append(":<").append(k).append("#>\n");
+		}
+				
+		return(retval.toString());
 	}
 	
 	public static String tabIndent(String tab) {
@@ -463,6 +594,8 @@ public class NodeGroup {
 		// Error handling: For each error, inserts a comment at the beginning.
 		//    #Error: explanation
 		
+		this.buildPrefixHash();
+		
 		String retval = "";
 		String tab = tabIndent("");
 		
@@ -472,6 +605,7 @@ public class NodeGroup {
 		
 		ArrayList<Node> orderedNodes = this.getOrderedNodeList();
 		StringBuilder sparql = new StringBuilder();
+		sparql.append(this.generateSparqlPrefix());
 		
 		if (qt.equals(AutoGeneratedQueryTypes.QUERY_COUNT)) {
 			sparql.append("SELECT (COUNT(*) as ?count) { \n");
@@ -496,6 +630,10 @@ public class NodeGroup {
 				// add all the returned props
 				ArrayList<PropertyItem> props = n.getReturnedPropertyItems();
 				for (PropertyItem pi : props) {
+					String id = pi.getSparqlID();
+					if (id.isEmpty()) {
+						throw new Exception("Trying to return a property whose sparqlID is not set: " + pi.getKeyName());
+					}
 					sparql.append(" ").append(pi.getSparqlID());
 				}
 			}
@@ -534,14 +672,19 @@ public class NodeGroup {
 		}
 		
 		
-		retval = BelmontUtil.prefixQuery(sparql.toString());
+		//retval = BelmontUtil.prefixQuery(sparql.toString());
+		retval = sparql.toString();
 		
 		return retval;
 	}
 
 	public String generateSparqlConstruct() throws Exception{
+	
+		this.buildPrefixHash();
+		
 		String tab = tabIndent("");
 		StringBuilder sparql = new StringBuilder();
+		sparql.append(this.generateSparqlPrefix());
 		sparql.append("construct {\n");
 		
 		AutoGeneratedQueryTypes queryType = AutoGeneratedQueryTypes.QUERY_CONSTRUCT;
@@ -585,6 +728,9 @@ public class NodeGroup {
 	}
 	
 	public String generateSparqlAsk() throws Exception{
+		
+		this.buildPrefixHash();
+		
 		// generate a sparql ask statement
 		String footer = "";
 		String tab = tabIndent("");
@@ -598,12 +744,12 @@ public class NodeGroup {
 		}
 		
 		
-		String retval = "ask {\n" + footer + "\n}";
-		retval = BelmontUtil.prefixQuery(retval.toString());
+		String retval = this.generateSparqlPrefix() + "ask {\n" + footer + "\n}";
+		//retval = BelmontUtil.prefixQuery(retval.toString());
 		return retval;
 	}
 	
-	private String generateSparqlSubgraphClauses(AutoGeneratedQueryTypes queryType, Node snode, NodeItem skipNodeItem, Returnable targetObj, ArrayList<Node> doneNodes, String tab) {
+	private String generateSparqlSubgraphClauses(AutoGeneratedQueryTypes queryType, Node snode, NodeItem skipNodeItem, Returnable targetObj, ArrayList<Node> doneNodes, String tab) throws Exception {
 		StringBuilder sparql = new StringBuilder();
 		
 		// check to see if this node has already been processed. 
@@ -635,7 +781,8 @@ public class NodeGroup {
 			}
 			
 			// SPARQL for basic prop
-			sparql.append(tab + snode.getSparqlID() + " <" + prop.getUriRelationship() + "> " + prop.getSparqlID() +  " .\n");
+//			sparql.append(tab + snode.getSparqlID() + " <" + prop.getUriRelationship() + "> " + prop.getSparqlID() +  " .\n");
+			sparql.append(tab + snode.getSparqlID() + " " + this.getPrefixedUri(prop.getUriRelationship()) + " " + prop.getSparqlID() +  " .\n");
 		
 			// add in attribute range constraint if there is one 
 			if(prop.getConstraints() != null && prop.getConstraints() != ""){
@@ -680,7 +827,9 @@ public class NodeGroup {
 					sparql.append("\n");
 					
 					// node connection, then recursive call
-					sparql.append(tab + snode.getSparqlID() + " <" + nItem.getUriConnectBy() + "> " + domainNode.getSparqlID() + " .\n");
+					// sparql.append(tab + snode.getSparqlID() + " <" + nItem.getUriConnectBy() + "> " + domainNode.getSparqlID() + " .\n");
+					sparql.append(tab + snode.getSparqlID() + " " + this.getPrefixedUri(nItem.getUriConnectBy()) + " " + domainNode.getSparqlID() + " .\n");
+					
 					tab = tabIndent(tab);
 					
 					// RECURSION
@@ -712,7 +861,8 @@ public class NodeGroup {
 				// the incoming connection
 				if (incomingSNode != null) {
 					sparql.append("\n");
-					sparql.append(tab + incomingSNode.getSparqlID() + " <" + nItem.getUriConnectBy() + "> " + snode.getSparqlID() + " .\n");
+//					sparql.append(tab + incomingSNode.getSparqlID() + " <" + nItem.getUriConnectBy() + "> " + snode.getSparqlID() + " .\n");
+					sparql.append(tab + incomingSNode.getSparqlID() + " " + this.getPrefixedUri(nItem.getUriConnectBy()) + " " + snode.getSparqlID() + " .\n");
 					tab = tabIndent(tab);
 				}
 				
@@ -730,7 +880,7 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 
-	private String generateSparqlTypeClause(Node curr, String tab) {
+	private String generateSparqlTypeClause(Node curr, String tab) throws Exception {
 		String retval = "";
 		// Generates SPARQL to constrain the type of this node if
 		// There is no edge that constrains it's type OR
@@ -742,11 +892,11 @@ public class NodeGroup {
 		if(constrainedTypes.size() == 0 || !constrainedTypes.contains(curr.getFullUriName() )){
 			// constrain to exactly the this type since there are no sub-types
 			if(curr.getSubClassNames().size() == 0){
-				retval += tab + curr.getSparqlID() + " a <" + curr.getFullUriName() + "> .\n";
+				retval += tab + curr.getSparqlID() + " a " + this.getPrefixedUri(curr.getFullUriName()) + " .\n";
 			}
 			else{
 				retval += tab + curr.getSparqlID() + " a " + curr.getSparqlID() + "_type .\n";
-				retval += tab + curr.getSparqlID() +  "_type " + " rdfs:subClassOf <" + curr.getFullUriName() + ">.\n";
+				retval += tab + curr.getSparqlID() +  "_type " + " rdfs:subClassOf " + this.getPrefixedUri(curr.getFullUriName()) + ".\n";
 			}
 		}
 		
@@ -891,6 +1041,10 @@ public class NodeGroup {
 	}
 	
 	public void pruneAllUnused () {
+		this.pruneAllUnused(false);
+	}
+
+	public void pruneAllUnused (boolean instanceOnly) {
 		// prune all unused subgraphs
 		ArrayList<Node> pruned = new ArrayList<Node>();
 		boolean prunedSomething = true;
@@ -902,7 +1056,7 @@ public class NodeGroup {
 			for (Node node : this.nodes) {
 				if (!pruned.contains(node)) {
 					pruned.add(node);
-					this.pruneUnusedSubGraph(node);
+					this.pruneUnusedSubGraph(node, instanceOnly);
 					prunedSomething = true;
 					break;   // go back to "while" since this.SNodeList is now changed
 				}
@@ -910,9 +1064,9 @@ public class NodeGroup {
 		} 
 	}
 	
-	public boolean pruneUnusedSubGraph (Node node) {
+	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) {
 		
-		if (! node.isUsed()) {
+		if (! node.isUsed(instanceOnly)) {
 			ArrayList<Node> subNodes = this.getAllConnectedNodes(node);
 			ArrayList<ArrayList<Node>> subGraphs = new ArrayList<ArrayList<Node>>();
 			ArrayList<Integer> needSubTree = new ArrayList<Integer>();
@@ -923,11 +1077,13 @@ public class NodeGroup {
 			
 			// build a subGraph for every connection
 			for (int i = 0; i < subNodes.size(); i++) {
-				subGraphs.set(i, this.getSubGraph(subNodes.get(i), stopList));
-				needSubTree.set(i, 0);
+				subGraphs.add(this.getSubGraph(subNodes.get(i), stopList));
+				needSubTree.add(0);
 				
 				for (int j=0; j < subGraphs.get(i).size(); j++) {
-					if (subGraphs.get(i).get(j).isUsed()) {
+					Node n = subGraphs.get(i).get(j);
+					
+					if (n.isUsed(instanceOnly))  {
 						needSubTree.set(i, 1);
 						needSubTreeCount += 1;
 						break;
@@ -943,7 +1099,8 @@ public class NodeGroup {
 				for (int i=0; i < subGraphs.size(); i++) {
 					if (needSubTree.get(i) == 0) {
 						for (int j=0; j < subGraphs.get(i).size(); j++) {
-							this.deleteNode(subGraphs.get(i).get(j), false);
+							Node n = subGraphs.get(i).get(j);
+							this.deleteNode(n, false);
 						}
 					}
 				}
@@ -953,7 +1110,7 @@ public class NodeGroup {
 				ArrayList<Node> connList = this.getAllConnectedNodes(node);
 				this.deleteNode(node, false);
 				for (int i=0; i < connList.size(); i++) {
-					this.pruneUnusedSubGraph(connList.get(i));
+					this.pruneUnusedSubGraph(connList.get(i), instanceOnly);
 				}
 				
 				return true;
@@ -1130,7 +1287,7 @@ public class NodeGroup {
 			}
 		}
 
-		return new Node(nome, belprops, belnodes, fullNome, this);
+		return new Node(nome, belprops, belnodes, fullNome, oInfo.getSubclassNames(classUri), this);
 	}
 	
 	public HashMap<String, String> getSparqlNameHash() {
@@ -1164,6 +1321,36 @@ public class NodeGroup {
 		}
 		return retval;
 
+	}
+	
+	/**
+	 * Set a property item to be returned, giving it a SparqlID if needed
+	 * @param pItem
+	 * @param val
+	 * @return the sparqlId
+	 */
+	public String setIsReturned(PropertyItem pItem, boolean val) {
+		String ret = null;
+		pItem.setIsReturned(val);
+		if (val && pItem.getSparqlID().isEmpty()) {
+			ret = this.changeSparqlID(pItem, pItem.getKeyName());
+		}
+		return  ret;
+	}
+	
+	/**
+	 * Set a node to be returned, giving it a SparqlID if needed
+	 * @param pItem
+	 * @param val
+	 * @return the sparqlId
+	 */
+	public String setIsReturned(Node node, boolean val) {
+		String ret = null;
+		node.setIsReturned(val);
+		if (val && node.getSparqlID().isEmpty()) {
+			ret = this.changeSparqlID(node, node.getUri(true));
+		}
+		return  ret;
 	}
 	
 	public String changeSparqlID(PropertyItem obj, String requestID) {
@@ -1518,6 +1705,8 @@ public class NodeGroup {
 	}
 	
 	public String generateSparqlInsert(String post, OntologyInfo oInfo) throws Exception{
+		this.buildPrefixHash();
+		
 		String retval = "";
 		// get the primary insert body.
 		String primaryBody = this.getInsertLeader(post, oInfo);
@@ -1525,22 +1714,17 @@ public class NodeGroup {
 		// get the where clause body
 		String whereBody = this.getInsertWhereBody(post, oInfo);
 		
-		retval = "INSERT {\n" + primaryBody + "} WHERE {" + whereBody + "}\n";
+		retval =  this.generateSparqlPrefix() + " INSERT {\n" + primaryBody + "} WHERE {" + whereBody + "}\n";
 		
-		try {
-			String retvalClean = BelmontUtil.prefixQuery(retval);
-			retval = retvalClean;
-		} catch (Exception e) {
-			throw new Exception("error encountered attempting to create prefixed insert query");
-			
-		}
 		return retval;
 	}
 
-	public String getInsertLeader(String postfixSparqlIDs, OntologyInfo oInfo) {
+	public String getInsertLeader(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception {
 		// this method creates the top section of the insert statements.
 		// the single argument is used to post-fix the sparqlIDs, if required. 
 		// this is used in the generation of bulk insertions. 
+		this.buildPrefixHash();
+		
 		String retval = "";
 		if(postfixSparqlIDs == null){ postfixSparqlIDs = "";}
 		
@@ -1570,19 +1754,19 @@ public class NodeGroup {
 			
 			// only add this node if the current instance should be included. 
 			if((!currIsEnum) || (currIsEnum && !currInstanceBlank)){
-				retval += "\t" + sparqlID + " a <" + curr.getFullUriName() + "> . \n";
+				retval += "\t" + sparqlID + " a " + this.getPrefixedUri(curr.getFullUriName()) + " . \n";
 				
 				// insert each property we know of. 
 				for(PropertyItem prop : curr.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + sparqlID + " <" + prop.getUriRelationship() + "> \"" + inst + "\"^^<http://www.w3.org/2001/XMLSchema#" + prop.getValueType() + "> .\n";  
+						retval += "\t" + sparqlID + " " + this.getPrefixedUri(prop.getUriRelationship()) + " \"" + inst + "\"^^" + this.getPrefixedUri("http://www.w3.org/2001/XMLSchema#" + prop.getValueType()) + " .\n";  
 					}
 				}
 				
 				// insert a line for each node item
 				for(NodeItem ni : curr.getNodeItemList()){
 					for(Node currentConnection : ni.getNodeList()){
-						retval += "\t" + sparqlID + " <" + ni.getUriConnectBy() + "> " + currentConnection.getSparqlID() + postfixSparqlIDs + " .\n";
+						retval += "\t" + sparqlID + " " + this.getPrefixedUri(ni.getUriConnectBy()) + " " + currentConnection.getSparqlID() + postfixSparqlIDs + " .\n";
 					}
 				}
 			}
@@ -1591,7 +1775,9 @@ public class NodeGroup {
 		return retval;
 	}
 	
-	public String getInsertWhereBody(String postfixSparqlIDs, OntologyInfo oInfo) {
+	public String getInsertWhereBody(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception {
+		
+		this.buildPrefixHash();
 		StringBuilder sparql = new StringBuilder();
 		
 		if (postfixSparqlIDs == null) {
@@ -1619,8 +1805,8 @@ public class NodeGroup {
 					nodeVal = UriResolver.DEFAULT_URI_PREFIX + nodeVal;
 				}
 				
-				sparql.append("\tBIND (<").append(nodeVal).append("> AS ")
-					.append(sparqlId).append(").\n");
+//				sparql.append("\tBIND (<").append(nodeVal).append("> AS ").append(sparqlId).append(").\n");
+				sparql.append("\tBIND (").append(this.getPrefixedUri(nodeVal)).append(" AS ").append(sparqlId).append(").\n");
 			}
 			else if(currInstanceBlank && !currIsEnum){
 				ArrayList<PropertyItem> constrainedProps = node.getConstrainedPropertyObjects();
@@ -1629,9 +1815,12 @@ public class NodeGroup {
 					// node is constrained
 					
 					for (PropertyItem pi : constrainedProps) {
-						sparql.append(" ").append(sparqlId).append(" <").append(pi.getUriRelationship())
-							.append("> ").append(pi.getSparqlID()).append(". ").append(pi.getConstraints())
-							.append(" .\n");
+				//		sparql.append(" ").append(sparqlId).append(" <").append(pi.getUriRelationship())
+				//			.append("> ").append(pi.getSparqlID()).append(". ").append(pi.getConstraints())
+				//			.append(" .\n");
+						sparql.append(" ").append(sparqlId).append(" ").append(this.getPrefixedUri(pi.getUriRelationship()))
+								.append(" ").append(pi.getSparqlID()).append(". ").append(pi.getConstraints())
+								.append(" .\n");
 					}
 				}
 				
@@ -1646,13 +1835,19 @@ public class NodeGroup {
 							nodeVal = UriResolver.DEFAULT_URI_PREFIX + nodeVal;
 						}
 						
-						sparql.append("\tBIND (iri(\"").append(nodeVal)
+						sparql.append("\tBIND (iri(\"").append(this.getPrefixedUri(nodeVal))
 							.append("\") AS ").append(sparqlId).append(").\n");
 					}
 					else {
-						sparql.append("\tBIND (iri(concat(\"" + UriResolver.DEFAULT_URI_PREFIX + "\", \"")
+						//sparql.append("\tBIND (iri(concat(\"" + UriResolver.DEFAULT_URI_PREFIX + "\", \"")
+						//	.append(UUID.randomUUID().toString()).append("\")) AS ")
+						//	.append(sparqlId).append(").\n");
+						
+						sparql.append("\tBIND (iri(concat(\"" + this.getPrefixedUri(UriResolver.DEFAULT_URI_PREFIX) + "\", \"")
 							.append(UUID.randomUUID().toString()).append("\")) AS ")
 							.append(sparqlId).append(").\n");
+						
+						
 					}
 				}
 			}
@@ -1687,4 +1882,32 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	public HashMap<String, RuntimeConstrainedObject> getConstrainedItems(){
+		HashMap<String, RuntimeConstrainedObject> retval = new HashMap<String, RuntimeConstrainedObject>();
+		
+		// go through all of the nodegroup contents and send back the collection.
+		for(Node curr : this.nodes){
+			if(curr.getIsRuntimeConstrained()){ 
+				// this one is constrained. add it to the list. 
+				
+				RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)curr, RuntimeConstrainedItems.SupportedTypes.NODE);
+				retval.put(curr.sparqlID, currConst);
+			}
+			else{
+				// do nothing.
+			}
+			
+			// check the properties to make sure that we get them all. 
+			for(PropertyItem pi : curr.getPropertyItems()){
+				if(pi.getIsRuntimeConstrained()){
+					RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)pi, RuntimeConstrainedItems.SupportedTypes.PROPERTYITEM);
+					retval.put(pi.sparqlID, currConst);
+				}
+				else{
+					// do nothing.
+				}
+			}
+		}
+		return retval;
+	}
 }

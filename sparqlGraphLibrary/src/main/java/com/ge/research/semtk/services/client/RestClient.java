@@ -31,15 +31,19 @@ import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+
 
 /**
  * An abstract class containing code for a REST client.
  */
 @SuppressWarnings("deprecation")
-public abstract class RestClient extends Client {
+public abstract class RestClient extends Client implements Runnable {
 	
 	protected RestClientConfig conf;	
 	protected JSONObject parametersJSON = new JSONObject();
+	Object runRes = null;
+	Exception runException = null;
 	
 	/**
 	 * Constructor
@@ -50,6 +54,29 @@ public abstract class RestClient extends Client {
 	public RestClientConfig getConfig() {
 		return this.conf;
 	}
+	
+	/**
+	 * Execute as a thread,
+	 *    puts results in runRes
+	 *    and any exception into runException
+	 */
+	public void run() {
+		try {
+			this.runRes = this.execute();
+		} catch (Exception e) {
+			this.runException = e;
+		}
+	}
+	
+	public Object getRunRes() {
+		return runRes;
+	}
+
+	public Exception getRunException() {
+		return runException;
+	}
+
+
 	
 	/**
 	 * Abstract method to set up service parameters available upon instantiation

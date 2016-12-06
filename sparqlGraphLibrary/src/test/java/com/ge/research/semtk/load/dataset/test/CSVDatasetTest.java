@@ -60,7 +60,7 @@ public class CSVDatasetTest {
 		try {
 			
 			String[] headers = {"HEADER3","HEADER1"}; // picked a subset of the existing headers, in reverse order than they appear in the file
-			CSVDataset csvDataset = new CSVDataset("src/test/java/com/ge/research/semtk/load/dataset/test/test.csv", headers);
+			CSVDataset csvDataset = new CSVDataset("src/test/resources/test.csv", headers);
 			ArrayList<ArrayList<String>> records;
 			
 			// confirm that we read the data correctly
@@ -125,6 +125,7 @@ public class CSVDatasetTest {
 			e.printStackTrace();
 		}
 	}
+	
 	
 	@Test
 	public void testCSVDatasetFromString() throws Exception{

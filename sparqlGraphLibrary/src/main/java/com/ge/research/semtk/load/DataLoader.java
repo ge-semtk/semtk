@@ -19,6 +19,9 @@
 package com.ge.research.semtk.load;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.print.attribute.HashAttributeSet;
 
 import org.json.simple.JSONObject;
 
@@ -199,27 +202,45 @@ public class DataLoader {
 	}
 	public void insertToTripleStore() throws Exception{
 		// take the values from the current collection of node groups and then send them off to the store. 
-		
+	
+		HashMap<String, String> prefixHash = new HashMap<String, String>();
+		String prefixes = "";
 		String totalInsertHead = "";
 		String totalInsertWhere = "";
 		
 		int seqNum = 0;
+		NodeGroup lastNg = null;
 		for(NodeGroup ng : this.subGraphsToLoad){
+			
+			// we are going to use one prefix hash and add to is as needed. 
+			
+			if(seqNum == 0){
+				prefixHash = ng.getPrefixHash();
+			}
+			else{
+				ng.rebuildPrefixHash(prefixHash);	// add new elements, as needed.
+				prefixHash = ng.getPrefixHash(); 	// get back a copy. 
+			}
+			
 			String seq = "__" + seqNum;
 			
 			totalInsertHead  += ng.getInsertLeader(seq, this.oInfo);
 			totalInsertWhere += ng.getInsertWhereBody(seq, this.oInfo);
 			
 			seqNum += 1;
+			lastNg = ng;
 		}
 		// make the query and send it off.
-		String query = "Insert { " + totalInsertHead + " } where { " + totalInsertWhere + " } "; 
+		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
+		//       this way, we only need to get it's prefixes. 
+		
+		String query =  lastNg.generateSparqlPrefix() + "Insert { " + totalInsertHead + " } where { " + totalInsertWhere + " } "; 
 
 		// some diagnostic output:
-		//System.err.println("Insert generated : ");
-		//System.err.println(query);
+		System.err.println("Insert generated : ");
+		System.err.println(query);
 		
-		this.endpoint.executeQuery(BelmontUtil.prefixQuery(query), SparqlResultTypes.CONFIRM);
+		this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	}
 	
 	/**

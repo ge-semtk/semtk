@@ -424,9 +424,30 @@ require([
 			}
 
 			// Get class object.  (Parent of tree node that was dropped)
+			var itemKeyName = new OntologyName(gOTree.nodeGetURI(treeNode)).getLocalName();
 			var classTreeNode = gOTree.nodeGetParent(treeNode);
 			var classObj = gOInfo.getClass(gOTree.nodeGetURI(classTreeNode));
 
+			// does item already exist
+			var classUri = classObj.getNameStr();
+			var testSNode = gNodeGroup.getNodesBySuperclassURI(classUri, gOInfo);
+			if (testSNode.length > 0) {
+				if (testSNode.length > 1) {
+					alertUser("Internal error in sparqlForm addRowFromOTree:  Node already exists more than once: " + classUri);
+					return;
+				}
+				var prop = testSNode[0].getPropertyByKeyname(itemKeyName);
+				if (prop != null && prop.getIsReturned()) {
+					alertUser("Property is already on the form: " + itemKeyName);
+					return;
+				}
+				var nodeItem = testSNode[0].getNodeItemByKeyname(itemKeyName);
+				if (nodeItem != null && nodeItem.getSNodes().length > 0) {
+					alertUser("Item is already on the form: " + itemKeyName);
+					return;
+				}
+			}
+			
 			// get info on the dropped Node
 			var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getDomain(), true);
 			
@@ -434,8 +455,7 @@ require([
 				alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add " + classObj.getNameStr());
 				return;
 			}
-			var itemKeyName = new OntologyName(gOTree.nodeGetURI(treeNode)).getLocalName();
-
+			
 			// start by presuming that "item" is a property item
 			var item = itemSNode.getPropertyByKeyname(itemKeyName);
 			var filterItem = null;
@@ -472,7 +492,7 @@ require([
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 		
-		itemDialogCallback = function(item, sparqlID, optionalFlag, constraintStr, data) {
+		itemDialogCallback = function(item, sparqlID, optionalFlag, rtConstrainedFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
 			
 	    	// Note: ModalItemDialog validates that sparqlID is legal
@@ -483,6 +503,7 @@ require([
 	    	// Optional
 	    	if (item.getItemType() == "PropertyItem") {
 	    		item.setIsOptional(optionalFlag);
+	    		
 	    	} else if (item.getItemType() == "NodeItem") {
 	    		alert("Internal Error in sparqlForm.js itemDialogCallback():  item is a nodeItem.  Not implemented");
 	    	} else {
@@ -501,6 +522,9 @@ require([
 	    			}
 	    		}
 	    	}
+	    	
+	    	// RuntimeConstrained
+	    	item.setIsRuntimeConstrained(rtConstrainedFlag);
 	    	
 	    	if (constraintStr.length > 0) {
 	    		document.getElementById(data.textId).innerHTML = FORM_CONSTRAINED_ICON;

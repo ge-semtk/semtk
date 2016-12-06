@@ -19,13 +19,16 @@
 package com.ge.research.semtk.sparqlX;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 public class SparqlToXUtils {
-
+	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");
 	
 	// check that the passed Sparql query references the appropriate manadate columns in the return.
 	public static void validateSparqlQuery(String query, String[] requiredCols) throws IOException {
@@ -205,34 +208,20 @@ public class SparqlToXUtils {
 		
 	}
 	
-	
-	public static String safeUri(String uri) throws Exception {
+	public static boolean isLegalURI(String uri) {
 		
-		// check for 0 or one "#"
-		if (StringUtils.countMatches(uri, "#") > 1) {
-			throw new Exception ("Built an illegal URI with multiple hashes: " + uri);
+		// special case: virtuoso silently chokes on these
+		Matcher m = SparqlToXUtils.PATTERN_BAD_FIRST_CHAR.matcher(uri);
+		if (m.find()) {
+			return false;
 		}
 		
-		StringBuilder out = new StringBuilder();
-	    for (int i = 0; i < uri.length(); i++) {
-	        char c = uri.charAt(i);
-	        
-	        // lowercase
-	        if      (c >= 97 && c <= 122) { out.append(c); } 
-	        // caps
-	        else if (c >= 65 && c <= 90)  { out.append(c); }   
-	        // numbers
-	        else if (c >= 48 && c <= 57)  { out.append(c); } 
-	        // all garbage low chars including spaces
-	        else if (c <= 32)             { out.append("%20"); } 
-	        else if (c == '<')             { out.append("%3C"); } 
-	        else if (c == '>')             { out.append("%3E"); } 
-
-	        // rest
-	        else                          { out.append(c); }
-	    }
-	    return out.toString();
-		
+		try	{
+			new URI(uri);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
 	}
-
+	
 }

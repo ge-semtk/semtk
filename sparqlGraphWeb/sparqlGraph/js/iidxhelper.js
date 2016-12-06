@@ -65,6 +65,24 @@ define([	// properly require.config'ed
 			return checkbox;
 		};
 		
+		IIDXHelper.createLeftRightTable = function (leftDom, rightDom) {
+			// create a two column table with 100% width and right side right justified
+			var table = document.createElement("table");
+			table.style.width = "100%";
+			var tr = document.createElement("tr");
+			var td = document.createElement("td");
+			td.appendChild(leftDom);
+			tr.appendChild(td);
+			
+			td = document.createElement("td");
+			td.align = "right";
+			td.appendChild(rightDom);
+			tr.appendChild(td);
+			
+			table.appendChild(tr);
+			return table;
+		};
+		
 		IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {
 			// take a text label, DOM control, and optional help text
 			// Assemble a representative "control-group" div and return it

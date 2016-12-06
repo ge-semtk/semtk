@@ -50,9 +50,22 @@ public class Node extends Returnable {
 	// a collection of our known subclasses. 
 	private ArrayList<String> subclassNames = new ArrayList<String>();
 	
-	// the constraints which will be applied on qry
-	private ValueConstraint constraints = null;
 	
+	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng){
+		// just create the basic node.
+		this.nodeName = name;
+		this.fullURIname = URI;
+		this.subclassNames = new ArrayList<String>(subClassNames);
+		if(n != null){ this.nodes = n;}
+		if(p != null){ this.props = p;}
+		this.nodeGroup = ng;
+		
+		// add code to get the sparqlID
+		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
+	}
+	
+	// PEC NOTE:  this is missing a param from belmont.js : subClassNames
+	//            We might have a serious structural problem.
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, NodeGroup ng){
 		// just create the basic node.
 		this.nodeName = name;
@@ -91,11 +104,15 @@ public class Node extends Returnable {
 		ret.put("isReturned", this.isReturned);
 		ret.put("valueConstraint", this.getValueConstraintStr());
 		ret.put("instanceValue", this.getInstanceValue());
+		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		
 		return ret;
 	}
 	
 	public void setSparqlID(String ID){
+		if (this.constraints != null) {
+			this.constraints.changeSparqlID(this.sparqlID, ID);
+		}
 		this.sparqlID = ID;
 	}
 	 
@@ -135,6 +152,12 @@ public class Node extends Returnable {
 		}
 		catch(Exception E){ // the value was not set
 			this.constraints = null;
+		}
+		try{
+			this.setIsRuntimeConstrained((Boolean)nodeEncoded.get("isRuntimeConstrained"));
+		}
+		catch(Exception E){
+			this.setIsRuntimeConstrained(false);
 		}
 		
 		// create the node items and property items.
@@ -249,12 +272,32 @@ public class Node extends Returnable {
 		return fullURIname;
 	}
 
+	public boolean isUsed(boolean instanceOnly) {
+		if (instanceOnly) {
+			return this.hasInstanceData();
+		} else {
+			return this.isUsed();
+		}
+	}
+	
 	public boolean isUsed() {
 		if (this.isReturned || this.constraints != null || this.instanceValue != null) {
 			return true;
 		}
 		for (PropertyItem item : this.props) {
 			if (item.isReturned || item.getConstraints() != null || item.getInstanceValues().size() > 0) {
+				return true;
+			}
+		}
+		return false;	
+	}
+	
+	public boolean hasInstanceData() {
+		if (this.instanceValue != null) {
+			return true;
+		}
+		for (PropertyItem item : this.props) {
+			if (item.getInstanceValues().size() > 0) {
 				return true;
 			}
 		}
@@ -372,5 +415,8 @@ public class Node extends Returnable {
 		}
 		
 		return constrainedProperties;
+	}
+	public String getValueType(){
+		return "node_uri";
 	}
 }

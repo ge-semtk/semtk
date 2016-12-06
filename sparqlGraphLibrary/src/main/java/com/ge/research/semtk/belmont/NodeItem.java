@@ -167,4 +167,5 @@ public class NodeItem {
 			this.setIsOptional(Boolean.parseBoolean(str) ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE);
 		}
 	}
+	
 }

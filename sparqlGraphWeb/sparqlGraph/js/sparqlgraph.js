@@ -279,19 +279,20 @@
   		});
      };
     
-    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, constraintStr, data) {    	
+    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// update the property
     	propItem.setReturnName(sparqlID);
     	propItem.setIsOptional(optionalFlag);
+    	propItem.setIsRuntimeConstrained(rtConstrainedFlag);
     	propItem.setConstraints(constraintStr);
     	
     	// PEC TODO: pass draculaLabel through the dialog
     	displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
     };
     
-    snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, constraintStr, data) {    	
+    snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// don't un-set an SNode's sparqlID
@@ -316,11 +317,16 @@
 			}
 		}
 		
+		// runtime constrained
+    	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
+
     	// constraints
     	snodeItem.setConstraints(constraintStr);
     	
     	// PEC TODO: pass draculaLabel through the dialog
+    	changeLabelText(data.draculaLabel, snodeItem.getSparqlID());
     	displayLabelOptions(data.draculaLabel, snodeItem.getDisplayOptions());
+    	gNodeGroup.drawNodes();
     };
     
     downloadFile = function (data, filename) {
@@ -585,6 +591,11 @@
 	
 	     guiQueryNonEmpty();	
    	};
+   	
+   	doLayout = function() {
+   		setStatus("Laying out graph...");
+   		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, "")); 		
+   	};
     
     doTestMsi = function () {
     	require(['sparqlgraph/js/microserviceinterface',
@@ -785,6 +796,9 @@
     };
    
     guiGraphNonEmpty = function () {
+    	document.getElementById("btnLayout").className = "btn";
+    	document.getElementById("btnLayout").disabled = false;
+    	
     	document.getElementById("btnGraphClear").className = "btn";
     	document.getElementById("btnGraphClear").disabled = false;
     	
@@ -797,6 +811,9 @@
     };
     
     giuGraphEmpty = function () {
+    	document.getElementById("btnLayout").className = "btn disabled";
+    	document.getElementById("btnLayout").disabled = true;
+    	
     	document.getElementById("btnGraphClear").className = "btn disabled";
     	document.getElementById("btnGraphClear").disabled = true;
     	

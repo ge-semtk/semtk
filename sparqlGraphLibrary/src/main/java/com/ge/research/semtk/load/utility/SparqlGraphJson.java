@@ -54,6 +54,15 @@ public class SparqlGraphJson {
 		return this.conn;
 	}
 	
+	public JSONObject getSparqlConnJson() throws Exception {
+		if (jObj.containsKey("sparqlConn")) {
+			return (JSONObject)jObj.get("sparqlConn");
+		}
+		else{
+			return null;
+		}
+	}
+	
 	public JSONObject getSNodeGroupJson() {
 		if (jObj.containsKey("sNodeGroup")) {
 			return (JSONObject) jObj.get("sNodeGroup");

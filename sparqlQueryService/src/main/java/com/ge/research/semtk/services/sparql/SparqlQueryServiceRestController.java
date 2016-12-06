@@ -119,6 +119,7 @@ public class SparqlQueryServiceRestController {
 			return (new SimpleResultSet(false, e.getMessage())).toJson();
 		}		
 		resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
+		System.out.println("Result code:" + resultSet.getResultCodeString());
 		return resultSet.toJson();
 	}	
 	

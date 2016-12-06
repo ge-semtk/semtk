@@ -33,7 +33,7 @@ public class PropertyItem extends Returnable {
 	private String valueType = null;
 	private String valueTypeURI = null;  
 	private String uriRelationship = null; // the full URI of the relationship
-	private ValueConstraint constraints = null;
+	
 	private String fullURIName = null;
 	private Boolean isOptional = false;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
@@ -72,6 +72,13 @@ public class PropertyItem extends Returnable {
 		this.isOptional = (Boolean)next.get("isOptional");
 		this.isReturned = (Boolean)next.get("isReturned");
 		
+		try{
+			this.setIsRuntimeConstrained((Boolean)next.get("isRuntimeConstrained"));
+		}
+		catch(Exception E){
+			this.setIsRuntimeConstrained(false);
+		}
+		
 		JSONArray instArr = (JSONArray)next.get("instanceValues");
 		Iterator<String> it = instArr.iterator();
 		while(it.hasNext()){
@@ -98,6 +105,7 @@ public class PropertyItem extends Returnable {
 		ret.put("SparqlID", this.sparqlID);
 		ret.put("isReturned", this.isReturned);
 		ret.put("isOptional", this.isOptional);
+		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("instanceValues", iVals);
 
 		return ret;
@@ -150,6 +158,12 @@ public class PropertyItem extends Returnable {
 	public void addConstraint(String str) {
 		this.constraints = new ValueConstraint(str);
 	}
-
+	
+	public void setSparqlID(String ID){
+		if (this.constraints != null) {
+			this.constraints.changeSparqlID(this.sparqlID, ID);
+		}
+		this.sparqlID = ID;
+	}
 
 }

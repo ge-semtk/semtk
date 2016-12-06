@@ -116,14 +116,14 @@ public abstract class Utility {
 	 */
 	public static JSONObject getJSONObjectFromFile(File f) throws Exception{
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
-		String jsonStr = "";
+		StringBuilder jsonStr = new StringBuilder();
 		String line;
 		while((line = bufferedReader.readLine()) != null){
-			jsonStr += " " + line;
+			jsonStr.append(" " + line);
 		}
 		bufferedReader.close();
 		JSONParser parser = new JSONParser();
-		return (JSONObject) parser.parse(jsonStr);	
+		return (JSONObject) parser.parse(jsonStr.toString());	
 	}
 	
 	/**

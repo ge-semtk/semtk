@@ -159,5 +159,26 @@ public class SparqlConnection {
 		return this.domain;
 	}
 	
+	// added to support more descriptive information retrieval about the connection:
+	// "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"
 	
+	public String getConnectionName(){
+		return this.name;
+	}
+
+	public String getDataSourceDataset(){
+		return this.dataSourceDataset;
+	}
+	
+	public String getDataSourceKnowledgeServiceURL(){
+		return this.dataKsServerURL;
+	}
+	
+	public String getDataSourceURL(){
+		return this.dataServerUrl;
+	}
+	
+	public String getServerType(){
+		return this.serverType;
+	}
 }

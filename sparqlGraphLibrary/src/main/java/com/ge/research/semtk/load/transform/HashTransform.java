@@ -20,6 +20,8 @@ package com.ge.research.semtk.load.transform;
 
 import java.util.HashMap;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.ge.research.semtk.load.transform.Transform;
 
 /**
@@ -39,7 +41,10 @@ public class HashTransform extends Transform {
 	
 	@Override
 	public String applyTransform(String input) {
-		String retval = String.valueOf(input.hashCode());
+		// use 128 bit SHA-1. 
+		// prepends "z" as a convenience so that the hash is a legal URI fragment
+		
+		String retval = "z" + DigestUtils.shaHex(input);
 		return retval;
 	}
 	

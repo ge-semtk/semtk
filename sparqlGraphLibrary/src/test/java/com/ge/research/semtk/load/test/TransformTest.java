@@ -32,11 +32,12 @@ public class TransformTest {
 	@Test
 	public void testHashTransform() throws Exception{
 		HashTransform transform = new HashTransform("name");
-		assertEquals(transform.applyTransform("some string"),"1395333309");
-		assertEquals(transform.applyTransform("some string 2"),"885514639");
-		assertEquals(transform.applyTransform("some string 3"),"885514640");			
-		assertEquals(transform.applyTransform("some longer string that has a bunch of words in it like this but is almost the same as another string like this other one and now lets make it even longer 1"),"-61650938");
-		assertEquals(transform.applyTransform("some longer string that has a bunch of words in it like this but is almost the same as another string like this other one and now lets make it even longer 2"),"-61650937");
+
+		assertEquals(transform.applyTransform("some string"),"z8b45e4bd1c6acb88bebf6407d16205f567e62a3e");
+		assertEquals(transform.applyTransform("some string"),"z8b45e4bd1c6acb88bebf6407d16205f567e62a3e");
+		assertEquals(transform.applyTransform("\u0002garbage"),"z67feeda2e157ac556f0de821c104ba04eac9cf97");			
+		assertEquals(transform.applyTransform(" string that has a bunch of words in it like this but is almost the same as another string like this other one and now lets make it eve"),"z63c5166681fdd181df7d6a1da7df552c8070058a");
+		assertEquals(transform.applyTransform(" one with '!@#$%^&*()_-+={[}]|\\\\:P;\\\"'<,>.?/~"), "za7e33f5d20ba17715936db84442fd46a2721bb84");
 	}
 	
 	@Test

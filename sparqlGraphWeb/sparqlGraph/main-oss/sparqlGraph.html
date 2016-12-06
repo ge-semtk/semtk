@@ -29,6 +29,7 @@
     <!-- Include the required JavaScript libraries: -->
     <script type="text/javascript" src="../jquery/jquery.js"></script>
     <script type="text/javascript" src="../jquery/jquery-ui-1.10.4.min.js"></script>
+    
 	<script type="text/javascript" src='../jquery/jquery.cookie.js'></script>	
 	<script type="text/javascript" src='../jquery/jquery.jsonp-2.3.0.min.js'></script>
 	
@@ -106,6 +107,23 @@
 		.tg .tg-e3zv{font-weight:bold}
 		.tgembed {width:100%;}
 	</style>
+	
+	<script type="text/javascript">
+		//
+		// Global error handling designed specifically for SSO logouts - which cause tricky side-effects
+		//
+		// http://stackoverflow.com/questions/951791/javascript-global-error-handling
+		window.onerror = function(msg, url, line, col, error) {
+		   // Note that col & error are new to the HTML 5 spec and may not be supported
+		   var extra;
+		   extra += !col ?   '' : '\ncolumn: ' + col;
+		   extra += !error ? '' : '\nerror: '  + error;
+		
+		   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
+		
+		   return true;
+		};
+	</script>
 	
 	<script>
 		// =========== custom for OSS version =========
@@ -228,6 +246,7 @@
 						    <button class="btn btn-disabled" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
 						</td>
 						<td align="right">
+							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
 						    <input type="checkbox" class='checkbox' id="optional"> Optional Properties </input>
 							<input type="checkbox" class='checkbox' id="namespace" checked> Show namespaces </input>
 		   	    			<button class="btn btn-disabled" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>

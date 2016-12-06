@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -190,12 +191,12 @@ public class ImportSpecHandler {
 			
 			// check for a null column mapping having been found. if so, change the URI to a guid and make this a blank node. 
 			// encode uri and set it. 
-			if(uri == null){
+			if(StringUtils.isBlank(uri)){
 				curr.setInstanceValue(null);
 			}
 			else{
 				uri = this.uriResolver.getInstanceUriWithPrefix(curr.getFullUriName(), uri);
-				uri = SparqlToXUtils.safeUri(uri);
+				if (! SparqlToXUtils.isLegalURI(uri)) { throw new Exception("Attempting to insert ill-formed URI: " + uri); }
 				curr.setInstanceValue(uri);
 			}
 			
@@ -237,7 +238,7 @@ public class ImportSpecHandler {
 		}
 			
 		// prune nodes that no longer belong (no uri and no properties)
-		ng.pruneAllUnused();
+		ng.pruneAllUnused(true);
 		
 		// set URI for nulls
 		ng = this.setURIsForBlankNodes(ng);
@@ -274,7 +275,7 @@ public class ImportSpecHandler {
 				}
 				
 				// if all is well, append the value
-				if(text != null & text != ""){
+				if(!StringUtils.isEmpty(text)){
 					ret += text;
 				}
 				
@@ -292,7 +293,7 @@ public class ImportSpecHandler {
 					if(pos == null){ throw new Exception("Cannot find column in header list.");}
 				}
 				
-				if(colText != null && colText != ""){
+				if(! StringUtils.isBlank(colText)){
 					ret += this.applyTransforms(colText, mapItem);
 				}
 				else {

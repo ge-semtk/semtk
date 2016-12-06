@@ -22,7 +22,10 @@ public abstract class Returnable {
 	
 	protected String sparqlID = null;
 	protected Boolean isReturned = false;
+	protected Boolean isRuntimeConstrained = false;
 	
+	// the constraints which will be applied on qry
+	protected ValueConstraint constraints = null;
 	
 	/**
 	 * 
@@ -39,5 +42,25 @@ public abstract class Returnable {
 	public boolean getIsReturned() {
 		return this.isReturned;
 	}
+	
+	public String getRuntimeConstraintID(){
+		return this.getSparqlID();
+	}
 
+	public boolean getIsRuntimeConstrained(){
+		return this.isRuntimeConstrained;
+	}
+	
+	public void setIsRuntimeConstrained(boolean constrained){
+		this.isRuntimeConstrained = constrained;
+	}
+	
+	public void setValueConstraint(ValueConstraint v) {
+		this.constraints = v;
+	}
+	public ValueConstraint getValueConstraint(){
+		return this.constraints;
+	}
+	
+	public abstract String getValueType();
 }

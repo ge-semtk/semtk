@@ -457,6 +457,7 @@ var PropertyItem = function(nome, val, relation, uriRelation, jObj) {
 		this.SparqlID = '';
 		this.isReturned = false;
 		this.isOptional = false;
+		this.isRuntimeConstrained = false;
 		this.instanceValues = [];
 	}
 };
@@ -474,6 +475,7 @@ PropertyItem.prototype = {
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
 			isOptional : this.getIsOptional(),
+			isRuntimeConstrained : this.getIsRuntimeConstrained(),
 			instanceValues : this.instanceValues,
 		};
 		return ret;
@@ -489,6 +491,7 @@ PropertyItem.prototype = {
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
 		this.isOptional = jObj.isOptional;
+		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
        
         
         if(jObj.instanceValues){
@@ -536,8 +539,11 @@ PropertyItem.prototype = {
 	setValueType : function(typ) {
 		this.ValueType = typ;
 	},
-	setSparqlID : function(retname) {
-		this.SparqlID = retname;
+	setSparqlID : function(id) {
+		if (this.SparqlID != null && this.constraints != null) {
+			this.constraints = this.constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
+		}
+		this.SparqlID = id;
 	},
 	setConstraints : function(con) {
 		var f = new SparqlFormatter();
@@ -552,6 +558,9 @@ PropertyItem.prototype = {
 	},
 	setIsOptional : function(bool) {
 		this.isOptional = bool;
+	},
+	setIsRuntimeConstrained : function(bool) {
+		this.isRuntimeConstrained = bool;
 	},
 	// return values from the propertyItem
 	getfullURIName : function() {
@@ -580,8 +589,11 @@ PropertyItem.prototype = {
 		return this.isReturned;
 	},
 	getIsOptional : function() {
-		// boolean for PropertyItems
 		return this.isOptional;
+	},
+	getIsRuntimeConstrained : function() {
+		// boolean for PropertyItems
+		return this.isRuntimeConstrained;
 	},
 	getConstraints : function() {
 		// return the string representing the constraints.
@@ -697,6 +709,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 				nodeGroup.sparqlNameHash); // always has SparqlID since it is
 											// always included in the query
 		this.isReturned = false;
+		this.isRuntimeConstrained = false;
 		this.valueConstraint = "";
 		this.instanceValue = null;
 	}
@@ -737,6 +750,7 @@ SemanticNode.prototype = {
 			subClassNames : this.subClassNames.slice(),
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
+			isRuntimeConstrained : this.isRuntimeConstrained,
 			valueConstraint : this.valueConstraint,
 			instanceValue : this.instanceValue,
 		};
@@ -757,6 +771,7 @@ SemanticNode.prototype = {
 		this.subClassNames = jObj.subClassNames.slice();
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
+		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;
 
@@ -793,6 +808,9 @@ SemanticNode.prototype = {
 		return f.buildValueConstraint(this, valueList);
 	},
 	setSparqlID : function(id) {
+		if (this.SparqlID != null && this.constraints != null) {
+			this.constraints = this.constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
+		}
 		this.SparqlID = id;
 	},
 	getSparqlID : function() {
@@ -800,6 +818,9 @@ SemanticNode.prototype = {
 	},
 	setIsReturned : function(val) {
 		this.isReturned = val;
+	},
+	setIsRuntimeConstrained : function(val) {
+		this.isRuntimeConstrained = val;
 	},
 	setValueConstraint : function(c) {
 		this.valueConstraint = c;
@@ -820,6 +841,9 @@ SemanticNode.prototype = {
 	},
 	getIsReturned : function() {
 		return this.isReturned;
+	},
+	getIsRuntimeConstrained : function() {
+		return this.isRuntimeConstrained;
 	},
 	setNodeName : function(nome) {
 		this.NodeName = nome;
@@ -845,13 +869,25 @@ SemanticNode.prototype = {
 		return retprops;
 	},
 	
-	isUsed : function () {
-		// does this node or its properties have any constrants or isReturned()
-		if (this.getIsReturned() || this.hasConstraints() || this.instanceValue != null) return true;
-		
-		for (var i = 0; i < this.propList.length; i++) {
-			if (this.propList[i].getIsReturned() || this.propList[i].hasConstraints() || this.propList[i].instanceValues.length > 0) {
-				return true;
+	isUsed : function (optInstanceOnly) {
+		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+
+		if (instanceOnly) {
+			if (this.instanceValue != null) return true;
+			
+			for (var i = 0; i < this.propList.length; i++) {
+				if (this.propList[i].instanceValues.length > 0) {
+					return true;
+				}
+			}
+		} else {
+			// does this node or its properties have any constrants or isReturned()
+			if (this.getIsReturned() || this.hasConstraints() || this.instanceValue != null) return true;
+			
+			for (var i = 0; i < this.propList.length; i++) {
+				if (this.propList[i].getIsReturned() || this.propList[i].hasConstraints() || this.propList[i].instanceValues.length > 0) {
+					return true;
+				}
 			}
 		}
 		return false;
@@ -1151,7 +1187,7 @@ SemanticNode.prototype = {
 		var oInfo = this.nodeGrp.canvasOInfo;
 		var newNode = this.nodeGrp.returnBelmontSemanticNode(nItem.getUriValueType(), oInfo);
 		var myClass = oInfo.getClass(this.fullURIName);
-		var connURI = myClass.getPropertyByKeyname(nItem.getKeyName()).getNameStr();
+		var connURI = oInfo.getInheritedPropertyByKeyname(myClass, nItem.getKeyName()).getNameStr();
 		
 		this.nodeGrp.addOneNode(newNode, this, null, connURI);
 		this.nodeGrp.drawNodes();
@@ -1219,7 +1255,7 @@ SemanticNode.prototype = {
 var SemanticNodeGroup = function(width, height, divName) {
 	this.SNodeList = [];
 	this.graph = new Graph();
-	this.layouter = new Graph.Layout.Ordered(this.graph, null);
+	this.layouter = new Graph.Layout.Spring(this.graph, null, width, height);
 	this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
 			height);
 	this.rangeSetter = '';
@@ -1526,7 +1562,7 @@ SemanticNodeGroup.prototype = {
 			});
 		}
 
-		this.layouter.layout();
+		//this.layouter.layout();    //don't layout every time.  It doesn't work that well.
 		this.renderer.draw();
 
 	},
@@ -2670,6 +2706,9 @@ SemanticNodeGroup.prototype = {
 		// this.graph = new Graph();
 		// this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph,
 		// this.width, this.height);
+		this.graph = new Graph();
+		this.layouter = new Graph.Layout.Spring(this.graph, null);
+		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.drawNodes();
 		this.sparqlNameHash = {};
 
@@ -2718,7 +2757,7 @@ SemanticNodeGroup.prototype = {
 	},
 
 	
-	pruneUnusedSubGraph : function(snode) {
+	pruneUnusedSubGraph : function(snode, optInstanceOnly) {
 		// deletes a node if 
 		//       - it contains no returns or constraints
 		//       - it has one or less subGraphs hanging off it that contain no returns or constraints
@@ -2727,7 +2766,9 @@ SemanticNodeGroup.prototype = {
 		//
 		// If node or multiple subgraphs have returns and constraints: does nothing and returns false
 		// If anything was deleted: return true
-		if (! snode.isUsed()) {
+		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+		
+		if (! snode.isUsed(instanceOnly)) {
 			var subNodes = this.getAllConnectedNodes(snode);
 			var subGraphs = [];
 			var needSubTree = [];
@@ -2739,7 +2780,7 @@ SemanticNodeGroup.prototype = {
 				needSubTree[i] = 0;
 				// check to see if the subGraph contains any constraints or returns
 				for (var j=0; j < subGraphs[i].length; j++) {
-					if (subGraphs[i][j].isUsed()) {
+					if (subGraphs[i][j].isUsed(instanceOnly)) {
 						needSubTree[i] = 1;
 						needSubTreeCount += 1;
 						break;
@@ -2765,7 +2806,7 @@ SemanticNodeGroup.prototype = {
 				var connList = this.getAllConnectedNodes(snode);
 				this.deleteNode(snode, false);
 				for (var i=0; i < connList.length; i++) {
-					this.pruneUnusedSubGraph(connList[i]);
+					this.pruneUnusedSubGraph(connList[i], optInstanceOnly);
 				}
 				
 				return true;
@@ -2774,7 +2815,9 @@ SemanticNodeGroup.prototype = {
 		return false;
 	},
 	
-	pruneAllUnused : function() {
+	pruneAllUnused : function(optInstanceOnly) {
+		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+
 		// prune all unused subgraphs
 		
 		var pruned = [];        // sparqlID's of nodes already pruned
@@ -2787,7 +2830,7 @@ SemanticNodeGroup.prototype = {
 			for (var i=0; i < this.SNodeList.length; i++) {
 				if (pruned.indexOf(this.SNodeList[i].getSparqlID()) == -1) {
 					pruned.push(this.SNodeList[i].getSparqlID());
-					this.pruneUnusedSubGraph(this.SNodeList[i]);
+					this.pruneUnusedSubGraph(this.SNodeList[i], instanceOnly);
 					prunedSomething = true;
 					break;   // go back to "while" since this.SNodeList is now changed
 				}

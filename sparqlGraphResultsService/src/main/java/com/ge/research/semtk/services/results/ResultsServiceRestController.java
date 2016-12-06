@@ -138,6 +138,37 @@ public class ResultsServiceRestController {
 	    return res.toJson();
 	}
 	
+	@CrossOrigin
+	@RequestMapping(value="/storeIncrementalCsvResults", method=RequestMethod.POST)
+	public JSONObject storeIncrementalCsvResults(@RequestBody ResultsRequestBodyIncrementalFileContents requestBody){
+		SimpleResultSet res = new SimpleResultSet();
+		String jobId = requestBody.jobId;
+		
+		// logging
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeIncrementalCsvResults start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service storeCsvResults start JobId=" + jobId + " with segment number: " + requestBody.getSegmentNumber());
+		
+		try{
+			ResultsStorage storage = getResultsStorage();
+			URL [] urls = storage.storeCsvFileIncremental(requestBody.getContents(), prop.getSampleLines(), requestBody.jobId, requestBody.getSegmentNumber());
+			
+		    // store the location via JobTracker
+		    JobTracker tracker = new JobTracker(edc_prop);
+	    	tracker.setJobResultsURLs(requestBody.jobId, urls[0], urls[1]);
+	    	
+		    res.setSuccess(true);
+		}
+		catch(Exception e){
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(e.toString());
+		    LoggerRestClient.easyLog(logger, "ResultsService", "storeCsvTableResults exception", "message", e.toString());
+		    e.printStackTrace();
+		}
+    	
+		return res.toJson();
+	}
+	
 	/**
 	 * Store a chunk of text as a csv file and sample json file save URLS with jobId
 	 * @param requestBody where contents are json string representing Table
