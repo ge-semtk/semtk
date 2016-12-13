@@ -22,7 +22,7 @@
 	</dependency>
 	<dependency>
 	  <groupId>com.ge.research.semtk</groupId>
-	  <artifactId>sparqlGraphLibrary-GE</artifactId>
+	  <artifactId>sparqlGraphLibrary</artifactId>
 	  <version>0.0.1-SNAPSHOT</version>
 	</dependency>
 	<dependency>
