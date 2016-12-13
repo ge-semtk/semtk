@@ -947,14 +947,18 @@ define([	// properly require.config'ed
 					 insertBeforeIObj = this.elemHash[insertBeforeElem.id];
 				 }
 				 
-				 // do html
-				 rowElem.insertBefore(dropElem, insertBeforeElem);
-				 
-				 // insert in right spot in importSpec
-				 var iRow = this.elemHash[rowElem.id];
-				 iRow.addItem(dropItem, insertBeforeIObj);
-			     this.updateUseStyles(dropItem.getColumnOrTextObj());
-			     this.setChangedFlag(true);
+				 // Transforms can't be dropped on UriRows.  Everything else: go for it
+				 if (! this.elemIsTransform(dragElem)) {
+
+					 // do html
+					 rowElem.insertBefore(dropElem, insertBeforeElem);
+					 
+					 // insert in right spot in importSpec
+					 var iRow = this.elemHash[rowElem.id];
+					 iRow.addItem(dropItem, insertBeforeIObj);
+				     this.updateUseStyles(dropItem.getColumnOrTextObj());
+				     this.setChangedFlag(true);
+				 }
 
 				// halt further actions
 				ev.preventDefault();

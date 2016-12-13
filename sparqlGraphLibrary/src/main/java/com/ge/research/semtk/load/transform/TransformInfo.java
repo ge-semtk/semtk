@@ -31,7 +31,6 @@ public class TransformInfo {
 		 	// the order of items in the string array are: argumentCount, actual transform class name
 		HashMap<String, String[]> tMap = new HashMap<String, String[]>();
 		
-	//	tMap.put("replaceAll", new String[]{"2", "com.ge.research.knowledge.load.transform.ReplaceAllTransform"});
 		tMap.put("replaceAll", new String[]{"2", ReplaceAllTransform.class.getCanonicalName()});
 		tMap.put("toUpperCase", new String[]{"0", ToUpperCaseTransform.class.getCanonicalName()});
 		tMap.put("toLowerCase", new String[]{"0", ToLowerCaseTransform.class.getCanonicalName()});

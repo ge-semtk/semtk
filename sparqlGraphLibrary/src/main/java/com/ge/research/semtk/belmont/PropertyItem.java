@@ -142,6 +142,10 @@ public class PropertyItem extends Returnable {
 	public String getValueType() {
 		return this.valueType;
 	}
+	
+	public String getValueTypeURI() {
+		return this.valueTypeURI;
+	}
 
 	public void addInstanceValue(String value) {
 		this.instanceValues.add(value);

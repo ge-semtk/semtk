@@ -134,6 +134,12 @@ public class DataLoader {
 	
 	public int importData(Boolean checkFirst) throws Exception{
 
+		// check the nodegroup for consistency before continuing.
+		
+		System.err.println("about to validate against model.");
+		this.master.validateAgainstModel(this.oInfo);
+		System.err.println("validation completed.");
+		
 		Boolean dataCheckSucceeded = true;
 		this.totalRecordsProcessed = 0;	// reset the counter.
 		
@@ -236,9 +242,9 @@ public class DataLoader {
 		
 		String query =  lastNg.generateSparqlPrefix() + "Insert { " + totalInsertHead + " } where { " + totalInsertWhere + " } "; 
 
-		// some diagnostic output:
-		System.err.println("Insert generated : ");
-		System.err.println(query);
+//		// some diagnostic output:
+//		System.err.println("Insert generated : ");
+//		System.err.println(query);
 		
 		this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	}

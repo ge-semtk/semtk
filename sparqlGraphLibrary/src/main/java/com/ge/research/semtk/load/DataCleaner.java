@@ -43,6 +43,7 @@ public class DataCleaner {
 	public final static String JSON_KEY_SPLIT = "SPLIT";
 	public final static String JSON_KEY_LOWERCASE = "LOWERCASE";
 	public final static String JSON_KEY_REMOVE_NULLS = "REMOVE_NULLS";
+	public final static String JSON_KEY_REMOVE_NA = "REMOVE_NA";
 	
 	private final static String[] UNSUPPORTED_SPLIT_DELIMITERS = {"\n","^"," "}; // noticed that these don't work so disallow them for now...add to this list as we find more		
 
@@ -52,10 +53,11 @@ public class DataCleaner {
 	private CSVPrinter csvPrinter;  	// csv writer for the cleaned dataset
 	private final int BATCH_SIZE = 2;	// TODO make this configurable?
 
-	// store setup info about how to clean	TODO add more as needed
+	// store setup info about how to clean
 	private HashMap<String,String> columnsToSplit = new HashMap<String,String>(); // key is column header, value is split delimiter (e.g. ~)	
 	private HashSet<String> columnsToLowerCase = new HashSet<String>(); // key is column header	
 	private boolean removeNulls = false;  // if true, replace all occurrences of "null" string (as a whole entry) with ""
+	private boolean removeNA = false;  // if true, replace all occurrences of "N/A" or "n/a" string (as a whole entry) with ""
 	
 	// store counts
 	private int numRowsProcessed;		// num original records 
@@ -63,7 +65,7 @@ public class DataCleaner {
 
 
 	/**
-	 * Constructor that takes no cleaning spec - expect it to be added programattically using addSplit(), etc
+	 * Constructor that takes no cleaning spec - expect it to be added programmatically using addSplit(), etc
 	 * @param dataset the dataset to clean
 	 * @param cleanedFilePathStr the file to write cleaned data to
 	 */
@@ -123,6 +125,14 @@ public class DataCleaner {
 			}
 		}
 		
+		// add remove N/A specs
+		String removeNAVal = (String) cleanSpecJson.get(JSON_KEY_REMOVE_NA);
+		if(removeNAVal != null){
+			if(removeNAVal.toString().toLowerCase().equals("true")){
+				removeNA = true;
+			}
+		}		
+		
 	}
 
 
@@ -178,6 +188,15 @@ public class DataCleaner {
 		this.removeNulls = removeNulls;
 	}
 
+	/**
+	 * Specify removing "not applicables" or not
+	 * @param removeNA true to remove N/A and n/a, else false
+	 * @throws Exception 
+	 */
+	public void addRemoveNA(boolean removeNA) throws Exception{
+		this.removeNA = removeNA;
+	}
+	
 
 	/**
 	 * Clean each row and write to CSV
@@ -235,6 +254,11 @@ public class DataCleaner {
 			row = performRemoveNulls(row);
 		}
 		
+		// remove "N/A" and "n/a"
+		if(removeNA){
+			row = performRemoveNA(row);
+		}		
+		
 		// perform splits
 		ArrayList<ArrayList<String>> rowsToWrite = performSplits(row);
 		
@@ -281,6 +305,22 @@ public class DataCleaner {
 		}
 		return row;
 	}	
+	
+	/**
+	 * Take a row of data and remove n/a strings
+	 * @param row the input row of data
+	 * @return cleaned rows of data
+	 */
+	private ArrayList<String> performRemoveNA(ArrayList<String> row){
+		String value;
+		for(int i = 0; i < row.size(); i++){  // for each value in the row			
+			value = row.get(i);
+			if(value.trim().equalsIgnoreCase("n/a")){  
+				row.set(i,"");  // change to empty string
+			}
+		}
+		return row;
+	}		
 
 
 	/**

@@ -19,6 +19,7 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
@@ -32,11 +33,18 @@ import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.ontologyTools.OntologyClass;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
 
 //the nodes which represent any given entity the user/caller intends to manipulate. 
 
 public class Node extends Returnable {
+	
+	private String nodeType = "node_uri";
+	
 	// keeps track of our properties and collection 	
 	private ArrayList<PropertyItem> props = new ArrayList<PropertyItem>();
 	private ArrayList<NodeItem> nodes = new ArrayList<NodeItem>();
@@ -107,6 +115,64 @@ public class Node extends Returnable {
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		
 		return ret;
+	}
+	
+	public void validateAgainstModel(OntologyInfo oInfo) throws Exception {
+		OntologyClass oClass = oInfo.getClass(this.fullURIname);
+		
+		if (oClass == null) {
+			throw new Exception("Class URI no longer exists in model: " + this.fullURIname);
+		}
+		
+		// build hash of ontology properties for this class
+		HashMap<String, OntologyProperty> oPropHash = new HashMap<>();
+		for (OntologyProperty op : oInfo.getInheritedProperties(oClass)) {
+			oPropHash.put(op.getNameStr(), op);
+		}
+		
+		// check each property's URI and range
+		for (PropertyItem pi : this.props) {
+			// domain
+			if (! oPropHash.containsKey(pi.getUriRelationship())) {
+				throw new Exception(String.format("Node %s contains property %s which no longer exists in model",
+									this.getSparqlID(), pi.getUriRelationship()));
+			}
+			
+			// range
+			OntologyRange oRange = oPropHash.get(pi.getUriRelationship()).getRange();
+			if (! oRange.getFullName().equals(pi.getValueTypeURI())) {
+				throw new Exception(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
+									this.getSparqlID(), pi.getUriRelationship(), pi.getValueTypeURI(), oRange.getFullName()));
+			}
+		}
+		
+		// check node items
+		for (NodeItem ni : this.nodes) {
+			if (ni.getConnected()) {
+				// domain
+				if (! oPropHash.containsKey(ni.getUriConnectBy())) {
+					throw new Exception(String.format("Node %s contains node connection %s which no longer exists in model",
+										this.getSparqlID(), ni.getUriConnectBy()));
+				}
+				
+				// range
+				OntologyRange oRange = oPropHash.get(ni.getUriConnectBy()).getRange();
+				if (! oRange.getFullName().equals(ni.getUriValueType())) {
+					throw new Exception(String.format("Node %s contains node connection %s with type %s which doesn't match %s in model", 
+										this.getSparqlID(), ni.getUriConnectBy(), ni.getUriValueType(), oRange.getFullName()));
+				}
+				
+				// connected node types
+				for (Node n : ni.getNodeList()) {
+					OntologyClass rangeClass = oInfo.getClass(oRange.getFullName());
+					OntologyClass nodeClass = oInfo.getClass(n.getFullUriName());
+					if (!oInfo.classIsA(nodeClass, rangeClass)) {
+						throw new Exception(String.format("Node %s, node connection %s connects to node %s with type %s which isn't a type of %s in model", 
+								this.getSparqlID(), ni.getUriConnectBy(), n.getSparqlID(), n.getFullUriName(), oRange.getFullName()));
+					}
+				}
+			}
+		}
 	}
 	
 	public void setSparqlID(String ID){
@@ -417,6 +483,6 @@ public class Node extends Returnable {
 		return constrainedProperties;
 	}
 	public String getValueType(){
-		return "node_uri";
+		return this.nodeType;
 	}
 }

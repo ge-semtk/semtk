@@ -62,7 +62,7 @@ public class ImportSpecHandler {
 		String userUriPrefixValue = (String) this.importspec.get("baseURI");
 		
 		// check the value of the UserURI Prefix
-		System.err.println("User uri prefix set to: " +  userUriPrefixValue);
+		// System.err.println("User uri prefix set to: " +  userUriPrefixValue);
 		
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInf);
 	}

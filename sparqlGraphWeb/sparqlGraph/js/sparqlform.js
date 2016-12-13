@@ -73,13 +73,30 @@ require([
 			gConn.name = g.conn.name;
 			gConn.serverType = SparqlConnection.VIRTUOSO_SERVER;
 	
-			gConn.dataServerUrl = g.conn.serverURL;
-			gConn.dataKsServerURL = ""; // fuseki will not have this
-			gConn.dataSourceDataset = g.conn.dataset;
-	
-			gConn.ontologyServerUrl = g.conn.serverURL;
-			gConn.ontologyKsServerURL = ""; // fuseki will not have this
-			gConn.ontologySourceDataset = g.conn.dataset;
+			// backwards-compatible single connection
+			if (g.conn.hasOwnProperty('serverURL') && g.conn.hasOwnProperty('dataset')) {
+				gConn.dataServerUrl = g.conn.serverURL;
+				gConn.dataKsServerURL = ""; // fuseki will not have this
+				gConn.dataSourceDataset = g.conn.dataset;
+		
+				gConn.ontologyServerUrl = g.conn.serverURL;
+				gConn.ontologyKsServerURL = ""; // fuseki will not have this
+				gConn.ontologySourceDataset = g.conn.dataset;
+				
+			// newer double connection
+			} else if (g.conn.hasOwnProperty('dataServerURL') && g.conn.hasOwnProperty('dataDataset') &&
+					   g.conn.hasOwnProperty('ontologyServerURL') && g.conn.hasOwnProperty('ontologyDataset')) {
+				gConn.dataServerUrl = g.conn.dataServerURL;
+				gConn.dataKsServerURL = ""; // fuseki will not have this
+				gConn.dataSourceDataset = g.conn.dataDataset;
+		
+				gConn.ontologyServerUrl = g.conn.ontologyServerURL;
+				gConn.ontologyKsServerURL = ""; // fuseki will not have this
+				gConn.ontologySourceDataset = g.conn.ontologyDataset;
+				
+			} else {
+				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
+			}
 	
 			gConn.domain = g.conn.domain;
 			gConn.build();

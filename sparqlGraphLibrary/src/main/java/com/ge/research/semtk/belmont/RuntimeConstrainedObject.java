@@ -29,16 +29,12 @@ public class RuntimeConstrainedObject{
 	}
 	
 	public ValueConstraint getValueConstraint(){
-		
 		return this.constrainedObject.getValueConstraint();
-		
 	}
 	
 	public String getValueType(){
-		
 		String retval = this.constrainedObject.getValueType();
-					
-		return retval;
+		return retval.toUpperCase(); // changes to upper case to match expected ID names in the "XSDSupportedTypes" enum. 
 	}
 	
 	public SupportedTypes getObjectType(){

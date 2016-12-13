@@ -284,7 +284,7 @@ public class NodeGroup {
 			
 			this.prefixHash.put(chunks[0], newPrefixName);
 			
-			System.err.println("adding prefix: " + newPrefixName + " with key " + chunks[0] + " from input " + prefixedUri);
+			//System.err.println("adding prefix: " + newPrefixName + " with key " + chunks[0] + " from input " + prefixedUri);
 		}
 	}
 	
@@ -1909,5 +1909,15 @@ public class NodeGroup {
 			}
 		}
 		return retval;
+	}
+	
+	public void validateAgainstModel(OntologyInfo oInfo) throws Exception {
+		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
+			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
+		}
+		
+		for (Node n : this.getNodeList()) {
+			n.validateAgainstModel(oInfo);
+		}
 	}
 }

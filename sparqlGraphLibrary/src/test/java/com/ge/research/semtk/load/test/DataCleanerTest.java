@@ -136,6 +136,46 @@ public class DataCleanerTest {
 	}	
 	
 	
+	@SuppressWarnings("unchecked")
+	@Test 
+	public void test_RemoveNA() throws IOException {
+
+		String originalFilePathStr = "src/test/resources/datacleanertest-input-na.csv";
+		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		BufferedReader reader = null;
+		
+		try {	
+			
+			JSONObject cleaningSpecJson = Utility.getJSONObjectFromFilePath("src/test/resources/datacleanertest-spec-na.json");
+			
+			Dataset dataset = new CSVDataset(originalFilePathStr, false);
+			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			
+			// do the cleaning
+			int cleanedRows = cleaner.cleanData();
+			
+			// check results
+			assertEquals(cleanedRows,3);
+			reader = new BufferedReader(new FileReader(cleanedFilePathStr));
+			String s = reader.readLine();
+			assertEquals(s,"parent_name,parent_age,has_pool,pet_name");
+			s = reader.readLine();
+			assertEquals(s,"robert,40,YES,Bobby");
+			s = reader.readLine();
+			assertEquals(s,"barbara,37,NO,");
+			s = reader.readLine();
+			assertEquals(s, "\"\",39,NO,Snulls");
+			s = reader.readLine();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		} finally {
+			if(reader != null){	reader.close(); }
+		}
+	}		
+	
+	
 	@Test 
 	public void test_WithoutJSONSpecs() throws IOException {
 
