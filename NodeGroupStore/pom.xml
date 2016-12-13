@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.ge.research.semtk</groupId>
-    <artifactId>semtk-ge</artifactId>
+    <artifactId>semtk-oss</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>NodeGroupStore</artifactId>
