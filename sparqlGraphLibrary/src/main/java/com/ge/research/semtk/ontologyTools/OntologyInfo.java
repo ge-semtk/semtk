@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
@@ -897,6 +900,82 @@ public class OntologyInfo {
 		
 	}
 	
+	/**
+	 * Build a VisJs representation of OntologyInfo
+	 * @return  JSONObject
+	 */
+	public JSONObject toVisJs() {
+		// Questions
+		//    Javascript ontologyTree has a namespace node at the root.   Do we want that?
+		//    This function gives inherited properties.  Is that ok.
+		//    Do we want namespace on the model or not.  This one does.  If we don't, where does it come from?
+		//
+		JSONObject ret = new JSONObject();
+		
+		int id = 1;
+		HashMap<Integer, String> indexToClass = new HashMap<Integer, String>();
+		HashMap<String, Integer> classToIndex = new HashMap<String, Integer>();
+
+		
+		// give each class a number
+		for (String className : this.classHash.keySet()) {
+			classToIndex.put(className, id);
+			indexToClass.put(id, className);
+			id++;
+		}
+		
+		// create model
+		JSONArray model = new JSONArray();
+		for (int i=1; i < id; i++) {
+			OntologyName classOntName = new OntologyName(indexToClass.get(i));
+			JSONObject m = new JSONObject();
+			m.put("id", i);
+			m.put("label", classOntName.getLocalName());
+			model.add(m);
+		}
+		
+		// create edges
+		JSONArray edges = new JSONArray();
+		for (String className : this.subclassHash.keySet()) {
+			ArrayList<OntologyClass> subClasses = this.subclassHash.get(className);
+			for (int i=0; i < subClasses.size(); i++) {
+				JSONObject e = new JSONObject();
+				e.put("from", classToIndex.get(className));
+				e.put("to", classToIndex.get(subClasses.get(i).getNameString(false)));
+				edges.add(e);
+			}
+		}
+		
+		// create properties
+		JSONArray properties = new JSONArray();
+		for (String className : this.classHash.keySet()) {
+			
+			// create array of properties
+			JSONArray propArray = new JSONArray();
+			
+			ArrayList<OntologyProperty> ontProps = this.getInheritedProperties(this.classHash.get(className));  
+			//ArrayList<OntologyProperty> ontProps = this.classHash.get(className).getProperties();
+			
+			for (int i=0; i < ontProps.size(); i++) {
+				JSONObject p = new JSONObject();
+				OntologyProperty ontProp = ontProps.get(i);
+				p.put("type", ontProp.getRangeStr(true));
+				p.put("val",  ontProp.getNameStr());
+				propArray.add(p);
+			}
+			
+			// create object to hold the property array and add it to properties
+			JSONObject propArrayObj = new JSONObject();
+			propArrayObj.put(classToIndex.get(className).toString(), propArray);
+			properties.add(propArrayObj);
+		}
+		JSONObject data = new JSONObject();
+		data.put("model", model);
+		data.put("edges", edges);
+		data.put("properties", properties);
+		ret.put("data", data);
+		return ret;
+	}
 }
 
 

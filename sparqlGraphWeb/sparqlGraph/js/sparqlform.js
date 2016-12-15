@@ -662,6 +662,7 @@ require([
 				initNodeGroup();
 				kdlLogEvent("SF: Clear Form");
 			}
+			clearResults();
 		};
 
 		clearResults = function() {
