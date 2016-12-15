@@ -930,7 +930,10 @@ public class OntologyInfo {
 			OntologyName classOntName = new OntologyName(indexToClass.get(i));
 			JSONObject m = new JSONObject();
 			m.put("id", i);
+			// use local name of class
 			m.put("label", classOntName.getLocalName());
+			// use full name of class
+			//m.put("label", classOntName.getFullName());
 			model.add(m);
 		}
 		
@@ -953,14 +956,16 @@ public class OntologyInfo {
 			// create array of properties
 			JSONArray propArray = new JSONArray();
 			
-			ArrayList<OntologyProperty> ontProps = this.getInheritedProperties(this.classHash.get(className));  
+			// get inherited properties
+			ArrayList<OntologyProperty> ontProps = this.getInheritedProperties(this.classHash.get(className)); 
+			// get only properties of this class
 			//ArrayList<OntologyProperty> ontProps = this.classHash.get(className).getProperties();
 			
 			for (int i=0; i < ontProps.size(); i++) {
 				JSONObject p = new JSONObject();
 				OntologyProperty ontProp = ontProps.get(i);
-				p.put("type", ontProp.getRangeStr(true));
-				p.put("val",  ontProp.getNameStr());
+				p.put("type", ontProp.getRangeStr(true));     // true strips name string
+				p.put("val",  ontProp.getNameStr(true));      // true strips name string
 				propArray.add(p);
 			}
 			

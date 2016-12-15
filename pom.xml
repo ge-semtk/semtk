@@ -23,6 +23,7 @@
 	<module>sparqlGraphResultsService</module>
 	<module>standaloneExecutables</module>
 	<module>NodeGroupStore</module>
+	<module>ontologyInfoService</module>
   </modules>
   
    <properties>

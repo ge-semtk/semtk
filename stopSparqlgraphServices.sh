@@ -9,5 +9,7 @@ SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "=== END MICROSERVICES... ==="
 pkill -f QueryService
 pkill -f IngestionService
+pkill -f ontologyInfoService
+pkill -f NodeGroupStore
 
 echo "=== DONE ==="
