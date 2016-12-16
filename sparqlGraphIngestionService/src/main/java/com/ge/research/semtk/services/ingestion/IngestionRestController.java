@@ -50,6 +50,7 @@ import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.query.rdb.OracleConnector;
+import com.ge.research.semtk.query.rdb.PostgresConnector;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
@@ -257,6 +258,51 @@ public class IngestionRestController {
 		
 		return retval.toJson();
 	}		
+
+	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)
+	public JSONObject fromPostgresODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
+		
+		TableResultSet retval = new TableResultSet();
+		int recordsProcessed = 0;
+
+		
+		try {
+					
+			String sparqlEndpointUser = prop.getSparqlUserName();
+			String sparqlEndpointPassword = prop.getSparqlPassword();
+			
+			// log the attempted user name and password
+			System.err.println("the user name was: " + sparqlEndpointUser);
+			System.err.println("the password was: " + sparqlEndpointPassword);
+			
+			// get template file content and convert to json object for use. 
+			String templateContent = new String(templateFile.getBytes());
+			JSONParser parser = new JSONParser();
+			JSONObject json = null;
+			json = (JSONObject) parser.parse(templateContent);
+		
+			// get an ODBC data set to use in the load. 
+			String postgresDriver = PostgresConnector.getDriver();
+			String dbUrl = PostgresConnector.getDatabaseURL(dbHost, Integer.valueOf(dbPort), dbDatabase);
+			Dataset ds = new ODBCDataset(postgresDriver, dbUrl, dbUser, dbPassword, dbQuery);
+			
+			// perform actual load
+			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
+			recordsProcessed = dl.importData(true);	// defaulting to preflight.
+	
+			retval.setSuccess(true);
+			retval.addResultsJSON(dl.getLoadingErrorReport().toJson());
+
+		} catch (Exception e) {
+			// TODO write failure JSONObject to return and return it.
+			e.printStackTrace();
+			
+			retval.setSuccess(false);
+			retval.addRationaleMessage(e.getMessage());
+		}
+		
+		return retval.toJson();
+	}	
 	
 	private LoggerRestClient loggerConfigInitialization(LoggerRestClient logger, LoggerClientConfig lcc){
 		// send a log of the load having occurred.

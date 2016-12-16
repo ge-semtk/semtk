@@ -9,7 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
 
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.RuntimeConstrainedItems;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.resultSet.Table;

@@ -1,6 +1,8 @@
-package com.ge.research.semtk.belmont;
+package com.ge.research.semtk.belmont.runtimeConstraints;
 
-import com.ge.research.semtk.belmont.RuntimeConstrainedItems.SupportedTypes;
+import com.ge.research.semtk.belmont.Returnable;
+import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems.SupportedTypes;
 
 public class RuntimeConstrainedObject{
 	// this is used to store Nodes, PropertyItems which might be runtime constrained. 
