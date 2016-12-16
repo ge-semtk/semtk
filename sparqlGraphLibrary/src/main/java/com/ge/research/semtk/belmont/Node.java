@@ -131,44 +131,47 @@ public class Node extends Returnable {
 		}
 		
 		// check each property's URI and range
-		for (PropertyItem pi : this.props) {
+		for (PropertyItem myPropItem : this.props) {
 			// domain
-			if (! oPropHash.containsKey(pi.getUriRelationship())) {
+			if (! oPropHash.containsKey(myPropItem.getUriRelationship())) {
 				throw new Exception(String.format("Node %s contains property %s which no longer exists in model",
-									this.getSparqlID(), pi.getUriRelationship()));
+									this.getSparqlID(), myPropItem.getUriRelationship()));
 			}
 			
 			// range
-			OntologyRange oRange = oPropHash.get(pi.getUriRelationship()).getRange();
-			if (! oRange.getFullName().equals(pi.getValueTypeURI())) {
+			OntologyRange oRange = oPropHash.get(myPropItem.getUriRelationship()).getRange();
+			if (! oRange.getFullName().equals(myPropItem.getValueTypeURI())) {
 				throw new Exception(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
-									this.getSparqlID(), pi.getUriRelationship(), pi.getValueTypeURI(), oRange.getFullName()));
+									this.getSparqlID(), myPropItem.getUriRelationship(), myPropItem.getValueTypeURI(), oRange.getFullName()));
 			}
 		}
 		
 		// check node items
-		for (NodeItem ni : this.nodes) {
-			if (ni.getConnected()) {
+		for (NodeItem myNodeItem : this.nodes) {
+			if (myNodeItem.getConnected()) {
 				// domain
-				if (! oPropHash.containsKey(ni.getUriConnectBy())) {
+				if (! oPropHash.containsKey(myNodeItem.getUriConnectBy())) {
 					throw new Exception(String.format("Node %s contains node connection %s which no longer exists in model",
-										this.getSparqlID(), ni.getUriConnectBy()));
+										this.getSparqlID(), myNodeItem.getUriConnectBy()));
 				}
 				
 				// range
-				OntologyRange oRange = oPropHash.get(ni.getUriConnectBy()).getRange();
-				if (! oRange.getFullName().equals(ni.getUriValueType())) {
+				// Raghava's bug is right here
+				OntologyProperty oProp = oPropHash.get(myNodeItem.getUriConnectBy());
+				OntologyRange oRange = oProp.getRange();
+				if (! myNodeItem.getUriValueType().equals(oRange.getFullName())) {
+					ArrayList<OntologyProperty> d = oInfo.getInheritedProperties(oClass);
 					throw new Exception(String.format("Node %s contains node connection %s with type %s which doesn't match %s in model", 
-										this.getSparqlID(), ni.getUriConnectBy(), ni.getUriValueType(), oRange.getFullName()));
+										this.getSparqlID(), myNodeItem.getUriConnectBy(), myNodeItem.getUriValueType(), oRange.getFullName()));
 				}
 				
 				// connected node types
-				for (Node n : ni.getNodeList()) {
+				for (Node n : myNodeItem.getNodeList()) {
 					OntologyClass rangeClass = oInfo.getClass(oRange.getFullName());
-					OntologyClass nodeClass = oInfo.getClass(n.getFullUriName());
-					if (!oInfo.classIsA(nodeClass, rangeClass)) {
+					OntologyClass myNodeClass = oInfo.getClass(n.getFullUriName());
+					if (!oInfo.classIsA(myNodeClass, rangeClass)) {
 						throw new Exception(String.format("Node %s, node connection %s connects to node %s with type %s which isn't a type of %s in model", 
-								this.getSparqlID(), ni.getUriConnectBy(), n.getSparqlID(), n.getFullUriName(), oRange.getFullName()));
+								this.getSparqlID(), myNodeItem.getUriConnectBy(), n.getSparqlID(), n.getFullUriName(), oRange.getFullName()));
 					}
 				}
 			}
