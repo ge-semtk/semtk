@@ -21,6 +21,7 @@ package com.ge.research.semtk.load.test;
 import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -87,6 +88,8 @@ public class DataCleanerTest {
 			s = reader.readLine();
 			assertEquals(s,"Michael,39,mikey,Marlington Dr,no,,");
 			
+			(new File(cleanedFilePathStr)).delete();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -127,6 +130,8 @@ public class DataCleanerTest {
 			assertEquals(s, "michael,39,NO,Snulls");
 			s = reader.readLine();
 			
+			(new File(cleanedFilePathStr)).delete();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -166,6 +171,8 @@ public class DataCleanerTest {
 			s = reader.readLine();
 			assertEquals(s, "\"\",39,NO,Snulls");
 			s = reader.readLine();
+			
+			(new File(cleanedFilePathStr)).delete();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -227,6 +234,8 @@ public class DataCleanerTest {
 			s = reader.readLine();
 			assertEquals(s,"Michael,39,mikey,Marlington Dr,no,,");
 			
+			(new File(cleanedFilePathStr)).delete();
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -264,6 +273,9 @@ public class DataCleanerTest {
 		} finally {
 			if(reader != null){	reader.close(); }
 		}
+		
+		(new File(cleanedFilePathStr)).delete();
+		
 	}	
 	
 	
@@ -279,6 +291,8 @@ public class DataCleanerTest {
 			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
 			cleaner.addSplit("child_names","~");
 			cleaner.addSplit("child_names","*");
+			
+			(new File(cleanedFilePathStr)).delete();
 						
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -288,6 +302,7 @@ public class DataCleanerTest {
 		if(!thrown){
 			fail();
 		}
+		
 	}	
 	
 	
@@ -303,6 +318,8 @@ public class DataCleanerTest {
 			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
 			cleaner.addSplit("child_names","\n");
 			cleaner.addSplit("child_names","*");
+			
+			(new File(cleanedFilePathStr)).delete();
 						
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -319,7 +336,7 @@ public class DataCleanerTest {
 	public void test_SOHDelimiter() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-SOH.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output-SOH.csv";
+		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -341,6 +358,8 @@ public class DataCleanerTest {
 			assertEquals(s,"Cobert,40,cobbie,Rockington St,yes,Ruff,");
 			s = reader.readLine();
 			assertEquals(s,"Cobert,40,cobbie,Rockington St,yes,Rocky,");
+			
+			(new File(cleanedFilePathStr)).delete();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
