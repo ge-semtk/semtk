@@ -38,7 +38,15 @@
 			<version>4.5.1</version>
 		</dependency>
 		<!-- end addition by paul -->
+		<!--  Added by Justin because tests were failing to find a specifically needed class -->
 
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpcore</artifactId>
+		    <version>4.4</version>
+		</dependency>
+
+		<!--  End of additions by Justin -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
