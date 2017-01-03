@@ -662,6 +662,18 @@ public class OntologyInfo {
 				throw new Exception("Cannot find class " + classList[i] + " in the ontology");
 			}			
 			c.addProperty(prop);
+			
+			// SemTk doesn't handle multiple ranges properly
+			// Do a little bit of error handling / warning
+			if (this.propertyHash.containsKey(propertyList[i]) && 
+					! this.propertyHash.get(propertyList[i]).getRangeStr().equals(rangeList[i])) {
+				throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
+												  classList[i], 
+												  propertyList[i], 
+												  this.propertyHash.get(propertyList[i]).getRangeStr(),
+												  rangeList[i]));
+			}
+			
 			this.propertyHash.put(propertyList[i], prop);
 		}
 	}

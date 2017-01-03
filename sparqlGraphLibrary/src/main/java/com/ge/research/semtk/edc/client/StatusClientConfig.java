@@ -42,6 +42,10 @@ public class StatusClientConfig extends RestClientConfig {
 		return jobId;
 	}
 	
+	public void setJobId(String jobId){
+		this.jobId = jobId;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public void addParameters(JSONObject param) {
 		param.put("jobId", jobId);
