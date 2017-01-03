@@ -962,7 +962,7 @@ public class OntologyInfo {
 		}
 		
 		// create properties
-		JSONArray properties = new JSONArray();
+		JSONObject properties = new JSONObject();
 		for (String className : this.classHash.keySet()) {
 			
 			// create array of properties
@@ -981,10 +981,7 @@ public class OntologyInfo {
 				propArray.add(p);
 			}
 			
-			// create object to hold the property array and add it to properties
-			JSONObject propArrayObj = new JSONObject();
-			propArrayObj.put(classToIndex.get(className).toString(), propArray);
-			properties.add(propArrayObj);
+			properties.put(classToIndex.get(className).toString(), propArray);
 		}
 		JSONObject data = new JSONObject();
 		data.put("model", model);
