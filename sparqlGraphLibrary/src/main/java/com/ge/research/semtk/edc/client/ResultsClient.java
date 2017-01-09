@@ -91,7 +91,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	
 
 	/**
-	 * Store Table.  fullResult is csv.  sample is json.
+	 * Store Table.  fullResult is csv.  sample is shorter csv.
 	 * @param contents
 	 * @throws Exception
 	 */
