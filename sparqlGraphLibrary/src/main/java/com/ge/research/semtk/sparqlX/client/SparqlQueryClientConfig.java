@@ -25,9 +25,9 @@ import com.ge.research.semtk.services.client.RestClientConfig;
  */
 public class SparqlQueryClientConfig extends RestClientConfig {
 
-	private String sparqlServerAndPort;  // e.g. http://vesuvius37.crd.ge.com:2420
+	private String sparqlServerAndPort;  	// e.g. http://host:port
 	private String sparqlServerType;		// e.g. virtuoso
-	private String sparqlDataset;		// e.g. http://research.ge.com/energy/turbineeng-sandbox
+	private String sparqlDataset;			// e.g. http://dataset
 	
 	public SparqlQueryClientConfig(String serviceProtocol,String serviceServer, int servicePort, String serviceEndpoint,
 			String sparqlServerAndPort, String sparqlServerType, String sparqlDataset)
