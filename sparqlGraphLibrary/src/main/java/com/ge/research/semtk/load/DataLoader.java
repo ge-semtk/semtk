@@ -162,9 +162,7 @@ public class DataLoader {
 				dataCheckSucceeded = false;
 			}
 		}
-		
-		System.out.println("Preflight check succeeded, proceed to load data (" + totalPreflightRecordsChecked + " records)...");
-		
+				
 		if (dataCheckSucceeded) {
 			this.dttmf.resetDataSet();
 			// orchestrate the retrieval of new nodegroups and the flushing of
