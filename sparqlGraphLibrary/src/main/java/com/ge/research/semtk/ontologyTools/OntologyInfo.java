@@ -977,7 +977,7 @@ public class OntologyInfo {
 				JSONObject p = new JSONObject();
 				OntologyProperty ontProp = ontProps.get(i);
 				p.put("type", ontProp.getRangeStr(true));     // true strips name string
-				p.put("val",  ontProp.getNameStr(true));      // true strips name string
+				p.put("name",  ontProp.getNameStr(true));      // true strips name string
 				propArray.add(p);
 			}
 			
