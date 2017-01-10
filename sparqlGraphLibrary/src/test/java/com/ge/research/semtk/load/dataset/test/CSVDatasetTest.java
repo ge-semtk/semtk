@@ -131,12 +131,12 @@ public class CSVDatasetTest {
 	public void testCSVDatasetFromString() throws Exception{
 		
 		// read from a path to a string
-		String csvPath = "src/test/java/com/ge/research/semtk/load/dataset/test/test.csv";
+		String csvPath = "src/test/resources/test2.csv";
 		byte[] encoded = Files.readAllBytes(Paths.get(csvPath));
 		String csvString = new String(encoded, StandardCharsets.UTF_8);
 		
 		String[] headers = {"HEADER3","HEADER1"}; // picked a subset of the existing headers, in reverse order than they appear in the file
-		CSVDataset csvDataset = new CSVDataset("src/test/java/com/ge/research/semtk/load/dataset/test/test.csv", headers);
+		CSVDataset csvDataset = new CSVDataset("src/test/resources/test2.csv", headers);
 		ArrayList<ArrayList<String>> records;
 		
 		// confirm that we read the data correctly
