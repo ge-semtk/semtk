@@ -20,7 +20,7 @@
 	<module>sparqlGraphStatusService</module>
 	<module>sparqlGraphResultsService</module>
 	<module>standaloneExecutables</module>
-	<module>NodeGroupStore</module>
+	<module>nodeGroupStoreService</module>
 	<module>ontologyInfoService</module>
   </modules>
   
