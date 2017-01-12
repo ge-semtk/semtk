@@ -5,8 +5,8 @@
     <artifactId>semtk-oss</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>NodeGroupStore</artifactId>
-  <name>NodeGroupStore</name>
+  <artifactId>nodeGroupStoreService</artifactId>
+  <name>nodeGroupStoreService</name>
   <description>store and retrieve a nodegroup for "canned" queries. </description>
 
   <dependencies>
