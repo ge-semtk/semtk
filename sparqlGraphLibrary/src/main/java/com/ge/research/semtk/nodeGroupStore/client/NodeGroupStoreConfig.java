@@ -5,9 +5,9 @@ import com.ge.research.semtk.services.client.RestClientConfig;
 public class NodeGroupStoreConfig extends RestClientConfig {
 
 	public NodeGroupStoreConfig(String serviceProtocol, String serviceServer,
-			int servicePort, String serviceEndpoint) throws Exception {
+			int servicePort) throws Exception {
 		
-		super(serviceProtocol, serviceServer, servicePort, serviceEndpoint);
+		super(serviceProtocol, serviceServer, servicePort, "fake");
 		
 	}
 

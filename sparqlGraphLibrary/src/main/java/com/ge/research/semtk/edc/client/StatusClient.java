@@ -44,7 +44,10 @@ public class StatusClient extends RestClient {
 		throw new Exception("Received empty response");
 	}
 	
-
+	public void setJobId(String jobId){
+		((StatusClientConfig)this.conf).setJobId(jobId);
+	}
+	
 	/**
 	 * Not meant to be used.
 	 * @return
