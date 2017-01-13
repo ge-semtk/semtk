@@ -97,6 +97,10 @@ public class DataLoader {
 		return this.endpoint.getDataset();
 	}
 	
+	public int getTotalRecordsProcessed(){
+		return this.totalRecordsProcessed;
+	}
+	
 	private void validateColumns(Dataset ds) throws Exception {
 		// validate that the columns specified in the template are present in the dataset
 		String[] colNamesToIngest = dttmf.getImportColNames();   // col names from JSON		
