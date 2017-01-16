@@ -19,12 +19,10 @@
 package com.ge.research.semtk.load.client;
 
 import java.net.ConnectException;
-import java.net.URL;
 
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 

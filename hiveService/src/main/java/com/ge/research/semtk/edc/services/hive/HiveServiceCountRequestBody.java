@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.edc.services.hive;
 
-import java.util.List;
-
 public class HiveServiceCountRequestBody extends HiveServiceRequestBody {
     public String table;
     public String column;

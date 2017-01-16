@@ -5,25 +5,18 @@ import java.util.ArrayList;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
-import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
-import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
-import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+
+import nodeGroupStoreService.src.main.java.com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
+import nodeGroupStoreService.src.main.java.com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
 
 @RestController
 @RequestMapping("/nodeGroupStore")

@@ -18,9 +18,6 @@
 
 package com.ge.research.semtk.edc.services.hive;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
 @ConfigurationProperties(prefix="hive", ignoreUnknownFields = true)
 public class HiveProperties {

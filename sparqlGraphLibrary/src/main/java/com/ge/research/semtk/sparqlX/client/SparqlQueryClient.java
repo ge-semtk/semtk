@@ -21,7 +21,6 @@ package com.ge.research.semtk.sparqlX.client;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;

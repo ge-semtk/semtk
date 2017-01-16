@@ -31,8 +31,6 @@ import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
-import com.ge.research.semtk.resultSet.SimpleResultSet;
-
 
 /**
  * An abstract class containing code for a REST client.

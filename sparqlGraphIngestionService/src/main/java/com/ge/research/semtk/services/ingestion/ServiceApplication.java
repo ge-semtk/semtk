@@ -18,13 +18,6 @@
 
 package com.ge.research.semtk.services.ingestion;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import com.ge.research.semtk.services.ingestion.ServiceApplication;
-
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
 @SpringBootApplication
 @EnableSwagger2
 public class ServiceApplication {

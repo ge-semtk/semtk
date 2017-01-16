@@ -1,8 +1,5 @@
 package com.ge.research.semtk.services.nodegroupStore.service;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
 @ConfigurationProperties(prefix="store", ignoreUnknownFields = true)
 public class StoreProperties {

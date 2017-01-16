@@ -2,7 +2,6 @@ package com.ge.research.semtk.nodeGroupStore.client;
 
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;

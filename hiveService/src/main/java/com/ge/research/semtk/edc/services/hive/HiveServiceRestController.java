@@ -18,18 +18,11 @@
 
 package com.ge.research.semtk.edc.services.hive;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.edc.services.hive.HiveProperties;
 
 /**
  * Service to execute queries on Hive

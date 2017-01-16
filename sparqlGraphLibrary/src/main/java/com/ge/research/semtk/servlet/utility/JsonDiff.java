@@ -19,7 +19,6 @@
 package com.ge.research.semtk.servlet.utility;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import org.json.simple.JSONArray;

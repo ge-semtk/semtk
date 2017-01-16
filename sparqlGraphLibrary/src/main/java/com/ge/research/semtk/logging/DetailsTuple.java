@@ -21,8 +21,6 @@ package com.ge.research.semtk.logging;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import com.ge.research.semtk.logging.DetailsTuple;
-
 public class DetailsTuple {
 
 	private String detailName;

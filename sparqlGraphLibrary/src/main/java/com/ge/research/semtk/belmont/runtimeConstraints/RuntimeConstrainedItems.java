@@ -9,8 +9,6 @@ import java.util.HashMap;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.XSDSupportUtil;
-import com.ge.research.semtk.belmont.XSDSupportedTypes;
 
 public class RuntimeConstrainedItems {
 

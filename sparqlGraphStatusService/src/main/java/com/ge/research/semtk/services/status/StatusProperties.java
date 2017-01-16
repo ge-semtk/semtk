@@ -18,9 +18,6 @@
 
 package com.ge.research.semtk.services.status;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
 @ConfigurationProperties(prefix="status.service", ignoreUnknownFields = true)
 public class StatusProperties {

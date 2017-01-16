@@ -1,19 +1,10 @@
 package com.ge.research.semtk.services.ontologyinfo;
 
-import java.net.URL;
-
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @CrossOrigin

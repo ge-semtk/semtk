@@ -28,14 +28,13 @@ import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
-import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableResultSet;
-
 import org.apache.commons.math3.util.Pair;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Sets;
 

@@ -1,9 +1,5 @@
 package com.ge.research.semtk.services.status;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.stereotype.Component;
-
 @Component
 public class StatusServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 

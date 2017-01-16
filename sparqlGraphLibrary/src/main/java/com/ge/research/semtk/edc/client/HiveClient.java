@@ -18,14 +18,13 @@
 
 package com.ge.research.semtk.edc.client;
 
-import org.json.simple.JSONObject;
+import java.util.List;
+
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
 import com.ge.research.semtk.resultSet.TableResultSet;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Client to call the HiveService

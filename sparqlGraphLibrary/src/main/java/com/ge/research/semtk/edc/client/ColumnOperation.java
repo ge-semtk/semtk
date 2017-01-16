@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.edc.client;
 
-import java.util.List;
-
 /**
  * Column-Operation pairs to pass to HiveService
  */

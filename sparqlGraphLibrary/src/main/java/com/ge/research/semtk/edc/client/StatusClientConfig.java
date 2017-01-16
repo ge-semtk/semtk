@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.edc.client;
 
-import java.util.Arrays;
-
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.services.client.RestClientConfig;

@@ -18,11 +18,6 @@
 
 package com.ge.research.semtk.edc.services.oracle;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.query.rdb.OracleConnector;

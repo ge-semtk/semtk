@@ -18,7 +18,6 @@
 
 package com.ge.research.semtk.load.transform;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.ge.research.semtk.load.transform.Transform;

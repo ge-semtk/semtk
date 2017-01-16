@@ -18,18 +18,15 @@
 
 package com.ge.research.semtk.sparqlX.parallel;
 
+import java.util.ArrayList;
+import java.util.concurrent.RecursiveTask;
+
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
-
-import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.ArrayList;
-import java.util.concurrent.RecursiveTask;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 /**
  * Stores all parameters passed to an individual sparql subquery and its eventual response.

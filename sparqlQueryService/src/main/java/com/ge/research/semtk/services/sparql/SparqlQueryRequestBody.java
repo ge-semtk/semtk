@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.services.sparql;
 
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
-
 /**
  * For service calls needing SPARQL connection information and a query.
  */
