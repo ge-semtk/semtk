@@ -18,6 +18,9 @@
 
 package com.ge.research.semtk.services.ontologyinfo;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
 import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
 
 @Configuration

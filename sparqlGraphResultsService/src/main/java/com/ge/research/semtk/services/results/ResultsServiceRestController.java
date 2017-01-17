@@ -18,6 +18,23 @@
 
 package com.ge.research.semtk.services.results;
 
+/*
+ * TODO
+ * Move properties to a common place.
+ *    Do we want spring boot dependencies in sparqlGraphLibraries?  Seems bad.
+ *    
+ * Move query functions (anything that knows the model) to new package in libraries like
+ *     com.ge.research.semtk.edc.services
+ * What is the best way to use properties in this situation.
+ */
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
 import java.net.URL;
 
 import org.json.simple.JSONObject;

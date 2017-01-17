@@ -18,6 +18,9 @@
 
 package com.ge.research.semtk.services.status;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
 import com.ge.research.semtk.edc.ServicesConfigProperties;
 
 // subclass simply adds spring annotations including locations
