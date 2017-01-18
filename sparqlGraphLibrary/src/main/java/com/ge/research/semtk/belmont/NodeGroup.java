@@ -95,11 +95,11 @@ public class NodeGroup {
 			JSONObject nodeJson = (JSONObject) nodeArr.get(i);	
 			// e.g. sample nodeJSON:
 			// {
-			//	"@id":"http:\/\/research.ge.com\/sofc\/data#Cell_EHAP298",
-			//	"@type":[{"@id":"http:\/\/research.ge.com\/sofc\/testconfig#Cell"}],  ... IN VIRTUOSO 7.2.5+, NO @id HERE
-			//	"http:\/\/research.ge.com\/sofc\/testconfig#cellId":[{"@value":"EHAP298","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"}],
-			//	"http:\/\/research.ge.com\/sofc\/testconfig#screenPrinting":[{"@id":"http:\/\/research.ge.com\/sofc\/data#ScrnPrnt_EHAP298_Barrier_2015-06-12"}],
-			//	"http:\/\/research.ge.com\/sofc\/testconfig#sizeInches":[2]
+			//	"@id":"http:\/\/research.ge.com\/print\/data#Cell_ABC",
+			//	"@type":[{"@id":"http:\/\/research.ge.com\/print\/testconfig#Cell"}],  ... IN VIRTUOSO 7.2.5+, NO @id HERE
+			//	"http:\/\/research.ge.com\/print\/testconfig#cellId":[{"@value":"ABC","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"}],
+			//	"http:\/\/research.ge.com\/print\/testconfig#screenPrinting":[{"@id":"http:\/\/research.ge.com\/print\/data#Prnt_ABC_2000-01-01"}],
+			//	"http:\/\/research.ge.com\/print\/testconfig#sizeInches":[2]
 			//	}
 			
 			// gather basic node info
@@ -132,7 +132,7 @@ public class NodeGroup {
 		        }		        
 		        		        
 		        // primitive properties are like this:
-		        // e.g. KEY=http://research.ge.com/sofc/testconfig#pasteMaterial VALUE=[{"@value":"Ce0.8Sm0.2 Oxide Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"} {"@value":"Another Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"}]
+		        // e.g. KEY=http://research.ge.com/print/testconfig#material VALUE=[{"@value":"Red Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"} {"@value":"Blue Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"}]
 		        		         
 		        JSONArray valueArray = (JSONArray)value; 	// the value is an array
 	        	if(!((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if no @type then this is not a primitive property   
@@ -143,7 +143,7 @@ public class NodeGroup {
 		        for(int j = 0; j < valueArray.size(); j++){ 
 		        	JSONObject valueJSONObject = (JSONObject)((valueArray).get(j));	 
 		        	if(property == null){  // only create property once
-		        		String relationship = key; 		// e.g. http://research.ge.com/sofc/testconfig#pasteMaterial
+		        		String relationship = key; 		// e.g. http://research.ge.com/print/testconfig#material
 		        		String propertyValueType = valueJSONObject.get("@type").toString();	// e.g. http://www.w3.org/2001/XMLSchema#string
 		        		String relationshipLocal = new OntologyName(relationship).getLocalName();   // e.g. pasteMaterial
 		        		String propertyValueTypeLocal = new OntologyName(propertyValueType).getLocalName();	// e.g. string
@@ -180,7 +180,7 @@ public class NodeGroup {
 		        }		        
 
 		        // node items are in this format:
-		        // e.g. KEY=http://research.ge.com/sofc/testconfig#screenPrinting VALUE=[{"@id":"http:\/\/research.ge.com\/sofc\/data#ScrnPrnt_EHAP298_Barrier_2015-06-12"}]        		        
+		        // e.g. KEY=http://research.ge.com/print/testconfig#screenPrinting VALUE=[{"@id":"http:\/\/research.ge.com\/print\/data#ScrnPrnt_ABC"}]        		        
 		        
 		        JSONArray valueArray = (JSONArray)value; 	// the value is an array
 	        	if(((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if has @type then this is not a node item
@@ -191,12 +191,12 @@ public class NodeGroup {
 		        for(int j = 0; j < valueArray.size(); j++){
 		        	JSONObject valueJSONObject = ((JSONObject)(valueArray).get(j));	// the value is an array 	      		        
 
-			        String relationship = key;  // e.g. http://research.ge.com/sofc/testconfig#screenPrinting
+			        String relationship = key;  // e.g. http://research.ge.com/print/testconfig#screenPrinting
 			        String relationshipLocal = (new OntologyName(relationship)).getLocalName(); // e.g. screenPrinting			        
-		        	String toNodeURI = valueJSONObject.get("@id").toString(); // e.g. http://research.ge.com/sofc/data#ScrnPrnt_EHAP298
-		        	String toNodeURILocal = (new OntologyName(toNodeURI)).getLocalName(); // e.g. ScrnPrnt_EHAP298
+		        	String toNodeURI = valueJSONObject.get("@id").toString(); // e.g. http://research.ge.com/print/data#ScrnPrnt_ABC
+		        	String toNodeURILocal = (new OntologyName(toNodeURI)).getLocalName(); // e.g. ScrnPrnt_ABC
 			        Node toNode = nodeHash.get(toNodeURI);  
-			        String toNodeClassURI = toNode.getFullUriName(); // e.g. http://research.ge.com/sofc/testconfig#ScreenPrinting		        	
+			        String toNodeClassURI = toNode.getFullUriName(); // e.g. http://research.ge.com/print/testconfig#ScreenPrinting		        	
 			        
 		        	if(nodeItem == null){  // only create node item once
 				        nodeItem = new NodeItem(relationshipLocal, (new OntologyName(toNodeClassURI)).getLocalName(), toNodeClassURI); 

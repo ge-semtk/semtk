@@ -43,7 +43,7 @@ public class PropertyItem extends Returnable {
 	 * @param nome (e.g. pasteMaterial)
 	 * @param valueType (e.g. string)
 	 * @param valueTypeURI (e.g. http://www.w3.org/2001/XMLSchema#string)
-	 * @param uriRelationship (e.g. http://research.ge.com/sofc/testconfig#pasteMaterial)
+	 * @param uriRelationship (e.g. http://research.ge.com/print/testconfig#material)
 	 */
 	public PropertyItem(String nome, String valueType, String valueTypeURI, String uriRelationship){
 		this.keyName = nome;

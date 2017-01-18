@@ -220,7 +220,7 @@ public class ImportSpecHandler {
 
 				// find and set the actual property value. 
 				for(PropertyItem pi : inScopeProperties){
-					if(pi.getUriRelationship().equals(uriRelation)){  // e.g. http://research.ge.com/sofc/testconfig#cellId
+					if(pi.getUriRelationship().equals(uriRelation)){  // e.g. http://research.ge.com/print/testconfig#cellId
 						
 						if(this.notEmpty(instanceValue)){
 							if(pi.getValueType().equalsIgnoreCase("string")){
