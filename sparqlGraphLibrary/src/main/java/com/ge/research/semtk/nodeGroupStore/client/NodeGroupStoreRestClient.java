@@ -36,6 +36,8 @@ public class NodeGroupStoreRestClient extends RestClient {
 			JSONObject jobj = (JSONObject) this.execute();
 			JSONObject tblWrapper = (JSONObject)jobj.get("table");
 			
+			System.err.println(tblWrapper);
+						
 			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
 			retval.addResults(tbl);
 			retval.readJson(jobj);
