@@ -1,30 +1,47 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.ge.research.semtk</groupId>
-  <artifactId>semtk-oss</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.3.1.RELEASE</version>
+	</parent>
+	
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>com.ge.research.semtk</groupId>
+	<artifactId>semtk-oss</artifactId>
+	<version>1.1.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
 
-  <parent>
-  	<groupId>org.springframework.boot</groupId>
-  	<artifactId>spring-boot-starter-parent</artifactId>
-  	<version>1.3.1.RELEASE</version>
-  </parent>
+	<distributionManagement>
+		<repository>
+			<id>semtk</id>
+			<name>build.GE Artifactory-releases</name>
+			<url>https://devcloud.swcoe.ge.com/artifactory/UMKGF</url>
+		</repository>
+		<snapshotRepository>
+			<id>semtk-snapshots</id>
+			<name>build.GE Artifactory-snapshots</name>
+			<url>https://devcloud.swcoe.ge.com/artifactory/UMKGF-SNAPSHOT</url>
+		</snapshotRepository>
+	</distributionManagement>
 
-  <modules>
-   	<module>sparqlGraphLibrary</module>
-  	<module>sparqlGraphIngestionService</module>
-   	<module>oracleService</module>
-   	<module>hiveService</module>   	
-	<module>sparqlQueryService</module>   	
-	<module>sparqlGraphStatusService</module>
-	<module>sparqlGraphResultsService</module>
-	<module>standaloneExecutables</module>
-	<module>nodeGroupStoreService</module>
-	<module>ontologyInfoService</module>
-  </modules>
-  
-   <properties>
+	<modules>
+		<module>sparqlGraphLibrary</module>
+		<module>sparqlGraphIngestionService</module>
+		<module>oracleService</module>
+		<module>hiveService</module>
+		<module>sparqlQueryService</module>
+		<module>sparqlGraphStatusService</module>
+		<module>sparqlGraphResultsService</module>
+		<module>standaloneExecutables</module>
+		<module>nodeGroupStoreService</module>
+		<module>ontologyInfoService</module>
+	</modules>
+
+	<properties>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 	</properties>
