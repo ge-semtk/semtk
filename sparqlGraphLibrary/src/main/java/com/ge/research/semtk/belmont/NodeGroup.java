@@ -500,9 +500,8 @@ public class NodeGroup {
 				JSONArray nodeConnections = (JSONArray)node.get("SnodeSparqlIDs");
 				for(int m = 0; m < nodeConnections.size(); m += 1){
 					// this should update the values we care about
-					// PEC 1/16/2017 This looks like a bug but I don't understand what's going on
 					JSONArray nodeInst = (JSONArray)node.get("SnodeSparqlIDs");
-					nodeInst = BelmontUtil.updateSparqlIdsForJSON(nodeConnections, k, changedHash, tempHash);
+					nodeInst = BelmontUtil.updateSparqlIdsForJSON(nodeConnections, m, changedHash, tempHash);
 				}
 			}
 		}
