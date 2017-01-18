@@ -3,3 +3,4 @@
 .classpath
 .settings
 target
+sparqlGraphLibrary/src/test/resources/datacleanertest-output.csv

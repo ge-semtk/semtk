@@ -43,8 +43,8 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.ResultsStorage;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
-import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 
 /**
  * Service to get status of a query.

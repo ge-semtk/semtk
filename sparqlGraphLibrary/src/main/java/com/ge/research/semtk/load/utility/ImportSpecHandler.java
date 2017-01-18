@@ -20,7 +20,6 @@ package com.ge.research.semtk.load.utility;
 
 import java.sql.Time;
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,12 +30,12 @@ import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
+import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 
@@ -221,7 +220,7 @@ public class ImportSpecHandler {
 
 				// find and set the actual property value. 
 				for(PropertyItem pi : inScopeProperties){
-					if(pi.getUriRelationship().equals(uriRelation)){  // e.g. http://research.ge.com/sofc/testconfig#cellId
+					if(pi.getUriRelationship().equals(uriRelation)){  // e.g. http://research.ge.com/print/testconfig#cellId
 						
 						if(this.notEmpty(instanceValue)){
 							if(pi.getValueType().equalsIgnoreCase("string")){

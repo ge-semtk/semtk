@@ -33,8 +33,6 @@ import java.util.Arrays;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.load.utility.Utility;
-
 
 /*
  * Utility methods

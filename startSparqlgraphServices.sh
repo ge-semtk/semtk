@@ -27,6 +27,6 @@ $JAVA_HOME/bin/java -jar $SEMTK/sparqlGraphIngestionService/target/sparqlGraphIn
 
 $JAVA_HOME/bin/java -jar $SEMTK/ontologyInfoService/target/ontologyInfoService-0.0.1-SNAPSHOT.jar --spring.config.location=$SEMTK/sparqlGraphIngestionService/src/main/resources/ingest.properties --server.port=$PORT_ONTOLOGY_INFO_SERVICE --multipart.maxFileSize=1000Mb > $LOGS/sparqlGraphIngestionService.log 2>&1 &
 
-$JAVA_HOME/bin/java -jar $SEMTK/NodeGroupStore/target/NodeGroupStore-0.0.1-SNAPSHOT.jar --spring.config.location=$SEMTK/sparqlGraphIngestionService/src/main/resources/ingest.properties --server.port=$PORT_NODE_GROUP_SERVICE --multipart.maxFileSize=1000Mb > $LOGS/sparqlGraphIngestionService.log 2>&1 &
+$JAVA_HOME/bin/java -jar $SEMTK/nodeGroupStoreService/target/nodeGroupStoreService-0.0.1-SNAPSHOT.jar --spring.config.location=$SEMTK/sparqlGraphIngestionService/src/main/resources/ingest.properties --server.port=$PORT_NODE_GROUP_SERVICE --multipart.maxFileSize=1000Mb > $LOGS/sparqlGraphIngestionService.log 2>&1 &
 
 echo "=== DONE ==="

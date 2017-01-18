@@ -20,7 +20,6 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 
-import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 

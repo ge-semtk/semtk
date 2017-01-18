@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.edc.services.hive;
 
-import java.util.List;
-
 public class HiveServiceRandomSamplingRequestBody extends HiveServiceRequestBody {
     public String table;
     public int numRows;

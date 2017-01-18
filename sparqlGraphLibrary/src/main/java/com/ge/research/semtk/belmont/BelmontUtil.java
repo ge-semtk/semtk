@@ -19,17 +19,11 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import com.ge.research.semtk.belmont.BelmontUtil;
-import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 
 public class BelmontUtil {
 

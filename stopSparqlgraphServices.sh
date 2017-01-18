@@ -10,6 +10,6 @@ echo "=== END MICROSERVICES... ==="
 pkill -f QueryService
 pkill -f IngestionService
 pkill -f ontologyInfoService
-pkill -f NodeGroupStore
+pkill -f nodeGroupStoreService
 
 echo "=== DONE ==="

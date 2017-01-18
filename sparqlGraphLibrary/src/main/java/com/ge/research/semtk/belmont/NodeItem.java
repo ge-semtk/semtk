@@ -47,7 +47,7 @@ public class NodeItem {
 	 * Constructor 
 	 * @param nome the property name (e.g. screenPrinting)
 	 * @param valueType (e.g. ScreenPrinting)
-	 * @param UriValueType (e.g. http://research.ge.com/sofc/testconfig#ScreenPrinting)
+	 * @param UriValueType (e.g. http://research.ge.com/print/testconfig#ScreenPrinting)
 	 */
 	public NodeItem(String nome, String valueType, String UriValueType) {
 		this.keyName = nome;

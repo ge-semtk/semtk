@@ -18,23 +18,10 @@
 
 package com.ge.research.semtk.load.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.Test;
 
-import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.load.DataCleaner;
-import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.load.utility.Utility;
 
 public class UtilityTest {

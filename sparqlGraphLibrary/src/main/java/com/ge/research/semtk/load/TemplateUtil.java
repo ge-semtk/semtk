@@ -24,7 +24,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
 
 public class TemplateUtil {
 

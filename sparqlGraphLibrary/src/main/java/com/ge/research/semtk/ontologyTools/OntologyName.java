@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.ontologyTools;
 
-import com.ge.research.semtk.ontologyTools.OntologyName;
-
 public class OntologyName {
 
 	private String name = "";

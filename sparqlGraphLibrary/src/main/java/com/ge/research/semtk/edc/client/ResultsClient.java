@@ -23,8 +23,8 @@ import java.net.URL;
 
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.services.client.RestClient;
 
 public class ResultsClient extends RestClient implements Runnable {

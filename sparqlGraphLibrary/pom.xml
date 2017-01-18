@@ -4,10 +4,10 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>1.1.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>sparqlGraphLibrary</artifactId>
-    
+	
     <repositories>
 		<!-- need cloudera repository to retrieve hadoop-client 2.5.0-cdh5.3.0 -->
 		<repository>
@@ -35,16 +35,14 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
-			<version>4.5.1</version>
-		</dependency>
+			</dependency>
 		<!-- end addition by paul -->
 		<!--  Added by Justin because tests were failing to find a specifically needed class -->
 
 		<dependency>
 		    <groupId>org.apache.httpcomponents</groupId>
 		    <artifactId>httpcore</artifactId>
-		    <version>4.4</version>
-		</dependency>
+		    </dependency>
 
 		<!--  End of additions by Justin -->
 		<dependency>
@@ -67,8 +65,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.13</version>
-		</dependency>
+			</dependency>
 
 		<dependency>
 			<groupId>com.google.guava</groupId>

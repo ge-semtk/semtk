@@ -21,8 +21,8 @@ package com.ge.research.semtk.resultSet;
 
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
 
 /**
  * A result set containing a NodeGroup (graph)

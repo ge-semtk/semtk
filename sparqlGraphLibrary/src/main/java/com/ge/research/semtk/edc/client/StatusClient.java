@@ -19,7 +19,6 @@
 package com.ge.research.semtk.edc.client;
 
 import java.net.ConnectException;
-import java.net.URL;
 
 import org.json.simple.JSONObject;
 

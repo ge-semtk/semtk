@@ -18,7 +18,6 @@
 
 package com.ge.research.semtk.load.dataset;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.json.simple.JSONObject;

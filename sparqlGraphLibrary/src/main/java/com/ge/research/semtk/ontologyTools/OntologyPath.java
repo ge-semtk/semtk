@@ -21,7 +21,6 @@ package com.ge.research.semtk.ontologyTools;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.Triple;
 
 public class OntologyPath {

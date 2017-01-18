@@ -19,7 +19,7 @@
 package com.ge.research.semtk.load.dataset.test;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

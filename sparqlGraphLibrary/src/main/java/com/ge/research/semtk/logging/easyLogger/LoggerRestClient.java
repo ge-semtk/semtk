@@ -19,12 +19,9 @@
 package com.ge.research.semtk.logging.easyLogger;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.UUID;
-
-import com.ge.research.semtk.logging.Details;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -35,6 +32,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.logging.Details;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 

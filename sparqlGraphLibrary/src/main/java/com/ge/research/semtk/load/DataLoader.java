@@ -21,11 +21,8 @@ package com.ge.research.semtk.load;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.print.attribute.HashAttributeSet;
-
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.belmont.BelmontUtil;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataSetExhaustedException;
@@ -95,6 +92,10 @@ public class DataLoader {
 	
 	public String getDatasetGraphName(){
 		return this.endpoint.getDataset();
+	}
+	
+	public int getTotalRecordsProcessed(){
+		return this.totalRecordsProcessed;
 	}
 	
 	private void validateColumns(Dataset ds) throws Exception {

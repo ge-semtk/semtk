@@ -21,8 +21,6 @@ package com.ge.research.semtk.standaloneExecutables;
 import java.io.File;
 import java.nio.file.Files;
 
-import org.json.simple.JSONObject;
-
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
