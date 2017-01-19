@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.belmont.test;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 import com.ge.research.semtk.belmont.BelmontUtil;
@@ -25,19 +27,19 @@ import com.ge.research.semtk.belmont.BelmontUtil;
 public class BelmontUtilTest {
 
 	@Test
-	public void testPrefixQuery() {
-		
+	public void testPrefixQuery() {	
 		System.out.println("Running prefix query test");
 		
 		String query = "select ?s ?type {?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type.}";
 		
 		try {
-			String prefixedQuery = BelmontUtil.prefixQuery(query);
+			String prefixedQuery = BelmontUtil.prefixQuery(query);		
 			
-			System.out.println(prefixedQuery);
+			assertTrue(prefixedQuery.startsWith("prefix 22-rdf-syntax-ns:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
+			assertTrue(prefixedQuery.endsWith("select ?s ?type {?s 22-rdf-syntax-ns:type ?type.}"));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			fail();
 		}
 	}
 	
@@ -48,14 +50,17 @@ public class BelmontUtilTest {
 		
 		String query = "select ?s ?type ?prop {?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type."
 				+ " ?s <http://foo.research.com/test#bar> ?prop.}";
-		
+
 		try {
 			String prefixedQuery = BelmontUtil.prefixQuery(query);
 			
-			System.out.println(prefixedQuery);
+			assertTrue(prefixedQuery.contains("prefix 22-rdf-syntax-ns:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
+			assertTrue(prefixedQuery.contains("prefix test:<http://foo.research.com/test#>"));
+			assertTrue(prefixedQuery.endsWith("select ?s ?type ?prop {?s 22-rdf-syntax-ns:type ?type. ?s test:bar ?prop.}"));		
+			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			fail();
 		}
 	}
 	
@@ -70,10 +75,14 @@ public class BelmontUtilTest {
 		try {
 			String prefixedQuery = BelmontUtil.prefixQuery(query);
 			
-			System.out.println(prefixedQuery);
+			String expected = "prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+					"prefix test:<http://foo.research.com/test#>\n\n" +
+					"  select ?s ?type ?prop {?s rdf:type ?type.  ?s test:bar ?prop.}";
+
+			assertTrue(prefixedQuery.equals(expected));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			fail();
 		}
 	}
 	
