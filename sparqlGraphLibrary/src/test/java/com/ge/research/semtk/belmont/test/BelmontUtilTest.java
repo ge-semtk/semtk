@@ -27,63 +27,44 @@ import com.ge.research.semtk.belmont.BelmontUtil;
 public class BelmontUtilTest {
 
 	@Test
-	public void testPrefixQuery() {	
-		System.out.println("Running prefix query test");
+	public void testPrefixQuery() throws Exception {	
 		
 		String query = "select ?s ?type {?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type.}";
-		
-		try {
-			String prefixedQuery = BelmontUtil.prefixQuery(query);		
+
+		String prefixedQuery = BelmontUtil.prefixQuery(query);		
 			
-			assertTrue(prefixedQuery.startsWith("prefix 22-rdf-syntax-ns:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
-			assertTrue(prefixedQuery.endsWith("select ?s ?type {?s 22-rdf-syntax-ns:type ?type.}"));
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		assertTrue(prefixedQuery.startsWith("prefix 22-rdf-syntax-ns:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
+		assertTrue(prefixedQuery.endsWith("select ?s ?type {?s 22-rdf-syntax-ns:type ?type.}"));
 	}
 	
 	@Test
-	public void testMultiplePrefixQuery() {
-		
-		System.out.println("Running multiple prefix test");
+	public void testMultiplePrefixQuery() throws Exception {
 		
 		String query = "select ?s ?type ?prop {?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type."
 				+ " ?s <http://foo.research.com/test#bar> ?prop.}";
 
-		try {
-			String prefixedQuery = BelmontUtil.prefixQuery(query);
+		String prefixedQuery = BelmontUtil.prefixQuery(query);
 			
-			assertTrue(prefixedQuery.contains("prefix 22-rdf-syntax-ns:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
-			assertTrue(prefixedQuery.contains("prefix test:<http://foo.research.com/test#>"));
-			assertTrue(prefixedQuery.endsWith("select ?s ?type ?prop {?s 22-rdf-syntax-ns:type ?type. ?s test:bar ?prop.}"));		
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		assertTrue(prefixedQuery.contains("prefix 22-rdf-syntax-ns:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
+		assertTrue(prefixedQuery.contains("prefix test:<http://foo.research.com/test#>"));
+		assertTrue(prefixedQuery.endsWith("select ?s ?type ?prop {?s 22-rdf-syntax-ns:type ?type. ?s test:bar ?prop.}"));		
+
 	}
 	
 	@Test
-	public void testPartiallyAlreadyPrefixed() {
-		System.out.println("Running partial prefix test");
+	public void testPartiallyAlreadyPrefixed() throws Exception {
 		
 		String query = "prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n "
 				+ " select ?s ?type ?prop {?s rdf:type ?type. \n"
 				+ " ?s <http://foo.research.com/test#bar> ?prop.}";
 		
-		try {
-			String prefixedQuery = BelmontUtil.prefixQuery(query);
+		String prefixedQuery = BelmontUtil.prefixQuery(query);
 			
-			String expected = "prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-					"prefix test:<http://foo.research.com/test#>\n\n" +
-					"  select ?s ?type ?prop {?s rdf:type ?type.  ?s test:bar ?prop.}";
+		String expected = "prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+				"prefix test:<http://foo.research.com/test#>\n\n" +
+				"  select ?s ?type ?prop {?s rdf:type ?type.  ?s test:bar ?prop.}";
 
-			assertTrue(prefixedQuery.equals(expected));
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
+		assertTrue(prefixedQuery.equals(expected));
 	}
 	
 }
