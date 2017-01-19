@@ -53,7 +53,7 @@ public class TestGraph {
 	public TestGraph() {
 	}
 
-	private static final String SPARQLSERVER = "http://localhost:2420";
+	private static final String SPARQLSERVER = "http://localhost:2420"; 
 	private static final String SPARQLSERVERTYPE = "virtuoso";
 	private static final String USER = "username";
 	private static final String PASSWORD = "password";
@@ -65,6 +65,7 @@ public class TestGraph {
 			sei.executeTestQuery();
 		}catch(Exception e){
 			System.out.println("***** Cannot connect to " + SPARQLSERVERTYPE + " server at " + SPARQLSERVER + " with the given credentials for '" + USER + "'.  Set up this server or change settings in TestGraph. *****");
+			throw e;
 		}
 		return sei;
 	}
