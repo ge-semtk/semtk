@@ -60,7 +60,13 @@ public class TestGraph {
 	
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
-		return new VirtuosoSparqlEndpointInterface(SPARQLSERVER, generateDataset("both"), USER, PASSWORD);
+		SparqlEndpointInterface sei = new VirtuosoSparqlEndpointInterface(SPARQLSERVER, generateDataset("both"), USER, PASSWORD);
+		try{
+			sei.executeTestQuery();
+		}catch(Exception e){
+			System.out.println("***** Cannot connect to " + SPARQLSERVERTYPE + " server at " + SPARQLSERVER + " with the given credentials for '" + USER + "'.  Set up this server or change settings in TestGraph. *****");
+		}
+		return sei;
 	}
 	
 	/**
