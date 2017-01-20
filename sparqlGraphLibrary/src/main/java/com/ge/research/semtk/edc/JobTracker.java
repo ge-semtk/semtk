@@ -26,10 +26,10 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 
 public class JobTracker {
-	ServicesConfigProperties prop = null;
+	JobEndpointProperties prop = null;
 	SparqlEndpointInterface endpoint = null;
 	
-	public JobTracker (ServicesConfigProperties edc_prop) throws Exception {
+	public JobTracker (JobEndpointProperties edc_prop) throws Exception {
 		this.prop = edc_prop;
 		this.endpoint = SparqlEndpointInterface.getInstance(	this.prop.getJobEndpointType(),
 																this.prop.getJobEndpointServerUrl(), 

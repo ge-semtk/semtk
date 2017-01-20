@@ -21,12 +21,12 @@ package com.ge.research.semtk.services.status;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.edc.ServicesConfigProperties;
+import com.ge.research.semtk.edc.JobEndpointProperties;
 
 // subclass simply adds spring annotations including locations
 
 @Configuration
 @ConfigurationProperties(prefix="status.edc.services", ignoreUnknownFields = true)
-public class StatusEdcConfigProperties extends ServicesConfigProperties {
+public class StatusEdcConfigProperties extends JobEndpointProperties {
 
 }
