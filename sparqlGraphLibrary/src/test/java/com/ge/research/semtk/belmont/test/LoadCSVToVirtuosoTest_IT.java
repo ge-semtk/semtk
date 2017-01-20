@@ -39,17 +39,14 @@ public class LoadCSVToVirtuosoTest_IT {
 		sgJson = TestGraph.initGraphWithData("sampleBattery");
 	}
 	
-	@Test 
-	public void loadCSVToVirtuoso1() throws Exception {	
-		// load JSON object from file
-
-		String[] headers = {"Battery","Cell","color","birthday"};
+	@Test
+	public void loadCSVToVirtuoso() throws Exception {
+		String[] headers = { "Battery", "Cell", "color", "birthday" };
 		Dataset ds = new CSVDataset("src/test/resources/sampleBattery.csv", headers);
-
-		DataLoader dl = new DataLoader(sgJson, 6, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		int numLoaded = dl.importData(true);
-		assertEquals(numLoaded, 4);	
-	}	
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		assertEquals(dl.getTotalRecordsProcessed(),4);
+	}
 	
 	@Test 
 	public void loadCSVToVirtuoso_BadFile() {
