@@ -18,7 +18,9 @@
 
 package com.ge.research.semtk.edc;
 
-public class ServicesConfigProperties {
+// meant to be inherited into a spring boot microservice property object
+// properties for a triple-store endpoint
+public class JobEndpointProperties {
 	private String jobEndpointType = "";
 	private String jobEndpointDomain = "";
 	private String jobEndpointServerUrl = "";
