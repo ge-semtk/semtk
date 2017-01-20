@@ -18,15 +18,13 @@
 
 package com.ge.research.semtk.load.dataset.test;
 
-
 import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-
-import org.junit.Test;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
 
@@ -55,75 +53,70 @@ public class CSVDatasetTest {
 	
 	
 	@Test
-	public void testCSVDatasetFromPath() {
+	public void testCSVDatasetFromPath() throws Exception {
+			
+		String[] headers = {"HEADER3","HEADER1"}; // picked a subset of the existing headers, in reverse order than they appear in the file
+		CSVDataset csvDataset = new CSVDataset("src/test/resources/test.csv", headers);
+		ArrayList<ArrayList<String>> records;
+			
+		// confirm that we read the data correctly
+		records = csvDataset.getNextRecords(5);
+		assertEquals(records.size(), 5);
 
-		try {
+		ArrayList<String> g0 = new ArrayList<String>();
+		g0.add("a3");
+		g0.add("a1");
+
+		assertEquals(records.get(0), g0);
+
+		g0.clear();
+		g0.add("b3");
+		g0.add("b1");
+
+		assertEquals(records.get(1), g0);
+
+		g0.clear();
+		g0.add("c3");
+		g0.add("c1");
+
+		assertEquals(records.get(2), g0);
+
+		g0.clear();
+		g0.add("d3");
+		g0.add("d1");
+
+		assertEquals(records.get(3), g0);
 			
-			String[] headers = {"HEADER3","HEADER1"}; // picked a subset of the existing headers, in reverse order than they appear in the file
-			CSVDataset csvDataset = new CSVDataset("src/test/resources/test.csv", headers);
-			ArrayList<ArrayList<String>> records;
+		g0.clear();
+		g0.add("e3");
+		g0.add("e1");
 			
-			// confirm that we read the data correctly
-			records = csvDataset.getNextRecords(5);
-			assertEquals(records.size(), 5);
+		assertEquals(records.get(4), g0);
 			
-			ArrayList<String> g0 = new ArrayList<String>();
-			g0.add("a3");
-			g0.add("a1");
+		// confirm that we handle the end of the file correctly
+		records = csvDataset.getNextRecords(5);  // ask for 5, should get 2 (file has only 7 non-header lines)
+		assertEquals(records.size(), 2);
+		ArrayList<String> t0 = new ArrayList<String>();
+		t0.add("f3");
+		t0.add("f1");
 			
-			assertEquals(records.get(0), g0);
+		ArrayList<String> t1 = new ArrayList();
+		t1.add("g3");
+		t1.add("g1");
 			
-			g0.clear();
-			g0.add("b3");
-			g0.add("b1");
+		assertEquals(records.get(0), t0);
+		assertEquals(records.get(1), t1);
 			
-			assertEquals(records.get(1), g0);
+		// confirm that we can retrieve the headers
+		assertEquals(csvDataset.getColumnNamesinOrder().get(0), headers[0].toLowerCase());
+		assertEquals(csvDataset.getColumnNamesinOrder().get(1), headers[1].toLowerCase());
 			
-			g0.clear();
-			g0.add("c3");
-			g0.add("c1");
+		// reset and get more
+		csvDataset.reset();
+		records = csvDataset.getNextRecords(5);
+		assertEquals(records.size(), 5);
+		assertEquals(records.get(4), g0);
 			
-			assertEquals(records.get(2), g0);
-			
-			g0.clear();
-			g0.add("d3");
-			g0.add("d1");
-			
-			assertEquals(records.get(3), g0);
-			
-			g0.clear();
-			g0.add("e3");
-			g0.add("e1");
-			
-			assertEquals(records.get(4), g0);
-			
-			// confirm that we handle the end of the file correctly
-			records = csvDataset.getNextRecords(5);  // ask for 5, should get 2 (file has only 7 non-header lines)
-			assertEquals(records.size(), 2);
-			ArrayList<String> t0 = new ArrayList<String>();
-			t0.add("f3");
-			t0.add("f1");
-			
-			ArrayList<String> t1 = new ArrayList();
-			t1.add("g3");
-			t1.add("g1");
-			
-			assertEquals(records.get(0), t0);
-			assertEquals(records.get(1), t1);
-			
-			// confirm that we can retrieve the headers
-			assertEquals(csvDataset.getColumnNamesinOrder().get(0), headers[0].toLowerCase());
-			assertEquals(csvDataset.getColumnNamesinOrder().get(1), headers[1].toLowerCase());
-			
-			// reset and get more
-			csvDataset.reset();
-			records = csvDataset.getNextRecords(5);
-			assertEquals(records.size(), 5);
-			assertEquals(records.get(4), g0);
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	

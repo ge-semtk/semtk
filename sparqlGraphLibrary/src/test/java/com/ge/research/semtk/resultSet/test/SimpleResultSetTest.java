@@ -18,8 +18,7 @@
 
 package com.ge.research.semtk.resultSet.test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -31,74 +30,48 @@ public class SimpleResultSetTest {
 
 	@Test
 	public void test1() {
-		try{
-			SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
-			// TODO ADD TESTS
-		}catch(Exception e){
-			e.printStackTrace();
-			fail();
-		}
+		SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
+		assertEquals(resultSet.getRationaleAsString(","),"Monkeys are brown,");
 	}	
 	
 	@Test
-	public void testJsonRationale1() {
-		try{
-			SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
-			JSONObject j = resultSet.toJson();
-			SimpleResultSet set2 = SimpleResultSet.fromJson(j);
-			set2.getRationaleAsString(null).equals("Monkeys are brown");
-		}catch(Exception e){
-			e.printStackTrace();
-			fail();
-		}
+	public void testJsonRationale1() throws Exception {
+		SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
+		JSONObject j = resultSet.toJson();
+		SimpleResultSet rs = SimpleResultSet.fromJson(j);
+		assertTrue(rs.getRationaleAsString(",").equals("Monkeys are brown,"));
 	}
 	
 	@Test
-	public void testJsonResultString() {
-		try{
-			SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
-			resultSet.addResult("result", "test");
-			JSONObject j = resultSet.toJson();
-			SimpleResultSet set2 = SimpleResultSet.fromJson(j);
-			assertTrue(set2.getResult("result").equals("test"));
-		}catch(Exception e){
-			e.printStackTrace();
-			fail();
-		}
+	public void testJsonResultString() throws Exception {
+		SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
+		resultSet.addResult("result", "test");
+		JSONObject j = resultSet.toJson();
+		SimpleResultSet set2 = SimpleResultSet.fromJson(j);
+		assertTrue(set2.getResult("result").equals("test"));
 	}	
 	
 	@Test
-	public void testJsonResultInt() {
-		try{
-			SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
-			resultSet.addResult("result", 100);
-			JSONObject j = resultSet.toJson();
-			SimpleResultSet set2 = SimpleResultSet.fromJson(j);
-			assertTrue(set2.getResultInt("result") == 100);
-		}catch(Exception e){
-			e.printStackTrace();
-			fail();
-		}
+	public void testJsonResultInt() throws Exception {
+		SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
+		resultSet.addResult("result", 100);
+		JSONObject j = resultSet.toJson();
+		SimpleResultSet set2 = SimpleResultSet.fromJson(j);
+		assertTrue(set2.getResultInt("result") == 100);
 	}	
 	
 	@Test
-	public void testJsonResultBadName() {
-		try{
-			SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
-			resultSet.addResult("result", 100);
-			JSONObject j = resultSet.toJson();
-			SimpleResultSet set2 = SimpleResultSet.fromJson(j);
+	public void testJsonResultBadName() throws Exception {
+		SimpleResultSet resultSet = new SimpleResultSet(true, "Monkeys are brown");
+		resultSet.addResult("result", 100);
+		JSONObject j = resultSet.toJson();
+		SimpleResultSet set2 = SimpleResultSet.fromJson(j);
 			
-			try {
-				set2.getResultInt("BAD_NAME");
-				fail();
-			} catch (Exception e) {
-
-				// success
-			}
-		}catch(Exception e){
-			e.printStackTrace();
+		try {
+			set2.getResultInt("BAD_NAME");  // expect an error here
 			fail();
+		} catch (Exception e) {
+			// success
 		}
 	}	
 	
