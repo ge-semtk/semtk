@@ -3,6 +3,7 @@ package com.ge.research.semtk.load.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -293,21 +294,13 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testGraphLoadBattery() throws Exception {
-		String csvPath = "src/test/resources/sampleBattery.csv";
-		String jsonPath = "src/test/resources/sampleBattery.json";
-		String owlPath = "src/test/resources/sampleBattery.owl";
-
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson(jsonPath);
-		CSVDataset csvDataset = new CSVDataset(csvPath, false);
-		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlPath);
-
+		SparqlGraphJson sgJson = TestGraph.initGraphWithData("sampleBattery");
+		CSVDataset csvDataset = new CSVDataset("src/test/resources/sampleBattery.csv", false);
 		DataLoader dl = new DataLoader(sgJson, 5, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
-
-		// check the load
-		assertTrue(dl.getTotalRecordsProcessed() == 4);
+		assertEquals(dl.getTotalRecordsProcessed(), 4);
 	}
+	
 
 	@Test
 	public void testGraphLoadBadEnum() throws Exception {
