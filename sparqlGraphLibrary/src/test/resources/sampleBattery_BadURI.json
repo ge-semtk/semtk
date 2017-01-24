@@ -1,0 +1,25 @@
+{
+	"sparqlConn": {
+		
+	},
+	"sNodeGroup": {
+		"version": 1,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Color",
+				"fullURIName": "http://kdl.ge.com/batterydemo#ColorBADURI",
+				"subClassNames": [],
+				"SparqlID": "?Color",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			
+		]
+	},
+	"importSpec": {
+		
+	}
+}

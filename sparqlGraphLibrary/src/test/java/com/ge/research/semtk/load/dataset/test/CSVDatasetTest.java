@@ -19,6 +19,8 @@
 package com.ge.research.semtk.load.dataset.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -27,10 +29,23 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.dataset.Dataset;
 
 
 public class CSVDatasetTest {
 	
+	
+	@Test 
+	public void testCSVDataset_BadFile() throws Exception {
+		try{
+			String[] headers = {"Battery","Cell","color","birthday"};
+			Dataset ds = new CSVDataset("src/test/resources/bad/path.csv", headers);
+			fail("Did not throw expected exception");	
+		}catch(Exception e){
+			// expect to get here
+		}
+		
+	}
 	
 	@Test
 	public void testCSVDatasetFromFileContent() throws Exception{

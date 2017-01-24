@@ -1,0 +1,40 @@
+{
+	"sparqlConn": {
+		
+	},
+	"sNodeGroup": {
+		"version": 1,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "cellId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#cellId_BADURI",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					
+				],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			
+		]
+	},
+	"importSpec": {
+
+	}
+}

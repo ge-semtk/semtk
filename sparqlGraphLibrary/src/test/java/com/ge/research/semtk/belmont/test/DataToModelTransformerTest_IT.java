@@ -20,7 +20,7 @@ import com.ge.research.semtk.load.utility.DataToModelTransformer;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.load.utility.Utility;
 
-public class DataToModelTransformerTest {
+public class DataToModelTransformerTest_IT {
 
 	@Test
 	public void checkSpecHandlerFunction() throws Exception {

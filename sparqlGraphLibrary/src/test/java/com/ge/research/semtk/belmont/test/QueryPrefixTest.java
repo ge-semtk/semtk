@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import com.ge.research.semtk.belmont.BelmontUtil;
 
-public class BelmontUtilTest {
+public class QueryPrefixTest {
 
 	@Test
 	public void testPrefixQuery() throws Exception {	

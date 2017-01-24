@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.belmont.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.json.simple.JSONArray;
@@ -41,16 +42,33 @@ public class BelmontConstructQueryTest_IT {
 	}
 	
 	@Test
-	public void testCreateConstruct() throws Exception{
+	public void testConstructQuery1() throws Exception{
 			
-		JSONObject ngBase = sgJson.getSNodeGroupJson();
-		NodeGroup ng = NodeGroup.getInstanceFromJson(ngBase);
-		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDataInterface();
+		NodeGroup ng = NodeGroup.getInstanceFromJson(sgJson.getSNodeGroupJson());
+		SparqlEndpointInterface sei = sgJson.getDataInterface();
 
-		String qry = ng.generateSparqlConstruct();
-		JSONObject res = sei.executeQuery(qry, SparqlResultTypes.GRAPH_JSONLD);
+		String query = ng.generateSparqlConstruct();
+		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 			
 		// pass if there's a @graph and the first element contains anything about a (b)attery
-		assertTrue(((JSONArray)res.get("@graph")).get(0).toString().contains("attery"));
+		assertTrue(((JSONArray)responseJson.get("@graph")).get(0).toString().contains("attery"));
+		
+		NodeGroup responseNodeGroup = NodeGroup.fromConstructJSON(responseJson);
+		assertEquals(responseNodeGroup.getNodeCount(),9);
+	}
+
+	
+	@Test 
+	public void testConstructQuery2() throws Exception {		
+		
+		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/sampleBattery_PlusConstraints.json");		
+		SparqlEndpointInterface sei = sgJson.getDataInterface();			
+		
+		String query = ng.generateSparqlConstruct();
+		
+		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
+		NodeGroup responseNodeGroup = NodeGroup.fromConstructJSON(responseJson);
+		assertEquals(responseNodeGroup.getNodeCount(),9);
+		// TODO test the PlusConstraints part
 	}
 }

@@ -41,6 +41,7 @@ public class NodeGroupTest {
 		assertEquals(ng.getNodeList().get(1).getFullUriName(),"http://kdl.ge.com/batterydemo#Cell");
 		assertEquals(ng.getNodeList().get(2).getFullUriName(),"http://kdl.ge.com/batterydemo#Battery");	
 	}
+		
 	
 	@Test
 	public void checkDuplicateSparqlIdInLoad() throws Exception {
@@ -61,5 +62,15 @@ public class NodeGroupTest {
 		assertTrue(ng.getNodeBySparqlID("?Cell_0")!= null);
 		assertTrue(ng.getNodeBySparqlID("?Cell_1")!= null);		
 	}
+	
+	@Test
+	public void testDuplicatePrefix() throws Exception {
+		NodeGroup ng = new NodeGroup();
+		ng.addToPrefixHash("/here/is/a/prefixed#value");
+		ng.addToPrefixHash("/here/is/another/prefixed#value");
+		String p = ng.generateSparqlPrefix();
+		assertTrue(p.contains("prefix prefixed:</here/is/a/prefixed#>"));
+		assertTrue(p.contains("prefix prefixed_0:</here/is/another/prefixed#>"));
+	}	
 	
 }

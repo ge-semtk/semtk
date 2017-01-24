@@ -1,0 +1,372 @@
+{
+	"sparqlConn": {
+		"name": "Test",
+		"type": "virtuoso",
+		"dsURL": "http://localhost:2420",
+		"dsKsURL": "",
+		"dsDataset": "http://dataset",
+		"domain": "http://research.ge.com"
+	},
+	"sNodeGroup": {
+		"version": 1,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "pasteLot",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/spcell#pasteLot",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "pasteMaterial",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/spcell#pasteMaterial",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "pasteVendor",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/spcell#pasteVendor",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printArea",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#printArea",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printDate",
+						"ValueType": "date",
+						"relationship": "http://www.w3.org/2001/XMLSchema#date",
+						"UriRelationship": "http://research.ge.com/spcell#printDate",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printDryWeightGm",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#printDryWeightGm",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printInitialWeightGm",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#printInitialWeightGm",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printLoading",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#printLoading",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printNotes",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/spcell#printNotes",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printOrder",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/spcell#printOrder",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "printWetWeightGm",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#printWetWeightGm",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "testLoadingXInitialWeight",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#testLoadingXInitialWeight",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "testLogLoading",
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/spcell#testLogLoading",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					
+				],
+				"NodeName": "ScreenPrinting",
+				"fullURIName": "http://research.ge.com/spcell#ScreenPrinting",
+				"subClassNames": [],
+				"SparqlID": "?ScreenPrinting",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "cellId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/spcell#cellId",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "sizeInches",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/spcell#sizeInches",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?ScreenPrinting"
+						],
+						"KeyName": "screenPrinting",
+						"ValueType": "ScreenPrinting",
+						"UriValueType": "http://research.ge.com/spcell#ScreenPrinting",
+						"ConnectBy": "screenPrinting",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/spcell#screenPrinting",
+						"isOptional": false
+					}
+				],
+				"NodeName": "Cell",
+				"fullURIName": "http://research.ge.com/spcell#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "http://research.ge.com/test",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "cell"
+			},
+			{
+				"colId": "col_1",
+				"colName": "guy"
+			},
+			{
+				"colId": "col_2",
+				"colName": "lot"
+			},
+			{
+				"colId": "col_3",
+				"colName": "material"
+			},
+			{
+				"colId": "col_4",
+				"colName": "size in"
+			},
+			{
+				"colId": "col_5",
+				"colName": "treatment"
+			}
+		],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "Cell_"
+			}
+		],
+		"transforms": [
+			{
+				"transId": "trans_0",
+				"name": "Trans_eE",
+				"transType": "replaceAll",
+				"arg1": "e",
+				"arg2": "E"
+			},
+			{
+				"transId": "trans_1",
+				"name": "Trans_up",
+				"transType": "toUpperCase",
+				"arg1": "",
+				"arg2": ""
+			},
+			{
+				"transId": "trans_2",
+				"name": "Trans_down",
+				"transType": "toLowerCase",
+				"arg1": "",
+				"arg2": ""
+			}
+		],
+		"nodes": [
+			{
+				"sparqlID": "?Cell",
+				"type": "http://research.ge.com/spcell#Cell",
+				"mapping": [
+					{
+						"textId": "text_0",
+						"text": "Cell_"
+					},
+					{
+						"colId": "col_0",
+						"colName": "cell",
+						"transformList": [
+							"trans_0"
+						]
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/spcell#cellId",
+						"mapping": [
+							{
+								"colId": "col_0",
+								"colName": "cell"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/spcell#sizeInches",
+						"mapping": [
+							{
+								"colId": "col_4",
+								"colName": "size in"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?ScreenPrinting",
+				"type": "http://research.ge.com/spcell#ScreenPrinting",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/spcell#pasteLot",
+						"mapping": [
+							{
+								"colId": "col_2",
+								"colName": "lot"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/spcell#pasteMaterial",
+						"mapping": [
+							{
+								"colId": "col_3",
+								"colName": "material",
+								"transformList": [
+									"trans_2"
+								]
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/spcell#pasteVendor",
+						"mapping": [
+							{
+								"colId": "col_1",
+								"colName": "guy",
+								"transformList": [
+									"trans_1"
+								]
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

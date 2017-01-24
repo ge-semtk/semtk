@@ -1,0 +1,18 @@
+uri "http://research.ge.com/kdl/plant" alias pet version "1".
+
+Plant is a class
+	described by plantName with a single value of type string.
+
+Color is a class must be one of {yellow, red, white, purple}.
+
+Tree is a type of Plant,
+	described by bark with a single value of type string,
+	described by numbranches with a single value of type int.
+	
+Flower is a type of Plant,
+	described by color with a single value of type Color,
+	described by numPedals with a single value of type int.
+	
+Tulip is a type of Flower,
+	described by bulbSizeCm with a single value of type float.
+	
