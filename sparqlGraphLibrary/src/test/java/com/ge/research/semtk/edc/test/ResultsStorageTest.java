@@ -21,23 +21,31 @@ package com.ge.research.semtk.edc.test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.edc.ResultsStorage;
 import com.ge.research.semtk.resultSet.Table;
 
 public class ResultsStorageTest {
-	// Notice that the tests aren't terribly powerful without a web server
-	String BASE_URL = "file:///C:/Temp";
-	String FILE_LOC = "C:/Temp";
-	String CSV_CONTENTS = "one, two, three\n1,2,3\n10,20,30\n100,200,300\n";
-	String CSV_SAMPLE =   "one, two, three\n1,2,3\n10,20,30\n";
-	String JSON_RESULT = "{\"col_names\":[\"one\",\" two\",\" three\"],\"rows\":[[\"1\",\"2\",\"3\"],[\"10\",\"20\",\"30\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
-	int SAMPLE_LINES = 2;
+
+	private static String BASE_URL;
+	private static String FILE_LOC;
+	private String CSV_CONTENTS = "one, two, three\n1,2,3\n10,20,30\n100,200,300\n";
+	private String CSV_SAMPLE =   "one, two, three\n1,2,3\n10,20,30\n";
+	private int SAMPLE_LINES = 2;
+	
+	@BeforeClass
+	public static void setup() throws IOException {
+		FILE_LOC = (new java.io.File( "." ).getCanonicalPath());  // write test files to current directory (they will be deleted)
+		BASE_URL = "file://" + FILE_LOC;	
+	}
+	
 	
 	@Test
 	public void test_basic_csv() {
@@ -60,7 +68,6 @@ public class ResultsStorageTest {
 		} catch(Exception e){
 			e.printStackTrace();
 			fail();
-			
 		} finally {
 			cleanup(rs, urls);
 		}
@@ -85,7 +92,6 @@ public class ResultsStorageTest {
 		} catch(Exception e){
 			e.printStackTrace();
 			fail();
-			
 		} finally {
 			URL[] urls = { url };
 			cleanup(rs,  urls );
@@ -129,15 +135,15 @@ public class ResultsStorageTest {
 			
 		} catch(Exception e){
 			e.printStackTrace();
-			fail();
-			
+			fail();			
 		} finally {
 			cleanup(rs, urls);
 		}
 	}
+	
 	@Test
 	public void test_delete() {
-		// store csv and read it back
+		// store csv and then delete it
 
 		ResultsStorage rs = null;
 		URL urls[] = null;
@@ -149,16 +155,17 @@ public class ResultsStorageTest {
 			
 			rs.deleteStoredFile(urls[0]);
 			
+			// expect failure trying to access the deleted file
 			IOUtils.toString(urls[0]);
 			fail("No exception retrieving deleted URL");
 			
 		} catch(Exception e){
-			assertTrue(e.toString().contains("cannot find the file"));
-			
+			assertTrue(e.toString().contains("No such file or directory"));			
 		} finally {
 			cleanup(rs, urls);
 		}
 	}
+	
 	
 	private void cleanup(ResultsStorage rs, URL [] urls) {
 		try {

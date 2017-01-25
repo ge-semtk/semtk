@@ -49,9 +49,4 @@ public abstract class ServiceProperties {
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
 	}
-	public String getMavenGitTest_1() {
-		return "test succeeded";
-	}
-	
-	
 }
