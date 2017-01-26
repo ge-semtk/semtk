@@ -85,6 +85,14 @@ public class SimpleResultSet extends GeneralResultSet{
 		this.resultsContents.put(name, value);
 	}
 	
+	@SuppressWarnings("unchecked")
+	public void addResult(String name, JSONObject jObj) {
+		if (this.resultsContents == null) {
+			this.resultsContents = new JSONObject();
+		}
+		this.resultsContents.put(name, jObj);
+	}
+	
 	/**
 	 * 
 	 * @param name

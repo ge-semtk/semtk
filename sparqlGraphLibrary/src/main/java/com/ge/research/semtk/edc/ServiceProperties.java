@@ -49,6 +49,4 @@ public abstract class ServiceProperties {
 	public void setEndpoint(String endpoint) {
 		this.endpoint = endpoint;
 	}
-	
-	
 }
