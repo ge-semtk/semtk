@@ -237,16 +237,42 @@ public class RuntimeConstraintsTest {
 					fail(); }
 				
 			// set value between
-		
+				rtci.selectAndSetConstraint("?durationInSeconds", SupportedOperations.VALUEBETWEEN.name(), ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueType(), names);
+				
 			// check value between
-		
+				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER ( ?durationInSeconds >= 23.0  &&  ?durationInSeconds <= 37.0 )")){
+					System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with ValueBetween clause") ;
+				}
+				else{ 
+					System.err.println(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint());
+					fail(); }
+				
 			// set value between uninclusive
+				rtci.selectAndSetConstraint("?durationInSeconds", SupportedOperations.VALUEBETWEENUNINCLUSIVE.name(), ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueType(), names);
 		
 			// check value between uniclusive
+				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER ( ?durationInSeconds > 23.0  &&  ?durationInSeconds < 37.0 )")){
+					System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with ValueBetweenUninclusive clause") ;
+				}
+				else{ 
+					System.err.println(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint());
+					fail(); }
 		
 		// date
+			names = new ArrayList<String>();	
+			names.add("2017/01/17T00:00");
+			names.add("1955/11/05T22:04");
+				
 			// set matches
-		
+				rtci.selectAndSetConstraint("?releaseDate", SupportedOperations.MATCHES.name(), ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueType(), names);
+			// check matches
+				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("VALUES ?releaseDate { '2017/01/17T00:00'^^<http://www.w3.org/2001/XMLSchema#date> '1955/11/05T22:04'^^<http://www.w3.org/2001/XMLSchema#date>  }")){
+					System.err.println("testContraintsSetByType() :: expected value for ?releaseDate uri with Matches clause") ;
+				}
+				else{ 
+					System.err.println(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint());
+					fail(); }
+				
 		// string
 
 			names = new ArrayList<String>();

@@ -178,7 +178,7 @@ public class RuntimeConstrainedItems {
 			this.setNumberInInterval(sparqlId, valLow, valHigh, true, true);
 		
 		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.VALUEBETWEENUNINCLUSIVE)){
+		else if(operationID.toUpperCase().equals(SupportedOperations.VALUEBETWEENUNINCLUSIVE.name())){
 			// this only handles numeric types right now. dates will likely break.
 			Double valLow  = Double.parseDouble(operands.get(0));
 			Double valHigh = Double.parseDouble(operands.get(1));
