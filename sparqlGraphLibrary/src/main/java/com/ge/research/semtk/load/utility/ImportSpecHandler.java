@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.load.utility;
 
+import java.net.URI;
 import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -420,13 +421,16 @@ public class ImportSpecHandler {
 	 * Expects to only get the last part of the type, e.g. "float"
 	 */
 	@SuppressWarnings("deprecation")
-	private static String validateDataType(String input, String expectedSparqlGraphType) throws Exception{
-		 		 
+	public static String validateDataType(String input, String expectedSparqlGraphType) throws Exception{
+		 
+		 //   from the XSD data types:
 		 //   string | boolean | decimal | int | integer | negativeInteger | nonNegativeInteger | 
 		 //   positiveInteger | nonPositiveInteger | long | float | double | duration | 
 		 //   dateTime | time | date | unsignedByte | unsignedInt | anySimpleType |
 		 //   gYearMonth | gYear | gMonthDay;
 		 
+		// 	  added for the runtimeConstraint:
+		//	  NODE_URI
 		
 		/**
 		 *  Please keep the wiki up to date
@@ -610,15 +614,26 @@ public class ImportSpecHandler {
 		 }
 		 else if(expectedSparqlGraphType.equalsIgnoreCase("gMonthDay")){
 			 try {
-			 String[] all = input.split("-");
-			 // check them all
-			 if(all.length != 2){ throw new Exception("month-day did not have two parts."); }
-			 if(all[0].length() != 2 && all[1].length() != 2){ throw new Exception("month-day format was wrong. " + input + " given was not MM-dd"); }
+				 String[] all = input.split("-");
+				 // check them all
+				 if(all.length != 2){ throw new Exception("month-day did not have two parts."); }
+			 	if(all[0].length() != 2 && all[1].length() != 2){ throw new Exception("month-day format was wrong. " + input + " given was not MM-dd"); }
 			 }
 			 catch(Exception e){
 				 throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
 			 }
 		 }
+		 else if(expectedSparqlGraphType.equalsIgnoreCase("NODE_URI")){
+			 try {
+				 // check that this looks like a URI
+				 URI uri = new URI(input);
+			 }
+			 catch(Exception e){
+				 throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause: " + e.getMessage());
+			 }
+				 
+		 }
+		 
 		 else {
 			 	// assume it is cool for now.
 		 }

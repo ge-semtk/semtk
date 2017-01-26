@@ -40,9 +40,7 @@ public class StoreNodeGroup {
 			IngestorRestClient irc   = new IngestorRestClient(icc);
 			
 			irc.execIngestionFromCsv(insertTemplate, data);
-			TableResultSet tbl = irc.getLastResult();
-			
-			
+			TableResultSet tbl = irc.getLastResult();			
 			System.err.println("does the return believes the run was a succes?" + tbl.getSuccess() );
 			tbl.throwExceptionIfUnsuccessful();
 			
