@@ -43,7 +43,7 @@ public class ResultsStorageTest {
 	@BeforeClass
 	public static void setup() throws IOException {
 		FILE_LOC = (new java.io.File( "." ).getCanonicalPath());  // write test files to current directory (they will be deleted)
-		BASE_URL = "file://" + FILE_LOC;	
+		BASE_URL = "file:///" + FILE_LOC;	
 	}
 	
 	
@@ -160,7 +160,7 @@ public class ResultsStorageTest {
 			fail("No exception retrieving deleted URL");
 			
 		} catch(Exception e){
-			assertTrue(e.toString().contains("No such file or directory"));			
+			assertTrue(e.toString().contains("No such file or directory") || e.toString().contains("cannot find the file"));			
 		} finally {
 			cleanup(rs, urls);
 		}
