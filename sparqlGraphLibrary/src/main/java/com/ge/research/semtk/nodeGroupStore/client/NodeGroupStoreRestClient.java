@@ -104,17 +104,30 @@ public class NodeGroupStoreRestClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
+		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
 		this.parametersJSON.put("comments", comments);
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toString());
 		
 		try{
-			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
-			retval.throwExceptionIfUnsuccessful();
+		
+			TableResultSet ret = new TableResultSet((JSONObject) this.execute());
+			if(ret.getTable().getNumRows() >= 1){
+				// this is a problem as this already exists. 
+				throw new Exception ("executeStoreNodeGroup :: nodegrouop with ID (" + proposedId + ") already exists. no work will be performed.");
+			}
+					
+			else{
+				// perform actual insertion.
+				conf.setServiceEndpoint("nodeGroupStore/storeNodeGroup");
+				retval = new SimpleResultSet();
+				retval.fromJson((JSONObject) this.execute());
+			}
 		}
 		finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("id");
 			this.parametersJSON.remove("name");
 			this.parametersJSON.remove("jsonRenderedNodeGroup");
 			this.parametersJSON.remove("comments");
