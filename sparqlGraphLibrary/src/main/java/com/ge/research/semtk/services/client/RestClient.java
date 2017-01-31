@@ -39,8 +39,8 @@ import org.json.simple.JSONValue;
 public abstract class RestClient extends Client implements Runnable {
 	
 	protected RestClientConfig conf;	
-	protected JSONObject parametersJSON = new JSONObject();
 	Object runRes = null;
+	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
 	
 	/**
@@ -108,7 +108,19 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;");
 
-		String encoded = parametersJSON.toJSONString().replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
+		JSONObject sendableJSON = new JSONObject();
+		
+		// we have to encode individual json parameter values.
+		for(Object s : parametersJSON.keySet()){
+			String sStr = (String) parametersJSON.get(s);
+			
+			// perform alteration and add.
+			sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
+		
+			sendableJSON.put((String)s, sStr);
+		}
+		
+		String encoded = sendableJSON.toJSONString();
 		
 		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
 		
