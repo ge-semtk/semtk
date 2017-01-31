@@ -38,6 +38,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * A utility class to load data to a semantic graph.  Intended for use in tests.
@@ -46,25 +47,21 @@ import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
  */
 public class TestGraph {
 
-	// PEC TODO: if we want the option of sharing or splitting model from data in different graphs
-	//           then static functions will not do.
-	//           It will have to be an object instantiated by a json nodegroup (shows whether they're split)
-	//           or NULL (pick a default)
+	// PEC TODO: if we want the option of sharing or splitting model from data in different graphs then static functions will not do.
+	//           It will have to be an object instantiated by a json nodegroup (shows whether they're split) or NULL (pick a default)
 	public TestGraph() {
 	}
 
-	private static final String SPARQLSERVER = "http://localhost:2420"; 
-	private static final String SPARQLSERVERTYPE = "virtuoso";
-	private static final String USER = "dba";		// default Virtuoso credentials
-	private static final String PASSWORD = "dba";	// default Virtuoso credentials
+	// property file specifies SPARQL connection/credentials
+	private static final String INTEGRATION_TEST_PROPERTY_FILE = "src/test/resources/integrationtest.properties";
 	
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
-		SparqlEndpointInterface sei = new VirtuosoSparqlEndpointInterface(SPARQLSERVER, generateDataset("both"), USER, PASSWORD);
+		SparqlEndpointInterface sei = new VirtuosoSparqlEndpointInterface(getSparqlServer(), generateDataset("both"), getUsername(), getPassword());
 		try{
 			sei.executeTestQuery();
 		}catch(Exception e){
-			System.out.println("***** Cannot connect to " + SPARQLSERVERTYPE + " server at " + SPARQLSERVER + " with the given credentials for '" + USER + "'.  Set up this server or change settings in TestGraph. *****");
+			System.out.println("***** Cannot connect to " + getSparqlServerType() + " server at " + getSparqlServer() + " with the given credentials for '" + getUsername() + "'.  Set up this server or change settings in TestGraph. *****");
 			throw e;
 		}
 		return sei;
@@ -72,9 +69,10 @@ public class TestGraph {
 	
 	/**
 	 * Get the URL of the SPARQL server.
+	 * @throws Exception 
 	 */
-	public static String getSparqlServer(){
-		return SPARQLSERVER;
+	public static String getSparqlServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServer");
 	}
 	
 	/**
@@ -86,23 +84,26 @@ public class TestGraph {
 	
 	/**
 	 * Get the SPARQL server type.
+	 * @throws Exception 
 	 */
-	public static String getSparqlServerType(){
-		return SPARQLSERVERTYPE;
+	public static String getSparqlServerType() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerType");
 	}
 	
 	/**
 	 * Get the SPARQL server username.
+	 * @throws Exception 
 	 */
-	public static String getUsername(){
-		return USER;
+	public static String getUsername() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerUsername");
 	}
 	
 	/**
 	 * Get the SPARQL server password.
+	 * @throws Exception 
 	 */
-	public static String getPassword(){
-		return PASSWORD;
+	public static String getPassword() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerPassword");
 	}
 	
 	/**
@@ -176,6 +177,7 @@ public class TestGraph {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public static SparqlGraphJson getSparqlGraphJson(String jsonFilename) throws Exception {
 		
 		JSONParser parser = new JSONParser();
@@ -186,8 +188,8 @@ public class TestGraph {
 		
 		if (  ((JSONObject)jObj.get("sparqlConn")).containsKey("onDataset")) {
 			((JSONObject)jObj.get("sparqlConn")).put("onDataset", generateDataset("both"));    // "model"
-			((JSONObject)jObj.get("sparqlConn")).put("onURL", SPARQLSERVER); 
-			((JSONObject)jObj.get("sparqlConn")).put("onKsURL", SPARQLSERVER); 
+			((JSONObject)jObj.get("sparqlConn")).put("onURL", getSparqlServer()); 
+			((JSONObject)jObj.get("sparqlConn")).put("onKsURL", getSparqlServer()); 
 			
 			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDataset("both"));   // "data"
 		} else {
@@ -195,8 +197,8 @@ public class TestGraph {
 		}
 		
 		// modify dataset and URL
-		((JSONObject)jObj.get("sparqlConn")).put("dsURL", SPARQLSERVER); 
-		((JSONObject)jObj.get("sparqlConn")).put("dsKsURL", SPARQLSERVER); 
+		((JSONObject)jObj.get("sparqlConn")).put("dsURL", getSparqlServer()); 
+		((JSONObject)jObj.get("sparqlConn")).put("dsKsURL", getSparqlServer()); 
 		
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
 		return s;
@@ -228,7 +230,7 @@ public class TestGraph {
 		
 		// load the data
 		Dataset ds = new CSVDataset(csvPath, false);
-		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.USER, TestGraph.PASSWORD);
+		DataLoader dl = new DataLoader(sgJson, 2, ds, getUsername(), getPassword());
 		dl.importData(true);
 		
 		return sgJson;
