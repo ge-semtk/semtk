@@ -1,5 +1,7 @@
 package com.ge.research.semtk.nodeGroupStore.client;
 
+import java.net.ConnectException;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -119,5 +121,24 @@ public class NodeGroupStoreRestClient extends RestClient {
 		}
 		
 		return retval;				
+	}
+	
+	public SimpleResultSet deleteStoredNodeGroup(String nodeGroupID) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint("nodeGroupStore/deleteStoredNodeGroup");
+		this.parametersJSON.put("id", nodeGroupID);
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("id");
+		}
+
+		return retval;
 	}
 }

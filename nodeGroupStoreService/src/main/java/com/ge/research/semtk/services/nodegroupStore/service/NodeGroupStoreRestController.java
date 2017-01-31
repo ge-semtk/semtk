@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.belmont.NodeGroup;
@@ -41,7 +42,17 @@ public class NodeGroupStoreRestController {
 		
 		try{
 		// store a new nodegroup to the remote nodegroup store. 
+			
+		// check that the ID does not already exist. if it does, fail.
+		String qry = SparqlQueries.getNodeGroupByID(requestBody.getName());
+		SparqlQueryClient clnt = createClient(prop);
 		
+		TableResultSet instanceTable = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
+		
+		if(instanceTable.getTable().getNumRows() > 0){
+			throw new Exception("Uanble to store Nodegroup. The ID (" + requestBody.getName() + ") already exists. No work was performed.");
+		}
+			
 		// get the nodeGroup and the connection info:
 		SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
 		JSONObject ng = sgJson.getSNodeGroupJson();
@@ -156,20 +167,72 @@ public class NodeGroupStoreRestController {
 		
 		return retval.toJson();
 	}
-	
+	/**
+	 * This method uses a static delete query. it would be better to use a local nodegroup and have belmont 
+	 * generate a deletion query itself. 
+	 * @param requestBody
+	 * @return
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/deleteStoredNodeGroup", method=RequestMethod.POST)
+	public JSONObject deleteStoredNodeGroup(@RequestBody DeleteByIdRequest requestBody){
+		SimpleResultSet retval = null;
+		
+		String qry =
+			"prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+			"Delete " + 
+			"{" +
+			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup." +
+			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId() + "\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
+			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup ." +
+			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			"}" + 
+			 "where { " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId()  +"\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
+			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			 "}";
+		
+		try{
+			// attempt to delete the nodegroup, name and comments where there is a give ID.
+			SparqlQueryClient clnt = createClient(prop);
+			retval = (SimpleResultSet) clnt.execute(qry, SparqlResultTypes.CONFIRM);
+			
+			
+								
+		}
+		catch(Exception e){
+			// something went wrong. report and exit. 
+			
+			System.err.println("a failure was encountered during the deletion of " +  requestBody.getId() + ": " + 
+					e.getMessage());
+			
+			retval = new SimpleResultSet();
+			retval.setSuccess(false);
+			retval.addRationaleMessage(e.getMessage());
+		}
+		
+		
+		return retval.toJson();
+	}
 	
 	// static method to avoid repeating the client generation code...
 	
 	
 	private static SparqlQueryClient createClient(StoreProperties props) throws Exception{
 		
-		SparqlQueryClient retval = new SparqlQueryClient(new SparqlQueryClientConfig(	props.getSparqlServiceProtocol(),
+		SparqlQueryClient retval = new SparqlQueryClient((SparqlQueryClientConfig)(new SparqlQueryAuthClientConfig(	
+				props.getSparqlServiceProtocol(),
 				props.getSparqlServiceServer(), 
 				props.getSparqlServicePort(), 
 				props.getSparqlServiceEndpoint(),
                 props.getSparqlServerAndPort(), 
                 props.getSparqlServerType(), 
-                props.getSparqlServerDataSet()));
+                props.getSparqlServerDataSet(),
+				props.getSparqlServiceUser(),
+				props.getSparqlServicePass())
+				));
 		
 		return retval;
 	}

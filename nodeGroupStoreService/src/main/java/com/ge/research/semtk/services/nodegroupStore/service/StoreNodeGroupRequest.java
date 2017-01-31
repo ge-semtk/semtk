@@ -9,9 +9,7 @@ public class StoreNodeGroupRequest {
 	private String jsonRenderedNodeGroup;
 	private String name;
 	private String comments;
-	
-
-	
+		
 	public JSONObject getJsonNodeGroup(){
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
@@ -43,7 +41,5 @@ public class StoreNodeGroupRequest {
 	public void setComments(String comments) {
 		this.comments = comments;
 	}
-	
-	
 	
 }
