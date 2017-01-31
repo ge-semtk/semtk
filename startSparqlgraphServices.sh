@@ -20,8 +20,8 @@ mkdir -p $LOGS
 
 echo "=== START MICROSERVICES... ==="
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-1.1.0-SNAPSHOT.jar --server.port=$PORT_SPARQL_QUERY_SERVICE > "$LOGS"/sparqlQueryService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-*.jar --server.port=$PORT_SPARQL_QUERY_SERVICE > "$LOGS"/sparqlQueryService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-1.1.0-SNAPSHOT.jar --spring.config.location="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar --spring.config.location="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
 
 echo "=== DONE ==="

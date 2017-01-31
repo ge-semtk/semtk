@@ -27,16 +27,16 @@ echo "=== START MICROSERVICES... ==="
 # start SPARQL query service, ingestion service
 ./startSparqlgraphServices.sh
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-1.1.0-SNAPSHOT.jar --spring.config.location="$SEMTK"/ontologyInfoService/src/main/resources/ontologyinfo.properties --server.port=$PORT_ONTOLOGYINFO_SERVICE > "$LOGS"/ontologyInfoService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar --spring.config.location="$SEMTK"/ontologyInfoService/src/main/resources/ontologyinfo.properties --server.port=$PORT_ONTOLOGYINFO_SERVICE > "$LOGS"/ontologyInfoService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-1.1.0-SNAPSHOT.jar --spring.config.location="$SEMTK"/nodeGroupStoreService/src/main/resources/store.properties --server.port=$PORT_NODEGROUPSTORE_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar --spring.config.location="$SEMTK"/nodeGroupStoreService/src/main/resources/store.properties --server.port=$PORT_NODEGROUPSTORE_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-1.1.0-SNAPSHOT.jar --spring.config.location="$SEMTK"/sparqlGraphStatusService/src/main/resources/status.properties --server.port=$PORT_SPARQLGRAPH_STATUS_SERVICE > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar --spring.config.location="$SEMTK"/sparqlGraphStatusService/src/main/resources/status.properties --server.port=$PORT_SPARQLGRAPH_STATUS_SERVICE > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-1.1.0-SNAPSHOT.jar --spring.config.location="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties --server.port=$PORT_SPARQLGRAPH_RESULTS_SERVICE > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar --spring.config.location="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties --server.port=$PORT_SPARQLGRAPH_RESULTS_SERVICE > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/hiveService/target/hiveService-1.1.0-SNAPSHOT.jar --spring.config.location="$SEMTK"/hiveService/src/main/resources/hive.properties --server.port=$PORT_HIVE_SERVICE > "$LOGS"/hiveService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/hiveService/target/hiveService-*.jar --spring.config.location="$SEMTK"/hiveService/src/main/resources/hive.properties --server.port=$PORT_HIVE_SERVICE > "$LOGS"/hiveService.log 2>&1 &
 
-#"$JAVA_HOME"/bin/java -jar "$SEMTK"/oracleService/target/oracleService-1.1.0-SNAPSHOT.jar --server.port=$PORT_ORACLE_SERVICE > "$LOGS"/oracleService.log 2>&1 &
+#"$JAVA_HOME"/bin/java -jar "$SEMTK"/oracleService/target/oracleService-*.jar --server.port=$PORT_ORACLE_SERVICE > "$LOGS"/oracleService.log 2>&1 &
 
 echo "=== DONE ==="
