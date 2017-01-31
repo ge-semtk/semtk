@@ -143,7 +143,7 @@ define([	// properly require.config'ed
 		 * Change html tags to plain html text
 		 */
 		IIDXHelper.htmlSafe = function(str) {
-		    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&percnt;");
 		},
 		
 		IIDXHelper.isFirefox = function () {

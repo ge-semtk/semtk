@@ -102,8 +102,15 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 		
 		DefaultHttpClient httpclient = new DefaultHttpClient();
+	
+		// immediate line below removed to perform htmml encoding in stream
+		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
 		
-		HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
+		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;");
+
+		String encoded = parametersJSON.toJSONString().replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
+		
+		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
 		
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
 		//httppost.setEntity(new UrlEncodedFormEntity(parametersJSON, "UTF-8"));
