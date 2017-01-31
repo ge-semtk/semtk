@@ -12,7 +12,7 @@ $SEMTK/stopSparqlgraphServices.sh
 
 ######## WAIT #######
 COUNTER=0
-while ps aux | grep 'IngestionService\|QueryService\|ontologyInfoService\|nodeGroupStoreService' | grep -v grep; do
+while ps aux | grep 'IngestionService\|QueryService' | grep -v grep; do
         let COUNTER=COUNTER+1
 
         if [ $COUNTER -eq 30 ]; then

@@ -55,8 +55,8 @@ public class TestGraph {
 
 	private static final String SPARQLSERVER = "http://localhost:2420"; 
 	private static final String SPARQLSERVERTYPE = "virtuoso";
-	private static final String USER = "username";
-	private static final String PASSWORD = "password";
+	private static final String USER = "dba";		// default Virtuoso credentials
+	private static final String PASSWORD = "dba";	// default Virtuoso credentials
 	
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
