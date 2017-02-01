@@ -29,6 +29,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Properties;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -38,6 +39,9 @@ import org.json.simple.parser.JSONParser;
  * Utility methods
  */
 public abstract class Utility {
+	
+	// property file with integration test configurations
+	public static final String INTEGRATION_TEST_PROPERTY_FILE = "src/test/resources/integrationtest.properties";
 	
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
@@ -187,5 +191,28 @@ public abstract class Utility {
 		}				
 		throw new Exception("Cannot parse " + s + " using available formatters");
 	}
+	
+	
+	/**
+	 * Retrieve a property from a properties file.
+	 * @param propertyFile the property file
+	 * @param key the name of the property to retrieve
+	 */
+	public static String getPropertyFromFile(String propertyFile, String key) throws Exception{
+	
+		Properties properties = new Properties();
+		try {
+			properties.load(new FileReader(new File(propertyFile)));
+		} catch (Exception e) {
+		    throw new Exception("Cannot load properties file " + propertyFile, e);
+		}
+		// now read the property		
+		String ret = properties.getProperty(key);
+		if(ret == null){
+		    throw new Exception("Cannot read property '" + key + "' from " + propertyFile);	
+		}
+		
+		return ret.trim();
+	}	
 	
 }

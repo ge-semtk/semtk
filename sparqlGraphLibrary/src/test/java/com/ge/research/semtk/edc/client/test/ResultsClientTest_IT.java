@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
@@ -37,13 +38,22 @@ import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.resultSet.Table;
 
 public class ResultsClientTest_IT {
-	private final String SERVICE_PROTOCOL = "http";
-	private final String SERVICE_SERVER = "localhost";
-	private final int SERVICE_PORT = 12052;
+	
+	private static String SERVICE_PROTOCOL;
+	private static String SERVICE_SERVER;
+	private static int SERVICE_PORT;
+	
 	private final String CSV_CONTENTS = "one,two,three\n1,2,3\n10,20,30\n100,200,300\n";
 	private final String EXTENSION = "csv";
-
 	private final String JOB_ID = "results_test_jobid";
+	
+	@BeforeClass
+	public static void setup() throws Exception{
+		SERVICE_PROTOCOL = Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.protocol");
+		SERVICE_SERVER = Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.server");
+		SERVICE_PORT = Integer.valueOf(Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.port")).intValue();
+	System.out.println(SERVICE_PORT);
+	}
 	
 	@Test
 	public void testSingleFile() {

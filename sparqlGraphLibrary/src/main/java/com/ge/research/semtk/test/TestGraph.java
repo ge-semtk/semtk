@@ -38,7 +38,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
-import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.load.utility.Utility;
 
 /**
  * A utility class to load data to a semantic graph.  Intended for use in tests.
@@ -51,9 +51,6 @@ public class TestGraph {
 	//           It will have to be an object instantiated by a json nodegroup (shows whether they're split) or NULL (pick a default)
 	public TestGraph() {
 	}
-
-	// property file specifies SPARQL connection/credentials
-	private static final String INTEGRATION_TEST_PROPERTY_FILE = "src/test/resources/integrationtest.properties";
 	
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
@@ -72,7 +69,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServer");
+		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServer");
 	}
 	
 	/**
@@ -87,7 +84,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServerType() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerType");
+		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerType");
 	}
 	
 	/**
@@ -95,7 +92,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getUsername() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerUsername");
+		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerUsername");
 	}
 	
 	/**
@@ -103,7 +100,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getPassword() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerPassword");
+		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerPassword");
 	}
 	
 	/**
