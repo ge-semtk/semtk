@@ -34,8 +34,8 @@ import org.junit.Test;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClientTest_IT {
 	

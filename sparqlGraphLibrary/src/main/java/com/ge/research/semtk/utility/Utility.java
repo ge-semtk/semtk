@@ -16,7 +16,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.load.utility;
+package com.ge.research.semtk.utility;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -38,7 +38,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * A utility class to load data to a semantic graph.  Intended for use in tests.

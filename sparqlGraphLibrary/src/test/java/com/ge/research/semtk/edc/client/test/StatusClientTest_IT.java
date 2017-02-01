@@ -28,7 +28,7 @@ import org.junit.Test;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 
 public class StatusClientTest_IT {
 	
