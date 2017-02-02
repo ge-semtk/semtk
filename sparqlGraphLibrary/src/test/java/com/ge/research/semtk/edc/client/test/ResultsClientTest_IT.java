@@ -35,6 +35,7 @@ import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClientTest_IT {
@@ -49,10 +50,9 @@ public class ResultsClientTest_IT {
 	
 	@BeforeClass
 	public static void setup() throws Exception{
-		SERVICE_PROTOCOL = Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.protocol");
-		SERVICE_SERVER = Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.server");
-		SERVICE_PORT = Integer.valueOf(Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.port")).intValue();
-	System.out.println(SERVICE_PORT);
+		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
+		SERVICE_SERVER = IntegrationTestUtility.getResultsServiceServer();
+		SERVICE_PORT = IntegrationTestUtility.getResultsServicePort();
 	}
 	
 	@Test

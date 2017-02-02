@@ -39,10 +39,7 @@ import org.json.simple.parser.JSONParser;
  * Utility methods
  */
 public abstract class Utility {
-	
-	// property file with integration test configurations
-	public static final String INTEGRATION_TEST_PROPERTY_FILE = "src/test/resources/integrationtest.properties";
-	
+		
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 

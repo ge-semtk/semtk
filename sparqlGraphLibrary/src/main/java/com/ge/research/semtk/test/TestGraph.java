@@ -69,7 +69,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServer() throws Exception{
-		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServer");
+		return IntegrationTestUtility.getSparqlServer();
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServerType() throws Exception{
-		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerType");
+		return IntegrationTestUtility.getSparqlServerType();
 	}
 	
 	/**
@@ -92,7 +92,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getUsername() throws Exception{
-		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerUsername");
+		return IntegrationTestUtility.getSparqlServerUsername();
 	}
 	
 	/**
@@ -100,7 +100,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getPassword() throws Exception{
-		return Utility.getPropertyFromFile(Utility.INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerPassword");
+		return IntegrationTestUtility.getSparqlServerPassword();
 	}
 	
 	/**
