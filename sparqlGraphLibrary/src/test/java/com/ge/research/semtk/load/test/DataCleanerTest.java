@@ -34,7 +34,7 @@ import org.junit.Test;
 import com.ge.research.semtk.load.DataCleaner;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 
 public class DataCleanerTest {
 

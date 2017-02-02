@@ -29,7 +29,7 @@ import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;

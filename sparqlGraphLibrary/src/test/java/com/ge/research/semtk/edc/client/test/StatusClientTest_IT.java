@@ -22,19 +22,30 @@ import static org.junit.Assert.*;
 
 import java.net.ConnectException;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.utility.Utility;
 
 public class StatusClientTest_IT {
-
-	private final String SERVICE_PROTOCOL = "http";
-	private final String SERVICE_SERVER = "localhost";
-	private final int SERVICE_PORT = 12051;
+	
+	private static String SERVICE_PROTOCOL;
+	private static String SERVICE_SERVER;
+	private static int SERVICE_PORT;
 	
 	private final String JOB_ID1 = "client_test_job_1";
+	
+	
+	@BeforeClass
+	public static void setup() throws Exception{
+		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
+		SERVICE_SERVER = IntegrationTestUtility.getStatusServiceServer();
+		SERVICE_PORT = IntegrationTestUtility.getStatusServicePort();
+	}
 	
 	@Test
 	public void testSetSuccess() {

@@ -30,8 +30,8 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.utility.Utility;
 
 public class QueryGenerationTest {
 

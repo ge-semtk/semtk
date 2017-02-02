@@ -28,22 +28,32 @@ import java.util.ArrayList;
 
 import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.load.utility.Utility;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClientTest_IT {
-	private final String SERVICE_PROTOCOL = "http";
-	private final String SERVICE_SERVER = "localhost";
-	private final int SERVICE_PORT = 12052;
+	
+	private static String SERVICE_PROTOCOL;
+	private static String SERVICE_SERVER;
+	private static int SERVICE_PORT;
+	
 	private final String CSV_CONTENTS = "one,two,three\n1,2,3\n10,20,30\n100,200,300\n";
 	private final String EXTENSION = "csv";
-
 	private final String JOB_ID = "results_test_jobid";
+	
+	@BeforeClass
+	public static void setup() throws Exception{
+		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
+		SERVICE_SERVER = IntegrationTestUtility.getResultsServiceServer();
+		SERVICE_PORT = IntegrationTestUtility.getResultsServicePort();
+	}
 	
 	@Test
 	public void testSingleFile() {
