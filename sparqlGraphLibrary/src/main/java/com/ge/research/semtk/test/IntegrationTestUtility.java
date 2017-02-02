@@ -72,6 +72,14 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.port")).intValue();
 	}
 		
+	// Hive service
+	public static String getHiveServiceServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hiveservice.server");
+	}
+	public static int getHiveServicePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hiveservice.port")).intValue();
+	}
+	
 	// Hive
 	public static String getHiveServer() throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.server");
