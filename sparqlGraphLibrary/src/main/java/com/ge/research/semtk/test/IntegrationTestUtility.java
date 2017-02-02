@@ -56,4 +56,13 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.port")).intValue();
 	}
 	
+	
+	// RDB query generator service
+	public static String geRDBQueryGeneratorServiceServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.server");
+	}
+	public static int getRDBQueryGeneratorServicePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.port")).intValue();
+	}
+		
 }
