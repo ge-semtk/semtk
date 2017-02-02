@@ -20,16 +20,16 @@ public class IntegrationTestUtility {
 	
 	// sparql endpoint
 	public static String getSparqlServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServer");
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.server");
 	}
 	public static String getSparqlServerType() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerType");
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.type");
 	}
 	public static String getSparqlServerUsername() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerUsername");
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.username");
 	}
 	public static String getSparqlServerPassword() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlServerPassword");
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.password");
 	}
 	
 	// sparql query service
@@ -56,13 +56,37 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.port")).intValue();
 	}
 	
+	// dispatch service
+	public static String getDispatchServiceServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.dispatchservice.server");
+	}
+	public static int getDispatchServicePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.dispatchservice.port")).intValue();
+	}	
 	
 	// RDB query generator service
-	public static String geRDBQueryGeneratorServiceServer() throws Exception{
+	public static String getRDBQueryGeneratorServiceServer() throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.server");
 	}
 	public static int getRDBQueryGeneratorServicePort() throws Exception{
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.port")).intValue();
 	}
 		
+	// Hive
+	public static String getHiveServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.server");
+	}
+	public static int getHivePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.port")).intValue();
+	}
+	public static String getHiveUsername() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.username");
+	}
+	public static String getHivePassword() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.password");
+	}
+	public static String getHiveDatabase() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.database");
+	}
+	
 }
