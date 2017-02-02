@@ -22,8 +22,8 @@ echo $SEMTK
 CONFIG_INGESTION_SERVICE="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties
 # use different config files if given a config directory parameter
 if [ $# -eq 1 ]; then
-	echo USING CONFIG FILES IN $1 
 	CONFIG_DIR=$1
+	echo USING CONFIG FILES IN "$CONFIG_DIR"
     CONFIG_INGESTION_SERVICE="$CONFIG_DIR"/ingest.properties
 else
 	echo USING DEFAULT CONFIGS in src/main/resources/

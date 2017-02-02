@@ -30,8 +30,8 @@ CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/r
 CONFIG_HIVE_SERVICE="$SEMTK"/hiveService/src/main/resources/hive.properties 
 # use different config files if given a config directory parameter
 if [ $# -eq 1 ]; then
-	echo USING CONFIG FILES IN $1 
 	CONFIG_DIR=$1
+	echo USING CONFIG FILES IN "$CONFIG_DIR"
     CONFIG_ONTOLOGYINFO_SERVICE="$CONFIG_DIR"/ontologyinfo.properties
     CONFIG_NODEGROUPSTORE_SERVICE="$CONFIG_DIR"/store.properties
     CONFIG_SPARQLGRAPH_STATUS_SERVICE="$CONFIG_DIR"/status.properties
@@ -47,7 +47,7 @@ mkdir -p $LOGS
 echo "=== START MICROSERVICES... ==="
 
 # start SPARQL query service, ingestion service
-"$SEMTK"/startSparqlgraphServices.sh $"CONFIG_DIR"
+"$SEMTK"/startSparqlgraphServices.sh "$CONFIG_DIR"
 
 "$JAVA_HOME"/bin/java -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar --spring.config.location="$CONFIG_ONTOLOGYINFO_SERVICE" --server.port=$PORT_ONTOLOGYINFO_SERVICE > "$LOGS"/ontologyInfoService.log 2>&1 &
 
