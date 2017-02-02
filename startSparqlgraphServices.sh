@@ -6,7 +6,7 @@
 PORT_SPARQL_QUERY_SERVICE=12050
 PORT_INGESTION_SERVICE=12091
 
-if [ -z ${JAVA_HOME} ]; then
+if [ -z "$JAVA_HOME" ]; then
         >&2 echo No JAVA_HOME
         exit
 fi

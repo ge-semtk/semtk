@@ -6,11 +6,11 @@
 PORT_SPARQLGRAPH_STATUS_SERVICE=12051
 PORT_SPARQLGRAPH_RESULTS_SERVICE=12052
 PORT_HIVE_SERVICE=12055
-PORT_ORACLE_SERVICE=
+PORT_ORACLE_SERVICE=none
 PORT_NODEGROUPSTORE_SERVICE=12056
 PORT_ONTOLOGYINFO_SERVICE=12057
 
-if [ -z ${JAVA_HOME} ]; then
+if [ -z "$JAVA_HOME" ]; then
         >&2 echo No JAVA_HOME
         exit
 fi
@@ -25,7 +25,7 @@ mkdir -p $LOGS
 echo "=== START MICROSERVICES... ==="
 
 # start SPARQL query service, ingestion service
-./startSparqlgraphServices.sh
+"$SEMTK"/startSparqlgraphServices.sh
 
 "$JAVA_HOME"/bin/java -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar --spring.config.location="$SEMTK"/ontologyInfoService/src/main/resources/ontologyinfo.properties --server.port=$PORT_ONTOLOGYINFO_SERVICE > "$LOGS"/ontologyInfoService.log 2>&1 &
 
