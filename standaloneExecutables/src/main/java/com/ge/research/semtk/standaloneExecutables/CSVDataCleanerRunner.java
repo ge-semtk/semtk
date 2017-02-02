@@ -23,7 +23,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.load.DataCleaner;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * Cleans a CSV file and writes output to another CSV file
