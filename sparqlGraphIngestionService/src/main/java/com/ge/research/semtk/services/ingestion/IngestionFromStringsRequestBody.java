@@ -36,9 +36,10 @@ public class IngestionFromStringsRequestBody {
 			System.err.println("--------------- Start Message -------------");
 			System.err.println(data);
 			System.err.println("--------------- End Message -------------");
-			
-			return java.net.URLDecoder.decode(data, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
+		
+			return data;
+	//		return java.net.URLDecoder.decode(data, "UTF-8");
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "";
