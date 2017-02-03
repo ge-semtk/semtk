@@ -107,7 +107,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
 		this.parametersJSON.put("comments", comments);
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toJSONString() );
 		
 		try{
 		
@@ -118,10 +118,13 @@ public class NodeGroupStoreRestClient extends RestClient {
 			}
 					
 			else{
+				this.parametersJSON.remove("id");
+				System.err.println("existence check succeeded. proceeding to insert node group: " + proposedId);
+				
 				// perform actual insertion.
 				conf.setServiceEndpoint("nodeGroupStore/storeNodeGroup");
-				retval = new SimpleResultSet();
-				retval.fromJson((JSONObject) this.execute());
+				JSONObject interim = (JSONObject) this.execute();
+				retval = SimpleResultSet.fromJson( interim );
 			}
 		}
 		finally{

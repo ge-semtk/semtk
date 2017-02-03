@@ -19,18 +19,23 @@
 package com.ge.research.semtk.services.client;
 
 import java.net.ConnectException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-
 
 /**
  * An abstract class containing code for a REST client.
@@ -110,25 +115,35 @@ public abstract class RestClient extends Client implements Runnable {
 
 		JSONObject sendableJSON = new JSONObject();
 		
+		List<NameValuePair> paraSend = new ArrayList<NameValuePair>();
+		
 		// we have to encode individual json parameter values.
 		for(Object s : parametersJSON.keySet()){
 			String sStr = (String) parametersJSON.get(s);
 			
 			// perform alteration and add.
-			sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
-		
-			sendableJSON.put((String)s, sStr);
+		//	sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&percnt;");
+			
+			sendableJSON.put((String)s, URLEncoder.encode(sStr));
+			paraSend.add(new BasicNameValuePair((String)s, sStr));
 		}
 		
 		String encoded = sendableJSON.toJSONString();
 		
 		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
 		
+		
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
-		//httppost.setEntity(new UrlEncodedFormEntity(parametersJSON, "UTF-8"));
+	
+		
+		
+		UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(paraSend);
+		
+	//	httppost.setEntity(uefe);
 	    httppost.setEntity(entity);
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-		
+	//	httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
+	    
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);

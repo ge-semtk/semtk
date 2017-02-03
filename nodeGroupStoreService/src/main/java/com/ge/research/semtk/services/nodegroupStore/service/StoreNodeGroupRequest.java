@@ -11,8 +11,12 @@ public class StoreNodeGroupRequest {
 	private String comments;
 		
 	public JSONObject getJsonNodeGroup(){
+	
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
+		
+		
+		
 		try {
 			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
 		} catch (ParseException e) {
@@ -21,11 +25,11 @@ public class StoreNodeGroupRequest {
 		}
 		return retval;
 	}
-		
+
 	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
 		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
 	}
-
+	
 	public String getName() {
 		return name;
 	}
