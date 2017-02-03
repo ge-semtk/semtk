@@ -117,8 +117,8 @@ public class StoreNodeGroup {
 	
 		
 		// diagnostic print for quote troubleshooting
-		System.err.println("original: " + quotedString.substring(250));
-		System.err.println("modified: " + retval.substring(250));
+		System.err.println("original: " + quotedString);
+		System.err.println("modified: " + retval);
 		
 		return retval;
 	}
