@@ -144,7 +144,7 @@ public abstract class RestClient extends Client implements Runnable {
 //		String encoded = sendableJSON.toJSONString();
 		
 //		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
-		HttpEntity entity = new ByteArrayEntity(sendableJSON.toString().getBytes("UTF-8"));
+		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
 		
 		
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
