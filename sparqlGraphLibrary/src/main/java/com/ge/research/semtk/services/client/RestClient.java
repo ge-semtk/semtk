@@ -151,7 +151,7 @@ public abstract class RestClient extends Client implements Runnable {
 	
 		
 		
-		UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(paraSend);
+	//	UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(paraSend);
 		
 	//	httppost.setEntity(uefe);
 	    httppost.setEntity(entity);
