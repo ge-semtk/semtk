@@ -31,14 +31,9 @@ public class IngestionFromStringsRequestBody {
 		this.template = template;
 	}
 	public String getData() {
-		try {
-			
-			System.err.println("--------------- Start Message -------------");
-			System.err.println(data);
-			System.err.println("--------------- End Message -------------");
-		
+		try {	
 			return data;
-	//		return java.net.URLDecoder.decode(data, "UTF-8");
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

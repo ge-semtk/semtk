@@ -116,11 +116,7 @@ public class StoreNodeGroup {
 		retval = retval.replace("\\\"\"", "\\\\\"\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
 		
 		//String retval = StringEscapeUtils.escapeCsv(quotedString);  // using the apache lib. might have to pair this with unescaping later, using the same lib...
-		
-		// diagnostic print for quote troubleshooting
-		System.err.println("original: " + quotedString);
-		System.err.println("modified: " + retval);
-		
+	
 		return retval;
 	}
 	
