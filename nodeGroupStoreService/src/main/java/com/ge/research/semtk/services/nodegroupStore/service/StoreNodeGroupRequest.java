@@ -15,6 +15,12 @@ public class StoreNodeGroupRequest {
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
 		
+		System.err.println("----------START MESSAGE-------------");
+		
+		System.err.println("incoming node group string for conversion: ");
+		System.err.println(jsonRenderedNodeGroup);
+		
+		System.err.println("----------END MESSAGE---------------");
 		
 		
 		try {

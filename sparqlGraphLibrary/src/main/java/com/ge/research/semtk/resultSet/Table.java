@@ -25,7 +25,7 @@ import java.util.HashMap;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * A table of data

@@ -22,7 +22,7 @@ import java.io.File;
 import java.nio.file.Files;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**

@@ -111,7 +111,7 @@ public abstract class RestClient extends Client implements Runnable {
 		// immediate line below removed to perform htmml encoding in stream
 		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
 		
-		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;");
+		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
 
 		JSONObject sendableJSON = new JSONObject();
 		
@@ -128,9 +128,23 @@ public abstract class RestClient extends Client implements Runnable {
 			paraSend.add(new BasicNameValuePair((String)s, sStr));
 		}
 		
-		String encoded = sendableJSON.toJSONString();
+//		String encoded = parametersJSON.toJSONString().replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
+//		JSONObject sendableJSON = new JSONObject();
+//		
+//		// we have to encode individual json parameter values.
+//		for(Object s : parametersJSON.keySet()){
+//			String sStr = (String) parametersJSON.get(s);
+//			
+//			// perform alteration and add.
+//			//sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
+//		
+//			sendableJSON.put((String)s, sStr);
+//		}
+//		
+//		String encoded = sendableJSON.toJSONString();
 		
-		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
+//		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
+		HttpEntity entity = new ByteArrayEntity(sendableJSON.toString().getBytes("UTF-8"));
 		
 		
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());

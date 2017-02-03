@@ -10,9 +10,17 @@ SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ######## STOP #######
 $SEMTK/stopSparqlgraphServices.sh
 
+function multips {
+	if [ -d /proc ]; then
+		grep -a "$1" /proc/*/cmdline | grep -va grep
+	else
+		ps aux | grep "$1" | grep -v grep
+	fi
+}
+
 ######## WAIT #######
 COUNTER=0
-while ps aux | grep 'IngestionService\|QueryService' | grep -v grep; do
+while multips 'IngestionService\|QueryService'; do
         let COUNTER=COUNTER+1
 
         if [ $COUNTER -eq 30 ]; then
