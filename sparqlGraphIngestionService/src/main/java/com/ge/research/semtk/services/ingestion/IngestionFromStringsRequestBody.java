@@ -32,6 +32,11 @@ public class IngestionFromStringsRequestBody {
 	}
 	public String getData() {
 		try {
+			
+			System.err.println("--------------- Start Message -------------");
+			System.err.println(data);
+			System.err.println("--------------- End Message -------------");
+			
 			return java.net.URLDecoder.decode(data, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
