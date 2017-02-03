@@ -119,38 +119,20 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// we have to encode individual json parameter values.
 		for(Object s : parametersJSON.keySet()){
-			String sStr = (String) parametersJSON.get(s);
+//			String sStr = (String) parametersJSON.get(s);
 			
 			// perform alteration and add.
 		//	sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&percnt;");
 			
-			sendableJSON.put((String)s, URLEncoder.encode(sStr));
-			paraSend.add(new BasicNameValuePair((String)s, sStr));
+//			sendableJSON.put((String)s, URLEncoder.encode(sStr));
+//			paraSend.add(new BasicNameValuePair((String)s, sStr));
 		}
-		
-//		String encoded = parametersJSON.toJSONString().replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
-//		JSONObject sendableJSON = new JSONObject();
-//		
-//		// we have to encode individual json parameter values.
-//		for(Object s : parametersJSON.keySet()){
-//			String sStr = (String) parametersJSON.get(s);
-//			
-//			// perform alteration and add.
-//			//sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
-//		
-//			sendableJSON.put((String)s, sStr);
-//		}
-//		
-//		String encoded = sendableJSON.toJSONString();
-		
+
 //		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
 		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
-		
-		
+				
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
 	
-		
-		
 	//	UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(paraSend);
 		
 	//	httppost.setEntity(uefe);
