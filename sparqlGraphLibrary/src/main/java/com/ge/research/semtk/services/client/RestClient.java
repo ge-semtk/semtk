@@ -113,33 +113,12 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
 
-		JSONObject sendableJSON = new JSONObject();
-		
-		List<NameValuePair> paraSend = new ArrayList<NameValuePair>();
-		
-		// we have to encode individual json parameter values.
-		for(Object s : parametersJSON.keySet()){
-//			String sStr = (String) parametersJSON.get(s);
-			
-			// perform alteration and add.
-		//	sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&percnt;");
-			
-//			sendableJSON.put((String)s, URLEncoder.encode(sStr));
-//			paraSend.add(new BasicNameValuePair((String)s, sStr));
-		}
-
-//		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
 		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
 				
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
-	
-	//	UrlEncodedFormEntity uefe = new UrlEncodedFormEntity(paraSend);
-		
-	//	httppost.setEntity(uefe);
 	    httppost.setEntity(entity);
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-	//	httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
-	    
+
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);

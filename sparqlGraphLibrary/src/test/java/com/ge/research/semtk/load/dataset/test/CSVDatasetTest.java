@@ -86,12 +86,12 @@ public class CSVDatasetTest {
 		String s = reader.readLine();
 		System.out.println(s + "\n\n");
 
-		s = s.replaceAll("\"", "\"\"");  // replace 1x doublequote with 2x doublequote
+		s = s.replace("\"", "\"\"");  // replace 1x doublequote with 2x doublequote
 		
 		System.out.println(s + "\n\n");
 		
 		//s = s.replaceAll("\\\"", "\\\\\"");  BAD
-		s = s.replaceAll("\\\"\"", "\\\\\"\""); //ALMOST RIGHT
+		s = s.replace("\\\"\"", "\\\\\"\""); //ALMOST RIGHT
 		//s = s.replaceAll("\\\"", "\\\\\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
 		
 		System.out.println(s);
