@@ -97,4 +97,21 @@ public class IntegrationTestUtility {
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.database");
 	}
 	
+	// Oracle
+	public static String getOracleServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.server");
+	}
+	public static int getOraclePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.port")).intValue();
+	}
+	public static String getOracleUsername() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.username");
+	}
+	public static String getOraclePassword() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.password");
+	}
+	public static String getOracleDatabase() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.database");
+	}	
+	
 }
