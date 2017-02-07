@@ -184,6 +184,11 @@ public class RuntimeConstrainedItems {
 						
 			this.setDateBefore(sparqlId, val, true);
 		}
+		else if(operationID.toUpperCase().equals(SupportedOperations.MATCHES.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
+			// create a constraint to match the provided
+			this.setDateMatchesConstraint(sparqlId, operands);
+		
+		}
 		else if(operationID.toUpperCase().equals(SupportedOperations.MATCHES.name())){
 			// create a constraint to match the provided
 			this.setMatchesConstraint(sparqlId, operands);
@@ -240,6 +245,12 @@ public class RuntimeConstrainedItems {
 		this.setValueContraint(sparqlId, constraintStr);
 	}
 
+	public void setDateMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
+		// create the constraint string. 
+		String constraintStr = ConstraintUtil.getDateMatchesOneOfConstraint(sparqlId, inputs, getTypeName(sparqlId));
+		this.setValueContraint(sparqlId, constraintStr);
+	}
+	
 	// regex
 	public void setRegexConstraint(String sparqlId, String regexFragment) throws Exception{
 		String constraintStr = ConstraintUtil.getRegexConstraint(sparqlId, regexFragment, getTypeName(sparqlId));

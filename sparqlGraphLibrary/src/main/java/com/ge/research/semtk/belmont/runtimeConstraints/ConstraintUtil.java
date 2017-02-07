@@ -1,6 +1,8 @@
 package com.ge.research.semtk.belmont.runtimeConstraints;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import com.ge.research.semtk.belmont.XSDSupportUtil;
 import com.ge.research.semtk.belmont.XSDSupportedTypes;
@@ -32,6 +34,18 @@ public class ConstraintUtil {
 		return retval;
 	}
 
+	public static String getDateMatchesConstraint(String sparqlId, String val, String XSDValueTypeName) throws Exception{
+		// first check the validity of the passed type name.
+		checkValidType(XSDValueTypeName);
+		checkDateFormatMatches(val, XSDValueTypeName);
+		
+		// assuming that we passed the test, let's create the constraints
+		// the values looks a lot like this: VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> } 
+
+		String retval = "VALUES " + sparqlId + " {'" + val + "'" + XSDSupportUtil.getXsdSparqlTrailer(XSDValueTypeName) + "}";		
+		return retval;
+	}
+	
 	public static String getMatchesOneOfConstraint(String sparqlId, ArrayList<String> val, String XSDValueTypeName) throws Exception{
 		// first check the validity of the passed type name.
 		checkValidType(XSDValueTypeName);
@@ -48,6 +62,26 @@ public class ConstraintUtil {
 		
 		return retval;
 	}
+	
+	public static String getDateMatchesOneOfConstraint(String sparqlId, ArrayList<String> val, String XSDValueTypeName) throws Exception{
+		// first check the validity of the passed type name.
+		checkValidType(XSDValueTypeName);
+		for(String v : val){
+			checkDateFormatMatches(v, XSDValueTypeName);
+		}
+		
+		// VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> '1279'^^<http://www.w3.org/2001/XMLSchema#int> } 
+	
+		String retval = "VALUES " + sparqlId + " { ";
+		// go through each passed value and add them.
+		for(String cv : val){
+			retval += "'" + cv + "'" + XSDSupportUtil.getXsdSparqlTrailer(XSDValueTypeName) + " "; 
+		}
+		
+		retval += " }";
+		
+		return retval;
+	}	
 	
 	public static String getRegexConstraint(String sparqlId, String val, String XSDValueTypeName) throws Exception{
 		// first check the validity of the passed type name.
@@ -150,6 +184,8 @@ public class ConstraintUtil {
 		checkValidType(XSDValueTypeName);
 		
 		String retval = "";
+		checkDateFormatMatches(val, XSDValueTypeName);
+
 		
 		if(XSDSupportUtil.dateOperationAvailable(XSDValueTypeName)){
 			//   FILTER (?date > "2014-05-23T10:20:13+05:30"^^xsd:dateTime)
@@ -177,6 +213,8 @@ public class ConstraintUtil {
 		checkValidType(XSDValueTypeName);
 		
 		String retval = "";
+		checkDateFormatMatches(val, XSDValueTypeName);
+
 		
 		if(XSDSupportUtil.dateOperationAvailable(XSDValueTypeName)){
 			//   FILTER (?date > "2014-05-23T10:20:13+05:30"^^xsd:dateTime)
@@ -204,6 +242,10 @@ public class ConstraintUtil {
 		checkValidType(XSDValueTypeName);
 		
 		String retval = "";
+		
+		checkDateFormatMatches(valLow, XSDValueTypeName);
+		checkDateFormatMatches(valHigh, XSDValueTypeName);
+		
 		
 		if(XSDSupportUtil.dateOperationAvailable(XSDValueTypeName)){
 			//   FILTER (?date > "2014-05-23T10:20:13+05:30"^^xsd:dateTime)
@@ -236,4 +278,36 @@ public class ConstraintUtil {
 		return retval;
 		
 	}
+	
+	// some checks for Date formatting.
+	
+	public static void checkDateFormatMatches(String proposedDate, String xsdType) throws Exception{
+		
+		// datetime: 2014-05-23T10:20:13+05:30
+		// date    : 2014-05-23
+		
+		if(xsdType.equalsIgnoreCase(XSDSupportedTypes.DATE.name())){
+			try{
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+				Date dateFromString = formatter.parse(proposedDate);
+			}
+			catch(Exception e){
+				throw new Exception("checkDateFormatMatches :: the passed type(" + xsdType + ") does not have a conversion for the passed value (" + proposedDate + "). Accepted format is yyyy-MM-dd." );
+			}
+		}
+		else if(xsdType.equalsIgnoreCase(XSDSupportedTypes.DATETIME.name())){
+			try{
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+				Date dateFromString = formatter.parse(proposedDate);
+			}
+			catch(Exception e){
+				throw new Exception("checkDateFormatMatches :: the passed type(" + xsdType + ") does not have a conversion for the passed value (" + proposedDate + "). Accepted format is yyyy-MM-dd'T'HH:mm:ss." );
+			}
+		} 
+		else{
+			throw new Exception("checkDateFormatMatches :: the passed type(" + xsdType + ") does not match a known date type." );
+		}
+		
+	}
+	
 }
