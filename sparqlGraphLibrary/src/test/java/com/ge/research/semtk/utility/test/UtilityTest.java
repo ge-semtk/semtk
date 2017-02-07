@@ -19,12 +19,23 @@ package com.ge.research.semtk.utility.test;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.junit.Test;
 
 import com.ge.research.semtk.utility.Utility;
 
 public class UtilityTest {
 
+	@Test
+	public void testGetURLContentsAsString() throws Exception{		
+		URL url = new URL(new URL("file:"), "src/test/resources/test.csv");
+		String s = Utility.getURLContentsAsString(url);
+		assertEquals(s,"HEADER1,HEADER2,HEADER3\na1,a2,a3\nb1,b2,b3\nc1,c2,c3\nd1,d2,d3\ne1,e2,e3\nf1,f2,f3\ng1,g2,g3\n");		
+	}
+	
 	@Test
 	public void testLoadProperties() throws Exception {
 		String p = Utility.getPropertyFromFile("src/test/resources/utilitytest.properties","maple.color");
