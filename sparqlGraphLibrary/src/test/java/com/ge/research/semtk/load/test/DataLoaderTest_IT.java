@@ -36,7 +36,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// test
 		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -62,7 +62,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
@@ -101,7 +101,7 @@ public class DataLoaderTest_IT {
 		// get json
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl(owlPath);
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson(jsonPath);
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
@@ -125,7 +125,7 @@ public class DataLoaderTest_IT {
 		Dataset ds = new CSVDataset(contents, true);
 
 		// get json
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the "E"s in the column value but not the text "Cell_"
 		String prefix = sgJson.getImportSpec().getUriPrefix();
@@ -178,7 +178,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -244,7 +244,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
@@ -308,7 +308,7 @@ public class DataLoaderTest_IT {
 		String jsonPath = "src/test/resources/sampleBattery.json";
 		String owlPath = "src/test/resources/sampleBattery.owl";
 
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson(jsonPath);
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		CSVDataset csvDataset = new CSVDataset(csvPath, false);
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl(owlPath);

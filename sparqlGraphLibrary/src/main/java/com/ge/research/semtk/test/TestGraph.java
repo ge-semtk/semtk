@@ -165,23 +165,34 @@ public class TestGraph {
 	 */
 	public static NodeGroup getNodeGroup(String jsonFilename) throws Exception {
 		
-		return getSparqlGraphJson(jsonFilename).getNodeGroupCopy();
+		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroupCopy();
 	}
 	
 	/**
 	 * Get SparqlGraphJson modified with Test connection
 	 * @param jsonFilename
-	 * @return
-	 * @throws Exception
 	 */
-	@SuppressWarnings("unchecked")
-	public static SparqlGraphJson getSparqlGraphJson(String jsonFilename) throws Exception {
-		
-		JSONParser parser = new JSONParser();
+	public static SparqlGraphJson getSparqlGraphJsonFromFile(String jsonFilename) throws Exception {		
 		InputStreamReader reader = new InputStreamReader(new FileInputStream(jsonFilename));
-		JSONObject jObj = (JSONObject) parser.parse(reader);
-		
-		
+		JSONObject jObj = (JSONObject) (new JSONParser()).parse(reader);		
+		return getSparqlGraphJsonFromJson(jObj);
+	}	
+	
+	/**
+	 * Get SparqlGraphJson modified with Test connection
+	 * @param jsonString
+	 */
+	public static SparqlGraphJson getSparqlGraphJsonFromString(String jsonString) throws Exception {		
+		JSONObject jObj = (JSONObject) (new JSONParser()).parse(jsonString);		
+		return getSparqlGraphJsonFromJson(jObj);
+	}	
+	
+	/**
+	 * Get SparqlGraphJson modified with Test connection
+	 * @param jsonObject
+	 */	
+	@SuppressWarnings("unchecked")
+	public static SparqlGraphJson getSparqlGraphJsonFromJson(JSONObject jObj) throws Exception{
 		
 		if (  ((JSONObject)jObj.get("sparqlConn")).containsKey("onDataset")) {
 			((JSONObject)jObj.get("sparqlConn")).put("onDataset", generateDataset("both"));    // "model"
@@ -223,7 +234,7 @@ public class TestGraph {
 		// load the model
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl(owlPath);
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJson(jsonPath); 
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath); 
 		
 		// load the data
 		Dataset ds = new CSVDataset(csvPath, false);
