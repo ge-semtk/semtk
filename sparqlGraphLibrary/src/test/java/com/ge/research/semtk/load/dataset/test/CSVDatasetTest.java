@@ -58,15 +58,6 @@ public class CSVDatasetTest {
 		assertEquals(records.size(),3);
 		assertEquals(records.get(0).get(0),"cell1_import_0");		
 	}
-
-	@Test
-	public void testCSVDatasetForJustin() throws Exception{
-		String path = "src/test/resources/sample csv failure.txt";
-		CSVDataset csvDataset = new CSVDataset(path, false); 
-		ArrayList<ArrayList<String>> records = csvDataset.getNextRecords(10);
-		assertEquals(records.size(),3);
-		assertEquals(records.get(0).get(0),"cell1_import_0");	
-	}
 	
 	@Test
 	public void testCSVDatasetFromPath_NoHeaders() throws Exception{
@@ -78,8 +69,8 @@ public class CSVDatasetTest {
 	}
 	
 	@Test
-	public void testCSVDataWithEmbeddedEscapedQuotes_DELETEME() throws Exception{
-		String path = "src/test/resources/sample csv failure.txt";
+	public void testCSVDataWithEmbeddedEscapedQuotes() throws Exception{
+		String path = "src/test/resources/csvDataWithEmbeddedQuotes.txt";
 		
 		@SuppressWarnings("resource")
 		BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
