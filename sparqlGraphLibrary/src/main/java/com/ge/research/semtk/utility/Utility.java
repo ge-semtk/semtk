@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -65,6 +66,14 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss"));
 	}
 
+	public static JSONArray getJsonArrayFromString(String s) throws Exception{
+		return (JSONArray) (new JSONParser()).parse(s);
+	}
+	
+	public static JSONObject getJsonObjectFromString(String s) throws Exception{
+		return (JSONObject) (new JSONParser()).parse(s);
+	}
+	
 	/**
 	 * Get the contents of a URL as a string
 	 * @throws IOException 
