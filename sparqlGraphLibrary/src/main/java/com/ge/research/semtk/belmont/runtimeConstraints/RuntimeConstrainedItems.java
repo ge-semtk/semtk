@@ -242,6 +242,7 @@ public class RuntimeConstrainedItems {
 	public void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
 		String constraintStr = ConstraintUtil.getMatchesOneOfConstraint(sparqlId, inputs, getTypeName(sparqlId));
+		System.out.println("======= setMatchesConstraint for " + sparqlId + " to " + constraintStr);
 		this.setValueContraint(sparqlId, constraintStr);
 	}
 
