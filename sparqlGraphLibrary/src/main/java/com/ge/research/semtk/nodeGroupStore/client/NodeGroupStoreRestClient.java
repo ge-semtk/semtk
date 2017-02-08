@@ -1,7 +1,5 @@
 package com.ge.research.semtk.nodeGroupStore.client;
 
-import java.net.ConnectException;
-
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -79,7 +77,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	public TableResultSet executeGetNodeGroupRuntimeConstraints(String nodeGroupId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
-		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
+		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupRuntimeConstraints");		
 		this.parametersJSON.put("id", nodeGroupId);
 		
 		try{
