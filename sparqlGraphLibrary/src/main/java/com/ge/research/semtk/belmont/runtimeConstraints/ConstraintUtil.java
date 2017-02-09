@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import javax.xml.crypto.dsig.keyinfo.X509Data;
+
 import com.ge.research.semtk.belmont.XSDSupportUtil;
 import com.ge.research.semtk.belmont.XSDSupportedTypes;
 
@@ -53,9 +55,14 @@ public class ConstraintUtil {
 		// VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> '1279'^^<http://www.w3.org/2001/XMLSchema#int> } 
 	
 		String retval = "VALUES " + sparqlId + " { ";
+		
 		// go through each passed value and add them.
-		for(String cv : val){
-			retval += "'" + cv + "'" + XSDSupportUtil.getXsdSparqlTrailer(XSDValueTypeName) + " "; 
+		for(String cv : val){			
+			if(XSDValueTypeName.equalsIgnoreCase(XSDSupportedTypes.NODE_URI.name())){
+				retval += "<" + cv + "> ";  // e.g. VALUES ?TimeSeriesTableType { timeseries:DataScan } ... no type information needed for URIs
+			}else{
+				retval += "'" + cv + "'" + XSDSupportUtil.getXsdSparqlTrailer(XSDValueTypeName) + " "; 
+			}
 		}
 		
 		retval += " }";

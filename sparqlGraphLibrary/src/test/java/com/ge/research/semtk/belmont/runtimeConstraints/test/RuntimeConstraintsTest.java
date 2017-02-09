@@ -329,7 +329,7 @@ public class RuntimeConstraintsTest {
 			// set matches
 			rtci.selectAndSetConstraint("?Album", SupportedOperations.MATCHES.name(), ng.getNodeBySparqlID("?Album").getValueType(), names);
 			// check matches
-			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { 'test://decemberunderground'^^<http://www.w3.org/2001/XMLSchema#node_uri>  }")){
+			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { <test://decemberunderground>  }")){
 				System.err.println("testContraintsSetByType() :: expected value for ?Album uri with Matches clause") ;
 			}
 			else { fail(); }
