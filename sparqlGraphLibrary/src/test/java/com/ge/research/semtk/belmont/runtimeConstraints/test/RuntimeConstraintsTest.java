@@ -323,17 +323,42 @@ public class RuntimeConstraintsTest {
 			
 		// NODE_URI
 
+
+			// no prefix, no angle brackets.
 			names = new ArrayList<String>();
-			names.add("test://decemberunderground");
+			names.add("test://music#decemberunderground");
 
 			// set matches
 			rtci.selectAndSetConstraint("?Album", SupportedOperations.MATCHES.name(), ng.getNodeBySparqlID("?Album").getValueType(), names);
 			// check matches
-			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { <test://decemberunderground>  }")){
-				System.err.println("testContraintsSetByType() :: expected value for ?Album uri with Matches clause") ;
+			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { <test://music#decemberunderground>  }")){
+				System.err.println("testContraintsSetByType() :: expected value for ?Album uri with Matches clause (no angle brackets)") ;
 			}
 			else { fail(); }
-			
+
+			// no prefix, angle brackets included
+			names = new ArrayList<String>();
+			names.add("<test://music#decemberunderground>");
+
+			// set matches
+			rtci.selectAndSetConstraint("?Album", SupportedOperations.MATCHES.name(), ng.getNodeBySparqlID("?Album").getValueType(), names);
+			// check matches
+			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { <test://music#decemberunderground>  }")){
+				System.err.println("testContraintsSetByType() :: expected value for ?Album uri with Matches clause (angle brackets included)") ;
+			}
+			else { fail(); }
+
+			// prefixed
+			names = new ArrayList<String>();
+			names.add("music:decemberunderground");
+
+			// set matches
+			rtci.selectAndSetConstraint("?Album", SupportedOperations.MATCHES.name(), ng.getNodeBySparqlID("?Album").getValueType(), names);
+			// check matches
+			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { music:decemberunderground  }")){
+				System.err.println("testContraintsSetByType() :: expected value for ?Album uri with Matches clause (prefixed)") ;
+			}
+			else { fail(); }
 	}
 	
 	

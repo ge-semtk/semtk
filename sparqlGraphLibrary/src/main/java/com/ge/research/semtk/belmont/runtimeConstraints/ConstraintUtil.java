@@ -59,8 +59,20 @@ public class ConstraintUtil {
 		// go through each passed value and add them.
 		for(String cv : val){			
 			if(XSDValueTypeName.equalsIgnoreCase(XSDSupportedTypes.NODE_URI.name())){
-				retval += "<" + cv + "> ";  // e.g. VALUES ?TimeSeriesTableType { timeseries:DataScan } ... no type information needed for URIs
-			}else{
+				
+				// check for angle brackets first
+				if( cv.contains("#")){   // the uri given is not prefixed.
+					if(cv.startsWith("<") && cv.endsWith(">")){
+						retval += cv + " ";  // already in brackets so probably will not break.
+					}
+					else{
+						retval += "<" + cv + "> ";  // e.g. VALUES ?TimeSeriesTableType { <timeseries:DataScan> } ... no type information needed for URIs
+					}
+				}
+				else{  // the URI is assumed prefixed since it has no # . Assume the user/caller knows what they want and just use it. 
+					retval += cv + " ";
+				}
+			}else{   // not a node uri.
 				retval += "'" + cv + "'" + XSDSupportUtil.getXsdSparqlTrailer(XSDValueTypeName) + " "; 
 			}
 		}
