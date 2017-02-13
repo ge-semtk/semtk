@@ -62,6 +62,27 @@ public class IngestorRestClient extends RestClient{
 		return ret;
 	}
 	
+	public void execIngestionFromCsv(String template, String data, String sparqlConnectionOverride) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheck");
+		this.parametersJSON.put("template", template);
+		this.parametersJSON.put("data", data);
+		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
+		
+		try{
+			this.lastResult = this.execute();
+			this.lastResult.throwExceptionIfUnsuccessful();
+	
+			return;
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("template");
+			this.parametersJSON.remove("data");
+			this.parametersJSON.remove("connectionOverride");
+		}
+	}
+	
 	public void execIngestionFromCsv(String template, String data) throws ConnectException, EndpointNotFoundException, Exception{
 		conf.setServiceEndpoint("ingestion/fromCsvPrecheck");
 		this.parametersJSON.put("template", template);

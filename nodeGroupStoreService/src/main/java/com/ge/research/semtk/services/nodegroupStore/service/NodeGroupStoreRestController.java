@@ -178,6 +178,12 @@ public class NodeGroupStoreRestController {
 	public JSONObject deleteStoredNodeGroup(@RequestBody DeleteByIdRequest requestBody){
 		SimpleResultSet retval = null;
 		
+		// NOTE:
+		// this static delete works but will need to be updated should the metadata surrounding node groups be updated. 
+		// really, if the insertion nodegroup itself is edited, this should be looked at.
+		// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
+		// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
+		
 		String qry =
 			"prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
 			"Delete " + 
