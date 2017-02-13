@@ -90,6 +90,9 @@ public class ResultsStorage {
 		return ret;
 	}
 
+	/**
+	 * Store full csv file, and sample as json.
+	 */
 	public URL[] storeCsvFileIncremental(String contents, int sampleRows, String jobID, int segment) throws Exception {
 		
 		Boolean newSample = true;
