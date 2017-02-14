@@ -18,29 +18,32 @@
 
 package com.ge.research.semtk.services.ingestion;
 
-import java.io.UnsupportedEncodingException;
 
 public class IngestionFromStringsRequestBody {
-	private String template;
-	private String data;
+	
+	public String template;
+	public String data;
 	
 	public String getTemplate() {
 		return template;
 	}
+	
 	public void setTemplate(String template) {
 		this.template = template;
 	}
+	
 	public String getData() {
 		try {	
 			return data;
-
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return "";
 		}
 	}
+	
 	public void setData(String data) {
 		this.data = data;
 	}
+	
 }
