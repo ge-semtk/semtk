@@ -90,6 +90,9 @@ public class ResultsStorage {
 		return ret;
 	}
 
+	/**
+	 * Store full csv file, and sample as json.
+	 */
 	public URL[] storeCsvFileIncremental(String contents, int sampleRows, String jobID, int segment) throws Exception {
 		
 		Boolean newSample = true;
@@ -97,7 +100,7 @@ public class ResultsStorage {
 		
 		String fullname = storeFileIncrement(jobID, contents, "csv");
 		
-		String samplename = storeTruncatedFileIncrementalJson(jobID, contents, sampleRows + 1, "csv", newSample);
+		String samplename = storeTruncatedFileIncrementalJson(jobID, contents, sampleRows + 1, "json", newSample);
 		
 		URL[] ret = { getURL(samplename), getURL(fullname) };
 		return ret;
@@ -144,8 +147,6 @@ public class ResultsStorage {
 		jobID = jobID + "_sample";
 		
 		if(generateNewSample){
-			
-			System.out.println("generation of sample called.");
 			
 			// assumptions: 
 			// 1. the first row (as in up to the first newline) are column headers.

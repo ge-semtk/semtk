@@ -1,7 +1,5 @@
 package com.ge.research.semtk.nodeGroupStore.client;
 
-import java.net.ConnectException;
-
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -79,7 +77,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	public TableResultSet executeGetNodeGroupRuntimeConstraints(String nodeGroupId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
-		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
+		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupRuntimeConstraints");		
 		this.parametersJSON.put("id", nodeGroupId);
 		
 		try{
@@ -107,7 +105,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
 		this.parametersJSON.put("comments", comments);
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toJSONString() );
 		
 		try{
 		
@@ -118,10 +116,13 @@ public class NodeGroupStoreRestClient extends RestClient {
 			}
 					
 			else{
+				this.parametersJSON.remove("id");
+				System.err.println("existence check succeeded. proceeding to insert node group: " + proposedId);
+				
 				// perform actual insertion.
 				conf.setServiceEndpoint("nodeGroupStore/storeNodeGroup");
-				retval = new SimpleResultSet();
-				retval.fromJson((JSONObject) this.execute());
+				JSONObject interim = (JSONObject) this.execute();
+				retval = SimpleResultSet.fromJson( interim );
 			}
 		}
 		finally{

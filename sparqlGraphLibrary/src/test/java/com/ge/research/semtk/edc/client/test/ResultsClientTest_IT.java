@@ -112,7 +112,7 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(JOB_ID, table);
 			urls = client.execGetResults(JOB_ID);
 			
-			assertTrue(urls[0].toString().endsWith("_sample.csv")); 
+			assertTrue(urls[0].toString().endsWith("_sample.json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// trust ResultsStorageTest.java to test the contents
@@ -162,7 +162,7 @@ public class ResultsClientTest_IT {
 			// --- test results ---
 			urls = client.execGetResults(JOB_ID);
 			
-			assertTrue(urls[0].toString().endsWith(".csv")); 
+			assertTrue(urls[0].toString().endsWith(".json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// trust ResultsStorageTest.java to test the contents

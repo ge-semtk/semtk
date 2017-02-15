@@ -19,18 +19,23 @@
 package com.ge.research.semtk.services.client;
 
 import java.net.ConnectException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-
 
 /**
  * An abstract class containing code for a REST client.
@@ -106,31 +111,14 @@ public abstract class RestClient extends Client implements Runnable {
 		// immediate line below removed to perform htmml encoding in stream
 		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
 		
-		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;");
-		
-//		String encoded = parametersJSON.toJSONString().replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
-//		JSONObject sendableJSON = new JSONObject();
-//		
-//		// we have to encode individual json parameter values.
-//		for(Object s : parametersJSON.keySet()){
-//			String sStr = (String) parametersJSON.get(s);
-//			
-//			// perform alteration and add.
-//			//sStr = sStr.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt").replaceAll("\"", "&quot;").replaceAll("%", "&#37;");
-//		
-//			sendableJSON.put((String)s, sStr);
-//		}
-//		
-//		String encoded = sendableJSON.toJSONString();
-		
-//		HttpEntity entity = new ByteArrayEntity(encoded.getBytes("UTF-8"));
+		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
+
 		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
-		
+				
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
-		//httppost.setEntity(new UrlEncodedFormEntity(parametersJSON, "UTF-8"));
 	    httppost.setEntity(entity);
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-		
+
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);

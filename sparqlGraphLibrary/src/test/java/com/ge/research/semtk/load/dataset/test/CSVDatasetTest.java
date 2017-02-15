@@ -23,6 +23,9 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -56,7 +59,6 @@ public class CSVDatasetTest {
 		assertEquals(records.get(0).get(0),"cell1_import_0");		
 	}
 	
-	
 	@Test
 	public void testCSVDatasetFromPath_NoHeaders() throws Exception{
 		String path = "src/test/resources/CSVDatasetTest1.csv";
@@ -64,6 +66,26 @@ public class CSVDatasetTest {
 		ArrayList<ArrayList<String>> records = csvDataset.getNextRecords(10);
 		assertEquals(records.size(),3);
 		assertEquals(records.get(0).get(0),"cell1_import_0");	
+	}
+	
+	@Test
+	public void testCSVDataWithEmbeddedEscapedQuotes() throws Exception{
+		String path = "src/test/resources/csvDataWithEmbeddedQuotes.txt";
+		
+		@SuppressWarnings("resource")
+		BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
+		String s = reader.readLine();
+		System.out.println(s + "\n\n");
+
+		s = s.replace("\"", "\"\"");  // replace 1x doublequote with 2x doublequote
+		
+		System.out.println(s + "\n\n");
+		
+		//s = s.replaceAll("\\\"", "\\\\\"");  BAD
+		s = s.replace("\\\"\"", "\\\\\"\""); //ALMOST RIGHT
+		//s = s.replaceAll("\\\"", "\\\\\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
+		
+		System.out.println(s);
 	}
 	
 	

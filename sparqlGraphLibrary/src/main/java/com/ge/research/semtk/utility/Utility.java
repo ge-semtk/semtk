@@ -22,6 +22,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -60,6 +64,36 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss"));
+	}
+
+	public static JSONArray getJsonArrayFromString(String s) throws Exception{
+		return (JSONArray) (new JSONParser()).parse(s);
+	}
+	
+	public static JSONObject getJsonObjectFromString(String s) throws Exception{
+		return (JSONObject) (new JSONParser()).parse(s);
+	}
+	
+	/**
+	 * Get the contents of a URL as a string
+	 * @throws IOException 
+	 */
+	public static String getURLContentsAsString(URL url) throws IOException{
+		StringBuffer ret = new StringBuffer();
+		BufferedReader br = null;
+		try{
+			URLConnection conn = url.openConnection();
+			br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			String line;
+			while ((line = br.readLine()) != null) {
+				ret.append(line).append("\n");
+			}
+		}finally{
+			if(br != null){
+				br.close();
+			}
+		}
+		return ret.toString();
 	}
 	
 	/**

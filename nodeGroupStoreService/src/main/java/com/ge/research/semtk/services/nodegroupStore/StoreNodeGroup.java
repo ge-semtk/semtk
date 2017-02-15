@@ -111,9 +111,12 @@ public class StoreNodeGroup {
 	}
 	
 	public static String escapeQuotes(String quotedString){
-		String retval = quotedString.replaceAll("\"", "\"\"");  // replace the quotes.
-		//String retval = StringEscapeUtils.escapeCsv(quotedString);  // using the apache lib. might have to pair this with unescaping later, using the same lib...
 		
+		String retval = quotedString.replaceAll("\"", "\"\"");  // replace the quotes.
+		retval = retval.replace("\\\"\"", "\\\\\"\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
+		
+		//String retval = StringEscapeUtils.escapeCsv(quotedString);  // using the apache lib. might have to pair this with unescaping later, using the same lib...
+	
 		return retval;
 	}
 	

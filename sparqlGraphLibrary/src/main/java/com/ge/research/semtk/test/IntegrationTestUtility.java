@@ -80,6 +80,14 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hiveservice.port")).intValue();
 	}
 	
+	// nodegroup store service
+	public static String getNodegroupStoreServiceServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupstoreservice.server");
+	}
+	public static int getNodegroupStoreServicePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupstoreservice.port")).intValue();
+	}
+	
 	// Hive
 	public static String getHiveServer() throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.server");
@@ -96,5 +104,22 @@ public class IntegrationTestUtility {
 	public static String getHiveDatabase() throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.database");
 	}
+	
+	// Oracle
+	public static String getOracleServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.server");
+	}
+	public static int getOraclePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.port")).intValue();
+	}
+	public static String getOracleUsername() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.username");
+	}
+	public static String getOraclePassword() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.password");
+	}
+	public static String getOracleDatabase() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.database");
+	}	
 	
 }

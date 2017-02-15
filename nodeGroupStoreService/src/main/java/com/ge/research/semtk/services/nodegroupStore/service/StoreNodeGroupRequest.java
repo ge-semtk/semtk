@@ -11,8 +11,18 @@ public class StoreNodeGroupRequest {
 	private String comments;
 		
 	public JSONObject getJsonNodeGroup(){
+	
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
+		
+		System.err.println("----------START MESSAGE-------------");
+		
+		System.err.println("incoming node group string for conversion: ");
+		System.err.println(jsonRenderedNodeGroup);
+		
+		System.err.println("----------END MESSAGE---------------");
+		
+		
 		try {
 			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
 		} catch (ParseException e) {
@@ -21,11 +31,11 @@ public class StoreNodeGroupRequest {
 		}
 		return retval;
 	}
-		
+
 	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
 		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
 	}
-
+	
 	public String getName() {
 		return name;
 	}

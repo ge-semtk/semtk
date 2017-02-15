@@ -30,6 +30,7 @@ import com.ge.research.semtk.load.utility.DataToModelTransformer;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
@@ -269,4 +270,6 @@ public class DataLoader {
 		}
 		return s;
 	}
+	
+
 }

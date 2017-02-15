@@ -65,11 +65,11 @@ public class RecordProcessResults extends GeneralResultSet{
 	public void addResults(Table table) throws Exception {
 		if(table.getRows().size() > 0){
 			this.resultsContents = this.addPreamble(table.toJson());
+			this.addRationaleMessage("at least one error occurred. please check embedded error table for details");
 		}
 		else{
 			this.resultsContents = this.addPreamble(null);
 		}
-		this.addRationaleMessage("at least one error occurred. please check embedded error table for details");
 	}
 
 	private JSONObject addPreamble(JSONObject resultsWithoutPreamble){
