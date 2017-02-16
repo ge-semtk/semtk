@@ -40,6 +40,14 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlqueryservice.port")).intValue();	
 	}	
 	
+	// ingestion service
+	public static String getIngestionServiceServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.ingestionservice.server");
+	}
+	public static int getIngestionServicePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.ingestionservice.port")).intValue();	
+	}	
+		
 	// status service
 	public static String getStatusServiceServer() throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.statusservice.server");
