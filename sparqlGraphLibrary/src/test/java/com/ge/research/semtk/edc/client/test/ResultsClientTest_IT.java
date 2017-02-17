@@ -107,7 +107,7 @@ public class ResultsClientTest_IT {
 		String [] cols = {"colA", "colB"};
 		String [] types = {"String", "String"};
 		ArrayList<String> row = new ArrayList<String>();
-		row.add("apple,ant");
+		row.add("apple,ant");  // this element has a comma in it.
 		row.add("bench");
 		
 		try {
