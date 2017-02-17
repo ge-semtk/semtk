@@ -17,7 +17,7 @@
 						"KeyName": "connectionAlias",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#connectionAlias",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#connectionAlias",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?connectionAlias",
@@ -29,7 +29,7 @@
 						"KeyName": "domain",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#domain",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#domain",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?domain",
@@ -41,7 +41,7 @@
 						"KeyName": "dsDataset",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#dsDataset",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#dsDataset",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?dsDataset",
@@ -53,7 +53,7 @@
 						"KeyName": "dsKsURL",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#dsKsURL",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#dsKsURL",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?dsKsURL",
@@ -65,7 +65,7 @@
 						"KeyName": "dsURL",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#dsURL",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#dsURL",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?dsURL",
@@ -77,7 +77,7 @@
 						"KeyName": "originalServerType",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#originalServerType",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#originalServerType",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?originalServerType",
@@ -88,7 +88,7 @@
 				],
 				"nodeList": [],
 				"NodeName": "SemTkConnection",
-				"fullURIName": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#SemTkConnection",
+				"fullURIName": "http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection",
 				"subClassNames": [],
 				"SparqlID": "?SemTkConnection",
 				"isReturned": true,
@@ -101,7 +101,7 @@
 						"KeyName": "ID",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#ID",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#ID",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?ID",
@@ -113,7 +113,7 @@
 						"KeyName": "NodeGroup",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#NodeGroup",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#NodeGroup",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?NodeGroup",
@@ -125,7 +125,7 @@
 						"KeyName": "comments",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#comments",
+						"UriRelationship": "http://research.ge.com/semtk/prefabNodeGroup#comments",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?comments",
@@ -141,15 +141,15 @@
 						],
 						"KeyName": "originalConnection",
 						"ValueType": "SemTkConnection",
-						"UriValueType": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#SemTkConnection",
+						"UriValueType": "http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection",
 						"ConnectBy": "originalConnection",
 						"Connected": true,
-						"UriConnectBy": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#originalConnection",
+						"UriConnectBy": "http://research.ge.com/semtk/prefabNodeGroup#originalConnection",
 						"isOptional": 0
 					}
 				],
 				"NodeName": "PrefabNodeGroup",
-				"fullURIName": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#PrefabNodeGroup",
+				"fullURIName": "http://research.ge.com/semtk/prefabNodeGroup#PrefabNodeGroup",
 				"subClassNames": [],
 				"SparqlID": "?PrefabNodeGroup",
 				"isReturned": true,
@@ -217,7 +217,7 @@
 		"nodes": [
 			{
 				"sparqlID": "?PrefabNodeGroup",
-				"type": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#PrefabNodeGroup",
+				"type": "http://research.ge.com/semtk/prefabNodeGroup#PrefabNodeGroup",
 				"mapping": [
 					{
 						"colId": "col_6",
@@ -229,7 +229,7 @@
 				],
 				"props": [
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#ID",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#ID",
 						"mapping": [
 							{
 								"colId": "col_6",
@@ -238,7 +238,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#NodeGroup",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#NodeGroup",
 						"mapping": [
 							{
 								"colId": "col_7",
@@ -247,7 +247,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#comments",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#comments",
 						"mapping": [
 							{
 								"colId": "col_0",
@@ -259,7 +259,7 @@
 			},
 			{
 				"sparqlID": "?SemTkConnection",
-				"type": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#SemTkConnection",
+				"type": "http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection",
 				"mapping": [
 					{
 						"textId": "text_0",
@@ -275,7 +275,7 @@
 				],
 				"props": [
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#connectionAlias",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#connectionAlias",
 						"mapping": [
 							{
 								"colId": "col_1",
@@ -284,7 +284,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#domain",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#domain",
 						"mapping": [
 							{
 								"colId": "col_2",
@@ -293,7 +293,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#dsDataset",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#dsDataset",
 						"mapping": [
 							{
 								"colId": "col_3",
@@ -302,7 +302,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#dsKsURL",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#dsKsURL",
 						"mapping": [
 							{
 								"colId": "col_4",
@@ -311,7 +311,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#dsURL",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#dsURL",
 						"mapping": [
 							{
 								"colId": "col_5",
@@ -320,7 +320,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://com.ge.research/knowledge/semTK/prefabNodeGroup#originalServerType",
+						"URIRelation": "http://research.ge.com/semtk/prefabNodeGroup#originalServerType",
 						"mapping": [
 							{
 								"colId": "col_8",
