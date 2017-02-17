@@ -102,6 +102,35 @@ public class ResultsClientTest_IT {
 	}
 	
 	@Test
+	public void testTableWithComma() throws Exception {
+
+		String [] cols = {"colA", "colB"};
+		String [] types = {"String", "String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("apple,ant");
+		row.add("bench");
+		
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			
+			client.execStoreTableResults(JOB_ID, table);
+			URL[] urls = client.execGetResults(JOB_ID);
+			
+			assertTrue(urls[0].toString().endsWith("_sample.json")); 
+			assertTrue(urls[1].toString().endsWith(".csv")); 
+
+			// check the results.
+			String resultString = Utility.getURLContentsAsString(urls[1]);
+			System.out.println(resultString);
+			String expectedResultString = "colA,colB\n\"apple,ant\",bench\n";   // elements with commas must be put in quotes, else the comma will look like a delimiter
+			assertEquals(expectedResultString, resultString);
+		} finally {
+			cleanup(client, JOB_ID);
+		}
+	}
+	
+	@Test
 	public void testBiggerTable() throws Exception {
 
 		try {
