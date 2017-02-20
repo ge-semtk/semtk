@@ -140,6 +140,14 @@ public class TestGraph {
 	}
 	
 	/**
+	 * Get the number of triples in the test graph.
+	 */
+	public static int getNumTriples() throws Exception {
+		Table table = TestGraph.execTableSelect(Utility.SPARQL_QUERY_TRIPLE_COUNT); 
+		return (new Integer(table.getCell(0, 0))).intValue(); // this cell contains the count
+	}
+	
+	/**
 	 * 
 	 * @param owlFilename  "src/test/resources/file.owl"
 	 * @throws Exception
