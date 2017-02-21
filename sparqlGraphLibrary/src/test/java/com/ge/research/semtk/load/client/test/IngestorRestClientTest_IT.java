@@ -86,6 +86,7 @@ public class IngestorRestClientTest_IT {
 		TestGraph.clearGraph();
 
 		// get an override SPARQL connection, by getting the TestGraph dataset and appending "OTHER"
+		// TODO could not find a clean way to add this functionality to TestGraph for reusability - maybe in the future
 		JSONObject sparqlConnJson = sgJson_TestGraph.getSparqlConn().toJson();  // original TestGraph sparql conn 
 		String testGraphDataset = (String) sparqlConnJson.get(SparqlConnection.DSDATASET_JSONKEY);
 		String otherDataset = testGraphDataset + "OTHER";  						// make the override dataset
