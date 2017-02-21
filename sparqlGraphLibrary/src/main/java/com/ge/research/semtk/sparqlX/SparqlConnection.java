@@ -82,6 +82,10 @@ public class SparqlConnection {
 	
 	public void fromJson(JSONObject jObj) throws Exception {
 		
+		if(jObj.entrySet().size() == 1 && jObj.containsKey("sparqlConn")){
+			throw new Exception("Cannot create SparqlConnection object because the JSON is wrapped in \"sparqlConn\"");
+		}
+		
 		this.name = (String) jObj.get("name"); 
 		this.serverType = (String) jObj.get("type"); 
 			
