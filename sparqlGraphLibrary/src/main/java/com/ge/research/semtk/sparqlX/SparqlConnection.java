@@ -30,6 +30,10 @@ public class SparqlConnection {
  * To match files written by historical javascript, this is mostly a JSON wrangler.
  * 
  */
+
+	// TODO replace all hardcoded json keys with Strings like this
+	public final static String DSDATASET_JSONKEY = "dsDataset";
+	
 	private final static String NONE_SERVER = "";
 	private final static String QUERY_SERVER = "kdl";
 	private final static String FUSEKI_SERVER = "fuseki";
