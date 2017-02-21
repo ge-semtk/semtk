@@ -1,0 +1,8 @@
+{
+	"name": "Throwaway Dataset",
+	"type": "virtuoso",
+	"dsURL": "http://localhost:2420",
+	"dsKsURL": "",
+	"dsDataset": "http://dataset-deleteme",
+	"domain": "http://research.ge.com"
+}
