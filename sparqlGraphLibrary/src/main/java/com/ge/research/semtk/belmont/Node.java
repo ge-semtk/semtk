@@ -112,6 +112,7 @@ public class Node extends Returnable {
 		ret.put("valueConstraint", this.getValueConstraintStr());
 		ret.put("instanceValue", this.getInstanceValue());
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
+		ret.put("subClassNames", scNames);
 		
 		return ret;
 	}
