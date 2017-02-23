@@ -46,6 +46,8 @@ import com.ge.research.semtk.resultSet.Table;
  */
 public abstract class Utility {
 		
+	public static String SPARQL_QUERY_TRIPLE_COUNT = "select count(*) where {?x ?y ?z}"; // SPARQL query to count triples
+	
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 

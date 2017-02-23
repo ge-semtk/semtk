@@ -62,6 +62,12 @@ public class IngestorRestClient extends RestClient{
 		return ret;
 	}
 	
+	/**
+	 * Ingest from CSV, with the option to override the SPARQL connection
+	 * @param template the template (as a String)
+	 * @param data the data (as a String)
+	 * @param sparqlConnectionOverride the SPARQL connection as a String, or null to use the connection from the template.
+	 */
 	public void execIngestionFromCsv(String template, String data, String sparqlConnectionOverride) throws ConnectException, EndpointNotFoundException, Exception{
 		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheck");
 		this.parametersJSON.put("template", template);
@@ -83,6 +89,11 @@ public class IngestorRestClient extends RestClient{
 		}
 	}
 	
+	/**
+	 * Ingest from CSV.
+	 * @param template the template (as a String)
+	 * @param data the data (as a String)
+	 */
 	public void execIngestionFromCsv(String template, String data) throws ConnectException, EndpointNotFoundException, Exception{
 		conf.setServiceEndpoint("ingestion/fromCsvPrecheck");
 		this.parametersJSON.put("template", template);

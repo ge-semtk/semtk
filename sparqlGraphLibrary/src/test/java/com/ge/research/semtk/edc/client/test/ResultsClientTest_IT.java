@@ -18,11 +18,9 @@
 
 package com.ge.research.semtk.edc.client.test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
-import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -31,7 +29,6 @@ import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.resultSet.Table;
@@ -48,52 +45,36 @@ public class ResultsClientTest_IT {
 	private final String EXTENSION = "csv";
 	private final String JOB_ID = "results_test_jobid";
 	
+	private static ResultsClient client = null;
+	
 	@BeforeClass
 	public static void setup() throws Exception{
 		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
 		SERVICE_SERVER = IntegrationTestUtility.getResultsServiceServer();
 		SERVICE_PORT = IntegrationTestUtility.getResultsServicePort();
+		client = new ResultsClient(new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT));
 	}
 	
 	@Test
-	public void testSingleFile() {
-		ResultsClientConfig config = null;
-		ResultsClient client = null;
-		URL urls[] = null;
-		
+	public void testSingleFile() throws Exception {
+
 		try {	
-			// create
-			config = new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT);
-			client = new ResultsClient(config);
-			
 			client.execStoreSingleFileResults(JOB_ID, CSV_CONTENTS, EXTENSION);
-			urls = client.execGetResults(JOB_ID);
+			URL[] urls = client.execGetResults(JOB_ID);
 			
 			assertTrue(urls[0] == null); 
-		
 			String contents = IOUtils.toString(urls[1]);
 			assertTrue(contents.equals(CSV_CONTENTS));
 			assertTrue(urls[1].toString().endsWith(EXTENSION));
-		
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
+			
 		} finally {
 			cleanup(client, JOB_ID);
 		}
 	}
 	
 	@Test
-	public void testTable() {
-		ResultsClientConfig config = null;
-		ResultsClient client = null;
-		URL urls[] = null;
+	public void testTable() throws Exception {
+
 		String [] cols = {"col1", "col2"};
 		String [] types = {"String", "String"};
 		ArrayList<String> row = new ArrayList<String>();
@@ -104,96 +85,89 @@ public class ResultsClientTest_IT {
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
 			table.addRow(row);
-		
-			// create
-			config = new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT);
-			client = new ResultsClient(config);
 			
 			client.execStoreTableResults(JOB_ID, table);
-			urls = client.execGetResults(JOB_ID);
+			URL[] urls = client.execGetResults(JOB_ID);
 			
 			assertTrue(urls[0].toString().endsWith("_sample.json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
-			// trust ResultsStorageTest.java to test the contents
-		
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
+			// check the results.
+			String resultString = Utility.getURLContentsAsString(urls[1]);
+			String expectedResultString = "col1,col2\none, two\none, two\n";
+			assertEquals(expectedResultString, resultString);
 		} finally {
 			cleanup(client, JOB_ID);
 		}
 	}
 	
 	@Test
-	public void testBiggerTable() {
-		ResultsClientConfig config = null;
-		ResultsClient client = null;
-		URL urls[] = null;
-		long startTime;
-		long endTime;
-		double elapsed;
+	public void testTableWithComma() throws Exception {
+
+		String [] cols = {"colA", "colB"};
+		String [] types = {"String", "String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("apple,ant");  // this element has a comma in it.
+		row.add("bench");
+		
 		try {
-			startTime = System.nanoTime();
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			
+			client.execStoreTableResults(JOB_ID, table);
+			URL[] urls = client.execGetResults(JOB_ID);
+			
+			assertTrue(urls[0].toString().endsWith("_sample.json")); 
+			assertTrue(urls[1].toString().endsWith(".csv")); 
+
+			// check the results.
+			String resultString = Utility.getURLContentsAsString(urls[1]);
+			System.out.println(resultString);
+			String expectedResultString = "colA,colB\n\"apple,ant\",bench\n";   // elements with commas must be put in quotes, else the comma will look like a delimiter
+			assertEquals(expectedResultString, resultString);
+		} finally {
+			cleanup(client, JOB_ID);
+		}
+	}
+	
+	@Test
+	public void testBiggerTable() throws Exception {
+
+		try {
+			long startTime = System.nanoTime();
 			
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath("src/test/resources/table9000.json");
 			Table table = Table.fromJson(jsonObj);
 			
-			endTime = System.nanoTime();
-			elapsed = ((endTime - startTime) / 1000000000.0);
+			long endTime = System.nanoTime();
+			double elapsed = ((endTime - startTime) / 1000000000.0);
 			System.err.println(String.format(">>> Utility.getJSONEObjectFromFilePath()=%.2f sec", elapsed));
 
 			// --- store results ----
-			startTime = System.nanoTime();
-			config = new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT);
-			client = new ResultsClient(config);
-			
+			startTime = System.nanoTime();		
 			client.execStoreTableResults(JOB_ID, table);
 			endTime = System.nanoTime();
 			elapsed = ((endTime - startTime) / 1000000000.0);
 			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
 			
 			// --- test results ---
-			urls = client.execGetResults(JOB_ID);
+			URL[] urls = client.execGetResults(JOB_ID);
 			
 			assertTrue(urls[0].toString().endsWith(".json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// trust ResultsStorageTest.java to test the contents
-		
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
 		} finally {
 			cleanup(client, JOB_ID);
 		}
 	}
 	
 	@Test
-	public void testStoreCsv() {
-		ResultsClientConfig config = null;
-		ResultsClient client = null;
-		URL urls[] = null;
-		
+	public void testStoreCsv() throws Exception {
+
 		try {	
-			// create
-			config = new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT);
-			client = new ResultsClient(config);
-			
 			client.execStoreCsvResults(JOB_ID, CSV_CONTENTS);
-			urls = client.execGetResults(JOB_ID);
+			URL[] urls = client.execGetResults(JOB_ID);
 			
 			String sample = IOUtils.toString(urls[0]);
 			assertTrue(sample.equals(CSV_CONTENTS)); 
@@ -201,69 +175,30 @@ public class ResultsClientTest_IT {
 			String contents = IOUtils.toString(urls[1]);
 			assertTrue(contents.equals(CSV_CONTENTS));
 		
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
 		} finally {
 			cleanup(client, JOB_ID);
 		}
 	}
 	
 	@Test
-	public void test_delete() {
-
-		ResultsClientConfig config = null;
-		ResultsClient client = null;
-		URL urls[] = null;
-		
+	public void test_delete() throws Exception {
 		try {
-			// create
-			config = new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT);
-			client = new ResultsClient(config);
-
 			client.execStoreCsvResults(JOB_ID, CSV_CONTENTS);
 			client.execDeleteStorage(JOB_ID);
-			urls = client.execGetResults(JOB_ID);
+			URL[] urls = client.execGetResults(JOB_ID);
 
 			String sample = IOUtils.toString(urls[0]);
 			assertTrue(sample == null);
 			
 		} catch (FileNotFoundException e) {
-			// success
-			
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
+			// success			
 		} finally {
 			cleanup(client, JOB_ID);
 		}
 	}
 	
-	private void cleanup(ResultsClient client, String jobId) {
-		try {
-			client.execDeleteStorage(JOB_ID);
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
-		}
+	private void cleanup(ResultsClient client, String jobId) throws Exception {
+		client.execDeleteStorage(JOB_ID);
 	}
 
 }
