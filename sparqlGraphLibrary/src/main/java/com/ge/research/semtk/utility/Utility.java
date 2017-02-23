@@ -38,6 +38,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.resultSet.Table;
+
 
 /*
  * Utility methods
@@ -72,7 +74,7 @@ public abstract class Utility {
 	
 	public static JSONObject getJsonObjectFromString(String s) throws Exception{
 		return (JSONObject) (new JSONParser()).parse(s);
-	}
+   	}
 	
 	/**
 	 * Get the contents of a URL as a string
@@ -95,6 +97,50 @@ public abstract class Utility {
 		}
 		return ret.toString();
 	}
+	
+	public static Table getURLResultsContentAsTable(URL url) throws Exception{
+		Table retval = null;
+		
+		// first, get the content
+		String contents = getURLContentsAsString(url);
+		
+		// split it into lines.
+		String[] lines = contents.split("\n");
+		
+		if(lines.length > 0){
+			// get our columns
+			String[] colName = lines[0].split(",");
+			String[] colType = new String[colName.length];
+			
+			// add col type info
+			for(int i = 0; i < colName.length; i++){
+				colType[i] = "string";
+			}
+			
+			// make arraylist of the remaining values
+			ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+			if(lines.length >=2 ){
+				for(int k = 1; k < lines.length; k++){
+					ArrayList<String> curr = new ArrayList<String>();
+					// add each element
+					for(String t : lines[k].split(",")){
+						curr.add(t);
+					}
+					// add to the rows collection
+					rows.add(curr);
+				}
+			}
+			
+			retval = new Table(colName, colType, rows);
+			
+		}
+		else{
+			// do nothing. 
+		}
+		
+		return retval;
+	}
+	
 	
 	/**
 	 * Determine if two String arrays have the same elements, ignoring order

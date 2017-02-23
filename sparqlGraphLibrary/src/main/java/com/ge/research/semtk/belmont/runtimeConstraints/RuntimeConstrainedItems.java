@@ -68,7 +68,9 @@ public class RuntimeConstrainedItems {
 		if(this.members.isEmpty() ){
 			throw new Exception("RuntimConstrainedItems.applyConstraintJson :: there are no runtime contrainted items in this node group. unable to apply contraints to an empty set.");
 		}
-		
+		if(runtimeConstraints == null || runtimeConstraints.isEmpty()){
+			return; // nothing to do
+		}
 		
 		for(Object curr : runtimeConstraints){
 			JSONObject c1 = (JSONObject) curr; 	// just a shortcut to avoid a multitude of casts.
@@ -90,7 +92,7 @@ public class RuntimeConstrainedItems {
 				operandType = this.members.get(sparqlId).getValueType();  // this should return the expected XSD type with no prefix. 
 			}
 			else{
-				throw new Exception("RuntimConstrainedItems.applyConstraintJson :: " + this.members.get(sparqlId).getObjectType() + " was not understood for " + sparqlId);
+				throw new Exception("RuntimeConstrainedItems.applyConstraintJson :: " + this.members.get(sparqlId).getObjectType() + " was not understood for " + sparqlId);
 			}
 			
 			JSONArray opers = (JSONArray) c1.get("Operands");

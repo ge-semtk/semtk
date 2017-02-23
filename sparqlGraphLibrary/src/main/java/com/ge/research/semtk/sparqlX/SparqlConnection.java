@@ -59,6 +59,14 @@ public class SparqlConnection {
 	public SparqlConnection(String jsonText) throws Exception {
 	    this.fromString(jsonText);
 	}
+	
+	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain){
+		this.dataServerUrl = dataServicetURL;
+		this.dataKsServerURL = knowledgeServiceURL;
+		this.serverType = serverType;
+		this.dataSourceDataset = dataset;
+		this.domain = domain;
+	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
