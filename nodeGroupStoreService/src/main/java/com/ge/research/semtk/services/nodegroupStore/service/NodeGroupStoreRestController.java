@@ -183,7 +183,7 @@ public class NodeGroupStoreRestController {
 		// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
 		
 		String qry =
-			"prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+			"prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 			"Delete " + 
 			"{" +
 			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup." +
