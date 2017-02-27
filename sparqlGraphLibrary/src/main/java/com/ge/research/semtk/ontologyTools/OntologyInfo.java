@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ExecutorCompletionService;
 
@@ -1006,6 +1007,14 @@ public class OntologyInfo {
 	}
 	
 	public JSONObject toJSON(SparqlConnection sc) throws Exception {
+		
+		
+		// build the entire connnection hash
+		for(String ocKey : this.classHash.keySet()){
+			this.getConnList(ocKey);			
+		}
+
+		
 		JSONObject retval = new JSONObject();
 		JSONObject sparqlConnJSONObject = null;
 		

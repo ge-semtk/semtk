@@ -111,7 +111,7 @@ public class OntologyInfoTests_IT {
 		JSONObject serialized = oInfo.toJSON(null);
 		System.err.println(serialized.toJSONString());
 		
-		assertEquals(serialized.toJSONString().length(), 3272);
+		assertEquals(serialized.toJSONString().length(), 3558);
 	}
 
 }
