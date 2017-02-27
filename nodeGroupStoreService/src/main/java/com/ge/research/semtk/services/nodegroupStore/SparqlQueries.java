@@ -25,7 +25,7 @@ public class SparqlQueries {
 	
 	// get sparql queries for getting the needed info. 
 	public static String getNodeGroupByID(String id){
-		String retval = "prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"select distinct ?ID ?NodeGroup ?comments where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
@@ -37,7 +37,7 @@ public class SparqlQueries {
 	}
 	
 	public static String getNodeGroupByConnectionAlias(String connectionAlias){
-		String retval = "prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"select distinct ?ID ?NodeGroup ?comments where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
@@ -51,7 +51,7 @@ public class SparqlQueries {
 	}
 	
 	public static String getConnectionInfo(){
-		String retval = "prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"select distinct ?connectionAlias ?domain ?dsDataset ?dsKsURL ?dsURL ?originalServerType where { " +
 						"?SemTkConnection a prefabNodeGroup:SemTkConnection. " +
 						"?SemTkConnection prefabNodeGroup:connectionAlias ?connectionAlias . " +
@@ -65,7 +65,7 @@ public class SparqlQueries {
 	}
 	
 	public static String getFullNodeGroupList(){
-		String retval = "prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"select distinct ?ID ?NodeGroup ?comments where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
@@ -76,7 +76,7 @@ public class SparqlQueries {
 	}
 
 	public static String getNodeGroupIdAndCommentList(){
-		String retval = "prefix prefabNodeGroup:<http://com.ge.research/knowledge/semTK/prefabNodeGroup#> " +
+		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"select distinct ?ID ?comments where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
