@@ -16,7 +16,10 @@
  */
 package com.ge.research.semtk.ontologyTools.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import org.json.simple.JSONObject;
 import org.junit.Test;
 
 import com.ge.research.semtk.test.TestGraph;
@@ -95,6 +98,20 @@ public class OntologyInfoTests_IT {
 		assertTrue(res.contains("\"name\":\"color\","));
 		// property type without namespace
 		assertTrue(res.contains("\"type\":\"Color\""));
+	}
+	
+	@Test
+	public void testToJSON() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/Plant.owl");
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		OntologyInfo oInfo = new OntologyInfo(sei, "http://research.ge.com");
+		
+		
+		JSONObject serialized = oInfo.toJSON(null);
+		System.err.println(serialized.toJSONString());
+		
+		assertEquals(serialized.toJSONString().length(), 3272);
 	}
 
 }

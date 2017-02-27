@@ -49,6 +49,33 @@ public class OntologyInfoServiceRestController {
 	    
 	    return res.toJson();
 	}
+
+	@CrossOrigin
+	@RequestMapping(value="/getDetailedOntologyInfo", method= RequestMethod.POST)
+	public JSONObject getVisJs(@RequestBody DetailedOntologyInfoRequestBody requestBody){
+		
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+	    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs start");
+    	logToStdout("OntologyInfo Service getVisJs start");
+    	
+    	SimpleResultSet res = new SimpleResultSet();
+	    
+	    try {
+	    	
+	       	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getUrl(), requestBody.getDataset());
+	    	OntologyInfo oInfo = new OntologyInfo(sei, requestBody.getDomain());
+	    	res.addResultsJSON( oInfo.toJSON(null) );
+	    	res.setSuccess(true);
+	    	
+	    } catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(e.toString());
+		    LoggerRestClient.easyLog(logger, "OntologyInfoService", "toJSON exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+	    
+	    return res.toJson();
+	}
 	
 	private void logToStdout (String message) {
 		System.out.println(message);

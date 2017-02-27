@@ -26,8 +26,8 @@ public class StoreNodeGroup {
 		// get everything we need to send. 
 		String data = SparqlQueries.getHeaderRow() + getInsertRow(ng, connectionInfo, id, comments); 
 
-	//	System.err.println(":: csv data output ::");
-	//	System.err.println(data);
+		//	System.err.println(":: csv data output ::");	
+		//	System.err.println(data);
 		
 		// should add better error handling here. 
 		try{
