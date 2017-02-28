@@ -910,7 +910,7 @@ public class NodeGroup {
 			}
 			else{
 				retval += tab + curr.getSparqlID() + " a " + curr.getSparqlID() + "_type .\n";
-				retval += tab + curr.getSparqlID() +  "_type " + " rdfs:subClassOf " + this.getPrefixedUri(curr.getFullUriName()) + ".\n";
+				retval += tab + curr.getSparqlID() +  "_type " + " rdfs:subClassOf* " + this.getPrefixedUri(curr.getFullUriName()) + ".\n";
 			}
 		}
 		
