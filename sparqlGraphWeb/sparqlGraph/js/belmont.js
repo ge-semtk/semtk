@@ -2448,7 +2448,7 @@ SemanticNodeGroup.prototype = {
 			} else {
 				var typeVar = node.getSparqlID() + "_type";
 				sparql += TAB + node.getSparqlID() + " a " + typeVar + ".\n";
-				sparql += TAB + typeVar + " rdfs:subClassOf <" + node.fullURIName + ">.\n";
+				sparql += TAB + typeVar + " rdfs:subClassOf* <" + node.fullURIName + ">.\n";
 			}
 
 		}
