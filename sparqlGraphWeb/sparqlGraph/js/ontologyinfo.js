@@ -1126,8 +1126,11 @@ OntologyName.prototype = {
 	},
 	isInDomain : function(domain) {
 		// does my name start with this domain
-		i = this.name.indexOf(domain);
-		return (i == 0);
+		//i = this.name.indexOf(domain);
+		//return (i == 0);
+		
+		var m = this.name.match("^"+domain);
+		return (m != null);
 	}
 };
 
@@ -1151,8 +1154,10 @@ OntologyRange.prototype = {
 	},
 	isInDomain : function(domain) {
 		// does my name start with this domain
-		i = this.name.indexOf(domain);
-		return (i == 0);
+		//i = this.name.indexOf(domain);
+		//return (i == 0);
+		var m = this.name.match("^"+domain);
+		return (m != null);
 	},
 	
 };
