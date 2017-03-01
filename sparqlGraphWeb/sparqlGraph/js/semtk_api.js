@@ -8,7 +8,7 @@ var SemtkAPI = function() {
 	
 	this.oInfo = null;
 	
-	this.nodegroup = new SemanticNodeGroup(0, 0, "canvas_dracula");
+	this.nodegroup = new SemanticNodeGroup(1000, 700, "canvas_dracula");
 	this.nodegroup.drawable = false;
 	
 	this.conn = new SparqlConnection('{"name": "","type": "","dsURL": "","dsKsURL": "","dsDataset": "","domain": ""}');
