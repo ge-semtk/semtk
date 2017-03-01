@@ -1,4 +1,4 @@
-var Semtk_api = function() {
+var SemtkAPI = function() {
 	this.oInfo = null;
 	
 	this.nodegroup = new SemanticNodeGroup(0, 0, "noDiv");
@@ -8,7 +8,7 @@ var Semtk_api = function() {
 	
 };
 
-Semtk_api.prototype = {
+SemtkPI.prototype = {
 		
 	//=============== Nodegroup ==============
 		
@@ -111,6 +111,6 @@ Semtk_api.prototype = {
 		
 	},
 	
-	addNode(classURI, )
+	//addNode(classURI, )
 
 };
