@@ -1,14 +1,21 @@
 var SemtkAPI = function() {
+	
+	// create invisible canvas for nodegroup dracula
+	var elemDiv = document.createElement('div');
+	elemDiv.style.display = 'none';
+	elemDiv.setAttribute("name", "canvas_dracula");
+	document.body.appendChild(elemDiv);
+	
 	this.oInfo = null;
 	
-	this.nodegroup = new SemanticNodeGroup(0, 0, "noDiv");
+	this.nodegroup = new SemanticNodeGroup(0, 0, "canvas_dracula");
 	this.nodegroup.drawable = false;
 	
 	this.conn = new SparqlConnection('{"name": "","type": "","dsURL": "","dsKsURL": "","dsDataset": "","domain": ""}');
 	
 };
 
-SemtkPI.prototype = {
+SemtkAPI.prototype = {
 		
 	//=============== Nodegroup ==============
 		
