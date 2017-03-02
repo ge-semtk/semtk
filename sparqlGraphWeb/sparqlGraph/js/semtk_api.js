@@ -67,6 +67,8 @@ SemtkAPI.prototype = {
 	 * optKSUrl: for SADL server.  omit it.
 	 */
 	createModelConnection(type, url, dataset, domain, statusCallback, successCallback, failureCallback, optKSUrl) {
+		// TODO: move callbacks to the constructor
+		//       they need to be async (not "alert")
 		
 		// fill in ontology fields    
 		// PEC TODO this is awful
@@ -76,6 +78,7 @@ SemtkAPI.prototype = {
 		this.conn.ontologySourceDataset = dataset;
 		this.conn.domain = domain;
 		
+		// TODO use query client instead of virtuoso
 		// refresh and reload the oInfo
 		this.oInfo = new OntologyInfo();
 		this.oInfo.load(this.conn.domain, this.conn.createOntologyInterface(), statusCallback, successCallback, failureCallback);
