@@ -3,14 +3,17 @@ var SemtkAPI = function() {
 	// create invisible canvas for nodegroup dracula
 	var elemDiv = document.createElement('div');
 	elemDiv.style.display = 'none';
-	elemDiv.setAttribute("name", "canvas_dracula");
+	elemDiv.id = "canvas_dracula";
 	document.body.appendChild(elemDiv);
 	
+	// create empty ontology info
 	this.oInfo = null;
 	
+	// create empty nodegroup
 	this.nodegroup = new SemanticNodeGroup(1000, 700, "canvas_dracula");
 	this.nodegroup.drawable = false;
 	
+	// create an empty connection
 	this.conn = new SparqlConnection('{"name": "","type": "","dsURL": "","dsKsURL": "","dsDataset": "","domain": ""}');
 	
 };
@@ -65,17 +68,17 @@ SemtkAPI.prototype = {
 	 */
 	createModelConnection(type, url, dataset, domain, statusCallback, successCallback, failureCallback, optKSUrl) {
 		
-		// fill in ontology fields
+		// fill in ontology fields    
+		// PEC TODO this is awful
 		this.conn.serverType = type;
 		this.conn.ontologyServerUrl = url;
 		this.conn.ontologyKsServerURL = optKSUrl;   
 		this.conn.ontologySourceDataset = dataset;
 		this.conn.domain = domain;
-		this.createOntologyInterface();
 		
 		// refresh and reload the oInfo
 		this.oInfo = new OntologyInfo();
-		this.oInfo.load(this.conn.domain, this.conn.getOntologyInterface, statusCallback, successCallback, failureCallback);
+		this.oInfo.load(this.conn.domain, this.conn.createOntologyInterface(), statusCallback, successCallback, failureCallback);
 	},
 	
 	/* 
