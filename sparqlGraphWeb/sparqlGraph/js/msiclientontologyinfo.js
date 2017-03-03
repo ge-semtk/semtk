@@ -27,59 +27,35 @@ define([	// properly require.config'ed   bootstrap-modal
 	function(MicroServiceInterface, MsiResultSet) {
 	
 		
-		var MsiClientOntologyInfo = function (serviceURL, jobId, optFailureCallback, optTimeout) {
+		var MsiClientOntologyInfo = function (serviceURL, optFailureCallback, optTimeout) {
 			
 			this.msi = new MicroServiceInterface(serviceURL);
-			this.jobId = jobId;
 			this.optFailureCallback = optFailureCallback;
 			this.optTimeout = optTimeout;
-			
 		};
 		
 		  
-		MsiClientStatus.prototype = {
+		MsiClientOntologyInfo.prototype = {
 				
-			getJobIdData : function () {
-				return JSON.stringify ({
-					"jobId" : this.jobId,
-				});	
-			},
 			
-			execGetPercentComplete : function (successCallback) {			
-				
-				this.msi.postToEndpoint("getPercentComplete", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
-			},
-			
-			execGetStatus : function (successCallback) {
-				
-				this.msi.postToEndpoint("getStatus", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
-			},
-			
-			execGetStatusMessage : function (successCallback) {
-				
-				this.msi.postToEndpoint("getStatusMessage", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
-			},
-			
-			execRetrieveDetailedOntologyInfo : function (dataset, domain, servertype, url) {
+			execRetrieveDetailedOntologyInfo : function (dataset, domain, servertype, url, successCallback) {
 				var myData = JSON.stringify ({
-					"dataset" : this.jobId,
-					"domain" : timeoutMsec,
-					"serverType" : percent,
+					"dataset" : dataset,
+					"domain" : domain,
+					"serverType" : servertype,
 					"url" : url,
 				});				
 				
-				this.msi.postToEndpoint("getDetailedOntologyInfo", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 5000);
+				this.msi.postToEndpoint("getDetailedOntologyInfo", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 			
 			getRetrieveDetailedOntologyInfoSucceeded : function (resultSet) {
 				// may return null
 				return resultSet.getSimpleResultField("ontologyInfo");
 			},
-			getQueryFailedResultHtml : function (resultSet) {
-				return resultSet.getGeneralResultHtml();
-			},
+			
 		};
 	
-		return MsiClientStatus;            // return the constructor
+		return MsiClientOntologyInfo;            // return the constructor
 	}
 );

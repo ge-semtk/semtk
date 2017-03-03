@@ -1,0 +1,141 @@
+<html>
+  <head>
+    <script src="../iidx-oss/components/requirejs/require.js"></script>
+    <script type="text/javascript" src="../sparqlGraph/js/requiresetup.js"></script>
+    <script src="../../iidx-oss/js/require.config.js"></script>
+    <script>
+    
+    	// set up require.js
+		requireConfigSparqlgraph( 
+			"../sparqlGraph",
+			{
+				baseUrl : '../iidx-oss',
+				paths : {
+				    "jquery" :      "../sparqlGraph/jquery/jquery",
+
+				}
+			}
+		);
+
+    	//========= callbacks =========
+		var api = null;
+		
+    	
+    	// tell UI we're done loading stuff
+    	var doneLoading = function() {
+    		configureServices();
+    		
+    		document.getElementById("btnTest1").disabled=false;
+    		document.getElementById("btnTest2").disabled=false;
+    	};
+    	
+    	// GUI developer writes this
+    	var statusCallback = function(str) {
+    		console.log(str);
+    	};
+    	
+    	// GUI developer writes this
+    	var failureCallback = function(html) {
+    		alert(html);
+    	};
+    	
+    	var configureServices = function() {
+			api.setSparqlQueryService("http://vesuvius37.crd.ge.com:12050/sparqlQueryService", failureCallback, 45000);
+			api.setOntologyService(   "http://vesuvius37.crd.ge.com:12057/ontologyinfo",       failureCallback, 45000);
+    	};
+    	
+    	var test1 = function() {
+    		api.clearNodegroup();
+    		connectViaService(buildSparql);
+    	};
+    	
+    	var test2 = function() {
+    		connectDirectly(alertClasses);
+    	};
+    	
+    	
+		var connectDirectly = function(callback) {
+			api.setupSparqlConnection("maples-conn", "virtuoso", "http://");
+			// remove the service, and a direct connection will occur
+			api.setSparqlQueryService(null, 0);
+			api.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
+		};
+		
+		var alertClassesLogModelDraw = function() {
+			alertClasses();
+			console.log("getModelDrawJSON: " + JSON.stringify(api.getModelDrawJSON()));
+		}
+		
+		var connectViaService = function(callback) {
+			api.setupSparqlConnection("maples-conn", "virtuoso", "http://");
+			api.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
+		}
+		
+		var alertClasses = function() {
+			alert("oInfo classes: " + api.getClassNames());
+		}
+		
+		var buildSparql = function() {
+			// get classes
+			var classList = api.getClassNames();
+			if (classList.length == 0) {
+				throw "buildSparql: classList.length is 0";
+			}
+			
+			// deciding on a  class and property
+			var classURI = "http://kdl.ge.com/GE/blueprintv5#Equipment";
+			var propURI = "http://kdl.ge.com/GE/blueprintv5#equipmentName";
+			
+			if (! api.modelContainsClass(classURI)) {
+				throw "buildSparql: model doesn't contain class: " + classURI;
+			}
+			if (! api.classContainsProperty(classURI, propURI)) {
+				throw "buildSparql: " + classURI + " doesn't contain prop: " + propURI;
+			}
+			
+			// add a node with this class
+			var sparqlID = api.addClassFirstPath(classURI);
+			if (! sparqlID) {
+				throw "buildSparql: failed to add URI to nodegroup: " + classURI;
+			}
+			
+			// set property to return
+			api.setPropertyReturned(sparqlID, propURI, true);
+			
+			var sparql = api.getSPARQLSelect(100);
+			alert("SPARQL: " + sparql);
+			
+			api.getModelDrawJSONAsync(buildSparql2);
+		};
+		
+		var buildSparql2 = function(json) {
+			alert("Model:\n" + JSON.stringify(json));
+			
+			alert("Nodegroup:\n" + JSON.stringify(api.getNodegroupDrawJSON()));
+		};
+		
+		// ===== on Load =====
+		// require is async.  It loads required js files then executes
+		
+		require([ 'sparqlgraph/js/semtk_api' ], function(SemtkAPI) {
+			
+			// load the api  (a global for this script)
+			api = new SemtkAPI();
+			
+			// tell app we're done
+			doneLoading();
+		});
+		
+    </script>
+
+  </head>
+
+  <body>
+    Demo of Semtk API
+    <p>
+    <button id="btnTest1" disabled=true onclick="test1();">Gen Sparql</button>
+    <button id="btnTest2" disabled=true onclick="test2();">Virtuoso</button>
+    
+    
+  </body>
+</html>
