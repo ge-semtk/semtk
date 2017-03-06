@@ -26,7 +26,13 @@ define([	// properly require.config'ed   bootstrap-modal
 
 	function(MsiClientQuery, MsiClientOntologyInfo) {
 
-		var SemtkAPI = function() {
+		/**
+		 *  optionalFatalErrCallback - Accepts a string message.  Should end with a throw statement or otherwise not return.
+		 *                             If not specified, a simple throw is used.
+		 */
+		var SemtkAPI = function(optionalFatalErrCallback) {
+			// save error callback. 
+			this.errCallback = typeof optionalFatalErrCallback === "undefined" ? null: optionalFatalErrCallback;	
 			
 			// create invisible canvas for nodegroup dracula
 			var elemDiv = document.createElement('div');
@@ -65,7 +71,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			setOntologyService : function(serviceURL, failureHTMLCallback, timeoutMs) {
-				// TODO: error check that this.conn is not null;
+				// assert
+				this.assert(this.conn != null, "setOntologyService", "Model connection must be set first.");
 				this.ontologyServiceClient = new MsiClientOntologyInfo(serviceURL, failureHTMLCallback, timeoutMs);
 			},
 				
@@ -160,6 +167,9 @@ define([	// properly require.config'ed   bootstrap-modal
 			//=============== Visualization JSON ==============
 			
 			getModelDrawJSONAsync : function(successCallbackJson) {
+				// asserts
+				this.assertModelLoaded("getModelDrawJSONAsync");
+				
 				this.ontologyServiceClient.execRetrieveDetailedOntologyInfo(this.conn.ontologySourceDataset, 
 																			this.conn.domain, 
 																			this.conn.serverType, 
@@ -210,6 +220,10 @@ define([	// properly require.config'ed   bootstrap-modal
 			 *    - any range (connections to "nodes" or plain value "properties"
 			 */
 			getAllPropertyNames : function (classURI) {
+				// asserts
+				this.assertModelLoaded("getAllPropertyNames");
+				this.assertValidClassURI(classURI, "getAllPropertyNames");
+				
 				var oClass = this.oInfo.getClass(classURI);
 				var propList = this.oInfo.getInheritedProperties(oClass);
 				var ret = [];
@@ -220,10 +234,17 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			modelContainsClass: function (classURI) {
+				// asserts
+				this.assertModelLoaded("modelContainsClass");
+				
 				return this.oInfo.containsClass(classURI);
 			},
 			
 			classContainsProperty: function (classURI, propertyURI) {
+				// asserts
+				this.assertModelLoaded("classContainsProperty");
+				this.assertValidClassURI(classURI, "classContainsProperty");
+				
 				var propNames = this.getAllPropertyNames(classURI);
 				return (propNames.indexOf(propertyURI) > -1);
 			},
@@ -250,7 +271,10 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * Note: if no path is found, that's a failure.
 			 */
 			addClassFirstPath : function(classURI) {
-			
+				// asserts
+				this.assertModelLoaded("addClassFirstPath");
+				this.assertValidClassURI(classURI, "addClassFirstPath");
+				
 				// if there are no nodes yet, just add it.
 				if (this.nodegroup.getNodeCount() === 0) {
 					sNode = this.nodegroup.addNode(classURI, this.oInfo);
@@ -276,8 +300,9 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * Given a node's sparqlID and property URI, set isReturned to true or false
 			 */
 			setPropertyReturned : function(nodeSparqlID, propURI, value) {
-				var sNode = this.nodegroup.getNodeBySparqlID(nodeSparqlID);
-				var propItem = sNode.getPropertyByURIRelation(propURI);
+				// asserts
+				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "setPropertyReturned");
+				
 				propItem.setIsReturned(value);
 				
 				if (propItem.getSparqlID() == "") {
@@ -291,8 +316,9 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * return sparqlID, possibly ""
 			 */
 			getPropertySparqlID : function (nodeSparqlID, propURI) {
-				var sNode = this.nodegroup.getNodeBySparqlID(nodeSparqlID);
-				var propItem = sNode.getPropertyByURIRelation(propURI);
+				// asserts
+				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "getPropertySparqlID");
+				
 				return propItem.getSparqlID();
 			},
 		
@@ -301,8 +327,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * returns: sparqlID
 			 */
 			setPropertySparqlID : function (nodeSparqlID, propURI, sparqlID) {
-				var sNode = this.nodegroup.getNodeBySparqlID(nodeSparqlID);
-				var propItem = sNode.getPropertyByURIRelation(propURI);
+				// asserts
+				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "setPropertySparqlID");
 				
 				var f = new SparqlFormatter();
 				// prepend "?"
@@ -312,6 +338,48 @@ define([	// properly require.config'ed   bootstrap-modal
 				propItem.setSparqlID(newName);
 				return newName;
 			},
+			
+			// ====== meant to be private =======
+			
+			/**
+			 * Get a property item, doing all the assert-ing
+			 */
+			assertGetPropItem(nodeSparqlID, propURI, funcName) {
+				// asserts
+				this.assertModelLoaded(funcName);
+				
+				var sNode = this.nodegroup.getNodeBySparqlID(nodeSparqlID);
+				this.assert(sNode != null, funcName, "Invalid nodeSparqlID: " + nodeSparqlID);
+				
+				var propItem = sNode.getPropertyByURIRelation(propURI);
+				this.assert(sNode != null, funcName, "Invalid propURI: " + propURI + " for node " + nodeSparqlID);
+				
+				return propItem;
+			},
+			
+			raiseError : function (msgString) {
+				if (this.errCallback != null) {
+					this.errCallback(msgString);
+					throw "SemtkAPI fatalErrCallback incorrectly returned.\nIt should have its own \'throw\' or otherwise end the thread.";
+					
+				} else {
+					throw msgString;
+				}
+			},
+			
+			assert : function (boolean, funcName, msg) {
+				if (! boolean) {
+					this.raiseError("SemTk API error in " + funcName + "(): \n" + msg);
+				}
+			},
+			
+			assertModelLoaded : function (funcName) {
+				this.assert(this.oInfo != null, funcName, "Model connection is null.");
+			},
+			
+			assertValidClassURI : function (classURI, funcName) {
+				this.assert(this.oInfo.containsClass(classURI), funcName, "Invalid classURI: " + classURI);
+			}
 		
 		};
 		

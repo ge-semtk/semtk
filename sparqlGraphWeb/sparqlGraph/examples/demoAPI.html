@@ -20,14 +20,10 @@
     	//========= callbacks =========
 		var api = null;
 		
-    	
-    	// tell UI we're done loading stuff
-    	var doneLoading = function() {
-    		configureServices();
-    		
-    		document.getElementById("btnTest1").disabled=false;
-    		document.getElementById("btnTest2").disabled=false;
-    	};
+    	var errorCallback = function(msg) {
+    		alert("Error caught: " + msg + "\n\nMore on the console.");
+    		throw msg;
+    	}
     	
     	// GUI developer writes this
     	var statusCallback = function(str) {
@@ -39,6 +35,14 @@
     		alert(html);
     	};
     	
+    	// tell UI we're done loading stuff
+    	var doneLoading = function() {
+    		configureServices();
+    		
+    		document.getElementById("btnTest1").disabled=false;
+    		document.getElementById("btnTest2").disabled=false;
+    	};
+    	
     	var configureServices = function() {
 			api.setSparqlQueryService("http://vesuvius37.crd.ge.com:12050/sparqlQueryService", failureCallback, 45000);
 			api.setOntologyService(   "http://vesuvius37.crd.ge.com:12057/ontologyinfo",       failureCallback, 45000);
@@ -46,7 +50,7 @@
     	
     	var test1 = function() {
     		api.clearNodegroup();
-    		connectViaService(buildSparql);
+    		connectViaServiceAsync(testBuildSparql);
     	};
     	
     	var test2 = function() {
@@ -66,7 +70,7 @@
 			console.log("getModelDrawJSON: " + JSON.stringify(api.getModelDrawJSON()));
 		}
 		
-		var connectViaService = function(callback) {
+		var connectViaServiceAsync = function(callback) {
 			api.setupSparqlConnection("maples-conn", "virtuoso", "http://");
 			api.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
 		}
@@ -75,11 +79,11 @@
 			alert("oInfo classes: " + api.getClassNames());
 		}
 		
-		var buildSparql = function() {
+		var testBuildSparql = function() {
 			// get classes
 			var classList = api.getClassNames();
 			if (classList.length == 0) {
-				throw "buildSparql: classList.length is 0";
+				throw "testBuildSparql: classList.length is 0";
 			}
 			
 			// deciding on a  class and property
@@ -87,16 +91,16 @@
 			var propURI = "http://kdl.ge.com/GE/blueprintv5#equipmentName";
 			
 			if (! api.modelContainsClass(classURI)) {
-				throw "buildSparql: model doesn't contain class: " + classURI;
+				throw "testBuildSparql: model doesn't contain class: " + classURI;
 			}
 			if (! api.classContainsProperty(classURI, propURI)) {
-				throw "buildSparql: " + classURI + " doesn't contain prop: " + propURI;
+				throw "testBuildSparql: " + classURI + " doesn't contain prop: " + propURI;
 			}
 			
 			// add a node with this class
 			var sparqlID = api.addClassFirstPath(classURI);
 			if (! sparqlID) {
-				throw "buildSparql: failed to add URI to nodegroup: " + classURI;
+				throw "testBuildSparql: failed to add URI to nodegroup: " + classURI;
 			}
 			
 			// set property to return
@@ -105,10 +109,10 @@
 			var sparql = api.getSPARQLSelect(100);
 			alert("SPARQL: " + sparql);
 			
-			api.getModelDrawJSONAsync(buildSparql2);
+			api.getModelDrawJSONAsync(testBuildSparql2);
 		};
 		
-		var buildSparql2 = function(json) {
+		var testBuildSparql2 = function(json) {
 			alert("Model:\n" + JSON.stringify(json));
 			
 			alert("Nodegroup:\n" + JSON.stringify(api.getNodegroupDrawJSON()));
@@ -120,7 +124,7 @@
 		require([ 'sparqlgraph/js/semtk_api' ], function(SemtkAPI) {
 			
 			// load the api  (a global for this script)
-			api = new SemtkAPI();
+			api = new SemtkAPI(errorCallback);
 			
 			// tell app we're done
 			doneLoading();
