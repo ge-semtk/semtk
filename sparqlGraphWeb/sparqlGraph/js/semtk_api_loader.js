@@ -22,6 +22,8 @@
  *  Loads the semtk api with no dependent .js files.
  *  Creates variable: semtk
  * 
+ *  Requires: that it is called from an html document with a <head> tag in it.
+ *  
  *  Your html should look like this;
  *  
  *    <script>	
