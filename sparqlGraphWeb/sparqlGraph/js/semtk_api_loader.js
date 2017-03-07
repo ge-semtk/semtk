@@ -19,8 +19,8 @@
 
 /**
  * 
- *  Loads the semtk api with no dependent .js files.
- *  Creates variable: semtk
+ *  Loads the semtk api and all its dependencies.
+ *  Creates global: semtk
  * 
  *  Requires: that it is called from an html document with a <head> tag in it.
  *  
@@ -35,8 +35,9 @@
  *    </script>
  *    
  *    <script>	
- *		SEMTK_LOAD_CALLBACK = doneLoading;   // ready function.  Uses the global: semtk
- *		SEMTK_LOAD_PATH = "..";              // relative URL path to folder containing iidx-oss and sparqlGraph
+ *      SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
+ *		SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk
+ *		SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph
  *    </script>
  *
  *	  <script src="../sparqlGraph/js/semtk_api_loader.js"></script>
@@ -48,9 +49,10 @@
 
 var semtk = null;
 
-var IIDX_PATH =        (typeof SEMTK_LOAD_PATH !== "undefined")     ? SEMTK_LOAD_PATH + "/iidx-oss"    : "../iidx-oss";
-var SPARQLGRAPH_PATH = (typeof SEMTK_LOAD_PATH !== "undefined")     ? SEMTK_LOAD_PATH + "/sparqlGraph" : "../sparqlGraph";
-var CALLBACK =         (typeof SEMTK_LOAD_CALLBACK !== "undefined") ? SEMTK_LOAD_CALLBACK              : function() { alert("SemTk loaded.\nNo SEMTK_LOAD_CALLBACK() is defined");};
+var IIDX_PATH =        (typeof SEMTK_LOAD_PATH !== "undefined")  ? SEMTK_LOAD_PATH + "/iidx-oss"    : "../iidx-oss";
+var SPARQLGRAPH_PATH = (typeof SEMTK_LOAD_PATH !== "undefined")  ? SEMTK_LOAD_PATH + "/sparqlGraph" : "../sparqlGraph";
+var LOAD_CALLBACK =    (typeof SEMTK_LOAD_CALLBACK !== "undefined")   ? SEMTK_LOAD_CALLBACK  : function() { alert("SemTk loaded.\nNo SEMTK_LOAD_CALLBACK() is defined");};
+var ERROR_CALLBACK =   (typeof SEMTK_ERROR_CALLBACK !== "undefined")  ? SEMTK_ERROR_CALLBACK : function(msg) { alert("SemTk error: " + msg);};
 
 loadScript = function(url, callback)
 {
@@ -84,10 +86,10 @@ load3 = function() {
 	require([ 'sparqlgraph/js/semtk_api' ], function(SemtkAPI) {
 		
 		// load the semtk  (a global for this script)
-		semtk = new SemtkAPI(errorCallback);
+		semtk = new SemtkAPI(ERROR_CALLBACK);
 		
 		// tell app we're done
-		CALLBACK();
+		LOAD_CALLBACK();
 	});
 }
 

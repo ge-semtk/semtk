@@ -1,3 +1,20 @@
+/**
+ ** Copyright 2016 General Electric Company
+ **
+ ** Authors:  Paul Cuddihy, Justin McHugh
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
 
 /**
  *   NOTES:
@@ -52,7 +69,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			// clients
 			this.queryServiceURL = null;
 			this.queryServiceTimeout = null;
-			this.modelClientOrInterface = null;
+			this.modelQueryServiceClient = null;
+			this.dataQueryServiceClient = null;
 			
 			this.ontologyServiceClient = null;
 		};
@@ -122,39 +140,54 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.conn.setup(name, type, domain);
 			},
 			
+			
 			/**
 			 * statusCallback(statusString)
 			 * successCallback() 
 			 * failureCallback(failureString)
 			 */
-			setSparqlModelConnectionAsync : function(url, dataset, statusCallback, successCallback, failureCallback, optKsUrl) {
+			setSparqlModelConnection : function(url, dataset, optKsUrl) {
 				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
+				
+				// assert
+				this.assert(this.queryServiceURL != null, "setSparqlModelConnection", "There is no query service set.");
+				this.assert(this.conn.name != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
 				
 				// fill in ontology fields    
 				this.conn.setOntologyInterface(url, dataset, ksUrl);
 				
-				// set this modelClientOrInterface
-				// if there's a queryServiceURL, create a query client.
-				// otherwise go straight to the connection (e.g. virtuoso)
-				if (this.queryServiceURL == null) {
-					this.modelClientOrInterface = this.conn.getOntologyInterface();
-				} else {
-					var test_0 = new OntologyInfo();
-					this.modelClientOrInterface = new MsiClientQuery(this.queryServiceURL, this.conn.getOntologyInterface(), failureCallback, this.queryServiceTimeout );
-				}
-								
-				// refresh and reload the oInfo
-				this.oInfo = new OntologyInfo();
-				this.oInfo.load(this.conn.domain, this.modelClientOrInterface, statusCallback, successCallback, failureCallback);
+				this.modelQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getOntologyInterface(), this.raiseError, this.queryServiceTimeout );
+
+				
 			},
 			
 			/* 
 			 * Create a connection
 			 */
 			setSparqlDataConnection : function(url, dataset, optKSUrl) {
-				this.conn.dataServerUrl = url;
-				this.conn.dataKsServerURL = optKSUrl;   
-				this.conn.dataSourceDataset = dataset;
+				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
+				
+				// assert
+				this.assert(this.queryServiceURL != null, "setSparqlDataConnection", "There is no query service set.");
+				this.assert(this.conn.name != "", "setSparqlDataConnection", "Sparql connection has not been set up.");
+				
+				this.conn.setDataInterface(url, dataset, ksUrl);
+				
+				this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(), this.raiseError, this.queryServiceTimeout );
+			},
+			
+			/**
+			 * statusCallback(statusString)
+			 * successCallback() 
+			 * failureCallback(failureString)
+			 */
+			loadModelAsync : function( statusCallback, successCallback, failureCallback) {		
+				// assert
+				this.assert(this.modelQueryServiceClient != null, "loadModelAsync", "There is no sparql model connection set.");
+				
+				// refresh and reload the oInfo
+				this.oInfo = new OntologyInfo();
+				this.oInfo.load(this.conn.domain, this.modelQueryServiceClient, statusCallback, successCallback, failureCallback);
 			},
 			
 			/* 
@@ -206,6 +239,13 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			getSPARQLCount : function() {
+				
+			},
+			
+			/**
+			 * The basic sparql execute function.  Get a table of results.
+			 */
+			executeSPARQLAsync : function(sparql, successCallback) {
 				
 			},
 			
@@ -305,11 +345,20 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				propItem.setIsReturned(value);
 				
-				if (propItem.getSparqlID() == "") {
-					var keyname = propItem.getKeyName();
-					keyname = keyname[0].toUpperCase() + keyname.slice(1);
-					this.setPropertySparqlID(nodeSparqlID, propURI, keyname);
-				}
+				this.pFillBlankSparqlID(propItem);
+			},
+			
+			/**
+			 * Given a node's sparqlID and property URI, set constraint
+			 */
+			setPropertyConstraints : function(nodeSparqlID, propURI, constraintStr) {
+				// asserts
+				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "setPropertyReturned");
+				
+				propItem.setConstraints(constraintStr);
+				
+				this.pFillBlankSparqlID(propItem);
+				
 			},
 			
 			/**
@@ -330,16 +379,43 @@ define([	// properly require.config'ed   bootstrap-modal
 				// asserts
 				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "setPropertySparqlID");
 				
-				var f = new SparqlFormatter();
-				// prepend "?"
-				var suggestedID = (sparqlID[0] !== "?") ? "?" + sparqlID : suggestedID;
-				var newName = f.genSparqlID(suggestedID, this.nodegroup.sparqlNameHash);
+				var validID = this.validateSparqlID(sparqlID);
+				propItem.setSparqlID(validID);
 				
-				propItem.setSparqlID(newName);
-				return newName;
+				return validID;
+			},
+			
+			/**
+			 * Given a suggestion, return a valid unused sparqlID for this nodegroup
+			 */
+			validateSparqlID(sparqlID) {
+				// asserts
+				this.assert(this.nodegroup != null, "validateSparqlID", "Nodegroup has not been initialized.");
+						
+				var f = new SparqlFormatter();
+				var suggestedID = (sparqlID[0] !== "?") ? "?" + sparqlID : suggestedID;
+				
+				return f.genSparqlID(suggestedID, this.nodegroup.sparqlNameHash);
 			},
 			
 			// ====== meant to be private =======
+			
+			/**
+			 * If an item has a blank sparqlID, fill it with something close to the keyname
+			 * Private function with no asserting.
+			 */
+			pFillBlankSparqlID(item) {
+				
+				if (item.getSparqlID() == "") {
+					// capitalize the keyname
+					var keyname = item.getKeyName();
+					keyname = keyname[0].toUpperCase() + keyname.slice(1);
+					// translate to valid sparqlID
+					var validID = this.validateSparqlID(keyname);
+					// set
+					item.setSparqlID(validID);
+				}
+			},
 			
 			/**
 			 * Get a property item, doing all the assert-ing
@@ -373,8 +449,13 @@ define([	// properly require.config'ed   bootstrap-modal
 				}
 			},
 			
+			assertModelAndDataConnected :  function (funcName) {
+				this.assertModelLoaded(funcName);
+				this.assert(this.conn.dataServierUrl != "", funcName, "Data connection has not been set.");
+			},
+			
 			assertModelLoaded : function (funcName) {
-				this.assert(this.oInfo != null, funcName, "Model connection is null.");
+				this.assert(this.oInfo != null, funcName, "Model has not been successfully loaded.");
 			},
 			
 			assertValidClassURI : function (classURI, funcName) {

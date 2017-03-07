@@ -7,7 +7,7 @@
 		var api = null;
 		
     	var errorCallback = function(msg) {
-    		alert("Error caught: " + msg + "\n\nMore on the console.");
+    		alert("GUI errorCallback: " + msg + "\n\nMore on the console.");
     		throw msg;
     	}
     	
@@ -18,7 +18,7 @@
     	
     	// GUI developer writes this
     	var failureCallback = function(html) {
-    		alert(html);
+    		alert("GUI failureCallback: " + html);
     	};
     	
     	// tell UI we're done loading stuff
@@ -40,16 +40,12 @@
     	};
     	
     	var test2 = function() {
-    		connectDirectly(alertClasses);
+    		alert("test2 is empty");
     	};
     	
     	
-		var connectDirectly = function(callback) {
-			semtk.setupSparqlConnection("maples-conn", "virtuoso", "http://");
-			// remove the service, and a direct connection will occur
-			semtk.setSparqlQueryService(null, 0);
-			semtk.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
-		};
+		
+		
 		
 		var alertClassesLogModelDraw = function() {
 			alertClasses();
@@ -57,8 +53,14 @@
 		}
 		
 		var connectViaServiceAsync = function(callback) {
-			semtk.setupSparqlConnection("maples-conn", "virtuoso", "http://");
-			semtk.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
+			var name = "maples-conn";
+			var type = "virtuoso";
+			var domain = "http://";
+			semtk.setupSparqlConnection(name, type, domain);
+			
+			semtk.setSparqlModelConnection("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5");
+			semtk.setSparqlDataConnection ("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5");
+			semtk.loadModelAsync(statusCallback, callback, failureCallback)
 		}
 		
 		var alertClasses = function() {
@@ -106,6 +108,7 @@
 	</script>
 	
 	<script>	
+		SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
 		SEMTK_LOAD_CALLBACK = doneLoading;   // ready function.  Uses the global: semtk
 		SEMTK_LOAD_PATH = "..";              // relative URL path to folder containing iidx-oss and sparqlGraph
     </script>
@@ -118,7 +121,7 @@
     Demo of Semtk API
     <p>
     <button id="btnTest1" disabled=true onclick="test1();">Gen Sparql</button>
-    <button id="btnTest2" disabled=true onclick="test2();">Virtuoso</button>
+    <button id="btnTest2" disabled=true onclick="test2();">test2</button>
     
     
   </body>
