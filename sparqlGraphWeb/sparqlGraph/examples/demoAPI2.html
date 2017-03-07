@@ -42,15 +42,6 @@
     	var test2 = function() {
     		alert("test2 is empty");
     	};
-    	
-    	
-		
-		
-		
-		var alertClassesLogModelDraw = function() {
-			alertClasses();
-			console.log("getModelDrawJSON: " + JSON.stringify(semtk.getModelDrawJSON()));
-		}
 		
 		var connectViaServiceAsync = function(callback) {
 			var name = "maples-conn";
@@ -94,7 +85,7 @@
 			// set property to return
 			semtk.setPropertyReturned(sparqlID, propURI, true);
 			
-			var sparql = semtk.getSPARQLSelect(100);
+			var sparql = semtk.getSparqlSelect(100);
 			alert("SPARQL: " + sparql);
 			
 			semtk.getModelDrawJSONAsync(testBuildSparql2);

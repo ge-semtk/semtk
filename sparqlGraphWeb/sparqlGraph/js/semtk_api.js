@@ -232,20 +232,20 @@ define([	// properly require.config'ed   bootstrap-modal
 			/**
 			 * limit of zero means no limit
 			 */
-			getSPARQLSelect : function(limit) {
+			getSparqlSelect : function(limit) {
 				return this.nodegroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT,
 													 false,
 													 limit);
 			},
 			
-			getSPARQLCount : function() {
+			getSparqlCount : function() {
 				
 			},
 			
 			/**
 			 * The basic sparql execute function.  Get a table of results.
 			 */
-			executeSPARQLAsync : function(sparql, successCallback) {
+			executeSparqlAsync : function(sparql, successCallback) {
 				
 			},
 			
