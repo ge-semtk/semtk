@@ -1,26 +1,12 @@
 <html>
   <head>
-    <script src="../iidx-oss/components/requirejs/require.js"></script>
-    <script type="text/javascript" src="../sparqlGraph/js/requiresetup.js"></script>
-    <script src="../iidx-oss/js/require.config.js"></script>
-    <script>
     
-    	// set up require.js
-		requireConfigSparqlgraph( 
-			"../sparqlGraph",
-			{
-				baseUrl : '../iidx-oss',
-				paths : {
-				    "jquery" :      "../sparqlGraph/jquery/jquery",
-
-				}
-			}
-		);
+    <script>
 
     	//========= callbacks =========
-		var semtk = null;
+		var api = null;
 		
-		var errorCallback = function(msg) {
+    	var errorCallback = function(msg) {
     		alert("GUI errorCallback: " + msg + "\n\nMore on the console.");
     		throw msg;
     	}
@@ -56,15 +42,6 @@
     	var test2 = function() {
     		alert("test2 is empty");
     	};
-    	
-    	
-		
-		
-		
-		var alertClassesLogModelDraw = function() {
-			alertClasses();
-			console.log("getModelDrawJSON: " + JSON.stringify(semtk.getModelDrawJSON()));
-		}
 		
 		var connectViaServiceAsync = function(callback) {
 			var name = "maples-conn";
@@ -119,21 +96,16 @@
 			
 			alert("Nodegroup:\n" + JSON.stringify(semtk.getNodegroupDrawJSON()));
 		};
-		
-		// ===== on Load =====
-		// require is async.  It loads required js files then executes
-		
-		require([ 'sparqlgraph/js/semtk_api' ], function(SemtkAPI) {
-			
-			// load the api  (a global for this script)
-			semtk = new SemtkAPI(errorCallback);
-			
-			// tell app we're done
-			doneLoading();
-		});
-		
+	</script>
+	
+	<script>	
+		SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
+		SEMTK_LOAD_CALLBACK = doneLoading;   // ready function.  Uses the global: semtk
+		SEMTK_LOAD_PATH = "..";              // relative URL path to folder containing iidx-oss and sparqlGraph
     </script>
 
+	<script src="../sparqlGraph/js/semtk_api_loader.js"></script>
+	
   </head>
 
   <body>
