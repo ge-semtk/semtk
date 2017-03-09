@@ -1,27 +1,13 @@
 <html>
   <head>
-    <script src="../iidx-oss/components/requirejs/require.js"></script>
-    <script type="text/javascript" src="../sparqlGraph/js/requiresetup.js"></script>
-    <script src="../../iidx-oss/js/require.config.js"></script>
-    <script>
     
-    	// set up require.js
-		requireConfigSparqlgraph( 
-			"../sparqlGraph",
-			{
-				baseUrl : '../iidx-oss',
-				paths : {
-				    "jquery" :      "../sparqlGraph/jquery/jquery",
-
-				}
-			}
-		);
+    <script>
 
     	//========= callbacks =========
 		var api = null;
 		
     	var errorCallback = function(msg) {
-    		alert("Error caught: " + msg + "\n\nMore on the console.");
+    		alert("GUI errorCallback: " + msg + "\n\nMore on the console.");
     		throw msg;
     	}
     	
@@ -32,7 +18,7 @@
     	
     	// GUI developer writes this
     	var failureCallback = function(html) {
-    		alert(html);
+    		alert("GUI failureCallback: " + html);
     	};
     	
     	// tell UI we're done loading stuff
@@ -44,44 +30,37 @@
     	};
     	
     	var configureServices = function() {
-			api.setSparqlQueryService("http://vesuvius37.crd.ge.com:12050/sparqlQueryService", failureCallback, 45000);
-			api.setOntologyService(   "http://vesuvius37.crd.ge.com:12057/ontologyinfo",       failureCallback, 45000);
+			semtk.setSparqlQueryService("http://vesuvius37.crd.ge.com:12050/sparqlQueryService", failureCallback, 45000);
+			semtk.setOntologyService(   "http://vesuvius37.crd.ge.com:12057/ontologyinfo",       failureCallback, 45000);
     	};
     	
     	var test1 = function() {
-    		api.clearNodegroup();
+    		semtk.clearNodegroup();
     		connectViaServiceAsync(testBuildSparql);
     	};
     	
     	var test2 = function() {
-    		connectDirectly(alertClasses);
+    		alert("test2 is empty");
     	};
-    	
-    	
-		var connectDirectly = function(callback) {
-			api.setupSparqlConnection("maples-conn", "virtuoso", "http://");
-			// remove the service, and a direct connection will occur
-			api.setSparqlQueryService(null, 0);
-			api.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
-		};
-		
-		var alertClassesLogModelDraw = function() {
-			alertClasses();
-			console.log("getModelDrawJSON: " + JSON.stringify(api.getModelDrawJSON()));
-		}
 		
 		var connectViaServiceAsync = function(callback) {
-			api.setupSparqlConnection("maples-conn", "virtuoso", "http://");
-			api.setSparqlModelConnectionAsync("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5", statusCallback, callback, failureCallback);
+			var name = "maples-conn";
+			var type = "virtuoso";
+			var domain = "http://";
+			semtk.setupSparqlConnection(name, type, domain);
+			
+			semtk.setSparqlModelConnection("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5");
+			semtk.setSparqlDataConnection ("http://vesuvius37.crd.ge.com:2420", "http://kdl.ge.com/GE/blueprintV5");
+			semtk.loadModelAsync(statusCallback, callback, failureCallback)
 		}
 		
 		var alertClasses = function() {
-			alert("oInfo classes: " + api.getClassNames());
+			alert("oInfo classes: " + semtk.getClassNames());
 		}
 		
 		var testBuildSparql = function() {
 			// get classes
-			var classList = api.getClassNames();
+			var classList = semtk.getClassNames();
 			if (classList.length == 0) {
 				throw "testBuildSparql: classList.length is 0";
 			}
@@ -90,55 +69,58 @@
 			var classURI = "http://kdl.ge.com/GE/blueprintv5#Equipment";
 			var propURI = "http://kdl.ge.com/GE/blueprintv5#equipmentName";
 			
-			if (! api.modelContainsClass(classURI)) {
+			if (! semtk.modelContainsClass(classURI)) {
 				throw "testBuildSparql: model doesn't contain class: " + classURI;
 			}
-			if (! api.classContainsProperty(classURI, propURI)) {
+			if (! semtk.classContainsProperty(classURI, propURI)) {
 				throw "testBuildSparql: " + classURI + " doesn't contain prop: " + propURI;
 			}
 			
 			// add a node with this class
-			var sparqlID = api.addClassFirstPath(classURI);
+			var sparqlID = semtk.addClassFirstPath(classURI);
 			if (! sparqlID) {
 				throw "testBuildSparql: failed to add URI to nodegroup: " + classURI;
 			}
 			
+			// delete and re-add
+			semtk.deleteNode(sparqlID);
+			sparqlID = semtk.addClassFirstPath(classURI);
+			
 			// set property to return
-			api.setPropertyReturned(sparqlID, propURI, true);
+			semtk.setPropertyReturned(sparqlID, propURI, true);
 			
-			var sparql = api.getSPARQLSelect(100);
-			alert("SPARQL: " + sparql);
+			// set values constraint
+			semtk.setPropertyValueConstraint(sparqlID, propURI, ["belmont/generateSparqlInsert#7EA_98671", 
+			                                                     "belmont/generateSparqlInsert#7FA_42087", 
+			                                                     "belmont/generateSparqlInsert#BP_CC_BFP_S"]);
+			var sparql = semtk.getSparqlSelect(100);
+			alert("SPARQL: \n" + sparql);
 			
-			api.getModelDrawJSONAsync(testBuildSparql2);
+			semtk.getModelDrawJSONAsync(testBuildSparql2);
 		};
 		
 		var testBuildSparql2 = function(json) {
 			alert("Model:\n" + JSON.stringify(json));
 			
-			alert("Nodegroup:\n" + JSON.stringify(api.getNodegroupDrawJSON()));
+			alert("Nodegroup:\n" + JSON.stringify(semtk.getNodegroupDrawJSON()));
 		};
-		
-		// ===== on Load =====
-		// require is async.  It loads required js files then executes
-		
-		require([ 'sparqlgraph/js/semtk_api' ], function(SemtkAPI) {
-			
-			// load the api  (a global for this script)
-			api = new SemtkAPI(errorCallback);
-			
-			// tell app we're done
-			doneLoading();
-		});
-		
+	</script>
+	
+	<script>	
+		SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
+		SEMTK_LOAD_CALLBACK = doneLoading;   // ready function.  Uses the global: semtk
+		SEMTK_LOAD_PATH = "..";              // relative URL path to folder containing iidx-oss and sparqlGraph
     </script>
 
+	<script src="../sparqlGraph/js/semtk_api_loader.js"></script>
+	
   </head>
 
   <body>
     Demo of Semtk API
     <p>
     <button id="btnTest1" disabled=true onclick="test1();">Gen Sparql</button>
-    <button id="btnTest2" disabled=true onclick="test2();">Virtuoso</button>
+    <button id="btnTest2" disabled=true onclick="test2();">test2</button>
     
     
   </body>

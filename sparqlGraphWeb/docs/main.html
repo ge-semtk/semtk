@@ -1,0 +1,24 @@
+
+<h1 class="page-title">SemTk Javascript API</h1>
+
+<h2>Including in your html</h2>
+
+Your html should look like this:
+   
+ <pre>
+&lt;script&gt;	
+  doneLoading = function() {
+    alert("doing whatever now that semtk is loaded");
+    semtk.doWhatever();
+  }
+       
+&lt;/script&gt;
+     
+&lt;script&gt;	
+  SEMTK_ERROR_CALLBACK = errorCallback;  // error function (messageString)
+  SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk
+  SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph
+&lt;/script&gt;
+
+&lt;script src="../sparqlGraph/js/semtk_api_loader.js"&gt;&lt;/script&gt;
+ </pre> 
