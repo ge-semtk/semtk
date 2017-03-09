@@ -82,11 +82,19 @@
 				throw "testBuildSparql: failed to add URI to nodegroup: " + classURI;
 			}
 			
+			// delete and re-add
+			semtk.deleteNode(sparqlID);
+			sparqlID = semtk.addClassFirstPath(classURI);
+			
 			// set property to return
 			semtk.setPropertyReturned(sparqlID, propURI, true);
 			
+			// set values constraint
+			semtk.setPropertyValueConstraint(sparqlID, propURI, ["belmont/generateSparqlInsert#7EA_98671", 
+			                                                     "belmont/generateSparqlInsert#7FA_42087", 
+			                                                     "belmont/generateSparqlInsert#BP_CC_BFP_S"]);
 			var sparql = semtk.getSparqlSelect(100);
-			alert("SPARQL: " + sparql);
+			alert("SPARQL: \n" + sparql);
 			
 			semtk.getModelDrawJSONAsync(testBuildSparql2);
 		};

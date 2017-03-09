@@ -12,8 +12,8 @@ SET USERDIR=%UserProfile%
 SET DOC=%~dp0
 
 
-call %USERDIR%\node_modules\.bin\jsdoc.cmd %DOC%\..\sparqlGraph\js\semtk_api.js -d %DOC%
-move /Y %DOC%\index.html %DOC%\temp.html
+call %USERDIR%\node_modules\.bin\jsdoc.cmd -d %DOC% ^
+           %DOC%\..\sparqlGraph\js\semtk_api.js 
+                                           
 
-type %DOC%\temp.html | %DOC%\repl.bat "Home</h1>" "Semantics Toolkit Web API</h1><object type='text/html' data='main.html' ></object>" > %DOC%\index.html
-del temp.html
+jsdoc.sh %DOC%
