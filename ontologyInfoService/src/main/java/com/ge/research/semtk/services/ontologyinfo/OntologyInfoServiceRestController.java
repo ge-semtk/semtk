@@ -37,9 +37,25 @@ public class OntologyInfoServiceRestController {
     	logToStdout("OntologyInfo Service getVisJs start");
     	
     	SimpleResultSet res = new SimpleResultSet();
-	    
+        
+    	String serverType = "";
+    	String serverUrl = ""; 
+    	
 	    try {
-	    	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset);
+	    	
+	    	if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+	    		serverType = service_prop.getServerType(); 
+	    	} else {
+	    		serverType = requestBody.serverType;
+	    	}
+	    	
+	    	if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+	    		serverUrl = service_prop.getServerURL(); 
+	    	} else {
+	    		serverUrl = requestBody.serverAndPort; 
+	    	}
+	    	
+	    	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, serverUrl, requestBody.dataset);
 	    	OntologyInfo oInfo = new OntologyInfo(sei, requestBody.domain);
 	    	res.addResultsJSON(oInfo.toVisJs());
 	    	res.setSuccess(true);
