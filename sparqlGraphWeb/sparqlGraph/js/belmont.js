@@ -1161,6 +1161,14 @@ SemanticNode.prototype = {
 		}
 		return null;
 	},
+	getNodeItemByURIConnectBy : function(URIConnectedBy) {
+		for (var i = 0; i < this.nodeList.length; i++) {
+			if (this.nodeList[i].getURIConnectBy() == URIConnectedBy) {
+				return this.nodeList[i];
+			}
+		}
+		return null;
+	},
 	getNodeItem : function(i) {
 		return this.nodeList[i];
 	},

@@ -109,13 +109,7 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.shim['sparqlgraph/js/ontologyinfo'] = {
 			deps : [ 'sparqlgraph/js/sparqlserverinterface' ]
 		};
-	config.shim['sparqlgraph/js/semtk_api'] = {
-			deps: [
-			          'sparqlgraph/js/sparqlconnection', 
-			          'sparqlgraph/js/ontologyinfo', 
-			          'sparqlgraph/js/belmont', 
-			      ]
-		};
+	
 	config.waitseconds = 45;
 	
 	require.config(config);
