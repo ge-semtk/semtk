@@ -24,6 +24,10 @@ public class OntologyInfoServiceRestController {
 	@Autowired
 	OntologyInfoLoggingProperties log_prop;
 	
+	@Autowired
+	private OntologyServiceProperties service_prop;
+
+	
 	@CrossOrigin
 	@RequestMapping(value="/getVisJs", method= RequestMethod.POST)
 	public JSONObject getVisJs(@RequestBody OntologyInfoRequestBody requestBody){
@@ -33,9 +37,25 @@ public class OntologyInfoServiceRestController {
     	logToStdout("OntologyInfo Service getVisJs start");
     	
     	SimpleResultSet res = new SimpleResultSet();
-	    
+        
+    	String serverType = "";
+    	String serverUrl = ""; 
+    	
 	    try {
-	    	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset);
+	    	
+	    	if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+	    		serverType = service_prop.getServerType(); 
+	    	} else {
+	    		serverType = requestBody.serverType;
+	    	}
+	    	
+	    	if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+	    		serverUrl = service_prop.getServerURL(); 
+	    	} else {
+	    		serverUrl = requestBody.serverAndPort; 
+	    	}
+	    	
+	    	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, serverUrl, requestBody.dataset);
 	    	OntologyInfo oInfo = new OntologyInfo(sei, requestBody.domain);
 	    	res.addResultsJSON(oInfo.toVisJs());
 	    	res.setSuccess(true);
@@ -58,11 +78,25 @@ public class OntologyInfoServiceRestController {
 	    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs start");
     	logToStdout("OntologyInfo Service getVisJs start");
     	
-    	SimpleResultSet res = new SimpleResultSet();
+    	SimpleResultSet res = new SimpleResultSet();	
 	    
+    	String serverType = "";
+    	String serverUrl = ""; 
 	    try {
+	    	if(requestBody.getServerType() == null || requestBody.getServerType().isEmpty()) {
+	    		serverType = service_prop.getServerType(); 
+	    	} else {
+	    		serverType = requestBody.getServerType();
+	    	}
 	    	
-	       	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getUrl(), requestBody.getDataset());
+	    	if(requestBody.getUrl() == null || requestBody.getUrl().isEmpty()) {
+	    		serverUrl = service_prop.getServerURL(); 
+	    	} else {
+	    		serverUrl = requestBody.getUrl(); 
+	    	}
+	    		 
+	    		
+	       	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, serverUrl, requestBody.getDataset());
 	    	OntologyInfo oInfo = new OntologyInfo(sei, requestBody.getDomain());
 	    	res.addResultsJSON( oInfo.toJSON(null) );
 	    	res.setSuccess(true);
