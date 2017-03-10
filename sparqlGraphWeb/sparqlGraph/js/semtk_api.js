@@ -35,6 +35,7 @@
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/msiclientquery', 
         	'sparqlgraph/js/msiclientontologyinfo', 
+        	'sparqlgraph/js/msiresultset', 
 
 			// shimmed
         	'sparqlgraph/js/graphGlue',
@@ -130,7 +131,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		
 		/**
 		 * Success Data callback
-		 * @callback SemtkAPI~SuccessSataCallback
+		 * @callback SemtkAPI~SuccessDataCallback
 		 * @param {data} data
 		 */
 		
@@ -261,8 +262,9 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(), this.raiseError, this.queryServiceTimeout );
 			},
 			
+			// PEC HERE commenting
+			
 			/**
-			 * PEC HERE
 			 * statusCallback(statusString)
 			 * successCallback() 
 			 * failureCallback(failureString)
@@ -328,22 +330,55 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 			},
 			
+			// PEC TODO table json is neither documented nor abstracted from virtuoso
+			
+			/**
+			 * Run the current node group's select query 
+			 * @param {int}                          limit SPARQL query limit.  0 means no limit.
+			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives table JSON
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback query failed.  Note that internal failures call semtk fatalErrorCallback.
+			 */
+			executeSparqlSelectAsync(limit, successCallback, failureCallback) {
+				this.executeSparqlAsync(this.getSparqlSelect(limit), successCallback, failureCallback);
+			},
+			
 			/**
 			 * The basic sparql execute function.  Get a table of results.
+			 * @param {string} sparql SPARQL select query
+			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives table JSON
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback query failed.  Note that internal failures call semtk fatalErrorCallback.
 			 */
-			executeSparqlAsync : function(sparql, successCallback) {
-				
+			executeSparqlAsync : function(sparql, successCallback, failureCallback) {
+				this.assertModelAndDataConnected("executeSparqlAsync");
+				this.dataQueryServiceClient.executeAndParse(sparql, this.executeSparqlCallback.bind(this, successCallback, failureCallback));
+			},
+			
+			executeSparqlCallback : function(successCallback, failureCallback, resultset ) {
+				if (!resultset.isSuccess()) {
+					failureCallback(resultset.getStatusMessage);
+					
+				}  else {
+					this.assert(resultset.isTableResults(), "executeSparqlAsync", "Internal: query did not return a table");
+					successCallback(resultset.getTable());
+				}
 			},
 			
 			//=============== Model (oInfo) ============
+			/**
+			 * Get all classes in the model
+			 * @return{list} list of class URIs
+			 */
 			getClassNames : function() {
 				return this.oInfo.getClassNames();
 			},
 			
 			/**
-			 * get names of all properties
-			 *    - including inherited
-			 *    - any range (connections to "nodes" or plain value "properties"
+			 * get names of all properties for a class<br><pre>
+			 *   - including inherited
+			 *   - any range (connections to "nodes" or plain value "properties")
+			 * </pre>
+			 * @param {string} classURI URI of the class 
+			 * @return{list} list of property URIs
 			 */
 			getAllPropertyNames : function (classURI) {
 				// asserts

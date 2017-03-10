@@ -27,6 +27,7 @@
     		
     		document.getElementById("btnTest1").disabled=false;
     		document.getElementById("btnTest2").disabled=false;
+    		document.getElementById("btnTest3").disabled=false;
     	};
     	
     	var configureServices = function() {
@@ -111,7 +112,7 @@
 			var phyAssetURI = "http://kdl.ge.com/GE/blueprintv5#PhysicalAsset";
 			var deployedAssetTypeURI = "http://kdl.ge.com/GE/blueprintv5#deployedAssetType";
 			var phyAssetNodeId = semtk.addNodeConnectFrom(phyAssetURI, bpTagNodeId, deployedAssetTypeURI);
-			
+
 			// show sparql
 			alert("SPARQL: \n" + semtk.getSparqlSelect(100));
 			
@@ -122,7 +123,32 @@
 			alert("Model:\n" + JSON.stringify(json));
 			
 			alert("Nodegroup:\n" + JSON.stringify(semtk.getNodegroupDrawJSON()));
+			
+			semtk.executeSparqlSelectAsync(0, testBuildSparql3, failureCallback);
 		};
+		
+		var testBuildSparql3= function(json) {
+			alert("Query Results:\n" + JSON.stringify(json));
+		};
+		
+		var test3 = function() {
+			connectViaServiceAsync();
+			
+			// execute arbitrary query
+			var query = "" +
+						"prefix blueprintv5:<http://kdl.ge.com/GE/blueprintv5#>" +
+						"select distinct ?equipmentName where {" +
+						"   ?Equipment a blueprintv5:Equipment." +
+						"   ?Equipment blueprintv5:equipmentName ?equipmentName ." +
+						"}" +
+						"LIMIT 50";
+			
+			semtk.executeSparqlAsync(query, queryCallback, failureCallback);
+		};
+		
+		var queryCallback = function(table) {
+			alert("Table: \n" + JSON.stringify(table));
+		}
 	</script>
 	
 	<script>	
@@ -140,6 +166,7 @@
     <p>
     <button id="btnTest1" disabled=true onclick="test1();">Gen Sparql</button>
     <button id="btnTest2" disabled=true onclick="test2();">test2</button>
+    <button id="btnTest3" disabled=true onclick="test3();">Query</button>
     
     
   </body>
