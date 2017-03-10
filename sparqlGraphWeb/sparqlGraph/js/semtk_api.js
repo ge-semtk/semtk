@@ -343,6 +343,43 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			/**
+			 * Query for all existing values of a property, given the rest of the nodegroup and constraints
+			 * @param {string} nodeSparqlID          SPARQL Id of an existing node
+			 * @param {string} propURI               URI of the node's property
+			 * @param {int}                          limit SPARQL query limit.  0 means no limit.
+			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives list of strings
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback query failed.  Note that internal failures call semtk fatalErrorCallback.
+			 */
+			getPropertyConstraintValuesAsync(nodeSparqlID, propURI, limit, successCallback, failureCallback) {
+				var sNode = this.assertGetNode(nodeSparqlID, "addNodeConnectFrom");
+				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "setPropertyReturned");
+				
+				// make sure there's a SPARQL ID
+				var blankFlag = this.pFillBlankSparqlID(propItem);
+				
+				// generate SPARQL
+				var sparql = this.nodegroup.generateSparql(SemanticNodeGroup.QUERY_CONSTRAINT,
+						 									false,
+						 									limit,
+						 									propItem);
+				// remove temp SPARQL ID
+				if (blankFlag) { propItem.setSparqlID("");	}
+				
+				// execute
+				this.assertModelAndDataConnected("executeSparqlAsync");
+				this.executeSparqlAsync(sparql, this.getPropertyConstraintValuesCallback.bind(this, successCallback), failureCallback);
+			},
+			
+			getPropertyConstraintValuesCallback : function(successCallback, table ) {
+				var list = [];
+				
+				for (var i=0; i < table.row_count; i++) {
+					list.push(table.rows[i][0]);
+				}
+				successCallback(list);
+			},
+			
+			/**
 			 * The basic sparql execute function.  Get a table of results.
 			 * @param {string} sparql SPARQL select query
 			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives table JSON
@@ -355,7 +392,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			
 			executeSparqlCallback : function(successCallback, failureCallback, resultset ) {
 				if (!resultset.isSuccess()) {
-					failureCallback(resultset.getStatusMessage);
+					failureCallback(resultset.getStatusMessage());
 					
 				}  else {
 					this.assert(resultset.isTableResults(), "executeSparqlAsync", "Internal: query did not return a table");
@@ -754,6 +791,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				/**
 				 * If an item has a blank sparqlID, fill it with something close to the keyname
 				 * Private function with no asserting.
+				 * Returns true if it did anything
 				 */
 				if (item.getSparqlID() == "") {
 					// capitalize the keyname
@@ -763,6 +801,9 @@ define([	// properly require.config'ed   bootstrap-modal
 					var validID = this.validateSparqlID(keyname);
 					// set
 					item.setSparqlID(validID);
+					return true;
+				} else {
+					return false;
 				}
 			},
 			

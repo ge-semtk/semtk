@@ -88,12 +88,23 @@
 			sparqlID = semtk.addNodeFirstPath(classURI);
 			
 			// set property to return
-			semtk.setPropertyReturned(sparqlID, propURI, true);
+			semtk.setPropertyReturned(sparqlID, propURI, true);	
 			
 			// set values constraint
 			semtk.setPropertyValueConstraint(sparqlID, propURI, ["belmont/generateSparqlInsert#7EA_98671", 
 			                                                     "belmont/generateSparqlInsert#7FA_42087", 
 			                                                     "belmont/generateSparqlInsert#BP_CC_BFP_S"]);
+			
+			// get all valid values of property
+			// this ignores the constraint we just set
+			semtk.getPropertyConstraintValuesAsync(sparqlID, propURI, 100, testBuildSparql1A, failureCallback);
+			
+		};
+		
+		var testBuildSparql1A = function(list) {	
+			
+			// print list of Property values
+			alert("Property values:\n" + list);
 			
 			// search for paths
 			var newURI = "http://kdl.ge.com/GE/blueprintv5#BP_Tag";
@@ -132,8 +143,10 @@
 		};
 		
 		var test3 = function() {
-			connectViaServiceAsync();
-			
+			connectViaServiceAsync(test3Callback1);
+		};
+		
+		var test3Callback1 = function() {	
 			// execute arbitrary query
 			var query = "" +
 						"prefix blueprintv5:<http://kdl.ge.com/GE/blueprintv5#>" +
@@ -143,12 +156,14 @@
 						"}" +
 						"LIMIT 50";
 			
-			semtk.executeSparqlAsync(query, queryCallback, failureCallback);
+			semtk.executeSparqlAsync(query, test3Callback2, failureCallback);
+			
 		};
 		
-		var queryCallback = function(table) {
+		var test3Callback2 = function(table) {
 			alert("Table: \n" + JSON.stringify(table));
-		}
+		};
+		
 	</script>
 	
 	<script>	
