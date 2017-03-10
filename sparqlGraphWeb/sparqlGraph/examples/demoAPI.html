@@ -77,14 +77,14 @@
 			}
 			
 			// add a node with this class
-			var sparqlID = semtk.addClassFirstPath(classURI);
+			var sparqlID = semtk.addNodeFirstPath(classURI);
 			if (! sparqlID) {
 				throw "testBuildSparql: failed to add URI to nodegroup: " + classURI;
 			}
 			
 			// delete and re-add
 			semtk.deleteNode(sparqlID);
-			sparqlID = semtk.addClassFirstPath(classURI);
+			sparqlID = semtk.addNodeFirstPath(classURI);
 			
 			// set property to return
 			semtk.setPropertyReturned(sparqlID, propURI, true);
@@ -93,8 +93,27 @@
 			semtk.setPropertyValueConstraint(sparqlID, propURI, ["belmont/generateSparqlInsert#7EA_98671", 
 			                                                     "belmont/generateSparqlInsert#7FA_42087", 
 			                                                     "belmont/generateSparqlInsert#BP_CC_BFP_S"]);
-			var sparql = semtk.getSparqlSelect(100);
-			alert("SPARQL: \n" + sparql);
+			
+			// search for paths
+			var newURI = "http://kdl.ge.com/GE/blueprintv5#BP_Tag";
+			var pathHash = semtk.findPathsToAdd(newURI);
+			
+			// arbitrarily choose the second one.
+			// user should be able to understand the pathNames keys and make this choice,
+			//    but they pretty sketchy-looking.
+			var pathNames = Object.keys(pathHash);
+			var chosenPathData = pathHash[pathNames[1]];
+			
+			// add the chosen path
+			var bpTagNodeId = semtk.addPath(newURI, chosenPathData);
+			
+			// add a PhysicalAsset node linked to bpTag Node by deployedAssetType 
+			var phyAssetURI = "http://kdl.ge.com/GE/blueprintv5#PhysicalAsset";
+			var deployedAssetTypeURI = "http://kdl.ge.com/GE/blueprintv5#deployedAssetType";
+			var phyAssetNodeId = semtk.addNodeConnectFrom(phyAssetURI, bpTagNodeId, deployedAssetTypeURI);
+			
+			// show sparql
+			alert("SPARQL: \n" + semtk.getSparqlSelect(100));
 			
 			semtk.getModelDrawJSONAsync(testBuildSparql2);
 		};
