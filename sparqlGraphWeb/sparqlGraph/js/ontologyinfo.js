@@ -856,6 +856,12 @@ OntologyPath.prototype = {
 		this.tripleList.push([className0, attName, className1]);
 	},
 	
+	addTriples : function(tripleList) {
+		for (var i=0; i < tripleList.length; i++) {
+			this.addTriple(tripleList[i][0], tripleList[i][1], tripleList[i][2]);
+		}
+	},
+	
 	asList : function() {
 		// return list of triples.  Each triple is a list of three string names [class, att, class]
 		return this.tripleList;

@@ -35,8 +35,10 @@
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/msiclientquery', 
         	'sparqlgraph/js/msiclientontologyinfo', 
+        	'sparqlgraph/js/msiresultset', 
 
 			// shimmed
+        	'sparqlgraph/js/graphGlue',
 	        'sparqlgraph/js/sparqlconnection', 
 	        'sparqlgraph/js/sparqlserverinterface', 
 	        'sparqlgraph/js/ontologyinfo', 
@@ -47,7 +49,7 @@ define([	// properly require.config'ed   bootstrap-modal
 	
 		/**
 		 * <b>Consider using semtk_api_loader.js instead of calling this constructor.</b><br>
-		 * Your HTML would include this:<br>
+		 * This HTML creates a global "semtk" :<br>
 		 * <pre>
 		 *    &lt;script&gt;	
 		 *        doneLoading = function() {	
@@ -104,16 +106,60 @@ define([	// properly require.config'ed   bootstrap-modal
 		 * @return This callback should not return.  It should end by throwing an exception.
 		 */
 		
+		/**
+		 * Html error callback explaining the failure
+		 * @callback SemtkAPI~HTMLErrorCallback
+		 * @param {string} HTMLMessage A message that may have html markup
+		 */
+		
+		/**
+		 * String error callback explaining the failure
+		 * @callback SemtkAPI~StringErrorCallback
+		 * @param {string} message The error message
+		 */
+		
+		/**
+		 * Status callback
+		 * @callback SemtkAPI~StatusCallback
+		 * @param {string} message Short string message for a status bar
+		 */
+		
+		/**
+		 * Success callback
+		 * @callback SemtkAPI~SuccessCallback
+		 */
+		
+		/**
+		 * Success Data callback
+		 * @callback SemtkAPI~SuccessDataCallback
+		 * @param {data} data
+		 */
+		
+		
 		SemtkAPI.prototype = {
 			// TODO:  some callbacks process html and some don't.
 				
 			//=============== Services ==============	
-			
+				
+			/**
+			 * set the SPARQL Query Service
+			 * @param {string}                     serviceURL           full url of SparqlQueryService
+			 * @param {SemtkAPI~HTMLErrorCallback} failureHTMLCallback  failure callback
+			 * @param {int}                        timeoutMs            timeout in millisec
+			 * @return                             none
+			 */
 			setSparqlQueryService : function(serviceURL, failureHTMLCallback, timeoutMs) {
 				this.queryServiceURL = serviceURL;
 				this.queryServiceTimeout = timeoutMs;
 			},
 			
+			/**
+			 * set the SPARQL Query Service
+			 * @param {string}                     serviceURL           full url of OntologyService
+			 * @param {SemtkAPI~HTMLErrorCallback} failureHTMLCallback  failure callback
+			 * @param {int}                        timeoutMs            timeout in millisec
+			 * @return                             none
+			 */
 			setOntologyService : function(serviceURL, failureHTMLCallback, timeoutMs) {
 				// assert
 				this.assert(this.conn != null, "setOntologyService", "Model connection must be set first.");
@@ -162,15 +208,25 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * callbacks: accept a single non-html string
 			 * optKSUrl: for SADL server.  omit it.
 			 */
+			
+			/**
+			 * set up SPARQL connection fields common to both the model and data connections
+			 * @param {string} name    a name for the connection         
+			 * @param {string} type    typically "virtuoso"              
+			 * @param {string} domain  URI prefix considered to be "inside" the model       
+			 * @return         none     
+			 */
 			setupSparqlConnection : function(name, type, domain) {
 				this.conn.setup(name, type, domain);
 			},
 			
 			
 			/**
-			 * statusCallback(statusString)
-			 * successCallback() 
-			 * failureCallback(failureString)
+			 * set up SPARQL model connection 
+			 * @param {string} url      server holding the data         
+			 * @param {string} dataset  depending on server type, this is dataset or graph name             
+			 * @param {string} optKsUrl for SADLserver, otherwise ignored      
+			 * @return         none         
 			 */
 			setSparqlModelConnection : function(url, dataset, optKsUrl) {
 				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
@@ -187,8 +243,12 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 			},
 			
-			/* 
-			 * Create a connection
+			/**
+			 * set up SPARQL data connection 
+			 * @param {string} url      server holding the data         
+			 * @param {string} dataset  depending on server type, this is dataset or graph name             
+			 * @param {string} optKsUrl for SADLserver, otherwise ignored      
+			 * @return         none         
 			 */
 			setSparqlDataConnection : function(url, dataset, optKSUrl) {
 				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
@@ -201,6 +261,8 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(), this.raiseError, this.queryServiceTimeout );
 			},
+			
+			// PEC HERE commenting
 			
 			/**
 			 * statusCallback(statusString)
@@ -268,22 +330,92 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 			},
 			
+			// PEC TODO table json is neither documented nor abstracted from virtuoso
+			
+			/**
+			 * Run the current node group's select query 
+			 * @param {int}                          limit SPARQL query limit.  0 means no limit.
+			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives table JSON
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback query failed.  Note that internal failures call semtk fatalErrorCallback.
+			 */
+			executeSparqlSelectAsync(limit, successCallback, failureCallback) {
+				this.executeSparqlAsync(this.getSparqlSelect(limit), successCallback, failureCallback);
+			},
+			
+			/**
+			 * Query for all existing values of a property, given the rest of the nodegroup and constraints
+			 * @param {string} nodeSparqlID          SPARQL Id of an existing node
+			 * @param {string} propURI               URI of the node's property
+			 * @param {int}                          limit SPARQL query limit.  0 means no limit.
+			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives list of strings
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback query failed.  Note that internal failures call semtk fatalErrorCallback.
+			 */
+			getPropertyConstraintValuesAsync(nodeSparqlID, propURI, limit, successCallback, failureCallback) {
+				var sNode = this.assertGetNode(nodeSparqlID, "addNodeConnectFrom");
+				var propItem = this.assertGetPropItem(nodeSparqlID, propURI, "setPropertyReturned");
+				
+				// make sure there's a SPARQL ID
+				var blankFlag = this.pFillBlankSparqlID(propItem);
+				
+				// generate SPARQL
+				var sparql = this.nodegroup.generateSparql(SemanticNodeGroup.QUERY_CONSTRAINT,
+						 									false,
+						 									limit,
+						 									propItem);
+				// remove temp SPARQL ID
+				if (blankFlag) { propItem.setSparqlID("");	}
+				
+				// execute
+				this.assertModelAndDataConnected("executeSparqlAsync");
+				this.executeSparqlAsync(sparql, this.getPropertyConstraintValuesCallback.bind(this, successCallback), failureCallback);
+			},
+			
+			getPropertyConstraintValuesCallback : function(successCallback, table ) {
+				var list = [];
+				
+				for (var i=0; i < table.row_count; i++) {
+					list.push(table.rows[i][0]);
+				}
+				successCallback(list);
+			},
+			
 			/**
 			 * The basic sparql execute function.  Get a table of results.
+			 * @param {string} sparql SPARQL select query
+			 * @param {SemtkAPI~SuccessDataCallback} successCallback receives table JSON
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback query failed.  Note that internal failures call semtk fatalErrorCallback.
 			 */
-			executeSparqlAsync : function(sparql, successCallback) {
-				
+			executeSparqlAsync : function(sparql, successCallback, failureCallback) {
+				this.assertModelAndDataConnected("executeSparqlAsync");
+				this.dataQueryServiceClient.executeAndParse(sparql, this.executeSparqlCallback.bind(this, successCallback, failureCallback));
+			},
+			
+			executeSparqlCallback : function(successCallback, failureCallback, resultset ) {
+				if (!resultset.isSuccess()) {
+					failureCallback(resultset.getStatusMessage());
+					
+				}  else {
+					this.assert(resultset.isTableResults(), "executeSparqlAsync", "Internal: query did not return a table");
+					successCallback(resultset.getTable());
+				}
 			},
 			
 			//=============== Model (oInfo) ============
+			/**
+			 * Get all classes in the model
+			 * @return{list} list of class URIs
+			 */
 			getClassNames : function() {
 				return this.oInfo.getClassNames();
 			},
 			
 			/**
-			 * get names of all properties
-			 *    - including inherited
-			 *    - any range (connections to "nodes" or plain value "properties"
+			 * get names of all properties for a class<br><pre>
+			 *   - including inherited
+			 *   - any range (connections to "nodes" or plain value "properties")
+			 * </pre>
+			 * @param {string} classURI URI of the class 
+			 * @return{list} list of property URIs
 			 */
 			getAllPropertyNames : function (classURI) {
 				// asserts
@@ -325,18 +457,85 @@ define([	// properly require.config'ed   bootstrap-modal
 			getPropertyLegalValues : function(nodeSparqlId, propURI, limit) {
 				
 			},
-			
-			// TODO:  this next section with classURI, nodeSparqlID, propURI
-			//        demonstrates the need for good and consistent error handling
-			//        as bad values currently give difficult-to-understand errors thrown 
-			//        and not caught; so the thread dies and a message appears on the console.
+						
+			// PEC HERE: test these add functions
 			
 			/**
-			 * Add a node with given classURI via a shortest path.
-			 * Return: sparqlID or null
-			 * Note: if no path is found, that's a failure.
+			 * Add a new node with no connections
+			 * @param {string} classURI URI of the new node
+			 * @return {string} SPARQL ID of added node
 			 */
-			addClassFirstPath : function(classURI) {
+			addNodeOrphan : function(classURI) {
+				// asserts
+				this.assertModelLoaded("addClassOrphan");
+				this.assertValidClassURI(classURI, "addClassOrphan");
+				
+				var sNode = this.nodegroup.returnBelmontSemanticNode(classURI, this.oInfo);
+				this.nodegroup.addOneNode(sNode, null, null, null);
+				return sNode.getSparqlID();
+			},
+			
+			/**
+			 * Add a new node connected from existing node
+			 * @param {string} classURI     URI of the new node
+			 * @param {string} nodeSparqlID SPARQL id of the existing node
+			 * @param {string} propURI      URI of the existing node's property that will link to new node
+			 * @return {string}             SPARQL ID of added node
+			 */
+			addNodeConnectFrom : function (classURI, nodeSparqlId, propURI) {
+				// asserts
+				this.assertModelLoaded("addNodeConnectFrom");
+				this.assertValidClassURI(classURI, "addNodeConnectFrom");
+				
+				// get nodes
+				var sNode = this.assertGetNode(nodeSparqlId, "addNodeConnectFrom");
+				var newNode = this.nodegroup.returnBelmontSemanticNode(classURI, this.oInfo);
+				
+				// check legality
+				var nodeItem = this.assertGetSnodeNodeItem(sNode, propURI);
+				var range = nodeItem.getUriValueType();
+				this.assertClassIsA(classURI, range, "addNodeConnectFrom");
+				
+				// add
+				this.nodegroup.addOneNode(newNode, sNode, null, propURI);
+				
+				return newNode.getSparqlID();
+			},
+			
+			/**
+			 * Add a new node connected to an existing node
+			 * @param {string} classURI     URI of the new node
+			 * @param {string} propURI      URI of the new node's property that will link to existing node
+			 * @param {string} nodeSparqlID SPARQL Id of the existing node
+			 * @return {string}             SPARQL Id of added node
+			 */
+			addNodeConnectTo : function(classURI, propURI, nodeSparqlId) {
+				// asserts
+				this.assertModelLoaded("addNodeConnectTo");
+				this.assertValidClassURI(classURI, "addNodeConnectTo");
+				
+				// get nodes
+				var sNode = this.assertGetNode(nodeSparqlId, "addNodeConnectTo");
+				var newNode = this.nodegroup.returnBelmontSemanticNode(classURI, this.oInfo);
+				
+				// check legality
+				var nodeItem = this.assertGetSnodeNodeItem(newNode, propURI);
+				var range = nodeItem.getUriValueType();
+				this.assertClassIsA(classURI, range, "addNodeConnectTo");
+				
+				// add
+				this.nodegroup.addOneNode(newNode, sNode, propURI, null);
+			},
+			
+			addClassFirstPath : function () {throw "Function changed to addNodeFirstPath"; },
+			// sorry Lacksmi -Paul
+			
+			/**
+			 * Add a new node via a shortest path, or no path if nodegroup is empty
+			 * @param {string} classURI URI of the new node
+			 * @return {string} SPARQL ID of added node, or null if no path is found.
+			 */
+			addNodeFirstPath : function(classURI) {
 				// asserts
 				this.assertModelLoaded("addClassFirstPath");
 				this.assertValidClassURI(classURI, "addClassFirstPath");
@@ -355,7 +554,71 @@ define([	// properly require.config'ed   bootstrap-modal
 			}, 
 			
 			/**
+			 * Create a new node with the given URI attached via the given path
+			 * @param {string} classURI URI of the new node
+			 * @param {list}   pathData a value returned by findPathsToAdd(classURI)
+			 * @return {string} SPARQL ID of added node
+			 */
+			addPath : function(classURI, pathData) {
+				// unpack pathList
+				var sparqlID = pathData[0];
+				var pathTriples = pathData[1];
+				
+				// asserts
+				this.assertModelLoaded("addPath");
+				this.assertValidClassURI(classURI, "addPath");
+				var sNode = this.assertGetNode(sparqlID, "addPath");
+				
+				// make path object
+				var path = new OntologyPath(classURI);
+				path.addTriples(pathTriples);
+				
+				var newNode = this.nodegroup.addPath(path, sNode, this.oInfo, false, false);
+				return newNode.getSparqlID();
+			},
+			
+			/**
+			 * Find paths to add a new node to the nodegroup
+			 * @param {string} classURI URI of the new node
+			 * @return {hash}  ret[display_string] = [sparqlID, [[t0, t1, t2], [t3, t4, t5], ... ]] pathData for addClassUsingPath()
+			 */
+			findPathsToAdd : function(classURI) {
+				// asserts
+				this.assertModelLoaded("findPathsToAdd");
+				this.assertValidClassURI(classURI, "findPathsToAdd");
+				
+				var ret = {};
+				
+				// get paths
+				var nodeURIs = this.nodegroup.getArrayOfURINames();
+				var paths = this.oInfo.findAllPaths(classURI, nodeURIs, this.conn.getDomain());
+				
+				// build return
+				// unfortunately this code is copied from sparqlgraph.js drop()
+		  		for (var p=0; p < paths.length; p++) {
+		  			// for each instance of the anchor class
+		  			var nlist = this.nodegroup.getNodesByURI(paths[p].getAnchorClassName());
+		  			for (var n=0; n < nlist.length; n++) {
+		  				
+		  				var pathStr = genPathString(paths[p], nlist[n], false);
+		  				var pathTriples = paths[n].asList();
+		  				ret[pathStr] = [nlist[n].getSparqlID(), pathTriples];
+		  				
+		  				// push it again backwards if it is a special singleLoop
+		  				if ( paths[p].isSingleLoop()) {
+		  					var pathStr = genPathString(paths[p], nlist[n], true);
+		  					var pathTriples = paths[n].asList();
+		  					ret[pathStr] = [nlist[n].getSparqlID(), pathTriples];
+		  				}
+		  			}
+		  		}
+				
+				return ret;
+			},
+			
+			/**
 			 * Erase the nodegroup and start over
+			 * @return none
 			 */
 			clearNodegroup : function () {
 				
@@ -363,14 +626,20 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.nodegroup.drawable = false;
 			},
 			
+			/**
+			 * Delete a node from the nodegroup
+			 * @param {string} nodeSparqlID SPARQL id of the node
+			 * @return none
+			 */
 			deleteNode : function(sparqlID) {
 				// asserts
 				this.assertModelLoaded("deleteNode");
 				
-				var snode = this.nodegroup.getNodeBySparqlID(sparqlID);
-				this.assert(snode != null, "deleteNode", "Nodegroup does not contain node with sparqlID of " + sparqlID);
-				this.nodegroup.deleteNode(snode, false);
+				var sNode = this.nodegroup.getNodeBySparqlID(sparqlID);
+				this.assert(sNode != null, "deleteNode", "Nodegroup does not contain node with sparqlID of " + sparqlID);
+				this.nodegroup.deleteNode(sNode, false);
 			},
+			
 			
 			/**
 			 * Given a node's sparqlID and property URI, get type string
@@ -455,8 +724,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			/**
 			 * Given a node's sparqlID and property URI, get SPARQL id <br>
 			 * If blank, SPARQL id is first set, based on the property keyname.
-			 * @param {string} nodeSparqlID SPARQL id of the node
-			 * @param {string} propURI URI of the node's property
+			 * @param {string}  nodeSparqlID SPARQL id of the node
+			 * @param {string}  propURI URI of the node's property
 			 * @return {string} SPARQL id
 			 */
 			getPropertySparqlID: function(nodeSparqlID, propURI) {
@@ -468,7 +737,11 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			/**
-			 * Given a node's sparqlID and property URI, set isReturned to true or false
+			 * Given a node's sparqlID and property URI, set whether the property will be returned by the query
+			 * @param {string}  nodeSparqlID SPARQL id of the node
+			 * @param {string}  propURI URI of the node's property
+			 * @param {boolean} new value for isReturned
+			 * @return          none
 			 */
 			setPropertyReturned : function(nodeSparqlID, propURI, value) {
 				// asserts
@@ -481,7 +754,10 @@ define([	// properly require.config'ed   bootstrap-modal
 		
 			/**
 			 * set property's sparqlID to something as close to sparqlID as possible
-			 * returns: sparqlID
+			 * @param {string}  nodeSparqlID SPARQL id of the node
+			 * @param {string}  propURI URI of the node's property
+			 * @param {string}  sparqlID proposed SPARQL Id
+			 * @return {string} actual SPARQL id applied to the property
 			 */
 			setPropertySparqlID : function (nodeSparqlID, propURI, sparqlID) {
 				// asserts
@@ -515,6 +791,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				/**
 				 * If an item has a blank sparqlID, fill it with something close to the keyname
 				 * Private function with no asserting.
+				 * Returns true if it did anything
 				 */
 				if (item.getSparqlID() == "") {
 					// capitalize the keyname
@@ -524,26 +801,66 @@ define([	// properly require.config'ed   bootstrap-modal
 					var validID = this.validateSparqlID(keyname);
 					// set
 					item.setSparqlID(validID);
+					return true;
+				} else {
+					return false;
 				}
 			},
 			
 			
+			assertGetNode : function (nodeSparqlID, funcName) {
+				var sNode = this.nodegroup.getNodeBySparqlID(nodeSparqlID);
+				this.assert(sNode != null, funcName, "Invalid nodeSparqlID: " + nodeSparqlID);
+				return sNode;
+			},
 			
-			assertGetPropItem(nodeSparqlID, propURI, funcName) {
+			assertGetPropItem : function (nodeSparqlID, propURI, funcName) {
 				/**
 				 * Get a property item, doing all the assert-ing
+				 * Uses Belmont definition of PropertyItem
 				 */
 				
 				// asserts
 				this.assertModelLoaded(funcName);
 				
-				var sNode = this.nodegroup.getNodeBySparqlID(nodeSparqlID);
-				this.assert(sNode != null, funcName, "Invalid nodeSparqlID: " + nodeSparqlID);
+				var sNode = this.assertGetNode(nodeSparqlID, funcName);
 				
 				var propItem = sNode.getPropertyByURIRelation(propURI);
 				this.assert(sNode != null, funcName, "Invalid propURI: " + propURI + " for node " + nodeSparqlID);
 				
 				return propItem;
+			},
+			
+			assertGetNodeItem : function (nodeSparqlID, propURI, funcName) {
+				/**
+				 * Get a node item, doing all the assert-ing
+				 * Uses Belmont definition of NodeItem
+				 */
+				
+				// asserts
+				this.assertModelLoaded(funcName);
+				
+				var sNode = this.assertGetNode(nodeSparqlID, funcName);
+				
+				return this.assertGetSnodeNodeItem(sNode, propURI, funcName);
+			},
+			
+			assertGetSnodePropItem : function (sNode, propURI, funcName) {
+				/**
+				 * Get a sNode's property item.
+				 */
+				item = sNode.getPropertyByURIRelation(propURI);
+				this.assert(item != null, funcName, "Invalid plain property propURI: " + propURI + " for node " + sNode.getSparqlID());
+				return item;
+			},
+			
+			assertGetSnodeNodeItem : function (sNode, propURI, funcName) {
+				/**
+				 * Get a sNode's node item. 
+				 */
+				item = sNode.getNodeItemByURIConnectBy(propURI);
+				this.assert(item != null, funcName, "Invalid node connection property propURI: " + propURI + " for node " + sNode.getSparqlID());
+				return item;
 			},
 			
 			raiseError : function (msgString) {
@@ -560,6 +877,13 @@ define([	// properly require.config'ed   bootstrap-modal
 				if (! boolean) {
 					this.raiseError("SemTk API error in " + funcName + "(): \n" + msg);
 				}
+			},
+			
+			assertClassIsA : function (classURI1, classURI2, funcName) {
+				this.assertModelLoaded(funcName);
+				var c1 = new OntologyClass(classURI1);
+				var c2 = new OntologyClass(classURI2);
+				this.assert(this.oInfo.classIsA(c1, c2), funcName, classURI1 + " is not a type of " + classURI2);
 			},
 			
 			assertModelAndDataConnected :  function (funcName) {
