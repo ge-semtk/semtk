@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.services.sparql;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +57,8 @@ import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 @RequestMapping("/sparqlQueryService")
 public class SparqlQueryServiceRestController {			
 	
+	@Autowired
+	private SparqlQueryServiceProperties serviceProps; 
 	/**
 	 * Execute (non-auth) query 
 	 */
@@ -67,7 +70,14 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		logToStdout("\n================== Sparql Query Service start query ========================");
 
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  }
+		
 		try{
+			
 			
 			// disallow running drop graph query here (keep this check first, before the subsequent check)
 			if(SparqlResultTypes.isDropGraphQuery(requestBody.query)){ 
@@ -105,6 +115,12 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		logToStdout("Sparql Query Service start queryAuth");
 
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  }
+		
 		try{
 			// disallow running drop graph query here - require client to explicitly use /dropGraph to avoid accidental drops
 			if(SparqlResultTypes.isDropGraphQuery(requestBody.query)){ 
@@ -134,6 +150,12 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		logToStdout("Sparql Query Service start dropGraph");
 
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  }
+		
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
@@ -212,6 +234,14 @@ public class SparqlQueryServiceRestController {
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
 		logToStdout("Sparql Query Service start clearPrefix");
+		
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  }
+		
+		
 		String query = "";
 		try{
 			requestBody.printInfo(); 	// print info to console			
@@ -243,6 +273,14 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
     	logToStdout("Sparql Query Service start clearAll");
 
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  }
+		
+		
+		
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
@@ -271,6 +309,14 @@ public class SparqlQueryServiceRestController {
 								@RequestParam("user") String user, 
 								@RequestParam("password") String password, 
 								@RequestParam("owlFile") MultipartFile owlFile){
+
+		if(serverAndPort == null || serverAndPort.isEmpty()) {
+			serverAndPort = serviceProps.getServerAndPort(); }
+		
+		if(serverType == null || serverType.isEmpty()) {
+			serverType = serviceProps.getServerType();  }
+		
+		
 		SimpleResultSet resultSet = null;
 		JSONObject simpleResultSetJson = null;
 		SparqlEndpointInterface sei = null;
