@@ -337,12 +337,7 @@ public class SparqlQueryServiceRestController {
 			return (new SimpleResultSet(false, e.getMessage())).toJson();
 		}		
 		
-		return simpleResultSetJson;
-		
-		
-		
-		
-		
+		return simpleResultSetJson;	
 	}	
 	
 	private void logToStdout (String message) {
