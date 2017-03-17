@@ -201,8 +201,11 @@ ModalDialog.prototype = {
 		// nameArray controls the number of fields and their labels
 		// valArray can have default values.  Or it can be empty or shorter than nameArray.
 		// callback receives the parameter valArray
-		// TODO width
-		// width is optional and doesn't work very well
+		// 
+		// width can be:
+		//      optional - 70%
+		//      number - characters
+		//      string - the actual value of width style
 		//
 		// Things that should be parameterized:
 		//      size = 6
@@ -215,15 +218,17 @@ ModalDialog.prototype = {
 		var selected = null;
 		var html = '';
 		
-		var w = width ? width : 80;   // width defaults to 40
+		if (typeof width === "undefined") { width = "70%"; }
+		else if (typeof width == "number") {width = width + "ch";}
+		
 	
-		html += '<div id="modaldialog_div" style="width:' + (w + 10) + 'ch;">';
+		html += '<div id="modaldialog_div" style="width:' + width + '";>';
 		html += '<form class="form-horizontal" action="javascript:' + this.varName + '.listDialogSubmit()">\n';
 		html += '<fieldset>\n';
 		html += '<legend>' + title + '</legend>\n';
 		// PEC TODO:  width is hardcoded
 		// PEC TODO: overflow:auto  does not work
-		html += '<select id="' + this.getFieldId(0) + '" size="6" onchange=javascript:' + this.varName + '.listDialogSelectChanged() style="width:500px; overflow_x:auto; overflow_y:auto;">\n';
+		html += '<select id="' + this.getFieldId(0) + '" size="6" onchange=javascript:' + this.varName + '.listDialogSelectChanged() style="width:90%; overflow-x:auto;">\n';
 		
 		// populate the <select multiple>
 		for (var i=0; i < nameArray.length; i++) {
