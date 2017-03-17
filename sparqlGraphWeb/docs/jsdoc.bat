@@ -12,7 +12,7 @@ SET USERDIR=%UserProfile%
 SET DOC=%~dp0
 
 
-call %USERDIR%\node_modules\.bin\jsdoc.cmd -d %DOC% ^
+call %USERDIR%\node_modules\.bin\jsdoc.cmd -t templates\minami-master -d %DOC% ^
            %DOC%\..\sparqlGraph\js\semtk_api.js 
                                            
 
