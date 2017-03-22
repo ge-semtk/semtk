@@ -1,0 +1,74 @@
+{
+	"sparqlConn": {
+		"name": <same as in NodeGroup.json files>,
+		"type": <same as in NodeGroup.json files>,
+		"dsURL": <same as in NodeGroup.json files>,
+		"dsKsURL": <same as in NodeGroup.json files>,
+		"dsDataset": <same as in NodeGroup.json files>,
+		"domain": <same as in NodeGroup.json files>
+	},
+	"ontologyInfo" : {
+		"version" : 1 ,
+		"created" : <date and time>,
+		
+		"classList" : 
+		
+		[
+			{
+				"fullUri" : <class uri> ,
+				"superClasses" : 
+				[
+					<super class uri>
+				],
+				"subClasses" : 
+				[
+					<sub class uri>
+				],
+				"properties" : 
+				[
+					<property uri> 
+				],
+				"directConnections" :
+				[
+					{
+						"direction" : < "TO" or "FROM" > ,
+						"class"	:	<class uri>
+					}
+				]
+			},
+	
+		],
+		
+		"propertyList" : 
+		
+		[
+			{ 
+				"fullUri" : <property uri> ,
+				"domain" : 
+				[
+					<domain class uri>
+				],
+				"range" : 
+				[
+					<range uri -- might be a class in the model or a primitive>
+				]
+			}
+		],
+		
+		"enumerationList" :
+		
+		[
+			{
+				"fullUri" : <uri of class which has enumerated subclasses>
+				"enumeration" :
+				[
+					<subclass uri>
+				]
+		
+			}
+		]
+		
+		
+	}
+	
+}

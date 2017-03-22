@@ -12,6 +12,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
@@ -40,7 +41,7 @@ public class StoreNodeGroup {
 			IngestorRestClient irc   = new IngestorRestClient(icc);
 			
 			irc.execIngestionFromCsv(insertTemplate, data);
-			TableResultSet tbl = irc.getLastResult();			
+			RecordProcessResults tbl = irc.getLastResult();			
 			System.err.println("does the return believes the run was a succes?" + tbl.getSuccess() );
 			tbl.throwExceptionIfUnsuccessful();
 			

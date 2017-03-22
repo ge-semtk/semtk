@@ -53,7 +53,11 @@ public class NodeGroupStoreRestController {
 			
 		// get the nodeGroup and the connection info:
 		SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
-		JSONObject ng = sgJson.getSNodeGroupJson();
+																// the next line was removed to make sure the node group is not "stripped" -- cut down to just the nodegroup proper when stored. 
+																// the executor is smart enough to deal with both cases. 
+//		JSONObject ng = sgJson.getSNodeGroupJson();				
+		JSONObject ng = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 				
+		
 		JSONObject connectionInfo = sgJson.getSparqlConnJson();
 		
 		// get the template information
