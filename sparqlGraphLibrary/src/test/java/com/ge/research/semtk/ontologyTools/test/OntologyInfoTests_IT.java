@@ -100,18 +100,18 @@ public class OntologyInfoTests_IT {
 		assertTrue(res.contains("\"type\":\"Color\""));
 	}
 	
-	@Test
-	public void testToJSON() throws Exception {
-		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/Plant.owl");
-		SparqlEndpointInterface sei = TestGraph.getSei();
-		OntologyInfo oInfo = new OntologyInfo(sei, "http://research.ge.com");
-		
-		
-		JSONObject serialized = oInfo.toJSON(null);
-		System.err.println(serialized.toJSONString());
-		
-		assertEquals(serialized.toJSONString().length(), 3558);
-	}
+// TODO - REPLACE THIS WITH A TEST THAT SERIALIZES AND DE-SERIALIZED THE JSON.  (TEST BELOW IS NO GOOD BECAUSE JSON LENGTH MAY VARY.)	
+//	@Test
+//	public void testToJSON() throws Exception {
+//		TestGraph.clearGraph();
+//		TestGraph.uploadOwl("src/test/resources/Plant.owl");
+//		SparqlEndpointInterface sei = TestGraph.getSei();
+//		OntologyInfo oInfo = new OntologyInfo(sei, "http://research.ge.com");
+//				
+//		JSONObject serialized = oInfo.toJSON(null);
+//		System.err.println(serialized.toJSONString());
+//		
+//		assertEquals(serialized.toJSONString().length(), 3558);
+//	}
 
 }
