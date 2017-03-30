@@ -66,7 +66,7 @@ public class RuntimeConstrainedItems {
 			throw new Exception("RuntimConstrainedItems.applyConstraintJson :: the parent node group was empty. unable to apply contraints to an empty node group.");
 		}
 		if(this.members.isEmpty() ){
-			throw new Exception("RuntimConstrainedItems.applyConstraintJson :: there are no runtime contrainted items in this node group. unable to apply contraints to an empty set.");
+			return;
 		}
 		if(runtimeConstraints == null || runtimeConstraints.isEmpty()){
 			return; // nothing to do
