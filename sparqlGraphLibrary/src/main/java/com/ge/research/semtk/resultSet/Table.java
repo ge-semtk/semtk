@@ -21,8 +21,6 @@ package com.ge.research.semtk.resultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -466,19 +464,22 @@ public class Table {
 	}	
 	
 	/**
-	 * Retrieve a table containing the subset of rows where multiple columns match given criteria (using regex).
-	 * @param filterMap keys are header names (case sensitive), values are filters for regex
+	 * Retrieve a table containing the subset of rows by matching on multiple columns.  
+	 * Matching is determined by case-insensitive substring.
+	 *
+	 * @param filterMap keys are header names (case sensitive), values are filters
 	 * @return the table subset
 	 * @throws Exception
+	 * 
+	 * TODO: merge functionality with Table.getSubsetWhereMatches()
 	 */
-	public Table getSubsetByRegex(HashMap<String,String> filterMap) throws Exception{
+	public Table getSubsetBySubstring(HashMap<String,String> filterMap) throws Exception{
 		
 		// create a new table to add the filtered rows to
 		Table ret = new Table(getColumnNames(), getColumnTypes(), null);
 		
 		int index;
 		String filterValue;
-		Matcher matcher;
 		boolean failed;
 		
 		// for each row
@@ -488,8 +489,7 @@ public class Table {
 				index = getColumnIndex(filterKey);
 				    
 				filterValue = filterMap.get(filterKey);
-	            matcher = (Pattern.compile(filterValue)).matcher(row.get(index));
-	            if (!matcher.find()) {
+	            if (row.get(index) == null || !row.get(index).toLowerCase().contains(filterValue.toLowerCase())) {
 	            	failed = true;
 	            	break;
 	            }	       
