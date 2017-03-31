@@ -21,6 +21,8 @@ package com.ge.research.semtk.resultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -463,5 +465,41 @@ public class Table {
 		return ret;
 	}	
 	
+	/**
+	 * Retrieve a table containing the subset of rows where multiple columns match given criteria (using regex).
+	 * @param filterMap keys are header names (case sensitive), values are filters for regex
+	 * @return the table subset
+	 * @throws Exception
+	 */
+	public Table getSubsetByRegex(HashMap<String,String> filterMap) throws Exception{
+		
+		// create a new table to add the filtered rows to
+		Table ret = new Table(getColumnNames(), getColumnTypes(), null);
+		
+		int index;
+		String filterValue;
+		Matcher matcher;
+		boolean failed;
+		
+		// for each row
+		for(ArrayList<String> row : getRows()){
+			failed = false;
+			for(String filterKey : filterMap.keySet()){
+				index = getColumnIndex(filterKey);
+				    
+				filterValue = filterMap.get(filterKey);
+	            matcher = (Pattern.compile(filterValue)).matcher(row.get(index));
+	            if (!matcher.find()) {
+	            	failed = true;
+	            	break;
+	            }	       
+			}
+			if(!failed){
+				ret.addRow(row);  // the row met the criteria
+			}
+		}
+			
+		return ret;		
+	}
 	
 }
