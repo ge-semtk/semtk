@@ -142,11 +142,26 @@ public class NodeGroupStoreRestController {
 				ArrayList<String> tmpRow = tbl.getRows().get(0);
 				int targetCol = tbl.getColumnIndex("NodeGroup");
 				
-				String ng = tmpRow.get(targetCol);
-				
-				// turn this into a nodeGroup. 
+				String ngJSONstr = tmpRow.get(targetCol);
 				JSONParser jParse = new JSONParser();
-				JSONObject json = (JSONObject) jParse.parse(ng);
+				JSONObject json = (JSONObject) jParse.parse(ngJSONstr); 
+				
+				// check if this is a wrapped or unwrapped 
+				// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
+				if(json.containsKey("sNodeGroup")){
+					System.err.println("located key: sNodeGroup");
+					json = (JSONObject) json.get("sNodeGroup");
+				}
+				
+				// otherwise, check for a truncated one that is only the nodegroup proper.
+				else if(json.containsKey("sNodeList")){
+					// do nothing
+				}
+				else{
+					// no idea what this is...
+					throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+				}
+				
 				
 				// get the runtime constraints. 
 			
