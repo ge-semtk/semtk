@@ -1,0 +1,17 @@
+uri "http://research.ge.com/semtk/prefabNodeGroup" alias PrefabNodeGroup version "$Revision:$ Last modified on   $Date:$".
+
+
+SemTkConnection is a class,
+	described by connectionAlias with a single value of type string,
+	described by originalServerType with a single value of type string,
+	described by dsURL with a single value of type string,
+	described by dsKsURL  with a single value of type string,
+	described by dsDataset with a single value of type string,
+	described by domain with a single value of type string.
+		
+PrefabNodeGroup is a class,
+	described by ID with a single value of type string,
+	described by NodeGroup with a single value of type string,
+	described by originalConnection with a single value of type SemTkConnection,
+	described by comments with values of type string.
+	

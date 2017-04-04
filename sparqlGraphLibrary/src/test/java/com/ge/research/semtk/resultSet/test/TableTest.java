@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -309,6 +310,24 @@ public class TableTest {
 		}
 		assertTrue(thrown);
 		
+	}
+	
+	@Test
+	public void testTableSubsetBySubstring() throws Exception {
+		String jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"],[\"\",\"tropicana\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":3}";
+		JSONObject jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
+		Table table = Table.fromJson(jsonObj);
+		
+		HashMap<String,String> map = new HashMap<String,String>();
+		map.put("colA","pple");	
+		map.put("colB","ana");
+		
+		Table tableSubset = table.getSubsetBySubstring(map);
+		assertEquals(tableSubset.getNumColumns(),3);
+		assertEquals(tableSubset.getNumRows(), 1);
+		assertEquals(tableSubset.getRows().get(0).get(0), "apple");
+		assertEquals(tableSubset.getRows().get(0).get(1), "banana");
+		assertEquals(tableSubset.getRows().get(0).get(2), "coconut");
 	}
 	
 	

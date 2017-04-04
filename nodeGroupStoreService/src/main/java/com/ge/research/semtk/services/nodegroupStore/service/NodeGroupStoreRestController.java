@@ -53,7 +53,11 @@ public class NodeGroupStoreRestController {
 			
 		// get the nodeGroup and the connection info:
 		SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
-		JSONObject ng = sgJson.getSNodeGroupJson();
+																// the next line was removed to make sure the node group is not "stripped" -- cut down to just the nodegroup proper when stored. 
+																// the executor is smart enough to deal with both cases. 
+//		JSONObject ng = sgJson.getSNodeGroupJson();				
+		JSONObject ng = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 				
+		
 		JSONObject connectionInfo = sgJson.getSparqlConnJson();
 		
 		// get the template information
@@ -138,11 +142,26 @@ public class NodeGroupStoreRestController {
 				ArrayList<String> tmpRow = tbl.getRows().get(0);
 				int targetCol = tbl.getColumnIndex("NodeGroup");
 				
-				String ng = tmpRow.get(targetCol);
-				
-				// turn this into a nodeGroup. 
+				String ngJSONstr = tmpRow.get(targetCol);
 				JSONParser jParse = new JSONParser();
-				JSONObject json = (JSONObject) jParse.parse(ng);
+				JSONObject json = (JSONObject) jParse.parse(ngJSONstr); 
+				
+				// check if this is a wrapped or unwrapped 
+				// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
+				if(json.containsKey("sNodeGroup")){
+					System.err.println("located key: sNodeGroup");
+					json = (JSONObject) json.get("sNodeGroup");
+				}
+				
+				// otherwise, check for a truncated one that is only the nodegroup proper.
+				else if(json.containsKey("sNodeList")){
+					// do nothing
+				}
+				else{
+					// no idea what this is...
+					throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+				}
+				
 				
 				// get the runtime constraints. 
 			

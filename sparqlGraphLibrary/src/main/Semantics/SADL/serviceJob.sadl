@@ -1,0 +1,16 @@
+uri "http://research.ge.com/semtk/services/job" alias job version "$Revision:$ Last modified on   $Date:$". 
+// v8-27-2015 9:00
+
+
+Status is a class must be one of {Success, Failure, InProgress}.
+
+URL is a class,
+	described by full with a single value of type string.
+
+Job is a class,
+	described by id with a single value of type string,
+	described by status with a single value of type Status,
+	described by statusMessage with a single value of type string,
+	described by percentComplete with a single value of type int,
+	described by fullResultsURL with a single value of type URL,
+	described by sampleResultsURL with a single value of type URL.

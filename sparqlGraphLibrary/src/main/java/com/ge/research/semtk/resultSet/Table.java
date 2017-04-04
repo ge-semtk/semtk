@@ -463,5 +463,43 @@ public class Table {
 		return ret;
 	}	
 	
+	/**
+	 * Retrieve a table containing the subset of rows by matching on multiple columns.  
+	 * Matching is determined by case-insensitive substring.
+	 *
+	 * @param filterMap keys are header names (case sensitive), values are filters
+	 * @return the table subset
+	 * @throws Exception
+	 * 
+	 * TODO: merge functionality with Table.getSubsetWhereMatches()
+	 */
+	public Table getSubsetBySubstring(HashMap<String,String> filterMap) throws Exception{
+		
+		// create a new table to add the filtered rows to
+		Table ret = new Table(getColumnNames(), getColumnTypes(), null);
+		
+		int index;
+		String filterValue;
+		boolean failed;
+		
+		// for each row
+		for(ArrayList<String> row : getRows()){
+			failed = false;
+			for(String filterKey : filterMap.keySet()){
+				index = getColumnIndex(filterKey);
+				    
+				filterValue = filterMap.get(filterKey);
+	            if (row.get(index) == null || !row.get(index).toLowerCase().contains(filterValue.toLowerCase())) {
+	            	failed = true;
+	            	break;
+	            }	       
+			}
+			if(!failed){
+				ret.addRow(row);  // the row met the criteria
+			}
+		}
+			
+		return ret;		
+	}
 	
 }

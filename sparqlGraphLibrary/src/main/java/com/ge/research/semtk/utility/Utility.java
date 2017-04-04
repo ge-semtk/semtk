@@ -186,7 +186,33 @@ public abstract class Utility {
 		
 		return jsonObject;
 	}
-	
+
+	public static JSONArray getJSONArrayFromFilePath(String jsonFilePath) throws Exception{
+		
+		// validate that file has a .json extension
+		if(!jsonFilePath.endsWith(".json")){
+			throw new Exception("Error: File " + jsonFilePath + " is not a JSON file");
+		}
+		
+		// load the file
+		File jsonFile = null;	
+		try {
+			jsonFile = new File(jsonFilePath);
+		} catch (Exception e) {
+			throw new Exception("Could not find JSON file " + jsonFilePath);
+		}
+			
+		// load JSON file to JSON object
+		JSONArray jsonArr = null;
+		try{
+			jsonArr = Utility.getJSONArrayFromFile(jsonFile);	
+		}catch (Exception e){
+			throw new Exception("Could not load JSON from file " + jsonFilePath);
+		}
+		
+		return jsonArr;
+	}
+
 	
 	/**
 	 * Get a JSON object from a file
@@ -205,6 +231,18 @@ public abstract class Utility {
 		bufferedReader.close();
 		JSONParser parser = new JSONParser();
 		return (JSONObject) parser.parse(jsonStr.toString());	
+	}
+
+	public static JSONArray getJSONArrayFromFile(File f) throws Exception{
+		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
+		StringBuilder jsonStr = new StringBuilder();
+		String line;
+		while((line = bufferedReader.readLine()) != null){
+			jsonStr.append(" " + line);
+		}
+		bufferedReader.close();
+		JSONParser parser = new JSONParser();
+		return (JSONArray) parser.parse(jsonStr.toString());	
 	}
 	
 	/**
