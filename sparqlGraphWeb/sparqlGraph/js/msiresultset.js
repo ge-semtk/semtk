@@ -53,7 +53,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			getColumnName : function (x) {
-				return this.getTable().col_names[0];
+				return this.getTable().col_names[x];
 			},
 			
 			getGeneralResultHtml : function () { 
@@ -408,6 +408,53 @@ define([	// properly require.config'ed   bootstrap-modal
 					return val;
 				}
 			},
+			
+			/**
+			 * Append another result set
+			 * @param otherResults - MsiResultSet
+			 * @throws error if otherResults has new column names
+			 */
+			appendResults : function (otherResults) {
+				var colMap = [];
+				
+				// build colMap
+				for (var i=0; i < otherResults.getColumnCount(); i++) {
+					var map = -1;
+					for (var j=0; j < this.getColumnCount(); j++) {
+						if (this.getColumnName(j) === otherResults.getColumnName(i)) {
+							map = j;
+							break;
+						}
+					}
+					if (map == -1) {
+						throw "MsiResultsSet.appendResults() new data has column that isn't in this resultSet: " + other.getColumnName(i);
+					} else {
+						colMap.push(map);
+					}
+				}
+				
+				// create template row
+				var table = this.getTable();
+				var other = otherResults.getTable();
+				var template = [];
+				for (var i=0; i < this.getColumnCount(); i++) {
+					template.push("");
+				}
+				
+				// append: loop through new rows
+				var len = other.rows.length;
+				for (var i=0; i < len; i++) {
+					// copy the template
+					var row = template.slice();
+					// insert new values into correct position in the template row
+					for (var j=0; j < other.rows[i].length; j++) {
+						row[colMap[j]] = other.rows[i][j];
+					}
+					// push the new row
+					table.rows.push(row);
+					table.row_count += 1;
+				}
+			}
 		};
 	
 		return MsiResultSet;            // return the constructor
