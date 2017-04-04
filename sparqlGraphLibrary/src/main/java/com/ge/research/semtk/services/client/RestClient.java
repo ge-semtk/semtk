@@ -114,7 +114,6 @@ public abstract class RestClient extends Client implements Runnable {
 		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
 
 		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
-				
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
 	    httppost.setEntity(entity);
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
