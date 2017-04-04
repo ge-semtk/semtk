@@ -61,10 +61,6 @@
 
 
 
-<div class="description">
-    <b>Consider using semtk_api_loader.js instead of calling this constructor.</b><br>This HTML creates a global "semtk" :<br><pre>   &lt;script&gt;	       doneLoading = function() {	       alert("doing whatever now that semtk is loaded");       semtk.doWhatever();   }   &lt;/script&gt;      &lt;script&gt;       SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)       SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk       SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph   &lt;/script&gt;	     &lt;script src="../sparqlGraph/js/semtk_api_loader.js"&gt;&lt;/script&gt;</pre>
-</div>
-
 
 
 
@@ -155,7 +151,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line74">line 74</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -178,6 +174,13 @@
 
 
 
+
+
+    <h5>Example</h5>
+    
+        <p class="code-caption">   Best to create a global "semtk" with this HTML using semtk_api_loader.js, <br>instead of calling this constructor.</p>
+    
+    <pre class="prettyprint"><code>&lt;script>   doneLoading = function() {	       alert("doing whatever now that semtk is loaded");       doWhatever();   }   errorCallback = function(msg) {       alert(msg);    // ideally, clean up html in msg first   }   SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)   SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk   SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph&lt;/script>	  &lt;script src="../sparqlGraph/js/semtk_api_loader.js">&lt;/script>&lt;script>   semtk.callStuff();&lt;/script></code></pre>
 
 
 
@@ -350,7 +353,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line485">line 485</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line491">line 491</a>
     </li></ul></dd>
     
 
@@ -549,7 +552,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line512">line 512</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line518">line 518</a>
     </li></ul></dd>
     
 
@@ -702,7 +705,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line538">line 538</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line544">line 544</a>
     </li></ul></dd>
     
 
@@ -855,7 +858,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line468">line 468</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line474">line 474</a>
     </li></ul></dd>
     
 
@@ -1031,7 +1034,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line562">line 562</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line568">line 568</a>
     </li></ul></dd>
     
 
@@ -1135,7 +1138,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line623">line 623</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line629">line 629</a>
     </li></ul></dd>
     
 
@@ -1276,7 +1279,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line634">line 634</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line640">line 640</a>
     </li></ul></dd>
     
 
@@ -1463,7 +1466,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line388">line 388</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line394">line 394</a>
     </li></ul></dd>
     
 
@@ -1640,7 +1643,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line341">line 341</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line347">line 347</a>
     </li></ul></dd>
     
 
@@ -1771,7 +1774,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line585">line 585</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line591">line 591</a>
     </li></ul></dd>
     
 
@@ -1924,7 +1927,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line420">line 420</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line426">line 426</a>
     </li></ul></dd>
     
 
@@ -2006,7 +2009,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line408">line 408</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line414">line 414</a>
     </li></ul></dd>
     
 
@@ -2160,7 +2163,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line718">line 718</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line724">line 724</a>
     </li></ul></dd>
     
 
@@ -2405,7 +2408,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line353">line 353</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line359">line 359</a>
     </li></ul></dd>
     
 
@@ -2487,7 +2490,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line457">line 457</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line463">line 463</a>
     </li></ul></dd>
     
 
@@ -2641,7 +2644,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line731">line 731</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line737">line 737</a>
     </li></ul></dd>
     
 
@@ -2817,7 +2820,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line650">line 650</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line656">line 656</a>
     </li></ul></dd>
     
 
@@ -2921,7 +2924,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line323">line 323</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line329">line 329</a>
     </li></ul></dd>
     
 
@@ -3003,7 +3006,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line272">line 272</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line278">line 278</a>
     </li></ul></dd>
     
 
@@ -3180,7 +3183,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line163">line 163</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line169">line 169</a>
     </li></ul></dd>
     
 
@@ -3390,7 +3393,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line684">line 684</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line690">line 690</a>
     </li></ul></dd>
     
 
@@ -3577,7 +3580,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line746">line 746</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line752">line 752</a>
     </li></ul></dd>
     
 
@@ -3764,7 +3767,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line702">line 702</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line708">line 708</a>
     </li></ul></dd>
     
 
@@ -3951,7 +3954,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line762">line 762</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line768">line 768</a>
     </li></ul></dd>
     
 
@@ -4150,7 +4153,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line664">line 664</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line670">line 670</a>
     </li></ul></dd>
     
 
@@ -4337,7 +4340,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line253">line 253</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line259">line 259</a>
     </li></ul></dd>
     
 
@@ -4524,7 +4527,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line231">line 231</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line237">line 237</a>
     </li></ul></dd>
     
 
@@ -4711,7 +4714,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line151">line 151</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line157">line 157</a>
     </li></ul></dd>
     
 
@@ -4898,7 +4901,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line219">line 219</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line225">line 225</a>
     </li></ul></dd>
     
 
@@ -5045,7 +5048,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line109">line 109</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line115">line 115</a>
     </li></ul></dd>
     
 
@@ -5176,7 +5179,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line102">line 102</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line108">line 108</a>
     </li></ul></dd>
     
 
@@ -5317,7 +5320,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line121">line 121</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line127">line 127</a>
     </li></ul></dd>
     
 
@@ -5448,7 +5451,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line115">line 115</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line121">line 121</a>
     </li></ul></dd>
     
 
@@ -5530,7 +5533,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line127">line 127</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line133">line 133</a>
     </li></ul></dd>
     
 
@@ -5661,7 +5664,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line132">line 132</a>
+        <a href="semtk_api.js.html">semtk_api.js</a>, <a href="semtk_api.js.html#line138">line 138</a>
     </li></ul></dd>
     
 
@@ -5703,7 +5706,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Mar 16 2017 14:47:31 GMT-0400 (Eastern Daylight Time) using the Minami theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Mar 22 2017 09:29:17 GMT-0400 (Eastern Daylight Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
