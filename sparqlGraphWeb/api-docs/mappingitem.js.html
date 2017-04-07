@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>importtrans.js - Documentation</title>
+    <title>mappingitem.js - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,7 +29,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">importtrans.js</h1>
+    <h1 class="page-title">mappingitem.js</h1>
     
 
     
@@ -61,135 +61,169 @@
 define([	// properly require.config'ed
         
 			// shimmed
-			
+    		// 'logconfig',
 		],
 
 	function() {
 	
 		/**
-		 * Transformation that can be added to many ImportMappings
+		 * An item to be added to a single ImportMapping
 		 * API users should not call this constructor
-		 * @description &lt;font color="red">Users of {@link SemtkAPI} should not call this constructor.&lt;/font>&lt;br>Use {@link SemtkImportAPI#createImportTransform} instead
-		 * @alias ImportTransform
+		 * Use SemtkImportAPI.createTextMappingItem() or SemtkImportAPI.createColumnMappingItem() instead
+		 * @description &lt;font color="red">Users of {@link SemtkAPI} should not call this constructor.&lt;/font>&lt;br>Use {@link SemtkImportAPI#createMappingItemText} or {@link SemtkImportAPI#createMappingItemColumn} instead
+		 * @alias MappingItem
 		 * @class
 		 */
-		var ImportTransform = function (name, transType, arg1, arg2 ) {
-			this.name = name;
-			this.transType = transType;
-			this.arg1 = arg1;
-			this.arg2 = arg2;
-			this.use = 0;
+		var MappingItem = function (itemType, iObj, transformList) {
+			this.itemType = itemType;   
+			this.iObj = iObj;        // column name or text iObj
+			this.transformList = transformList;      
 		};
 		
-		ImportTransform.TRANSFORMS = [ 	["Hash","hashCode","",""],
-		                               	["Replace All",  "replaceAll",  "search", "replace"],
-		                              	["To Uppercase", "toUpperCase", "",       ""],
-		                              	["To Lowercase", "toLowerCase", "",       ""]
-									 ];
+		MappingItem.TYPE_TEXT = "text";
+		MappingItem.TYPE_COLUMN = "column";
 		
-		ImportTransform.getArgNames = function(type) {
-			var i = 0;
-			while ( i &lt; ImportTransform.TRANSFORMS.length &amp;&amp; ImportTransform.TRANSFORMS[i][1] !== type) {
-				i += 1;
-			}
-			return [ImportTransform.TRANSFORMS[i][2], ImportTransform.TRANSFORMS[i][3]];
-		}
-
-		ImportTransform.prototype = {
-				
+		MappingItem.prototype = {
 			//
 			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
 			//      These methods' behaviors are not guaranteed to be stable in future releases.
 			//
 			
 			/**
-			 * Get the name
-			 * @returns {string} display name of this transform
+			 * Add an import transform
+			 * @param {ImportTransform} trans the import transform to add
+			 * @param {ImportTransform} insertBefore insert before this transform, append to end of list if null
 			 */
-			getName : function () {
-				return this.name;
+			addTransform : function (trans, insertBefore) {
+				if (insertBefore == null) {
+					this.transformList.push(trans);
+				} else {
+					var pos = this.transformList.indexOf(insertBefore);
+					this.transformList.splice(pos, 0, trans);
+				}
 			},
 			
 			/**
-			 * Get the type
-			 * @returns {string} one of first column in ImportTransform.TRANSFORMS
+			 * Delete the given import transform&lt;br>
+			 * silently failing if it doesn't exist
+			 * @param {ImportTransform} trans
+			 */
+			delTransform : function (trans) {
+				var index = this.transformList.indexOf(trans);
+				if (index > -1) {
+					this.transformList.splice(index, 1);
+				}
+			},
+			
+			/**
+			 * @description Get the mapping item type
+			 * @returns {string} MappingItem.TYPE_TEXT or MappingItem.TYPE_COLUMN
 			 */
 			getType : function () {
-				return this.transType;
-			},
-			
-			getArgNames : function() {
-				return ImportTransform.getArgNames(this.transType);
+				return this.itemType;
 			},
 			
 			/**
-			 * Get the first arg
-			 * @returns {string} as specified by third col in ImportTransform.TRANSFORMS
+			 * @description Get this item's ImportText
+			 * @returns {ImportText}
+			 * @throws exception if this is not a text item
 			 */
-			getArg1 : function () {
-				return this.arg1;
+			getTextObj : function () {
+				if (this.itemType != MappingItem.TYPE_TEXT) {kdlLogAndThrow("Internal error in MappingItem.getTextObj().  Item is not a text item.");}
+				return this.iObj;
 			},
 			
 			/**
-			 * Get the second arg
-			 * @returns {string} as specified by fourth col in ImportTransform.TRANSFORMS
+			 * @description Get this item's ImportColumn
+			 * @returns {ImportColumn}
+			 * @throws exception if this is not a column item
 			 */
-			getArg2 : function () {
-				return this.arg2;
+			getColumnObj : function () {
+				if (this.itemType != MappingItem.TYPE_COLUMN) {kdlLogAndThrow("Internal error in MappingItem.getColumnObj().  Item is not a column item.");}
+				return this.iObj;
+			},
+			
+			getColumnOrTextObj : function () {
+				return this.iObj;
 			},
 			
 			/**
-			 * How many times is this item used in a MappingItem
-			 * @returns {int}
+			 * @description Get this item's list of transforms
+			 * @returns {ImportTransform[]}
 			 */
-			getUse : function () {
-				return this.use;
+			getTransformList : function () {
+				return this.transformList;
 			},
 			
-			setName : function (x) {
-				this.name = x;
+			incrUse : function (n) {
+				// increment use of everything in this item
+				this.iObj.incrUse(n);
+				for (var i=0; i &lt; this.transformList.length; i++) {
+					this.transformList[i].incrUse(n);
+				}
 			},
 			
-			setType : function (x) {
-				this.transType = x;
+			fromJson : function (jObj, idHash) {
+				// columns and texts and transforms are loaded just by id
+				if (jObj.hasOwnProperty("text")) {
+					this.itemType = MappingItem.TYPE_TEXT;
+					this.iObj = idHash[jObj.textId];
+					this.iObj.incrUse(1);
+					this.transformList = [];
+					
+				} else {
+					this.itemType = MappingItem.TYPE_COLUMN;
+					this.iObj = idHash[jObj.colId];
+					this.iObj.incrUse(1);
+					this.transformList = [];
+					if (jObj.hasOwnProperty("transformList")) {
+						for (var i=0; i &lt; jObj.transformList.length; i++) {
+							var iTrans = idHash[jObj.transformList[i]];
+							iTrans.incrUse(1);
+							this.transformList.push(iTrans);
+						}
+					}
+				}
 			},
 			
-			setArg1 : function (x) {
-				this.arg1 = x;
-			},
-			
-			setArg2 : function (x) {
-				this.arg2 = x;
-			},
-			
-			incrUse : function (x) {
-				return this.use += x;
-			},
-			
-			// TODO: handle transform arguments and error checking
-			fromJson : function (jObj) {
-				this.name = jObj.name;
-				this.transType = jObj.transType;
-				this.arg1 = jObj.arg1;
-				this.arg2 = jObj.arg2;
+			toJson : function (idHash) {
+				// use id hash to put ImportColumns, ImportText, ImportTransform
+				// into the Json by ID only
+				var ret = {};
 				
-				this.use = 0;
-				return jObj.transId;
+				if (this.itemType == MappingItem.TYPE_TEXT) {
+					
+					ret.textId = this.helpGetKeyFromHash(idHash, this.iObj);
+					ret.text = this.iObj.getText();
+					
+				} else {
+					ret.colId = this.helpGetKeyFromHash(idHash, this.iObj);
+					ret.colName = this.iObj.getColName();
+					
+					// add transform if it isn't empty
+					if (this.transformList != null &amp;&amp; this.transformList.length > 0) {
+						ret.transformList = [];
+						for (var i=0; i &lt; this.transformList.length; i++) {
+							// just push the transform key
+							ret.transformList.push(this.helpGetKeyFromHash(idHash, this.transformList[i]));
+						}
+					};
+				}
+				return ret;
 			},
 			
-			// TODO: handle transform arguments and error checking
-			toJson : function (id) {
-				return {
-					"transId" : id,
-					"name" : this.name,
-					"transType" : this.transType,
-					"arg1" : this.arg1,
-					"arg2" : this.arg2,
-				};
-			}
+			helpGetKeyFromHash : function(idHash, item) {
+				// generic helper to find a key of an item in a hash
+				for (var k in idHash) {
+					if (idHash[k] === item) {
+						return k;
+					}
+				}
+				return null;
+			},
 		};
 	
-		return ImportTransform;            // return the constructor
+		return MappingItem;            // return the constructor
 	}
 );</code></pre>
         </article>
@@ -203,7 +237,7 @@ define([	// properly require.config'ed
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Apr 07 2017 14:24:00 GMT-0400 (Eastern Daylight Time) using the Minami theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Apr 07 2017 16:07:21 GMT-0400 (Eastern Daylight Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>

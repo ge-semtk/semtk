@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>semtk_api_loader.js - Documentation</title>
+    <title>ImportMapping - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,123 +29,619 @@
 
 <div id="main">
     
-    <h1 class="page-title">semtk_api_loader.js</h1>
+    <h1 class="page-title">ImportMapping</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>/**
- ** Copyright 2016 General Electric Company
- **
- ** Authors:  Paul Cuddihy, Justin McHugh
- **
- ** Licensed under the Apache License, Version 2.0 (the "License");
- ** you may not use this file except in compliance with the License.
- ** You may obtain a copy of the License at
- ** 
- **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
- ** Unless required by applicable law or agreed to in writing, software
- ** distributed under the License is distributed on an "AS IS" BASIS,
- ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- ** See the License for the specific language governing permissions and
- ** limitations under the License.
- */
+        <h2>
+        ImportMapping
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+
+    <h4 class="name" id="ImportMapping"><span class="type-signature"></span>new ImportMapping<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
 
 
-/**
- *  @alias semtk_api_loader
- *  @example
- *  Loads the semtk api and all its dependencies.
- *  Creates global: semtk
- * 
- *  Requires: that it is called from an html document with a &lt;head> tag in it.
- *  
- *  Your html should look like this;
- *  
- *  &lt;script>	
- *    doneLoading = function() {
- *      alert("doing my favorite method now that semtk is loaded");
- *      semtk.callMyFavorite();
- *    }
- *   	
- *    SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString) that throws and exception and doesn't return
- *    SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk
- *    SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph
- *  &lt;/script>
- *
- *  &lt;script src="../sparqlGraph/js/semtk_api_loader.js">&lt;/script>
- * 
- * 
- */
+
+<div class="description">
+    <font color="red">Users of <a href="SemtkAPI.html">SemtkAPI</a> should not call this constructor.</font><br>Use SemtkImportAPI#getMappings or SemtkImportAPI#getMapping instead
+</div>
 
 
-var semtk = null;
 
-var IIDX_PATH =        (typeof SEMTK_LOAD_PATH !== "undefined")  ? SEMTK_LOAD_PATH + "/iidx-oss"    : "../iidx-oss";
-var SPARQLGRAPH_PATH = (typeof SEMTK_LOAD_PATH !== "undefined")  ? SEMTK_LOAD_PATH + "/sparqlGraph" : "../sparqlGraph";
-var LOAD_CALLBACK =    (typeof SEMTK_LOAD_CALLBACK !== "undefined")   ? SEMTK_LOAD_CALLBACK  : function() { alert("SemTk loaded.\nNo SEMTK_LOAD_CALLBACK() is defined");};
-var ERROR_CALLBACK =   (typeof SEMTK_ERROR_CALLBACK !== "undefined")  ? SEMTK_ERROR_CALLBACK : function(msg) { alert("SemTk error: " + msg);};
 
-loadScript = function(url, callback)
-{
-    // Adding the script tag to the head as suggested before
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = url;
 
-    // Then bind the event to the callback function.
-    // There are several events for cross browser compatibility.
-    script.onreadystatechange = callback;
-    script.onload = callback;
 
-    // Fire the loading
-    head.appendChild(script);
-}
 
-load3 = function() {
-	requireConfigSparqlgraph( 
-		"../sparqlGraph",
-		{
-			baseUrl : IIDX_PATH,
-			paths : {
-			    "jquery" :      "../sparqlGraph/jquery/jquery",
 
-			}
-		}
-	);
-	
-	require([ 'sparqlgraph/js/semtk_api' ], function(SemtkAPI) {
-		
-		// load the semtk  (a global for this script)
-		semtk = new SemtkAPI(ERROR_CALLBACK);
-		
-		// tell app we're done
-		LOAD_CALLBACK();
-	});
-}
 
-load2 = function() {
-	loadScript(IIDX_PATH + "/js/require.config.js", load3);
-}
 
-load1 = function() {
-	loadScript(SPARQLGRAPH_PATH + "/js/requiresetup.js", load2);
-}
 
-load0 = function() {
-	loadScript(IIDX_PATH + "/components/requirejs/require.js", load1);
-}
 
-load0();</code></pre>
-        </article>
-    </section>
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="importmapping.js.html">importmapping.js</a>, <a href="importmapping.js.html#line34">line 34</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="addItem"><span class="type-signature"></span>addItem<span class="signature">(item, insertBefore)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Add a mapping item
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>item</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="MappingItem.html">MappingItem</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">item to add</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>insertBefore</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="MappingItem.html">MappingItem</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">insert here.  If null then add to end.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="importmapping.js.html">importmapping.js</a>, <a href="importmapping.js.html#line58">line 58</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="clearItems"><span class="type-signature"></span>clearItems<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    clears all mapping items
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="importmapping.js.html">importmapping.js</a>, <a href="importmapping.js.html#line71">line 71</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="delItem"><span class="type-signature"></span>delItem<span class="signature">(item)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    delete a given mapping item
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>item</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="MappingItem.html">MappingItem</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the mapping item to delete</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="importmapping.js.html">importmapping.js</a>, <a href="importmapping.js.html#line81">line 81</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+    <div class="param-desc">
+    
+        exception if item is invalid
+    
+    </div>
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getItemList"><span class="type-signature"></span>getItemList<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="MappingItem.html">MappingItem</a>>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get the MappingItems for this ImportMapping
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="importmapping.js.html">importmapping.js</a>, <a href="importmapping.js.html#line124">line 124</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    ordered list of items
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;<a href="MappingItem.html">MappingItem</a>></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 
@@ -155,7 +651,7 @@ load0();</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Apr 07 2017 14:24:00 GMT-0400 (Eastern Daylight Time) using the Minami theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Apr 07 2017 16:07:21 GMT-0400 (Eastern Daylight Time) using the Minami theme.
 </footer>
 
 <script>prettyPrint();</script>
