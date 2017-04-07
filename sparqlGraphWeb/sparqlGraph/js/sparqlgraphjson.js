@@ -24,7 +24,7 @@
 define([	// properly require.config'ed
         		
 			// shimmed
-
+        	'sparqlgraph/js/belmont'
 		],
 
 	function() {
@@ -55,6 +55,10 @@ define([	// properly require.config'ed
 				return this.jObj.sNodeGroup;
 			},
 			
+			getSNodeGroup : function() {
+				
+			},
+			
 			getMappingTabJson : function() {
 				if (this.jObj.hasOwnProperty("importSpec")) {
 					return this.jObj.importSpec;
@@ -81,6 +85,14 @@ define([	// properly require.config'ed
 			parse : function (jsonString) {
 				this.jObj = JSON.parse(jsonString);
 			},
+			
+			toJson : function () {
+				return this.jObj;
+			},
+			
+			fromJson : function (json) {
+				this.jObj = json;
+			}
 			
 		};
 		return SparqlGraphJson;            

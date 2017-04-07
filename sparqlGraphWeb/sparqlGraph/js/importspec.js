@@ -21,8 +21,8 @@
 
 define([// properly require.config'ed
         'sparqlgraph/js/importcsvspec',
-        'sparqlgraph/js/importtriplerow',
-        'sparqlgraph/js/importitem',
+        'sparqlgraph/js/importmapping',
+        'sparqlgraph/js/mappingitem',
         'sparqlgraph/js/importtrans',
         'sparqlgraph/js/importtext',
         'sparqlgraph/js/importcolumn',
@@ -33,14 +33,16 @@ define([// properly require.config'ed
 		//'logconfig',	
 		],
 
-	function (ImportCsvSpec, ImportTripleRow, ImportItem, ImportTransform, ImportText, ImportColumn, $) {
+	function (ImportCsvSpec, ImportMapping, MappingItem, ImportTransform, ImportText, ImportColumn, $) {
 	
 		//============ main object  ImportSpec =============
-		var ImportSpec = function () {
+		var ImportSpec = function (alertCallback) {
+			this.alertCallback = (typeof alertCallback === "undefined") ? null: alertCallback;
+			
 			this.baseURI = "";
 			this.nodegroup = null;
-			this.rowList = [];    // ordered list rows
-			this.rowHash = {};
+			this.mapList = [];    // ordered list rows
+			this.mapHash = {};
 			
 			this.colList = [];    // lists of these objects
 			this.textList = [];
@@ -61,8 +63,8 @@ define([// properly require.config'ed
 				// first clear everything
 				this.baseURI = "";
 				
-				this.rowList = [];    
-				this.rowHash = {};
+				this.mapList = [];    
+				this.mapHash = {};
 				
 				this.colList = [];    
 				this.textList = [];
@@ -77,8 +79,8 @@ define([// properly require.config'ed
 			},
 			
 			addRow : function (iRow) {
-				this.rowList.push(iRow);
-				this.rowHash[iRow.genUniqueKey()] = iRow;
+				this.mapList.push(iRow);
+				this.mapHash[iRow.genUniqueKey()] = iRow;
 			},
 			
 			delText : function (iText) {
@@ -145,17 +147,17 @@ define([// properly require.config'ed
 			
 			getSortedRows : function () {
 				// rows are always sorted by node and prop
-				return this.rowList;
+				return this.mapList;
 			},
 			
-			findRow : function(sparqlId, propUri) {
+			getMapping : function(sparqlId, propUri) {
 				// find a row
 				// propUri may be null				
-				var key = ImportTripleRow.staticGenUniqueKey(sparqlId, propUri);
-				if (key in this.rowHash) {
-					return this.rowHash[key];
+				var key = ImportMapping.staticGenUniqueKey(sparqlId, propUri);
+				if (key in this.mapHash) {
+					return this.mapHash[key];
 				} else {
-					kdlLogAndThrow("Internal error in ImportSpec.findRow(). Can't find row: " + sparqlId + ", " + propUri);
+					kdlLogAndThrow("Internal error in ImportSpec.getMapping(). Can't find row: " + sparqlId + ", " + propUri);
 				}
 			},
 			
@@ -165,8 +167,8 @@ define([// properly require.config'ed
 				if (this.nodegroup === null) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  No nodegroup is loaded.");}
 				
 				// delete all itemLists
-				for (var i=0; i < this.rowList.length; i++) {
-					this.rowList[i].clearItems();
+				for (var i=0; i < this.mapList.length; i++) {
+					this.mapList[i].clearItems();
 				}
 				
 				// clear anything that has to do with items
@@ -219,14 +221,14 @@ define([// properly require.config'ed
 					if (! jObj.nodes[i].hasOwnProperty("sparqlID")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  Node has no sparqlId.");}
 					
 					// find node row and fill it in
-					var n = this.findRow(jObj.nodes[i].sparqlID, null);
+					var n = this.getMapping(jObj.nodes[i].sparqlID, null);
 					n.fromJsonNode(jObj.nodes[i], idHash, this);
 					
 					for (var j=0; j < jObj.nodes[i].props.length; j++) {
 						if (! jObj.nodes[i].props[j].hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  Prop has no URIRelation in node: " + jObj.nodes[i].sparqlID );}
 						
 						// find property row and fill it in
-						var p = this.findRow(jObj.nodes[i].sparqlID, jObj.nodes[i].props[j].URIRelation);
+						var p = this.getMapping(jObj.nodes[i].sparqlID, jObj.nodes[i].props[j].URIRelation);
 						p.fromJsonProp(jObj.nodes[i].props[j], n.getNode(), idHash);
 					}
 				}
@@ -268,8 +270,8 @@ define([// properly require.config'ed
 				// rows : they must be ordered (Node1, null), (Node1, prop1), (Node1, prop2), (Node2, null), etc.
 				ret.nodes = [];
 				var lastNodeObj = null;
-				for (var i=0; i < this.rowList.length; i++) {
-					var row = this.rowList[i];
+				for (var i=0; i < this.mapList.length; i++) {
+					var row = this.mapList[i];
 					
 					// if row is for a node (not a prop)
 					if (row.getPropItem() == null) {
@@ -287,20 +289,20 @@ define([// properly require.config'ed
 				return ret;
 			},
 			updateNodegroup : function (nodegroup) {
-				// Build new rowList and rowHash based on this.nodegroup
+				// Build new mapList and mapHash based on this.nodegroup
 				// saving any existing itemLists
 				
 				this.nodegroup = nodegroup;
 				
 				// save copy of previous state
 				var oldRowHash = {};
-				for (var k in this.rowHash) {
-					oldRowHash[k] = this.rowHash[k];
+				for (var k in this.mapHash) {
+					oldRowHash[k] = this.mapHash[k];
 				}
 				
 				// reset rows
-				this.rowList = [];
-				this.rowHash = {};
+				this.mapList = [];
+				this.mapHash = {};
 				
 				if (this.nodegroup === null) { return; }
 				
@@ -309,9 +311,9 @@ define([// properly require.config'ed
 				for (var i = 0; i < nodeList.length; i++) {
 					var node = nodeList[i];
 					
-					// Build a ImportTripleRow for the node URI
+					// Build a ImportMapping for the node URI
 					var prop = null;
-					var row = new ImportTripleRow(node, prop);
+					var row = new ImportMapping(node, prop);
 					var key = row.genUniqueKey();
 					if (key in oldRowHash) { 
 						row.itemList = oldRowHash[key].itemList.slice(); 
@@ -320,12 +322,12 @@ define([// properly require.config'ed
 					
 					this.addRow(row);
 					
-					// Build a ImportTripleRow for each property
+					// Build a ImportMapping for each property
 					var propItemList = nodeList[i].propList;
 					if (propItemList) {
 						for (var j=0; j < propItemList.length; j++) {
 							prop = propItemList[j];
-							row = new ImportTripleRow(node, prop);
+							row = new ImportMapping(node, prop);
 							var keyP = row.genUniqueKey();
 							if (keyP in oldRowHash) { 
 								row.itemList = oldRowHash[keyP].itemList.slice(); 
@@ -339,9 +341,21 @@ define([// properly require.config'ed
 				
 				for (var key in oldRowHash) {
 					if (oldRowHash[key] !== null) {
-						alert("Threw out some rows.");   // PEC TODO
+						this.alert("Threw out some rows.  e.g.:  " + key);   
 						break;
 					};
+				}
+			},
+			
+			/**
+			 * Alert if there's a callback, otherwise log to console
+			 * @param: {string} msg the message
+			 */
+			alert : function(msg) {
+				if (this.alertCallback !== null) {
+					this.alertCallback(msg);
+				} else {
+					console.log("Importspec alert: " + msg);
 				}
 			},
 			
@@ -359,8 +373,8 @@ define([// properly require.config'ed
 			
 			updateColsFromCsvCallback : function () {
 				// looks at a (new) importCSVSpec for new column names
-				// 	- keeps any existing column ImportItems that have value pointing to valid column
-				// 	- deletes any ImportItems that point to non-existing columns
+				// 	- keeps any existing column MappingItems that have value pointing to valid column
+				// 	- deletes any MappingItems that point to non-existing columns
 				// 	- adds any new columns
 				//
 
@@ -370,19 +384,19 @@ define([// properly require.config'ed
 				
 				
 				// loop through all existing items
-				for (var i=0; i < this.rowList.length; i++) {
-					var itemList = this.rowList[i].getItemList();
+				for (var i=0; i < this.mapList.length; i++) {
+					var itemList = this.mapList[i].getItemList();
 					for (var j=0; j < itemList.length; j++) {
 						var item = itemList[j];
 						
 						// find the columns in items
-						if (item.getType() == ImportItem.TYPE_COLUMN) {
+						if (item.getType() == MappingItem.TYPE_COLUMN) {
 							var col = item.getColumnObj();
 							
 							// if column is still valid
 							if (newColNames.indexOf(col.getColName()) < 0) {
 								// delete the item
-								this.rowList[i].delItem(item);
+								this.mapList[i].delItem(item);
 							}
 						}
 					}

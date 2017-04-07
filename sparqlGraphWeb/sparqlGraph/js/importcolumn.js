@@ -25,8 +25,11 @@ define([	// properly require.config'ed
 
 	function() {
 	
-		/*
-		 *    A data source CSV column
+		/**
+		 * Column that can be added to many ImportMappings
+		 * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link SemtkImportAPI#createImportColumn} instead
+		 * @alias ImportColumn
+		 * @class
 		 */
 		var ImportColumn= function (colName) {
 			this.colName = colName;
@@ -35,15 +38,27 @@ define([	// properly require.config'ed
 		
 		
 		ImportColumn.prototype = {
+			//
+			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
+			//      These methods' behaviors are not guaranteed to be stable in future releases.
+			//
 				
 			getId : function () {
 				return this.id;
 			},
 			
+			/**
+			 * Get the column name
+			 * @returns {int}
+			 */
 			getColName : function () {
 				return this.colName;
 			},
 			
+			/**
+			 * How many times is this item used in a MappingItem
+			 * @returns {int}
+			 */
 			getUse : function () {
 				return this.use;
 			},

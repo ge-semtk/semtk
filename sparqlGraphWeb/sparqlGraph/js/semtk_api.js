@@ -36,6 +36,9 @@ define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/msiclientquery', 
         	'sparqlgraph/js/msiclientontologyinfo', 
         	'sparqlgraph/js/msiresultset', 
+        	'sparqlgraph/js/mappingtab',
+        	'sparqlgraph/js/semtk_api_import',
+        	'sparqlgraph/js/sparqlgraphjson',
 
 			// shimmed
         	'sparqlgraph/js/graphGlue',
@@ -45,27 +48,10 @@ define([	// properly require.config'ed   bootstrap-modal
 	        'sparqlgraph/js/belmont', 
 		],
 
-	function(MsiClientQuery, MsiClientOntologyInfo) {
+	function(MsiClientQuery, MsiClientOntologyInfo, MsiResultSet, MappingTab, SemtkImportAPI, SparqlGraphJson) {
 	
 		/**
-		 * <b>Consider using semtk_api_loader.js instead of calling this constructor.</b><br>
-		 * This HTML creates a global "semtk" :<br>
-		 * <pre>
-		 *    &lt;script&gt;	
-		 *        doneLoading = function() {	
-		 *        alert("doing whatever now that semtk is loaded");
-		 *        semtk.doWhatever();
-		 *    }
-		 *    &lt;/script&gt;
-		 *    
-		 *    &lt;script&gt;
-		 *        SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
-		 *        SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk
-		 *        SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph
-		 *    &lt;/script&gt;
-		 *	  
-		 *    &lt;script src="../sparqlGraph/js/semtk_api_loader.js"&gt;&lt;/script&gt;
-		 * </pre>
+		 * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link semtk_api_loader} instead 
 		 * @alias SemtkAPI
 		 * @class
 		 * @constructor
@@ -85,10 +71,14 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.oInfo = null;
 			
 			// create empty nodegroup
+			this.nodegroup = null;
 			this.clearNodegroup();
 			
 			// create an empty connection
 			this.conn = new SparqlConnection();
+			
+			// create an empty MappingTab.  No divs or callbacks.  Just a pass-through for the ImportSpec
+			this.mappingTab = new MappingTab();
 			
 			// clients
 			this.queryServiceURL = null;
@@ -139,7 +129,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		SemtkAPI.prototype = {
 			// TODO:  some callbacks process html and some don't.
 				
-			//=============== Services ==============	
+			//=============== Setup ==============	
 				
 			/**
 			 * set the SPARQL Query Service
@@ -167,19 +157,111 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 				
 			//=============== Nodegroup ==============
-				
-			/* 
-			 *  SparqlGraph Nodegroup->upload or drop nodegroup file
+			
+			/**
+			 * Load everything from a nodegroup JSON 
+			 * @param {JSON}                       nodegroupJson JSON representing extended conn/nodegroup/importspec
+			 * @param {SemtkAPI~statusCallback}     statusCallback
+			 * @param {SemtkAPI~successCallback}    successCallback
+			 * @param {SemtkAPI~SemtkErrorCallback} failureCallback
 			 */
-			loadSessionFile : function(nodegroupJSON) {
+			loadNodegroupJsonFullAsync : function (nodegroupJson, statusCallback, successCallback, failureCallback) {
+				this.loadModelConn(nodegroupJson);
+				this.loadDataConn(nodegroupJson);
 				
+				this.loadModelAsync(statusCallback,
+						            this.loadNodegroupJsonFullCallback.bind(this, nodegroupJson, statusCallback, successCallback, failureCallback), 
+						            failureCallback);
 			},
 			
-			/* 
-			 *  SparqlGraph Nodegroup->download 
+			/**
+			 * Finishes the work of loadNodegroupJsonFullAsync<br>
+			 * After the model is loaded
+			 * @private
 			 */
-			getSessionFile : function() {
+			loadNodegroupJsonFullCallback : function (nodegroupJson, statusCallback, successCallback, failureCallback) {
+				statusCallback("loading nodegroup");
+				try {	
+					this.loadNodegroupJson(nodegroupJson);
+				} catch(err) {
+					statusCallback("");
+					failureCallback("SemtkAPI.loadNodegroupJsonFullAsync: " + err.message);
+				}
+				statusCallback("");
+				successCallback();
+			},
+			
+			/**
+			 * Load model connection from nodegroupJson<br>
+			 * Doesn't change the name.
+			 * @param {JSON} nodegroupJson JSON representing extended conn/nodegroup/importspec
+			 */
+			loadModelConn : function(nodegroupJson) {
+				var sgJson = new SparqlGraphJson();
+				sgJson.fromJson(nodegroupJson);
+				var conn = sgJson.getSparqlConn();
 				
+				this.setupSparqlConnection(this.conn.name === "" ? conn.name : this.conn.name, 
+						                   conn.serverType, 
+						                   conn.domain);
+				this.setSparqlModelConnection(conn.ontologyServerUrl, conn.ontologySourceDataset, this.ontologyKsServerUrl );
+			},
+			/**
+			 * Load data connection from nodegroupJson<br>
+			 * Doesn't change the name.
+			 * @param {JSON} nodegroupJson JSON representing extended conn/nodegroup/importspec
+			 */
+			loadDataConn : function(nodegroupJson) {
+				var sgJson = new SparqlGraphJson();
+				sgJson.fromJson(nodegroupJson);
+				var conn = sgJson.getSparqlConn();
+				
+				this.setupSparqlConnection(this.conn.name === "" ? conn.name : this.conn.name, 
+		                   conn.serverType, 
+		                   conn.domain);
+				this.setSparqlDataConnection(conn.dataServerUrl, conn.dataSourceDataset, this.dataKsServerUrl);
+			},
+			
+			/**
+			 * Load nodegroup and importspec nodegroupJson<br>
+			 * See {@link SemtkAPI#loadNodegroupJsonFullAsync} source code for usage<br>
+			 * and modify if you want to change the way connections are handled.<br>
+			 * <font color="red"><b> 
+			 *        Connections must be loaded separately
+			 * </font>
+			 * @throws error if the model connection doesn't match
+			 * @param {JSON} nodegroupJson JSON representing extended conn/nodegroup/importspec
+			 */
+			loadNodegroupJson : function(nodegroupJson) {
+				var sgJson = new SparqlGraphJson();
+				
+	    		try {
+	    			sgJson.fromJson(nodegroupJson);
+		    		
+	    			var grpJson = sgJson.getSNodeGroupJson();
+	    			var importJson = sgJson.getMappingTabJson();
+	    			
+	    			// nodegroup
+	    			this.clearNodegroup();
+	    			this.nodegroup.addJson(grpJson);
+	    			
+	    			// import spec
+	    			this.mappingTab.load(this.nodegroup, importJson);
+	    			
+	    			// connections must be done separately
+		    		
+	    		} catch (e) {
+	    			this.errCallback("SemtkAPI.loadNodegroupJson: Error loading JSON:\n" + e);
+	    		}
+			},
+			
+			/**
+			 * @description Get json representing connection, nodegroup, import spec
+			 * @returns {JSON}
+			 */
+			getNodegroupJson : function() {
+				var sgJson = new SparqlGraphJson(this.conn, this.nodegroup, this.mappingTab);
+				return sgJson.toJson();
 			},
 				
 			/* 
@@ -215,6 +297,11 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} type    typically "virtuoso"              
 			 * @param {string} domain  URI prefix considered to be "inside" the model       
 			 * @return         none     
+			 * 
+			 * @example
+			 * semtk.setupSparqlConnection("Fred", "virtuoso", "uri://my/model/prefix");
+			 * semtk.setSparqlModelConnection("http://virtuoso.server-a.com:2420", "uri://graphname");
+			 * semtk.setSparqlDataConnection ("http://virtuoso.server-b.com:2420", "uri://diffgraph");
 			 */
 			setupSparqlConnection : function(name, type, domain) {
 				this.conn.setup(name, type, domain);
@@ -262,12 +349,12 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(), this.raiseError, this.queryServiceTimeout );
 			},
 			
-			// PEC HERE commenting
 			
 			/**
-			 * statusCallback(statusString)
-			 * successCallback() 
-			 * failureCallback(failureString)
+			 * Asynchronously load the model using the model connection
+			 * @param {SemtkAPI~StatusCallback}      statusCallback  called periodically
+			 * @param {SemtkAPI~SuccessCallback}     successCallback called on successful completion
+			 * @param {SemtkAPI~StringErrorCallback} failureCallback called on error
 			 */
 			loadModelAsync : function( statusCallback, successCallback, failureCallback) {		
 				// assert
@@ -286,7 +373,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			//=============== Visualization JSON ==============
-			
+			// PEC HERE commenting
 			getModelDrawJSONAsync : function(successCallbackJson) {
 				// asserts
 				this.assertModelLoaded("getModelDrawJSONAsync");
@@ -314,6 +401,19 @@ define([	// properly require.config'ed   bootstrap-modal
 			
 			getNodegroupDrawJSON : function() {
 				return this.nodegroup.toJson();
+			},
+			
+			//=============== Import spec ============
+			
+			/**
+			* Get the importSpec API object
+			* @returns SemtkImport
+			* 
+			* @example
+			* importApi = semTk.getSemtkImportAPI();
+			*/
+			getSemtkImportAPI : function() {
+				return new SemtkImportAPI(this);
 			},
 			
 			//=============== SPARQL ============

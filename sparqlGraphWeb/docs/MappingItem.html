@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Home - Documentation</title>
+    <title>MappingItem - Documentation</title>
 
     <script src="scripts/prettify/prettify.js"></script>
     <script src="scripts/prettify/lang-css.js"></script>
@@ -29,15 +29,103 @@
 
 <div id="main">
     
+    <h1 class="page-title">MappingItem</h1>
+    
 
     
 
 
 
+
+<section>
+
+<header>
+    
+        <h2>
+        MappingItem
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+
+    <h4 class="name" id="MappingItem"><span class="type-signature"></span>new MappingItem<span class="signature">()</span><span class="type-signature"></span></h4>
+
     
 
 
 
+<div class="description">
+    <font color="red">Users of <a href="SemtkAPI.html">SemtkAPI</a> should not call this constructor.</font><br>Use <a href="SemtkImportAPI.html#createMappingItemText">SemtkImportAPI#createMappingItemText</a> or <a href="SemtkImportAPI.html#createMappingItemColumn">SemtkImportAPI#createMappingItemColumn</a> instead
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line36">line 36</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -45,9 +133,745 @@
 
 
     
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="addTransform"><span class="type-signature"></span>addTransform<span class="signature">(trans, insertBefore)</span><span class="type-signature"></span></h4>
+
+    
 
 
 
+<div class="description">
+    Add an import transform
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>trans</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ImportTransform.html">ImportTransform</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the import transform to add</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>insertBefore</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ImportTransform.html">ImportTransform</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">insert before this transform, append to end of list if null</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line56">line 56</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="delTransform"><span class="type-signature"></span>delTransform<span class="signature">(trans)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Delete the given import transform<br>silently failing if it doesn't exist
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>trans</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ImportTransform.html">ImportTransform</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line70">line 70</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getColumnObj"><span class="type-signature"></span>getColumnObj<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="ImportColumn.html">ImportColumn</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get this item's ImportColumn
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line100">line 100</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+    <div class="param-desc">
+    
+        exception if this is not a column item
+    
+    </div>
+
+
+    
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="ImportColumn.html">ImportColumn</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getTextObj"><span class="type-signature"></span>getTextObj<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="ImportText.html">ImportText</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get this item's ImportText
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line90">line 90</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+    <div class="param-desc">
+    
+        exception if this is not a text item
+    
+    </div>
+
+
+    
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="ImportText.html">ImportText</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getTransformList"><span class="type-signature"></span>getTransformList<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;<a href="ImportTransform.html">ImportTransform</a>>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get this item's list of transforms
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line113">line 113</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;<a href="ImportTransform.html">ImportTransform</a>></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getType"><span class="type-signature"></span>getType<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get the mapping item type
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="mappingitem.js.html">mappingitem.js</a>, <a href="mappingitem.js.html#line81">line 81</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    MappingItem.TYPE_TEXT or MappingItem.TYPE_COLUMN
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 

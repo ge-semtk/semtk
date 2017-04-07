@@ -25,8 +25,12 @@ define([	// properly require.config'ed
 
 	function() {
 	
-		/*
-		 *    A set of transformations to be applied to a column
+		/**
+		 * Transformation that can be added to many ImportMappings
+		 * API users should not call this constructor
+		 * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link SemtkImportAPI#createImportTransform} instead
+		 * @alias ImportTransform
+		 * @class
 		 */
 		var ImportTransform = function (name, transType, arg1, arg2 ) {
 			this.name = name;
@@ -51,10 +55,24 @@ define([	// properly require.config'ed
 		}
 
 		ImportTransform.prototype = {
+				
+			//
+			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
+			//      These methods' behaviors are not guaranteed to be stable in future releases.
+			//
+			
+			/**
+			 * Get the name
+			 * @returns {string} display name of this transform
+			 */
 			getName : function () {
 				return this.name;
 			},
 			
+			/**
+			 * Get the type
+			 * @returns {string} one of first column in ImportTransform.TRANSFORMS
+			 */
 			getType : function () {
 				return this.transType;
 			},
@@ -63,14 +81,26 @@ define([	// properly require.config'ed
 				return ImportTransform.getArgNames(this.transType);
 			},
 			
+			/**
+			 * Get the first arg
+			 * @returns {string} as specified by third col in ImportTransform.TRANSFORMS
+			 */
 			getArg1 : function () {
 				return this.arg1;
 			},
 			
+			/**
+			 * Get the second arg
+			 * @returns {string} as specified by fourth col in ImportTransform.TRANSFORMS
+			 */
 			getArg2 : function () {
 				return this.arg2;
 			},
 			
+			/**
+			 * How many times is this item used in a MappingItem
+			 * @returns {int}
+			 */
 			getUse : function () {
 				return this.use;
 			},

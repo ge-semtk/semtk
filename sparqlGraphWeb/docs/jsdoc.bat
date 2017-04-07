@@ -13,7 +13,13 @@ SET DOC=%~dp0
 
 
 call %USERDIR%\node_modules\.bin\jsdoc.cmd -t templates\minami-master -d %DOC% ^
-           %DOC%\..\sparqlGraph\js\semtk_api.js 
-                                           
+           %DOC%\..\sparqlGraph\js\importcolumn.js ^
+           %DOC%\..\sparqlGraph\js\importtext.js ^
+           %DOC%\..\sparqlGraph\js\importtrans.js ^
+           %DOC%\..\sparqlGraph\js\importmapping.js ^
+           %DOC%\..\sparqlGraph\js\mappingitem.js ^
+           %DOC%\..\sparqlGraph\js\semtk_api.js ^
+           %DOC%\..\sparqlGraph\js\semtk_api_import.js ^
+           %DOC%\..\sparqlGraph\js\semtk_api_loader.js                                
 
 jsdoc.sh %DOC%
