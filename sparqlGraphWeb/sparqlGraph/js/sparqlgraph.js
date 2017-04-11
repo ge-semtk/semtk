@@ -444,7 +444,7 @@
 	    			}
 	    			
 	    			// if no conn is loaded or something different is loaded then load the connection
-	    			// DANGER WILL ROBINSON: this is asynchronous.
+	    			// asynchronous.
 	    			if (!gConn || ! conn.equals(gConn, true)) {
 	    				
 	    				var existName = gLoadDialog.connectionIsKnown(conn, true);     // true: make this selected in cookies
@@ -468,15 +468,15 @@
 	    				
 	    				
 	    			} else {
-	    			
-			        	// TODO: fix the fact that this continues in parallel...
-			        	// If user hit "execute" quickly enough, it would crash and burn
 			        	
+	    				// Go straight to loading the nodegroup, 
+	    				// since the conn and oInfo are already OK
 			        	doQueryLoadFile2(grpJson, importJson);
 	    			}
 		    		
 	    		} catch (e) {
 	    			logAndAlert("Error loading query file onto the canvas:\n" + e);
+	    			console.log(e.stack);
 	    			clearGraph();
 	    		}
     		});
@@ -484,13 +484,18 @@
 	    r.readAsText(file);
     	
     };
-    
+    /**
+     * loads a nodegroup onto the graph
+     * @param {JSON} grpJson    node group
+     * @param {JSON} importJson import spec
+     */
     doQueryLoadFile2 = function(grpJson, importJson) {
-    	// load the semantic node group, all confirmed and parsed
+    	// by the time this is called, the correct oInfo is loaded.
+    	// and the gNodeGroup is empty.
     	
     	clearGraph();
     	logEvent("SG Loaded Nodegroup");
-		gNodeGroup.addJson(grpJson);
+		gNodeGroup.addJson(grpJson, gOInfo);    // PEC HERE TESTING
 		gNodeGroup.drawNodes();
 		guiGraphNonEmpty();
 		
@@ -523,7 +528,7 @@
     		
     	} else {
     		require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
 	    		
 				gMappingTab.setChangedFlag(false);	
 	    		downloadFile(sgJson.stringify(), "sparql_graph.json");

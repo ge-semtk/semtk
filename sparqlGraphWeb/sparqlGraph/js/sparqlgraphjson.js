@@ -28,7 +28,9 @@ define([	// properly require.config'ed
 		],
 
 	function() {
-		var SparqlGraphJson = function(conn, nodegroup, mappingTab) {
+		var SparqlGraphJson = function(conn, nodegroup, mappingTab, optCompressFlag) {
+			var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
+			
 			// intended that either all or none of the parameters are given
 			
 			this.jObj = {
@@ -38,8 +40,8 @@ define([	// properly require.config'ed
 			};
 			
 			if (typeof conn      != "undefined") { this.setSparqlConn(conn); }
-			if (typeof nodegroup != "undefined") { this.setSNodeGroup(nodegroup); }
-			if (typeof mappingTab != "undefined") { this.setMappingTab(mappingTab); }
+			if (typeof nodegroup != "undefined") { this.setSNodeGroup(nodegroup, compressFlag); }
+			if (typeof mappingTab != "undefined") { this.setMappingTab(mappingTab, compressFlag); }
 
 		};
 	
@@ -70,11 +72,15 @@ define([	// properly require.config'ed
 				this.jObj.sparqlConn = conn.toJson();
 			},
 			
-			setSNodeGroup : function(sNodeGroup) {
-				this.jObj.sNodeGroup = sNodeGroup.toJson();
+			setSNodeGroup : function(sNodeGroup, optCompressFlag) {
+				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
+				
+				this.jObj.sNodeGroup = sNodeGroup.toJson(compressFlag);
 			},
 			
-			setMappingTab : function(mappingTab) {
+			setMappingTab : function(mappingTab, optCompressFlag) {
+				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
+
 				this.jObj.importSpec = mappingTab.toJson();
 			},
 			

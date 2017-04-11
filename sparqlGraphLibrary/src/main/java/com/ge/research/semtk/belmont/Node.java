@@ -57,7 +57,6 @@ public class Node extends Returnable {
 	// a collection of our known subclasses. 
 	private ArrayList<String> subclassNames = new ArrayList<String>();
 	
-	
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng){
 		// just create the basic node.
 		this.nodeName = name;
@@ -71,8 +70,21 @@ public class Node extends Returnable {
 		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
 	}
 	
-	// PEC NOTE:  this is missing a param from belmont.js : subClassNames
-	//            We might have a serious structural problem.
+	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng, OntologyInfo uncompressOInfo) throws Exception {
+		// just create the basic node.
+		this.nodeName = name;
+		this.fullURIname = URI;
+		this.subclassNames = new ArrayList<String>(subClassNames);
+		if(n != null){ this.nodes = n;}
+		if(p != null){ this.props = this.getUncompressedProps(URI, p, uncompressOInfo);}
+		this.nodeGroup = ng;
+		
+		// add code to get the sparqlID
+		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
+	}
+	
+	// Constructor when there are no subclasses
+	// Left-over from confused port from javascript
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, NodeGroup ng){
 		// just create the basic node.
 		this.nodeName = name;
@@ -86,7 +98,7 @@ public class Node extends Returnable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public JSONObject toJson() {
+	public JSONObject toJson(boolean compressFlag) {
 		// return a JSON object of things needed to serialize
 		JSONObject ret = new JSONObject();
 		JSONArray jPropList = new JSONArray();
@@ -96,9 +108,15 @@ public class Node extends Returnable {
 		for (int i = 0; i < this.subclassNames.size(); i++) {
 			scNames.add(this.subclassNames.get(i));
 		}
+		
 		for (int i = 0; i < this.props.size(); i++) {
-			jPropList.add(this.props.get(i).toJson());
+			PropertyItem p = this.props.get(i);
+			// if compressFlag, then only add property if returned or constrained
+			if (compressFlag == false || p.getIsReturned() || p.getConstraints() != null) {
+				jPropList.add(p.toJson());
+			}
 		}
+		
 		for (int i = 0; i < this.nodes.size(); i++) {
 			jNodeList.add(this.nodes.get(i).toJson());
 		}
@@ -113,6 +131,63 @@ public class Node extends Returnable {
 		ret.put("instanceValue", this.getInstanceValue());
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("subClassNames", scNames);
+		
+		return ret;
+	}
+	
+	/**
+	 * 
+	 * @param classURI
+	 * @param props
+	 * @param oInfo
+	 * @return
+	 * @throws Exception
+	 */
+	private ArrayList<PropertyItem> getUncompressedProps(String classURI, ArrayList<PropertyItem> props, OntologyInfo oInfo) throws Exception {
+		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
+		// build hash of properties for this class
+		HashMap<String, PropertyItem> propItemHash = new HashMap<>();
+		for (PropertyItem p : props) {
+			propItemHash.put(p.getUriRelationship(), p);
+		}
+		
+		// get oInfo's version of the property list
+		OntologyClass ontClass = oInfo.getClass(classURI);
+		if (ontClass == null) {
+			throw new Exception("Class no longer exists in the model: " + classURI);
+		}
+		ArrayList<OntologyProperty> ontProps = oInfo.getInheritedProperties(ontClass);
+		
+		// loop through oInfo's version	
+		for (OntologyProperty oProp : ontProps) {
+			String oPropURI = oProp.getNameStr();
+			
+			// if ontology property is one of the prop parameters, then check it over
+			if (propItemHash.containsKey(oPropURI)) {
+				
+				// has range changed
+				PropertyItem propItem = propItemHash.get(oPropURI);
+				if (! propItem.getValueTypeURI().equals(oProp.getRangeStr())) {
+					throw new Exception(String.format("Property %s range of %s doesn't match model range of %s",
+														oPropURI, 
+														propItem.getValueTypeURI(), 
+														oProp.getRangeStr() ));
+				}
+				
+				// all is ok: add the propItem
+				ret.add(propItem);
+				
+			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
+		    // Uncompress (create) it.
+			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
+				PropertyItem propItem = new PropertyItem(	oProp.getNameStr(true), 
+															oProp.getRangeStr(true), 
+															oProp.getRangeStr(false),
+															oProp.getNameStr(false));
+				ret.add(propItem);
+			}
+			
+		}
 		
 		return ret;
 	}

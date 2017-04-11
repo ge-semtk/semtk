@@ -1222,7 +1222,9 @@ define([	// properly require.config'ed
 				
 			},
 			
-            toJson : function () {
+            toJson : function (optCompressFlag) {
+				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
+
                 return this.importSpec.toJson();
             },
         };

@@ -234,7 +234,9 @@ define([// properly require.config'ed
 				}
 			},
 			
-			toJson : function() {
+			toJson : function(optCompressFlag) {
+				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
+
 				var ret = {};
 				var idHash = {};
 				
@@ -283,7 +285,10 @@ define([// properly require.config'ed
 					// if row is property and has items
 					} else if (row.getItemList().length > 0) {
 						// push the row as a property to the last node
-						lastNodeObj.props.push(row.toJson(idHash));
+						var mapJson = row.toJson(idHash);
+						if (compressFlag == false || mapJson.mapping.length > 0) {
+							lastNodeObj.props.push(row.toJson(idHash));
+						}
 					}
 				}
 				return ret;

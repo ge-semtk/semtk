@@ -159,14 +159,19 @@ public class SparqlGraphJson {
 		this.conn = conn;							// insert the new one.
 	}
 	
+	
 	public void setSNodeGroup(NodeGroup sNodeGroup) throws Exception {
+		this.setSNodeGroup(sNodeGroup, false);
+	}
+	
+	public void setSNodeGroup(NodeGroup sNodeGroup, boolean compressFlag) throws Exception {
 		jObj.remove("sNodeGroup");
-		jObj.put("sNodeGroup", sNodeGroup.toJson());
+		jObj.put("sNodeGroup", sNodeGroup.toJson(compressFlag));
 	}
 	
 	public void setImportSpec(ImportSpecHandler importSpec) throws Exception {
 		throw new Exception("setImportSpec isn't implemented");
-		//jObj.put("importSpec", importSpec.toJson());
+		//jObj.put("importSpec", importSpec.toJson(true));
 	}
 	
 	public void parse(String jsonString) throws Exception {

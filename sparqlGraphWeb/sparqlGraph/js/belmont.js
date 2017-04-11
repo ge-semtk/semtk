@@ -440,16 +440,16 @@ NodeItem.prototype = {
 };
 
 /* the property item */
-var PropertyItem = function(nome, val, relation, uriRelation, jObj) { 
+var PropertyItem = function(keyname, valType, relationship, UriRelationship, jObj) { 
 	
 	if (jObj) {
 		this.fromJson(jObj);
 	} else {
-		this.KeyName = nome; // the name used to identify the property
-		this.ValueType = val; // the type of the value associated with
+		this.KeyName = keyname; // the name used to identify the property
+		this.ValueType = valType; // the type of the value associated with
 								// property in the ontology.
-		this.relationship = relation;
-		this.UriRelationship = uriRelation;
+		this.relationship = relationship;
+		this.UriRelationship = UriRelationship;
 		this.Constraints = ''; // the constraints are represented as a str and
 								// will be used in the
 		// in the sparql generation.
@@ -513,8 +513,8 @@ PropertyItem.prototype = {
 		return f.buildValueConstraint(this, valueList);
 	},
 	// set the values of items in the propertyItem
-	setKeyName : function(nome) {
-		this.KeyName = nome;
+	setKeyName : function(keyname) {
+		this.KeyName = keyname;
 	},
 	// set the insertion value. really, we should check the correct value type as we go.
 	addInstanceValue : function(inval){
@@ -694,9 +694,12 @@ edgeIntermediate.prototype = {
 
 /* the semantic node */
 var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
-		nodeGroup, jObj) {
+		nodeGroup, jObj, optUncompressOInfo) {
+	
+	var uncompressOInfo = (typeof optUncompressOInfo === "undefined") ? null : optUncompressOInfo;
+
 	if (jObj) {
-		this.fromJson(jObj, nodeGroup);
+		this.fromJson(jObj, nodeGroup, uncompressOInfo);
 	} else {
 		this.propList = plist.slice(); // a list of properties
 		this.nodeList = nlist.slice(); // a list of the nodes that this can
@@ -740,7 +743,9 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 // the functions used by the SemanticNode in order to keep things in order.
 SemanticNode.prototype = {
 
-	toJson : function() {
+	toJson : function(optCompressFlag) {
+		var compressFlag = (typeof optCompressFlag === "undefined") ? false : optCompressFlag;
+		
 		// return a JSON object of things needed to serialize
 		var ret = {
 			propList : [],
@@ -754,15 +759,26 @@ SemanticNode.prototype = {
 			valueConstraint : this.valueConstraint,
 			instanceValue : this.instanceValue,
 		};
+		
 		for (var i = 0; i < this.propList.length; i++) {
-			ret.propList.push(this.propList[i].toJson());
+			var p = this.propList[i];
+			// if compressFlag, then only add property if returned or constrained
+			if (compressFlag == false || p.getIsReturned() || p.getConstraints() != "") {
+				ret.propList.push(p.toJson());
+			}
 		}
+			
 		for (var i = 0; i < this.nodeList.length; i++) {
 			ret.nodeList.push(this.nodeList[i].toJson());
 		}
+		
 		return ret;
 	},
-	fromJson : function(jObj, nodeGroup) {
+	
+	fromJson : function(jObj, nodeGroup, optUncompressOInfo) {
+		
+		var uncompressOInfo = (typeof optUncompressOInfo === "undefined") ? null : optUncompressOInfo;
+
 		// presumes SparqlID's are reconciled already
 		// presumes that SNodes pointed to by NodeItems already exist
 		this.propList = [], this.nodeList = [];
@@ -775,14 +791,77 @@ SemanticNode.prototype = {
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;
 
-		for (var i = 0; i < jObj.propList.length; i++) {
-			var p = new PropertyItem(null, null, null, null, jObj.propList[i]);
-			this.propList.push(p);
+		if (uncompressOInfo != null) {
+			// uncompress JSON properties
+			var pList = [];
+			for (var i = 0; i < jObj.propList.length; i++) {
+				var p = new PropertyItem(null, null, null, null, jObj.propList[i]);
+				pList.push(p);
+			}
+			this.propList = this.getUncompressedProps(jObj.fullURIName, pList, uncompressOInfo);
+			
+		} else {
+			// load JSON properties as-is
+			for (var i = 0; i < jObj.propList.length; i++) {
+				var p = new PropertyItem(null, null, null, null, jObj.propList[i]);
+				this.propList.push(p);
+			}
 		}
+		
 		for (var i = 0; i < jObj.nodeList.length; i++) {
 			var n = new NodeItem(null, null, null, jObj.nodeList[i], nodeGroup);
 			this.nodeList.push(n);
 		}
+	},
+	
+	getUncompressedProps : function(classURI, props, oInfo) {
+		var ret = [];
+		
+		// build hash of properties for this class
+		var propItemHash = {};
+		for (var p=0; p < props.length; p++) {
+			propItemHash[props[p].getUriRelation()] = props[p];
+		}
+		
+		// get oInfo's version of the property list
+		var ontClass = oInfo.getClass(classURI);
+		if (ontClass == null) {
+			throw "Class no longer exists in the model: " + classURI;
+		}
+		var ontProps = oInfo.getInheritedProperties(ontClass);
+		
+		// loop through oInfo's version	
+		for (var i=0; i < ontProps.length; i++) {
+			var oProp = ontProps[i];
+			var oPropURI = oProp.getNameStr();
+			
+			// if ontology property is one of the prop parameters, then check it over
+			if (oPropURI in propItemHash) {
+				
+				// has range changed
+				var propItem = propItemHash[oPropURI];
+				if (propItem.getRelation() != oProp.getRangeStr()) {
+					throw "Property " + oPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + oProp.getRangeStr();
+				}
+				
+				// all is ok: add the propItem
+				ret.push(propItem);
+				
+			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
+		    // Uncompress (create) it.
+			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
+				
+				var propItem = new PropertyItem(oProp.getNameStr(true), 
+												oProp.getRangeStr(true),
+												oProp.getRangeStr(false),
+												oProp.getNameStr(false)
+												);
+				ret.push(propItem);
+			}
+			
+		}
+		
+		return ret;
 	},
 	
 	setInstanceValue : function(inval){
@@ -1300,29 +1379,39 @@ SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 
 // the functions used by the semanticNodeGroup to keep its stuff in order.
 SemanticNodeGroup.prototype = {
-	toJson : function() {
+		
+	toCompressedJson() {
+		return this.toJson(true);
+	},
+	
+	toJson : function(optCompressFlag) {
+		var compressFlag = (typeof optCompressFlag === "undefined") ? false : optCompressFlag;
+
 		// get list in order such that linked nodes always preceed the node that
 		// links to them
 		var snList = this.getOrderedNodeList().reverse();
 
 		var ret = {
-			version : 1,
+			version : 2,
 			sNodeList : [],
 		};
 		// add json snodes to sNodeList
 		for (var i = 0; i < snList.length; i++) {
-			ret.sNodeList.push(snList[i].toJson());
+			ret.sNodeList.push(snList[i].toJson(compressFlag));
 		}
 		return ret;
 	},
-	addJson : function(jObj) {
+	
+	addJson : function(jObj, optUncompressOInfo) {
+		var uncompressOInfo = (typeof optUncompressOInfo === "undefined") ? null : optUncompressOInfo;
+		
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
 
 		// loop through SNodes in the json
 		for (var i = 0; i < jObj.sNodeList.length; i++) {
 			var newNode = new SemanticNode(null, null, null, null, null, this,
-					jObj.sNodeList[i]);
+					jObj.sNodeList[i], uncompressOInfo);
 
 			// add the node without messing with any connections...they are
 			// already there.
