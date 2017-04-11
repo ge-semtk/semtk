@@ -53,6 +53,25 @@ public class XSDSupportUtil {
 		return retval;
 	}
 	
+	public static boolean booleanOperationAvailable(String candidate){
+		boolean retval = false;
+		
+		if(supportedType(candidate)){
+			// this is a type we understand. we can now check.
+			
+			try{
+				if(XSDSupportedTypes.BOOLEAN == XSDSupportedTypes.valueOf(candidate.toUpperCase())){
+					retval = true;
+				}
+			
+			}
+			catch(Exception eee){
+				// do nothing.
+			}
+		}
+
+		return retval;
+	}	
 	public static boolean dateOperationAvailable(String candidate){
 		boolean retval = false;
 		boolean passedInitialCheck = true;
@@ -117,4 +136,6 @@ public class XSDSupportUtil {
 
 		return retval;		
 	}
+	
+	
 }

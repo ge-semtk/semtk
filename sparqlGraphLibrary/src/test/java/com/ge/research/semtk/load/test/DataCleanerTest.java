@@ -34,7 +34,7 @@ import org.junit.Test;
 import com.ge.research.semtk.load.DataCleaner;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 
 public class DataCleanerTest {
 
@@ -307,6 +307,43 @@ public class DataCleanerTest {
 		
 	}	
 	
+	
+	@Test 
+	public void test_badColumnName() throws Exception {
+		
+		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
+		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		Dataset dataset = new CSVDataset(originalFilePathStr, false);
+		DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
+		
+		// try using bad column name for split 
+		boolean thrown = false;
+		try {				
+			cleaner.addSplit("bad_column_name","\n");			
+			(new File(cleanedFilePathStr)).delete();						
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue(e.getMessage().contains("nonexistent column"));
+			thrown = true;
+		} 
+		if(!thrown){
+			fail();
+		}
+		
+		// try using bad column name for toLowerCase 
+		thrown = false;
+		try {				
+			cleaner.addToLowerCase("bad_column_name");			
+			(new File(cleanedFilePathStr)).delete();						
+		} catch (Exception e) {
+			e.printStackTrace();
+			assertTrue(e.getMessage().contains("nonexistent column"));
+			thrown = true;
+		} 
+		if(!thrown){
+			fail();
+		}
+	}	
 	
 	@Test 
 	public void test_disallowUnsupportedSplitDelimiter() throws IOException {

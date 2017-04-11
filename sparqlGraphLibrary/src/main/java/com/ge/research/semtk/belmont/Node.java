@@ -112,6 +112,7 @@ public class Node extends Returnable {
 		ret.put("valueConstraint", this.getValueConstraintStr());
 		ret.put("instanceValue", this.getInstanceValue());
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
+		ret.put("subClassNames", scNames);
 		
 		return ret;
 	}
@@ -193,11 +194,23 @@ public class Node extends Returnable {
 		// create a new node from JSON, assuming everything is sane. 
 		this.nodeGroup = ng;
 		
+		this.updateFromJson(nodeEncoded);
+	}
+	public void updateFromJson(JSONObject nodeEncoded) throws Exception{
+		// blank existing 
+		props = new ArrayList<PropertyItem>();
+		nodes = new ArrayList<NodeItem>();
+		nodeName = null;
+		fullURIname = null;
+		instanceValue = null;
+		subclassNames = new ArrayList<String>();
+		
+		
 		// build all the parts we need from this incoming JSON Object...
 		this.nodeName = nodeEncoded.get("NodeName").toString();
 		this.fullURIname = nodeEncoded.get("fullURIName").toString();
 		this.sparqlID = nodeEncoded.get("SparqlID").toString();
-		
+				
 		// get the array of subclass names.
 		JSONArray subclasses = (JSONArray)nodeEncoded.get("subClassNames");
 		if (subclasses != null) {
@@ -227,7 +240,6 @@ public class Node extends Returnable {
 		catch(Exception E){
 			this.setIsRuntimeConstrained(false);
 		}
-		
 		// create the node items and property items.
 		// nodeItems 
 		JSONArray nodesToProcess = (JSONArray)nodeEncoded.get("nodeList");
@@ -243,9 +255,8 @@ public class Node extends Returnable {
 			this.props.add(new PropertyItem(pIt.next()));
 		}
 		
-		
 	}
-
+	
 	public NodeItem setConnection(Node curr, String connectionURI) throws Exception {
 		// create a display name. 
 		String connectionLocal = new OntologyName(connectionURI).getLocalName();

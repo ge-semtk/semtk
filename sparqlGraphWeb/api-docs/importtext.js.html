@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>importtext.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ImportColumn.html">ImportColumn</a><ul class='methods'><li data-type='method'><a href="ImportColumn.html#getColName">getColName</a></li><li data-type='method'><a href="ImportColumn.html#getUse">getUse</a></li></ul></li><li><a href="ImportMapping.html">ImportMapping</a><ul class='methods'><li data-type='method'><a href="ImportMapping.html#addItem">addItem</a></li><li data-type='method'><a href="ImportMapping.html#clearItems">clearItems</a></li><li data-type='method'><a href="ImportMapping.html#delItem">delItem</a></li><li data-type='method'><a href="ImportMapping.html#getItemList">getItemList</a></li></ul></li><li><a href="ImportText.html">ImportText</a><ul class='methods'><li data-type='method'><a href="ImportText.html#getText">getText</a></li><li data-type='method'><a href="ImportText.html#getUse">getUse</a></li></ul></li><li><a href="ImportTransform.html">ImportTransform</a><ul class='methods'><li data-type='method'><a href="ImportTransform.html#getArg1">getArg1</a></li><li data-type='method'><a href="ImportTransform.html#getArg2">getArg2</a></li><li data-type='method'><a href="ImportTransform.html#getName">getName</a></li><li data-type='method'><a href="ImportTransform.html#getType">getType</a></li><li data-type='method'><a href="ImportTransform.html#getUse">getUse</a></li></ul></li><li><a href="MappingItem.html">MappingItem</a><ul class='methods'><li data-type='method'><a href="MappingItem.html#addTransform">addTransform</a></li><li data-type='method'><a href="MappingItem.html#delTransform">delTransform</a></li><li data-type='method'><a href="MappingItem.html#getColumnObj">getColumnObj</a></li><li data-type='method'><a href="MappingItem.html#getTextObj">getTextObj</a></li><li data-type='method'><a href="MappingItem.html#getTransformList">getTransformList</a></li><li data-type='method'><a href="MappingItem.html#getType">getType</a></li></ul></li><li><a href="SemtkAPI.html">SemtkAPI</a><ul class='methods'><li data-type='method'><a href="SemtkAPI.html#addNodeConnectFrom">addNodeConnectFrom</a></li><li data-type='method'><a href="SemtkAPI.html#addNodeConnectTo">addNodeConnectTo</a></li><li data-type='method'><a href="SemtkAPI.html#addNodeFirstPath">addNodeFirstPath</a></li><li data-type='method'><a href="SemtkAPI.html#addNodeOrphan">addNodeOrphan</a></li><li data-type='method'><a href="SemtkAPI.html#addPath">addPath</a></li><li data-type='method'><a href="SemtkAPI.html#clearNodegroup">clearNodegroup</a></li><li data-type='method'><a href="SemtkAPI.html#deleteNode">deleteNode</a></li><li data-type='method'><a href="SemtkAPI.html#executeSparqlAsync">executeSparqlAsync</a></li><li data-type='method'><a href="SemtkAPI.html#executeSparqlSelectAsync">executeSparqlSelectAsync</a></li><li data-type='method'><a href="SemtkAPI.html#findPathsToAdd">findPathsToAdd</a></li><li data-type='method'><a href="SemtkAPI.html#getAllPropertyNames">getAllPropertyNames</a></li><li data-type='method'><a href="SemtkAPI.html#getClassNames">getClassNames</a></li><li data-type='method'><a href="SemtkAPI.html#getNodegroupJson">getNodegroupJson</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyConstraint">getPropertyConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyConstraintValuesAsync">getPropertyConstraintValuesAsync</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyLegalValues">getPropertyLegalValues</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertySparqlID">getPropertySparqlID</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyType">getPropertyType</a></li><li data-type='method'><a href="SemtkAPI.html#getSemtkImportAPI">getSemtkImportAPI</a></li><li data-type='method'><a href="SemtkAPI.html#getSparqlSelect">getSparqlSelect</a></li><li data-type='method'><a href="SemtkAPI.html#loadDataConn">loadDataConn</a></li><li data-type='method'><a href="SemtkAPI.html#loadModelAsync">loadModelAsync</a></li><li data-type='method'><a href="SemtkAPI.html#loadModelConn">loadModelConn</a></li><li data-type='method'><a href="SemtkAPI.html#loadNodegroupJson">loadNodegroupJson</a></li><li data-type='method'><a href="SemtkAPI.html#loadNodegroupJsonFullAsync">loadNodegroupJsonFullAsync</a></li><li data-type='method'><a href="SemtkAPI.html#setOntologyService">setOntologyService</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertyFilterConstraint">setPropertyFilterConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertyReturned">setPropertyReturned</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertySparqlConstraint">setPropertySparqlConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertySparqlID">setPropertySparqlID</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertyValueConstraint">setPropertyValueConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#setSparqlDataConnection">setSparqlDataConnection</a></li><li data-type='method'><a href="SemtkAPI.html#setSparqlModelConnection">setSparqlModelConnection</a></li><li data-type='method'><a href="SemtkAPI.html#setSparqlQueryService">setSparqlQueryService</a></li><li data-type='method'><a href="SemtkAPI.html#setupSparqlConnection">setupSparqlConnection</a></li></ul></li><li><a href="SemtkImportAPI.html">SemtkImportAPI</a><ul class='methods'><li data-type='method'><a href="SemtkImportAPI.html#createImportColumn">createImportColumn</a></li><li data-type='method'><a href="SemtkImportAPI.html#createImportText">createImportText</a></li><li data-type='method'><a href="SemtkImportAPI.html#createImportTransform">createImportTransform</a></li><li data-type='method'><a href="SemtkImportAPI.html#createMappingItemColumn">createMappingItemColumn</a></li><li data-type='method'><a href="SemtkImportAPI.html#createMappingItemText">createMappingItemText</a></li><li data-type='method'><a href="SemtkImportAPI.html#getBaseURI">getBaseURI</a></li><li data-type='method'><a href="SemtkImportAPI.html#getClassPropPairs">getClassPropPairs</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportColumn">getImportColumn</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportColumns">getImportColumns</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportMapping">getImportMapping</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportMappings">getImportMappings</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportText">getImportText</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportTexts">getImportTexts</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportTransform">getImportTransform</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportTransforms">getImportTransforms</a></li><li data-type='method'><a href="SemtkImportAPI.html#setBaseURI">setBaseURI</a></li><li data-type='method'><a href="SemtkImportAPI.html#syncToNodegroup">syncToNodegroup</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#semtk_api_loader">semtk_api_loader</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">importtext.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ ** Copyright 2016 General Electric Company
+ **
+ ** Authors:  Paul Cuddihy, Justin McHugh
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
+define([	// properly require.config'ed
+        
+			// shimmed
+			
+		],
+
+
+	function() {
+	
+		/**
+		 * Text that can be added to many ImportMappings
+		 * @description &lt;font color="red">Users of {@link SemtkAPI} should not call this constructor.&lt;/font>&lt;br>Use {@link SemtkImportAPI#createImportText} instead
+		 * @alias ImportText
+		 * @class
+		 */
+		var ImportText = function (text) {
+			this.text = text;
+			this.use = 0;
+		};
+			
+		ImportText.prototype = {
+			//
+			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
+			//      These methods' behaviors are not guaranteed to be stable in future releases.
+			//
+				
+			/**
+			 * get the text
+			 * @returns {string} the text
+			 */
+			getText : function () {
+				return this.text;
+			},
+			
+			/**
+			 * How many times is this item used in a MappingItem
+			 * @returns {int}
+			 */
+			getUse : function () {
+				return this.use;
+			},
+			
+			setText : function(text) {
+				this.text = text;
+			},
+			
+			incrUse : function (x) {
+				return this.use += x;
+			},
+			
+			fromJson : function (jObj) {
+				this.text = jObj.text;
+				this.use = 0;
+				return jObj.textId;
+			},
+			
+			toJson : function (id) {
+				return {
+					"textId" : id,
+					"text"   : this.text,
+				};
+			},
+		};
+	
+		return ImportText;            // return the constructor
+	}
+);</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Apr 07 2017 16:07:21 GMT-0400 (Eastern Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

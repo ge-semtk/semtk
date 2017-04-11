@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>semtk_api_import.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ImportColumn.html">ImportColumn</a><ul class='methods'><li data-type='method'><a href="ImportColumn.html#getColName">getColName</a></li><li data-type='method'><a href="ImportColumn.html#getUse">getUse</a></li></ul></li><li><a href="ImportMapping.html">ImportMapping</a><ul class='methods'><li data-type='method'><a href="ImportMapping.html#addItem">addItem</a></li><li data-type='method'><a href="ImportMapping.html#clearItems">clearItems</a></li><li data-type='method'><a href="ImportMapping.html#delItem">delItem</a></li><li data-type='method'><a href="ImportMapping.html#getItemList">getItemList</a></li></ul></li><li><a href="ImportText.html">ImportText</a><ul class='methods'><li data-type='method'><a href="ImportText.html#getText">getText</a></li><li data-type='method'><a href="ImportText.html#getUse">getUse</a></li></ul></li><li><a href="ImportTransform.html">ImportTransform</a><ul class='methods'><li data-type='method'><a href="ImportTransform.html#getArg1">getArg1</a></li><li data-type='method'><a href="ImportTransform.html#getArg2">getArg2</a></li><li data-type='method'><a href="ImportTransform.html#getName">getName</a></li><li data-type='method'><a href="ImportTransform.html#getType">getType</a></li><li data-type='method'><a href="ImportTransform.html#getUse">getUse</a></li></ul></li><li><a href="MappingItem.html">MappingItem</a><ul class='methods'><li data-type='method'><a href="MappingItem.html#addTransform">addTransform</a></li><li data-type='method'><a href="MappingItem.html#delTransform">delTransform</a></li><li data-type='method'><a href="MappingItem.html#getColumnObj">getColumnObj</a></li><li data-type='method'><a href="MappingItem.html#getTextObj">getTextObj</a></li><li data-type='method'><a href="MappingItem.html#getTransformList">getTransformList</a></li><li data-type='method'><a href="MappingItem.html#getType">getType</a></li></ul></li><li><a href="SemtkAPI.html">SemtkAPI</a><ul class='methods'><li data-type='method'><a href="SemtkAPI.html#addNodeConnectFrom">addNodeConnectFrom</a></li><li data-type='method'><a href="SemtkAPI.html#addNodeConnectTo">addNodeConnectTo</a></li><li data-type='method'><a href="SemtkAPI.html#addNodeFirstPath">addNodeFirstPath</a></li><li data-type='method'><a href="SemtkAPI.html#addNodeOrphan">addNodeOrphan</a></li><li data-type='method'><a href="SemtkAPI.html#addPath">addPath</a></li><li data-type='method'><a href="SemtkAPI.html#clearNodegroup">clearNodegroup</a></li><li data-type='method'><a href="SemtkAPI.html#deleteNode">deleteNode</a></li><li data-type='method'><a href="SemtkAPI.html#executeSparqlAsync">executeSparqlAsync</a></li><li data-type='method'><a href="SemtkAPI.html#executeSparqlSelectAsync">executeSparqlSelectAsync</a></li><li data-type='method'><a href="SemtkAPI.html#findPathsToAdd">findPathsToAdd</a></li><li data-type='method'><a href="SemtkAPI.html#getAllPropertyNames">getAllPropertyNames</a></li><li data-type='method'><a href="SemtkAPI.html#getClassNames">getClassNames</a></li><li data-type='method'><a href="SemtkAPI.html#getNodegroupJson">getNodegroupJson</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyConstraint">getPropertyConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyConstraintValuesAsync">getPropertyConstraintValuesAsync</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyLegalValues">getPropertyLegalValues</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertySparqlID">getPropertySparqlID</a></li><li data-type='method'><a href="SemtkAPI.html#getPropertyType">getPropertyType</a></li><li data-type='method'><a href="SemtkAPI.html#getSemtkImportAPI">getSemtkImportAPI</a></li><li data-type='method'><a href="SemtkAPI.html#getSparqlSelect">getSparqlSelect</a></li><li data-type='method'><a href="SemtkAPI.html#loadDataConn">loadDataConn</a></li><li data-type='method'><a href="SemtkAPI.html#loadModelAsync">loadModelAsync</a></li><li data-type='method'><a href="SemtkAPI.html#loadModelConn">loadModelConn</a></li><li data-type='method'><a href="SemtkAPI.html#loadNodegroupJson">loadNodegroupJson</a></li><li data-type='method'><a href="SemtkAPI.html#loadNodegroupJsonFullAsync">loadNodegroupJsonFullAsync</a></li><li data-type='method'><a href="SemtkAPI.html#setOntologyService">setOntologyService</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertyFilterConstraint">setPropertyFilterConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertyReturned">setPropertyReturned</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertySparqlConstraint">setPropertySparqlConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertySparqlID">setPropertySparqlID</a></li><li data-type='method'><a href="SemtkAPI.html#setPropertyValueConstraint">setPropertyValueConstraint</a></li><li data-type='method'><a href="SemtkAPI.html#setSparqlDataConnection">setSparqlDataConnection</a></li><li data-type='method'><a href="SemtkAPI.html#setSparqlModelConnection">setSparqlModelConnection</a></li><li data-type='method'><a href="SemtkAPI.html#setSparqlQueryService">setSparqlQueryService</a></li><li data-type='method'><a href="SemtkAPI.html#setupSparqlConnection">setupSparqlConnection</a></li></ul></li><li><a href="SemtkImportAPI.html">SemtkImportAPI</a><ul class='methods'><li data-type='method'><a href="SemtkImportAPI.html#createImportColumn">createImportColumn</a></li><li data-type='method'><a href="SemtkImportAPI.html#createImportText">createImportText</a></li><li data-type='method'><a href="SemtkImportAPI.html#createImportTransform">createImportTransform</a></li><li data-type='method'><a href="SemtkImportAPI.html#createMappingItemColumn">createMappingItemColumn</a></li><li data-type='method'><a href="SemtkImportAPI.html#createMappingItemText">createMappingItemText</a></li><li data-type='method'><a href="SemtkImportAPI.html#getBaseURI">getBaseURI</a></li><li data-type='method'><a href="SemtkImportAPI.html#getClassPropPairs">getClassPropPairs</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportColumn">getImportColumn</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportColumns">getImportColumns</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportMapping">getImportMapping</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportMappings">getImportMappings</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportText">getImportText</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportTexts">getImportTexts</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportTransform">getImportTransform</a></li><li data-type='method'><a href="SemtkImportAPI.html#getImportTransforms">getImportTransforms</a></li><li data-type='method'><a href="SemtkImportAPI.html#setBaseURI">setBaseURI</a></li><li data-type='method'><a href="SemtkImportAPI.html#syncToNodegroup">syncToNodegroup</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#semtk_api_loader">semtk_api_loader</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">semtk_api_import.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>define([	// properly require.config'ed   bootstrap-modal
+        	'sparqlgraph/js/semtk_api', 
+        	'sparqlgraph/js/importspec',
+        	'sparqlgraph/js/importcolumn',
+        	'sparqlgraph/js/importtext',
+        	'sparqlgraph/js/importtrans',
+        	'sparqlgraph/js/importmapping',
+        	'sparqlgraph/js/mappingitem',
+
+			// shimmed
+
+		],
+
+	function(SemtkAPI, ImportSpec, ImportColumn, ImportText, ImportTransform, ImportMapping, MappingItem) {
+	
+		/**
+		 * This is part of the SemtkAPI, separated for clarity.
+		 * These methods support editing the import specification.
+		 * @description &lt;font color="red">Users of {@link SemtkAPI} should not call this constructor.&lt;/font>&lt;br>Use {@link SemtkAPI#getSemtkImportAPI} instead 
+		 * @alias SemtkImportAPI
+		 * @class
+		 * @constructor
+		 * @param semtkAPI
+		 */
+		var SemtkImportAPI = function(semtkApi) {
+			//   Programmer notes:  this object is just an API extension
+			//   All state should be stored under the mappingTab.
+			//   This object is not guaranteed to stay in existence.
+			//
+			//   This api provides an interface to ImportSpec, and exposes some of its member objects
+			
+			// Some pointers for convenience
+			this.semtk = semtkApi;                             // the semtk global
+			this.mappingTab = semtkApi.mappingTab;             // this pointer isn't changable
+			this.importSpec = semtkApi.mappingTab.importSpec   // but these contents are
+		};
+		
+		SemtkImportAPI.prototype = {
+			
+			/**
+			 * Create a column that can be shared by many ImportMappings.
+			 * Use as a constructor
+			 * @throws exception if column name already exists
+			 * @param {string} name column name
+			 * @returns {ImportColumn} which can be added to an MappingItem
+			 */
+			createImportColumn : function (name) {
+				if (this.getImportColumn(name) != null) {
+					throw "Column with this name already exists: " + name;
+				}
+				var iCol = new ImportColumn(name);
+				this.importSpec.addColumn(iCol);
+				return iCol;
+			},
+		
+			/**
+			 * Create text that can be shared by many ImportMappings.
+			 * Use as a constructor
+			 * @throws exception if text name already exists
+			 * @param {string} text the text
+			 * @returns {ImportText} which can be added to an MappingItem
+			 */
+			createImportText : function (text) {
+				if (this.getImportText(text) != null) {
+					throw "Text with this text already exists: " + text;
+				}
+				var iText = new ImportText(text);
+				this.importSpec.addText(iText);
+				return iText;
+			},
+			
+			/**
+			 * Create a transform that can be shared by many ImportMappings.
+			 * Use as a constructor
+			 * @throws exception if name already exists
+			 * @param {string} name
+			 * @param {string} transType for legal values, see ImportTransform.TRANSFORMS first item in each list
+			 * @param {string} arg1 arg if indicated by row in ImportTransform.TRANSFORMS
+			 * @param {string} arg2 arg if indicated by row in ImportTransform.TRANSFORMS
+			 * @returns {ImportTransform} which can be added to an MappingItem
+			 */
+			createImportTransform : function (name, transType, arg1, arg2 ) {
+				if (this.getImportTransform(name) != null) {
+					throw "Transform with this name already exists: " + name;
+				}
+				var iTrans = new ImportTransform(name, transType, arg1, arg2);
+				this.importSpec.addTransform(iTrans);
+				return iTrans;
+			},
+			
+			/**
+			 * Create a new text import item for a mapping
+			 * @param {ImportText} iText
+			 * @returns {MappingItem} which can be added to a mapping
+			 */
+			createMappingItemText : function (iText) {
+				return new MappingItem(MappingItem.TYPE_TEXT, iText, []);
+			},
+			
+			/**
+			 * Create a new column import item for a mapping
+			 * @param {ImportColumn} iCol
+			 * @param {ImportTransform[]} transformList optional
+			 * @returns {MappingItem} which can be added to a mapping
+			 */
+			createMappingItemColumn : function (iCol, transformList) {
+				var tList = (typeof transformList === "undefined") ? [] : transformList
+						
+				return new MappingItem(MappingItem.TYPE_COLUMN, iCol, tList);
+			},
+			
+			/**
+			 * Retrieve an ImportColumn by column name
+			 * @param {string} colName column name
+			 * @returns {ImportColumn} the column item or null
+			 */
+			getImportColumn : function (colName) {
+				var iCols = this.importSpec.getSortedColumns();
+				for (var i=0; i &lt; iCols.length; i++) {
+					if (iCols[i].getColName() === colName) {
+						return iCols[i];
+					}
+				}
+				return null;
+			},
+			
+			/**
+			 * Get all ImportColumns
+			 * @returns {ImportColumn[]}
+			 */
+			getImportColumns : function () {
+				return this.importSpec.getSortedColumns();
+			},
+			
+			/**
+			 * Get all ImportTexts
+			 * @returns {ImportText[]}
+			 */
+			getImportTexts : function () {
+				return this.importSpec.getSortedTexts();
+			},
+			
+			/**
+			 * Get all ImportTransforms
+			 * @returns {ImportTransform[]}
+			 */
+			getImportTransforms : function () {
+				return this.importSpec.getSortedTransforms();
+			},
+			
+			/**
+			 * Retrieve an ImportText by text
+			 * @param {string} text text
+			 * @returns {ImportText} the text item or null
+			 */
+			getImportText : function (text) {
+				var iTexts = this.importSpec.getSortedTexts();
+				for (var i=0; i &lt; iTexts.length; i++) {
+					if (iTexts[i].getText() === text) {
+						return iTexts[i];
+					}
+				}
+				return null;
+			},
+			
+			/**
+			 * Retrieve an ImportTransform by name
+			 * @param {string} name transform name
+			 * @returns {ImportTransform} the transform or null
+			 */
+			getImportTransform : function (name) {
+				var iTrans = this.importSpec.getSortedTransforms();
+				for (var i=0; i &lt; iTrans.length; i++) {
+					if (iTrans[i].getName() === name) {
+						return iTrans[i];
+					}
+				}
+				return null;
+			},
+			
+			/**
+			 * Get base URI
+			 * @returns {string} uri prefix for imported data
+			 */
+			getBaseURI : function () {
+				return this.importSpec.getBaseURI();
+			},
+			
+			/**
+			 * Get the ImportMapping a node SPARQL ID and property URI
+			 * @param {string} nodeSparqlId Class node SPARQL ID
+			 * @param {string} propertyUri  Property full URI or null
+			 * @returns {InputMapping}
+			 */
+			getImportMapping : function (nodeSparqlId, propertyUri) {
+				return this.importSpec.getMapping(nodeSparqlId, propertyUri);
+			},
+			
+			/**
+			 * Get an ImportMapping for each item that could be imported.
+			 * @returns {ImportMapping[]} List of ImportMappings
+			 */
+			getImportMappings : function () {
+				return this.importSpec.getSortedRows();
+			},
+			
+			/** 
+			 * Get a list of all node sparql id / property URI pairs for the nodegroup
+			 * Each pair will have an ImportMapping
+			 * Property URI is null for the class SPARQL IDs
+			 * @returns { string[][] } list all valid pairs in the nodegroup [node sparqlId, paramURI]
+			 */
+			getClassPropPairs : function () {
+				var mappings = this.getImportMappings();
+				var ret = [];
+				for (var i=0; i &lt; mappings.length; i++) {
+					ret.push( [mappings[i].getNodeSparqlId(),mappings[i].getPropUri() ] );
+				}
+				return ret;
+			},
+			
+			/**
+			 * Set base URI
+			 * @param {string} uri 
+			 * @returns none
+			 */
+			setBaseURI : function (uri) {
+				this.importSpec.setBaseURI(uri);
+			},
+			
+			/**
+			 * Re-syncs the the import spec to the nodegroup.
+			 * This should be done before saving or editing if nodegroup might have changed.
+			 * @returns none
+			 */
+			syncToNodegroup : function () {
+				this.importSpec.updateNodegroup(semtk.nodegroup);
+			}
+		};
+		
+		return SemtkImportAPI;            // return the constructor
+	}
+);</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Apr 07 2017 16:07:21 GMT-0400 (Eastern Daylight Time) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>

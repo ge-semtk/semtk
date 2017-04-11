@@ -19,18 +19,23 @@
 package com.ge.research.semtk.services.client;
 
 import java.net.ConnectException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-
 
 /**
  * An abstract class containing code for a REST client.
@@ -39,8 +44,8 @@ import org.json.simple.JSONValue;
 public abstract class RestClient extends Client implements Runnable {
 	
 	protected RestClientConfig conf;	
-	protected JSONObject parametersJSON = new JSONObject();
 	Object runRes = null;
+	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
 	
 	/**
@@ -102,14 +107,17 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 		
 		DefaultHttpClient httpclient = new DefaultHttpClient();
+	
+		// immediate line below removed to perform htmml encoding in stream
+		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
 		
-		HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
-		
+		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
+
+		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
 		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
-		//httppost.setEntity(new UrlEncodedFormEntity(parametersJSON, "UTF-8"));
 	    httppost.setEntity(entity);
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-		
+
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);

@@ -29,7 +29,8 @@ import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
@@ -37,17 +38,19 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 /**
  * Loads data to a triple store from a CSV file into database.
  * 
- * Sample command to execute in maven:
- * mvn exec:java -Dstart-class="com.ge.research.semtk.standaloneExecutables.CSVDataLoaderRunner" -Dexec.args="src/main/resources/test.json virtuosoUser virtuosoPassword src/test/resources/test.csv 10"
+ * Sample command:
+ * mvn exec:java -Dstart-class="com.ge.research.semtk.standaloneExecutables.CSVDataLoaderRunner" -Dexec.args="../sparqlGraphLibrary/src/test/resources/testTransforms.json virtuosoUser virtuosoPassword ../sparqlGraphLibrary/src/test/resources/testTransforms.csv 10" 
  *
+ * Sample command with SPARQL connection override:
+ * mvn exec:java -Dstart-class="com.ge.research.semtk.standaloneExecutables.CSVDataLoaderRunner" -Dexec.args="../sparqlGraphLibrary/src/test/resources/testTransforms.json virtuosoUser virtuosoPassword ../sparqlGraphLibrary/src/test/resources/testTransforms.csv 10 ../sparqlGraphLibrary/src/test/resources/SPARQLConnection-test.json"
  */
 public class CSVDataLoaderRunner {
 	
-	String loggerProtocol = null;
-	String loggerServer = null;
-	String loggerPort = null;
-	String loggerAPILocation = null;
-	LoggerRestClient lg = null;
+	private String loggerProtocol = null;
+	private String loggerServer = null;
+	private String loggerPort = null;
+	private String loggerAPILocation = null;
+	private LoggerRestClient lg = null;
 		
 	/**
 	 * Main method
@@ -59,14 +62,18 @@ public class CSVDataLoaderRunner {
 		try{
 		
 			// get arguments
-			if(args.length != 5){
-				throw new Exception("Invalid argument list.  Usage: main(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, batchSize)");
+			if(args.length != 5 && args.length != 6){
+				throw new Exception("Invalid argument list.  Usage: main(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, batchSize, connectionOverrideFilePath (optional))");
 			}
 			String templateJSONFilePath = args[0];
 			String sparqlEndpointUser = args[1];
 			String sparqlEndpointPassword = args[2];
 			String dataCSVFilePath = args[3];	
 			String batchSize = args[4];
+			String connectionOverrideFilePath = null;  	// stays null if no connection override provided
+			if(args.length == 6 ){
+				connectionOverrideFilePath = args[5]; 	// override the connection in the template JSON with the provided connection
+			}
 			
 			// validate arguments
 			if(!templateJSONFilePath.endsWith(".json")){
@@ -89,9 +96,10 @@ public class CSVDataLoaderRunner {
 			System.out.println("Template:   " + templateJSONFilePath);
 			System.out.println("CSV file:   " + dataCSVFilePath);
 			System.out.println("Batch size: " + batchSize);	
+			System.out.println("Connection override: " + connectionOverrideFilePath);	// may be null if no override connection provided
 			
 			try{
-				new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize));
+				new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize), connectionOverrideFilePath);
 			}catch(Exception e){
 				e.printStackTrace();
 				System.exit(1); // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
@@ -147,9 +155,11 @@ public class CSVDataLoaderRunner {
 	 * @param sparqlEndpointUser username for SPARQL endpoint
 	 * @param sparqlEndpointPassword password for SPARQL endpoint
 	 * @param dbHost dataCSVFilePath the path to the CSV data file
+	 * @param batchSize
+	 * @param connectionOverrideFilePath null to use the connection in the template json, or a SPARQL connection to override it
 	 * @throws Exception
 	 */
-	private void loadData(String templateJSONFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, String dataCSVFilePath, int batchSize) throws Exception{
+	private void loadData(String templateJSONFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, String dataCSVFilePath, int batchSize, String connectionOverrideFilePath) throws Exception{
 		
 		// load the JSON template
 		JSONObject templateJSON = Utility.getJSONObjectFromFilePath(templateJSONFilePath);
@@ -157,6 +167,12 @@ public class CSVDataLoaderRunner {
 		// parse everything
 		SparqlGraphJson sgJson = new SparqlGraphJson(templateJSON);
 		
+		// get the connection override, if any
+		if(connectionOverrideFilePath != null){
+			String overrideSparqlConnectionString = Utility.getJSONObjectFromFilePath(connectionOverrideFilePath).toJSONString();
+			sgJson.setSparqlConn(new SparqlConnection(overrideSparqlConnectionString));	// override the connection			
+		}
+					
 		// get needed column names from the JSON template ("colName" properties)
 		String[] colNamesToIngest = sgJson.getImportSpec().getColNamesUsed();		
 		System.out.println("Num columns to ingest: " + colNamesToIngest.length);
@@ -171,7 +187,7 @@ public class CSVDataLoaderRunner {
 		
 		// load the data
 		try{
-			DataLoader loader = new DataLoader(templateJSON, batchSize, dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader loader = new DataLoader(sgJson.getJson(), batchSize, dataset, sparqlEndpointUser, sparqlEndpointPassword);
 			int recordsAdded = loader.importData(true);
 			System.out.println("Inserted " + recordsAdded + " records");
 			System.out.println("Error report:\n " + loader.getLoadingErrorReportBrief());
@@ -183,8 +199,6 @@ public class CSVDataLoaderRunner {
 				dt.add(new DetailsTuple("records added", recordsAdded + "" ));
 				dt.add(new DetailsTuple("target graph", loader.getDatasetGraphName() ));
 				dt.add(new DetailsTuple("client", "CSVDataLoaderStandalone" ));
-						
-						
 				
 				if( loader.getLoadingErrorReportBrief() != null && !loader.getLoadingErrorReportBrief().isEmpty() ){
 					// report the error
@@ -192,17 +206,11 @@ public class CSVDataLoaderRunner {
 				}
 				// try to log it.
 				lg.logEvent("Load Data From CSV", dt, "Ingestion");
-			
 			}
-
-			
 			
 		}catch(Exception e){
 			e.printStackTrace();
 			throw new Exception("Could not load data: " + e.getMessage());
 		}						
-		
-		
 	}
-		
 }

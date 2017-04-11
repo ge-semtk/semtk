@@ -47,7 +47,7 @@ public class NodeGroup {
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();
-	public ArrayList<Node> orphanOnCreate = new ArrayList<Node>();
+	private ArrayList<Node> orphanOnCreate = new ArrayList<Node>();
 	private HashMap<String, String> prefixHash = new HashMap<String, String>();
 	private int prefixNumberStart = 0;
 	
@@ -219,6 +219,13 @@ public class NodeGroup {
 		return nodeGroup;
 	}
 	
+	public void addOrphanedNode(Node node){
+		// add to the onrphanOncreateList
+		this.orphanOnCreate.add(node);
+		// also, add to the list of known nodes
+		this.nodes.add(node);
+	}
+	
 	/**
 	 * Use JSON fuctionality to implement deepCopy
 	 * @param nodegroup
@@ -384,20 +391,24 @@ public class NodeGroup {
 			}
 			// modify the existing node:
 			else{
-				
+
+				// if the node is in both the nodesList and orphan list, modify it. 
 				check = null;
 				for(Node nd : this.orphanOnCreate){
-					if(curr.sparqlID == nd.sparqlID){
+					if(curr.sparqlID.equals(nd.sparqlID)){						
 						check = nd;
+						break;
 					}
 				}
 				if(check != null){
-					check = new Node(node, this);
-					this.addOneNode(check, null, null, null);
+					// remove from the orphan list. we do not want to mod this node more than once. 
+				//	this.orphanOnCreate.remove(check);
+					check.updateFromJson(node);
 				}
 				else{
-					throw new Exception( "uncreated node referenced: " + curr.sparqlID );
+					throw new Exception( "--uncreated node referenced: " + curr.sparqlID );
 				}
+					
 			}
 			
 		}
@@ -619,9 +630,14 @@ public class NodeGroup {
 			// loop through ordered nodes and add return names to the sparql
 			for(Node n : orderedNodes) {
 				
+				
 				// check if node URI is returned
 				if (n.getIsReturned()) {
 					sparql.append(" ").append(n.getSparqlID());
+					
+				}
+				else{
+					
 				}
 				
 				// add all the returned props
@@ -632,6 +648,7 @@ public class NodeGroup {
 						throw new Exception("Trying to return a property whose sparqlID is not set: " + pi.getKeyName());
 					}
 					sparql.append(" ").append(pi.getSparqlID());
+
 				}
 			}
 		}
@@ -765,8 +782,8 @@ public class NodeGroup {
 		
 		// This is the type-constraining statement for any type that needs
 		// NOTE: this is at the top due to a Virtuoso bug
-		//       If the first prop is optional and nothing matches then the whole query fails.
 		sparql.append(this.generateSparqlTypeClause(snode, tab));
+		//       If the first prop is optional and nothing matches then the whole query fails.
 				
 		// PropItems: generate sparql for property and constraints
 		for(PropertyItem prop : snode.getReturnedPropertyItems()){
@@ -893,7 +910,7 @@ public class NodeGroup {
 			}
 			else{
 				retval += tab + curr.getSparqlID() + " a " + curr.getSparqlID() + "_type .\n";
-				retval += tab + curr.getSparqlID() +  "_type " + " rdfs:subClassOf " + this.getPrefixedUri(curr.getFullUriName()) + ".\n";
+				retval += tab + curr.getSparqlID() +  "_type " + " rdfs:subClassOf* " + this.getPrefixedUri(curr.getFullUriName()) + ".\n";
 			}
 		}
 		

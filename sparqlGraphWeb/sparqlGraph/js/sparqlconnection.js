@@ -183,6 +183,30 @@ SparqlConnection.prototype = {
 		this.ontologyInterface = this.createOntologyInterface();
 	},
 	
+	setup(name, serverType, domain) {
+		this.name = name;
+		this.serverType = serverType;
+		this.domain = domain;
+	}, 
+	
+	setOntologyInterface(url, dataset, optKsURL) {
+		
+		this.ontologyServerUrl =     url;
+		this.ontologyKsServerURL =   optKsURL;
+		this.ontologySourceDataset = dataset;
+		
+		this.ontologyInterface = this.createOntologyInterface();
+	},
+	
+	setDataInterface(url, dataset, optKsURL) {
+		
+		this.dataServerUrl =     url;
+		this.dataKsServerURL =   optKsURL;
+		this.dataSourceDataset = dataset;
+		
+		this.dataInterface = this.createOntologyInterface();
+	},
+	
 	createDataInterface : function () {
 		if (this.serverType == SparqlConnection.FUSEKI_SERVER) {
 			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, this.dataServerUrl, this.dataSourceDataset);

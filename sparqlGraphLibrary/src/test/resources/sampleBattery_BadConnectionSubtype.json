@@ -1,0 +1,110 @@
+{
+	"sparqlConn": {
+
+	},
+	"sNodeGroup": {
+		"version": 1,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Color",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Color",
+				"subClassNames": [],
+				"SparqlID": "?Color",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "cellId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#cellId",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Battery"
+						],
+						"KeyName": "color",
+						"ValueType": "Color",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Color",
+						"ConnectBy": "color",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#color",
+						"isOptional": false
+					}
+				],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "birthday",
+						"ValueType": "dateTime",
+						"relationship": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#birthday",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell"
+						],
+						"KeyName": "cell",
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Cell",
+						"ConnectBy": "cell",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#cell",
+						"isOptional": false
+					}
+				],
+				"NodeName": "Battery",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Battery",
+				"subClassNames": [],
+				"SparqlID": "?Battery",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			}
+		]
+	},
+	"importSpec": {
+	
+	}
+}

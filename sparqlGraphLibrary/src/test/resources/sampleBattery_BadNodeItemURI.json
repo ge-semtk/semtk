@@ -1,0 +1,40 @@
+{
+	"sparqlConn": {
+		
+	},
+	"sNodeGroup": {
+		"version": 1,
+		"sNodeList": [
+			{
+				"propList": [
+					
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Color"
+						],
+						"KeyName": "color",
+						"ValueType": "Color",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Color",
+						"ConnectBy": "color",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#color_BAD",
+						"isOptional": false
+					}
+				],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			
+		]
+	},
+	"importSpec": {
+
+	}
+}

@@ -4,3 +4,6 @@
 .settings
 target
 sparqlGraphLibrary/src/test/resources/datacleanertest-output.csv
+sparqlGraphLibrary/results*.csv
+logs/
+*.swp

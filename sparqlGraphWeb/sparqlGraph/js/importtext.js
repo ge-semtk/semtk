@@ -22,10 +22,14 @@ define([	// properly require.config'ed
 			
 		],
 
+
 	function() {
 	
-		/*
-		 *    text value used to build triple
+		/**
+		 * Text that can be added to many ImportMappings
+		 * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link SemtkImportAPI#createImportText} instead
+		 * @alias ImportText
+		 * @class
 		 */
 		var ImportText = function (text) {
 			this.text = text;
@@ -33,12 +37,23 @@ define([	// properly require.config'ed
 		};
 			
 		ImportText.prototype = {
-
-			
+			//
+			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
+			//      These methods' behaviors are not guaranteed to be stable in future releases.
+			//
+				
+			/**
+			 * get the text
+			 * @returns {string} the text
+			 */
 			getText : function () {
 				return this.text;
 			},
 			
+			/**
+			 * How many times is this item used in a MappingItem
+			 * @returns {int}
+			 */
 			getUse : function () {
 				return this.use;
 			},

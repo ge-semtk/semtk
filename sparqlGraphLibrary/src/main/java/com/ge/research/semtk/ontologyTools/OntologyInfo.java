@@ -18,9 +18,16 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.ExecutorCompletionService;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -29,6 +36,7 @@ import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
@@ -47,7 +55,7 @@ public class OntologyInfo {
 	private HashMap<String, OntologyProperty> propertyHash = new HashMap<String, OntologyProperty>();
 	// for each class, the collection of valid, single-hop paths to and from other classes. 
 	private HashMap<String, ArrayList<OntologyPath>> connHash = new HashMap<String, ArrayList<OntologyPath>>();
-	// for each class, list its subclasses. the superclasses are sored in the class object itself. 
+	// for each class, list its subclasses. the superclasses are stored in the class object itself. 
 	private HashMap<String, ArrayList<OntologyClass>> subclassHash = new HashMap<String, ArrayList<OntologyClass>>();
 	// a list of all the enumerations available for a given class. these are handled as full uris for convenience sake. 
 	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
@@ -57,6 +65,11 @@ public class OntologyInfo {
 	private final static int MAXPATHLENGTH = 50;	// how many hops, max, allowed in a returned path between arbitrary nodes
 	
 	private static int restCount = 0;
+	
+	// used in the serialization and have to be held internally in the event that an oInfo is generated 
+	// be de-serializing a json blob.
+	private SparqlConnection modelConnection;
+	
 	/**
 	 * Default constructor
 	 */
@@ -67,7 +80,9 @@ public class OntologyInfo {
 	 * Constructor that also loads oInfo
 	 */
 	public OntologyInfo(SparqlEndpointInterface endpoint, String domain) throws Exception{
-		load(endpoint, domain); 
+		load(endpoint, domain);
+		this.modelConnection = new SparqlConnection(UUID.randomUUID().toString(), endpoint.getServerType(), null, endpoint.getServerAndPort(), endpoint.getDataset(), domain); 
+	
 	}
 	
 	/**
@@ -989,6 +1004,204 @@ public class OntologyInfo {
 		data.put("properties", properties);
 		ret.put("data", data);
 		return ret;
+	}
+	
+	public JSONObject toJSON(SparqlConnection sc) throws Exception {
+		
+		
+		// build the entire connnection hash
+		for(String ocKey : this.classHash.keySet()){
+			this.getConnList(ocKey);			
+		}
+
+		
+		JSONObject retval = new JSONObject();
+		JSONObject sparqlConnJSONObject = null;
+		
+		if(sc != null){
+			// use the incoming connection
+			sparqlConnJSONObject =sc.toJson();
+		}
+		
+		else if(sc == null && this.modelConnection != null){
+			// create a sparql connection to describe where this model came from
+			sparqlConnJSONObject = this.modelConnection.toJson();
+		}
+		else{
+			throw new Exception("Error creating JSON Serialization of Ontology Info object. no connection included or embedded.");
+		}
+		
+		
+		// get all the classes
+		JSONArray classList = this.generateJSONClassArray();
+			
+		// get all the properties
+		JSONArray propertyList = this.generateJSONPropArray();
+		
+		// get all enumerations
+		JSONArray enumList = this.generateJSONEnumerationArray();
+		
+		// get the date and time of creation.
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+		Date logDate = cal.getTime();
+		String creationTime = dateFormat.format(logDate);
+		
+		// add everything.
+		// create the oInfo object
+		JSONObject ontologyInfoJSONObject = new JSONObject();
+		ontologyInfoJSONObject.put("version", 1);
+		ontologyInfoJSONObject.put("created", creationTime);
+		ontologyInfoJSONObject.put("classList", classList);
+		ontologyInfoJSONObject.put("propertyList", propertyList);
+		ontologyInfoJSONObject.put("enumerationList", enumList);
+		
+		retval.put("sparqlConn", sparqlConnJSONObject);
+		retval.put("ontologyInfo", ontologyInfoJSONObject);
+		
+		// ship it out
+		return retval;
+	}
+
+	private JSONArray generateJSONEnumerationArray() {
+		JSONArray retval = new JSONArray();
+
+		// get all the enums and what class they descend directly from
+		for(String k : this.enumerationHash.keySet()){
+			JSONObject currEnum = new JSONObject();
+			JSONArray enumList = new JSONArray();
+			
+			for(String currVal : this.enumerationHash.get(k)){
+				enumList.add(currVal);
+			}
+			
+			currEnum.put("fullUri", k);
+			currEnum.put("enumeration", enumList);
+			retval.add(currEnum);
+		}
+		
+		// ship it out
+		return retval;
+	}
+
+	private JSONArray generateJSONPropArray() {
+		JSONArray retval = new JSONArray();
+
+		for(String k : this.propertyHash.keySet()){
+			OntologyProperty currProp = this.propertyHash.get(k);
+			
+			JSONObject propJSONObject = new JSONObject();
+			propJSONObject.put("fullUri", currProp.getNameStr(false));
+			
+			// find the domain. 
+			JSONArray domain = new JSONArray();
+			
+			for(String classUri : this.classHash.keySet()){
+				OntologyClass oClass = this.classHash.get(classUri);
+				// check to see if this class is in the domain.
+				
+				ArrayList<OntologyProperty> nowProps = this.getInheritedProperties(oClass);
+				if(nowProps  != null){
+					for(OntologyProperty p : nowProps){
+						if(p.getNameStr(false).equals(currProp.getNameStr(false))){
+							domain.add(oClass.getNameString(false));
+						}
+					}
+					
+				}
+				else{
+					// not in the domain.
+				}
+				
+			}
+			
+			propJSONObject.put("domain", domain);
+
+			// find the range. 
+			JSONArray range = new JSONArray();			
+			
+			range.add( currProp.getRange().getFullName() ); 			// currently, semtk only supports one range item. this might have to change so an array was used.
+			
+			propJSONObject.put("range", range);
+			// add the prop to the return
+			retval.add(propJSONObject);
+		}
+		// ship it out
+		return retval;
+	}
+
+	private JSONArray generateJSONClassArray() {
+		// throughout most of our other json generation routines, the objects themselves generate the json for themselves.
+		// this instance is different in that oInfo decentralizes a lof the information required for our export.
+		// as a result, i am centralizing this to make update/bug fixes less sprawling.
+		JSONArray retval = new JSONArray();
+		
+		// step through the class list and get what we need.
+		for(String oCurrUri : this.classHash.keySet()){
+			OntologyClass oCurr = this.classHash.get(oCurrUri);
+			
+			JSONObject currClass = new JSONObject();
+			currClass.put("fullUri", oCurrUri); 					// add the full uri for the class
+
+			// get & add the super classes
+			JSONArray superClasses = new JSONArray();
+			
+			for(String parentName : oCurr.getParentNameStrings(false)){
+				superClasses.add(parentName);
+			}
+			currClass.put("superClasses", superClasses);
+			
+			// get & add the sub classes
+			JSONArray subClasses = new JSONArray();
+			
+			if( this.subclassHash.get(oCurrUri) != null){
+				for(OntologyClass sCurr :this.subclassHash.get(oCurrUri) ){
+					subClasses.add(sCurr.getNameString(false));
+				}
+			}
+			currClass.put("subClasses", subClasses);
+			
+			// get & add the properties
+			JSONArray propArray = new JSONArray();
+			
+			ArrayList<OntologyProperty> allProps = this.getInheritedProperties(oCurr);
+			
+			if(allProps != null){
+				for( OntologyProperty oProp : allProps ){
+					propArray.add(oProp.getNameStr(false));
+				}
+			}
+			currClass.put("properties", propArray);
+			
+			// get & add the one-hop connections
+			JSONArray oneHop = new JSONArray();
+			
+			ArrayList<OntologyPath> paths = this.connHash.get(oCurrUri);
+			if(paths != null){
+				for(OntologyPath oPath : paths){
+					JSONObject pCurr = new JSONObject();
+					if(oPath.getStartClassName().equals(oCurrUri)) {
+						// add the destination.
+						pCurr.put("direction", "TO");
+						pCurr.put("class", oPath.getEndClassName());
+					}
+					else{
+						// this was the destination
+						pCurr.put("direction", "FROM");
+						pCurr.put("class", oPath.getStartClassName());
+					}
+					oneHop.add(pCurr);
+				}
+			}
+			currClass.put("directConnections", oneHop);
+	
+			// add the current class to the return array
+			retval.add(currClass);
+			
+		}
+		
+		// ship it out.
+		return retval;
 	}
 }
 

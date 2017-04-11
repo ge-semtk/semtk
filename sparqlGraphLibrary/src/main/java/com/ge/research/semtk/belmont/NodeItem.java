@@ -78,7 +78,7 @@ public class NodeItem {
 				// do not panic. add it. 
 				curr = new Node(currId, null, null, currId, ng);
 				curr.setSparqlID(currId);
-				ng.orphanOnCreate.add(curr);
+				ng.addOrphanedNode(curr);
 			}
 			this.nodes.add(curr);
 		}

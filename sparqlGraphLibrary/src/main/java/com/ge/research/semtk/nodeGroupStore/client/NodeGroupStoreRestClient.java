@@ -77,7 +77,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	public TableResultSet executeGetNodeGroupRuntimeConstraints(String nodeGroupId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
-		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
+		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupRuntimeConstraints");		
 		this.parametersJSON.put("id", nodeGroupId);
 		
 		try{
@@ -102,9 +102,46 @@ public class NodeGroupStoreRestClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
+		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
 		this.parametersJSON.put("comments", comments);
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toJSONString() );
+		
+		try{
+		
+			TableResultSet ret = new TableResultSet((JSONObject) this.execute());
+			if(ret.getTable().getNumRows() >= 1){
+				// this is a problem as this already exists. 
+				throw new Exception ("executeStoreNodeGroup :: nodegrouop with ID (" + proposedId + ") already exists. no work will be performed.");
+			}
+					
+			else{
+				this.parametersJSON.remove("id");
+				System.err.println("existence check succeeded. proceeding to insert node group: " + proposedId);
+				
+				// perform actual insertion.
+				conf.setServiceEndpoint("nodeGroupStore/storeNodeGroup");
+				JSONObject interim = (JSONObject) this.execute();
+				retval = SimpleResultSet.fromJson( interim );
+			}
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("id");
+			this.parametersJSON.remove("name");
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("comments");
+		}
+		
+		return retval;				
+	}
+	
+	public SimpleResultSet deleteStoredNodeGroup(String nodeGroupID) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint("nodeGroupStore/deleteStoredNodeGroup");
+		this.parametersJSON.put("id", nodeGroupID);
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
@@ -113,11 +150,9 @@ public class NodeGroupStoreRestClient extends RestClient {
 		finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("name");
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("comments");
+			this.parametersJSON.remove("id");
 		}
-		
-		return retval;				
+
+		return retval;
 	}
 }

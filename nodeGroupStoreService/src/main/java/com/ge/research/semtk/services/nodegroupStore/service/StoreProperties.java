@@ -13,11 +13,14 @@ public class StoreProperties {
 	private String ingestorProtocol = "";
 	private String ingestorPort     = "";
 	
-	// for read operations.
+	// for sparql operations.
 	private String sparqlServiceServer = "";
 	private String sparqlServicePort = "";
 	private String sparqlServiceProtocol = "";
 	private String sparqlServiceEndpoint = "";
+	
+	private String sparqlServiceUser = "";
+	private String sparqlServicePass = "";
 	
 	// sparql server and named graph info
 	private String sparqlServerAndPort = "";
@@ -96,6 +99,21 @@ public class StoreProperties {
 	}
 	public void setSparqlServerType(String sparqlServerType) {
 		this.sparqlServerType = sparqlServerType;
+	}
+	
+	
+	// needed for authenticated access. 
+	public String getSparqlServiceUser() {
+		return sparqlServiceUser;
+	}
+	public void setSparqlServiceUser(String sparqlServiceUser) {
+		this.sparqlServiceUser = sparqlServiceUser;
+	}
+	public String getSparqlServicePass() {
+		return sparqlServicePass;
+	}
+	public void setSparqlServicePass(String sparqlServicePass) {
+		this.sparqlServicePass = sparqlServicePass;
 	}	
 	
 

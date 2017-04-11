@@ -12,17 +12,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
-import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.load.utility.Utility;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 @RestController
@@ -41,10 +40,24 @@ public class NodeGroupStoreRestController {
 		
 		try{
 		// store a new nodegroup to the remote nodegroup store. 
+			
+		// check that the ID does not already exist. if it does, fail.
+		String qry = SparqlQueries.getNodeGroupByID(requestBody.getName());
+		SparqlQueryClient clnt = createClient(prop);
 		
+		TableResultSet instanceTable = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
+		
+		if(instanceTable.getTable().getNumRows() > 0){
+			throw new Exception("Uanble to store Nodegroup. The ID (" + requestBody.getName() + ") already exists. No work was performed.");
+		}
+			
 		// get the nodeGroup and the connection info:
 		SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
-		JSONObject ng = sgJson.getSNodeGroupJson();
+																// the next line was removed to make sure the node group is not "stripped" -- cut down to just the nodegroup proper when stored. 
+																// the executor is smart enough to deal with both cases. 
+//		JSONObject ng = sgJson.getSNodeGroupJson();				
+		JSONObject ng = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 				
+		
 		JSONObject connectionInfo = sgJson.getSparqlConnJson();
 		
 		// get the template information
@@ -129,11 +142,26 @@ public class NodeGroupStoreRestController {
 				ArrayList<String> tmpRow = tbl.getRows().get(0);
 				int targetCol = tbl.getColumnIndex("NodeGroup");
 				
-				String ng = tmpRow.get(targetCol);
-				
-				// turn this into a nodeGroup. 
+				String ngJSONstr = tmpRow.get(targetCol);
 				JSONParser jParse = new JSONParser();
-				JSONObject json = (JSONObject) jParse.parse(ng);
+				JSONObject json = (JSONObject) jParse.parse(ngJSONstr); 
+				
+				// check if this is a wrapped or unwrapped 
+				// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
+				if(json.containsKey("sNodeGroup")){
+					System.err.println("located key: sNodeGroup");
+					json = (JSONObject) json.get("sNodeGroup");
+				}
+				
+				// otherwise, check for a truncated one that is only the nodegroup proper.
+				else if(json.containsKey("sNodeList")){
+					// do nothing
+				}
+				else{
+					// no idea what this is...
+					throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+				}
+				
 				
 				// get the runtime constraints. 
 			
@@ -156,20 +184,78 @@ public class NodeGroupStoreRestController {
 		
 		return retval.toJson();
 	}
-	
+	/**
+	 * This method uses a static delete query. it would be better to use a local nodegroup and have belmont 
+	 * generate a deletion query itself. 
+	 * @param requestBody
+	 * @return
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/deleteStoredNodeGroup", method=RequestMethod.POST)
+	public JSONObject deleteStoredNodeGroup(@RequestBody DeleteByIdRequest requestBody){
+		SimpleResultSet retval = null;
+		
+		// NOTE:
+		// this static delete works but will need to be updated should the metadata surrounding node groups be updated. 
+		// really, if the insertion nodegroup itself is edited, this should be looked at.
+		// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
+		// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
+		
+		String qry =
+			"prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+			"Delete " + 
+			"{" +
+			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup." +
+			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId() + "\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
+			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup ." +
+			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			"}" + 
+			 "where { " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId()  +"\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
+			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			 "}";
+		
+		try{
+			// attempt to delete the nodegroup, name and comments where there is a give ID.
+			SparqlQueryClient clnt = createClient(prop);
+			retval = (SimpleResultSet) clnt.execute(qry, SparqlResultTypes.CONFIRM);
+			
+			
+								
+		}
+		catch(Exception e){
+			// something went wrong. report and exit. 
+			
+			System.err.println("a failure was encountered during the deletion of " +  requestBody.getId() + ": " + 
+					e.getMessage());
+			
+			retval = new SimpleResultSet();
+			retval.setSuccess(false);
+			retval.addRationaleMessage(e.getMessage());
+		}
+		
+		
+		return retval.toJson();
+	}
 	
 	// static method to avoid repeating the client generation code...
 	
 	
 	private static SparqlQueryClient createClient(StoreProperties props) throws Exception{
 		
-		SparqlQueryClient retval = new SparqlQueryClient(new SparqlQueryClientConfig(	props.getSparqlServiceProtocol(),
+		SparqlQueryClient retval = new SparqlQueryClient((SparqlQueryClientConfig)(new SparqlQueryAuthClientConfig(	
+				props.getSparqlServiceProtocol(),
 				props.getSparqlServiceServer(), 
 				props.getSparqlServicePort(), 
 				props.getSparqlServiceEndpoint(),
                 props.getSparqlServerAndPort(), 
                 props.getSparqlServerType(), 
-                props.getSparqlServerDataSet()));
+                props.getSparqlServerDataSet(),
+				props.getSparqlServiceUser(),
+				props.getSparqlServicePass())
+				));
 		
 		return retval;
 	}

@@ -163,7 +163,7 @@
     			  		}
     			  		
     			  		if (valList.length > 1) {
-    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 0, dropCallback, 62);
+    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 0, dropCallback, "90%");
     			  		} else {
     			  			dropCallback(valList[0]);
     			  		}

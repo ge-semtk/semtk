@@ -1,0 +1,6 @@
+cell,size in,lot,material,guy,treatment
+testStringsA,,any string,,,
+testStringsB,,"line\nreturn",,,
+testStringsC,,"double double ""quotes"" on this",,,
+testStringsE,,"single 'quotes' on this",,,
+testStringsF,,unquoted strange escape seq \+6%nozzle,,,

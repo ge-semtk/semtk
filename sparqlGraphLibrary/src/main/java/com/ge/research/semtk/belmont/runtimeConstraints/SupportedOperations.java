@@ -8,5 +8,6 @@ public enum SupportedOperations {
 	GREATERTHANOREQUALS, 	// value is greater than or equal to the operand
 	LESSTHAN, 				// value is less than the operand
 	LESSTHANOREQUALS, 		// value is less than or equal to the operand
-	VALUEBETWEEN			// value is between the given operands, including both endpoints
+	VALUEBETWEEN,			// value is between the given operands, including both endpoints
+	VALUEBETWEENUNINCLUSIVE // value is between the given operands, not including endpoints
 }

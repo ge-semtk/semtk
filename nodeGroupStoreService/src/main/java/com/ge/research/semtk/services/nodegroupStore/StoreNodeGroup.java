@@ -12,6 +12,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
@@ -26,8 +27,8 @@ public class StoreNodeGroup {
 		// get everything we need to send. 
 		String data = SparqlQueries.getHeaderRow() + getInsertRow(ng, connectionInfo, id, comments); 
 
-	//	System.err.println(":: csv data output ::");
-	//	System.err.println(data);
+		//	System.err.println(":: csv data output ::");	
+		//	System.err.println(data);
 		
 		// should add better error handling here. 
 		try{
@@ -40,9 +41,7 @@ public class StoreNodeGroup {
 			IngestorRestClient irc   = new IngestorRestClient(icc);
 			
 			irc.execIngestionFromCsv(insertTemplate, data);
-			TableResultSet tbl = irc.getLastResult();
-			
-			
+			RecordProcessResults tbl = irc.getLastResult();			
 			System.err.println("does the return believes the run was a succes?" + tbl.getSuccess() );
 			tbl.throwExceptionIfUnsuccessful();
 			
@@ -113,9 +112,12 @@ public class StoreNodeGroup {
 	}
 	
 	public static String escapeQuotes(String quotedString){
-		String retval = quotedString.replaceAll("\"", "\"\"");  // replace the quotes.
-		//String retval = StringEscapeUtils.escapeCsv(quotedString);  // using the apache lib. might have to pair this with unescaping later, using the same lib...
 		
+		String retval = quotedString.replaceAll("\"", "\"\"");  // replace the quotes.
+		retval = retval.replace("\\\"\"", "\\\\\"\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
+		
+		//String retval = StringEscapeUtils.escapeCsv(quotedString);  // using the apache lib. might have to pair this with unescaping later, using the same lib...
+	
 		return retval;
 	}
 	

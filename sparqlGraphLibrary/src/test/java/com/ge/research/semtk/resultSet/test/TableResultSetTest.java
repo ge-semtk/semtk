@@ -19,7 +19,6 @@
 package com.ge.research.semtk.resultSet.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 
@@ -36,7 +35,6 @@ public class TableResultSetTest {
 	
 	@Test
 	public void test() throws Exception{
-		
 		
 		String jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
 		JSONObject jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
@@ -58,32 +56,27 @@ public class TableResultSetTest {
 	
 	
 	@Test
-	public void testMerge() {
-		try{
+	public void testMerge() throws Exception {
 			
-			String jsonStr1 = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
-			JSONObject jsonObj1 = (JSONObject) new JSONParser().parse(jsonStr1);
-			Table table1 = Table.fromJson(jsonObj1);
-			TableResultSet tableResultSet1 = new TableResultSet();
-			tableResultSet1.addResults(table1);
+		String jsonStr1 = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
+		JSONObject jsonObj1 = (JSONObject) new JSONParser().parse(jsonStr1);
+		Table table1 = Table.fromJson(jsonObj1);
+		TableResultSet tableResultSet1 = new TableResultSet();
+		tableResultSet1.addResults(table1);
 			
-			String jsonStr2 = "{\"col_names\":[\"colC\",\"colB\",\"colA\"],\"rows\":[[\"cheesewhiz\",\"bonbons\",\"apple pie\"],[\"cider\",\"bourbon\",\"apple juice\"],[\"Chisholm\",\"Bobberson\",\"Anderson\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":3}";
-			JSONObject jsonObj2 = (JSONObject) new JSONParser().parse(jsonStr2);
-			Table table2 = Table.fromJson(jsonObj2);
-			TableResultSet tableResultSet2 = new TableResultSet();
-			tableResultSet2.addResults(table2);
+		String jsonStr2 = "{\"col_names\":[\"colC\",\"colB\",\"colA\"],\"rows\":[[\"cheesewhiz\",\"bonbons\",\"apple pie\"],[\"cider\",\"bourbon\",\"apple juice\"],[\"Chisholm\",\"Bobberson\",\"Anderson\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":3}";
+		JSONObject jsonObj2 = (JSONObject) new JSONParser().parse(jsonStr2);
+		Table table2 = Table.fromJson(jsonObj2);
+		TableResultSet tableResultSet2 = new TableResultSet();
+		tableResultSet2.addResults(table2);
 			
-			ArrayList<TableResultSet> tableResultSets = new ArrayList<TableResultSet>();
-			tableResultSets.add(tableResultSet1);
-			tableResultSets.add(tableResultSet2);
-			TableResultSet mergedTableResultSet = TableResultSet.merge(tableResultSets);
+		ArrayList<TableResultSet> tableResultSets = new ArrayList<TableResultSet>();
+		tableResultSets.add(tableResultSet1);
+		tableResultSets.add(tableResultSet2);
+		TableResultSet mergedTableResultSet = TableResultSet.merge(tableResultSets);
 			
-			assertEquals(mergedTableResultSet.getTable().getRows().size(),5);
+		assertEquals(mergedTableResultSet.getTable().getRows().size(),5);
 			
-		}catch(Exception e){
-			e.printStackTrace();
-			fail();
-		}
 	}	
 	
 

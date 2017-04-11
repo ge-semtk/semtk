@@ -169,7 +169,6 @@ public abstract class GeneralResultSet {
 			retval.put("message", GeneralResultSet.AmbiguousMessage);
 			
 			this.addRationaleMessage(AmbiguousMessage);
-			retval.put("rationale", this.getRationaleAsString("||"));
 		}
 		else if(success){
 			retval.put("status", GeneralResultSet.SUCCESS);
@@ -178,12 +177,13 @@ public abstract class GeneralResultSet {
 		else{
 			retval.put("status", GeneralResultSet.FAILURE);
 			retval.put("message", GeneralResultSet.FailureMessage);
-			String happenedSoFar = this.getRationaleAsString("||");
-			if(happenedSoFar.length() > 0){
-				// we have a rationale and should include it. 
-				retval.put("rationale", happenedSoFar);
-			}
 		}
+		
+		String rationaleString = this.getRationaleAsString("||");
+		if(rationaleString.length() > 0){
+			retval.put("rationale", rationaleString);
+		}
+		
 		// in any case, if the results are not null, let's include them. 
 		// partial results may be meaningful to some entities.
 		if(this.resultsContents != null && getResultsBlockName() != null && getResultsBlockName().length() > 0){

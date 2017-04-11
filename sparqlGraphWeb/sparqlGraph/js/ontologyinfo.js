@@ -856,6 +856,12 @@ OntologyPath.prototype = {
 		this.tripleList.push([className0, attName, className1]);
 	},
 	
+	addTriples : function(tripleList) {
+		for (var i=0; i < tripleList.length; i++) {
+			this.addTriple(tripleList[i][0], tripleList[i][1], tripleList[i][2]);
+		}
+	},
+	
 	asList : function() {
 		// return list of triples.  Each triple is a list of three string names [class, att, class]
 		return this.tripleList;
@@ -1126,8 +1132,11 @@ OntologyName.prototype = {
 	},
 	isInDomain : function(domain) {
 		// does my name start with this domain
-		i = this.name.indexOf(domain);
-		return (i == 0);
+		//i = this.name.indexOf(domain);
+		//return (i == 0);
+		
+		var m = this.name.match("^"+domain);
+		return (m != null);
 	}
 };
 
@@ -1151,8 +1160,10 @@ OntologyRange.prototype = {
 	},
 	isInDomain : function(domain) {
 		// does my name start with this domain
-		i = this.name.indexOf(domain);
-		return (i == 0);
+		//i = this.name.indexOf(domain);
+		//return (i == 0);
+		var m = this.name.match("^"+domain);
+		return (m != null);
 	},
 	
 };

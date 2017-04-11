@@ -51,4 +51,8 @@ public class ExecuteClientConfig extends RestClientConfig {
 			throw new Exception("Config parameter '" + key + "' not found");
 		}
 	}
+	
+	public String getConfigJsonString() {
+		return (this.configJson == null) ? "" : this.configJson.toJSONString();
+	}
 }

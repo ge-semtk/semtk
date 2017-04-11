@@ -18,8 +18,10 @@
 
 package com.ge.research.semtk.load.utility;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -43,6 +45,10 @@ public class SparqlGraphJson {
 	
 	public SparqlGraphJson(JSONObject jsonObj) {
 		this.jObj = jsonObj;
+	}
+	
+	public SparqlGraphJson(String s) throws ParseException {
+		this((JSONObject) (new JSONParser()).parse(s));		
 	}
 	
 	public SparqlConnection getSparqlConn() throws Exception {
@@ -78,6 +84,14 @@ public class SparqlGraphJson {
 	public JSONObject getImportSpecJson() {
 		if (jObj.containsKey("importSpec")) {
 			return (JSONObject) jObj.get("importSpec");
+		} else {
+			return null;
+		}
+	}
+	
+	public JSONArray getRuntimeConstraintsJson(){
+		if (jObj.containsKey("RuntimeConstraints")) {
+			return (JSONArray) jObj.get("RuntimeConstraints");
 		} else {
 			return null;
 		}
@@ -139,12 +153,14 @@ public class SparqlGraphJson {
 		return getImportSpecJson();
 	}
 	
-	// setFUNCTIONS() ported for completeness.  Not tested and I don't know where they'd be used yet
 	public void setSparqlConn(SparqlConnection conn) {
-		jObj.put("sparqlConn", conn.toJson());
+		jObj.remove("sparqlConn");					// remove the older one
+		jObj.put("sparqlConn", conn.toJson());		// add the new one.
+		this.conn = conn;							// insert the new one.
 	}
 	
 	public void setSNodeGroup(NodeGroup sNodeGroup) throws Exception {
+		jObj.remove("sNodeGroup");
 		jObj.put("sNodeGroup", sNodeGroup.toJson());
 	}
 	
@@ -157,5 +173,7 @@ public class SparqlGraphJson {
 		JSONParser parser = new JSONParser();
 		JSONObject jObj = (JSONObject) parser.parse(jsonString);
 	}
+	
+	// override the connection info in the SparqlGraphJson
 	
 }

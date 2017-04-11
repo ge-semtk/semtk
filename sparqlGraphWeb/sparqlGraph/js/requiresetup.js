@@ -109,6 +109,7 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.shim['sparqlgraph/js/ontologyinfo'] = {
 			deps : [ 'sparqlgraph/js/sparqlserverinterface' ]
 		};
+	
 	config.waitseconds = 45;
 	
 	require.config(config);

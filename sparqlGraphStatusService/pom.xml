@@ -3,9 +3,10 @@
   <parent>
     <groupId>com.ge.research.semtk</groupId>
     <artifactId>semtk-oss</artifactId>
-    <version>0.9.0</version>
+    <version>1.1.0</version>
   </parent>
   <artifactId>sparqlGraphStatusService</artifactId>
+  <version>1.1.0</version>
   
    <dependencies>
     <dependency>
@@ -21,7 +22,7 @@
 	<dependency>
 	  <groupId>com.ge.research.semtk</groupId>
 	  <artifactId>sparqlGraphLibrary</artifactId>
-	  <version>0.9.0</version>
+	  <version>1.1.0</version>
 	</dependency>
 	<dependency>
 	  <groupId>io.springfox</groupId>

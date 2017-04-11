@@ -30,6 +30,10 @@ public class SparqlConnection {
  * To match files written by historical javascript, this is mostly a JSON wrangler.
  * 
  */
+
+	// TODO replace all hardcoded json keys with Strings like this
+	public final static String DSDATASET_JSONKEY = "dsDataset";
+	
 	private final static String NONE_SERVER = "";
 	private final static String QUERY_SERVER = "kdl";
 	private final static String FUSEKI_SERVER = "fuseki";
@@ -59,6 +63,14 @@ public class SparqlConnection {
 	public SparqlConnection(String jsonText) throws Exception {
 	    this.fromString(jsonText);
 	}
+	
+	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain){
+		this.dataServerUrl = dataServicetURL;
+		this.dataKsServerURL = knowledgeServiceURL;
+		this.serverType = serverType;
+		this.dataSourceDataset = dataset;
+		this.domain = domain;
+	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
@@ -77,6 +89,10 @@ public class SparqlConnection {
 	}
 	
 	public void fromJson(JSONObject jObj) throws Exception {
+		
+		if(jObj.entrySet().size() == 1 && jObj.containsKey("sparqlConn")){
+			throw new Exception("Cannot create SparqlConnection object because the JSON is wrapped in \"sparqlConn\"");
+		}
 		
 		this.name = (String) jObj.get("name"); 
 		this.serverType = (String) jObj.get("type"); 

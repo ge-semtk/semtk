@@ -23,13 +23,14 @@ import java.net.ConnectException;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
 
 public class IngestorRestClient extends RestClient{
 
-	TableResultSet lastResult = null;
+	RecordProcessResults lastResult = null;
 	
 	public IngestorRestClient (IngestorClientConfig config){
 		this.conf = config;
@@ -51,17 +52,54 @@ public class IngestorRestClient extends RestClient{
 	 * @return
 	 * @throws Exception
 	 */
-	public TableResultSet execute() throws ConnectException, EndpointNotFoundException, Exception {
+	public RecordProcessResults execute() throws ConnectException, EndpointNotFoundException, Exception {
 		
 		if (conf.getServiceEndpoint().isEmpty()) {
 			throw new Exception("Attempting to execute IngestionClient with no enpoint specified.");
 		}
 		JSONObject resultJSON = (JSONObject)super.execute();	
 		
-		TableResultSet ret = new TableResultSet(resultJSON); 
+		RecordProcessResults ret = new RecordProcessResults(resultJSON); 
+
+		// the ingestor responds with a bit of extra information that should be added. 
+		// the unprocessed result is available in case one wants to see everything not included in the strict table version.
+		
 		return ret;
 	}
 	
+	/**
+	 * Ingest from CSV, with the option to override the SPARQL connection
+	 * @param template the template (as a String)
+	 * @param data the data (as a String)
+	 * @param sparqlConnectionOverride the SPARQL connection as a String, or null to use the connection from the template.
+	 */
+	public void execIngestionFromCsv(String template, String data, String sparqlConnectionOverride) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheck");
+		this.parametersJSON.put("template", template);
+		this.parametersJSON.put("data", data);
+		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
+		
+		try{
+			this.lastResult = this.execute();
+			
+			this.lastResult.throwExceptionIfUnsuccessful();
+	
+			return;
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("template");
+			this.parametersJSON.remove("data");
+			this.parametersJSON.remove("connectionOverride");
+		}
+	}
+	
+	/**
+	 * Ingest from CSV.
+	 * @param template the template (as a String)
+	 * @param data the data (as a String)
+	 */
 	public void execIngestionFromCsv(String template, String data) throws ConnectException, EndpointNotFoundException, Exception{
 		conf.setServiceEndpoint("ingestion/fromCsvPrecheck");
 		this.parametersJSON.put("template", template);
@@ -80,7 +118,7 @@ public class IngestorRestClient extends RestClient{
 			this.parametersJSON.remove("data");
 		}
 	}
-	public TableResultSet getLastResult(){
+	public RecordProcessResults getLastResult(){
 		return this.lastResult;
 	}
 	

@@ -23,7 +23,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -41,6 +40,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -70,13 +70,24 @@ public class IngestionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFile", method= RequestMethod.POST)
 	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile ){
-		return this.fromAnyCsv(templateFile, dataFile, true, false);
+		return this.fromAnyCsv(templateFile, dataFile, null, true, false);
+	}
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
+	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection){
+		return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile ){
-		return this.fromAnyCsv(templateFile, dataFile, true, true);
+		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
+	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection){
+		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
 	}
 	
 	/**
@@ -90,15 +101,38 @@ public class IngestionRestController {
 	public JSONObject fromCsv(@RequestBody String requestBody) throws JsonParseException, JsonMappingException, IOException{
 		// System.err.println("the request: " + requestBody);
 		IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
-		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), false, false);
+		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
 	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvWithNewConnection", method= RequestMethod.POST)
+	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody) throws JsonParseException, JsonMappingException, IOException{
+		// System.err.println("the request: " + requestBody);
+		IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
+		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
+	}
+	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody){
-		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), false, true);
+		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvWithNewConnectionPrecheck", method= RequestMethod.POST)
+	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody){
+		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
 	}
 	
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Boolean fromFiles, Boolean safeLoad){
+	/**
+	 * Load data from csv.
+	 * @param templateFile the json template (File if fromFiles=true, else String)
+	 * @param dataFile the data file (File if fromFiles=true, else String)
+	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
+	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
+	 * @param safeLoad
+	 */
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean safeLoad){
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 		int recordsProcessed = 0;
@@ -137,6 +171,8 @@ public class IngestionRestController {
 			}
 			
 			json = (JSONObject) parser.parse(templateContent);
+			SparqlGraphJson sgJson = new SparqlGraphJson(json);
+			
 		
 			String dataFileContent = null;
 			if(fromFiles) { dataFileContent = new String( ((MultipartFile)dataFile).getBytes() ); }
@@ -151,6 +187,19 @@ public class IngestionRestController {
 			else{
 				System.err.println("data content was null");
 			}
+					
+			// get the connection override, if any
+			if(sparqlConnectionOverride != null){
+				String sparqlConnectionString = null;	
+				if(fromFiles){
+					sparqlConnectionString = new String( ((MultipartFile)sparqlConnectionOverride).getBytes() ); // read from file
+				}else{
+					sparqlConnectionString = (String)sparqlConnectionOverride;
+				}
+				// override the connection
+				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));				
+			}
+			
 			
 			if(logger != null){ // always checking if we are actually logging. 
 				deets = LoggerRestClient.addDetails("template", templateContent, deets);
@@ -162,13 +211,19 @@ public class IngestionRestController {
 			// perform actual load
 			Calendar cal = Calendar.getInstance();
 			String startTime = dateFormat.format(cal.getTime());
-			if(logger != null) { deets = LoggerRestClient.addDetails("Start Time", startTime, deets); }
+			if(logger != null) { 
+				deets = LoggerRestClient.addDetails("Start Time", startTime, deets); 				
+			}
+						
+			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
 			
-			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
 			recordsProcessed = dl.importData(safeLoad); 	// defaulting to preflight.
 	
 			String endTime = dateFormat.format(cal.getTime());
-			if(logger != null) { deets = LoggerRestClient.addDetails("End Time", endTime, deets); }
+			if(logger != null) { 
+				deets = LoggerRestClient.addDetails("End Time", endTime, deets); 
+				deets = LoggerRestClient.addDetails("input record size", recordsProcessed + "", deets);	
+			}
 			
 			// set success values
 			if(safeLoad && dl.getLoadingErrorReport().getRows().size() == 0){
@@ -182,8 +237,7 @@ public class IngestionRestController {
 			}
 			else {
 				retval.setSuccess(false);
-			}
-			
+			}			
 			
 			retval.setRecordsProcessed(recordsProcessed);
 			retval.setFailuresEncountered(dl.getLoadingErrorReport().getRows().size());
@@ -209,10 +263,8 @@ public class IngestionRestController {
 	//	System.err.println(retvalJSON.toJSONString());
 		return retvalJSON;
 	}
-	
-	/**
-	 * Load data from Oracle
-	 */
+			
+
 	@CrossOrigin
 	@RequestMapping(value="/fromOracleODBC", method= RequestMethod.POST)
 	public JSONObject fromOracleODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
@@ -226,9 +278,8 @@ public class IngestionRestController {
 			String sparqlEndpointUser = prop.getSparqlUserName();
 			String sparqlEndpointPassword = prop.getSparqlPassword();
 			
-			// log the attempted user name and password
+			// log the attempted credentials
 			System.err.println("the user name was: " + sparqlEndpointUser);
-			System.err.println("the password was: " + sparqlEndpointPassword);
 			
 			// get template file content and convert to json object for use. 
 			String templateContent = new String(templateFile.getBytes());
@@ -258,7 +309,8 @@ public class IngestionRestController {
 		
 		return retval.toJson();
 	}		
-
+	
+	
 	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)
 	public JSONObject fromPostgresODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
 		
