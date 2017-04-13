@@ -273,26 +273,41 @@ define([// properly require.config'ed
 				ret.nodes = [];
 				var lastNodeObj = null;
 				for (var i=0; i < this.mapList.length; i++) {
-					var row = this.mapList[i];
+					var map = this.mapList[i];
 					
 					// if row is for a node (not a prop)
-					if (row.getPropItem() == null) {
+					if (map.getPropItem() == null) {
 						// push the row on as a new node
-						lastNodeObj = row.toJson(idHash);
+						lastNodeObj = map.toJson(idHash);
 						lastNodeObj.props = [];
 						ret.nodes.push(lastNodeObj);
 						
 					// if row is property and has items
-					} else if (row.getItemList().length > 0) {
+					} else if (map.getItemList().length > 0) {
 						// push the row as a property to the last node
-						var mapJson = row.toJson(idHash);
+						var mapJson = map.toJson(idHash);
 						if (compressFlag == false || mapJson.mapping.length > 0) {
-							lastNodeObj.props.push(row.toJson(idHash));
+							lastNodeObj.props.push(map.toJson(idHash));
 						}
 					}
 				}
 				return ret;
 			},
+			
+			// get list of all PropertyItems that have mappings
+			getMappedPropItems() {
+				var ret = [];
+				for (var i=0; i < this.mapList.length; i++) {
+					var map = this.mapList[i];
+					var pItem = map.getPropItem();
+					// if row is for a node (not a prop)
+					if (pItem != null && map.getItemList().length > 0) {
+						ret.push(pItem);
+					}
+				}
+				return ret;
+			},
+			
 			updateNodegroup : function (nodegroup) {
 				// Build new mapList and mapHash based on this.nodegroup
 				// saving any existing itemLists
@@ -318,28 +333,28 @@ define([// properly require.config'ed
 					
 					// Build a ImportMapping for the node URI
 					var prop = null;
-					var row = new ImportMapping(node, prop);
-					var key = row.genUniqueKey();
+					var map = new ImportMapping(node, prop);
+					var key = map.genUniqueKey();
 					if (key in oldRowHash) { 
-						row.itemList = oldRowHash[key].itemList.slice(); 
+						map.itemList = oldRowHash[key].itemList.slice(); 
 						oldRowHash[key] = null;
 					}
 					
-					this.addRow(row);
+					this.addRow(map);
 					
 					// Build a ImportMapping for each property
 					var propItemList = nodeList[i].propList;
 					if (propItemList) {
 						for (var j=0; j < propItemList.length; j++) {
 							prop = propItemList[j];
-							row = new ImportMapping(node, prop);
-							var keyP = row.genUniqueKey();
+							map = new ImportMapping(node, prop);
+							var keyP = map.genUniqueKey();
 							if (keyP in oldRowHash) { 
-								row.itemList = oldRowHash[keyP].itemList.slice(); 
+								map.itemList = oldRowHash[keyP].itemList.slice(); 
 								oldRowHash[keyP] = null;
 							}
 							
-							this.addRow(row);
+							this.addRow(map);
 						}
 					}
 				}

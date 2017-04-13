@@ -399,7 +399,7 @@ public class NodeGroup {
 		for (int j = 0; j < nodeArr.size(); ++j) {
 			JSONObject nodeJson = (JSONObject) nodeArr.get(j);
 			
-			Node curr  = new Node(nodeJson, this);
+			Node curr  = new Node(nodeJson, this, uncompressOInfo);
 			Node check = this.getNodeBySparqlID(curr.getSparqlID());
 			
 			// create nodes we have never seen
@@ -1889,22 +1889,17 @@ public class NodeGroup {
 	}
 
 	public JSONObject toJson() throws Exception {
-		return this.toJson(false);
+		return this.toJson(null);
 	}
-	
+
 	/**
-	 * Creates a JSON format that eliminates any un-returned and un-constrained elements
-	 * This format is more robust to model changes, so it's good for long-term storage.
-	 * It requires an OntologyInfo to un-compress.
+	 * 
+	 * @param mappedPropItems - null=don't deflate ;  non-null=deflate
 	 * @return
 	 * @throws Exception
 	 */
-	public JSONObject toCompressedJson() throws Exception {
-		return this.toJson(true);
-	}
-
 	@SuppressWarnings("unchecked")
-	public JSONObject toJson(boolean compressFlag) throws Exception {
+	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems) throws Exception {
 		JSONObject ret = new JSONObject();
 		
 		// get list in order such that linked nodes always preceed the node that
@@ -1921,7 +1916,7 @@ public class NodeGroup {
 		
 		// add json snodes to sNodeList
 		for (int i=0; i < snList.size(); i++) {
-			sNodeList.add(snList.get(i).toJson(compressFlag));
+			sNodeList.add(snList.get(i).toJson(mappedPropItems));
 		}
 		
 		ret.put("sNodeList", sNodeList);

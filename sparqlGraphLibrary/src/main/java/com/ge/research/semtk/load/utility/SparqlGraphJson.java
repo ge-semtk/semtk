@@ -105,11 +105,15 @@ public class SparqlGraphJson {
 	 * @throws Exception
 	 */
 	public NodeGroup getNodeGroupCopy() throws Exception {
+		return this.getNodeGroupCopy(null);
+	}
+	
+	public NodeGroup getNodeGroupCopy(OntologyInfo uncompressOInfo) throws Exception {
 		JSONObject json = getSNodeGroupJson();
 		if (json == null) {
 			return null;
 		} else {
-			return NodeGroup.getInstanceFromJson(json);
+			return NodeGroup.getInstanceFromJson(json, uncompressOInfo);
 		}
 	}
 	
@@ -157,21 +161,6 @@ public class SparqlGraphJson {
 		jObj.remove("sparqlConn");					// remove the older one
 		jObj.put("sparqlConn", conn.toJson());		// add the new one.
 		this.conn = conn;							// insert the new one.
-	}
-	
-	
-	public void setSNodeGroup(NodeGroup sNodeGroup) throws Exception {
-		this.setSNodeGroup(sNodeGroup, false);
-	}
-	
-	public void setSNodeGroup(NodeGroup sNodeGroup, boolean compressFlag) throws Exception {
-		jObj.remove("sNodeGroup");
-		jObj.put("sNodeGroup", sNodeGroup.toJson(compressFlag));
-	}
-	
-	public void setImportSpec(ImportSpecHandler importSpec) throws Exception {
-		throw new Exception("setImportSpec isn't implemented");
-		//jObj.put("importSpec", importSpec.toJson(true));
 	}
 	
 	public void parse(String jsonString) throws Exception {

@@ -248,6 +248,41 @@ public class ImportSpecHandler {
 	}
 	
 	/**
+	 * Return a pointer to every PropertyItem in ng that has a mapping in the import spec
+	 * @param ng
+	 * @return
+	 */
+	public ArrayList<PropertyItem> getMappedPropItems(NodeGroup ng) {
+		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
+		
+		JSONArray nodes = (JSONArray) this.importspec.get("nodes");  
+		
+		// loop through the json nodes in the import spec
+		for (int i = 0; i < nodes.size(); i++){  
+			JSONObject nodeJson = (JSONObject) nodes.get(i);
+						
+			// get the related node from the NodeGroup
+			String sparqlID = nodeJson.get("sparqlID").toString();
+			Node snode = ng.getNodeBySparqlID(sparqlID);
+			
+			// loop through Json node's properties
+			JSONArray propsJArr  = (JSONArray) nodeJson.get("props");
+			for (int j=0; j < propsJArr.size(); j++) {
+				JSONObject propJson = (JSONObject) propsJArr.get(j);
+				String uriRelation = propJson.get("URIRelation").toString();
+				
+				// if propertyJson has a mapping, return the PropertyItem
+				JSONArray propMapJArr = (JSONArray) propJson.get("mapping");
+				if (propMapJArr != null && propMapJArr.size() > 0) {
+					PropertyItem pItem = snode.getPropertyByURIRelation(uriRelation);
+					ret.add(pItem);
+				}
+			}
+		}
+		
+		return ret;
+	}
+	/**
 	 * Build a value from a mapping array and a data record
 	 * @param mappingArrayJson
 	 * @param record

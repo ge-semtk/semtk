@@ -28,8 +28,8 @@ define([	// properly require.config'ed
 		],
 
 	function() {
-		var SparqlGraphJson = function(conn, nodegroup, mappingTab, optCompressFlag) {
-			var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
+		var SparqlGraphJson = function(conn, nodegroup, mappingTab, optDeflateFlag) {
+			var deflateFlag = (typeof optDeflateFlag == "undefined") ? false : optDeflateFlag;
 			
 			// intended that either all or none of the parameters are given
 			
@@ -39,9 +39,22 @@ define([	// properly require.config'ed
 					importSpec: null,
 			};
 			
-			if (typeof conn      != "undefined") { this.setSparqlConn(conn); }
-			if (typeof nodegroup != "undefined") { this.setSNodeGroup(nodegroup, compressFlag); }
-			if (typeof mappingTab != "undefined") { this.setMappingTab(mappingTab, compressFlag); }
+			if (typeof conn      != "undefined") { 
+				this.setSparqlConn(conn); 
+			}
+			
+			if (typeof nodegroup != "undefined") { 
+				if (deflateFlag) {
+					var mappedPropItems = (typeof mappingTab != "undefined" && mappingTab != null) ? mappingTab.getMappedPropItems() : [];
+					this.jObj.sNodeGroup = nodegroup.toJson(true, mappedPropItems); 
+				} else {
+					this.jObj.sNodeGroup = nodegroup.toJson(false, []); 
+				}
+			}
+			
+			if (typeof mappingTab != "undefined") { 
+				this.jObj.importSpec = mappingTab.toJson();
+			}
 
 		};
 	
@@ -57,10 +70,6 @@ define([	// properly require.config'ed
 				return this.jObj.sNodeGroup;
 			},
 			
-			getSNodeGroup : function() {
-				
-			},
-			
 			getMappingTabJson : function() {
 				if (this.jObj.hasOwnProperty("importSpec")) {
 					return this.jObj.importSpec;
@@ -70,18 +79,6 @@ define([	// properly require.config'ed
 			},
 			setSparqlConn : function(conn) {
 				this.jObj.sparqlConn = conn.toJson();
-			},
-			
-			setSNodeGroup : function(sNodeGroup, optCompressFlag) {
-				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
-				
-				this.jObj.sNodeGroup = sNodeGroup.toJson(compressFlag);
-			},
-			
-			setMappingTab : function(mappingTab, optCompressFlag) {
-				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
-
-				this.jObj.importSpec = mappingTab.toJson();
 			},
 			
 			stringify : function () {

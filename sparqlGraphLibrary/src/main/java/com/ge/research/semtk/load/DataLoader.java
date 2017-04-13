@@ -66,11 +66,10 @@ public class DataLoader {
 		this.endpoint = sgJson.getDataInterface();
 		System.out.println("Dataset graph name: " + getDatasetGraphName());
 		
-		this.master = sgJson.getNodeGroupCopy();
-		
-		// initialize oInfo object
 		this.oInfo = sgJson.getOntologyInfo();
-				
+						
+		this.master = sgJson.getNodeGroupCopy(this.oInfo);
+		
 		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize);		
 	}
 	

@@ -70,14 +70,27 @@ public class Node extends Returnable {
 		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
 	}
 	
-	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng, OntologyInfo uncompressOInfo) throws Exception {
+	/**
+	 * Construct with a non-null oInfo for inflating.
+	 * @param name
+	 * @param p
+	 * @param n
+	 * @param classURI
+	 * @param subClassNames
+	 * @param ng
+	 * @param inflateOInfo - oInfo to re-inflate a deflated node
+	 * @throws Exception
+	 */
+	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String classURI, ArrayList<String> subClassNames, NodeGroup ng, OntologyInfo inflateOInfo) throws Exception {
 		// just create the basic node.
 		this.nodeName = name;
-		this.fullURIname = URI;
+		this.fullURIname = classURI;
 		this.subclassNames = new ArrayList<String>(subClassNames);
 		if(n != null){ this.nodes = n;}
-		if(p != null){ this.props = this.getUncompressedProps(URI, p, uncompressOInfo);}
+		if(p != null){ this.props = p;}
 		this.nodeGroup = ng;
+		
+		this.inflateAndValidate(inflateOInfo);
 		
 		// add code to get the sparqlID
 		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
@@ -97,8 +110,38 @@ public class Node extends Returnable {
 		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
 	}
 	
+	public Node(String jsonStr, NodeGroup ng) throws Exception{
+		// create the JSON Object we need and then call the other constructor. 
+		this((JSONObject)(new JSONParser()).parse(jsonStr), ng);
+	}
+	
+	public Node(JSONObject nodeEncoded, NodeGroup ng) throws Exception{
+		// create a new node from JSON, assuming everything is sane. 
+		this.nodeGroup = ng;
+		
+		this.updateFromJson(nodeEncoded);
+	}
+	
+	public Node(JSONObject nodeEncoded, NodeGroup ng, OntologyInfo inflateOInfo) throws Exception{
+		// create a new node from JSON, assuming everything is sane. 
+		this.nodeGroup = ng;
+		
+		this.updateFromJson(nodeEncoded);
+		this.inflateAndValidate(inflateOInfo);
+
+	}
+	
 	@SuppressWarnings("unchecked")
-	public JSONObject toJson(boolean compressFlag) {
+	public JSONObject toJson() {
+		return this.toJson(null);
+	}
+	
+	/**
+	 *
+	 * @param mappedPropItems - null=don't deflate ;  non-null=deflate
+	 * @return
+	 */
+	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems) {
 		// return a JSON object of things needed to serialize
 		JSONObject ret = new JSONObject();
 		JSONArray jPropList = new JSONArray();
@@ -109,16 +152,21 @@ public class Node extends Returnable {
 			scNames.add(this.subclassNames.get(i));
 		}
 		
-		for (int i = 0; i < this.props.size(); i++) {
+		// add properties
+		for (int i = 0; i < this.props.size(); i++) { 
 			PropertyItem p = this.props.get(i);
 			// if compressFlag, then only add property if returned or constrained
-			if (compressFlag == false || p.getIsReturned() || p.getConstraints() != null) {
+			if (mappedPropItems == null || p.getIsReturned() || p.getConstraints() != null || mappedPropItems.contains(p)) {
 				jPropList.add(p.toJson());
 			}
 		}
 		
+		// add nodes
 		for (int i = 0; i < this.nodes.size(); i++) {
-			jNodeList.add(this.nodes.get(i).toJson());
+			// if we're deflating, only add connected nodes
+			if (mappedPropItems == null || this.nodes.get(i).getConnected()) {
+				jNodeList.add(this.nodes.get(i).toJson());
+			}
 		}
 				
 		ret.put("propList", jPropList);
@@ -136,31 +184,43 @@ public class Node extends Returnable {
 	}
 	
 	/**
-	 * 
+	 * Expand props to full set of properties for this classURI in oInfo 
+	 * and validates all props
 	 * @param classURI
 	 * @param props
 	 * @param oInfo
 	 * @return
 	 * @throws Exception
 	 */
-	private ArrayList<PropertyItem> getUncompressedProps(String classURI, ArrayList<PropertyItem> props, OntologyInfo oInfo) throws Exception {
-		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
-		// build hash of properties for this class
+	private void inflateAndValidate(OntologyInfo oInfo) throws Exception {
+		if (oInfo == null) { return; }
+		
+		ArrayList<PropertyItem> newProps = new ArrayList<PropertyItem>();
+		ArrayList<NodeItem> newNodes = new ArrayList<NodeItem>();
+		
+		// build hash of suggested properties for this class
 		HashMap<String, PropertyItem> propItemHash = new HashMap<>();
-		for (PropertyItem p : props) {
+		for (PropertyItem p : this.props) {
 			propItemHash.put(p.getUriRelationship(), p);
 		}
 		
+		// build hash of suggested nodes for this class
+		HashMap<String, NodeItem> nodeItemHash = new HashMap<>();
+		for (NodeItem n : this.nodes) {
+			nodeItemHash.put(n.getKeyName(), n);
+		}
+		
 		// get oInfo's version of the property list
-		OntologyClass ontClass = oInfo.getClass(classURI);
+		OntologyClass ontClass = oInfo.getClass(this.getFullUriName());
 		if (ontClass == null) {
-			throw new Exception("Class no longer exists in the model: " + classURI);
+			throw new Exception("Class no longer exists in the model: " + this.getFullUriName());
 		}
 		ArrayList<OntologyProperty> ontProps = oInfo.getInheritedProperties(ontClass);
 		
 		// loop through oInfo's version	
 		for (OntologyProperty oProp : ontProps) {
 			String oPropURI = oProp.getNameStr();
+			String oPropKeyname = oProp.getNameStr(true);
 			
 			// if ontology property is one of the prop parameters, then check it over
 			if (propItemHash.containsKey(oPropURI)) {
@@ -175,7 +235,9 @@ public class Node extends Returnable {
 				}
 				
 				// all is ok: add the propItem
-				ret.add(propItem);
+				newProps.add(propItem);
+				
+				propItemHash.remove(oPropURI);
 				
 			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
 		    // Uncompress (create) it.
@@ -184,14 +246,80 @@ public class Node extends Returnable {
 															oProp.getRangeStr(true), 
 															oProp.getRangeStr(false),
 															oProp.getNameStr(false));
-				ret.add(propItem);
+				newProps.add(propItem);
+				
+			// node, in hash
+			} else if (nodeItemHash.containsKey(oPropKeyname)) {
+				// regardless of connection, check range
+				NodeItem nodeItem = nodeItemHash.get(oPropKeyname);
+				String nRangeStr = nodeItem.getUriValueType();
+				String nRangeAbbr = nodeItem.getValueType();
+				
+				if (!nRangeStr.equals(oProp.getRangeStr())) {
+					throw new Exception("Node property " + oPropURI + " range of " + nRangeStr + " doesn't match model range of " + oProp.getRangeStr());
+				}
+				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
+					throw new Exception("Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
+				}
+				
+				// if connected 
+				if (nodeItem.getConnected()) {
+					
+					// check full domain
+					String nDomainStr = nodeItem.getUriConnectBy();
+					if (!nDomainStr.equals(oProp.getNameStr())) {
+						throw new Exception("Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr());
+					}
+					
+					// check all connected snode classes
+					OntologyClass nRangeClass = oInfo.getClass(nRangeStr);
+					
+					ArrayList<Node> snodeList = nodeItem.getNodeList();
+					for (int j=0; j < snodeList.size(); j++) {
+						String snodeURI = snodeList.get(j).getUri();
+						OntologyClass snodeClass = oInfo.getClass(snodeURI);
+						
+						if (snodeClass == null) {
+							throw new Exception("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
+						}
+						
+						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
+							throw new Exception("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
+
+						}
+					}
+				
+					// all is ok: add the propItem
+					newNodes.add(nodeItem);
+					
+					nodeItemHash.remove(oPropKeyname);
+				}
+			// new node
+			} else {
+				NodeItem nodeItem = new NodeItem(	oProp.getNameStr(true), 
+													oProp.getRangeStr(true),
+													oProp.getRangeStr(false)
+													);
+				newNodes.add(nodeItem);
 			}
-			
 		}
 		
-		return ret;
+		if (!propItemHash.isEmpty()) {
+			throw new Exception("Property no longer exists in the model: " + propItemHash.keySet().toString());
+		}
+		if (!nodeItemHash.isEmpty()) {
+			throw new Exception("Node property no longer exists in the model: " + nodeItemHash.keySet().toString());
+		}
+		
+		this.props = newProps;
+		this.nodes = newNodes;
 	}
 	
+	/**
+	 * Validates that all nodeItems and propertyItems exist in the model
+	 * @param oInfo
+	 * @throws Exception
+	 */
 	public void validateAgainstModel(OntologyInfo oInfo) throws Exception {
 		OntologyClass oClass = oInfo.getClass(this.fullURIname);
 		
@@ -259,18 +387,7 @@ public class Node extends Returnable {
 		}
 		this.sparqlID = ID;
 	}
-	 
-	public Node(String jsonStr, NodeGroup ng) throws Exception{
-		// create the JSON Object we need and then call the other constructor. 
-		this((JSONObject)(new JSONParser()).parse(jsonStr), ng);
-	}
 	
-	public Node(JSONObject nodeEncoded, NodeGroup ng) throws Exception{
-		// create a new node from JSON, assuming everything is sane. 
-		this.nodeGroup = ng;
-		
-		this.updateFromJson(nodeEncoded);
-	}
 	public void updateFromJson(JSONObject nodeEncoded) throws Exception{
 		// blank existing 
 		props = new ArrayList<PropertyItem>();
@@ -503,6 +620,14 @@ public class Node extends Returnable {
 	public PropertyItem getPropertyByKeyname(String keyname) {
 		for (int i = 0; i < this.props.size(); i++) {
 			if (this.props.get(i).getKeyName().equals(keyname)) {
+				return this.props.get(i);
+			}
+		}
+		return null;
+	}
+	public PropertyItem getPropertyByURIRelation(String uriRel) {
+		for (int i = 0; i < this.props.size(); i++) {
+			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
 				return this.props.get(i);
 			}
 		}

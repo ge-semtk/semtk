@@ -495,7 +495,7 @@
     	
     	clearGraph();
     	logEvent("SG Loaded Nodegroup");
-		gNodeGroup.addJson(grpJson, gOInfo);    // PEC HERE TESTING
+		gNodeGroup.addJson(grpJson, gOInfo); 
 		gNodeGroup.drawNodes();
 		guiGraphNonEmpty();
 		
@@ -528,6 +528,9 @@
     		
     	} else {
     		require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
+    			// make sure importSpec is in sync
+    			gMappingTab.updateNodegroup(gNodeGroup);
+    			
 				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
 	    		
 				gMappingTab.setChangedFlag(false);	
