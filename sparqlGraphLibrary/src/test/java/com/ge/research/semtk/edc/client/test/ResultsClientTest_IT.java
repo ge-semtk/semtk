@@ -54,26 +54,7 @@ public class ResultsClientTest_IT {
 		SERVICE_PORT = IntegrationTestUtility.getResultsServicePort();
 		client = new ResultsClient(new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT));
 	}
-	
-	
-	@Test
-	public void testStoreSingleFile() throws Exception {
 
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
-		
-		try {	
-			client.execStoreSingleFileResults(jobId, CSV_CONTENTS, EXTENSION);
-			URL[] urls = client.execGetResults(jobId);
-			
-			assertTrue(urls[0] == null); 
-			String contents = IOUtils.toString(urls[1]);
-			assertTrue(contents.equals(CSV_CONTENTS));
-			assertTrue(urls[1].toString().endsWith(EXTENSION));
-			
-		} finally {
-			cleanup(client, jobId);
-		}
-	}
 	
 	
 	@Test
@@ -213,6 +194,26 @@ public class ResultsClientTest_IT {
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// trust ResultsStorageTest.java to test the contents
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
+	
+	@Test
+	public void testStoreSingleFile() throws Exception {
+
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
+		try {	
+			client.execStoreSingleFileResults(jobId, CSV_CONTENTS, EXTENSION);
+			URL[] urls = client.execGetResults(jobId);
+			
+			assertTrue(urls[0] == null); 
+			String contents = IOUtils.toString(urls[1]);
+			assertTrue(contents.equals(CSV_CONTENTS));
+			assertTrue(urls[1].toString().endsWith(EXTENSION));
+			
 		} finally {
 			cleanup(client, jobId);
 		}
