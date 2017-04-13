@@ -62,9 +62,13 @@ public class NodeGroup {
 	/**
 	 * Create a NodeGroup from JSON
 	 */
-	public static NodeGroup getInstanceFromJson(JSONObject json) throws Exception{
+	public static NodeGroup getInstanceFromJson(JSONObject json) throws Exception {
+		return NodeGroup.getInstanceFromJson(json, null);
+	}
+	
+	public static NodeGroup getInstanceFromJson(JSONObject json, OntologyInfo uncompressOInfo) throws Exception{
 		NodeGroup nodegroup = new NodeGroup();
-		nodegroup.addJsonEncodedNodeGroup(json);
+		nodegroup.addJsonEncodedNodeGroup(json, uncompressOInfo);
 		return nodegroup;
 	}
 	
@@ -369,20 +373,33 @@ public class NodeGroup {
 	public static String tabOutdent(String tab) {
 		return tab.substring(0, tab.length()-1);
 	}
-	
 	public void addJsonEncodedNodeGroup(JSONObject jobj) throws Exception{
+		this.addJsonEncodedNodeGroup(jobj, null);
+	}
+	
+	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception{
 		HashMap<String, String> changedHash = new HashMap<String, String>();
 		this.resolveSparqlIdCollisions(jobj, changedHash);
 		
 		// attempt to add the nodes, using "changedHash" as a guide for IDs.
-		this.addJson((JSONArray) jobj.get("sNodeList")); 
+		this.addJson((JSONArray) jobj.get("sNodeList"), uncompressOInfo); 
 	}
 	
 	public void addJson(JSONArray nodeArr) throws Exception {
+		this.addJson(nodeArr, null);
+	}
+	
+	/**
+	 * Add json to a nodegroup
+	 * @param nodeArr
+	 * @param uncompressOInfo If non-null, use this to uncompress any Node properties
+	 * @throws Exception
+	 */
+	public void addJson(JSONArray nodeArr, OntologyInfo uncompressOInfo) throws Exception {
 		for (int j = 0; j < nodeArr.size(); ++j) {
-			JSONObject node = (JSONObject) nodeArr.get(j);
+			JSONObject nodeJson = (JSONObject) nodeArr.get(j);
 			
-			Node curr  = new Node(node, this);
+			Node curr  = new Node(nodeJson, this, uncompressOInfo);
 			Node check = this.getNodeBySparqlID(curr.getSparqlID());
 			
 			// create nodes we have never seen
@@ -403,7 +420,7 @@ public class NodeGroup {
 				if(check != null){
 					// remove from the orphan list. we do not want to mod this node more than once. 
 				//	this.orphanOnCreate.remove(check);
-					check.updateFromJson(node);
+					check.updateFromJson(nodeJson);
 				}
 				else{
 					throw new Exception( "--uncreated node referenced: " + curr.sparqlID );
@@ -1871,8 +1888,18 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 
-	@SuppressWarnings("unchecked")
 	public JSONObject toJson() throws Exception {
+		return this.toJson(null);
+	}
+
+	/**
+	 * 
+	 * @param mappedPropItems - null=don't deflate ;  non-null=deflate
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems) throws Exception {
 		JSONObject ret = new JSONObject();
 		
 		// get list in order such that linked nodes always preceed the node that
@@ -1889,7 +1916,7 @@ public class NodeGroup {
 		
 		// add json snodes to sNodeList
 		for (int i=0; i < snList.size(); i++) {
-			sNodeList.add(snList.get(i).toJson());
+			sNodeList.add(snList.get(i).toJson(mappedPropItems));
 		}
 		
 		ret.put("sNodeList", sNodeList);

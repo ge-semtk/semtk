@@ -98,7 +98,8 @@ define([	// properly require.config'ed
 		MappingTab.prototype = {
 			clear : function () {
 				this.importCsvSpec = null;
-			    this.importSpec = new ImportSpec();
+				
+			    this.importSpec = new ImportSpec(this.importSpec.alertCallback);
 
 			    this.uniqueIndex = 0;  
 			    	    
@@ -116,6 +117,10 @@ define([	// properly require.config'ed
 				} else {
 					return "";
 				}
+			},
+			
+			getMappedPropItems : function () {
+				return this.importSpec.getMappedPropItems();
 			},
 			
 			getUniqueIndexStr : function () {
@@ -1222,7 +1227,9 @@ define([	// properly require.config'ed
 				
 			},
 			
-            toJson : function () {
+            toJson : function (optDeflateFlag) {
+				var deflateFlag = (typeof optDeflateFlag == "undefined") ? false : optDeflateFlag;
+
                 return this.importSpec.toJson();
             },
         };

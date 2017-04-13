@@ -134,10 +134,12 @@ public class NodeItem {
 	}
 
 	public String getUriValueType() {
-		// TODO Auto-generated method stub
-		return valueTypeURI;
+		return this.valueTypeURI;
 	}
-
+	public String getValueType() {
+		return this.valueType;
+	}
+	
 	public String getUriConnectBy() {
 		return this.uriConnectBy;
 	}
