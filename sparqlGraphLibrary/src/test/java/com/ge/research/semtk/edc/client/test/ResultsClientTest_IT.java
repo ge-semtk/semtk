@@ -55,8 +55,9 @@ public class ResultsClientTest_IT {
 		client = new ResultsClient(new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT));
 	}
 	
+	
 	@Test
-	public void testSingleFile() throws Exception {
+	public void testStoreSingleFile() throws Exception {
 
 		String jobId = "results_test_jobid_" + UUID.randomUUID();
 		
@@ -74,8 +75,9 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
+	
 	@Test
-	public void testTable() throws Exception {
+	public void testStoreTable() throws Exception {
 
 		String jobId = "results_test_jobid_" + UUID.randomUUID();
 		
@@ -98,23 +100,26 @@ public class ResultsClientTest_IT {
 
 			// check the results.
 			String resultString = Utility.getURLContentsAsString(urls[1]);
-			String expectedResultString = "col1,col2\none, two\none, two\n";
+			String expectedResultString = "col1,col2\none,two\none,two\n";		
 			assertEquals(expectedResultString, resultString);
 		} finally {
 			cleanup(client, jobId);
 		}
 	}
 	
+	
 	@Test
-	public void testTableWithComma() throws Exception {
+	public void testStoreTable_WithCommasAndQuotes() throws Exception {
 		
 		String jobId = "results_test_jobid_" + UUID.randomUUID();
 		
-		String [] cols = {"colA", "colB"};
-		String [] types = {"String", "String"};
+		String [] cols = {"colA", "colB","colC","colD"};
+		String [] types = {"String", "String", "String","String"};
 		ArrayList<String> row = new ArrayList<String>();
-		row.add("apple,ant");  // this element has a comma in it.
+		row.add("apple,ant");  					// this element has a comma
 		row.add("bench");
+		row.add("\"cabana\"");					// this element has quotes
+		row.add("Dan declared \"hi, dear\"");	// this element has quotes and a comma
 		
 		try {
 			Table table = new Table(cols, types, null);
@@ -123,20 +128,18 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);
 			URL[] urls = client.execGetResults(jobId);
 			
-			assertTrue(urls[0].toString().endsWith("_sample.json")); 
-			assertTrue(urls[1].toString().endsWith(".csv")); 
-
-			// check the results.
 			String resultString = Utility.getURLContentsAsString(urls[1]);
-			String expectedResultString = "colA,colB\n\"apple,ant\",bench\n";   // elements with commas must be put in quotes, else the comma will look like a delimiter
+			String expectedResultString = "colA,colB,colC,colD\n\"apple,ant\",\"bench\",\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";
 			assertEquals(expectedResultString, resultString);
+			
 		} finally {
 			cleanup(client, jobId);
 		}
 	}
 	
+	
 	@Test
-	public void testBiggerTable() throws Exception {
+	public void testStoreTable_Medium() throws Exception {
 
 		String jobId = "results_test_jobid_" + UUID.randomUUID();
 		
@@ -169,6 +172,53 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
+	/**
+	 * Adjust NUM_COLS and NUM_ROWS to make this bigger when performance testing.  
+	 * (Committing them on the smaller size)
+	 */
+	@Test
+	public void testStoreTable_Huge() throws Exception {
+
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
+		try {
+			
+			// construct a huge table
+			final int NUM_COLS = 100;
+			final int NUM_ROWS = 1000;
+			String[] cols = new String[NUM_COLS];
+			String[] colTypes = new String[NUM_COLS];
+			ArrayList<String> row = new ArrayList<String>();
+			for(int i = 0; i < NUM_COLS; i++){
+				cols[i] = "col" + i;
+				colTypes[i] = "String";
+				row.add("Element" + i);
+			}
+			Table table = new Table(cols, colTypes, null);
+			for(int i = 0; i < NUM_ROWS; i++){
+				table.addRow(row);
+			}
+			
+			// --- store results ----
+			long startTime = System.nanoTime();		
+			client.execStoreTableResults(jobId, table);
+			long endTime = System.nanoTime();
+			double elapsed = ((endTime - startTime) / 1000000000.0);
+			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
+			
+			// --- test results ---
+			URL[] urls = client.execGetResults(jobId);
+			
+			assertTrue(urls[0].toString().endsWith(".json")); 
+			assertTrue(urls[1].toString().endsWith(".csv")); 
+
+			// trust ResultsStorageTest.java to test the contents
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
+	
 	@Test
 	public void testStoreCsv() throws Exception {
 
@@ -189,6 +239,7 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
+	
 	@Test
 	public void test_delete() throws Exception {
 		
@@ -208,6 +259,7 @@ public class ResultsClientTest_IT {
 			cleanup(client, jobId);
 		}
 	}
+	
 	
 	private void cleanup(ResultsClient client, String jobId) throws Exception {
 		client.execDeleteStorage(jobId);

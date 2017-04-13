@@ -20,7 +20,9 @@ package com.ge.research.semtk.edc.client;
 
 import java.net.ConnectException;
 import java.net.URL;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -99,7 +101,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	public void execStoreTableResults(String jobId, Table table) throws ConnectException, EndpointNotFoundException, Exception {
 		// chunk up the table by size and then send all the chunks. 
 		// hopefully, this will avoid sending anything too large to the results service
-			
+		
 		int tableRowsDone = 0;
 		int totalRows     = table.getNumRows();
 		int segment       = 0;
@@ -152,12 +154,21 @@ public class ResultsClient extends RestClient implements Runnable {
 							}
 						}
 
-						// can we get the next results and add to what we want.
-						StringBuilder curr = new StringBuilder(table.getRow(tableRowsDone).toString());
+						// get the next row into a comma separated string.
+					    String curr = new StringBuilder(table.getRow(tableRowsDone).toString()).toString(); // ArrayList.toString() is fast
+					    // but if any element contained commas, then can't use ArrayList.toString()
+					    if(StringUtils.countMatches(curr, ",") != (table.getNumColumns() - 1)){
+							// escape double quotes (using "" for csv files), then enclose each element in double quotes 
+					    	curr = table.getRow(tableRowsDone).stream()
+						    		.map(s -> (new StringBuilder()).append("\"").append(s.replace("\"","\"\"")).append("\"").toString())
+						    		.collect(Collectors.joining(","));
+					    }else{
+					    	// ArrayList.toString() added surrounding brackets and spaces after each comma - remove these
+					    	curr = StringUtils.substring(curr, 1, curr.length() - 1);	
+					    	curr = StringUtils.replace(curr, ", ", ",");
+					    }
+					    
 						tableRowsDone += 1;
-						// remove the leading and trailing "[" "]" from the row.
-						curr.setLength(curr.length()-1);
-						curr.deleteCharAt(0);
 
 						// add to the existing results we want to send.
 						//lastResults = resultsSoFar.toString(); // PEC changed  
