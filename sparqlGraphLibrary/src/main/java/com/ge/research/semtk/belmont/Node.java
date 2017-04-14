@@ -288,12 +288,12 @@ public class Node extends Returnable {
 
 						}
 					}
-				
-					// all is ok: add the propItem
-					newNodes.add(nodeItem);
-					
-					nodeItemHash.remove(oPropKeyname);
 				}
+				// all is ok: add the propItem
+				newNodes.add(nodeItem);
+				
+				nodeItemHash.remove(oPropKeyname);
+				
 			// new node
 			} else {
 				NodeItem nodeItem = new NodeItem(	oProp.getNameStr(true), 

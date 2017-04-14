@@ -856,7 +856,7 @@ SemanticNode.prototype = {
 				// has range changed
 				var propItem = propItemHash[oPropURI];
 				if (propItem.getRelation() != oProp.getRangeStr()) {
-					throw "Property " + oPropURI + " range of " + propItem.getRelation() + " doesn't match model range of " + oProp.getRangeStr();
+					throw this.getSparqlID() + " property " + oPropURI + " range of " + propItem.getRelation() + " doesn't match model range of " + oProp.getRangeStr();
 				}
 				
 				// all is ok: add the propItem
@@ -883,10 +883,10 @@ SemanticNode.prototype = {
 				var nRangeStr = nodeItem.getUriValueType();
 				var nRangeAbbr = nodeItem.getValueType();
 				if (nRangeStr != oProp.getRangeStr()) {
-					throw "Node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
+					throw this.getSparqlID() + " Node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
 				}
 				if (nRangeAbbr != oProp.getRangeStr(true)) {
-					throw "Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
+					throw this.getSparqlID() + " Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
 				}
 				
 				// if connected 
@@ -895,7 +895,7 @@ SemanticNode.prototype = {
 					// check full domain
 					var nDomainStr = nodeItem.getURIConnectBy();
 					if (nDomainStr != oProp.getNameStr()) {
-						throw "Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr();
+						throw this.getSparqlID() + " Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr();
 					}
 					
 					// check all connected snode classes
@@ -907,20 +907,20 @@ SemanticNode.prototype = {
 						var snodeClass = oInfo.getClass(snodeURI);
 						
 						if (snodeClass == null) {
-							throw "Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model";
+							throw this.getSparqlID() + " Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model";
 						}
 						
 						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							throw "Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model";
+							throw this.getSparqlID() + " Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model";
 
 						}
 					}
-				
-					// all is ok: add the propItem
-					newNodes.push(nodeItem);
-					
-					delete nodeItemHash[oPropKeyname];
 				}
+				// all is ok: add the propItem
+				newNodes.push(nodeItem);
+				
+				delete nodeItemHash[oPropKeyname];
+				
 			// new node
 			} else {
 				var nodeItem = new NodeItem(oProp.getNameStr(true), 
@@ -932,10 +932,10 @@ SemanticNode.prototype = {
 		}	
 		
 		if (Object.keys(propItemHash).length > 0) {
-			throw "Property no longer exists in model: " + Object.keys(propItemHash);
+			throw this.getSparqlID() + " Property no longer exists in model: " + Object.keys(propItemHash);
 		}
 		if (Object.keys(nodeItemHash).length > 0) {
-			throw "Node property no longer exists in model: " + Object.keys(nodeItemHash);
+			throw this.getSparqlID() + " Node property no longer exists in model: " + Object.keys(nodeItemHash);
 		}
 		
 		this.propList = newProps;
