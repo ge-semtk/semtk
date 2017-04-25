@@ -24,7 +24,7 @@ public class ImportSpecHandlerTest_IT {
 		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");		
 		
 		// load in ImportSpecHandler
-		String jsonPath = "src/test/resources/sampleBatteryClearedColorMapping.json";
+		String jsonPath = "src/test/resources/sampleBattery_PlusConstraints.json";
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		OntologyInfo oInfo = sgJson.getOntologyInfo();
 		NodeGroup nodegroup = sgJson.getNodeGroupCopy();
