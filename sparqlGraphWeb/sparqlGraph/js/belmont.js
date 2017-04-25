@@ -1345,18 +1345,9 @@ SemanticNode.prototype = {
 		this.nodeGrp.asyncNodeEditor(nodeItem, draculaLabel);
 	},
 	
-	addClassToCanvas : function(nItemIndex, propName) {
-		// callback adds a link to nodeItem[nItemIndex] to the canvas 
-	
+	callAsyncLinkBuilder : function(nItemIndex) {
 		var nItem = this.nodeList[nItemIndex];
-		var oInfo = this.nodeGrp.canvasOInfo;
-		var newNode = this.nodeGrp.returnBelmontSemanticNode(nItem.getUriValueType(), oInfo);
-		var myClass = oInfo.getClass(this.fullURIName);
-		var connURI = oInfo.getInheritedPropertyByKeyname(myClass, nItem.getKeyName()).getNameStr();
-		
-		this.nodeGrp.addOneNode(newNode, this, null, connURI);
-		this.nodeGrp.drawNodes();
-		
+		this.nodeGrp.asyncLinkBuilder(this, nItem);
 	},
 
 	toggleReturnType : function(lt) {
@@ -1420,7 +1411,7 @@ SemanticNode.prototype = {
 var SemanticNodeGroup = function(width, height, divName) {
 	this.SNodeList = [];
 	this.graph = new Graph();
-	this.layouter = new Graph.Layout.Spring(this.graph, null, width, height);
+	this.layouter = new Graph.Layout.Spring(this.graph, width, height);
 	this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
 			height);
 	this.rangeSetter = '';
@@ -1430,6 +1421,8 @@ var SemanticNodeGroup = function(width, height, divName) {
 	this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
 	this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
 	this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
+	this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
+
 	
 	this.height = height;
 	this.width = width;
@@ -1439,7 +1432,8 @@ var SemanticNodeGroup = function(width, height, divName) {
 	                         // So I set this flag to false and skip drawing.
 	                         // JUSTIN / PAUL TODO.  Untangle this mess.
 	
-	this.canvasOInfo = null;    // this is a late addition used by nothing except callbacks on the canvas which add nodes.
+	this.canvasOInfo = null;    // DEPRECATED
+	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
     							// that's why it has a funny name.
     							// Only sparqlgraph.js calls this after loading a new oInfo.
     							// All other code passes in an oInfo when needed.
@@ -1694,6 +1688,7 @@ SemanticNodeGroup.prototype = {
 			}
 		}
 	},
+	// DEPRECATED
 	setCanvasOInfo : function (oInfo) {
 		this.canvasOInfo = oInfo;
 	},
@@ -1705,6 +1700,10 @@ SemanticNodeGroup.prototype = {
 	setAsyncNodeEditor : function (func) {
 		// func(nodeItem) will edit the property 
 		this.asyncNodeEditor = func;
+	},
+	setAsyncLinkBuilder : function (func) {
+		// func(nodeItem) will edit the property 
+		this.asyncLinkBuilder = func;
 	},
 	setAsyncSNodeEditor : function (func) {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
@@ -2685,12 +2684,16 @@ SemanticNodeGroup.prototype = {
 			for (var i = 0; i < this.SNodeList.length; i++) {
 				var snode = this.SNodeList[i];
 				
+				// count non-optional returns and optional properties
 				var nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				var optPropCount = 0;
 				var retItems = snode.getReturnedPropertyItems();
 				for (var p=0; p < retItems.length; p++) {
 					var pItem = retItems[p];
 					if (! pItem.getIsOptional()) {
 						nonOptReturnCount++;
+					} else if (pItem.getIsReturned()) {
+						optPropCount++;
 					}
 				}
 				
@@ -2737,7 +2740,7 @@ SemanticNodeGroup.prototype = {
 					}
 					
 					// if there is only one outgoing optional, than it can be set to non-optional for performance
-					if (optOutItems.length == 1) {
+					if (optOutItems.length == 1 && optPropCount == 0) {
 						optOutItems[0].setIsOptional(NodeItem.OPTIONAL_FALSE);
 					}
 					
@@ -2880,7 +2883,7 @@ SemanticNodeGroup.prototype = {
 		// this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph,
 		// this.width, this.height);
 		this.graph = new Graph();
-		this.layouter = new Graph.Layout.Spring(this.graph, null);
+		this.layouter = new Graph.Layout.Spring(this.graph, this.width, this.height);
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.drawNodes();
 		this.sparqlNameHash = {};

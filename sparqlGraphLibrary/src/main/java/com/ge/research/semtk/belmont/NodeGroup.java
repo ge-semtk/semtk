@@ -989,9 +989,12 @@ public class NodeGroup {
 			for (Node snode : this.nodes) {
 				// count non-optional returns
 				int nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				int optPropCount = 0;
 				for (PropertyItem pItem : snode.getReturnedPropertyItems()) {
 					if (! pItem.getIsOptional()) {
 						nonOptReturnCount++;
+					} else if (pItem.getIsReturned()) {
+						optPropCount++;
 					}
 				}
 				
@@ -1036,8 +1039,9 @@ public class NodeGroup {
 						n.setIsOptional(NodeItem.OPTIONAL_TRUE);
 					}
 
-					// if there is only one outgoing optional, than it can be set to non-optional for performance
-					if (optOutItems.size() == 1) {
+					// if there is only one outgoing optional, and no optional props here, 
+					// then outgoing optional can be set to non-optional for performance
+					if (optOutItems.size() == 1 && optPropCount == 0) {
 						optOutItems.get(0).setIsOptional(NodeItem.OPTIONAL_FALSE);
 					}
 					 

@@ -72,6 +72,7 @@
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
+	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
 	        
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"), 
@@ -134,16 +135,17 @@
     				var paths = gOInfo.findAllPaths(gDragLabel, nodelist, gConn.getDomain());
     				logEvent("SG Drop Class", "label", gDragLabel);
     				
-    				// Add the arbitary 0th path to return.
-    				if (paths.length == 0) {
+    				// Handle no paths or shift key during drag: drop node with no connections
+    				if (event.shiftKey || paths.length == 0) {
     					gNodeGroup.addNode(gDragLabel, gOInfo);
     			  		gNodeGroup.drawNodes();
     			  		guiGraphNonEmpty();
     			
     				} else {
     					// find possible anchor node(s) for each path
-    			  		var pathStrList = [];
-    			  		var valList = [];
+    					// start with disconnected option
+    			  		var pathStrList = ["** Disconnected " + gDragLabel];
+    			  		var valList = [[new OntologyPath(gDragLabel), null, false]];
     			  		
     			  		// for each path
     			  		for (var p=0; p < paths.length; p++) {
@@ -163,7 +165,7 @@
     			  		}
     			  		
     			  		if (valList.length > 1) {
-    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 0, dropCallback, "90%");
+    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropCallback, "90%");
     			  		} else {
     			  			dropCallback(valList[0]);
     			  		}
@@ -177,6 +179,25 @@
     	    }
       	});
 
+    };
+    
+    /**
+     * Add a node via path from anchorSNode
+     * If there is no anchorSNode then just add path.startClass
+     * @param val[] -  [path, anchorSNode, revFlag]
+     */
+    var dropCallback = function(val) {
+    	var path = val[0];
+    	var anchorNode = val[1];
+    	var singleLoopFlag = val[2];
+    	
+    	if (anchorNode == null) {
+    		gNodeGroup.addNode(path.getStartClassName(), gOInfo);
+    	} else {
+    		gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
+    	}
+    	gNodeGroup.drawNodes();
+      	guiGraphNonEmpty();
     };
     
     initDynatree = function() {
@@ -268,6 +289,51 @@
 		});
     };
     
+    launchLinkBuilder = function(snode, nItem) {
+		// callback when user clicks on a nodeItem	
+    	var rangeStr = nItem.getUriValueType();
+    	
+    	// find nodes that might connect
+    	var targetSNodes = gNodeGroup.getNodesBySuperclassURI(rangeStr, gOInfo);
+    	// disqualify nodes already linked
+    	var unlinkedTargetSNodes = [null];
+    	var unlinkedTargetNames = ["New " + rangeStr + ""];
+
+    	for (var i=0; i < targetSNodes.length; i++) {
+    		if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
+    			unlinkedTargetNames.push(targetSNodes[i].getSparqlID());
+    			unlinkedTargetSNodes.push(targetSNodes[i]);
+    		}
+    	}
+    	
+    	// if there are no possible connections, just add a new node and connect.
+    	if (unlinkedTargetSNodes.length == 1) {
+    		buildLink(snode, nItem, null);			
+    	} else {
+  			globalModalDialogue.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), "75%");
+    	}
+	},
+	
+	/**
+	 * Link from snode through it's nItem to rangeSNode
+	 * @param snode - starting point
+	 * @param nItem - nodeItem
+	 * @param rangeSnode - range node, if null then create it
+	 */
+	buildLink = function(snode, nItem, rangeSnode) {
+		var snodeClass = gOInfo.getClass(snode.fullURIName);
+		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
+		
+		if (rangeSnode == null) {
+			var rangeStr = nItem.getUriValueType();
+			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
+			gNodeGroup.addOneNode(newNode, snode, null, domainStr);
+		} else {
+			snode.setConnection(rangeSnode, domainStr);
+		}
+		gNodeGroup.drawNodes();
+	},
+	
     launchSNodeItemDialog = function (snodeItem, draculaLabel) {
     	require([ 'sparqlgraph/js/modalitemdialog',
   	            ], function (ModalItemDialog) {
@@ -360,7 +426,7 @@
 	    gOInfoLoadTime = new Date();
 		setStatus("");
 		guiTreeNonEmpty();
-		gNodeGroup.setCanvasOInfo(gOInfo);
+		//gNodeGroup.setCanvasOInfo(gOInfo);
 		gMappingTab.updateNodegroup(gNodeGroup);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
 

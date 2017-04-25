@@ -84,14 +84,4 @@ var genPathString = function(path, anchorNode, singleLoopFlag) {
 	return str;
 };
 
-var dropCallback = function(val) {
-	// PEC TODO: list
-	//    ignores the anchorNode
-	//    dialog allows multi-select
-	var path = val[0];
-	var anchorNode = val[1];
-	var singleLoopFlag = val[2];
-	gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
-	gNodeGroup.drawNodes();
-  	guiGraphNonEmpty();
-};
+
