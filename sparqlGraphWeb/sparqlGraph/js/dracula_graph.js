@@ -129,6 +129,18 @@ Graph.prototype = {
         this.snapshots.push({comment: comment, graph: graph});
         */
     },
+    
+    removeEdge: function(source, target) {
+    	// remove edges between source and target
+    	for(var i = 0; i < this.edges.length; i++) {
+    		if (this.edges[i].source == source && this.edges[i].target == target) {
+    			this.edges[i].hide();
+    			this.edges.splice(i, 1);
+    			i--;
+    		}
+    	}
+    },
+    
     removeNode: function(id) {
     	// remove all edges to and from
     	for(var i = 0; i < this.edges.length; i++) {
@@ -473,8 +485,12 @@ Graph.Renderer.Raphael.prototype = {
         if(!edge.connection) {
             edge.style && edge.style.callback && edge.style.callback(edge); // TODO move this somewhere else
             edge.connection = this.r.connection(edge.source.shape, edge.target.shape, edge.style);
+            edge.connection.label[0].style.cursor = "pointer";
+            edge.connection.label[0].onclick = function(e) {
+            	e.source.parentSNode.callAsyncLinkEditor(e.style.label, e.target.parentSNode, e);
+
+            }.bind(edge.connection.label[0], edge);
             
-            edge.connection.label[0].onclick = function(edge) {alert(edge.source.id + " " + edge.style.label);}.bind("fake_this", edge);
             return;
         }
         

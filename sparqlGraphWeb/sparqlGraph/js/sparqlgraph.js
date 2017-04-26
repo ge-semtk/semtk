@@ -73,6 +73,7 @@
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
 	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
+	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
 	        
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"), 
@@ -312,6 +313,26 @@
     	} else {
   			globalModalDialogue.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), "75%");
     	}
+	},
+	
+    launchLinkEditor = function(snode, nItem, targetSNode, edge) {
+		
+		require([ 'sparqlgraph/js/modallinkdialog',
+		            ], function (ModalLinkDialog) {
+	    		
+	    		var dialog= new ModalLinkDialog(nItem, snode, targetSNode, gNodeGroup, linkEditorCallback, {"edge" : edge});
+	    		dialog.show();
+			});
+	},
+	
+	linkEditorCallback = function(snode, nItem, targetSNode, data, optionalFlag, deleteFlag) {
+		// TODO: handle optionalFlag
+		
+		// deleteFlag
+		if (deleteFlag) {
+			snode.removeLink(nItem, targetSNode);
+		}
+		gNodeGroup.drawNodes();
 	},
 	
 	/**
