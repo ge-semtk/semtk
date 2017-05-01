@@ -440,16 +440,16 @@ NodeItem.prototype = {
 };
 
 /* the property item */
-var PropertyItem = function(nome, val, relation, uriRelation, jObj) { 
+var PropertyItem = function(keyname, valType, relationship, UriRelationship, jObj) { 
 	
 	if (jObj) {
 		this.fromJson(jObj);
 	} else {
-		this.KeyName = nome; // the name used to identify the property
-		this.ValueType = val; // the type of the value associated with
+		this.KeyName = keyname; // the name used to identify the property
+		this.ValueType = valType; // the type of the value associated with
 								// property in the ontology.
-		this.relationship = relation;
-		this.UriRelationship = uriRelation;
+		this.relationship = relationship;
+		this.UriRelationship = UriRelationship;
 		this.Constraints = ''; // the constraints are represented as a str and
 								// will be used in the
 		// in the sparql generation.
@@ -513,8 +513,8 @@ PropertyItem.prototype = {
 		return f.buildValueConstraint(this, valueList);
 	},
 	// set the values of items in the propertyItem
-	setKeyName : function(nome) {
-		this.KeyName = nome;
+	setKeyName : function(keyname) {
+		this.KeyName = keyname;
 	},
 	// set the insertion value. really, we should check the correct value type as we go.
 	addInstanceValue : function(inval){
@@ -694,9 +694,12 @@ edgeIntermediate.prototype = {
 
 /* the semantic node */
 var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
-		nodeGroup, jObj) {
+		nodeGroup, jObj, optInflateOInfo) {
+	
+	var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
+
 	if (jObj) {
-		this.fromJson(jObj, nodeGroup);
+		this.fromJson(jObj, nodeGroup, inflateOInfo);
 	} else {
 		this.propList = plist.slice(); // a list of properties
 		this.nodeList = nlist.slice(); // a list of the nodes that this can
@@ -740,7 +743,10 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 // the functions used by the SemanticNode in order to keep things in order.
 SemanticNode.prototype = {
 
-	toJson : function() {
+	toJson : function(optDeflateFlag, optMappedPropItems) {
+		var deflateFlag = (typeof optDeflateFlag === "undefined") ? false : optDeflateFlag;
+		var mappedPropItems = (typeof optMappedPropItems === "undefined") ? [] : optMappedPropItems;
+
 		// return a JSON object of things needed to serialize
 		var ret = {
 			propList : [],
@@ -754,15 +760,31 @@ SemanticNode.prototype = {
 			valueConstraint : this.valueConstraint,
 			instanceValue : this.instanceValue,
 		};
+		
+		// add properties
 		for (var i = 0; i < this.propList.length; i++) {
-			ret.propList.push(this.propList[i].toJson());
+			var p = this.propList[i];
+			// if deflateFlag, then only add property if returned or constrained
+			if (deflateFlag == false || p.getIsReturned() || p.getConstraints() != "" || mappedPropItems.indexOf(p) > -1) {
+				ret.propList.push(p.toJson());
+			}
 		}
+		
+		// add nodes
 		for (var i = 0; i < this.nodeList.length; i++) {
-			ret.nodeList.push(this.nodeList[i].toJson());
+			// if we're deflating, only add connected nodes
+			if (deflateFlag == false || this.nodeList[i].getConnected()) {
+				ret.nodeList.push(this.nodeList[i].toJson());
+			}
 		}
+		
 		return ret;
 	},
-	fromJson : function(jObj, nodeGroup) {
+	
+	fromJson : function(jObj, nodeGroup, optInflateOInfo) {
+		
+		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
+
 		// presumes SparqlID's are reconciled already
 		// presumes that SNodes pointed to by NodeItems already exist
 		this.propList = [], this.nodeList = [];
@@ -773,16 +795,151 @@ SemanticNode.prototype = {
 		this.isReturned = jObj.isReturned;
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
-		this.instanceValue = jObj.instanceValue;
+		this.instanceValue = jObj.instanceValue;	
 
+		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {
 			var p = new PropertyItem(null, null, null, null, jObj.propList[i]);
 			this.propList.push(p);
 		}
+	
+		
 		for (var i = 0; i < jObj.nodeList.length; i++) {
 			var n = new NodeItem(null, null, null, jObj.nodeList[i], nodeGroup);
 			this.nodeList.push(n);
 		}
+		
+		if (inflateOInfo != null) {
+			this.inflateAndValidate(inflateOInfo);
+		}
+		
+	},
+	
+	/*
+	 * Expand props to full set of properties for this classURI in oInfo 
+	 * and validates all props
+	 * Throws errors that user interface really wants.
+	 */
+	inflateAndValidate : function(oInfo) {
+		var newProps = [];
+		var newNodes = [];
+
+		
+		// build hash of suggested properties for this class
+		var propItemHash = {};
+		for (var p=0; p < this.propList.length; p++) {
+			propItemHash[this.propList[p].getUriRelation()] = this.propList[p];
+		}
+		
+		// build hash of suggested nodes for this class
+		var nodeItemHash = {};
+		for (var n=0; n < this.nodeList.length; n++) {
+			nodeItemHash[this.nodeList[n].getKeyName()] = this.nodeList[n];
+		}
+		
+		// get oInfo's version of the property list
+		var ontClass = oInfo.getClass(this.fullURIName);
+		if (ontClass == null) {
+			throw "Class no longer exists in the model: " + this.fullURIName;
+		}
+		var ontProps = oInfo.getInheritedProperties(ontClass);
+		
+		// loop through oInfo's version	
+		for (var i=0; i < ontProps.length; i++) {
+			var oProp = ontProps[i];
+			var oPropURI = oProp.getNameStr();
+			var oPropKeyname = oProp.getNameStr(true);
+			
+			// if ontology property is one of the prop parameters, then check it over
+			if (oPropURI in propItemHash) {
+				
+				// has range changed
+				var propItem = propItemHash[oPropURI];
+				if (propItem.getRelation() != oProp.getRangeStr()) {
+					throw this.getSparqlID() + " property " + oPropURI + " range of " + propItem.getRelation() + " doesn't match model range of " + oProp.getRangeStr();
+				}
+				
+				// all is ok: add the propItem
+				newProps.push(propItem);
+				
+				delete propItemHash[oPropURI];
+				
+			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
+		    // Inflate (create) it.
+			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
+				
+				var propItem = new PropertyItem(oProp.getNameStr(true), 
+												oProp.getRangeStr(true),
+												oProp.getRangeStr(false),
+												oProp.getNameStr(false)
+												);
+				newProps.push(propItem);
+				
+		    // node, in hash
+			} else if (oPropKeyname in nodeItemHash) {
+				
+				// regardless of connection, check range
+				var nodeItem = nodeItemHash[oPropKeyname];
+				var nRangeStr = nodeItem.getUriValueType();
+				var nRangeAbbr = nodeItem.getValueType();
+				if (nRangeStr != oProp.getRangeStr()) {
+					throw this.getSparqlID() + " Node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
+				}
+				if (nRangeAbbr != oProp.getRangeStr(true)) {
+					throw this.getSparqlID() + " Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
+				}
+				
+				// if connected 
+				if (nodeItem.getConnected()) {
+					
+					// check full domain
+					var nDomainStr = nodeItem.getURIConnectBy();
+					if (nDomainStr != oProp.getNameStr()) {
+						throw this.getSparqlID() + " Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr();
+					}
+					
+					// check all connected snode classes
+					var nRangeClass = oInfo.getClass(nRangeStr);
+					
+					var snodeList = nodeItem.getSNodes();
+					for (var j=0; j < snodeList.length; j++) {
+						var snodeURI = snodeList[j].getURI();
+						var snodeClass = oInfo.getClass(snodeURI);
+						
+						if (snodeClass == null) {
+							throw this.getSparqlID() + " Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model";
+						}
+						
+						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
+							throw this.getSparqlID() + " Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model";
+
+						}
+					}
+				}
+				// all is ok: add the propItem
+				newNodes.push(nodeItem);
+				
+				delete nodeItemHash[oPropKeyname];
+				
+			// new node
+			} else {
+				var nodeItem = new NodeItem(oProp.getNameStr(true), 
+											oProp.getRangeStr(true),
+											oProp.getRangeStr(false)
+											);
+				newNodes.push(nodeItem);
+			}
+		}	
+		
+		if (Object.keys(propItemHash).length > 0) {
+			throw this.getSparqlID() + " Property no longer exists in model: " + Object.keys(propItemHash);
+		}
+		if (Object.keys(nodeItemHash).length > 0) {
+			throw this.getSparqlID() + " Node property no longer exists in model: " + Object.keys(nodeItemHash);
+		}
+		
+		this.propList = newProps;
+		this.nodeList = newNodes;
 	},
 	
 	setInstanceValue : function(inval){
@@ -797,6 +954,12 @@ SemanticNode.prototype = {
 			this.nodeList[i].removeSNode(nd);
 		}
 	},
+	removeLink : function(nodeItem, targetSNode) {
+		
+		nodeItem.removeSNode(targetSNode);
+		this.nodeGrp.graph.removeEdge(this.node, targetSNode.node);
+	},
+	
 	buildFilterConstraint : function(op, val) {
 		// build but don't set a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -1187,19 +1350,13 @@ SemanticNode.prototype = {
 		var nodeItem = this.getNodeItemByKeyname(nodeKeyname);
 		this.nodeGrp.asyncNodeEditor(nodeItem, draculaLabel);
 	},
-	
-	addClassToCanvas : function(nItemIndex, propName) {
-		// callback adds a link to nodeItem[nItemIndex] to the canvas 
-	
+	callAsyncLinkBuilder : function(nItemIndex) {
 		var nItem = this.nodeList[nItemIndex];
-		var oInfo = this.nodeGrp.canvasOInfo;
-		var newNode = this.nodeGrp.returnBelmontSemanticNode(nItem.getUriValueType(), oInfo);
-		var myClass = oInfo.getClass(this.fullURIName);
-		var connURI = oInfo.getInheritedPropertyByKeyname(myClass, nItem.getKeyName()).getNameStr();
-		
-		this.nodeGrp.addOneNode(newNode, this, null, connURI);
-		this.nodeGrp.drawNodes();
-		
+		this.nodeGrp.asyncLinkBuilder(this, nItem);
+	},
+	callAsyncLinkEditor : function(nodeKeyname, targetSNode, edge) {
+		var nItem = this.getNodeItemByKeyname(nodeKeyname);
+		this.nodeGrp.asyncLinkEditor(this, nItem, targetSNode, edge);
 	},
 
 	toggleReturnType : function(lt) {
@@ -1263,7 +1420,7 @@ SemanticNode.prototype = {
 var SemanticNodeGroup = function(width, height, divName) {
 	this.SNodeList = [];
 	this.graph = new Graph();
-	this.layouter = new Graph.Layout.Spring(this.graph, null, width, height);
+	this.layouter = new Graph.Layout.Spring(this.graph, width, height);
 	this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
 			height);
 	this.rangeSetter = '';
@@ -1273,6 +1430,9 @@ var SemanticNodeGroup = function(width, height, divName) {
 	this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
 	this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
 	this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
+	this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
+	this.asyncLinkEditor = function(){alert("Internal error: SemanticNodeGroup asyncLinkEditor function is not defined.")};
+
 	
 	this.height = height;
 	this.width = width;
@@ -1282,7 +1442,8 @@ var SemanticNodeGroup = function(width, height, divName) {
 	                         // So I set this flag to false and skip drawing.
 	                         // JUSTIN / PAUL TODO.  Untangle this mess.
 	
-	this.canvasOInfo = null;    // this is a late addition used by nothing except callbacks on the canvas which add nodes.
+	this.canvasOInfo = null;    // DEPRECATED
+	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
     							// that's why it has a funny name.
     							// Only sparqlgraph.js calls this after loading a new oInfo.
     							// All other code passes in an oInfo when needed.
@@ -1300,29 +1461,37 @@ SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 
 // the functions used by the semanticNodeGroup to keep its stuff in order.
 SemanticNodeGroup.prototype = {
-	toJson : function() {
+		
+	
+	toJson : function(optDeflateFlag, optMappedPropItems) {
+		var deflateFlag = (typeof optDeflateFlag === "undefined") ? false : optDeflateFlag;
+		var mappedPropItems = (typeof optMappedPropItems === "undefined") ? [] : optMappedPropItems;
+
 		// get list in order such that linked nodes always preceed the node that
 		// links to them
 		var snList = this.getOrderedNodeList().reverse();
 
 		var ret = {
-			version : 1,
+			version : 2,
 			sNodeList : [],
 		};
 		// add json snodes to sNodeList
 		for (var i = 0; i < snList.length; i++) {
-			ret.sNodeList.push(snList[i].toJson());
+			ret.sNodeList.push(snList[i].toJson(deflateFlag, mappedPropItems));
 		}
 		return ret;
 	},
-	addJson : function(jObj) {
+	
+	addJson : function(jObj, optInflateOInfo) {
+		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
+		
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
 
 		// loop through SNodes in the json
 		for (var i = 0; i < jObj.sNodeList.length; i++) {
 			var newNode = new SemanticNode(null, null, null, null, null, this,
-					jObj.sNodeList[i]);
+					jObj.sNodeList[i], inflateOInfo);
 
 			// add the node without messing with any connections...they are
 			// already there.
@@ -1529,6 +1698,7 @@ SemanticNodeGroup.prototype = {
 			}
 		}
 	},
+	// DEPRECATED
 	setCanvasOInfo : function (oInfo) {
 		this.canvasOInfo = oInfo;
 	},
@@ -1540,6 +1710,14 @@ SemanticNodeGroup.prototype = {
 	setAsyncNodeEditor : function (func) {
 		// func(nodeItem) will edit the property 
 		this.asyncNodeEditor = func;
+	},
+	setAsyncLinkBuilder : function (func) {
+		// func(nodeItem) will edit the property 
+		this.asyncLinkBuilder = func;
+	},
+	setAsyncLinkEditor : function (func) {
+		// func(nodeItem) will edit the property 
+		this.asyncLinkEditor = func;
 	},
 	setAsyncSNodeEditor : function (func) {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
@@ -2520,12 +2698,16 @@ SemanticNodeGroup.prototype = {
 			for (var i = 0; i < this.SNodeList.length; i++) {
 				var snode = this.SNodeList[i];
 				
+				// count non-optional returns and optional properties
 				var nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				var optPropCount = 0;
 				var retItems = snode.getReturnedPropertyItems();
 				for (var p=0; p < retItems.length; p++) {
 					var pItem = retItems[p];
 					if (! pItem.getIsOptional()) {
 						nonOptReturnCount++;
+					} else if (pItem.getIsReturned()) {
+						optPropCount++;
 					}
 				}
 				
@@ -2572,7 +2754,7 @@ SemanticNodeGroup.prototype = {
 					}
 					
 					// if there is only one outgoing optional, than it can be set to non-optional for performance
-					if (optOutItems.length == 1) {
+					if (optOutItems.length == 1 && optPropCount == 0) {
 						optOutItems[0].setIsOptional(NodeItem.OPTIONAL_FALSE);
 					}
 					
@@ -2715,7 +2897,7 @@ SemanticNodeGroup.prototype = {
 		// this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph,
 		// this.width, this.height);
 		this.graph = new Graph();
-		this.layouter = new Graph.Layout.Spring(this.graph, null);
+		this.layouter = new Graph.Layout.Spring(this.graph, this.width, this.height);
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.drawNodes();
 		this.sparqlNameHash = {};

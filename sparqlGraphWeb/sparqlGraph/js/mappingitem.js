@@ -25,19 +25,34 @@ define([	// properly require.config'ed
 
 	function() {
 	
-		/*
-		 *    A column name or text or some item used to build a triple value
+		/**
+		 * An item to be added to a single ImportMapping
+		 * API users should not call this constructor
+		 * Use SemtkImportAPI.createTextMappingItem() or SemtkImportAPI.createColumnMappingItem() instead
+		 * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link SemtkImportAPI#createMappingItemText} or {@link SemtkImportAPI#createMappingItemColumn} instead
+		 * @alias MappingItem
+		 * @class
 		 */
-		var ImportItem = function (itemType, iObj, transformList) {
+		var MappingItem = function (itemType, iObj, transformList) {
 			this.itemType = itemType;   
 			this.iObj = iObj;        // column name or text iObj
 			this.transformList = transformList;      
 		};
 		
-		ImportItem.TYPE_TEXT = "text";
-		ImportItem.TYPE_COLUMN = "column";
+		MappingItem.TYPE_TEXT = "text";
+		MappingItem.TYPE_COLUMN = "column";
 		
-		ImportItem.prototype = {
+		MappingItem.prototype = {
+			//
+			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
+			//      These methods' behaviors are not guaranteed to be stable in future releases.
+			//
+			
+			/**
+			 * Add an import transform
+			 * @param {ImportTransform} trans the import transform to add
+			 * @param {ImportTransform} insertBefore insert before this transform, append to end of list if null
+			 */
 			addTransform : function (trans, insertBefore) {
 				if (insertBefore == null) {
 					this.transformList.push(trans);
@@ -47,6 +62,11 @@ define([	// properly require.config'ed
 				}
 			},
 			
+			/**
+			 * Delete the given import transform<br>
+			 * silently failing if it doesn't exist
+			 * @param {ImportTransform} trans
+			 */
 			delTransform : function (trans) {
 				var index = this.transformList.indexOf(trans);
 				if (index > -1) {
@@ -54,17 +74,31 @@ define([	// properly require.config'ed
 				}
 			},
 			
+			/**
+			 * @description Get the mapping item type
+			 * @returns {string} MappingItem.TYPE_TEXT or MappingItem.TYPE_COLUMN
+			 */
 			getType : function () {
 				return this.itemType;
 			},
 			
+			/**
+			 * @description Get this item's ImportText
+			 * @returns {ImportText}
+			 * @throws exception if this is not a text item
+			 */
 			getTextObj : function () {
-				if (this.itemType != ImportItem.TYPE_TEXT) {kdlLogAndThrow("Internal error in ImportItem.getTextObj().  Item is not a text item.");}
+				if (this.itemType != MappingItem.TYPE_TEXT) {kdlLogAndThrow("Internal error in MappingItem.getTextObj().  Item is not a text item.");}
 				return this.iObj;
 			},
 			
+			/**
+			 * @description Get this item's ImportColumn
+			 * @returns {ImportColumn}
+			 * @throws exception if this is not a column item
+			 */
 			getColumnObj : function () {
-				if (this.itemType != ImportItem.TYPE_COLUMN) {kdlLogAndThrow("Internal error in ImportItem.getColumnObj().  Item is not a column item.");}
+				if (this.itemType != MappingItem.TYPE_COLUMN) {kdlLogAndThrow("Internal error in MappingItem.getColumnObj().  Item is not a column item.");}
 				return this.iObj;
 			},
 			
@@ -72,6 +106,10 @@ define([	// properly require.config'ed
 				return this.iObj;
 			},
 			
+			/**
+			 * @description Get this item's list of transforms
+			 * @returns {ImportTransform[]}
+			 */
 			getTransformList : function () {
 				return this.transformList;
 			},
@@ -87,13 +125,13 @@ define([	// properly require.config'ed
 			fromJson : function (jObj, idHash) {
 				// columns and texts and transforms are loaded just by id
 				if (jObj.hasOwnProperty("text")) {
-					this.itemType = ImportItem.TYPE_TEXT;
+					this.itemType = MappingItem.TYPE_TEXT;
 					this.iObj = idHash[jObj.textId];
 					this.iObj.incrUse(1);
 					this.transformList = [];
 					
 				} else {
-					this.itemType = ImportItem.TYPE_COLUMN;
+					this.itemType = MappingItem.TYPE_COLUMN;
 					this.iObj = idHash[jObj.colId];
 					this.iObj.incrUse(1);
 					this.transformList = [];
@@ -112,7 +150,7 @@ define([	// properly require.config'ed
 				// into the Json by ID only
 				var ret = {};
 				
-				if (this.itemType == ImportItem.TYPE_TEXT) {
+				if (this.itemType == MappingItem.TYPE_TEXT) {
 					
 					ret.textId = this.helpGetKeyFromHash(idHash, this.iObj);
 					ret.text = this.iObj.getText();
@@ -144,6 +182,6 @@ define([	// properly require.config'ed
 			},
 		};
 	
-		return ImportItem;            // return the constructor
+		return MappingItem;            // return the constructor
 	}
 );

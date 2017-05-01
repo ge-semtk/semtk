@@ -18,6 +18,7 @@ import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataToModelTransformer;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 public class DataToModelTransformerTest_IT {
@@ -28,7 +29,9 @@ public class DataToModelTransformerTest_IT {
 		String[] headers = { "Battery", "Cell", "color", "birthday" };
 		Dataset ds = new CSVDataset("src/test/resources/sampleBattery.csv",	headers);
 
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json"));
+		TestGraph.clearGraph();
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+
 		DataToModelTransformer dtmx = new DataToModelTransformer(sgJson, 6, ds);
 		ArrayList<NodeGroup> ngArr = dtmx.getNextBatch();
 	

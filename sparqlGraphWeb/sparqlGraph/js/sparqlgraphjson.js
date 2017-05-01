@@ -24,11 +24,13 @@
 define([	// properly require.config'ed
         		
 			// shimmed
-
+        	'sparqlgraph/js/belmont'
 		],
 
 	function() {
-		var SparqlGraphJson = function(conn, nodegroup, mappingTab) {
+		var SparqlGraphJson = function(conn, nodegroup, mappingTab, optDeflateFlag) {
+			var deflateFlag = (typeof optDeflateFlag == "undefined") ? false : optDeflateFlag;
+			
 			// intended that either all or none of the parameters are given
 			
 			this.jObj = {
@@ -37,9 +39,22 @@ define([	// properly require.config'ed
 					importSpec: null,
 			};
 			
-			if (typeof conn      != "undefined") { this.setSparqlConn(conn); }
-			if (typeof nodegroup != "undefined") { this.setSNodeGroup(nodegroup); }
-			if (typeof mappingTab != "undefined") { this.setMappingTab(mappingTab); }
+			if (typeof conn      != "undefined") { 
+				this.setSparqlConn(conn); 
+			}
+			
+			if (typeof nodegroup != "undefined") { 
+				if (deflateFlag) {
+					var mappedPropItems = (typeof mappingTab != "undefined" && mappingTab != null) ? mappingTab.getMappedPropItems() : [];
+					this.jObj.sNodeGroup = nodegroup.toJson(true, mappedPropItems); 
+				} else {
+					this.jObj.sNodeGroup = nodegroup.toJson(false, []); 
+				}
+			}
+			
+			if (typeof mappingTab != "undefined") { 
+				this.jObj.importSpec = mappingTab.toJson();
+			}
 
 		};
 	
@@ -66,14 +81,6 @@ define([	// properly require.config'ed
 				this.jObj.sparqlConn = conn.toJson();
 			},
 			
-			setSNodeGroup : function(sNodeGroup) {
-				this.jObj.sNodeGroup = sNodeGroup.toJson();
-			},
-			
-			setMappingTab : function(mappingTab) {
-				this.jObj.importSpec = mappingTab.toJson();
-			},
-			
 			stringify : function () {
 				return JSON.stringify(this.jObj, null, '\t');
 			},
@@ -81,6 +88,14 @@ define([	// properly require.config'ed
 			parse : function (jsonString) {
 				this.jObj = JSON.parse(jsonString);
 			},
+			
+			toJson : function () {
+				return this.jObj;
+			},
+			
+			fromJson : function (json) {
+				this.jObj = json;
+			}
 			
 		};
 		return SparqlGraphJson;            

@@ -28,11 +28,11 @@
 define([	// properly require.config'ed
         	'sparqlgraph/js/importcolumn',
          	'sparqlgraph/js/importcsvspec',
-        	'sparqlgraph/js/importitem',
+        	'sparqlgraph/js/mappingitem',
         	'sparqlgraph/js/importspec',
         	'sparqlgraph/js/importtext',
         	'sparqlgraph/js/importtrans',
-        	'sparqlgraph/js/importtriplerow',
+        	'sparqlgraph/js/importmapping',
          	'sparqlgraph/js/modaliidx',
          	'sparqlgraph/js/importtransformmodal',
          	'sparqlgraph/js/iidxhelper',
@@ -44,13 +44,13 @@ define([	// properly require.config'ed
          	
 		],
 
-	function(ImportColumn, ImportCsvSpec, ImportItem, ImportSpec, ImportText, ImportTransform, ImportTripleRow, ModalIidx, ImportTransformModal, IIDXHelper, $) {
+	function(ImportColumn, ImportCsvSpec, MappingItem, ImportSpec, ImportText, ImportTransform, ImportMapping, ModalIidx, ImportTransformModal, IIDXHelper, $) {
 		
 		
 		//============ local object  MappingTab =============
 		var MappingTab = function(optionsdiv, canvasdiv, colsdiv, csvCallback, alertCallback) {
 		    this.importCsvSpec = null;
-		    this.importSpec = new ImportSpec();
+		    this.importSpec = new ImportSpec(alertCallback);
 		    
 		    this.optionsdiv = optionsdiv;
 		    this.canvasDiv = canvasdiv;
@@ -74,7 +74,7 @@ define([	// properly require.config'ed
 		                            //
 		                            //   transform names before and after drag-drop - ImportTransform
 		                            //
-		                            //   text or column  after drag and drop - ImportItems
+		                            //   text or column  after drag and drop - MappingItems
                                     //   drop area for each row (table cells) - ImportRow
 		};
 		
@@ -98,7 +98,8 @@ define([	// properly require.config'ed
 		MappingTab.prototype = {
 			clear : function () {
 				this.importCsvSpec = null;
-			    this.importSpec = new ImportSpec();
+				
+			    this.importSpec = new ImportSpec(this.importSpec.alertCallback);
 
 			    this.uniqueIndex = 0;  
 			    	    
@@ -116,6 +117,10 @@ define([	// properly require.config'ed
 				} else {
 					return "";
 				}
+			},
+			
+			getMappedPropItems : function () {
+				return this.importSpec.getMappedPropItems();
 			},
 			
 			getUniqueIndexStr : function () {
@@ -344,14 +349,14 @@ define([	// properly require.config'ed
 			createItemElem : function (item) {
 				// create an element from an importSpec item
 			
-				if (item.getType() === ImportItem.TYPE_TEXT) {
+				if (item.getType() === MappingItem.TYPE_TEXT) {
 					var textElem = this.createTextElem(item.getTextObj(), true);
-					this.elemHash[textElem.id] = item;   // overwrite so element points to ImportItem not ImportText
+					this.elemHash[textElem.id] = item;   // overwrite so element points to MappingItem not ImportText
 					return textElem;
 					
 				} else {
 					var colElem = this.createColElem(item.getColumnObj(), true);
-					this.elemHash[colElem.id] = item;   // overwrite so element points to ImportItem not ImportColumn
+					this.elemHash[colElem.id] = item;   // overwrite so element points to MappingItem not ImportColumn
 
 					var tList = item.getTransformList();
 					// add the transform
@@ -739,7 +744,7 @@ define([	// properly require.config'ed
 			
 			visitItemElements : function (iTextOrCol, applyFunc) {
 				// iTextOrCol is ImportText or ImportColumn
-				// visit each itemElement that hashes to an ImportItem who's value matches iTextOrCol
+				// visit each itemElement that hashes to an MappingItem who's value matches iTextOrCol
 				// apply applyFunc(elem) to each html element
 				var numApplied = 0;
 				
@@ -881,13 +886,13 @@ define([	// properly require.config'ed
 				if (dragElem.parentNode == this.columnDiv) {
 			    	//====  pulling in a column from cols list ====
 					var iCol = this.elemHash[dragElem.id];
-					var item = new ImportItem(ImportItem.TYPE_COLUMN, iCol, []);
+					var item = new MappingItem(MappingItem.TYPE_COLUMN, iCol, []);
 				    dropElem = this.createItemElem(item); 
 				
 			    } else if (dragElem.parentNode == this.textDiv) {
 			    	//====  pulling in a transform from transform list ====
 			    	var iText = this.elemHash[dragElem.id];
-					var item = new ImportItem(ImportItem.TYPE_TEXT, iText, []);
+					var item = new MappingItem(MappingItem.TYPE_TEXT, iText, []);
 				    dropElem = this.createItemElem(item); 
 			    
 			    } else if (dragElem.parentNode == this.transformDiv) {
@@ -1181,7 +1186,7 @@ define([	// properly require.config'ed
 			// ==== element types ====
 			// text hashes to ImportText
 			elemIsText :          function (elem) { return this.elemIdStartsWith(elem.id, MappingTab.PREFIX_TEXT); },
-			// text in an item hashes to ImportItem
+			// text in an item hashes to MappingItem
 			elemIsTextItem :      function (elem) { return this.elemIdStartsWith(elem.id, MappingTab.PREFIX_TEXT_ITEM); },
 			// column hashes to ImportColumn
 			elemIsColumn :        function (elem) { return this.elemIdStartsWith(elem.id, MappingTab.PREFIX_COL); },
@@ -1191,7 +1196,7 @@ define([	// properly require.config'ed
 			elemIsTransform :     function (elem) { return this.elemIdStartsWith(elem.id, MappingTab.PREFIX_TRANSFORM); },
 			// transform in an item also hashes to ImportTransform
 			elemIsTransformInItem : function (elem) { return this.elemIdStartsWith(elem.id, MappingTab.PREFIX_TRANSFORM_ITEM); },
-			// row hashes to ImportTripleRow
+			// row hashes to ImportMapping
 			elemIsRow :           function (elem) { return this.elemIdStartsWith(elem.id, MappingTab.PREFIX_ROW); },
 			
 			// === ID versions === 
@@ -1222,7 +1227,9 @@ define([	// properly require.config'ed
 				
 			},
 			
-            toJson : function () {
+            toJson : function (optDeflateFlag) {
+				var deflateFlag = (typeof optDeflateFlag == "undefined") ? false : optDeflateFlag;
+
                 return this.importSpec.toJson();
             },
         };

@@ -4,9 +4,10 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>1.1.0-SNAPSHOT</version>
+		<version>1.2.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>sparqlQueryService</artifactId>
+	<version>1.2.0-SNAPSHOT</version>
 
 	<dependencies>
 		<dependency>
@@ -22,7 +23,7 @@
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
-			<version>1.1.0-SNAPSHOT</version>
+			<version>1.2.0-SNAPSHOT</version>
 		</dependency>		
 		<dependency>
 			<groupId>io.springfox</groupId>

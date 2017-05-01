@@ -95,6 +95,7 @@
 		        alert("Require.js page loading time-out. (Try reloading the page)  \nError: "+err);
 		    } 
 		    else {
+		    	console.log(err.stack);
 		        throw err;
 		    }   
 		};

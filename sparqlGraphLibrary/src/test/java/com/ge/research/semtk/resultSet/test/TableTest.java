@@ -276,6 +276,23 @@ public class TableTest {
 	
 	
 	@Test
+	public void testTableToCSV_NullRow() throws Exception {
+		
+		boolean thrown = false;
+		try{
+			String[] cols = {"colA"};
+			String[] colTypes = {"String"};
+			ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+			rows.add(null);
+			Table table = new Table(cols, colTypes, rows);
+		}catch(Exception e){
+			thrown = true;
+			assertTrue(e.getMessage().contains("Cannot create a Table: row is null"));
+		}
+		assertTrue(thrown);
+	}
+	
+	@Test
 	public void testTable_WrongNumRowEntries() throws Exception {
 		boolean thrown = false;
 		try{

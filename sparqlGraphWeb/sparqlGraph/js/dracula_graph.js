@@ -101,6 +101,14 @@ Graph.prototype = {
         var t = this.addNode(target);
         //console.log("now trying to add edge: " + source.getSparqlID() + " ---> " + target.getSparqlID());
         
+        // return if it already exists
+        for (var i=0; i < this.edges.length; i++) {
+        	if (this.edges[i].source == s && this.edges[i].target == t && this.edges[i].style.label == style.label) {
+        		return;
+        	}
+        }
+        
+        // otherwise add it
         var edge = this.edgeFactory.build(s, t);
         jQuery.extend(edge.style,style);
         s.edges.push(edge);
@@ -121,19 +129,30 @@ Graph.prototype = {
         this.snapshots.push({comment: comment, graph: graph});
         */
     },
+    
+    removeEdge: function(source, target) {
+    	// remove edges between source and target
+    	for(var i = 0; i < this.edges.length; i++) {
+    		if (this.edges[i].source == source && this.edges[i].target == target) {
+    			this.edges[i].hide();
+    			this.edges.splice(i, 1);
+    			i--;
+    		}
+    	}
+    },
+    
     removeNode: function(id) {
-    	var testID = "?" + id;
     	// remove all edges to and from
     	for(var i = 0; i < this.edges.length; i++) {
-    		if (this.edges[i].source.id == testID || this.edges[i].target.id == testID) {
+    		if (this.edges[i].source.id == id || this.edges[i].target.id == id) {
     			this.edges.splice(i, 1);
     			i--;
     		}
     	}
     	
     	// delete the node ('delete' instead of 'splice' since it is an assoc array)
-    	this.nodes[testID].hide();
-    	delete this.nodes[testID];	
+    	this.nodes[id].hide();
+    	delete this.nodes[id];	
     },
 
 };
@@ -300,7 +319,7 @@ Graph.Renderer.Raphael.prototype = {
         }/* else, draw new nodes */
 
         var shape;
-
+        var graph = this.graph;
         /* if a node renderer function is provided by the user, then use it 
            or the default render function instead */
         if(!node.render) {
@@ -356,16 +375,19 @@ Graph.Renderer.Raphael.prototype = {
             	    	//node.parentSNode.nodeGrp.drawNodes();
             	    });
                 	
+                	// "X" for deleting SNodes
                 	cntrl.node.onmousedown = function (e) {
             			registerMouseDown(e);
             		};
             		
-            		cntrl.node.onmouseup = function (pnode, e) {
-            			if (mouseUpIsLeftClick(e)) {
+            		cntrl.node.onmouseup = function (pnode, graph, e) {
+            			registerMouseUp(e);
+            			if (mouseUpIsClick()) {
             				pnode.parentSNode.removeFromNodeGroup(false);		
                      	    pnode.parentSNode.nodeGrp.drawNodes();
+                     	    graph.removeNode(pnode.id);
             			}
-            		}.bind("blank_this", node);
+            		}.bind("fake_this", node, graph);
                 	
                 	// add the title
                 	
@@ -375,12 +397,14 @@ Graph.Renderer.Raphael.prototype = {
                 	lt.attr({"x" : getLineX(lt.getBBox().width, hMargin)});
                 	displayLabelOptions(lt, node.parentSNode.getDisplayOptions());
                 	
+                	// SNode
                 	lt.node.onmousedown = function (e) {
             			registerMouseDown(e);
             		};
             		
             		lt.node.onmouseup = function (pnode, e) {
-            			if (mouseUpIsLeftClick(e)) {
+            			registerMouseUp(e);
+            			if (mouseUpIsClick()) {
             				//node.parentSNode.toggleReturnType(lt);
             		    	pnode.parentSNode.callAsyncSNodeEditor(lt); 
             			}
@@ -461,7 +485,19 @@ Graph.Renderer.Raphael.prototype = {
         if(!edge.connection) {
             edge.style && edge.style.callback && edge.style.callback(edge); // TODO move this somewhere else
             edge.connection = this.r.connection(edge.source.shape, edge.target.shape, edge.style);
+            edge.connection.label[0].style.cursor = "pointer";
+            edge.connection.label[0].onclick = function(e) {
+            	e.source.parentSNode.callAsyncLinkEditor(e.style.label, e.target.parentSNode, e);
+
+            }.bind(edge.connection.label[0], edge);
+            
             return;
+        }
+        
+        if (typeof edge.render === "undefined") {
+        	edge.render = function(r, edge) {
+        		alert("edge.render");
+        	}
         }
         
         //FIXME showing doesn't work well
@@ -481,6 +517,7 @@ Graph.Layout.Spring = function(graph, width, height) {
     this.c = 0.01;
     this.maxVertexMovement = 0.5;
     this.layout();
+    this.totalNodeArea = 0;
 };
 Graph.Layout.Spring.prototype = {
 		
@@ -522,16 +559,18 @@ Graph.Layout.Spring.prototype = {
     
     layoutPrepare: function() {
     	var keys = Object.keys(this.graph.nodes);
+    	this.totalNodeArea = 0;
+    	
         for (var i=0; i < keys.length; i++) {
             var node = this.graph.nodes[keys[i]];   // PEC fixed loop syntax bug
             
-            node.layoutPosX = 0;
-            node.layoutPosY = 0;
+            node.layoutPosX = 0; 
+            node.layoutPosY = 0; 
             node.layoutForceX = 0;
             node.layoutForceY = 0;
-           
+            
+            this.totalNodeArea += node.shape.getBBox().height * node.shape.getBBox().width;
         }
-        
     },
     
     // PEC: I added this to allow a single layout then revert to un-layout behavior
@@ -562,10 +601,11 @@ Graph.Layout.Spring.prototype = {
             if(y < miny) miny = y;
         }
 
+        var factor = this.width * this.height / (6 * this.totalNodeArea + 1);
         this.graph.layoutMinX = minx;
-        this.graph.layoutMaxX = maxx;
+        this.graph.layoutMaxX = maxx * factor;
         this.graph.layoutMinY = miny;
-        this.graph.layoutMaxY = maxy;
+        this.graph.layoutMaxY = maxy * factor;
     },
     
     layoutIteration: function() {
@@ -616,7 +656,7 @@ Graph.Layout.Spring.prototype = {
         if(d2 < 0.01) {
             dx = 0.1 * Math.random() + 0.1;
             dy = 0.1 * Math.random() + 0.1;
-            var d2 = dx * dx + dy * dy;
+            d2 = dx * dx + dy * dy;
         }
         var d = Math.sqrt(d2);
         if(d < this.maxRepulsiveForceDistance) {
@@ -875,10 +915,10 @@ if (!Array.prototype.forEach)
     }
   };
 }
+//************* Special mouse functions *****************
 
-// Resolve trouble I'm having separating drags from single clicks
-// note:  e.which = 1 means left click
 var gMouseDownLoc = "";
+var gMouseUpLoc = "";
 
 var buildMouseLocation = function(e) {
 	return e.clientX.toString() + ":" + e.clientY.toString();
@@ -886,11 +926,25 @@ var buildMouseLocation = function(e) {
 var registerMouseDown = function(e) {
 	if (e.which == 1) {
 		gMouseDownLoc = buildMouseLocation(e);
+	} else {
+		gMouseDownLoc = "";
 	}
 };
-var mouseUpIsLeftClick = function(e) {
-	return (e.which == 1 && buildMouseLocation(e) == gMouseDownLoc);
+var registerMouseUp = function(e) {
+	if (e.which == 1) {
+		gMouseUpLoc = buildMouseLocation(e);
+	} else {
+		gMouseUpLoc = "";
+	}
 };
+var mouseUpIsClick = function() {
+	return (gMouseUpLoc.length > 0 && gMouseUpLoc == gMouseDownLoc);
+};
+var mouseUpIsDrag = function() {
+	return (gMouseUpLoc.length > 0 && gMouseUpLoc != gMouseDownLoc);
+};
+
+//************* End mouse functions *****************
 
 var buildGraphNodeLabels = function(propLabelStr, r, i, hMargin, vMargin, labelN, psize, node, isproperty){
 	// this method builds the actual labels used in the stacked boxes that represent each of the 
@@ -911,33 +965,53 @@ var buildGraphNodeLabels = function(propLabelStr, r, i, hMargin, vMargin, labelN
     
     
     if(isproperty){
-		
+		// propertyItem labels
 		itemLabel.node.onmousedown = function (e) {
 			registerMouseDown(e);
 		};
 		
 		itemLabel.node.onmouseup = function (pItemLabel, pPropLabelStr, pNode, e) {
-			if (mouseUpIsLeftClick(e)) {
+			registerMouseUp(e);
+			if (mouseUpIsClick()) {
 				var keyname = propLabelStr.split(" ")[0];
 		    	pNode.parentSNode.callAsyncPropEditor(keyname, pItemLabel); 
 			}
 		}.bind("blank_this", itemLabel, propLabelStr, node);
 		
     } else {
-
+    	// nodeItem labels
 		itemLabel.node.onmousedown = function (e) {
 			registerMouseDown(e);
 		};
 		
 		itemLabel.node.onmouseup = function (index, e) { 
-			if (mouseUpIsLeftClick(e)) {
-		    	node.parentSNode.addClassToCanvas(index, propLabelStr);
+			registerMouseUp(e);
+			if (mouseUpIsClick()) {
+		    	node.parentSNode.callAsyncLinkBuilder(index);
 		    	
 		    	// TODO: need code to un-color this when paths SNodes are deleted
 		    	//itemLabel.attr({"fill" : "#FF0000", "stroke-width": 3});	
 			}
     	
 		}.bind("non-this", i);
+		
+		// Not sure why these don't do anything.
+		// Instead Rederer d.onmousemove up around line 242
+		itemLabel.node.ondragstart = function (e) {
+			console.log("dragstart");
+			e.preventDefault && e.preventDefault();
+		};
+		
+		itemLabel.node.ondrag = function (e) {
+			console.log("drag");
+			e.preventDefault && e.preventDefault();
+		};
+		
+		itemLabel.node.ondragend = function (e) {
+			console.log("dragend");
+			e.preventDefault && e.preventDefault();
+		};
+		//=======end do nothing ====
     }
     return itemLabel;
 }

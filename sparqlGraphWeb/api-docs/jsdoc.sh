@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#
+# This splices main.html into the middle of index.html
+#
 
 cd $1
 

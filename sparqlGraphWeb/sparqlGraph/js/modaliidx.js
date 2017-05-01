@@ -71,7 +71,7 @@ define([	// properly require.config'ed   bootstrap-modal
 							)
 		};
 		
-		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optSubmitButtonText) {
+		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthStr) {
 			
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
 
@@ -83,7 +83,8 @@ define([	// properly require.config'ed   bootstrap-modal
 									function() {return null;},     // validation is not implemented for this one
 									clearCallback, 
 									submitCallback,
-									optSubmitButtonText
+									optOKButText,
+									optWidthStr
 									)
 		};
 		
@@ -134,14 +135,14 @@ define([	// properly require.config'ed   bootstrap-modal
 					$(this.div).modal('show');
 				},
 				
-				showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback) {
+				showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback, optOkButtonText, optWidthStr) {
 					// show a modal with header, body and callback.
 					// validate must return one of:
 					//      error message : display an alert
 					//      null : call callbackSuccess
 					
 					var okButText = (typeof optOkButtonText == "undefined") ? "OK" : optOkButtonText;
-					this.div = this.createModalDiv();
+					this.div = this.createModalDiv(optWidthStr);
 					
 					var header = this.createHeader(headerText);
 					this.div.appendChild(header);
@@ -158,7 +159,7 @@ define([	// properly require.config'ed   bootstrap-modal
 					$(this.div).modal('show');
 				},
 				
-				createModalDiv : function () {
+				createModalDiv : function (optWidthStr) {
 					// make sure modal exists and is attached to document.body
 					
 					// get rid of modal <div> if it already exists
@@ -170,7 +171,7 @@ define([	// properly require.config'ed   bootstrap-modal
 					// create the modal div
 					var modal = document.createElement("div");
 					modal.className = "modal hide fade";
-					modal.style = "display: none;";
+					modal.style = "display: none;" + ( (typeof optWidthStr != "undefined") ? ("width: " + optWidthStr) : "" );
 					modal.id = this.id;
 					document.body.appendChild(modal);
 					

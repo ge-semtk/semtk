@@ -58,13 +58,15 @@ public class Table {
 		}
 		// allow rows to be null
 		
-		if(rows != null){
-			if(rows.size() > 0 && rows.get(0).size() != cols.length){
+		if(rows != null && rows.size() > 0){
+			if(rows.get(0) == null){
+				throw new Exception("Cannot create a Table: row is null");
+			}
+			if(rows.get(0).size() != cols.length){
 				throw new Exception("Cannot create a Table: wrong number of entries in rows");
 			}
 			this.rows = rows;
-		}
-		else{
+		}else{
 			this.rows = new ArrayList<ArrayList<String>>();
 		}
 		this.columnNames = cols;

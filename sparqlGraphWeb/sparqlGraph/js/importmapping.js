@@ -17,28 +17,44 @@
  */
 
 define([	// properly require.config'ed
-        	 'sparqlgraph/js/importitem',
+        	 'sparqlgraph/js/mappingitem',
               	
      		// shimmed
         	// 'logconfig',
 		],
 
-		function (ImportItem) {
+		function (MappingItem) {
 		
-			/*
-			 * 
+			/**
+			 * An import mapping from columns, texts, and transforms to a class or property in the nodegroup.
+		     * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link SemtkImportAPI#getMappings} or {@link SemtkImportAPI#getMapping} instead
+			 * @alias ImportMapping
+			 * @class
 			 */
-			var ImportTripleRow = function (node, propItem) {
+			var ImportMapping = function (node, propItem) {
+				// params are purposely not documented for jsdoc.  Not designed for the API.
+				// node: SemanticNode
+				// propItem: PropertyItem
 				this.node = node;
 				this.propItem = propItem;
 				this.itemList = [];
 			};
 			
-			ImportTripleRow.staticGenUniqueKey = function(sparqlId, propUri) {
+			ImportMapping.staticGenUniqueKey = function(sparqlId, propUri) {
 				return sparqlId + "." + (propUri != null ? propUri : "");
 			};
 			
-			ImportTripleRow.prototype = {
+			ImportMapping.prototype = {
+				//
+				// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
+				//      These methods' behaviors are not guaranteed to be stable in future releases.
+				//
+					
+				/**
+				 * @description Add a mapping item
+				 * @param {MappingItem} item           item to add
+				 * @param {MappingItem} insertBefore   insert here.  If null then add to end.
+				 */
 				addItem : function (item, insertBefore) {
 					if (insertBefore == null) {
 						this.itemList.push(item);
@@ -49,11 +65,19 @@ define([	// properly require.config'ed
 					item.incrUse(1);
 				},
 				
+				/**
+				 * @description clears all mapping items
+				 */
 				clearItems : function () {
 					// clears items without any regard for the ImportSpec
 					this.itemList = [];
 				},
 				
+				/**
+				 * @description delete a given mapping item
+				 * @param {MappingItem} item the mapping item to delete
+				 * @throws exception if item is invalid
+				 */
 				delItem : function (item) {
 					var i = this.itemList.indexOf(item);
 					if (i < 0) { kdlLogAndThrow("Internal error in ImportRow.delItem().  Item isn't in this row.");}
@@ -66,7 +90,7 @@ define([	// properly require.config'ed
 					if (! jNode.hasOwnProperty("sparqlID")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonNode().  No sparqlID field.");}
 					
 					var node = iSpec.nodegroup.getNodeBySparqlID(jNode.sparqlID);
-					if (! node) {kdlLogAndThrow("ImportTripleRow.fromJsonNode() can't find node in nodegroup: " + jNode.sparqlID); }
+					if (! node) {kdlLogAndThrow("ImportMapping.fromJsonNode() can't find node in nodegroup: " + jNode.sparqlID); }
 					this.node = node;
 					this.propItem = null;
 					
@@ -79,7 +103,7 @@ define([	// properly require.config'ed
 					
 					if (! jProp.hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonProp().  No URIRelation field.");}
 					var propItem = node.getPropertyByURIRelation(jProp.URIRelation);
-					if (! propItem) { kdlLogAndThrow("ImportTripleRow.fromJsonProp() can't find property in nodegroup: " + node.getSparqlID() + "->" + jProp.URIRelation); }
+					if (! propItem) { kdlLogAndThrow("ImportMapping.fromJsonProp() can't find property in nodegroup: " + node.getSparqlID() + "->" + jProp.URIRelation); }
 
 					if (! jProp.hasOwnProperty("mapping")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonProp().  No mapping field.");}
 					this.itemsFromJson(jProp.mapping, idHash);
@@ -93,18 +117,22 @@ define([	// properly require.config'ed
 					return this.propItem;
 				},
 				
+				/**
+				 * @description Get the MappingItems for this ImportMapping
+				 * @returns {MappingItem[]} ordered list of items
+				 */
 				getItemList : function () {
 					return this.itemList;
 				},
 				
 				genUniqueKey : function () {
 					// key is unique to a nodegroup
-					return ImportTripleRow.staticGenUniqueKey(this.getNodeSparqlId(), this.getPropUri());
+					return ImportMapping.staticGenUniqueKey(this.getNodeSparqlId(), this.getPropUri());
 				},
 				
 				itemsFromJson : function (jMapping, idHash) {
 					for (var i=0; i < jMapping.length; i++) {
-						var item = new  ImportItem(null, null, null);
+						var item = new  MappingItem(null, null, null);
 						item.fromJson(jMapping[i], idHash);
 						this.itemList.push(item);
 					}
@@ -156,6 +184,6 @@ define([	// properly require.config'ed
 				
 
 			};
-			return ImportTripleRow;            
+			return ImportMapping;            
 	}
 );

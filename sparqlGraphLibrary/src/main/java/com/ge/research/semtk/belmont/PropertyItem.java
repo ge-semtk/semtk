@@ -123,6 +123,10 @@ public class PropertyItem extends Returnable {
 		return this.uriRelationship;
 	}
 
+	/**
+	 * Return constraints SPARQL or null
+	 * @return {String} or null
+	 */
 	public String getConstraints() {
 		if (constraints != null) {
 			String constraintStr =  this.constraints.getConstraint();

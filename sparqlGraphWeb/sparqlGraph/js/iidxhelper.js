@@ -111,7 +111,31 @@ define([	// properly require.config'ed
 		};
 		
 		IIDXHelper.downloadFile = function (data, filename) {
+			// http://stackoverflow.com/questions/13405129/javascript-create-and-save-file
+			// This handles bigger files than the OLD version
+			// because a blob doesn't need to be URI-encoded
+			// Paul April 2017
+			var a = document.createElement("a");
+	        var file = new Blob([data], {type: "text/csv;charset=utf8"});
+	        
+		    if (window.navigator.msSaveOrOpenBlob) // IE10+
+		        window.navigator.msSaveOrOpenBlob(file, filename);
+		    else { // Others
+		        var url = URL.createObjectURL(file);
+		        a.href = url;
+		        a.download = filename;
+		        document.body.appendChild(a);
+		        a.click();
+		        setTimeout(function() {
+		            document.body.removeChild(a);
+		            window.URL.revokeObjectURL(url);  
+		        }, 0); 
+		    }
+	    };
+	    
+	    IIDXHelper.downloadFileOLD = function (data, filename) {
 	    	// build an anchor and click on it
+	    	// URI encodes the data
 			$('<a>invisible</a>')
 				.attr('id','downloadFile')
 				.attr('href','data:text/csv;charset=utf8,' + encodeURIComponent(data))

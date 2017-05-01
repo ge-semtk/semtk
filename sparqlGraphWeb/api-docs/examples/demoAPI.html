@@ -28,6 +28,44 @@
     		document.getElementById("btnTest1").disabled=false;
     		document.getElementById("btnTest2").disabled=false;
     		document.getElementById("btnTest3").disabled=false;
+    		document.getElementById("btnTest4").disabled=false;
+
+    	};
+    	
+    	var uploadJsonCallback = function (successCallback, evt) {
+			var file = evt.target.files[0];
+    		var r = new FileReader();
+        	
+        	r.onload = function () {
+
+        		
+        		require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
+        			var json = null;
+        			try {
+	        			json = JSON.parse(r.result);
+	        			
+        			} catch (e) {
+        				errorCallback("Error parsing nodegroup json from input file.");
+        			}
+        			semtk.loadNodegroupJsonFullAsync(json, statusCallback, successCallback, failureCallback);
+    	    		
+        		});
+        	};
+    	    r.readAsText(file);
+    	};
+    	
+    	var uploadJson = function(successCallback) {
+    		// make fileInput
+    		var fileInput = document.getElementById("fileInput");
+    		if (fileInput !== null) {
+    			fileInput.parentNode.removeChild(fileInput);
+    		}
+    		document.body.innerHTML += '<input type="file" id="fileInput" style="display:none">';
+			fileInput = document.getElementById("fileInput");
+			
+    		// click fileInput
+	    	fileInput.addEventListener('change', uploadJsonCallback.bind(this, successCallback), false);
+			fileInput.click();
     	};
     	
     	var configureServices = function() {
@@ -150,9 +188,10 @@
 			// execute arbitrary query
 			var query = "" +
 						"prefix blueprintv5:<http://kdl.ge.com/GE/blueprintv5#>" +
-						"select distinct ?equipmentName where {" +
-						"   ?Equipment a blueprintv5:Equipment." +
-						"   ?Equipment blueprintv5:equipmentName ?equipmentName ." +
+						"select distinct ?equipmentSN ?priority where {" +
+						"   ?Alert a blueprintv5:Alert." +
+						"   ?Alert blueprintv5:equipmentSN ?equipmentSN ." +
+						"   ?Alert blueprintv5:priority ?priority ." +
 						"}" +
 						"LIMIT 50";
 			
@@ -164,15 +203,77 @@
 			alert("Table: \n" + JSON.stringify(table));
 		};
 		
+		// Import Spec
+		var testImport = function() {
+			var importAPI = semtk.getSemtkImportAPI();
+			console.log("Please choose Semtk opensource:    sampleBattery.json...")
+			uploadJson(testImportCallback1);
+		};
+		
+		var testImportCallback1 = function () {
+			// random reload shouldn't matter
+			var importAPI = semtk.getSemtkImportAPI();
+			
+			// test baseURI
+			console.log("baseURI from json: " + importAPI.getBaseURI());
+			importAPI.setBaseURI("uri://base/test");
+			console.log("baseURI set to:    " + importAPI.getBaseURI());
+			
+			// should not have any effect since we haven't changed nodegroup
+			importAPI.syncToNodegroup();
+			
+			// show the pair of ID's for each mapping
+			var pairs = importAPI.getClassPropPairs();
+			var str = "";
+			for (var i=0; i < pairs.length; i++) {
+				str += pairs[i] + "\n";
+			}
+			console.log("Import Mappings:\n" + str);
+			
+			// check that column "color" was used once
+			var use = importAPI.getImportColumn("color").getUse();
+			console.log("Use of color should be 1: " + use);
+			
+			// remove cell from the last ImportMapping
+			var classURI = pairs[pairs.length-2][0];
+			var propURI = pairs[pairs.length-2][1];
+			var map = importAPI.getImportMapping(classURI, propURI);
+			var item = map.getItemList()[0];
+			console.log("Item is a column: " + item.getType());
+			console.log("Item is column cell named: " + item.getColumnObj().getColName());
+			map.delItem(item);
+			
+			// create a new column
+			var col = importAPI.createImportColumn("cell2");
+			// create new text item
+			var text = importAPI.createImportText("Test__");
+			// create a new transform
+			var trans = importAPI.createImportTransform("TestTrans", "Replace All", "a", "A");
+			
+			// create a mapping item using the text
+			var tItem = importAPI.createMappingItemText(text);
+			
+			// create a mapping item using the col; add transform
+			var cItem = importAPI.createMappingItemColumn(col);
+			cItem.addTransform(trans, null);
+			
+			// add the mapping items to the map
+			map.addItem(tItem);
+			map.addItem(cItem);
+			
+			
+			console.log(JSON.stringify(   semtk.getNodegroupJson()   , null, '\t'));
+		};
+		
 	</script>
 	
 	<script>	
 		SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
 		SEMTK_LOAD_CALLBACK = doneLoading;   // ready function.  Uses the global: semtk
-		SEMTK_LOAD_PATH = "..";              // relative URL path to folder containing iidx-oss and sparqlGraph
+		SEMTK_LOAD_PATH = "../..";              // relative URL path to folder containing iidx-oss and sparqlGraph
     </script>
 
-	<script src="../sparqlGraph/js/semtk_api_loader.js"></script>
+	<script src="../../sparqlGraph/js/semtk_api_loader.js"></script>
 	
   </head>
 
@@ -182,6 +283,7 @@
     <button id="btnTest1" disabled=true onclick="test1();">Gen Sparql</button>
     <button id="btnTest2" disabled=true onclick="test2();">test2</button>
     <button id="btnTest3" disabled=true onclick="test3();">Query</button>
+    <button id="btnTest4" disabled=true onclick="testImport();">Import Spec</button>
     
     
   </body>

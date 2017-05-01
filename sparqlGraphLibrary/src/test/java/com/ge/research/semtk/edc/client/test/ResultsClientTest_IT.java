@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONObject;
@@ -43,7 +44,6 @@ public class ResultsClientTest_IT {
 	
 	private final String CSV_CONTENTS = "one,two,three\n1,2,3\n10,20,30\n100,200,300\n";
 	private final String EXTENSION = "csv";
-	private final String JOB_ID = "results_test_jobid";
 	
 	private static ResultsClient client = null;
 	
@@ -54,27 +54,14 @@ public class ResultsClientTest_IT {
 		SERVICE_PORT = IntegrationTestUtility.getResultsServicePort();
 		client = new ResultsClient(new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT));
 	}
+
+	
 	
 	@Test
-	public void testSingleFile() throws Exception {
+	public void testStoreTable() throws Exception {
 
-		try {	
-			client.execStoreSingleFileResults(JOB_ID, CSV_CONTENTS, EXTENSION);
-			URL[] urls = client.execGetResults(JOB_ID);
-			
-			assertTrue(urls[0] == null); 
-			String contents = IOUtils.toString(urls[1]);
-			assertTrue(contents.equals(CSV_CONTENTS));
-			assertTrue(urls[1].toString().endsWith(EXTENSION));
-			
-		} finally {
-			cleanup(client, JOB_ID);
-		}
-	}
-	
-	@Test
-	public void testTable() throws Exception {
-
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
 		String [] cols = {"col1", "col2"};
 		String [] types = {"String", "String"};
 		ArrayList<String> row = new ArrayList<String>();
@@ -86,53 +73,57 @@ public class ResultsClientTest_IT {
 			table.addRow(row);
 			table.addRow(row);
 			
-			client.execStoreTableResults(JOB_ID, table);
-			URL[] urls = client.execGetResults(JOB_ID);
+			client.execStoreTableResults(jobId, table);
+			URL[] urls = client.execGetResults(jobId);
 			
 			assertTrue(urls[0].toString().endsWith("_sample.json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// check the results.
 			String resultString = Utility.getURLContentsAsString(urls[1]);
-			String expectedResultString = "col1,col2\none, two\none, two\n";
+			String expectedResultString = "col1,col2\none,two\none,two\n";		
 			assertEquals(expectedResultString, resultString);
 		} finally {
-			cleanup(client, JOB_ID);
+			cleanup(client, jobId);
 		}
 	}
 	
+	
 	@Test
-	public void testTableWithComma() throws Exception {
-
-		String [] cols = {"colA", "colB"};
-		String [] types = {"String", "String"};
+	public void testStoreTable_WithCommasAndQuotes() throws Exception {
+		
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"colA", "colB","colC","colD"};
+		String [] types = {"String", "String", "String","String"};
 		ArrayList<String> row = new ArrayList<String>();
-		row.add("apple,ant");  // this element has a comma in it.
+		row.add("apple,ant");  					// this element has a comma
 		row.add("bench");
+		row.add("\"cabana\"");					// this element has quotes
+		row.add("Dan declared \"hi, dear\"");	// this element has quotes and a comma
 		
 		try {
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
-			
-			client.execStoreTableResults(JOB_ID, table);
-			URL[] urls = client.execGetResults(JOB_ID);
-			
-			assertTrue(urls[0].toString().endsWith("_sample.json")); 
-			assertTrue(urls[1].toString().endsWith(".csv")); 
 
-			// check the results.
+			client.execStoreTableResults(jobId, table);
+			URL[] urls = client.execGetResults(jobId);
+			
 			String resultString = Utility.getURLContentsAsString(urls[1]);
-			System.out.println(resultString);
-			String expectedResultString = "colA,colB\n\"apple,ant\",bench\n";   // elements with commas must be put in quotes, else the comma will look like a delimiter
+			String expectedResultString = "colA,colB,colC,colD\n\"apple,ant\",\"bench\",\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";
 			assertEquals(expectedResultString, resultString);
+			
 		} finally {
-			cleanup(client, JOB_ID);
+			cleanup(client, jobId);
 		}
 	}
 	
+	
 	@Test
-	public void testBiggerTable() throws Exception {
+	public void testStoreTable_Medium() throws Exception {
 
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
 		try {
 			long startTime = System.nanoTime();
 			
@@ -145,29 +136,98 @@ public class ResultsClientTest_IT {
 
 			// --- store results ----
 			startTime = System.nanoTime();		
-			client.execStoreTableResults(JOB_ID, table);
+			client.execStoreTableResults(jobId, table);
 			endTime = System.nanoTime();
 			elapsed = ((endTime - startTime) / 1000000000.0);
 			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
 			
 			// --- test results ---
-			URL[] urls = client.execGetResults(JOB_ID);
+			URL[] urls = client.execGetResults(jobId);
 			
 			assertTrue(urls[0].toString().endsWith(".json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// trust ResultsStorageTest.java to test the contents
 		} finally {
-			cleanup(client, JOB_ID);
+			cleanup(client, jobId);
 		}
 	}
+	
+	/**
+	 * Adjust NUM_COLS and NUM_ROWS to make this bigger when performance testing.  
+	 * (Committing them on the smaller size)
+	 */
+	@Test
+	public void testStoreTable_Huge() throws Exception {
+
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
+		try {
+			
+			// construct a huge table
+			final int NUM_COLS = 100;
+			final int NUM_ROWS = 1000;
+			String[] cols = new String[NUM_COLS];
+			String[] colTypes = new String[NUM_COLS];
+			ArrayList<String> row = new ArrayList<String>();
+			for(int i = 0; i < NUM_COLS; i++){
+				cols[i] = "col" + i;
+				colTypes[i] = "String";
+				row.add("Element" + i);
+			}
+			Table table = new Table(cols, colTypes, null);
+			for(int i = 0; i < NUM_ROWS; i++){
+				table.addRow(row);
+			}
+			
+			// --- store results ----
+			long startTime = System.nanoTime();		
+			client.execStoreTableResults(jobId, table);
+			long endTime = System.nanoTime();
+			double elapsed = ((endTime - startTime) / 1000000000.0);
+			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
+			
+			// --- test results ---
+			URL[] urls = client.execGetResults(jobId);
+			
+			assertTrue(urls[0].toString().endsWith(".json")); 
+			assertTrue(urls[1].toString().endsWith(".csv")); 
+
+			// trust ResultsStorageTest.java to test the contents
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
+	
+	@Test
+	public void testStoreSingleFile() throws Exception {
+
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
+		try {	
+			client.execStoreSingleFileResults(jobId, CSV_CONTENTS, EXTENSION);
+			URL[] urls = client.execGetResults(jobId);
+			
+			assertTrue(urls[0] == null); 
+			String contents = IOUtils.toString(urls[1]);
+			assertTrue(contents.equals(CSV_CONTENTS));
+			assertTrue(urls[1].toString().endsWith(EXTENSION));
+			
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
 	
 	@Test
 	public void testStoreCsv() throws Exception {
 
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
 		try {	
-			client.execStoreCsvResults(JOB_ID, CSV_CONTENTS);
-			URL[] urls = client.execGetResults(JOB_ID);
+			client.execStoreCsvResults(jobId, CSV_CONTENTS);
+			URL[] urls = client.execGetResults(jobId);
 			
 			String sample = IOUtils.toString(urls[0]);
 			assertTrue(sample.equals(CSV_CONTENTS)); 
@@ -176,16 +236,20 @@ public class ResultsClientTest_IT {
 			assertTrue(contents.equals(CSV_CONTENTS));
 		
 		} finally {
-			cleanup(client, JOB_ID);
+			cleanup(client, jobId);
 		}
 	}
 	
+	
 	@Test
 	public void test_delete() throws Exception {
+		
+		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		
 		try {
-			client.execStoreCsvResults(JOB_ID, CSV_CONTENTS);
-			client.execDeleteStorage(JOB_ID);
-			URL[] urls = client.execGetResults(JOB_ID);
+			client.execStoreCsvResults(jobId, CSV_CONTENTS);
+			client.execDeleteStorage(jobId);
+			URL[] urls = client.execGetResults(jobId);
 
 			String sample = IOUtils.toString(urls[0]);
 			assertTrue(sample == null);
@@ -193,12 +257,13 @@ public class ResultsClientTest_IT {
 		} catch (FileNotFoundException e) {
 			// success			
 		} finally {
-			cleanup(client, JOB_ID);
+			cleanup(client, jobId);
 		}
 	}
 	
+	
 	private void cleanup(ResultsClient client, String jobId) throws Exception {
-		client.execDeleteStorage(JOB_ID);
+		client.execDeleteStorage(jobId);
 	}
 
 }

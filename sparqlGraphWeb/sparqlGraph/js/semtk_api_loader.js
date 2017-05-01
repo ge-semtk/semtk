@@ -18,7 +18,8 @@
 
 
 /**
- * 
+ *  @alias semtk_api_loader
+ *  @example
  *  Loads the semtk api and all its dependencies.
  *  Creates global: semtk
  * 
@@ -26,25 +27,21 @@
  *  
  *  Your html should look like this;
  *  
- *    <script>	
- *		doneLoading = function() {
- *          alert("doing whatever now that semtk is loaded");
- *          semtk.doWhatever();
- *      }
- *      
- *    </script>
- *    
- *    <script>	
- *      SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString)
- *		SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk
- *		SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph
- *    </script>
+ *  <script>	
+ *    doneLoading = function() {
+ *      alert("doing my favorite method now that semtk is loaded");
+ *      semtk.callMyFavorite();
+ *    }
+ *   	
+ *    SEMTK_ERROR_CALLBACK = errorCallback; // error function (messageString) that throws and exception and doesn't return
+ *    SEMTK_LOAD_CALLBACK = doneLoading;    // ready function.  Uses the global: semtk
+ *    SEMTK_LOAD_PATH = "..";               // relative URL path to folder containing iidx-oss and sparqlGraph
+ *  </script>
  *
- *	  <script src="../sparqlGraph/js/semtk_api_loader.js"></script>
+ *  <script src="../sparqlGraph/js/semtk_api_loader.js"></script>
  * 
  * 
  */
-
 
 
 var semtk = null;
