@@ -69,27 +69,6 @@ public class CSVDatasetTest {
 	}
 	
 	@Test
-	public void testCSVDataWithEmbeddedEscapedQuotes() throws Exception{
-		String path = "src/test/resources/csvDataWithEmbeddedQuotes.txt";
-		
-		@SuppressWarnings("resource")
-		BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
-		String s = reader.readLine();
-		System.out.println(s + "\n\n");
-
-		s = s.replace("\"", "\"\"");  // replace 1x doublequote with 2x doublequote
-		
-		System.out.println(s + "\n\n");
-		
-		//s = s.replaceAll("\\\"", "\\\\\"");  BAD
-		s = s.replace("\\\"\"", "\\\\\"\""); //ALMOST RIGHT
-		//s = s.replaceAll("\\\"", "\\\\\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
-		
-		System.out.println(s);
-	}
-	
-	
-	@Test
 	public void testCSVDatasetFromPath() throws Exception {
 			
 		String[] headers = {"HEADER3","HEADER1"}; // picked a subset of the existing headers, in reverse order than they appear in the file
