@@ -954,6 +954,12 @@ SemanticNode.prototype = {
 			this.nodeList[i].removeSNode(nd);
 		}
 	},
+	removeLink : function(nodeItem, targetSNode) {
+		
+		nodeItem.removeSNode(targetSNode);
+		this.nodeGrp.graph.removeEdge(this.node, targetSNode.node);
+	},
+	
 	buildFilterConstraint : function(op, val) {
 		// build but don't set a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -1344,10 +1350,13 @@ SemanticNode.prototype = {
 		var nodeItem = this.getNodeItemByKeyname(nodeKeyname);
 		this.nodeGrp.asyncNodeEditor(nodeItem, draculaLabel);
 	},
-	
 	callAsyncLinkBuilder : function(nItemIndex) {
 		var nItem = this.nodeList[nItemIndex];
 		this.nodeGrp.asyncLinkBuilder(this, nItem);
+	},
+	callAsyncLinkEditor : function(nodeKeyname, targetSNode, edge) {
+		var nItem = this.getNodeItemByKeyname(nodeKeyname);
+		this.nodeGrp.asyncLinkEditor(this, nItem, targetSNode, edge);
 	},
 
 	toggleReturnType : function(lt) {
@@ -1422,6 +1431,7 @@ var SemanticNodeGroup = function(width, height, divName) {
 	this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
 	this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
 	this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
+	this.asyncLinkEditor = function(){alert("Internal error: SemanticNodeGroup asyncLinkEditor function is not defined.")};
 
 	
 	this.height = height;
@@ -1704,6 +1714,10 @@ SemanticNodeGroup.prototype = {
 	setAsyncLinkBuilder : function (func) {
 		// func(nodeItem) will edit the property 
 		this.asyncLinkBuilder = func;
+	},
+	setAsyncLinkEditor : function (func) {
+		// func(nodeItem) will edit the property 
+		this.asyncLinkEditor = func;
 	},
 	setAsyncSNodeEditor : function (func) {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
