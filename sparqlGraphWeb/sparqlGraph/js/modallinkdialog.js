@@ -69,7 +69,7 @@ define([	// properly require.config'ed
 								this.item,
 								this.targetSNode,
 								this.data,
-								document.getElementById("ModalLinkDialog.optionalCheck").checked,
+								document.getElementById("ModalLinkDialog.optionalSelect").value,
 								document.getElementById("ModalLinkDialog.deleteCheck").checked
 							  );
 			},
@@ -80,27 +80,54 @@ define([	// properly require.config'ed
 				dom.id = "ModalLinkDialogdom";
 				var title = this.sourceSNode.getSparqlID() + "-- " + this.item.getKeyName() + " --" + this.targetSNode.getSparqlID();
 				
-				
 				// optional checkbox
+				var select =  document.createElement("select");
+				select.id = "ModalLinkDialog.optionalSelect";
+				var option;
 				
-				optionalCheck = IIDXHelper.createVAlignedCheckbox();
-				optionalCheck.id = "ModalLinkDialog.optionalCheck";
-				optionalCheck.checked = false;    // PEC TODO
+				option = document.createElement("option");
+				option.text = " ";
+				option.value = NodeItem.OPTIONAL_FALSE;
+				select.options.add(option);
 				
+				option = document.createElement("option");
+				option.text = "forward (normal)";
+				option.value = NodeItem.OPTIONAL_TRUE;
+				select.options.add(option);
+				
+				option = document.createElement("option");
+				option.text = "reverse";
+				option.value = NodeItem.OPTIONAL_REVERSE;
+				select.options.add(option);
+				
+				select.style.width = "20ch";
+				
+				// set select.selectedIndex
+				var o = this.item.getSNodeOptional(this.targetSNode);
+				for (var i=0; i < select.options.length; i++) {
+					if (select.options[i].value == o) {
+						select.selectedIndex = i;
+						break;
+					}
+				}
+				
+				// delete
 				deleteCheck = IIDXHelper.createVAlignedCheckbox();
 				deleteCheck.id = "ModalLinkDialog.deleteCheck";
 				deleteCheck.checked = false;			
 
 				// normal operation: put optional check into the top table
-				dom.appendChild(optionalCheck)
-				dom.appendChild(document.createTextNode(" optional"));
+				dom.appendChild(document.createTextNode("Optional: "));
+				
+				dom.appendChild(select);
 				dom.appendChild(document.createElement("br"));
+				
 				dom.appendChild(deleteCheck)
 				dom.appendChild(document.createTextNode(" delete this link"));
 				
-				// compute a width
+				// compute a width: at least 40 but wide enough for the title too
 				var width = title.length * 1.3;
-				width = Math.max(30, width);
+				width = Math.max(40, width);
 				width = Math.floor(width);
 				
 				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this), "OK", width.toString() + "ch");   

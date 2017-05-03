@@ -17,12 +17,14 @@
 
 package com.ge.research.semtk.belmont.test;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.NodeItem;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -91,5 +93,4 @@ public class NodeGroupTest_IT {
 			} 
 		}
 	}	
-	
 }

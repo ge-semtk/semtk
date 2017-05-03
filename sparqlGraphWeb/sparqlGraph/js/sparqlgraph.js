@@ -325,13 +325,16 @@
 			});
 	},
 	
-	linkEditorCallback = function(snode, nItem, targetSNode, data, optionalFlag, deleteFlag) {
-		// TODO: handle optionalFlag
+	linkEditorCallback = function(snode, nItem, targetSNode, data, optionalVal, deleteFlag) {
+		
+		// optionalFlag
+		nItem.setSNodeOptional(targetSNode, optionalVal);
 		
 		// deleteFlag
 		if (deleteFlag) {
 			snode.removeLink(nItem, targetSNode);
-		}
+		} 
+		
 		gNodeGroup.drawNodes();
 	},
 	
@@ -390,19 +393,7 @@
         	snodeItem.setIsReturned(true);
     	}
     	
-    	// optional snode, so find nodeItem: optItem
-    	var optItem = gNodeGroup.itemGetOptionalItem(snodeItem);
-		if (optItem != null) {
-			// If optional then set to right direction
-			if (optionalFlag) {
-				optItem.setIsOptional(  (snodeItem.nodeList.indexOf(optItem) > -1) ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_TRUE);
-			// Only enforce the false if INCOMING optional was true
-			} else {
-				if (gNodeGroup.isIncomingOptional(snodeItem, optItem)) {
-					optItem.setIsOptional(NodeItem.OPTIONAL_FALSE);
-				}
-			}
-		}
+    	// ignore optionalFlag in sparqlGraph.  It is still used in sparqlForm
 		
 		// runtime constrained
     	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);

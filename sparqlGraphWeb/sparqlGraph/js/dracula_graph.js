@@ -491,19 +491,25 @@ Graph.Renderer.Raphael.prototype = {
 
             }.bind(edge.connection.label[0], edge);
             
-            return;
-        }
+            
+        } else {
         
-        if (typeof edge.render === "undefined") {
-        	edge.render = function(r, edge) {
-        		alert("edge.render");
-        	}
+	        if (typeof edge.render === "undefined") {
+	        	edge.render = function(r, edge) {
+	        		alert("edge.render");
+	        	}
+	        }
+	        
+	        //FIXME showing doesn't work well
+	        edge.connection.fg.show();
+	        edge.connection.bg && edge.connection.bg.show();
+	        edge.connection.draw();
         }
-        
-        //FIXME showing doesn't work well
-        edge.connection.fg.show();
-        edge.connection.bg && edge.connection.bg.show();
-        edge.connection.draw();
+        // test green
+        var lt = edge.connection.label;
+        displayEdgeLabelOptions(lt, edge.source.parentSNode.getEdgeDisplayOptions(edge.style.label, edge.target.parentSNode));
+
+        return;
     }
 };
 Graph.Layout = {};
@@ -753,6 +759,16 @@ Graph.Layout.Ordered.prototype = {
 // -Paul
 changeLabelText = function(label, newText) {
 	label.attr({"text" : label.attrs.text.slice(0,1) + newText});
+};
+
+displayEdgeLabelOptions = function (label, displayBitmap) {
+	if (displayBitmap == 0) {
+		label.attr({"fill": "#000000", "stroke":"none"});
+	} else if (displayBitmap == 1) {
+		label.attr({"fill": "#008000", "stroke":"bold"});
+	} else {
+		label.attr({"fill": "#001DA0", "stroke":"bold"});
+	} 
 };
 
 displayLabelOptions = function (label, displayBitmap) {

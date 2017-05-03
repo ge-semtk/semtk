@@ -1,0 +1,212 @@
+{
+	"sparqlConn": {
+		"name": "BatteryDemo",
+		"type": "virtuoso",
+		"dsURL": "http://localhost:2420",
+		"dsKsURL": "",
+		"dsDataset": "http://demo/paul",
+		"domain": "http://kdl.ge.com/"
+	},
+	"sNodeGroup": {
+		"version": 3,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Color",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Color",
+				"subClassNames": [],
+				"SparqlID": "?Color",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Color"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"KeyName": "color",
+						"ValueType": "Color",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Color",
+						"ConnectBy": "color",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#color",
+						"isOptional": 0
+					}
+				],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell"
+						],
+						"SnodeOptionals": [
+							"-1"
+						],
+						"KeyName": "cell",
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Cell",
+						"ConnectBy": "cell",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#cell",
+						"isOptional": 0
+					}
+				],
+				"NodeName": "Battery",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Battery",
+				"subClassNames": [],
+				"SparqlID": "?Battery",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Color",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Color",
+				"subClassNames": [],
+				"SparqlID": "?Color_0",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Color_0"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"KeyName": "color",
+						"ValueType": "Color",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Color",
+						"ConnectBy": "color",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#color",
+						"isOptional": 0
+					}
+				],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell",
+							"?Cell_0"
+						],
+						"SnodeOptionals": [
+							-1,
+							0
+						],
+						"KeyName": "cell",
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/batterydemo#Cell",
+						"ConnectBy": "cell",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#cell",
+						"isOptional": 0
+					}
+				],
+				"NodeName": "Battery",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Battery",
+				"subClassNames": [],
+				"SparqlID": "?Battery_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Battery_0",
+				"type": "http://kdl.ge.com/batterydemo#Battery",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Cell_0",
+				"type": "http://kdl.ge.com/batterydemo#Cell",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Color_0",
+				"type": "http://kdl.ge.com/batterydemo#Color",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Battery",
+				"type": "http://kdl.ge.com/batterydemo#Battery",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Cell",
+				"type": "http://kdl.ge.com/batterydemo#Cell",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Color",
+				"type": "http://kdl.ge.com/batterydemo#Color",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

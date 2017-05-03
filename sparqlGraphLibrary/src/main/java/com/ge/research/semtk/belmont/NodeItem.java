@@ -35,12 +35,12 @@ public class NodeItem {
 	public static int OPTIONAL_REVERSE = -1;
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
+	private ArrayList<Integer> snodeOptionals = new ArrayList<Integer>();
 	private String keyName = "";
 	private String valueType = "";
 	private String valueTypeURI = "";
 	private String connectedBy = "";
 	private String uriConnectBy = "";
-	private int isOptional = NodeItem.OPTIONAL_FALSE;
 	private Boolean connected = false;
 	
 	/**
@@ -62,7 +62,6 @@ public class NodeItem {
 		this.valueType = next.get("ValueType").toString();
 		this.connectedBy = next.get("ConnectBy").toString();
 		this.uriConnectBy = next.get("UriConnectBy").toString();
-		this.setIsOptionalBackwardsCompatible(next.get("isOptional").toString());
 		this.connected = (Boolean)next.get("Connected");
 		
 		// add the list of nodes this item attaches to on the far end. 
@@ -83,6 +82,28 @@ public class NodeItem {
 			this.nodes.add(curr);
 		}
 		
+		if (next.containsKey("SnodeOptionals")) {
+			JSONArray jsonOpt = (JSONArray)next.get("SnodeOptionals");
+			for (int i=0; i < jsonOpt.size(); i++) {
+				this.snodeOptionals.add(Integer.parseInt(jsonOpt.get(i).toString()));
+			}
+		} else {
+			long opt = NodeItem.OPTIONAL_FALSE;
+
+			if (next.containsKey("isOptional")) {
+				Object o = next.get("isOptional");
+				if (o instanceof Boolean) {
+					opt = ((Boolean) o) ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
+				}
+				else {
+					opt = (long) o;
+				}
+			}
+		
+			for (int i=0; i < this.nodes.size(); i++) {
+				this.snodeOptionals.add((int) opt);
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -91,17 +112,20 @@ public class NodeItem {
 		JSONObject ret = new JSONObject();
 		
 		JSONArray SNodeSparqlIDs = new JSONArray();
+		JSONArray SNodeOptionals = new JSONArray();
+		
 		for (int i=0; i < this.nodes.size(); i++) {
 			SNodeSparqlIDs.add(this.nodes.get(i).getSparqlID());
+			SNodeOptionals.add(this.snodeOptionals.get(i));
 		}
 		ret.put("SnodeSparqlIDs", SNodeSparqlIDs);
+		ret.put("SnodeOptionals", SNodeOptionals);
 		ret.put("KeyName", this.keyName);
 		ret.put("ValueType", this.valueType);
 		ret.put("UriValueType", this.valueTypeURI);
 		ret.put("ConnectBy", this.connectedBy);
 		ret.put("Connected", this.connected);
 		ret.put("UriConnectBy", this.uriConnectBy);
-		ret.put("isOptional", this.isOptional);
 		
 		return ret;
 	}
@@ -125,8 +149,14 @@ public class NodeItem {
 		this.uriConnectBy = connectionURI;		
 	}
 
-	public void setNodes(Node curr) {
+	public void pushNode(Node curr) {
 		this.nodes.add(curr);
+		this.snodeOptionals.add(NodeItem.OPTIONAL_FALSE);
+	}
+	
+	public void pushNode(Node curr, int opt) {
+		this.nodes.add(curr);
+		this.snodeOptionals.add(opt);
 	}
 	
 	public ArrayList<Node> getNodeList() {
@@ -143,10 +173,6 @@ public class NodeItem {
 	public String getUriConnectBy() {
 		return this.uriConnectBy;
 	}
-
-	public int getIsOptional() {
-		return this.isOptional;
-	}
 	
 	public void removeNode(Node node) {
 		this.nodes.remove(node);
@@ -154,20 +180,24 @@ public class NodeItem {
 			this.connected = false;
 		}
 	}
-
-	public void setIsOptional(int val) {
-		this.isOptional = val;
+	
+	public void setSNodeOptional(Node snode, int optional) throws Exception {
+		for (int i=0; i < this.nodes.size(); i++) {
+			if (this.nodes.get(i) == snode) {
+				this.snodeOptionals.set(i, optional);
+				return;
+			}
+		}
+		throw new Exception("NodeItem can't find link to semantic node");
 	}
 	
-	public void setIsOptionalBackwardsCompatible(String str) {
-		// handle old or new isOptional
-		try {
-			// new: integer
-			this.setIsOptional(Integer.parseInt(str));
-		} catch (Exception e) {
-			// old: boolean
-			this.setIsOptional(Boolean.parseBoolean(str) ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE);
+	public int getSNodeOptional(Node snode) throws Exception {
+		for (int i=0; i < this.nodes.size(); i++) {
+			if (this.nodes.get(i) == snode) {
+				return this.snodeOptionals.get(i);
+			}
 		}
+		throw new Exception("NodeItem can't find link to semantic node");
 	}
 	
 }

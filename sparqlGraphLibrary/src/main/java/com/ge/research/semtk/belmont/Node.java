@@ -450,6 +450,10 @@ public class Node extends Returnable {
 	}
 	
 	public NodeItem setConnection(Node curr, String connectionURI) throws Exception {
+		return this.setConnection(curr,  connectionURI, NodeItem.OPTIONAL_FALSE);
+	}
+	
+	public NodeItem setConnection(Node curr, String connectionURI, int opt) throws Exception {
 		// create a display name. 
 		String connectionLocal = new OntologyName(connectionURI).getLocalName();
 
@@ -461,7 +465,7 @@ public class Node extends Returnable {
 				nd.setConnected(true);
 				nd.setConnectBy(connectionLocal);
 				nd.setUriConnectBy(connectionURI);
-				nd.setNodes(curr);
+				nd.pushNode(curr, opt);
 				
 				return nd;
 			}
@@ -625,6 +629,7 @@ public class Node extends Returnable {
 		}
 		return null;
 	}
+	
 	public PropertyItem getPropertyByURIRelation(String uriRel) {
 		for (int i = 0; i < this.props.size(); i++) {
 			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
@@ -633,6 +638,11 @@ public class Node extends Returnable {
 		}
 		return null;
 	}
+	
+	public boolean ownsNodeItem(NodeItem nodeItem) {
+		return this.nodes.contains(nodeItem);
+	}
+	
 	public String getInstanceValue() {
 		return this.instanceValue;
 	}

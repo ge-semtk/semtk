@@ -523,19 +523,17 @@ require([
 	    		
 	    	} else if (item.getItemType() == "NodeItem") {
 	    		alert("Internal Error in sparqlForm.js itemDialogCallback():  item is a nodeItem.  Not implemented");
+	    	
 	    	} else {
-	    		// if item is an snode and there is an optItem (connecting NodeItem)
-	    		// set optional based on direction of the connection
-	        	var optItem = gNodeGroup.itemGetOptionalItem(item);
-	    		if (optItem != null) {
-	    			// If optional then set to right direction
-	    			if (optionalFlag) {
-	    				optItem.setIsOptional(  (item.nodeList.indexOf(optItem) > -1) ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_TRUE);
-	    			// Only enforce the false if INCOMING optional was true
-	    			} else {
-	    				if (gNodeGroup.isIncomingOptional(item, optItem)) {
-	    					optItem.setIsOptional(NodeItem.OPTIONAL_FALSE);
-	    				}
+	    		// "SemanticNode"
+	    		if (optionalFlag != null) {
+	    			var singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
+	    			if (singleNodeItem != null) {
+	    				if (item.ownsNodeItem(singleNodeItem)) {
+	    					singleNodeItem.setSNodeOptional(item.getSNodes()[0], NodeItem.OPTIONAL_REVERSE);
+						} else {
+							singleNodeItem.setSNodeOptional(item, NodeItem.OPTIONAL_TRUE);
+						}
 	    			}
 	    		}
 	    	}

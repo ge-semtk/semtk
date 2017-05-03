@@ -145,6 +145,7 @@ SparqlFormatter.prototype = {
 	},
 
 	prefixQuery : function(query) {
+		console.log("Using DEPRECATED function sparqlFormatter.prefixQuery()");
 		// look for URI's in a query and build prefixes
 		// return an equivalent query that is easier to read
 		var n;
@@ -199,7 +200,7 @@ SparqlFormatter.prototype = {
 				if (item.getValueType() == "uri") {
 					ret += " <" + valList[i] + ">";
 				} else {
-					ret += " '" + valList[i] + "'^^<http://www.w3.org/2001/XMLSchema#" + item.getValueType() + ">";
+					ret += " '" + valList[i] + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + item.getValueType();
 				}
 			}
 			
@@ -245,13 +246,13 @@ SparqlFormatter.prototype = {
 			if (!v) v = '1/21/2003';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^<http://www.w3.org/2001/XMLSchema#date>)";
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "date)";
 			
 		} else if (itemType == "dateTime") {
 			if (!v) v = '2011-12-03T10:15:30';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "dateTime)";
 			
 		} else{
 			if (!v) v = 'something';
@@ -300,6 +301,7 @@ var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
 	} else {
 		this.SNodes = [];    // the semantic nodes, if one exists currently,
 							// represented by this NodeItem.
+		this.SNodeOptionals = [];
 		this.KeyName = nome; // the name used to identify this node item
 		this.ValueType = val; // the type given for the linked (linkable?) node
 								
@@ -308,10 +310,11 @@ var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
 		this.Connected = false; // toggled if a connection between this node and
 								// the Semantic node owning the NodeItem list are linked.
 		this.UriConnectBy = '';
-		this.isOptional = NodeItem.OPTIONAL_FALSE;
+		
 	}
 };
 
+//deprecating
 NodeItem.OPTIONAL_FALSE = 0;
 NodeItem.OPTIONAL_TRUE = 1;       // everything "downstream" of this nodeItem is optional
 NodeItem.OPTIONAL_REVERSE = -1;   // everything "upstream"   of this nodeItem is optional
@@ -322,17 +325,20 @@ NodeItem.prototype = {
 		// return a JSON object of things needed to serialize
 		var ret = {
 			SnodeSparqlIDs : [],
+			SnodeOptionals : [],
 			KeyName : this.KeyName,
 			ValueType : this.ValueType,
 			UriValueType : this.UriValueType,
 			ConnectBy : this.ConnectBy,
 			Connected : this.Connected,
 			UriConnectBy : this.UriConnectBy,
-			isOptional : this.isOptional,
+			
 		};
-		for (var i = 0; i < this.SNodes.length; i++) {
+		for (var i=0; i < this.SNodes.length; i++) {
 			ret.SnodeSparqlIDs.push(this.SNodes[i].getSparqlID());
+			ret.SnodeOptionals.push(this.SNodeOptionals[i]);
 		}
+		
 		return ret;
 	},
 	fromJson : function(jObj, nodeGroup) {
@@ -346,13 +352,37 @@ NodeItem.prototype = {
 			}
 			this.SNodes.push(snode);
 		}
+		
+		// version 3:  SnodeOptionals
+		this.SNodeOptionals = [];
+		if (jObj.hasOwnProperty("SnodeOptionals")) {
+			for (var i=0; i < jObj.SnodeOptionals.length; i++) {
+				this.SNodeOptionals.push(jObj.SnodeOptionals[i]);
+			}
+		} else {
+			var opt = NodeItem.OPTIONAL_FALSE;
+
+			// backward compatibility
+			if (jObj.hasOwnProperty("isOptional")) {
+				var isOpt = jObj.isOptional;
+				if (isOpt == true || isOpt == NodeItem.OPTIONAL_TRUE) { 
+					opt = NodeItem.OPTIONAL_TRUE; 
+				} else if (isOpt == NodeItem.OPTIONAL_REVERSE) { 
+					opt = NodeItem.OPTIONAL_REVERSE; 
+				}
+			}
+		
+			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
+				this.SNodeOptionals.push(opt);
+			}
+		}
+		
 		this.KeyName = jObj.KeyName;
 		this.ValueType = jObj.ValueType;
 		this.UriValueType = jObj.UriValueType;
 		this.ConnectBy = jObj.ConnectBy;
 		this.Connected = jObj.Connected;
 		this.UriConnectBy = jObj.UriConnectBy;
-		this.setIsOptional(jObj.isOptional);   
 	},
 	// set values used by the NodeItem.
 	setKeyName : function(strName) {
@@ -373,18 +403,48 @@ NodeItem.prototype = {
 	setUriConnectBy : function(strConnName) {
 		this.UriConnectBy = strConnName;
 	},
-	setIsOptional : function(val) {
-		// manage backwards compatibility to boolean isOptional
-		if (val == NodeItem.OPTIONAL_TRUE || val == NodeItem.OPTIONAL_FALSE || val == NodeItem.OPTIONAL_REVERSE) { 
-			this.isOptional = val; 
-		} else if (val) {
-			this.isOptional = NodeItem.OPTIONAL_TRUE;
-		} else {
-			this.isOptional = NodeItem.OPTIONAL_FALSE;
+	
+	setSNodeOptional(snode, optional) {
+		for (var i=0; i < this.SNodes.length; i++) {
+			if (this.SNodes[i] == snode) {
+				this.SNodeOptionals[i] = optional;
+				return;
+			}
 		}
+		throw new Error("NodeItem can't find link to semantic node");
 	},
-	setSNodes : function(snode) {
+	
+	getSNodeOptional(snode) {
+		for (var i=0; i < this.SNodes.length; i++) {
+			if (this.SNodes[i] == snode) {
+				return this.SNodeOptionals[i] ;
+			}
+		}
+		throw new Error("NodeItem can't find link to semantic node");
+	},
+	
+	allOptionalReverse : function() {
+		// Does node item make it's owner node optional
+		//  1) connects to something
+		//  2) all optional reverse
+		if (this.SNodeOptionals.length == 0) {
+			return false;
+		}
+		for (var i=0; i < this.SNodeOptionals.length; i++) {
+			if (this.SNodeOptionals[i] != NodeItem.OPTIONAL_REVERSE) {
+				return false;
+			}
+		}
+		return true;
+	},
+	
+	getConnectsTo : function (snode) {
+		return (this.SNodes.indexOf(snode) > -1);
+	},
+	
+	pushSNode : function(snode, optOptional) {
 		this.SNodes.push(snode);
+		this.SNodeOptionals.push( (typeof optOptional === "undefined") ? NodeItem.OPTIONAL_FALSE : optOptional );
 	},
 
 	// get values used by the NodeItem
@@ -409,10 +469,7 @@ NodeItem.prototype = {
 	getURIConnectBy : function() {
 		return this.UriConnectBy;
 	},
-	getIsOptional : function() {
-		this.setIsOptional(this.isOptional);  // fixes backwards compatibility
-		return this.isOptional;
-	},
+
 	getDisplayOptions : function() {
 		var bitmap = 0;
 		return bitmap;
@@ -425,6 +482,7 @@ NodeItem.prototype = {
 			if (this.SNodes[i] == nd) {
 				// console.log("removing " + this.SNodes[i].getSparqlID);
 				this.SNodes.splice(i, 1);
+				this.SNodeOptionals.splice(i,1);
 			}
 		}
 		if (this.SNodes.length === 0) 
@@ -1267,25 +1325,24 @@ SemanticNode.prototype = {
 		return retval;
 	},
 
-	setConnection : function(otherNode, connectionUri) {
+	setConnection : function(otherNode, connectionUri, optOptional) {
 		// set the connection between the desired nodes.
 
 		connectionLocal = new OntologyName(connectionUri).getLocalName();
 		
 		for (var i = 0; i < this.nodeList.length; i++) {
-			var nd = this.nodeList[i];
+			var nItem = this.nodeList[i];
 
-			if (nd.getKeyName() == connectionLocal) {
-				nd.setConnected(true);
-				nd.setConnectBy(connectionLocal);
-				nd.setUriConnectBy(connectionUri);
+			if (nItem.getKeyName() == connectionLocal) {
+				nItem.setConnected(true);
+				nItem.setConnectBy(connectionLocal);
+				nItem.setUriConnectBy(connectionUri);
 
-				nd.setSNodes(otherNode);
-				return nd;
+				nItem.pushSNode(otherNode, optOptional);
+				return nItem;
 			}
 		}
-		alert("Internal error in SemanticNode.setConnection().  Couldn't find node item connection: " + this.getSparqlID() + "->" + connectionUri);
-		return null;
+		throw new Error("Internal error in SemanticNode.setConnection().  Couldn't find node item connection: " + this.getSparqlID() + "->" + connectionUri);
 	},
 	setPList : function(lst) {
 		this.propList = lst;
@@ -1335,8 +1392,14 @@ SemanticNode.prototype = {
 	getNodeItem : function(i) {
 		return this.nodeList[i];
 	},
+	getNodeList : function() {
+		return this.nodeList;
+	},
 	getNodeName : function() {
 		return this.NodeName;
+	},
+	ownsNodeItem : function (nodeItem) {
+		return this.nodeList.indexOf(nodeItem) > -1;
 	},
 
 	callAsyncPropEditor : function (propKeyname, draculaLabel) {
@@ -1393,6 +1456,15 @@ SemanticNode.prototype = {
 			bitmap += 2;
 		return bitmap;
 	},
+	getEdgeDisplayOptions : function(nodeKeyname, targetSNode) {
+		var nItem = this.getNodeItemByKeyname(nodeKeyname);
+		var opt = nItem.getSNodeOptional(targetSNode);
+		
+		if (opt == 0) { return 0;}
+		else if (opt == 1) { return 1;}
+		else if (opt == -1) { return 2;}
+
+	},
 	
 	// TODO: Justin plumb in additional details about where
 	//       these properties came from
@@ -1442,6 +1514,9 @@ var SemanticNodeGroup = function(width, height, divName) {
 	                         // So I set this flag to false and skip drawing.
 	                         // JUSTIN / PAUL TODO.  Untangle this mess.
 	
+	this.prefixHash = {};
+	this.prefixNumberStart = 0;
+	
 	this.canvasOInfo = null;    // DEPRECATED
 	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
     							// that's why it has a funny name.
@@ -1459,7 +1534,14 @@ SemanticNodeGroup.QUERY_COUNT = 2;
 SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 
+SemanticNodeGroup.JSON_VERSION = 3;
 // the functions used by the semanticNodeGroup to keep its stuff in order.
+
+SemanticNodeGroup.XMLSCHEMA_PREFIX = "XMLSchema:";
+SemanticNodeGroup.XMLSCHEMA_FULL = "http://www.w3.org/2001/XMLSchema#";
+SemanticNodeGroup.INSERT_PREFIX = "generateSparqlInsert:";
+SemanticNodeGroup.INSERT_FULL = "belmont/generateSparqlInsert#";
+
 SemanticNodeGroup.prototype = {
 		
 	
@@ -1472,7 +1554,7 @@ SemanticNodeGroup.prototype = {
 		var snList = this.getOrderedNodeList().reverse();
 
 		var ret = {
-			version : 2,
+			version : SemanticNodeGroup.JSON_VERSION,
 			sNodeList : [],
 		};
 		// add json snodes to sNodeList
@@ -1485,6 +1567,10 @@ SemanticNodeGroup.prototype = {
 	addJson : function(jObj, optInflateOInfo) {
 		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
 		
+		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
+			// TODO: do something smarter
+			console.log("Nodegroup json was created by a newer version of SemTK.");
+		}
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
 
@@ -1606,7 +1692,7 @@ SemanticNodeGroup.prototype = {
 						}	
 						// add the link to the semanticNode itself
 
-						currNodeItem.setSNodes(linkedSNode);
+						currNodeItem.pushSNode(linkedSNode);
 
 					}
 				}
@@ -1631,6 +1717,134 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
+	getPrefixedUri : function (originalUri) {
+		var retval = "";
+		if(originalUri == null ){
+			throw new Error("prefixed URI " + originalUri + " does not seem to contain a proper prefix.");
+		}
+		else if(originalUri.indexOf("#") == -1 ){
+			return originalUri;
+		}
+		else{
+			// get the chunks and build the prefixed string.
+			var chunks = originalUri.split("#");
+			var pre = this.prefixHash[chunks[0]];
+			
+			if(chunks.length > 1 ){
+				retval = pre + ":" + chunks[1];
+			}
+			else{
+				retval = pre + ":";
+			}
+		}
+		
+		return retval;
+	},
+	
+	addToPrefixHash : function (prefixedUri){
+		// from the incoming string, remove the local fragment and then try to add the rest to the prefix hash.
+		if(prefixedUri == null){ return; }
+		if(prefixedUri.indexOf("#") == -1){ return; }
+		
+		var chunks = prefixedUri.split("#");
+		
+		// found a new prefix
+		if(! (chunks[0] in this.prefixHash)) {
+			// create a new prefix name
+			var fragments = chunks[0].split("/");
+			var newPrefixName = fragments[fragments.length - 1];
+			// make sure new prefix name is unique
+			if (Object.values(this.prefixHash).indexOf(newPrefixName) > -1) {
+				var i=0;
+				while (Object.values(this.prefixHash).indexOf(newPrefixName + "_" + i) > -1) {
+					i++;
+				}
+				newPrefixName = newPrefixName + "_" + i;
+			}
+			
+			//String newPrefixName = "pre_" + this.prefixNumberStart;
+			this.prefixNumberStart += 1;  // also obsolete I think
+			
+			this.prefixHash[chunks[0]] = newPrefixName;
+			
+			//System.err.println("adding prefix: " + newPrefixName + " with key " + chunks[0] + " from input " + prefixedUri);
+		}
+	},
+	
+	rebuildPrefixHash : function (startingMap){
+		
+		this.prefixHash = {};		// x out the old map.
+		
+		this.prefixHash = startingMap;							// replace it.
+		this.prefixNumberStart = Object.keys(startingMap).length;
+		this.addAllToPrefixHash();
+		
+	},
+	
+	addAllToPrefixHash : function (){
+		
+		this.addToPrefixHash(SemanticNodeGroup.XMLSCHEMA_FULL);
+		
+		for(var i=0; i < this.SNodeList.length; i++){
+			var n = this.SNodeList[i];
+			if(n.getInstanceValue() != null && n.getInstanceValue().indexOf("#") > -1){
+				this.addToPrefixHash(n.getInstanceValue());
+			}			
+			// add the prefix for each node.
+			this.addToPrefixHash(n.getURI());
+			// add the URIs for the properties as well:
+			
+			for (var p=0; p < n.propList.length; p++) {
+				var pi = n.getPropertyItem(p);
+				this.addToPrefixHash(pi.getUriRelation());
+			}
+			// add the URIs for the node items
+			for (var q=0; q < n.nodeList.length; q++) {
+				var ni = n.getNodeItem(q);
+				this.addToPrefixHash(ni.getURIConnectBy());
+			}
+		}
+
+	},
+	
+	getPrefixHash : function() {
+		
+		if(this.prefixHash != null && Object.keys(this.prefixHash).length != 0){
+			return this.prefixHash;
+		}
+		else{
+			this.buildPrefixHash();		// create something to send.
+			return this.prefixHash;
+		}
+		
+	},
+	
+	buildPrefixHash : function() {
+		
+		if(Object.keys(this.prefixHash).length != 0){
+			return;
+		}
+		else{
+		// if possible, add the default prefix and user prefix:
+			this.addAllToPrefixHash();
+		}
+	},
+	
+	generateSparqlPrefix : function(){
+		var retval = "";
+		
+		// check that it is built!
+		this.buildPrefixHash(); 
+		
+		var keys = Object.keys(this.prefixHash);
+		for (var i=0; i < keys.length; i++) {
+			k = keys[i];
+			retval += "prefix " + this.prefixHash[k] + ":<" + k + "#>\n";
+		}
+				
+		return retval ;
+	},
+	
 	resolveSparqlIdCollisionsJson : function(jObj) {
 		// loop through a json object and resolve any SparqlID name collisions
 		// with this node group.
@@ -1858,23 +2072,22 @@ SemanticNodeGroup.prototype = {
 		var attUri = path.getAttributeName(pathLen - 1);
 		var nodeItem;
 
-		// link diabolical case from anchor node to last node in path
+		
 		if (class0Uri === class1Uri && reverseFlag ) {
-			nodeItem = anchorNode.setConnection(lastNode, attUri);
-			if (optionalFlag) {
-				nodeItem.setIsOptional(NodeItem.OPTIONAL_REVERSE);
-			}		// normal link from last node to anchor node
+			// link diabolical case from anchor node to last node in path
+			var opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
+			nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
+					
 		} else if (anchorNode.getURI() == class1Uri) {
-			nodeItem = lastNode.setConnection(anchorNode, attUri);
-			if (optionalFlag) {
-				nodeItem.setIsOptional(NodeItem.OPTIONAL_REVERSE);
-			}
-		// normal link from anchor node to last node
+			// normal link from last node to anchor node
+			var opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
+			nodeItem = lastNode.setConnection(anchorNode, attUri, opt);
+			
 		} else {
-			var nodeItem = anchorNode.setConnection(lastNode, attUri);
-			if (optionalFlag) {
-				nodeItem.setIsOptional(NodeItem.OPTIONAL_TRUE);
-			}
+			// normal link from anchor node to last node
+			var opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
+			var nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
+			
 		}
 		return retNode;
 
@@ -1954,7 +2167,6 @@ SemanticNodeGroup.prototype = {
 	},
 
 	getHeadNodes : function () {
-		// DEPRECATED
 		// get nodes with no incoming connections
 		// SparqlGraph should evolve to the point where these are not guaranteed to exist.
 		var nodeCount = this.SNodeList.length;
@@ -1977,8 +2189,8 @@ SemanticNodeGroup.prototype = {
 
 		// catch the problem for the day we allow circular graphs
 		if (nodeCount > 0 && ret.length == 0) {
-			alert("Internal error in belmont.js getOrderedNodeList(): No head nodes found.  Graph is totally circular.");
-			throw "Internal error.";
+			ret.push(this.SNodeList[0]);
+			console.log("Danger in belmont.js getOrderedNodeList(): No head nodes found.  Graph is totally circular.");
 		}
 		
 		return ret;
@@ -2076,19 +2288,20 @@ SemanticNodeGroup.prototype = {
 				for (var n=0; n < snode.nodeList.length; n++) {
 					var nodeItem = snode.nodeList[n];
 					
-					// if found an optional nodeItem
-					var opt = nodeItem.getIsOptional();
-					if (opt) {
+					// loop through all connectedSNodes
+					var connSNodes = nodeItem.getSNodes();
+					for (c=0; c < connSNodes.length; c++) {
+						var targetSNode = connSNodes[c];
+						// if found an optional nodeItem
+						var opt = nodeItem.getSNodeOptional(targetSNode);
+						
 						var subGraph = [];
 						// get subGraph(s) on the optional side of the nodeItem
 						if (opt == NodeItem.OPTIONAL_TRUE) {
-							for (var j=0; j < nodeItem.SNodes.length; j++) {
-								subGraph = subGraph.concat(this.getSubGraph(nodeItem.SNodes[j], [snode]));
-							}
+							subGraph = subGraph.concat(this.getSubGraph(targetSNode, [snode]));
+							
 						} else if (opt == NodeItem.OPTIONAL_REVERSE) {
-							for (var j=0; j < nodeItem.SNodes.length; j++) {
-								subGraph = subGraph.concat(this.getSubGraph(snode, [nodeItem.SNodes[j]]));
-							}
+							subGraph = subGraph.concat(this.getSubGraph(snode, [targetSNode]));
 						}
 						
 						// increment every node on the optional side of the nodeItem
@@ -2137,7 +2350,7 @@ SemanticNodeGroup.prototype = {
 		
 		var nodeItems = this.getConnectingNodeItems(sNode);
 		for (j=0; j < nodeItems.length; j++) {
-			if (nodeItems[j].getIsOptional() != NodeItem.OPTIONAL_REVERSE) {
+			if (nodeItems[j].getSNodeOptional(sNode) != NodeItem.OPTIONAL_REVERSE) {
 				var uriValType = nodeItems[j].getUriValueType();
 				if (ret.indexOf(uriValType) < 0)
 					ret.push(uriValType);
@@ -2260,8 +2473,11 @@ SemanticNodeGroup.prototype = {
 	},
 
 	generateSparqlConstruct : function() {   
+		this.prefixHash = {};
+		this.buildPrefixHash();
+		
 		var tab = "    ";
-		var sparql = "construct {\n";
+		var sparql = this.generateSparqlPrefix() + "\nconstruct {\n";
 		var queryType = SemanticNodeGroup.QUERY_CONSTRUCT;
 
 		var doneNodes = [];
@@ -2269,7 +2485,7 @@ SemanticNodeGroup.prototype = {
 		while (headNode != null) {
 			sparql += this.generateSparqlSubgraphClauses(queryType, 
 														headNode, 
-														null,    // skip nodeItem.  Null means do them all.
+														null, null,   // skip nodeItem.  Null means do them all.
 														null,    // no targetObj
 														doneNodes, 
 														tab);
@@ -2287,7 +2503,7 @@ SemanticNodeGroup.prototype = {
 		while (headNode != null) {
 			sparql += this.generateSparqlSubgraphClauses(queryType, 
 														headNode, 
-														null,    // skip nodeItem.  Null means do them all.
+														null, null,  // skip nodeItem.  Null means do them all.
 														null,    // no targetObj
 														doneNodes, 
 														tab);
@@ -2300,14 +2516,18 @@ SemanticNodeGroup.prototype = {
 	},
 
 	generateSparqlInsert : function() {
+		this.prefixHash = {};
+		this.buildPrefixHash();
+		this.addToPrefixHash(SemanticNodeGroup.INSERT_FULL);   // make sure to force the inclusion of the old ones.
+		
 		var f = new SparqlFormatter();
-		var sparql = "INSERT {\n";
+		var sparql = this.generateSparqlPrefix() + "\nINSERT {\n";
 		
 		// perform the insert section by looping through all nodes
 		for (var i=0; i < this.SNodeList.length; i++) {
 			var sparqlId = this.SNodeList[i].getSparqlID();
 			// insert information that the node was of it's own type. 90% of the time, this is redudant.
-			sparql += "    " + sparqlId + " a <" + this.SNodeList[i].fullURIName + ">.\n";
+			sparql += "    " + sparqlId + " a " + this.getPrefixedUri(this.SNodeList[i].fullURIName) + ".\n";
 			
 			// insert line for each property
 			for (var p=0; p < this.SNodeList[i].propList.length; p++) {
@@ -2316,7 +2536,7 @@ SemanticNodeGroup.prototype = {
 				var valuesToInsert = prop.getInstanceValues();
 				var sizeLimit = valuesToInsert.length;
 				for(var j = 0; j < sizeLimit; j += 1){
-					sparql += "   " + sparqlId + " <" + prop.getUriRelation() + "> \"" + f.sparqlSafe(valuesToInsert[j]) + "\"^^<http://www.w3.org/2001/XMLSchema#" + prop.getValueType() + ">.\n";
+					sparql += "   " + sparqlId + " " + this.getPrefixedUri(prop.getUriRelation()) + " \"" + f.sparqlSafe(valuesToInsert[j]) + "\"^^" + SemanticNodeGroup.INSERT_PREFIX + prop.getValueType() + ".\n";
 				}
 			}
 			
@@ -2324,7 +2544,7 @@ SemanticNodeGroup.prototype = {
 			for (var n=0; n < this.SNodeList[i].nodeList.length; n++) {
 				var node = this.SNodeList[i].nodeList[n];
 				for (var s=0; s < node.SNodes.length; s++) {
-					sparql += "   " + sparqlId + " <" + node.getURIConnectBy() + "> " + node.SNodes[s].getSparqlID() + ".\n";
+					sparql += "   " + sparqlId + " " + this.getPrefixedUri(node.getURIConnectBy()) + " " + node.SNodes[s].getSparqlID() + ".\n";
 				}
 			}
 		}
@@ -2340,7 +2560,7 @@ SemanticNodeGroup.prototype = {
 			if (this.SNodeList[i].getInstanceValue() != null) {
 				
 				// bind to a given URI
-				whereSparql += "   BIND (<" + this.SNodeList[i].getInstanceValue() + "> AS " + sparqlId + ").\n";
+				whereSparql += "   BIND (" + this.getPrefixedUri(this.SNodeList[i].getInstanceValue()) + " AS " + sparqlId + ").\n";
 				
 			} else {
 				var propList = this.SNodeList[i].getConstrainedPropertyItems();
@@ -2349,7 +2569,7 @@ SemanticNodeGroup.prototype = {
 				if (propList.length > 0) {
 					// (2) SNode is constrained
 					for (var p=0; p < propList.length; p++) {
-						whereSparql += "   " + sparqlId + " <" + propList[p].getUriRelation() + "> " + propList[p].getSparqlID() + ". " + propList[p].getConstraints() + " .\n";
+						whereSparql += "   " + sparqlId + " " + this.getPrefixedUri(propList[p].getUriRelation()) + " " + propList[p].getSparqlID() + ". " + propList[p].getConstraints() + " .\n";
 
 					}
 				} else{
@@ -2359,10 +2579,10 @@ SemanticNodeGroup.prototype = {
 					// we have to be able to check if the Node has "instanceValue" set. if it does. we want to reuse that. if not, kill it. 
 					if(this.SNodeList[i].getInstanceValue() != null){
 						// use the instanceValue
-						whereSparql += '   BIND (iri(" + this.SNodeList[i].getInstanceValue() + ") AS ' + sparqlId + ").\n";
+						whereSparql += "   BIND (iri(" + this.getPrefixedUri(this.SNodeList[i].getInstanceValue()) + ") AS " + sparqlId + ").\n";
 					}
 					else{
-						whereSparql += '   BIND (iri(concat("belmont/generateSparqlInsert#", "' + SparqlUtil.guid() + '")) AS ' + sparqlId + ").\n";
+						whereSparql += "   BIND (iri(concat(" + SemanticNodeGroup.INSERT_PREFIX + SparqlUtil.guid() + ")) AS " + sparqlId + ").\n";
 					}
 				}
 			}
@@ -2392,6 +2612,9 @@ SemanticNodeGroup.prototype = {
 		// Error handling: For each error, inserts a comment at the beginning.
 		//    #Error: explanation
 		
+		this.prefixHash = {};
+		this.buildPrefixHash();
+		
 		var targetObj = (typeof(optTargetObj) === 'undefined') ? null : optTargetObj;
 		var keepTargetConstraints = (typeof(optKeepTargetConstraints) === 'undefined') ? false : optKeepTargetConstraints;
 		var tab = this.tabIndent("");
@@ -2402,7 +2625,7 @@ SemanticNodeGroup.prototype = {
 		}
 
 		var orderedSNodes = this.getOrderedNodeList();
-		var sparql = '';
+		var sparql = this.generateSparqlPrefix() + "\n";
 
 		if (queryType == SemanticNodeGroup.QUERY_COUNT) {
 			sparql = "SELECT (COUNT(*) as ?count) { \n";
@@ -2446,7 +2669,7 @@ SemanticNodeGroup.prototype = {
 		while (headNode != null) {
 			sparql += this.generateSparqlSubgraphClauses(queryType, 
 														headNode, 
-														null,    // skip nodeItem.  Null means do them all.
+														null, null,   // skip nodeItem.  Null means do them all.
 														keepTargetConstraints ? null : targetObj, 
 														doneNodes, 
 														tab);
@@ -2466,12 +2689,12 @@ SemanticNodeGroup.prototype = {
 			sparql += "\n}";
 		}
 
-		sparql = fmt.prefixQuery(sparql);
+		//sparql = fmt.prefixQuery(sparql);
 		console.log("Built SPARQL query:\n" + sparql);
 		return sparql;
 	},
 	
-	generateSparqlSubgraphClauses : function (queryType, snode, skipNodeItem, targetObj, doneNodes, tab) {
+	generateSparqlSubgraphClauses : function (queryType, snode, skipNodeItem, skipNodeTarget, targetObj, doneNodes, tab) {
 		// recursively generate sparql clauses for nodes in a subtree
 		//
 		// queryType -    same as generateSparql
@@ -2480,7 +2703,6 @@ SemanticNodeGroup.prototype = {
 		// targetObj -    same as generateSparql
 		// doneNodes - snodes already processed.  Hitting one means there's a loop.  Updated as a side-effect.
 		// tab -          same as generateSparql
-		// optionalFlag - deprecated
 		
 		// done if snode is already in the doneNodes list
 		if (doneNodes.indexOf(snode) > -1) {
@@ -2512,7 +2734,7 @@ SemanticNodeGroup.prototype = {
 			}
 
 			// SPARQL for basic prop
-			sparql += tab + snode.getSparqlID() + " <" + props[l].getUriRelation() + "> " + props[l].getSparqlID() + " .\n";
+			sparql += tab + snode.getSparqlID() + " " + this.getPrefixedUri(props[l].getUriRelation()) + " " + props[l].getSparqlID() + " .\n";
 
 			// add in attribute range constraint if there is one 
 			if (props[l].getConstraints()) {
@@ -2540,36 +2762,36 @@ SemanticNodeGroup.prototype = {
 			}
 		}
 		
-		// Recursively process NodeItem sub tree
+		// Recursively process outgoing nItems   
 		for (var i=0; i < snode.nodeList.length; i++) {
 			var nItem = snode.nodeList[i];
-			
-			if (nItem != skipNodeItem) {
-			
-				// open optional
-				if (nItem.getIsOptional() == NodeItem.OPTIONAL_TRUE && nItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
-					sparql += tab + "optional {\n";
-					tab = this.tabIndent(tab);
-				}
 				
-				// each nItem might point to multiple children
-				for (var j=0; j < nItem.SNodes.length; j++) {
-					var domainNode = nItem.SNodes[j];
+			// each nItem might point to multiple children
+			for (var j=0; j < nItem.SNodes.length; j++) {
+				var targetNode = nItem.SNodes[j];
+				
+				if (nItem != skipNodeItem || targetNode != skipNodeTarget) {
+					// open optional
+					if (nItem.getSNodeOptional(targetNode) == NodeItem.OPTIONAL_TRUE  && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+						sparql += tab + "optional {\n";
+						tab = this.tabIndent(tab);
+					}
 	
 					sparql += "\n";
 					
 					// node connection, then recursive call
-					sparql += tab + snode.getSparqlID() + " <" + nItem.getURIConnectBy() + "> " + domainNode.getSparqlID() + ".\n";
+					sparql += tab + snode.getSparqlID() + " " + this.getPrefixedUri(nItem.getURIConnectBy()) + " " + targetNode.getSparqlID() + ".\n";
 					tab = this.tabIndent(tab);
+					
 					// RECURSION
-					sparql += this.generateSparqlSubgraphClauses(queryType, domainNode, nItem, targetObj, doneNodes, tab);
+					sparql += this.generateSparqlSubgraphClauses(queryType, targetNode, nItem, targetNode, targetObj, doneNodes, tab);
 					tab = this.tabOutdent(tab);
-				}
-				
-				// close optional
-				if (nItem.getIsOptional() == NodeItem.OPTIONAL_TRUE && nItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
-					tab = this.tabOutdent(tab);
-					sparql += tab + "}\n";
+					
+					// close optional
+					if (nItem.getSNodeOptional(targetNode) == NodeItem.OPTIONAL_TRUE && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+						tab = this.tabOutdent(tab);
+						sparql += tab + "}\n";
+					}
 				}
 			}
 		}
@@ -2580,10 +2802,10 @@ SemanticNodeGroup.prototype = {
 		for (var i=0; i < incomingNItems.length; i++) {
 			var nItem = incomingNItems[i];
 			
-			if (nItem != skipNodeItem) {
+			if (nItem != skipNodeItem || snode != skipNodeTarget) {
 			
 				// open optional
-				if (nItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE && nItem.SNodes.length > 0  && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {
+				if (nItem.getSNodeOptional(snode) == NodeItem.OPTIONAL_REVERSE && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {
 					sparql += tab + "optional {\n";
 					tab = this.tabIndent(tab);
 				}
@@ -2593,16 +2815,16 @@ SemanticNodeGroup.prototype = {
 				// the incoming connection
 				if (incomingSNode != null) {
 					sparql += "\n";
-					sparql += tab + incomingSNode.getSparqlID() + " <" + nItem.getURIConnectBy() + "> " + snode.getSparqlID() + ".\n";
-					tab = this.tabIndent(tab);
+					sparql += tab + incomingSNode.getSparqlID() + " " + this.getPrefixedUri(nItem.getURIConnectBy()) + " " + snode.getSparqlID() + ".\n";
+					//tab = this.tabIndent(tab);
 				}
 				
 				// RECURSION
-				sparql += this.generateSparqlSubgraphClauses(queryType, incomingSNode, nItem, targetObj, doneNodes, tab);
-				tab = this.tabOutdent(tab);
+				sparql += this.generateSparqlSubgraphClauses(queryType, incomingSNode, nItem, snode, targetObj, doneNodes, tab);
+				//tab = this.tabOutdent(tab);
 				
 				// close optional
-				if (nItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE && nItem.SNodes.length > 0 && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
+				if (nItem.getSNodeOptional(snode) == NodeItem.OPTIONAL_REVERSE  && (queryType !== SemanticNodeGroup.QUERY_CONSTRUCT)) {
 					tab = this.tabOutdent(tab);
 					sparql += tab + "}\n";
 				}
@@ -2627,14 +2849,13 @@ SemanticNodeGroup.prototype = {
 
 			// constrain to exactly this type since there are no subtypes
 			if (node.subClassNames.length == 0) {
-				sparql += TAB + node.getSparqlID() + " a <" + node.fullURIName
-						+ ">.\n";
+				sparql += TAB + node.getSparqlID() + " a " + this.getPrefixedUri(node.fullURIName) + ".\n";
 
 				// constrain to this type plus a list sub-types
 			} else {
 				var typeVar = node.getSparqlID() + "_type";
 				sparql += TAB + node.getSparqlID() + " a " + typeVar + ".\n";
-				sparql += TAB + typeVar + " rdfs:subClassOf* <" + node.fullURIName + ">.\n";
+				sparql += TAB + typeVar + " rdfs:subClassOf* " + this.getPrefixedUri(node.fullURIName) + ".\n";
 			}
 
 		}
@@ -2648,6 +2869,8 @@ SemanticNodeGroup.prototype = {
 		// this way the "whole chain" becomes optional.
 		// Leave original optionals in place
 		
+		// For nodes with only one non-optional connection, and optional properties
+		// make the node connection optional too
 		for (var i = 0; i < this.SNodeList.length; i++) {
 			var snode = this.SNodeList[i];
 			
@@ -2673,18 +2896,19 @@ SemanticNodeGroup.prototype = {
 					var otherSnode = connectedSnodes[0];
 					var nodeItems = this.getNodeItemsBetween(snode, otherSnode);
 					
-					// if it's only connected once from snode to otherSnode 
+					// if it's only connected once between snode and otherSnode 
 					// and connection is non-optional
-					if (nodeItems.length == 1 && nodeItems[0].getIsOptional() == NodeItem.OPTIONAL_FALSE) {
+					// then make it optional
+					if (nodeItems.length == 1) {
 						var nodeItem = nodeItems[0];
-						
-						// make the nodeItem optional inward
-						if (snode.nodeList.indexOf(nodeItem) > -1) {
-							nodeItem.setIsOptional(NodeItem.OPTIONAL_REVERSE);
-						} else {
-							nodeItem.setIsOptional(NodeItem.OPTIONAL_TRUE);
+						if (snode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(otherSnode) == NodeItem.OPTIONAL_FALSE) {
+							nodeItem.setSNodeOptional(otherSnode, NodeItem.OPTIONAL_REVERSE);
 						}
-					}
+						
+						if (otherSnode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(snode) == NodeItem.OPTIONAL_FALSE) {
+							nodeItem.setSNodeOptional(snode, NodeItem.OPTIONAL_TRUE);
+						}
+					} 
 				}
 			}
 		}
@@ -2711,51 +2935,73 @@ SemanticNodeGroup.prototype = {
 					}
 				}
 				
-				// sort all connecting node items by their optional status: none, in, out
+				// sort all connected node items by their optional status: none, in, out
 				var normItems = [];
 				var optOutItems = [];
 				var optInItems= [];
 				
-				var connItems = this.getAllConnectedNodeItems(snode); 
-				for (var n=0; n < connItems.length; n++) {
-					var nItem = connItems[n];
+				// outgoing nodes
+				var nItems = snode.getNodeList();
+				for (var n=0; n < nItems.length; n++) {
+					var nItem = nItems[n];
 					if (nItem.getConnected()) {
-						var opt = nItem.getIsOptional();
-						
-						if (opt == NodeItem.OPTIONAL_FALSE) {
-							normItems.push(nItem);
+						var targets = nItem.getSNodes();
+						for (var t=0; t < targets.length; t++) {
+							var target = targets[t];
+							var opt = nItem.getSNodeOptional(target);
 							
-						} else if (snode.nodeList.indexOf(nItem) > -1) {
-							if (opt == NodeItem.OPTIONAL_TRUE) {
-								optOutItems.push(nItem);
-							} else {
-								optInItems.push(nItem);
-							}
+							if (opt == NodeItem.OPTIONAL_FALSE) {
+								normItems.push([nItem, target]);
 								
-						} else {
-							if (opt == NodeItem.OPTIONAL_REVERSE) {
-								optOutItems.push(nItem);
-							} else {
-								optInItems.push(nItem);
+							} else if (opt == NodeItem.OPTIONAL_TRUE) {
+								optOutItems.push([nItem, target]);
+									
+							} else {// OPTIONAL_REVERSE
+								optInItems.push([nItem, target]); 
 							}
-								
 						}
 					}
 				}
 				
-				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length > 0 && optInItems.length == 0) {
+				// incoming nodes
+				var nItems = this.getConnectingNodeItems(snode); 
+				for (var n=0; n < nItems.length; n++) {
+					var nItem = nItems[n];
+					
+					var opt = nItem.getSNodeOptional(snode);
+					
+					if (opt == NodeItem.OPTIONAL_FALSE) {
+						normItems.push([nItem, snode]);
+	
+					} else if (opt == NodeItem.OPTIONAL_REVERSE) {
+						optOutItems.push([nItem, snode]);
+							
+					} else {// OPTIONAL_TRUE
+						optInItems.push([nItem, snode]); 
+					}
+					
+				}
+				
+				// if nothing is returned AND
+				//  one normal connection AND
+				//  one optional outward connections AND
+				// no optional in connections AND
+				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length == 1 && optInItems.length == 0) {
 				
 					// set the single normal nodeItem to incoming optional
-					var n = normItems[0];
-					if (snode.nodeList.indexOf(n) > -1) {
-						n.setIsOptional(NodeItem.OPTIONAL_REVERSE);
+					var nItem = normItems[0][0];
+					var target = normItems[0][1];
+					if (target != snode) {
+						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_REVERSE);
 					} else {
-						n.setIsOptional(NodeItem.OPTIONAL_TRUE);
+						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_TRUE);
 					}
 					
 					// if there is only one outgoing optional, than it can be set to non-optional for performance
 					if (optOutItems.length == 1 && optPropCount == 0) {
-						optOutItems[0].setIsOptional(NodeItem.OPTIONAL_FALSE);
+						var oItem = optOutItems[0][0];
+						var oTarget = optOutItems[0][1];
+						oItem.setSNodeOptional(oTarget, NodeItem.OPTIONAL_FALSE);
 					}
 					
 					changedFlag = true;
@@ -3064,11 +3310,11 @@ SemanticNodeGroup.prototype = {
 	},
 	
 	setConnectingNodeItemsOptional : function(snode, val) {
-		// set isOptional(val) on every nodeItem pointing to this snode
+		// set setSNodeOptional(val) on every nodeItem pointing to this snode
 		
 		var nItemList = this.getConnectingNodeItems(snode);
 		for (var i=0; i < nItemList.length; i++) {
-			nItemList[i].setIsOptional(val);
+			nItemList[i].setSNodeOptional(snode, val);
 		}
 	},
 	
@@ -3112,43 +3358,17 @@ SemanticNodeGroup.prototype = {
 		return prop;
 	},
 	
-	itemGetOptionalItem : function(item) {
-		// GUI assistant function:
-		// input item:  semanticNode, nodeItem, propItem
-		// returns:     nodeItem, propItem, null
-		//
-		// if item is a nodeItem or propItem item then just return it
-		// But it it's an sNode then try to find a single nodeItem connecting it.
-		// That will returned.
-		// If snode with 0 or multiple connecting nodeItems then return null.
+	getSingleConnectedNodeItem : function(snode) {
+		// GUI helper function
 		
-		// if this can have optional, then return it.  all set.
-		if (item.getItemType() != "SemanticNode") { 
-			return item;
-		
+		var connSnodes = this.getAllConnectedConnectedNodeItems(snode);
+		if (connSnodes.length == 1) {
+			return connSnodes[0];
 		} else {
-			// this is an snode
-			var connSnodes = this.getAllConnectedConnectedNodeItems(item);
-			if (connSnodes.length == 1) {
-				return connSnodes[0];
-			}
+			return null;
 		}
-		return null;
+		
 	},
 	
-	isIncomingOptional(snode, nodeItem) {
-		// does nodeItem make snode optional  ("incoming optional")
-		if (snode.nodeList.indexOf(nodeItem) > -1) {
-			// outgoing nodeItem, OPTIONAL_REVERSE
-			if (nodeItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE) {
-				return true;
-			}
-		} else if (nodeItem.getSNodes().indexOf(snode) > -1) {
-			// incoming nodeItem, OPTIONAL_TRUE
-			if (nodeItem.getIsOptional() == NodeItem.OPTIONAL_TRUE) {
-				return true;
-			}
-		}
-		return false;
-	},
+	
 };

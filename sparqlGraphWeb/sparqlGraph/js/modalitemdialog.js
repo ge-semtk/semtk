@@ -45,6 +45,7 @@ define([	// properly require.config'ed
 		var ModalItemDialog = function(item, nodegroup, clientOrInterface, callback, data, optGhostItem, optGhostNodegroup) {
 			// callback(item, sparqlID, optionalFlag, constraintStr, data)
 			//          where sparqlID and contraintStr could be ""
+			//          optionalFlag can be null, true, or false
 			// data.draculaLabel
 			// data.textId
 			//
@@ -122,7 +123,7 @@ define([	// properly require.config'ed
 				
 				// uncheck "optional"
 				var optionalCheck = this.getFieldElement(ModalItemDialog.OPTIONAL);
-				optionalCheck.checked = false;	
+				if (optionalCheck != null) { optionalCheck.checked = false;	}
 				
 				// uncheck "optional"
 				var rtConstrainedCheck = this.getFieldElement(ModalItemDialog.RT_CONSTRAINED_CHECK);
@@ -145,11 +146,12 @@ define([	// properly require.config'ed
 				
 				var sparqlIDElem = this.getFieldElement(ModalItemDialog.SPARQL_ID_TEXT);
 				var sparqlID = this.getSparqlIDText();
+				var optionalCheckElem = this.getFieldElement(ModalItemDialog.OPTIONAL);
 				
 				// return a list containing just the text field
 				this.callback(	this.item, 
 								this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked ? sparqlID : "",
-								this.getFieldElement(ModalItemDialog.OPTIONAL).checked,
+								(optionalCheckElem == null) ? null : optionalCheckElem.checked,
 								this.getFieldElement(ModalItemDialog.RT_CONSTRAINED_CHECK).checked,
 								this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT),
 								this.data
@@ -558,38 +560,37 @@ define([	// properly require.config'ed
 				td.style.verticalAlign = "top";
 				tr.appendChild(td);
 				
+				// if sparqlform and this is a node, look for singleNodeItem
+				var singleNodeItem = null;
+				if (this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
+					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
+				}
+				// is optional applicable to this item
+				var optionalFlag = (this.item.getItemType() == "PropertyItem" || singleNodeItem != null);
+						            
 				// optional checkbox
+				if (optionalFlag) {
+					optionalCheck = IIDXHelper.createVAlignedCheckbox();
+					optionalCheck.id = this.getFieldID(ModalItemDialog.OPTIONAL);
 				
-				optionalCheck = IIDXHelper.createVAlignedCheckbox();
-				optionalCheck.id = this.getFieldID(ModalItemDialog.OPTIONAL);
-				
-				// change snode into connecting nodeItem, or null
-				var optItem = this.nodegroup.itemGetOptionalItem(this.item);
-				if (optItem != null) {
 					if (this.item.getItemType() == "PropertyItem") {
-						optionalCheck.checked = optItem.getIsOptional();
+						optionalCheck.checked = this.item.getIsOptional();
 					} else {
 						// nodeItem is optional if INCOMING optional
-						if (this.item.nodeList.indexOf(optItem) > -1) {
-							optionalCheck.checked = (optItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE);
+						if (this.item.ownsNodeItem(singleNodeItem)) {
+							optionalCheck.checked = (singleNodeItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE);
 						} else {
-							optionalCheck.checked = (optItem.getIsOptional() == NodeItem.OPTIONAL_TRUE);
+							optionalCheck.checked = (singleNodeItem.getIsOptional() == NodeItem.OPTIONAL_TRUE);
 						}
 					}
 					optionalCheck.disabled = false;
-				} else {
-					optionalCheck.disabled = true;
-				}
-				optionalCheck.onclick = function () {
-					var e = this.getFieldElement(ModalItemDialog.OPTIONAL);
-					e.value = e.checked;  
-				}.bind(this);
 				
-				// set tooltip on optional if it is a connected nodeItem
-				if (optItem != null && optItem != this.item && ! this.sparqlformFlag) {
-					optionalCheck.title = "Set incoming edge optional: " + optItem.getKeyName();
-					optionalCheck.setAttribute("rel", "tooltip");	
+					optionalCheck.onclick = function () {
+						var e = this.getFieldElement(ModalItemDialog.OPTIONAL);
+						e.value = e.checked;  
+					}.bind(this);
 				}
+				
 				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 
 				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox();
@@ -605,9 +606,11 @@ define([	// properly require.config'ed
 					div.align = "right";
 					
 					// assemble
-					div.appendChild(optionalCheck)
-					div.appendChild(document.createTextNode(" optional"));
-					div.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+					if (optionalFlag) {
+						div.appendChild(optionalCheck)
+						div.appendChild(document.createTextNode(" optional"));
+						div.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+					}
 					div.appendChild(runtimeConstrainedCheck)
 					div.appendChild(document.createTextNode(" runtime constrained"));
 					dom.appendChild(div);
@@ -617,10 +620,12 @@ define([	// properly require.config'ed
 					
 				} else {
 					// normal operation: put optional check into the top table
-					td.appendChild(optionalCheck)
-					td.appendChild(document.createTextNode(" optional"));
-					td.appendChild(document.createElement("br"));
-					td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+					if (optionalFlag) {
+						td.appendChild(optionalCheck)
+						td.appendChild(document.createTextNode(" optional"));
+						td.appendChild(document.createElement("br"));
+						td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+					}
 					td.appendChild(runtimeConstrainedCheck)
 					td.appendChild(document.createTextNode(" runtime constrained"));
 				}
