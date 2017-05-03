@@ -3359,11 +3359,14 @@ SemanticNodeGroup.prototype = {
 	},
 	
 	getSingleConnectedNodeItem : function(snode) {
-		// GUI helper function
+		// GUI helper function: 
+		// find single connected nodeItem (either direction) with single connected SNode
+		// otherwise null.
 		
-		var connSnodes = this.getAllConnectedConnectedNodeItems(snode);
-		if (connSnodes.length == 1) {
-			return connSnodes[0];
+		var nItems = this.getAllConnectedConnectedNodeItems(snode);
+		// one nItem && one SNode
+		if (nItems.length == 1 && nItems[0].getSNodes().length == 1) {
+			return nItems[0];
 		} else {
 			return null;
 		}

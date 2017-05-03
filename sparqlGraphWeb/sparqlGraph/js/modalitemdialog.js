@@ -562,6 +562,7 @@ define([	// properly require.config'ed
 				
 				// if sparqlform and this is a node, look for singleNodeItem
 				var singleNodeItem = null;
+				
 				if (this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
 					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
 				}
@@ -578,9 +579,11 @@ define([	// properly require.config'ed
 					} else {
 						// nodeItem is optional if INCOMING optional
 						if (this.item.ownsNodeItem(singleNodeItem)) {
-							optionalCheck.checked = (singleNodeItem.getIsOptional() == NodeItem.OPTIONAL_REVERSE);
+							var targetNode = singleNodeItem.getSNodes()[0];
+							optionalCheck.checked = (singleNodeItem.getSNodeOptional(targetNode) == NodeItem.OPTIONAL_REVERSE);
 						} else {
-							optionalCheck.checked = (singleNodeItem.getIsOptional() == NodeItem.OPTIONAL_TRUE);
+							var targetNode = this.item;
+							optionalCheck.checked = (singleNodeItem.getSNodeOptional(targetNode) == NodeItem.OPTIONAL_TRUE);
 						}
 					}
 					optionalCheck.disabled = false;
