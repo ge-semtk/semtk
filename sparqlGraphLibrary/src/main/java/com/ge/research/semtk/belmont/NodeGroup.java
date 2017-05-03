@@ -1061,9 +1061,9 @@ public class NodeGroup {
 				
 				// if nothing is returned AND
 				//  one normal connection AND
-				//  one optional outward connections AND
+				//  >=1 optional outward connections AND
 				// no optional in connections AND
-				if (nonOptReturnCount == 0 && normItems.size() == 1 && optOutItems.size() == 1 && optInItems.size() == 0) {
+				if (nonOptReturnCount == 0 && normItems.size() == 1 && optOutItems.size() >= 1 && optInItems.size() == 0) {
 				
 					// set the single normal nodeItem to incoming optional
 					NodeItem nItem = normItems.get(0);

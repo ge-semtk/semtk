@@ -2984,9 +2984,9 @@ SemanticNodeGroup.prototype = {
 				
 				// if nothing is returned AND
 				//  one normal connection AND
-				//  one optional outward connections AND
+				//  >= 1 optional outward connections AND
 				// no optional in connections AND
-				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length == 1 && optInItems.length == 0) {
+				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length >= 1 && optInItems.length == 0) {
 				
 					// set the single normal nodeItem to incoming optional
 					var nItem = normItems[0][0];

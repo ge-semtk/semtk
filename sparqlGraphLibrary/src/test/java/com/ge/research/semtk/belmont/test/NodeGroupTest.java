@@ -162,8 +162,8 @@ public class NodeGroupTest {
 		// expanded optionals correctly
 		assertEquals(NodeItem.OPTIONAL_REVERSE, battery.getNodeItemList().get(0)  .getSNodeOptional(cell));
 		assertEquals(NodeItem.OPTIONAL_TRUE,    cell.getNodeItemList().get(0)     .getSNodeOptional(color));
-		assertEquals(NodeItem.OPTIONAL_REVERSE, battery_0.getNodeItemList().get(0).getSNodeOptional(cell));
-		assertEquals(NodeItem.OPTIONAL_FALSE,   battery_0.getNodeItemList().get(0).getSNodeOptional(cell_0));
+		assertEquals(NodeItem.OPTIONAL_TRUE, battery_0.getNodeItemList().get(0).getSNodeOptional(cell));
+		assertEquals(NodeItem.OPTIONAL_TRUE,   battery_0.getNodeItemList().get(0).getSNodeOptional(cell_0));
 		assertEquals(NodeItem.OPTIONAL_FALSE,   cell_0.getNodeItemList().get(0)   .getSNodeOptional(color_0));
 	}
 }
