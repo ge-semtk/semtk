@@ -81,6 +81,20 @@ public class Table {
 		
 	}
 	
+	public void replaceColumnNames(String [] newColumnnNames) throws Exception{
+		// this allows the replacement of the existing column names with a new set. 
+		// it requires that the incoming count of names match the ones being replaced.
+		
+		if(this.columnNames.length != newColumnnNames.length){
+			throw new Exception("replaceColumnNames: the incoming column name count (" + newColumnnNames.length + ") does not match the target column names count (" + this.columnNames.length + ")");
+		}
+		
+		else{
+			this.columnNames = newColumnnNames;
+		}
+		
+	}
+	
 	public int getNumRows(){
 		return rows.size();
 	}
