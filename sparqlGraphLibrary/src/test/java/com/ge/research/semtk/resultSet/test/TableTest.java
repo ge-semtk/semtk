@@ -55,6 +55,38 @@ public class TableTest {
 		
 	}
 	
+	@Test 
+	public void testReplaceColumnNames() throws Exception {
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		
+		Table table = new Table(cols, colTypes, rows);
+		String[] colRename_tooLarge = {"1", "2", "3", "4"};
+		String[] colRename_tooSmall = {"1"};
+		String[] colRename_justRight = {"1", "2", "3"};
+		
+		try{
+			table.replaceColumnNames(colRename_tooLarge);
+			throw new Exception("table accepted new columns names when too few values were provided ?!?!");
+		}
+		catch(Exception e){
+			// expected. continue
+		}
+		try{
+			table.replaceColumnNames(colRename_tooSmall);
+			throw new Exception("table accepted new columns names when too few values were provided ?!?!");
+		}
+		catch(Exception e){
+			// expected. continue
+		}
+		
+		// no try here. we expect this one works:
+		table.replaceColumnNames(colRename_justRight);
+		
+		
+	}
+	
 	@Test
 	public void testTableWithCommas() throws Exception {
 		
