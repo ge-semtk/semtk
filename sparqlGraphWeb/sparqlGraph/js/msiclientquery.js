@@ -47,7 +47,8 @@ define([	// properly require.config'ed   bootstrap-modal
 		MsiClientQuery.prototype = {
 				
 			execQuery : function (query, successCallback, optReturnType) {
-				this.data.returnType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
+				// BUG: this inexplicably has been "returnType", which doesn't work with the query service
+				this.data.resultType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
 				
 				this.data.query = query;
 				var myData = JSON.stringify(this.data);
@@ -58,7 +59,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			execAuthQuery : function (query, successCallback, optReturnType) {
-				this.data.returnType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
+				// BUG: this inexplicably has been "returnType", which doesn't work with the query service
+				this.data.resultType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
 				
 				this.data.query = query;
 				var myData = JSON.stringify(this.data);
