@@ -70,7 +70,7 @@ SparqlConnection.prototype = {
 		// add data interfaces
 		for (var i=0; i < this.dataInterfaces.length; i++) {
 			var di = this.dataInterfaces[i];
-			jObj.model.push({
+			jObj.data.push({
 				endpoint: {
 					type: di.getServerType(),
 					url: di.getServerURL(),
