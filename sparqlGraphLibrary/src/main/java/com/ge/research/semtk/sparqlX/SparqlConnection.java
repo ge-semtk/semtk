@@ -34,11 +34,9 @@ public class SparqlConnection {
 	// TODO replace all hardcoded json keys with Strings like this
 	public final static String DSDATASET_JSONKEY = "dsDataset";
 	
-	private final static String NONE_SERVER = "";
 	private final static String QUERY_SERVER = "kdl";
 	private final static String FUSEKI_SERVER = "fuseki";
 	private final static String VIRTUOSO_SERVER = "virtuoso";
-	private final static char DELIM = '>';
 	
 	private String name = "";
 	private String serverType = "";
@@ -65,6 +63,7 @@ public class SparqlConnection {
 	}
 	
 	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain){
+		this.name = name;
 		this.dataServerUrl = dataServicetURL;
 		this.dataKsServerURL = knowledgeServiceURL;
 		this.serverType = serverType;
