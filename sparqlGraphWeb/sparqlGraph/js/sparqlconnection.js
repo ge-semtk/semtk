@@ -36,7 +36,7 @@ var SparqlConnection = function(jsonText) {
     	this.modelNames = [];
     	
     	this.dataInterfaces = [];
-    	this.datalNames = [];
+    	this.dataNames = [];
     }
 };
 
@@ -53,7 +53,8 @@ SparqlConnection.prototype = {
 			data: []
 		};
 		
-		for (int i=0; i < this.modelInterfaces.length; i++) {
+		// add model interfaces
+		for (var i=0; i < this.modelInterfaces.length; i++) {
 			var mi = this.modelInterfaces[i];
 			jObj.model.push({
 				endpoint: {
@@ -66,8 +67,9 @@ SparqlConnection.prototype = {
 			});
 		}
 		
-		for (int i=0; i < this.dataInterfaces.length; i++) {
-			var di = this.modelInterfaces[i];
+		// add data interfaces
+		for (var i=0; i < this.dataInterfaces.length; i++) {
+			var di = this.dataInterfaces[i];
 			jObj.model.push({
 				endpoint: {
 					type: di.getServerType(),
@@ -84,17 +86,40 @@ SparqlConnection.prototype = {
 	fromJson : function (jObj) {
 		
 		this.name = jObj.name; 
+		
 		this.modelInterfaces = [];
     	this.modelDomains = [];
     	this.modelNames = [];
-    	for (var i=0; i < jObj.model.length; i++) {
-    		var m = jObj.model[i];
-    		this.addModelEndpoint(m.endpoint.type, m.endpoint.url, m.endpoint.dataset, m.domain, m.name);
-    	}
-    	for (var i=0; i < jObj.model.length; i++) {
-    		var d = jObj.data[i];
-    		this.addModelEndpoint(d.endpoint.type, d.endpoint.url, d.endpoint.dataset, d.name);
-    	}
+
+    	this.dataInterfaces = [];
+    	this.dataNames = [];
+    	
+		if (jObj.hasOwnProperty("dsURL")) {
+			console.log("SparqlConnection.fromJson() is reading old-fashioned connection JSON.")
+		
+			// backwards compatible read
+			// If any field doesn't exist, presume it exists in the other connection
+			this.addModelEndpoint(jObj.type, 
+								  jObj.hasOwnProperty("onURL") ? jObj.onURL : jObj.dsURL,
+								  jObj.hasOwnProperty("onDataset") ? jObj.onDataset : jObj.dsDataset,
+								  jObj.domain,
+							      "");
+			this.addDataEndpoint( jObj.type, 
+								  jObj.hasOwnProperty("dsURL") ? jObj.dsURL : jObj.onURL,
+								  jObj.hasOwnProperty("dsDataset") ? jObj.dsDataset : jObj.onDataset,
+							      "");
+		} else {
+			// read model interfaces
+	    	for (var i=0; i < jObj.model.length; i++) {
+	    		var m = jObj.model[i];
+	    		this.addModelEndpoint(m.endpoint.type, m.endpoint.url, m.endpoint.dataset, m.domain, m.name);
+	    	}
+	    	// read data interfaces
+	    	for (var i=0; i < jObj.data.length; i++) {
+	    		var d = jObj.data[i];
+	    		this.addDataEndpoint(d.endpoint.type, d.endpoint.url, d.endpoint.dataset, d.name);
+	    	}
+		}
 	},
 	
 	fromString : function (jsonText) {
@@ -124,7 +149,7 @@ SparqlConnection.prototype = {
 	
 	addDataEndpoint : function (sType, url, dataset, name) {
 		this.dataInterfaces.push(this.createInterface(sType, url, dataset));
-		this.dataDomains.push(domain);
+		this.dataNames.push(name);
 	},
 	
 	getModelEndpointCount : function () {
@@ -138,7 +163,7 @@ SparqlConnection.prototype = {
 	},
 	getModelName : function (i) {
 		return this.modelNames[i];
-	},
+	}, 
 	
 	getDataEndpointCount : function () {
 		return this.dataInterfaces.length();
@@ -153,12 +178,12 @@ SparqlConnection.prototype = {
 	// DEPRECATED IN A GIANT WAY
 	// remove from sparqlform.js, htmlform.js, modalloaddialog.js, uploadtab.js
 	build : function () {
-		throw new Error("If you're calling this you must have changed no-longer-existing attributes like dsDataset");
+		throw new Error("ERROR: If you're calling this you must have changed no-longer-existing attributes like dsDataset");
 	},
 	
 	// DEPRECATED
 	setup(name, serverType, domain) {
-		console.log("WARNING: called deprecated SparqlConnection.setup();");
+		console.log("NOTE: called deprecated SparqlConnection.setup();");
 		
 		this.name = name;
 		this.depServerType = serverType;
@@ -167,7 +192,7 @@ SparqlConnection.prototype = {
 	
 	// DEPRECATED
 	setOntologyInterface(url, dataset, unused_KsURL) {
-		console.log("WARNING: called deprecated SparqlConnection.setOntologyInterface();");
+		console.log("NOTE: called deprecated SparqlConnection.setOntologyInterface();");
 		
 		this.modelInterfaces = [this.createInterface(this.depServerType, url, dataset)];
 		this.modelDomains= [this.depDomain];
@@ -175,21 +200,24 @@ SparqlConnection.prototype = {
 	},
 	// DEPRECATED
 	setDataInterface(url, dataset, unused_KsURL) {
-		console.log("WARNING: called deprecated SparqlConnection.setDataInterface();");
+		console.log("Note: called deprecated SparqlConnection.setDataInterface();");
 		
 		this.dataInterfaces = [this.createInterface(this.depServerType, url, dataset)];
 		this.dataNames=[""];
 	},
 	// DEPRECATED
 	getDataInterface : function () {
-		return this.dataInterface[0];
+		console.log("Note: called deprecated SparqlConnection.getDataInterface();");
+		return this.dataInterfaces[0];
 	}, 
 	// DEPRECATED
 	getOntologyInterface : function () {
+		console.log("Note: called deprecated SparqlConnection.getOntologyInterface();");
 		return this.modelInterfaces[0];
 	},
 	// DEPRECATED
 	getDomain : function () {
+		console.log("Note: called deprecated SparqlConnection.getDomain();");
 		return this.modelDomains[0];
 	},
 	
