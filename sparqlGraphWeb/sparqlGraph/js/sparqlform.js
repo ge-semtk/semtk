@@ -530,9 +530,9 @@ require([
 	    			var singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
 	    			if (singleNodeItem != null) {
 	    				if (item.ownsNodeItem(singleNodeItem)) {
-	    					singleNodeItem.setSNodeOptional(item.getSNodes()[0], NodeItem.OPTIONAL_REVERSE);
+	    					singleNodeItem.setSNodeOptional(item.getSNodes()[0], optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE);
 						} else {
-							singleNodeItem.setSNodeOptional(item, NodeItem.OPTIONAL_TRUE);
+							singleNodeItem.setSNodeOptional(item, optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE);
 						}
 	    			}
 	    		}
