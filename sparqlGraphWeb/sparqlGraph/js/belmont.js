@@ -1762,6 +1762,10 @@ SemanticNodeGroup.prototype = {
 			}
 			//============================================================
 			
+			// make sure prefix starts with a number
+			f = new SparqlFormatter();
+			newPrefixName = f.legalizePrefixName(newPrefixName);
+			
 			// make sure new prefix name is unique
 			if (prefixVals.indexOf(newPrefixName) > -1) {
 				var i=0;
@@ -2637,7 +2641,7 @@ SemanticNodeGroup.prototype = {
 		var sparql = this.generateSparqlPrefix() + "\n";
 
 		if (queryType == SemanticNodeGroup.QUERY_COUNT) {
-			sparql = "SELECT (COUNT(*) as ?count) { \n";
+			sparql += "SELECT (COUNT(*) as ?count) { \n";
 		}
 		
 		sparql += 'select distinct';

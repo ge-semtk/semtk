@@ -266,6 +266,17 @@ public class NodeGroup {
 		return retval;
 	}
 	
+	private String legalizePrefixName(String suggestion) {
+		// replace illegal characters with "_"
+		
+		String ret = suggestion.replaceAll("[^A-Za-z_0-9]", "_");
+		if (! Character.isLetter(ret.charAt(0))) {
+			ret = "a" + ret;
+		}
+		
+		return ret;
+	}
+	
 	public void addToPrefixHash(String prefixedUri){
 		// from the incoming string, remove the local fragment and then try to add the rest to the prefix hash.
 		if(prefixedUri == null){ return; }
@@ -278,6 +289,10 @@ public class NodeGroup {
 			// create a new prefix name
 			String [] fragments = chunks[0].split("/");
 			String newPrefixName = fragments[fragments.length - 1];
+			
+			// make sure prefix starts with a number
+			newPrefixName = this.legalizePrefixName(newPrefixName);
+			
 			// make sure new prefix name is unique
 			if (this.prefixHash.containsValue(newPrefixName)) {
 				int i=0;
