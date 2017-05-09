@@ -1755,10 +1755,23 @@ SemanticNodeGroup.prototype = {
 			// create a new prefix name
 			var fragments = chunks[0].split("/");
 			var newPrefixName = fragments[fragments.length - 1];
+			
+			// === Object.values() apparently isn't widely supported  ===
+			// === so populate prefixVals = Object.values(prefixHash) ===
+			var prefixVals = [];
+			for (var k in this.prefixHash) {
+				prefixVals.push(this.prefixHash[k]);
+			}
+			//============================================================
+			
+			// make sure prefix starts with a number
+			f = new SparqlFormatter();
+			newPrefixName = f.legalizePrefixName(newPrefixName);
+			
 			// make sure new prefix name is unique
-			if (Object.values(this.prefixHash).indexOf(newPrefixName) > -1) {
+			if (prefixVals.indexOf(newPrefixName) > -1) {
 				var i=0;
-				while (Object.values(this.prefixHash).indexOf(newPrefixName + "_" + i) > -1) {
+				while (prefixVals.indexOf(newPrefixName + "_" + i) > -1) {
 					i++;
 				}
 				newPrefixName = newPrefixName + "_" + i;
@@ -2630,7 +2643,7 @@ SemanticNodeGroup.prototype = {
 		var sparql = this.generateSparqlPrefix() + "\n";
 
 		if (queryType == SemanticNodeGroup.QUERY_COUNT) {
-			sparql = "SELECT (COUNT(*) as ?count) { \n";
+			sparql += "SELECT (COUNT(*) as ?count) { \n";
 		}
 		
 		sparql += 'select distinct';
