@@ -1534,8 +1534,10 @@ SemanticNodeGroup.QUERY_COUNT = 2;
 SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 
-SemanticNodeGroup.JSON_VERSION = 3;
-// the functions used by the semanticNodeGroup to keep its stuff in order.
+SemanticNodeGroup.JSON_VERSION = 4;
+// version 4 - multiple connections
+// version 3 - SNodeOptionals
+
 
 SemanticNodeGroup.XMLSCHEMA_PREFIX = "XMLSchema:";
 SemanticNodeGroup.XMLSCHEMA_FULL = "http://www.w3.org/2001/XMLSchema#";

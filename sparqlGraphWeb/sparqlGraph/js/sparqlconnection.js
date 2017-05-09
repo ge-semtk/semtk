@@ -22,11 +22,26 @@
 
 var SparqlConnection = function(jsonText) {
 	
-	// used to support deprecated functions
+	//--used to support deprecated functions ---
 	this.depServerType ="";
 	this.depDomain="";
+	
+	//--old attributes still called by some legacy users ---
+	this.name = "";
+	this.serverType = "";
+
+	this.dataServerUrl = "";
+	this.dataKsServerURL = "";
+	this.dataSourceDataset = "";
+
+	this.ontologyServerUrl = "";
+	this.ontologyKsServerURL = "";
+	this.ontologySourceDataset = "";
+
+	this.domain = "";
 	//-------------------------------------
 	
+	// The actual function:
 	if (jsonText) {
     	this.fromString(jsonText);
     } else {
@@ -141,6 +156,11 @@ SparqlConnection.prototype = {
 		return (thisStr == otherStr);
 	},
 	
+	//== New-fashioned way to build a Connection ==
+	setName : function (name) {
+		this.name = name;
+	},
+	
 	addModelEndpoint : function (sType, url, dataset, domain, name) {
 		this.modelInterfaces.push(this.createInterface(sType, url, dataset));
 		this.modelDomains.push(domain);
@@ -175,10 +195,36 @@ SparqlConnection.prototype = {
 		return this.dataNames[i];
 	},
 
-	// DEPRECATED IN A GIANT WAY
-	// remove from sparqlform.js, htmlform.js, modalloaddialog.js, uploadtab.js
+	//---------- private function
+	createInterface : function (stype, url, dataset) {
+		if (stype == SparqlConnection.FUSEKI_SERVER) {
+			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, dataset);
+		} else if (stype == SparqlConnection.VIRTUOSO_SERVER) {
+			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, dataset);
+		} else {
+			throw new Error("Unsupported SparqlConnection server type: ": stype);
+		}
+	},
+	
+	// DEPRECATED: kept for some legacy callers.
 	build : function () {
-		throw new Error("ERROR: If you're calling this you must have changed no-longer-existing attributes like dsDataset");
+		console.log("ERROR: Using DEPRECATED SparqlConnection functions.");
+		console.log("	    Change to setName() addDataEndpoint() addModelEndpoint().");
+		
+		// creating a single model and single data endpoint presuming that the
+		// caller has already set the old-fashioned attributes.
+		this.setName(this.name);
+		this.addModelEndpoint(	this.serverType,
+								this.ontologyServerUrl,
+								this.ontologySourceDataset,
+								this.domain,
+								""
+							);
+		this.addDataEndpoint(	this.serverType,
+								this.dataServerUrl,
+								this.dataSourceDataset,
+								""
+							);
 	},
 	
 	// DEPRECATED
@@ -220,19 +266,6 @@ SparqlConnection.prototype = {
 		console.log("Note: called deprecated SparqlConnection.getDomain();");
 		return this.modelDomains[0];
 	},
-	
-	//---------- internal
-	createInterface : function (stype, url, dataset) {
-		if (stype == SparqlConnection.FUSEKI_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, dataset);
-		} else if (stype == SparqlConnection.VIRTUOSO_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, dataset);
-		} else {
-			return null;
-		}
-	},
-	
-	
 	
 };
 
