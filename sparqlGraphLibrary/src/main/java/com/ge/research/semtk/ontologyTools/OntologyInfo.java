@@ -81,7 +81,7 @@ public class OntologyInfo {
 	 */
 	public OntologyInfo(SparqlEndpointInterface endpoint, String domain) throws Exception{
 		load(endpoint, domain);
-		this.modelConnection = new SparqlConnection(UUID.randomUUID().toString(), endpoint.getServerType(), null, endpoint.getServerAndPort(), endpoint.getDataset(), domain); 
+		this.modelConnection = new SparqlConnection(UUID.randomUUID().toString(), endpoint.getServerType(), endpoint.getServerAndPort(), null, endpoint.getDataset(), domain); 
 	
 	}
 	

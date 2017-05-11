@@ -97,19 +97,9 @@
 		setConn : function(g_conn) {
 			// Establish Sparql Connection in this.conn, using g		
 			this.conn = new SparqlConnection();
-			this.conn.name = g_conn.name;
-			this.conn.serverType = g_conn.serverType;
-	
-			this.conn.dataServerUrl = g_conn.serverURL;
-			this.conn.dataKsServerURL = ""; // fuseki will not have this
-			this.conn.dataSourceDataset = g_conn.dataset;
-	
-			this.conn.ontologyServerUrl = g_conn.serverURL;
-			this.conn.ontologyKsServerURL = ""; // fuseki will not have this
-			this.conn.ontologySourceDataset = g_conn.dataset;
-	
-			this.conn.domain = g_conn.domain;
-			this.conn.build();
+			this.conn.setName(g_conn.name);
+			this.conn.addModelInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset, g_conn.domain, "noname");
+			this.conn.addDataInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset, "noname");
 		},	
 		
 		setFields : function(g_fields) {
@@ -189,10 +179,10 @@
 			var sparql = tmpNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 0, null);
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
+				this.conn.getDataInterface(0).executeAndParseGet(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
+				this.conn.getDataInterface(0).executeAndParse(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
 				
 			}
 		},
@@ -314,7 +304,7 @@
 				}
 				
 				// find or add the snode
-				snode = this.nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getDomain(), true, pathOptionalFlag); // superClassFlag=true				
+				snode = this.nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getModelDomain(0), true, pathOptionalFlag); // superClassFlag=true				
 				
 				//**** Check that return props exist, and have the right name ****//
 				if (f.hasOwnProperty("prop")) {
@@ -404,7 +394,7 @@
 				
 				// add the node if needed
 				var optFlag = retlist[i].hasOwnProperty("optional");
-				snode = nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getDomain(), true, optFlag);   // superClassFlag=true
+				snode = nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getModelDomain(0), true, optFlag);   // superClassFlag=true
 				
 				//**** Return the class if requested ****//
 				if (retlist[i].hasOwnProperty("node")) {
@@ -630,10 +620,10 @@
 			
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 					
 			}
 		}, 
@@ -663,10 +653,10 @@
 			this.registerQueryCall();
 			
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 							}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 									
 			}
 			
@@ -1244,10 +1234,10 @@
 			
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
 					
 			}
 		},
@@ -1305,10 +1295,10 @@
 			
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
 					
 			}
 		},
@@ -1343,10 +1333,10 @@
 
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
 						
 			}
 		},

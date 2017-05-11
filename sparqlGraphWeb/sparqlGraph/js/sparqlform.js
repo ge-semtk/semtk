@@ -70,36 +70,46 @@ require([
 		gConnSetup = function() {
 			// Establish Sparql Connection in gConn, using g		
 			gConn = new SparqlConnection();
-			gConn.name = g.conn.name;
-			gConn.serverType = SparqlConnection.VIRTUOSO_SERVER;
+			gConn.setName(g.conn.name);
+			var serverType = SparqlConnection.VIRTUOSO_SERVER;
 	
 			// backwards-compatible single connection
 			if (g.conn.hasOwnProperty('serverURL') && g.conn.hasOwnProperty('dataset')) {
-				gConn.dataServerUrl = g.conn.serverURL;
-				gConn.dataKsServerURL = ""; // fuseki will not have this
-				gConn.dataSourceDataset = g.conn.dataset;
-		
-				gConn.ontologyServerUrl = g.conn.serverURL;
-				gConn.ontologyKsServerURL = ""; // fuseki will not have this
-				gConn.ontologySourceDataset = g.conn.dataset;
+				gConn.addDataInterface(	
+						serverType,
+						g.conn.serverURL,
+						g.conn.dataset,
+						""
+						);
+				gConn.addModelInterface(
+						serverType,
+						g.conn.serverURL,
+						g.conn.dataset,
+						g.conn.domain,
+						""
+						);
 				
 			// newer double connection
 			} else if (g.conn.hasOwnProperty('dataServerURL') && g.conn.hasOwnProperty('dataDataset') &&
 					   g.conn.hasOwnProperty('ontologyServerURL') && g.conn.hasOwnProperty('ontologyDataset')) {
-				gConn.dataServerUrl = g.conn.dataServerURL;
-				gConn.dataKsServerURL = ""; // fuseki will not have this
-				gConn.dataSourceDataset = g.conn.dataDataset;
-		
-				gConn.ontologyServerUrl = g.conn.ontologyServerURL;
-				gConn.ontologyKsServerURL = ""; // fuseki will not have this
-				gConn.ontologySourceDataset = g.conn.ontologyDataset;
 				
+				gConn.addDataInterface(	
+						serverType,
+						g.conn.dataServerURL,
+						g.conn.dataDataset,
+						""
+						);
+				gConn.addModelInterface(
+						serverType,
+						g.conn.ontologyServerURL,
+						g.conn.ontologyDataset,
+						g.conn.domain,
+						""
+						);
 			} else {
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
 			}
-	
-			gConn.domain = g.conn.domain;
-			gConn.build();
+
 		};
 
 		setStatus = function(msg) {
@@ -466,7 +476,7 @@ require([
 			}
 			
 			// get info on the dropped Node
-			var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getDomain(), true);
+			var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getModelDomain(0), true);
 			
 			if (itemSNode == null) {
 				alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add " + classObj.getNameStr());
@@ -482,7 +492,7 @@ require([
 			// So get the childSNode
 			if (!item) {
 				var nodeItem = itemSNode.getNodeItemByKeyname(itemKeyName);
-				childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getDomain(), true);
+				childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getModelDomain(0), true);
 				if (itemSNode == null) {
 					alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add the child node " + nodeItem.getUriValueType());
 					return;

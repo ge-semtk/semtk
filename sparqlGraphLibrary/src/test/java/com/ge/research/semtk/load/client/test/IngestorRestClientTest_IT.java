@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.json.simple.JSONObject;
+import org.json.simple.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -88,9 +88,23 @@ public class IngestorRestClientTest_IT {
 		// get an override SPARQL connection, by getting the TestGraph dataset and appending "OTHER"
 		// TODO could not find a clean way to add this functionality to TestGraph for reusability - maybe in the future
 		JSONObject sparqlConnJson = sgJson_TestGraph.getSparqlConn().toJson();  // original TestGraph sparql conn 
-		String testGraphDataset = (String) sparqlConnJson.get(SparqlConnection.DSDATASET_JSONKEY);
-		String otherDataset = testGraphDataset + "OTHER";  						// make the override dataset
-		sparqlConnJson.put(SparqlConnection.DSDATASET_JSONKEY, otherDataset);  	// replace the dataset
+		
+		String testGraphDataset = null;
+		String otherDataset = null;
+		
+		if (sparqlConnJson.containsKey("dsDataset")) {
+			// older json hack
+			testGraphDataset = (String) sparqlConnJson.get("dsDataset");
+			otherDataset = testGraphDataset + "OTHER";  						// make the override dataset
+			sparqlConnJson.put("dsDataset", otherDataset);  	// replace the dataset
+		} else {
+			// newer json hack
+			JSONArray data = (JSONArray) sparqlConnJson.get("data");
+			JSONObject endpoint = (JSONObject) ((JSONObject)(data.get(0))).get("endpoint");
+			testGraphDataset = (String) endpoint.get("dataset");
+			otherDataset = testGraphDataset + "OTHER";  						// make the override dataset
+			endpoint.put("dataset", otherDataset);  	// replace the dataset
+		}
 		SparqlConnection sparqlConnectionOverride = new SparqlConnection(sparqlConnJson.toJSONString()); // get the connection object
 		
 		// clear the override graph and upload OWL to it (else the test load will fail)

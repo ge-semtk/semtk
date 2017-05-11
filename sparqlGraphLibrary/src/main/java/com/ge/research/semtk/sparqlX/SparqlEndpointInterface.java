@@ -236,7 +236,7 @@ public abstract class SparqlEndpointInterface {
 	// - Paul  5/26/2016
 	public static SparqlEndpointInterface getDataInterfaceFromJsonDEPRECATE(JSONObject json) throws Exception{
 		SparqlGraphJson sgJson = new SparqlGraphJson(json);
-		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDataInterface();
+		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDataInterface(0);
 		return sei;
 	}
 	

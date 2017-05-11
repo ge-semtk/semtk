@@ -118,15 +118,15 @@ public class SparqlGraphJson {
 	}
 	
 	public String getDomain() throws Exception {
-		return getSparqlConn().getDomain();
+		return getSparqlConn().getModelDomain(0);
 	}
 
 	public SparqlEndpointInterface getOntologyInterface() throws Exception {
-		return getSparqlConn().getOntologyInterface();
+		return getSparqlConn().getModelInterface(0);
 	}
 	
 	public SparqlEndpointInterface getDataInterface() throws Exception {
-		return getSparqlConn().getDataInterface();
+		return getSparqlConn().getDataInterface(0);
 	}
 	
 	public OntologyInfo getOntologyInfo() throws Exception {

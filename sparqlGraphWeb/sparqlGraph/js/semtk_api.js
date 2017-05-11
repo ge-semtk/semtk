@@ -298,12 +298,16 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} domain  URI prefix considered to be "inside" the model       
 			 * @return         none     
 			 * 
+			 * @deprecated
 			 * @example
-			 * semtk.setupSparqlConnection("Fred", "virtuoso", "uri://my/model/prefix");
-			 * semtk.setSparqlModelConnection("http://virtuoso.server-a.com:2420", "uri://graphname");
-			 * semtk.setSparqlDataConnection ("http://virtuoso.server-b.com:2420", "uri://diffgraph");
+			 * Replaced by:
+			 * setSparqlConnectionName("name");
+			 * addSparqlModelGraph("virtuoso", url, dataset, domain, "my fav model");
+			 * addSparqlDataGraph("virtuoso", url, dataset, "data #1");
+			 * 
 			 */
 			setupSparqlConnection : function(name, type, domain) {
+				this.console.log("semtk_api.js: using DERECATED setupSparqlConnection().");
 				this.conn.setup(name, type, domain);
 			},
 			
@@ -313,14 +317,16 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} url      server holding the data         
 			 * @param {string} dataset  depending on server type, this is dataset or graph name             
 			 * @param {string} optKsUrl for SADLserver, otherwise ignored      
-			 * @return         none         
+			 * @return         none  
+			 * @deprecated       
 			 */
 			setSparqlModelConnection : function(url, dataset, optKsUrl) {
+				this.console.log("semtk_api.js: using DERECATED setupSparqlConnection().");
 				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
 				
 				// assert
 				this.assert(this.queryServiceURL != null, "setSparqlModelConnection", "There is no query service set.");
-				this.assert(this.conn.name != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
+				this.assert(this.conn.getName() != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
 				
 				// fill in ontology fields    
 				this.conn.setOntologyInterface(url, dataset, ksUrl);
@@ -336,8 +342,10 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} dataset  depending on server type, this is dataset or graph name             
 			 * @param {string} optKsUrl for SADLserver, otherwise ignored      
 			 * @return         none         
+			 * @deprecated
 			 */
 			setSparqlDataConnection : function(url, dataset, optKSUrl) {
+				this.console.log("semtk_api.js: using DERECATED setupSparqlConnection().");
 				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
 				
 				// assert
@@ -349,6 +357,63 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(), this.raiseError, this.queryServiceTimeout );
 			},
 			
+			/**
+			 * @param {string} name    a name for the connection 
+			 * @return         void   
+			 * @example
+			 * semtk.setConnectionName("name");
+			 * semtk.addModelGraph("virtuoso", url, dataset, domain, "my fav model");
+			 * semtk.addDataGraph("virtuoso", url, dataset, "data #1");
+			 * semtk.addDataGraph("virtuoso", url, dataset, "data #2");
+			 * 
+			 */
+			setConnectionName : function(name) {
+				this.conn.setName(name);
+			},
+			
+			/**
+			 * add a SPARQL model connection 
+			 * @param {string} sType    "virtuoso" or "fuseki"         
+			 * @param {string} url      full URL of sparql endpoint            
+			 * @param {string} dataset  dataset or graph name     
+			 * @param {string} domain   regex on URI's that should be included in model     
+			 * @param {string} name     name for this endpoint     
+			 * @return         none  
+			 */
+			addModelGraph : function(sType, url, dataset, domain, name) {
+				
+				// assert
+				this.assert(this.queryServiceURL != null, "setSparqlModelConnection", "There is no query service set.");
+				this.assert(this.conn.getName() != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
+				
+				// fill in ontology fields    
+				this.conn.addModelInterface(sType, url, dataset, domain, name);
+				
+				if (this.conn.getModelInterfaceCount() == 1) {
+					this.modelQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getModelInterface(0), this.raiseError, this.queryServiceTimeout );
+				}
+				
+			},
+			
+			/**
+			 * add a SPARQL data connection 
+			 * @param {string} sType    "virtuoso" or "fuseki"         
+			 * @param {string} url      full URL of sparql endpoint            
+			 * @param {string} dataset  dataset or graph name     
+			 * @param {string} name     name for this endpoint     
+			 * @return         none  
+			 */
+			addDataGraph : function(sType, url, dataset, name) {
+				// assert
+				this.assert(this.queryServiceURL != null, "setSparqlDataConnection", "There is no query service set.");
+				this.assert(this.conn.getName() != "", "setSparqlDataConnection", "Sparql connection has not been set up.");
+				
+				this.conn.addDataInterface(sType, url, dataset, name);
+				
+				if (this.conn.getDataInterfaceCount() == 1) {
+					this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(0), this.raiseError, this.queryServiceTimeout );
+				}
+			},
 			
 			/**
 			 * Asynchronously load the model using the model connection
@@ -362,7 +427,8 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				// refresh and reload the oInfo
 				this.oInfo = new OntologyInfo();
-				this.oInfo.load(this.conn.domain, this.modelQueryServiceClient, statusCallback, successCallback, failureCallback);
+				// PEC TODO: only loading first model
+				this.oInfo.load(this.conn.getModelDomain(0), this.modelQueryServiceClient, statusCallback, successCallback, failureCallback);
 			},
 			
 			/* 
@@ -377,11 +443,12 @@ define([	// properly require.config'ed   bootstrap-modal
 			getModelDrawJSONAsync : function(successCallbackJson) {
 				// asserts
 				this.assertModelLoaded("getModelDrawJSONAsync");
-				
-				this.ontologyServiceClient.execRetrieveDetailedOntologyInfo(this.conn.ontologySourceDataset, 
-																			this.conn.domain, 
-																			this.conn.serverType, 
-																			this.conn.ontologyServerUrl, 
+				// PEC TODO: only reading first model
+				var mi = conn.getModelInterface(0);
+				this.ontologyServiceClient.execRetrieveDetailedOntologyInfo(mi.getServerURL(), 
+																			this.conn.getModelDomain(0), 
+																			mi.getServerType(), 
+																			mi.getServerURL(), 
 																			this.getModelDrawJSONCallback.bind(this, successCallbackJson)
 																			);
 				

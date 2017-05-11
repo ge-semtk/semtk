@@ -133,7 +133,7 @@
     			if ( gOInfo.containsClass(gDragLabel) ){
     				// the class was found. let's use it.
     				var nodelist = gNodeGroup.getArrayOfURINames();
-    				var paths = gOInfo.findAllPaths(gDragLabel, nodelist, gConn.getDomain());
+    				var paths = gOInfo.findAllPaths(gDragLabel, nodelist, gConn.getModelDomain(0));
     				logEvent("SG Drop Class", "label", gDragLabel);
     				
     				// Handle no paths or shift key during drag: drop node with no connections
@@ -471,8 +471,8 @@
 	    	
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
-	    	gQueryClient =       new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface());
-	    	var ontQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getOntologyInterface(), logAndAlert);
+	    	gQueryClient =       new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(0));
+	    	var ontQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getModelInterface(0), logAndAlert);
 	    	
 	    	logEvent("SG Loading", "connection", gConn.toString());
     		
@@ -483,13 +483,13 @@
     			
     		} else {
 		    	// load ontology via microservice
-				gOInfo.load(gConn.getDomain(), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+				gOInfo.load(gConn.getModelDomain(0), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
     		}
     	});
     };
     
     getQueryClientOrInterface = function() {
-    	return gAvoidQueryMicroserviceFlag ? gConn.getDataInterface() : gQueryClient;
+    	return gAvoidQueryMicroserviceFlag ? gConn.getDataInterface(0) : gQueryClient;
     };
     
     doQueryLoadFile = function (file) {
@@ -534,7 +534,7 @@
 	    					
 	    				} else {
 	    					// conn already exists in cookies.  Use the name in cookies, so we don't get duplicates
-	    					conn.name = existName;
+	    					conn.setName(existName);
 	    					gLoadDialog.writeProfiles();    // write so we save this as the selected connection
 	    				}
 	    				
@@ -697,7 +697,7 @@
 				}
 			};
 			
-    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDataInterface());
+    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDataInterface(0));
     		mq.execAuthQuery("select ?x ?y ?z where {?x ?y ?z.} limit 10", successCallback);
     	});
     	
@@ -768,7 +768,7 @@
         document.getElementById('queryText').value = gNodeGroup.generateSparqlConstruct();
 		var query = document.getElementById("queryText").value;
    
-   		var dataInterface = gConn.getDataInterface();
+   		var dataInterface = gConn.getDataInterface(0);
 		   
    		var testInterface = new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, dataInterface.serverURL, dataInterface.dataset, SparqlServerInterface.GRAPH_RESULTS);		
 		
@@ -810,7 +810,7 @@
 			
 			if (gAvoidQueryMicroserviceFlag) {
 				/* Old non-microservice code */
-				gConn.getDataInterface().executeAndParse(query, runQueryCallback);
+				gConn.getDataInterface(0).executeAndParse(query, runQueryCallback);
 		    	
 			} else {
 				gQueryClient.executeAndParse(query, runQueryCallback);
