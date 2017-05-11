@@ -56,6 +56,10 @@ define([	// properly require.config'ed   bootstrap-modal
 				return this.getTable().col_names[x];
 			},
 			
+			getColumnNumber : function(name) {
+				return this.getTable().col_names.indexOf(name);
+			},
+			
 			getGeneralResultHtml : function () { 
 				// build GeneralResultSet html
 				
@@ -335,6 +339,27 @@ define([	// properly require.config'ed   bootstrap-modal
 						                      ["Download CSV"], 
 						                      [this.tableDownloadCsv.bind(this)], 
 						                      optFinishedCallback);
+			},
+			
+			getColumnStringsByName : function(name) {
+				return this.getColumnStrings(this.getColumnNumber(name));
+			},
+			
+			/**
+			 * Return list of value strings for a given column.
+			 * null if column number is invalid.
+			 */
+			getColumnStrings : function (col) {
+				var cols = this.getColumnCount();
+				if (col < 0 || col >= cols) { return null; }
+				
+				var rows = this.getRowCount();
+				var table = this.getTable();
+				var ret = [];
+				for (var i=0; i < rows; i++) {
+					ret.push( (table.rows[i][col] != undefined) ? table.rows[i][col] : "");
+				}
+				return ret;
 			},
 			
 			//  COMPATIBLE with sparqlServerResult:
