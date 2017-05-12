@@ -1072,11 +1072,15 @@ SemanticNode.prototype = {
 	getNode : function() {
 		return this.node;
 	},
-	getPropsForSparql : function(forceRet) {
+	getPropsForSparql : function(forceRet, queryType) {
 		// return properties needed for a SPARQLquery
 
 		// forceRet can be empty or a propItem to return regardless of whether
 		// it is returned
+		
+		// queryType is going to be needed for the deletes. we need values labeled for deletion that may not have any 
+		// other meaningful features about them. this support will be added later.
+		
 		var retprops = [];
 		var t = this.propList.length;
 		for (var s = 0; s < t; s++) {
@@ -2725,7 +2729,7 @@ SemanticNodeGroup.prototype = {
 		sparql += this.generateSparqlTypeClause(snode, tab);
 		
 		// PropItems: generate sparql for property and constraints
-		var props = snode.getPropsForSparql(targetObj);
+		var props = snode.getPropsForSparql(targetObj, queryType);
 		for (var l = 0; l < props.length; l++) {
 			
 			if (props[l].getIsOptional() && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {

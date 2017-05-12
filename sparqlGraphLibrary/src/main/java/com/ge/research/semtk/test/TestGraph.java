@@ -126,6 +126,14 @@ public class TestGraph {
 		}
 	}
 	
+	public static void execDeletionQuery(String query) throws Exception{
+		SparqlEndpointInterface sei = getSei();
+		GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+		if (!resultSet.getSuccess()) {
+			throw new Exception(resultSet.getRationaleAsString(" "));
+		}		
+	}
+	
 	public static Table execTableSelect(String query) throws Exception {
 		// execute a select query
 		// exception if there's any problem

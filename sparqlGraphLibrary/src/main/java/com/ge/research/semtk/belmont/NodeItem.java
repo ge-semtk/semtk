@@ -36,6 +36,7 @@ public class NodeItem {
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 	private ArrayList<Integer> snodeOptionals = new ArrayList<Integer>();
+	private ArrayList<Boolean> deletionFlags = new ArrayList<Boolean>();
 	private String keyName = "";
 	private String valueType = "";
 	private String valueTypeURI = "";
@@ -104,6 +105,29 @@ public class NodeItem {
 				this.snodeOptionals.add((int) opt);
 			}
 		}
+		// get all of the deletion flag values, if any.
+		if (next.containsKey("DeletionMarkers")){
+			/*
+			 * Note: the code below seems to be dependent on the type in the JSONArray being 
+			 * boolean. the commented out line was originally in use, matching the SnodeOptionals
+			 * retrieval but failed on an exception about not being able to cast an arraylist to 
+			 * a jsonArray. this seems odd. following the exception itself, i changed the code to 
+			 * directly assume the result of the retrieval was an arrayList of booleans. this works
+			 * but i am uncertain as to why as the same approach has not worked in the past.
+			 */
+			//JSONArray jsonDelMark = (JSONArray)next.get("DeletionMarkers");
+			ArrayList<Boolean> jsonDelMark = (ArrayList<Boolean>) next.get("DeletionMarkers");
+			for(int i = 0; i < jsonDelMark.size(); i++){
+				this.deletionFlags.add(Boolean.parseBoolean(jsonDelMark.get(i).toString()));
+			}
+		}
+		// if there were no deletion flag markers, set all of the potential ones to false.
+		else{
+			for (int i=0; i < this.nodes.size(); i++) {
+				this.deletionFlags.add(false);
+			}
+		}
+		
 	}
 
 	@SuppressWarnings("unchecked")
@@ -120,6 +144,7 @@ public class NodeItem {
 		}
 		ret.put("SnodeSparqlIDs", SNodeSparqlIDs);
 		ret.put("SnodeOptionals", SNodeOptionals);
+		ret.put("DeletionMarkers", this.deletionFlags);
 		ret.put("KeyName", this.keyName);
 		ret.put("ValueType", this.valueType);
 		ret.put("UriValueType", this.valueTypeURI);
@@ -152,13 +177,27 @@ public class NodeItem {
 	public void pushNode(Node curr) {
 		this.nodes.add(curr);
 		this.snodeOptionals.add(NodeItem.OPTIONAL_FALSE);
+		this.deletionFlags.add(false);
 	}
 	
 	public void pushNode(Node curr, int opt) {
 		this.nodes.add(curr);
 		this.snodeOptionals.add(opt);
+		this.deletionFlags.add(false);
 	}
 	
+	public void pushNode(Node curr, Boolean deletionMarker){
+		this.nodes.add(curr);
+		this.snodeOptionals.add(NodeItem.OPTIONAL_FALSE);
+		this.deletionFlags.add(deletionMarker);
+	}
+	
+	public void pushNode(Node curr, int opt, Boolean deletionMarker) {
+		this.nodes.add(curr);
+		this.snodeOptionals.add(opt);
+		this.deletionFlags.add(deletionMarker);
+	}
+		
 	public ArrayList<Node> getNodeList() {
 		return this.nodes;
 	}
@@ -175,10 +214,48 @@ public class NodeItem {
 	}
 	
 	public void removeNode(Node node) {
-		this.nodes.remove(node);
+		int pos = this.nodes.indexOf(node);
+		if(pos > -1){
+			this.nodes.remove(pos);
+			this.snodeOptionals.remove(pos);
+			this.deletionFlags.remove(pos);
+		}
 		if (this.nodes.size() == 0) {
 			this.connected = false;
 		}
+	}
+	
+	public void setSnodeDeletionMarker(Node snode, Boolean toDelete) throws Exception{
+		for (int i=0; i < this.nodes.size(); i++) {
+			if (this.nodes.get(i) == snode) {
+				this.deletionFlags.set(i, toDelete);
+				return;
+			}
+		}
+		throw new Exception("NodeItem can't find link to semantic node");
+	}
+	
+	public Boolean getSnodeDeletionMarker(Node snode) throws Exception{
+		for (int i=0; i < this.nodes.size(); i++) {
+			if (this.nodes.get(i) == snode) {
+				return this.deletionFlags.get(i);
+			}
+		}
+		throw new Exception("NodeItem can't find link to semantic node");
+	}
+	
+	public ArrayList<Node> getSnodesWithDeletionFlagsEnabledOnThisNodeItem(){
+		ArrayList<Node> retval = new ArrayList<Node>();
+		
+		for(int i=0; i < this.nodes.size(); i++) {
+			// if the node is supposed to be deleted, add it to the deletion list.
+			if(this.deletionFlags.get(i)){
+				// add it.
+				retval.add(this.nodes.get(i));
+			}
+		}
+		// ship it back
+		return retval;
 	}
 	
 	public void setSNodeOptional(Node snode, int optional) throws Exception {
@@ -199,5 +276,6 @@ public class NodeItem {
 		}
 		throw new Exception("NodeItem can't find link to semantic node");
 	}
+	
 	
 }
