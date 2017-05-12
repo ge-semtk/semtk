@@ -18,7 +18,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class DeletionTest {
+public class DeletionTest_IT {
 
 	public String jsonNodegroupPath = "src/test/resources/ConsolidatedMusicTestDeletionNodegroup.json";
 	public String ttlGraphContentsPath = "src/test/resources/musicTestDataset_2017.q2.ttl";
