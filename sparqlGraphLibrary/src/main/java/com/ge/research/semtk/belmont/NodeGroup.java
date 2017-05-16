@@ -1824,7 +1824,6 @@ public class NodeGroup {
 				retval += generateNodeDeletionSparql(n);
 			}
 			// check the properties.
-			StringBuilder propDel = new StringBuilder();		// cheaper than using the strings for all the additions we may be doing.
 			for( PropertyItem pi : n.getPropertyItems() ){
 				if(pi.getIsMarkedForDeletion()){
 					// check for a property that is actually going to be deleted. 
