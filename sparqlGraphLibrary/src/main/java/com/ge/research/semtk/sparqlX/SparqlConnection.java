@@ -39,19 +39,15 @@ public class SparqlConnection {
 	private final static String VIRTUOSO_SERVER = "virtuoso";
 	
 	private String name = null;
+	private String domain = null;
 	private ArrayList<SparqlEndpointInterface> modelInterfaces = null;
-	private ArrayList<String> modelDomains = null;
-	private ArrayList<String> modelNames = null;
 	private ArrayList<SparqlEndpointInterface> dataInterfaces = null;
-	private ArrayList<String> dataNames = null;
 	
 	public SparqlConnection () {
 		this.name = "";
+		this.domain = "";
 		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
-		this.modelDomains = new ArrayList<String>();
-		this.modelNames = new ArrayList<String>();
 		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
-		this.dataNames = new ArrayList<String>();
 	}
 	
 	public SparqlConnection(String jsonText) throws Exception {
@@ -62,47 +58,39 @@ public class SparqlConnection {
 	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain) throws Exception{
 		this();
 		this.name = name;
+		this.domain = domain;
 		this.addDataInterface(serverType, 
 				dataServicetURL,
-				dataset,
-				"");
+				dataset);
 		this.addModelInterface(serverType, 
 				dataServicetURL,
-				dataset,
-				domain,
-				"");
+				dataset);
 	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
 		jObj.put("name", name);
+		jObj.put("domain", name);
 		jObj.put("model", new JSONArray());
 		jObj.put("data", new JSONArray());
 
 		for (int i=0; i < this.modelInterfaces.size(); i++) {
 			SparqlEndpointInterface mi = this.modelInterfaces.get(i);
-			JSONObject outer = new JSONObject();
 			JSONObject inner = new JSONObject();
 			inner.put("type", mi.getServerType());
 			inner.put("url", mi.getGetURL());
 			inner.put("dataset", mi.getDataset());
-			outer.put("endpoint", inner);
-			outer.put("domain", this.modelDomains.get(i));
-			outer.put("name", this.modelNames.get(i));
-			jObj.put("model", outer);
+			jObj.put("model", inner);
 		}
 		
-		for (int i=0; i < this.modelInterfaces.size(); i++) {
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
 			SparqlEndpointInterface di = this.dataInterfaces.get(i);
-			JSONObject outer = new JSONObject();
 			JSONObject inner = new JSONObject();
 			inner.put("type", di.getServerType());
 			inner.put("url", di.getGetURL());
 			inner.put("dataset", di.getDataset());
-			outer.put("endpoint", inner);
-			outer.put("name", this.modelNames.get(i));
-			jObj.put("data", outer);
+			jObj.put("data", inner);
 		}
 		return jObj;
 	}
@@ -114,12 +102,11 @@ public class SparqlConnection {
 		}
 		
 		this.name = (String) jObj.get("name");
+		this.domain = (String) jObj.get("domain");
+		
 		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
-		this.modelDomains = new ArrayList<String>();
-		this.modelNames = new ArrayList<String>();
 		
 		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
-		this.dataNames = new ArrayList<String>();
 		
 		if (jObj.containsKey("dsURL")) {
 			
@@ -128,27 +115,24 @@ public class SparqlConnection {
 			// If any field doesn't exist, presume it exists in the other connection
 			this.addModelInterface(	(String)(jObj.get("type")), 
 								    (String)(jObj.containsKey("onURL") ? jObj.get("onURL") : jObj.get("dsURL")),
-								    (String)(jObj.containsKey("onDataset") ? jObj.get("onDataset") : jObj.get("dsDataset")),
-								    (String)(jObj.get("domain")),
-							        "");
+								    (String)(jObj.containsKey("onDataset") ? jObj.get("onDataset") : jObj.get("dsDataset"))
+							        );
 			this.addDataInterface(	(String)(jObj.get("type")), 
 									(String)(jObj.containsKey("dsURL") ? jObj.get("dsURL") : jObj.get("onURL")),
-									(String)(jObj.containsKey("dsDataset") ? jObj.get("dsDataset")  : jObj.get("onDataset")),
-									"");
+									(String)(jObj.containsKey("dsDataset") ? jObj.get("dsDataset")  : jObj.get("onDataset"))
+									);
 		} else {
 			// normal read
 			
 			// read model interfaces
 	    	for (int i=0; i < ((JSONArray)(jObj.get("model"))).size(); i++) {
 	    		JSONObject m = (JSONObject)((JSONArray)jObj.get("model")).get(i);
-	    		JSONObject endpoint = (JSONObject) m.get("endpoint");
-	    		this.addModelInterface((String)(endpoint.get("type")), (String)(endpoint.get("url")), (String)(endpoint.get("dataset")), (String)(m.get("domain")), (String)(m.get("name")));
+	    		this.addModelInterface((String)(m.get("type")), (String)(m.get("url")), (String)(m.get("dataset")));
 	    	}
 	    	// read data interfaces
 	    	for (int i=0; i < ((JSONArray)(jObj.get("data"))).size(); i++) {
 	    		JSONObject d = (JSONObject)((JSONArray)jObj.get("data")).get(i);
-	    		JSONObject endpoint = (JSONObject) d.get("endpoint");
-	    		this.addDataInterface((String)(endpoint.get("type")), (String)(endpoint.get("url")), (String)(endpoint.get("dataset")), (String)(d.get("name")));
+	    		this.addDataInterface((String)(d.get("type")), (String)(d.get("url")), (String)(d.get("dataset")));
 	    	}
 		}
 		
@@ -181,41 +165,42 @@ public class SparqlConnection {
 		this.name = name;
 	}
 	
-	public void addModelInterface(String sType, String url, String dataset, String domain, String name) throws Exception {
-		this.modelInterfaces.add(this.createInterface(sType, url, dataset));
-		this.modelDomains.add(domain);
-		this.modelNames.add(name);
+	public void setDomain (String domain) {
+		this.domain = domain;
 	}
 	
-	public void addDataInterface(String sType, String url, String dataset, String name) throws Exception {
+	public void addModelInterface(String sType, String url, String dataset) throws Exception {
+		this.modelInterfaces.add(this.createInterface(sType, url, dataset));
+	}
+	
+	public void addDataInterface(String sType, String url, String dataset) throws Exception {
 		this.dataInterfaces.add(this.createInterface(sType, url, dataset));
-		this.dataNames.add(name);
 	}
 	
 	public int getModelInterfaceCount() {
 		return this.modelInterfaces.size();
 	}
+	
 	public SparqlEndpointInterface getModelInterface(int i) {
 		return this.modelInterfaces.get(i);
 	}
-	public String getModelDomain(int i) {
-		return this.modelDomains.get(i);
+	
+	public String getDomain() {
+		return this.domain;
 	}
-	public String getModelName(int i) {
-		return this.modelNames.get(i);
-	}
+	
 	public String getName() {
 		return this.name;
 	}
+	
 	public int getDataInterfaceCount() {
 		return this.dataInterfaces.size();
 	}
+	
 	public SparqlEndpointInterface getDataInterface(int i) {
 			return this.dataInterfaces.get(i);
 	}
-	public String getDataName(int i) {
-		return this.dataNames.get(i);
-	}
+
 
 	//---------- private function
 	private SparqlEndpointInterface createInterface(String stype, String url, String dataset) throws Exception{

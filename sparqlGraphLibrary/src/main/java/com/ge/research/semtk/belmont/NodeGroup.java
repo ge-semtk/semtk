@@ -43,7 +43,7 @@ import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 
 public class NodeGroup {
-	private final int VERSION = 3;
+	private static final int VERSION = 4;
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -396,8 +396,8 @@ public class NodeGroup {
 		HashMap<String, String> changedHash = new HashMap<String, String>();
 		this.resolveSparqlIdCollisions(jobj, changedHash);
 		int version = Integer.parseInt(jobj.get("version").toString());
-		if (version > 3) {
-			throw new Exception ("Nodegroup was created by a version > 3");
+		if (version > NodeGroup.VERSION) {
+			throw new Exception ("Nodegroup was created by a version > " + String.valueOf(NodeGroup.VERSION));
 		}
 		// attempt to add the nodes, using "changedHash" as a guide for IDs.
 		this.addJson((JSONArray) jobj.get("sNodeList"), uncompressOInfo); 

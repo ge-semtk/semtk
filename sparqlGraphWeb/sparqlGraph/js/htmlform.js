@@ -98,8 +98,9 @@
 			// Establish Sparql Connection in this.conn, using g		
 			this.conn = new SparqlConnection();
 			this.conn.setName(g_conn.name);
-			this.conn.addModelInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset, g_conn.domain, "noname");
-			this.conn.addDataInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset, "noname");
+			this.conn.setDomain(g_conn.domain);
+			this.conn.addModelInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset);
+			this.conn.addDataInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset);
 		},	
 		
 		setFields : function(g_fields) {
@@ -304,7 +305,7 @@
 				}
 				
 				// find or add the snode
-				snode = this.nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getModelDomain(0), true, pathOptionalFlag); // superClassFlag=true				
+				snode = this.nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getDomain(), true, pathOptionalFlag); // superClassFlag=true				
 				
 				//**** Check that return props exist, and have the right name ****//
 				if (f.hasOwnProperty("prop")) {
@@ -394,7 +395,7 @@
 				
 				// add the node if needed
 				var optFlag = retlist[i].hasOwnProperty("optional");
-				snode = nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getModelDomain(0), true, optFlag);   // superClassFlag=true
+				snode = nodeGroup.getOrAddNode(uri, this.oInfo, this.conn.getDomain(), true, optFlag);   // superClassFlag=true
 				
 				//**** Return the class if requested ****//
 				if (retlist[i].hasOwnProperty("node")) {

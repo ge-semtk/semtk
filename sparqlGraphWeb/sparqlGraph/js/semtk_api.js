@@ -361,14 +361,15 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} name    a name for the connection 
 			 * @return         void   
 			 * @example
-			 * semtk.setConnectionName("name");
-			 * semtk.addModelGraph("virtuoso", url, dataset, domain, "my fav model");
-			 * semtk.addDataGraph("virtuoso", url, dataset, "data #1");
-			 * semtk.addDataGraph("virtuoso", url, dataset, "data #2");
+			 * semtk.setConnectionInfo("name", "domain");
+			 * semtk.addModelGraph("virtuoso", url, dataset);
+			 * semtk.addDataGraph("virtuoso", url, dataset);
+			 * semtk.addDataGraph("virtuoso", url, dataset);
 			 * 
 			 */
-			setConnectionName : function(name) {
+			setConnectionInfo : function(name, domain) {
 				this.conn.setName(name);
+				this.conn.setDomain(domain);
 			},
 			
 			/**
@@ -376,18 +377,16 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} sType    "virtuoso" or "fuseki"         
 			 * @param {string} url      full URL of sparql endpoint            
 			 * @param {string} dataset  dataset or graph name     
-			 * @param {string} domain   regex on URI's that should be included in model     
-			 * @param {string} name     name for this endpoint     
 			 * @return         none  
 			 */
-			addModelGraph : function(sType, url, dataset, domain, name) {
+			addModelGraph : function(sType, url, dataset) {
 				
 				// assert
 				this.assert(this.queryServiceURL != null, "setSparqlModelConnection", "There is no query service set.");
 				this.assert(this.conn.getName() != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
 				
 				// fill in ontology fields    
-				this.conn.addModelInterface(sType, url, dataset, domain, name);
+				this.conn.addModelInterface(sType, url, dataset);
 				
 				if (this.conn.getModelInterfaceCount() == 1) {
 					this.modelQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getModelInterface(0), this.raiseError, this.queryServiceTimeout );
@@ -403,12 +402,12 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {string} name     name for this endpoint     
 			 * @return         none  
 			 */
-			addDataGraph : function(sType, url, dataset, name) {
+			addDataGraph : function(sType, url, dataset) {
 				// assert
 				this.assert(this.queryServiceURL != null, "setSparqlDataConnection", "There is no query service set.");
 				this.assert(this.conn.getName() != "", "setSparqlDataConnection", "Sparql connection has not been set up.");
 				
-				this.conn.addDataInterface(sType, url, dataset, name);
+				this.conn.addDataInterface(sType, url, dataset);
 				
 				if (this.conn.getDataInterfaceCount() == 1) {
 					this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(0), this.raiseError, this.queryServiceTimeout );
@@ -428,7 +427,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				// refresh and reload the oInfo
 				this.oInfo = new OntologyInfo();
 				// PEC TODO: only loading first model
-				this.oInfo.load(this.conn.getModelDomain(0), this.modelQueryServiceClient, statusCallback, successCallback, failureCallback);
+				this.oInfo.load(this.conn.getDomain(), this.modelQueryServiceClient, statusCallback, successCallback, failureCallback);
 			},
 			
 			/* 
@@ -446,7 +445,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				// PEC TODO: only reading first model
 				var mi = conn.getModelInterface(0);
 				this.ontologyServiceClient.execRetrieveDetailedOntologyInfo(mi.getServerURL(), 
-																			this.conn.getModelDomain(0), 
+																			this.conn.getDomain(), 
 																			mi.getServerType(), 
 																			mi.getServerURL(), 
 																			this.getModelDrawJSONCallback.bind(this, successCallbackJson)

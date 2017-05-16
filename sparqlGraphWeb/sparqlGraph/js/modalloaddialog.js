@@ -338,7 +338,7 @@ ModalLoadDialog.prototype = {
 			this.document.getElementById("mdOntologyKsURL").value = "";
 			this.document.getElementById("mdOntologySource").value = mi.getDataset();
 
-			this.document.getElementById("mdDomain").value = conn.getModelDomain(0);
+			this.document.getElementById("mdDomain").value = conn.getDomain();
 		}
 		
 		this.callbackServerType(); // enable/disable fields based on 
@@ -363,22 +363,13 @@ ModalLoadDialog.prototype = {
 		if (domain.indexOf("http") != 0) {
 			domain = "http://" + domain;
 		}
+		conn.setDomain(domain);
 		
 		conn.addDataInterface(	
 				serverType,
 				this.document.getElementById("mdDataServerURL").value.trim(),
 				this.document.getElementById("mdDataSource").value.trim(),
-				""
 				);
-		conn.addModelInterface(
-				serverType,
-				this.document.getElementById("mdOntologyServerURL").value.trim(),
-				this.document.getElementById("mdOntologySource").value.trim(),
-				domain,
-				""
-				);
-		
-		
 		
 		// If ontology stuff is empty, set it to same as data stuff
 		if (conn.ontologyServerUrl == "" && conn.ontologyKsServerURL == "" && conn.ontologySourceDataset == "") {
@@ -386,16 +377,12 @@ ModalLoadDialog.prototype = {
 					serverType,
 					this.document.getElementById("mdDataServerURL").value.trim(),
 					this.document.getElementById("mdDataSource").value.trim(),
-					domain,
-					""
 					);
 		} else {
 			conn.addModelInterface(
 					serverType,
 					this.document.getElementById("mdOntologyServerURL").value.trim(),
 					this.document.getElementById("mdOntologySource").value.trim(),
-					domain,
-					""
 					);
 		}
 		

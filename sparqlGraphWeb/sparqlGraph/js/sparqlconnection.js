@@ -28,7 +28,6 @@ var SparqlConnection = function(jsonText) {
 	this.depDomain="";
 	
 	//--old attributes still called by some legacy users ---
-	this.name = "";
 	this.serverType = "";
 
 	this.dataServerUrl = "";
@@ -39,7 +38,6 @@ var SparqlConnection = function(jsonText) {
 	this.ontologyKsServerURL = "";
 	this.ontologySourceDataset = "";
 
-	this.domain = "";
 	//-------------------------------------
 	
 	// The actual function:
@@ -47,12 +45,10 @@ var SparqlConnection = function(jsonText) {
     	this.fromString(jsonText);
     } else {
     	this.name = "";
-    	this.modelInterfaces = [];
-    	this.modelDomains = [];
-    	this.modelNames = [];
+    	this.domain = "";
     	
+    	this.modelInterfaces = [];
     	this.dataInterfaces = [];
-    	this.dataNames = [];
     }
 };
 
@@ -65,6 +61,7 @@ SparqlConnection.prototype = {
 	toJson : function () {
 		var jObj = {
 			name: this.name,
+			domain: this.domain,
 			model: [],
 			data: []
 		};
@@ -72,14 +69,10 @@ SparqlConnection.prototype = {
 		// add model interfaces
 		for (var i=0; i < this.modelInterfaces.length; i++) {
 			var mi = this.modelInterfaces[i];
-			jObj.model.push({
-				endpoint: {
+			jObj.model.push({		
 					type: mi.getServerType(),
 					url: mi.getServerURL(),
 					dataset: mi.getDataset()
-				},
-				domain: this.modelDomains[i],
-				name: this.modelNames[i]
 			});
 		}
 		
@@ -87,12 +80,9 @@ SparqlConnection.prototype = {
 		for (var i=0; i < this.dataInterfaces.length; i++) {
 			var di = this.dataInterfaces[i];
 			jObj.data.push({
-				endpoint: {
 					type: di.getServerType(),
 					url: di.getServerURL(),
 					dataset: di.getDataset()
-				},
-				name: this.dataNames[i]
 			});
 		}
 		
@@ -102,6 +92,7 @@ SparqlConnection.prototype = {
 	fromJson : function (jObj) {
 		
 		this.name = jObj.name; 
+		this.domain = jObj.domain;
 		
 		this.modelInterfaces = [];
     	this.modelDomains = [];
@@ -118,25 +109,24 @@ SparqlConnection.prototype = {
 			// If any field doesn't exist, presume it exists in the other connection
 			this.addModelInterface(jObj.type, 
 								  jObj.hasOwnProperty("onURL") ? jObj.onURL : jObj.dsURL,
-								  jObj.hasOwnProperty("onDataset") ? jObj.onDataset : jObj.dsDataset,
-								  jObj.domain,
-							      "");
+								  jObj.hasOwnProperty("onDataset") ? jObj.onDataset : jObj.dsDataset
+								  );
 			this.addDataInterface(jObj.type, 
 								  jObj.hasOwnProperty("dsURL") ? jObj.dsURL : jObj.onURL,
-								  jObj.hasOwnProperty("dsDataset") ? jObj.dsDataset : jObj.onDataset,
-							      "");
+								  jObj.hasOwnProperty("dsDataset") ? jObj.dsDataset : jObj.onDataset
+							      );
 		} else {
 			// normal read
 			
 			// read model interfaces
 	    	for (var i=0; i < jObj.model.length; i++) {
 	    		var m = jObj.model[i];
-	    		this.addModelInterface(m.endpoint.type, m.endpoint.url, m.endpoint.dataset, m.domain, m.name);
+	    		this.addModelInterface(m.type, m.url, m.dataset);
 	    	}
 	    	// read data interfaces
 	    	for (var i=0; i < jObj.data.length; i++) {
 	    		var d = jObj.data[i];
-	    		this.addDataInterface(d.endpoint.type, d.endpoint.url, d.endpoint.dataset, d.name);
+	    		this.addDataInterface(d.type, d.url, d.dataset);
 	    	}
 		}
 		
@@ -167,34 +157,32 @@ SparqlConnection.prototype = {
 		this.name = name;
 	},
 	
-	addModelInterface : function (sType, url, dataset, domain, name) {
-		this.modelInterfaces.push(this.createInterface(sType, url, dataset));
-		this.modelDomains.push(domain);
-		this.modelNames.push(name);
+	setDomain : function (domain) {
+		this.domain = domain
 	},
 	
-	addDataInterface : function (sType, url, dataset, name) {
+	addModelInterface : function (sType, url, dataset) {
+		this.modelInterfaces.push(this.createInterface(sType, url, dataset));
+	},
+	
+	addDataInterface : function (sType, url, dataset) {
 		this.dataInterfaces.push(this.createInterface(sType, url, dataset));
-		this.dataNames.push(name);
 	},
 	
 	getModelInterfaceCount : function () {
-		return this.modelInterfaces.length();
+		return this.modelInterfaces.length;
 	},
 	getModelInterface : function (i) {
 		return this.modelInterfaces[i];
 	},
-	getModelDomain : function (i) {
-		return this.modelDomains[i];
+	getDomain : function () {
+		return this.domain;
 	},
-	getModelName : function (i) {
-		return this.modelNames[i];
-	}, 
 	getName : function() {
 		return this.name;
 	},
 	getDataInterfaceCount : function () {
-		return this.dataInterfaces.length();
+		return this.dataInterfaces.length;
 	},
 	getDataInterface : function (i) {
 		if (typeof i == "undefined") {
@@ -206,10 +194,6 @@ SparqlConnection.prototype = {
 		}
 		
 	},
-	getDataName : function (i) {
-		return this.dataNames[i];
-	},
-
 	//---------- private function
 	createInterface : function (stype, url, dataset) {
 		if (stype == SparqlConnection.FUSEKI_SERVER) {
@@ -231,7 +215,6 @@ SparqlConnection.prototype = {
 		this.serverType = this.modelInterfaces[0].getServerType()
 		this.ontologyServerUrl = this.modelInterfaces[0].getServerURL();
 		this.ontologySourceDataset = this.modelInterfaces[0].getDataset();
-		this.domain = this.modelDomains[0];
 		this.dataServerUrl = this.dataInterfaces[0].getServerURL();
 		this.dataSourceDataset = this.dataInterfaces[0].getDataset();
 				
@@ -285,12 +268,6 @@ SparqlConnection.prototype = {
 		
 		this.dataInterfaces = [this.createInterface(this.depServerType, url, dataset)];
 		this.dataNames=[""];
-	},
-	// DEPRECATED
-	getDomain : function () {
-		console.log("Note: called deprecated SparqlConnection.getDomain();");
-		return this.modelDomains[0];
-	},
-	
+	}
 };
 

@@ -71,6 +71,7 @@ require([
 			// Establish Sparql Connection in gConn, using g		
 			gConn = new SparqlConnection();
 			gConn.setName(g.conn.name);
+			gConn.setDomain(g.conn.domain);
 			var serverType = SparqlConnection.VIRTUOSO_SERVER;
 	
 			// backwards-compatible single connection
@@ -78,15 +79,12 @@ require([
 				gConn.addDataInterface(	
 						serverType,
 						g.conn.serverURL,
-						g.conn.dataset,
-						""
+						g.conn.dataset
 						);
 				gConn.addModelInterface(
 						serverType,
 						g.conn.serverURL,
-						g.conn.dataset,
-						g.conn.domain,
-						""
+						g.conn.dataset
 						);
 				
 			// newer double connection
@@ -96,15 +94,13 @@ require([
 				gConn.addDataInterface(	
 						serverType,
 						g.conn.dataServerURL,
-						g.conn.dataDataset,
-						""
+						g.conn.dataDataset
 						);
 				gConn.addModelInterface(
 						serverType,
 						g.conn.ontologyServerURL,
 						g.conn.ontologyDataset,
-						g.conn.domain,
-						""
+						g.conn.domain
 						);
 			} else {
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
@@ -476,7 +472,7 @@ require([
 			}
 			
 			// get info on the dropped Node
-			var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getModelDomain(0), true);
+			var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getDomain(), true);
 			
 			if (itemSNode == null) {
 				alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add " + classObj.getNameStr());
@@ -492,7 +488,7 @@ require([
 			// So get the childSNode
 			if (!item) {
 				var nodeItem = itemSNode.getNodeItemByKeyname(itemKeyName);
-				childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getModelDomain(0), true);
+				childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getDomain(), true);
 				if (itemSNode == null) {
 					alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add the child node " + nodeItem.getUriValueType());
 					return;

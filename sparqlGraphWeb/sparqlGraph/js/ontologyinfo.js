@@ -715,9 +715,14 @@ OntologyInfo.prototype = {
 	loadAsync : function(conn, statusCallback, successCallback, failureCallback) {
 		// loadAsync() is for backwards compatibility.   
 		// Please use load() instead.
-
-		this.load(conn.getDomain(), conn.getOntologyInterface(), statusCallback, successCallback, failureCallback);
+		console.log("OntologyInfo.loadAsync(): called DEPRECATED function.  Use load()");
+		this.load(conn.getDomain(), conn.getModelInterface(0), statusCallback, successCallback, failureCallback);
 		
+    },
+    
+    loadSparqlConnection : function(conn, queryServiceUrl, statusCallback, successCallback, failureCallback, optRecursionIndex) {
+    	throw new Error("This is implemented in backcompatutils.js");
+    	
     },
     
     load : function (domain, interfaceOrClient, statusCallback, successCallback, failureCallback) {

@@ -133,7 +133,7 @@
     			if ( gOInfo.containsClass(gDragLabel) ){
     				// the class was found. let's use it.
     				var nodelist = gNodeGroup.getArrayOfURINames();
-    				var paths = gOInfo.findAllPaths(gDragLabel, nodelist, gConn.getModelDomain(0));
+    				var paths = gOInfo.findAllPaths(gDragLabel, nodelist, gConn.getDomain());
     				logEvent("SG Drop Class", "label", gDragLabel);
     				
     				// Handle no paths or shift key during drag: drop node with no connections
@@ -446,14 +446,19 @@
     };
     
     doLoadFailure = function(msg) {
-    	logAndAlert(msg);
-    	setStatus("");    		
-    	clearTree();
-    	gOInfo = new OntologyInfo();
-	    gOInfoLoadTime = new Date();
-    	
-    	gMappingTab.updateNodegroup(gNodeGroup);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+    	require(['sparqlgraph/js/ontologyinfo'], 
+   	         function () {
+    		
+	    	logAndAlert(msg);
+	    	setStatus("");    		
+	    	clearTree();
+	    	gOInfo = new OntologyInfo();
+		    gOInfoLoadTime = new Date();
+	    	
+	    	gMappingTab.updateNodegroup(gNodeGroup);
+			gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+		
+    	});
  		// retains gConn
     };
     
@@ -462,8 +467,10 @@
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
     	
     	require(['sparqlgraph/js/msiclientquery',
+    	         'sparqlgraph/js/ontologyinfo',
+    	         'sparqlgraph/js/backcompatutils',
     	         'jquery', 
-    	         'jsonp'], function(MsiClientQuery) {
+    	         'jsonp'], function(MsiClientQuery, OntologyInfo, BCUtils) {
     		
     		
 	    	// Clean out existing GUI
@@ -483,7 +490,9 @@
     			
     		} else {
 		    	// load ontology via microservice
-				gOInfo.load(gConn.getModelDomain(0), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+    			BCUtils.loadSparqlConnection(gOInfo, gConn, g.service.sparqlQuery.url, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+
+				//gOInfo.load(gConn.getDomain(), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
     		}
     	});
     };
@@ -670,13 +679,13 @@
    	doTest = function () {
    		
 	   	 // test move OptionalsUpstream and generateSparql2
-   		
+  		
 	   	 var qElem = document.getElementById("queryText");
 	   	 gNodeGroup.expandOptionalSubgraphs();
 	     document.getElementById('queryText').value = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 50);
 	
 	     guiQueryNonEmpty();	
-   	};
+  	};
    	
    	doLayout = function() {
    		setStatus("Laying out graph...");
