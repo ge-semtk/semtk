@@ -397,7 +397,7 @@ public class NodeGroup {
 		this.resolveSparqlIdCollisions(jobj, changedHash);
 		int version = Integer.parseInt(jobj.get("version").toString());
 		if (version > NodeGroup.VERSION) {
-			throw new Exception ("Nodegroup was created by a version > " + String.valueOf(NodeGroup.VERSION));
+			throw new Exception (String.format("This software reads NodeGroups through version %d.  Can't read version %d.", NodeGroup.VERSION, version));
 		}
 		// attempt to add the nodes, using "changedHash" as a guide for IDs.
 		this.addJson((JSONArray) jobj.get("sNodeList"), uncompressOInfo); 
