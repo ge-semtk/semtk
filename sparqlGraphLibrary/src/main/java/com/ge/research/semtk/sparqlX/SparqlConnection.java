@@ -72,8 +72,9 @@ public class SparqlConnection {
 		JSONObject jObj = new JSONObject();
 		jObj.put("name", name);
 		jObj.put("domain", name);
-		jObj.put("model", new JSONArray());
-		jObj.put("data", new JSONArray());
+		
+		JSONArray model = new JSONArray();
+		JSONArray data = new JSONArray();
 
 		for (int i=0; i < this.modelInterfaces.size(); i++) {
 			SparqlEndpointInterface mi = this.modelInterfaces.get(i);
@@ -81,7 +82,7 @@ public class SparqlConnection {
 			inner.put("type", mi.getServerType());
 			inner.put("url", mi.getGetURL());
 			inner.put("dataset", mi.getDataset());
-			jObj.put("model", inner);
+			model.add(inner);
 		}
 		
 		for (int i=0; i < this.dataInterfaces.size(); i++) {
@@ -90,8 +91,12 @@ public class SparqlConnection {
 			inner.put("type", di.getServerType());
 			inner.put("url", di.getGetURL());
 			inner.put("dataset", di.getDataset());
-			jObj.put("data", inner);
+			data.add(inner);
 		}
+		
+		jObj.put("model", model);
+		jObj.put("data", data);
+		
 		return jObj;
 	}
 	
@@ -201,6 +206,56 @@ public class SparqlConnection {
 			return this.dataInterfaces.get(i);
 	}
 
+	// Is number of endpoint serverURLs == 1
+	public boolean isSingleServerURL() {
+		String url = "";
+		for (int i=0; i < this.modelInterfaces.size(); i++) {
+			String e =  this.modelInterfaces.get(i).getServerAndPort();
+			if (url.equals("")) {
+				url = e;
+			} else if (! e.equals(url)) {
+				return false;
+			}
+		}
+		
+		// add data interfaces
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			String e =  this.dataInterfaces.get(i).getServerAndPort();
+			if (url.equals("")) {
+				url = e;
+			} else if (! e.equals(url)) {
+				return false;
+			}
+		}
+		
+		// if there are no serverURLs then false
+		if (url.equals("")) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	// get list of datasets for a given serverURL
+	public ArrayList<String> getDatasetsForServer(String serverURL) {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (int i=0; i < this.modelInterfaces.size(); i++) {
+			SparqlEndpointInterface e =  this.modelInterfaces.get(i);
+			if (e.getServerAndPort().equals(serverURL) &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.add(e.getDataset());
+			}
+		}
+		
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			SparqlEndpointInterface e =  this.dataInterfaces.get(i);
+			if (e.getServerAndPort().equals(serverURL)  &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.add(e.getDataset());
+			}
+		}
+		
+		return ret;
+	}
 
 	//---------- private function
 	private SparqlEndpointInterface createInterface(String stype, String url, String dataset) throws Exception{

@@ -41,6 +41,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class NodeGroup {
 	private static final int VERSION = 4;
@@ -50,6 +51,7 @@ public class NodeGroup {
 	private ArrayList<Node> orphanOnCreate = new ArrayList<Node>();
 	private HashMap<String, String> prefixHash = new HashMap<String, String>();
 	private int prefixNumberStart = 0;
+	private SparqlConnection conn = null;
 	
 	public NodeGroup(){
 		this.sparqlNameHash = new HashMap<String, String>();
@@ -61,11 +63,20 @@ public class NodeGroup {
 	
 	/**
 	 * Create a NodeGroup from JSON
+	 * 
+	 * DANGER: no connection info, which is now required for multi-graph sparql generation
+	 *         Strongly consider using SparqlGraphJson.getNodeGroup()
 	 */
 	public static NodeGroup getInstanceFromJson(JSONObject json) throws Exception {
 		return NodeGroup.getInstanceFromJson(json, null);
 	}
 	
+	/**
+	 * Create a NodeGroup from JSON
+	 * 
+	 * DANGER: no connection info, which is now required for multi-graph sparql generation
+	 *         Strongly consider using SparqlGraphJson.getNodeGroup()
+	 */
 	public static NodeGroup getInstanceFromJson(JSONObject json, OntologyInfo uncompressOInfo) throws Exception{
 		NodeGroup nodegroup = new NodeGroup();
 		nodegroup.addJsonEncodedNodeGroup(json, uncompressOInfo);
@@ -239,6 +250,12 @@ public class NodeGroup {
 	public static NodeGroup deepCopy(NodeGroup nodegroup) throws Exception {
 		NodeGroup copy = new NodeGroup();
 		copy.addJsonEncodedNodeGroup(nodegroup.toJson());
+		
+		// connection
+		SparqlConnection conn = new SparqlConnection();
+		conn.fromJson(nodegroup.conn.toJson());
+		copy.setSparqlConnection(conn);
+		
 		return copy;
 	}
 	
@@ -665,14 +682,9 @@ public class NodeGroup {
 			// loop through ordered nodes and add return names to the sparql
 			for(Node n : orderedNodes) {
 				
-				
 				// check if node URI is returned
 				if (n.getIsReturned()) {
 					sparql.append(" ").append(n.getSparqlID());
-					
-				}
-				else{
-					
 				}
 				
 				// add all the returned props
@@ -688,9 +700,13 @@ public class NodeGroup {
 			}
 		}
 		
+		// if there are no return values, it is an error. Prepend "#Error" to
+		// the SPARQL
 		if (sparql.toString().equals("select distinct")) {
 			throw new Exception("No values selected to return");
 		}
+		
+		sparql.append(this.generateSparqlFromClause(tab));
 		
 		sparql.append(" where {\n");
 		
@@ -727,6 +743,38 @@ public class NodeGroup {
 		return retval;
 	}
 
+	/**
+	 * Very simple FROM clause logic
+	 * Generates FROM clause if this.conn has
+	 *     - exactly 1 serverURL
+	 *     - more than one datasets (graphs)
+	 */
+	private String generateSparqlFromClause(String tab) {
+		
+		// do nothing if no conn
+		if (this.conn == null) return "";
+		
+		// multiple ServerURLs is not implemented
+		if (! this.conn.isSingleServerURL() ) {
+			throw new Error("SPARQL generation across multiple servers is not yet supported.");
+		}
+		
+		// get datasets for first model server.  All others must be equal
+		ArrayList<String> datasets = this.conn.getDatasetsForServer(this.conn.getModelInterface(0).getServerAndPort());
+		
+		if (datasets.size() < 2) return "";
+		
+		StringBuilder sparql = new StringBuilder().append("\n");
+		// multiple datasets: generate FROM clause
+		tab = tabIndent(tab);
+		for (int i=0; i < datasets.size(); i++) {
+			sparql.append(tab + "FROM <" + datasets.get(i) + ">\n");
+		}
+		tab = tabOutdent(tab);
+		
+		return sparql.toString();
+	}
+	
 	public String generateSparqlConstruct() throws Exception{
 	
 		this.buildPrefixHash();
@@ -1389,6 +1437,10 @@ public class NodeGroup {
 		Node node = this.returnBelmontSemanticNode(classUri, oInfo);
 		this.addOneNode(node, null, null, null);
 		return node;
+	}
+	
+	public void setSparqlConnection(SparqlConnection sparqlConn) {
+		this.conn = sparqlConn;
 	}
 	
 	public int getNodeCount() {

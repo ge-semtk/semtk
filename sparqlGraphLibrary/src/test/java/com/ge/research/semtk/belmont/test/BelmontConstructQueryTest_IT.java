@@ -44,7 +44,7 @@ public class BelmontConstructQueryTest_IT {
 	@Test
 	public void testConstructQuery1() throws Exception{
 			
-		NodeGroup ng = NodeGroup.getInstanceFromJson(sgJson.getSNodeGroupJson());
+		NodeGroup ng = sgJson.getNodeGroup();
 		SparqlEndpointInterface sei = sgJson.getDataInterface();
 
 		String query = ng.generateSparqlConstruct();

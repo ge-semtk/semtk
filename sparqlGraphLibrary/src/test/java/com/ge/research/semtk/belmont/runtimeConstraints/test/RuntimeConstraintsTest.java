@@ -25,7 +25,7 @@ public class RuntimeConstraintsTest {
 	
 	private void setup() throws Exception{
 		SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(testJsonString);
-		ng = sparqlGraphJson.getNodeGroupCopy();	
+		ng = sparqlGraphJson.getNodeGroup();	
 		runtimeConstraintsJSON = sparqlGraphJson.getRuntimeConstraintsJson();
 	}
 	

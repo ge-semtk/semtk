@@ -68,7 +68,7 @@ public class DataLoader {
 		
 		this.oInfo = sgJson.getOntologyInfo();
 						
-		this.master = sgJson.getNodeGroupCopy(this.oInfo);
+		this.master = sgJson.getNodeGroup(this.oInfo);
 		
 		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize);		
 	}

@@ -104,16 +104,18 @@ public class SparqlGraphJson {
 	 * @return NodeGroup - could be null
 	 * @throws Exception
 	 */
-	public NodeGroup getNodeGroupCopy() throws Exception {
-		return this.getNodeGroupCopy(null);
+	public NodeGroup getNodeGroup() throws Exception {
+		return this.getNodeGroup(null);
 	}
 	
-	public NodeGroup getNodeGroupCopy(OntologyInfo uncompressOInfo) throws Exception {
+	public NodeGroup getNodeGroup(OntologyInfo uncompressOInfo) throws Exception {
 		JSONObject json = getSNodeGroupJson();
 		if (json == null) {
 			return null;
 		} else {
-			return NodeGroup.getInstanceFromJson(json, uncompressOInfo);
+			NodeGroup ng = NodeGroup.getInstanceFromJson(json, uncompressOInfo);
+			ng.setSparqlConnection(this.getSparqlConn());
+			return ng;
 		}
 	}
 	

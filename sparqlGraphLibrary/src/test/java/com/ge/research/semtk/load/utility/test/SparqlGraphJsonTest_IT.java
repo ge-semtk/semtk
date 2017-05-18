@@ -29,8 +29,8 @@ public class SparqlGraphJsonTest_IT {
 		String jsonPath = "src/test/resources/sampleBatteryTestDeflate.json";
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		OntologyInfo oInfo = sgJson.getOntologyInfo();
-		NodeGroup nodegroupDeflated = sgJson.getNodeGroupCopy();
-		NodeGroup nodegroupInflated = sgJson.getNodeGroupCopy(oInfo);
+		NodeGroup nodegroupDeflated = sgJson.getNodeGroup();
+		NodeGroup nodegroupInflated = sgJson.getNodeGroup(oInfo);
 		
 		// ?Cell_1->cellId was missing from input but re-inflated properly
 		assertTrue(nodegroupDeflated.getNodeBySparqlID("?Cell_1").getPropertyItems().size() == 0);
@@ -83,7 +83,7 @@ public class SparqlGraphJsonTest_IT {
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(files[i]);
 			OntologyInfo oInfo = sgJson.getOntologyInfo();
 			try {
-				sgJson.getNodeGroupCopy(oInfo);
+				sgJson.getNodeGroup(oInfo);
 				assertTrue("Did not throw exception inflating " + files[i], false);
 			} catch (Exception e) {
 				assertTrue(e.getMessage().contains(msg[i]));

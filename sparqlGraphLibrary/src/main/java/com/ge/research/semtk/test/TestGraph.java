@@ -173,7 +173,7 @@ public class TestGraph {
 	 */
 	public static NodeGroup getNodeGroup(String jsonFilename) throws Exception {
 		
-		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroupCopy();
+		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroup();
 	}
 	
 	/**
