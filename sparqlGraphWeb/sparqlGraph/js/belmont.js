@@ -1514,6 +1514,9 @@ var SemanticNodeGroup = function(width, height, divName) {
 	                         // So I set this flag to false and skip drawing.
 	                         // JUSTIN / PAUL TODO.  Untangle this mess.
 	
+	this.conn = null;       // optional relevant SparqlConnection.
+	                        // this will need to be non-optional and expanded in the upcoming versions.
+	
 	this.prefixHash = {};
 	this.prefixNumberStart = 0;
 	
@@ -1570,8 +1573,7 @@ SemanticNodeGroup.prototype = {
 		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
 		
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
-			// TODO: do something smarter
-			console.log("Nodegroup json was created by a newer version of SemTK.");
+			throw new Error("SemanticNodeGroup.addJson only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
 		}
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
@@ -1715,6 +1717,12 @@ SemanticNodeGroup.prototype = {
 		// maybe less efficient but keeps avoids double implementation - Paul
 		var ret = new SemanticNodeGroup(this.width, this.height, this.divName);
 		ret.addJson(this.toJson());
+		
+		// connection
+		var conn = new SparqlConnection();
+		conn.fromJson(nodegroup.conn.toJson());
+		ret.setSparqlConnection(conn);
+		
 		ret.drawable = false;     // TODO: automatically make it illegal to draw a copy to get around raphael draw bugs.
 		return ret;
 	},
@@ -1951,6 +1959,10 @@ SemanticNodeGroup.prototype = {
 	setAsyncSNodeEditor : function (func) {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
 		this.asyncSNodeEditor = func;
+	},
+	
+	setSparqlConnection : function (sparqlConn) {
+		this.conn = sparqlConn;
 	},
 	
 	getNodeCount : function() {
@@ -2677,6 +2689,8 @@ SemanticNodeGroup.prototype = {
 			sparql = "#Error: No values selected for return.\n" + sparql;
 		}
 
+		sparql += this.generateSparqlFromClause(tab);
+		
 		sparql += " where {\n";
 
 		var doneNodes = [];
@@ -2706,6 +2720,39 @@ SemanticNodeGroup.prototype = {
 
 		//sparql = fmt.prefixQuery(sparql);
 		console.log("Built SPARQL query:\n" + sparql);
+		return sparql;
+	},
+	
+	/**
+	 * Very simple FROM clause logic
+	 * Generates FROM clause if this.conn has
+	 *     - exactly 1 serverURL
+	 *     - more than one datasets (graphs)
+	 */
+	generateSparqlFromClause : function (tab) {
+		
+		
+		// do nothing if no conn
+		if (this.conn == null) return "";
+		
+		// multiple ServerURLs is not implemented
+		if (! this.conn.isSingleServerURL() ) {
+			throw new Error("SPARQL generation across multiple servers is not yet supported.");
+		}
+		
+		// get datasets for first model server.  All others must be equal
+		var datasets = this.conn.getDatasetsForServer(this.conn.getModelInterface(0).getServerURL());
+		
+		if (datasets.length < 2) return "";
+		
+		var sparql = "\n";
+		// multiple datasets: generate FROM clause
+		tab = this.tabIndent(tab);
+		for (var i=0; i < datasets.length; i++) {
+			sparql += tab + "FROM <" + datasets[i] + ">\n";
+		}
+		tab = this.tabOutdent(tab);
+		
 		return sparql;
 	},
 	
@@ -3162,6 +3209,7 @@ SemanticNodeGroup.prototype = {
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.drawNodes();
 		this.sparqlNameHash = {};
+		this.conn = null;
 
 	},
 	

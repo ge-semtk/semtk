@@ -194,6 +194,58 @@ SparqlConnection.prototype = {
 		}
 		
 	},
+	
+	// Is number of endpoint serverURLs == 1
+	isSingleServerURL : function() {
+		var url = "";
+		for (var i=0; i < this.modelInterfaces.length; i++) {
+			var e =  this.modelInterfaces[i].getServerURL();
+			if (url == "") {
+				url = e;
+			} else if (e != url) {
+				return false;
+			}
+		}
+		
+		// add data interfaces
+		for (var i=0; i < this.dataInterfaces.length; i++) {
+			var e =  this.dataInterfaces[i].getServerURL();
+			if (url == "") {
+				url = e;
+			} else if (e != url) {
+				return false;
+			}
+		}
+		
+		// if there are no serverURLs then false
+		if (url == "") {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	
+	// get list of datasets for a given serverURL
+	getDatasetsForServer : function(serverURL) {
+		var ret = [];
+		
+		for (var i=0; i < this.modelInterfaces.length; i++) {
+			var e =  this.modelInterfaces[i];
+			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.push(e.getDataset());
+			}
+		}
+		
+		for (var i=0; i < this.dataInterfaces.length; i++) {
+			var e =  this.dataInterfaces[i];
+			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.push(e.getDataset());
+			}
+		}
+		
+		return ret;
+	},
+	
 	//---------- private function
 	createInterface : function (stype, url, dataset) {
 		if (stype == SparqlConnection.FUSEKI_SERVER) {

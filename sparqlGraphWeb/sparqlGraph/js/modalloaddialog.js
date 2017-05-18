@@ -365,25 +365,20 @@ ModalLoadDialog.prototype = {
 		}
 		conn.setDomain(domain);
 		
-		conn.addDataInterface(	
-				serverType,
-				this.document.getElementById("mdDataServerURL").value.trim(),
-				this.document.getElementById("mdDataSource").value.trim(),
-				);
+		var modelURL = this.document.getElementById("mdOntologyServerURL").value.trim();
+		var modelKsURL = "";
+		var modelDataset = this.document.getElementById("mdOntologySource").value.trim();
+		var dataURL = this.document.getElementById("mdDataServerURL").value.trim();
+		var dataKsURL = "";
+		var dataDataset = this.document.getElementById("mdDataSource").value.trim();
+		
+		conn.addDataInterface(serverType,dataURL,dataDataset);
 		
 		// If ontology stuff is empty, set it to same as data stuff
-		if (conn.ontologyServerUrl == "" && conn.ontologyKsServerURL == "" && conn.ontologySourceDataset == "") {
-			conn.addModelInterface(
-					serverType,
-					this.document.getElementById("mdDataServerURL").value.trim(),
-					this.document.getElementById("mdDataSource").value.trim(),
-					);
+		if (modelURL == "" && modelDataset == "") {
+			conn.addModelInterface(serverType,dataURL,dataDataset);
 		} else {
-			conn.addModelInterface(
-					serverType,
-					this.document.getElementById("mdOntologyServerURL").value.trim(),
-					this.document.getElementById("mdOntologySource").value.trim(),
-					);
+			conn.addModelInterface(serverType,modelURL,modelDataset);
 		}
 		
 		return conn;

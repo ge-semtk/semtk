@@ -105,7 +105,8 @@ require([
 			} else {
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
 			}
-
+			
+			gNodeGroup.setSparqlConnection(gConn);
 		};
 
 		setStatus = function(msg) {

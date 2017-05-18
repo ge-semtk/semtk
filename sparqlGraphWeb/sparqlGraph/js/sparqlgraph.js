@@ -478,8 +478,8 @@
 	    	
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
-	    	gQueryClient =       new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(0));
-	    	var ontQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getModelInterface(0), logAndAlert);
+	    	gNodeGroup.setSparqlConnection(gConn);
+	    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(0));
 	    	
 	    	logEvent("SG Loading", "connection", gConn.toString());
     		
@@ -491,8 +491,6 @@
     		} else {
 		    	// load ontology via microservice
     			BCUtils.loadSparqlConnection(gOInfo, gConn, g.service.sparqlQuery.url, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-
-				//gOInfo.load(gConn.getDomain(), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
     		}
     	});
     };
@@ -517,9 +515,7 @@
 	    		}
 	    		
 	    		try {
-	    			var grpJson = sgJson.getSNodeGroupJson();
 	    			var conn = sgJson.getSparqlConn();
-	    			var importJson = sgJson.getMappingTabJson();
 	    			
 	    			
 	    			// ask user to confirm if load will cause a connection switch
@@ -550,7 +546,7 @@
 	    				// now load the right connection, then load the file
 	    				doLoadConnection(conn, 
 	    								 function (){
-	    									doQueryLoadFile2(grpJson, importJson);
+	    									doQueryLoadFile2(sgJson);
 	    								 });
 	    				
 	    				
@@ -558,7 +554,7 @@
 			        	
 	    				// Go straight to loading the nodegroup, 
 	    				// since the conn and oInfo are already OK
-			        	doQueryLoadFile2(grpJson, importJson);
+			        	doQueryLoadFile2(sgJson);
 	    			}
 		    		
 	    		} catch (e) {
@@ -576,17 +572,17 @@
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
-    doQueryLoadFile2 = function(grpJson, importJson) {
+    doQueryLoadFile2 = function(sgJson) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
-    	
     	clearGraph();
     	logEvent("SG Loaded Nodegroup");
-		gNodeGroup.addJson(grpJson, gOInfo); 
+    	sgJson.getNodeGroup(gNodeGroup, gOInfo);
+	
 		gNodeGroup.drawNodes();
 		guiGraphNonEmpty();
 		
-		gMappingTab.load(gNodeGroup, importJson);
+		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
     };
     
     doNodeGroupUploadCallback = function (evt) {
