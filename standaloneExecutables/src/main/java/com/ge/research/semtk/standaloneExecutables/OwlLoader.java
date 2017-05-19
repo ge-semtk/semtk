@@ -59,7 +59,7 @@ public class OwlLoader {
 			SparqlEndpointInterface sei;
 			try{
 				SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(connectionJSONFilePath));
-				sei = sgJson.getSparqlConn().getOntologyInterface();
+				sei = sgJson.getSparqlConn().getModelInterface(0);
 				sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
 				
 				System.out.println("Ontology Dataset: " + sei.getDataset());
