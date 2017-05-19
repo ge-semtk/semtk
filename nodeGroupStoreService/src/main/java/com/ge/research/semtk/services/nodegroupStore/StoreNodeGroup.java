@@ -97,10 +97,6 @@ public class StoreNodeGroup {
 		SparqlConnection tempConn = new SparqlConnection();
 		tempConn.fromJson(connectionInfo);
 		
-		if (tempConn.getDataInterfaceCount() != 1) {
-			throw new Exception("Storing connectionInfo with multiple data graphs is not implemented.");
-		}
-		
 		// get the Data and Knowledge Service URLS:
 		// the knowledge one can be blank if they are the same. in that case, make sure to use the same value for both, rather than leaving it up to guesswork.
 		String dsInfo = tempConn.getDataInterface(0).getDataset();

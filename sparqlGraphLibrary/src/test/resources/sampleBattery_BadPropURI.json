@@ -1,6 +1,12 @@
 {
 	"sparqlConn": {
 		
+		"name": "whatever",
+		"type": "virtuoso",
+		"dsURL": "http://whatever:2420",
+		"dsKsURL": "",
+		"dsDataset": "whatever",
+		"domain": "whatever"
 	},
 	"sNodeGroup": {
 		"version": 1,
