@@ -97,16 +97,22 @@ public class StoreNodeGroup {
 		SparqlConnection tempConn = new SparqlConnection();
 		tempConn.fromJson(connectionInfo);
 		
+		if (tempConn.getDataInterfaceCount() != 1) {
+			throw new Exception("Storing connectionInfo with multiple data graphs is not implemented.");
+		}
+		
 		// get the Data and Knowledge Service URLS:
 		// the knowledge one can be blank if they are the same. in that case, make sure to use the same value for both, rather than leaving it up to guesswork.
-		String dsInfo = tempConn.getDataSourceDataset();
-		String ksInfo = tempConn.getDataSourceKnowledgeServiceURL();
+		String dsInfo = tempConn.getDataInterface(0).getDataset();
+		String ksInfo = ""; // tempConn.getDataSourceKnowledgeServiceURL();
+		String datasourceURL = tempConn.getDataInterface(0).getServerAndPort();
+		String serverType = tempConn.getDataInterface(0).getServerType();
 		
-		if(ksInfo == null || ksInfo.length() == 0 || ksInfo.isEmpty()) { ksInfo = dsInfo; }
+		//if(ksInfo == null || ksInfo.length() == 0 || ksInfo.isEmpty()) { ksInfo = dsInfo; }
 		
 		String retval = id + ",\"" + escapeQuotes(ng.toJSONString()) 
-				+ "\",\"" + escapeQuotes(comments) + "\"," + tempConn.getConnectionName() + "," + tempConn.getDomain() + "," + dsInfo + "," +
-				ksInfo  + "," + tempConn.getDataSourceURL() + "," + tempConn.getServerType();
+				+ "\",\"" + escapeQuotes(comments) + "\"," + tempConn.getName() + "," + tempConn.getDomain() + "," + dsInfo + "," +
+				ksInfo  + "," + datasourceURL + "," + serverType;
 		
 		return retval;	// ready to ship it all out. 
 	}

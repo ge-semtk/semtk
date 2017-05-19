@@ -34,7 +34,7 @@ public class DetailedOntologyInfoRequestBody {
 		this.domain = domain;
 	}
 	
-	public SparqlConnection getConnection(){
+	public SparqlConnection getConnection() throws Exception {
 		SparqlConnection retval = new SparqlConnection("ontologyConnection", this.serverType, this.url, "", this.dataset, this.domain);
 		return retval;
 	}
