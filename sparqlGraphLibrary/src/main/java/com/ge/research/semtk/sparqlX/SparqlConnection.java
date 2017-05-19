@@ -71,7 +71,7 @@ public class SparqlConnection {
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
 		jObj.put("name", name);
-		jObj.put("domain", name);
+		jObj.put("domain", domain);
 		
 		JSONArray model = new JSONArray();
 		JSONArray data = new JSONArray();
@@ -80,7 +80,7 @@ public class SparqlConnection {
 			SparqlEndpointInterface mi = this.modelInterfaces.get(i);
 			JSONObject inner = new JSONObject();
 			inner.put("type", mi.getServerType());
-			inner.put("url", mi.getGetURL());
+			inner.put("url", mi.getServerAndPort());
 			inner.put("dataset", mi.getDataset());
 			model.add(inner);
 		}
@@ -89,7 +89,7 @@ public class SparqlConnection {
 			SparqlEndpointInterface di = this.dataInterfaces.get(i);
 			JSONObject inner = new JSONObject();
 			inner.put("type", di.getServerType());
-			inner.put("url", di.getGetURL());
+			inner.put("url", di.getServerAndPort());
 			inner.put("dataset", di.getDataset());
 			data.add(inner);
 		}

@@ -163,6 +163,7 @@ public class SparqlGraphJson {
 		jObj.remove("sparqlConn");					// remove the older one
 		jObj.put("sparqlConn", conn.toJson());		// add the new one.
 		this.conn = conn;							// insert the new one.
+		this.oInfo = null;
 	}
 	
 	public void parse(String jsonString) throws Exception {

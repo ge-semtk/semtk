@@ -54,5 +54,13 @@ public class SparqlConnectionTest {
 		assertTrue(conn.isSingleServerURL());
 		assertEquals(conn.getDatasetsForServer(conn.getModelInterface(0).getServerAndPort()).size(), 2);
 	}
+	
+	@Test
+	public void JsonAndEquals() throws Exception {
+		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/TedDevAndBattery.json"));
+		SparqlConnection conn = sgJson.getSparqlConn();
+		SparqlConnection copy = new SparqlConnection(conn.toString());
+		assertTrue(copy.equals(conn, false));
+	}
 
 }

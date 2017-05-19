@@ -153,6 +153,9 @@ public abstract class SparqlEndpointInterface {
 		return password;
 	}
 
+	public void setDataset(String dataset) {
+		this.dataset = dataset;
+	}
 
 	public abstract String getServerType();
 	
