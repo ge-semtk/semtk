@@ -673,7 +673,7 @@
    		
 	   	 var qElem = document.getElementById("queryText");
 	   	 gNodeGroup.expandOptionalSubgraphs();
-	     document.getElementById('queryText').value = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 50);
+	     document.getElementById('queryText').value = gNodeGroup.generateSparqlDelete(null, null);
 	
 	     guiQueryNonEmpty();	
    	};

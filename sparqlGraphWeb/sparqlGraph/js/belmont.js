@@ -845,7 +845,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 		this.isRuntimeConstrained = false;
 		this.valueConstraint = "";
 		this.instanceValue = null;
-		this.deleteMode = NodeDeletionTypes.NO_DELETE; 
+		this.deletionMode = getNodeDeletionTypeName(NodeDeletionTypes.NO_DELETE); 
 	}
 	this.node = setNode(this); // the dracula node used in this Semantic Node.
 								// this is the thing that gets drawn
@@ -928,7 +928,7 @@ SemanticNode.prototype = {
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;	
-		this.isRuntimeConstrained = jObj.hasOwnProperty("deletionMode") ? jObj.deletionMode : NodeDeletionTypes.NO_DELETE;
+		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? jObj.deletionMode : NodeDeletionTypes.NO_DELETE;
 		
 		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {
@@ -1575,19 +1575,19 @@ SemanticNode.prototype = {
 };
 
 /* Node Deletion types */
-var NodeDeletionTypes = function(){
-	NodeDeletionTypes.NO_DELETE = 0;
-	NodeDeletionTypes.TYPE_INFO_ONLY = 1;
-	NodeDeletionTypes.FULL_DELETE = 2;
-	NodeDeletionTypes.LIMITED_TO_NODEGROUP = 3;
-	NodeDeletionTypes.LIMITED_TO_MODEL = 4;
+var NodeDeletionTypes = {
+	NO_DELETE : 0,
+	TYPE_INFO_ONLY : 1,
+	FULL_DELETE : 2,
+	LIMITED_TO_NODEGROUP : 3,
+	LIMITED_TO_MODEL : 4,
 };
 
 var getNodeDeletionTypeName = function(delVal){
 	
 	if(delVal === NodeDeletionTypes.NO_DELETE)				{ return "NO_DELETE";}
 	if(delVal === NodeDeletionTypes.TYPE_INFO_ONLY)			{ return "TYPE_INFO_INFO";}
-	if(delVal === NodeDeletionTypes.FULL_DELETE)			{ return "FULL_DELETE";}
+	if(delVal === NodeDeletionTypes.FULL_DELETE)		    	{ return "FULL_DELETE";}
 	if(delVal === NodeDeletionTypes.LIMITED_TO_NODEGROUP)	{ return "LIMITED_TO_NODEGROUP";}
 	if(delVal === NodeDeletionTypes.LIMITED_TO_MODEL)		{ return "LIMITED_TO_MODEL";}
 	
@@ -1599,7 +1599,7 @@ var getNodeDeletionTypeByName = function(delVal){
 	
 	if(delVal === "NO_DELETE")				{ return 0;}
 	if(delVal === "TYPE_INFO_ONLY")			{ return 1;}
-	if(delVal === "FULL_DELETE")			{ return 2;}
+	if(delVal === "FULL_DELETE")  			{ return 2;}
 	if(delVal === "LIMITED_TO_NODEGROUP")	{ return 3;}
 	if(delVal === "LIMITED_TO_MODEL")		{ return 4;}
 	
@@ -2750,7 +2750,7 @@ SemanticNodeGroup.prototype = {
 			for(var pCount = 0; pCount < n.propList.length; pCount += 1){
 				var pi = n.propList[pCount];
 				if( pi.getIsMarkedForDeletion() ){
-					retval += "    " + n.getSparqlID() + " " + this.getPrefixedUri( pi.getUriRelationship() ) + " " +  pi.getSparqlID() + " . \n";
+					retval += "    " + n.getSparqlID() + " " + this.getPrefixedUri( pi.getUriRelation() ) + " " +  pi.getSparqlID() + " . \n";
 				}
 			}
 			// get the NodeItems
@@ -2775,7 +2775,7 @@ SemanticNodeGroup.prototype = {
 		var indent = "    ";
 		var delMode = getNodeDeletionTypeByName(nodeInScope.getDeletionMode());
 		
-		if(delMode === NodeDeletionTypes.NO_DELETE){
+		if(delMode === NodeDeletionTypes.TYPE_INFO_ONLY){
 			retval += indent + nodeInScope.getSparqlID() + " rdf:type  " + nodeInScope.getSparqlID() + "_type_info . \n";
 		}
 		else if(delMode === NodeDeletionTypes.FULL_DELETE){
@@ -2788,8 +2788,8 @@ SemanticNodeGroup.prototype = {
 			
 			// get all incoming references to this particular node (in the current NodeGroup scope)
 			// and schedule them for removal...
-			for(var ndCounter = 0; ndCounter < this.nodes.length; ndCounter++){
-				var nd = this.nodes[ndCounter];
+			for(var ndCounter = 0; ndCounter < this.SNodeList.length; ndCounter++){
+				var nd = this.SNodeList[ndCounter];
 				
 				// get the node items and check the targets.
 				var connections = nd.getConnectingNodeItems(nodeInScope);
@@ -2808,6 +2808,8 @@ SemanticNodeGroup.prototype = {
 		else {
 			throw new Error("generateNodeDeletionSparql :: node with sparqlID (" + nodeInScope.getSparqlID() + ") has an unimplemented DeletionMode"); 
 		}
+		
+		return retval;
 	},
 	getDeletionWhereBody : function (postFixString, oInfo) {
 		var retval = "";
@@ -2815,7 +2817,7 @@ SemanticNodeGroup.prototype = {
 		var doneNodes = [];
 		var headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
-			sparql += this.generateSparqlSubgraphClauses(SemanticNodeGroup.QUERY_DELETE_WHERE, headNode, null, null, null, doneNodes, "   ");
+			retval += this.generateSparqlSubgraphClauses(SemanticNodeGroup.QUERY_DELETE_WHERE, headNode, null, null, null, doneNodes, "   ");
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 
