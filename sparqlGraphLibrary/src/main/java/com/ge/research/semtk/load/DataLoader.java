@@ -94,6 +94,10 @@ public class DataLoader {
 		this(new SparqlGraphJson(json), bSize, ds, username, password);
 	}
 	
+	public String getDatasetGraphName(){
+		return this.endpoint.getDataset();
+	}
+	
 	public int getTotalRecordsProcessed(){
 		return this.totalRecordsProcessed;
 	}
