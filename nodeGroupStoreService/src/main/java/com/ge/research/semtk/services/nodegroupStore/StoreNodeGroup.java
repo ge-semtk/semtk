@@ -17,6 +17,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 public class StoreNodeGroup {
 
@@ -99,10 +100,11 @@ public class StoreNodeGroup {
 		
 		// get the Data and Knowledge Service URLS:
 		// the knowledge one can be blank if they are the same. in that case, make sure to use the same value for both, rather than leaving it up to guesswork.
-		String dsInfo = tempConn.getDataInterface(0).getDataset();
+		SparqlEndpointInterface sei = tempConn.getDefaultQueryInterface();
+		String dsInfo = sei.getDataset();
 		String ksInfo = ""; // tempConn.getDataSourceKnowledgeServiceURL();
-		String datasourceURL = tempConn.getDataInterface(0).getServerAndPort();
-		String serverType = tempConn.getDataInterface(0).getServerType();
+		String datasourceURL = sei.getServerAndPort();
+		String serverType = sei.getServerType();
 		
 		//if(ksInfo == null || ksInfo.length() == 0 || ksInfo.isEmpty()) { ksInfo = dsInfo; }
 		

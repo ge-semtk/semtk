@@ -195,6 +195,24 @@ SparqlConnection.prototype = {
 		
 	},
 	
+	getDefaultQueryInterface : function () {
+		if (this.dataInterfaces.length > 0) {
+			return this.dataInterfaces[0];
+		} else if (this.modelInterfaces.length > 0) {
+			return this.modelInterfaces[0];
+		} else {
+			throw new Error("This SparqlConnection has no endpoints.");
+		}
+	},
+	
+	getInsertInterface : function () {
+		if (this.dataInterfaces.length == 1) {
+			return this.dataInterfaces.get[0];
+		} else {
+			throw new Error("Expecting one data endpoint for INSERT.  Found " + this.dataInterfaces.length);
+		}
+	},
+	
 	// Is number of endpoint serverURLs == 1
 	isSingleServerURL : function() {
 		var url = "";

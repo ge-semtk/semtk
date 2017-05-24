@@ -45,7 +45,7 @@ public class BelmontConstructQueryTest_IT {
 	public void testConstructQuery1() throws Exception{
 			
 		NodeGroup ng = sgJson.getNodeGroup();
-		SparqlEndpointInterface sei = sgJson.getDataInterface();
+		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 
 		String query = ng.generateSparqlConstruct();
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
@@ -62,7 +62,7 @@ public class BelmontConstructQueryTest_IT {
 	public void testConstructQuery2() throws Exception {		
 		
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/sampleBattery_PlusConstraints.json");		
-		SparqlEndpointInterface sei = sgJson.getDataInterface();			
+		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 		
 		String query = ng.generateSparqlConstruct();
 		

@@ -144,6 +144,10 @@ public class SparqlConnection {
 		// no deprecated field-handling
 	}
 
+	public static SparqlConnection deepCopy(SparqlConnection other) throws Exception {
+		return new SparqlConnection(other.toJson().toString());
+	}
+	
 	public void fromString(String jsonText) throws Exception {
 		JSONParser parser = new JSONParser();
 		JSONObject jObj = (JSONObject) parser.parse(jsonText);
@@ -181,13 +185,23 @@ public class SparqlConnection {
 	public void addDataInterface(String sType, String url, String dataset) throws Exception {
 		this.dataInterfaces.add(this.createInterface(sType, url, dataset));
 	}
+	public void addModelInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
+		this.modelInterfaces.add(this.createInterface(sType, url, dataset, user, passwd));
+	}
 	
+	public void addDataInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
+		this.dataInterfaces.add(this.createInterface(sType, url, dataset, user, passwd));
+	}
 	public int getModelInterfaceCount() {
 		return this.modelInterfaces.size();
 	}
 	
 	public SparqlEndpointInterface getModelInterface(int i) {
 		return this.modelInterfaces.get(i);
+	}
+	
+	public ArrayList<SparqlEndpointInterface> getModelInterfaces() {
+		return this.modelInterfaces;
 	}
 	
 	public String getDomain() {
@@ -205,7 +219,29 @@ public class SparqlConnection {
 	public SparqlEndpointInterface getDataInterface(int i) {
 			return this.dataInterfaces.get(i);
 	}
-
+	
+	public ArrayList<SparqlEndpointInterface> getDataInterfaces() {
+		return this.dataInterfaces;
+	}
+	
+	public SparqlEndpointInterface getDefaultQueryInterface() throws Exception {
+		if (this.dataInterfaces.size() > 0) {
+			return this.dataInterfaces.get(0);
+		} else if (this.modelInterfaces.size() > 0) {
+			return this.modelInterfaces.get(0);
+		} else {
+			throw new Exception("This SparqlConnection has no endpoints.");
+		}
+	}
+	
+	public SparqlEndpointInterface getInsertInterface() throws Exception {
+		if (this.dataInterfaces.size() == 1) {
+			return this.dataInterfaces.get(0);
+		} else {
+			throw new Exception("Expecting one data endpoint for INSERT.  Found " + this.dataInterfaces.size());
+		}
+	}
+	
 	// Is number of endpoint serverURLs == 1
 	public boolean isSingleServerURL() {
 		String url = "";
@@ -263,6 +299,16 @@ public class SparqlConnection {
 			return new FusekiSparqlEndpointInterface(url, dataset);
 		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
 			return new VirtuosoSparqlEndpointInterface(url, dataset);
+		} else {
+			throw new Error("Unsupported SparqlConnection server type: " + stype);
+		}
+	}
+	
+	private SparqlEndpointInterface createInterface(String stype, String url, String dataset, String user, String passwd) throws Exception{
+		if (stype.equals(SparqlConnection.FUSEKI_SERVER)) {
+			return new FusekiSparqlEndpointInterface(url, dataset, user, passwd);
+		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
+			return new VirtuosoSparqlEndpointInterface(url, dataset, user, passwd);
 		} else {
 			throw new Error("Unsupported SparqlConnection server type: " + stype);
 		}

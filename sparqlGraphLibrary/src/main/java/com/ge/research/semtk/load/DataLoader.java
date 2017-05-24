@@ -63,13 +63,17 @@ public class DataLoader {
 		
 		this.batchSize = bSize;
 		
-		this.endpoint = sgJson.getDataInterface();
-		System.out.println("Dataset graph name: " + getDatasetGraphName());
+		SparqlConnection conn = sgJson.getSparqlConn();
+		if (conn.getDataInterfaceCount() != 1) {
+			throw new Exception("Expecting 1 data endpoint interface for inserting.  Found: " + conn.getDataInterfaceCount());
+		}
 		
-		this.oInfo = sgJson.getOntologyInfo();
-						
+		this.endpoint = sgJson.getSparqlConn().getDataInterface(0);
+		
+		System.out.println("Dataset graph name: " + endpoint.getDataset());
+		
+		this.oInfo = sgJson.getOntologyInfo();				
 		this.master = sgJson.getNodeGroup(this.oInfo);
-		
 		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize);		
 	}
 	
@@ -88,10 +92,6 @@ public class DataLoader {
 	
 	public DataLoader(JSONObject json, int bSize, Dataset ds, String username, String password) throws Exception{
 		this(new SparqlGraphJson(json), bSize, ds, username, password);
-	}
-	
-	public String getDatasetGraphName(){
-		return this.endpoint.getDataset();
 	}
 	
 	public int getTotalRecordsProcessed(){

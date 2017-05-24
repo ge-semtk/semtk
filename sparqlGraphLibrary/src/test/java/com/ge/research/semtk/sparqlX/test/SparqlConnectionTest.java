@@ -62,5 +62,13 @@ public class SparqlConnectionTest {
 		SparqlConnection copy = new SparqlConnection(conn.toString());
 		assertTrue(copy.equals(conn, false));
 	}
+	
+	@Test
+	public void DeepCopyTest() throws Exception {
+		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/TedDevAndBattery.json"));
+		SparqlConnection conn = sgJson.getSparqlConn();
+		SparqlConnection copy = SparqlConnection.deepCopy(conn);
+		assertTrue(conn.equals(copy, true));
+	}
 
 }

@@ -36,9 +36,12 @@ import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
 /**
  * OntologyInfo is a class that contains the bulk of the understanding of the actual model.
@@ -79,11 +82,43 @@ public class OntologyInfo {
 	/**
 	 * Constructor that also loads oInfo
 	 */
-	public OntologyInfo(SparqlEndpointInterface endpoint, String domain) throws Exception{
-		load(endpoint, domain);
-		this.modelConnection = new SparqlConnection(UUID.randomUUID().toString(), endpoint.getServerType(), endpoint.getServerAndPort(), null, endpoint.getDataset(), domain); 
+	public OntologyInfo(SparqlConnection conn) throws Exception {
+		this.loadSparqlConnection(conn);
+		this.modelConnection = conn;
+	}
+	
+	/**
+	 * Load via the SparqlQueryClient 
+	 * @param clientConfig - query client config
+	 * @param conn
+	 * @throws Exception
+	 */
+	public OntologyInfo(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception{
+		this.loadSparqlConnection(clientConfig, conn);
+		this.modelConnection = conn;
 	
 	}
+	
+	public void loadSparqlConnection(SparqlConnection conn) throws Exception {
+    	
+		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
+		
+		for (int i = 0; i < modelInterfaces.size(); i++) {
+    		this.load(modelInterfaces.get(i), conn.getDomain());
+    	}
+    }
+
+	public void loadSparqlConnection(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception {
+    	
+		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
+		ArrayList<SparqlQueryClientConfig> configs = clientConfig.getArrayForEndpoints(modelInterfaces);
+		
+		for (int i = 0; i < configs.size(); i++) {
+    		this.load(new SparqlQueryClient(configs.get(i)), conn.getDomain());
+    	}
+    }
+	
+	
 	
 	/**
 	 * add a new class to the ontology info object. this includes information on super/sub classes
@@ -147,6 +182,7 @@ public class OntologyInfo {
 		
 		if(retval == null){ retval = new ArrayList<String>(); } // if it was null, initialize it.
 		
+		// add parent name to retval  &  parent class to superclasses
 		ArrayList<OntologyClass> superclasses = new ArrayList<OntologyClass>();
 		for(String currParentName : this.classHash.get(subclassName).getParentNameStrings(false)){
 			retval.add(currParentName);
@@ -155,7 +191,8 @@ public class OntologyInfo {
 		
 		// get the Parents' parents.
 		for(OntologyClass currParentClass : superclasses){
-			retval.add(currParentClass.getNameString(false));
+			// ALWAYS A DUPLICATE, RIGHT? - Paul 5/23/17
+			//retval.add(currParentClass.getNameString(false));
 			retval = this.getSuperclassNames(currParentClass.getNameString(false), retval);
 		}
 		// ship out the results so far gathered. 
@@ -485,9 +522,7 @@ public class OntologyInfo {
 	 * process the results of the query to get all of the sub- and super-class query and loads
 	 * them into the OntologyInfo object.
 	 **/
-	public void loadSuperSubClasses(SparqlEndpointInterface endpoint) throws Exception{
-		String xList[] = endpoint.getStringResultsColumn("x");
-		String yList[] = endpoint.getStringResultsColumn("y");
+	public void loadSuperSubClasses(String xList[], String yList[]) throws Exception{
 
 		HashMap<String, OntologyClass> tempClasses = new HashMap<String, OntologyClass>();
 				
@@ -533,8 +568,7 @@ public class OntologyInfo {
 	 * processes the results of the top-level class query. the results of this query are loaded into 
 	 * the OntologyInfo object.
 	 **/
-	public void loadTopLevelClasses(SparqlEndpointInterface endpoint) throws Exception{
-		String xList[] = endpoint.getStringResultsColumn("Class");
+	public void loadTopLevelClasses(String xList[]) throws Exception{
 		
 		for (int i=0; i < xList.length; i++) {
 			// add it.
@@ -561,9 +595,7 @@ public class OntologyInfo {
 	 * processes the results of the enumeration query and loads the results into the enumeration hashmap
 	 * in the OntologyInfo object. 
 	 */
-	public void loadEnums(SparqlEndpointInterface endpoint) throws Exception{
-		String classList[] = endpoint.getStringResultsColumn("Class");
-		String enumValList[] = endpoint.getStringResultsColumn("EnumVal");
+	public void loadEnums(String classList[], String enumValList[] ) throws Exception{
 		
 		for(int i = 0; i < classList.length; i += 1){
 			String className = classList[i];
@@ -664,11 +696,8 @@ public class OntologyInfo {
 	 * process the results of the properties sparql query and loads them into the properties hashmap
 	 * in the OntologyInfo object.
 	 */
-	public void loadProperties(SparqlEndpointInterface endpoint) throws Exception{
-		String classList[] = endpoint.getStringResultsColumn("Class");
-		String propertyList[] = endpoint.getStringResultsColumn("Property");
-		String rangeList[] = endpoint.getStringResultsColumn("Range");
-		
+	public void loadProperties(String classList[], String propertyList[], String rangeList[]) throws Exception{
+		 
 		// loop through and make the property, pull class...
 		for(int i = 0; i < classList.length; i += 1){
 			OntologyProperty prop = new OntologyProperty(propertyList[i], rangeList[i]);
@@ -914,17 +943,40 @@ public class OntologyInfo {
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
 		// execute each sub-query in order
 		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(domain), SparqlResultTypes.TABLE);
-		this.loadSuperSubClasses(endpoint);
+		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
 		
 		endpoint.executeQuery(OntologyInfo.getTopLevelClassQuery(domain), SparqlResultTypes.TABLE);
-		this.loadTopLevelClasses(endpoint);
+		this.loadTopLevelClasses(endpoint.getStringResultsColumn("Class"));
 		
 		endpoint.executeQuery(OntologyInfo.getLoadPropertiesQuery(domain), SparqlResultTypes.TABLE);
-		this.loadProperties(endpoint);
+		this.loadProperties(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("Property"),endpoint.getStringResultsColumn("Range"));
 		
 		endpoint.executeQuery(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
-		this.loadEnums(endpoint);
+		this.loadEnums(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("EnumVal"));
 		
+	}
+	
+	/**
+	 * loads all of the data for the ontology into the OntologyInfo object
+	 * @param endpoint
+	 * @param domain
+	 * @throws Exception
+	 */
+	public void load(SparqlQueryClient client, String domain) throws Exception {
+		// execute each sub-query in order
+		TableResultSet tableRes;
+		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(domain), SparqlResultTypes.TABLE);
+		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
+		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(domain), SparqlResultTypes.TABLE);
+		this.loadTopLevelClasses(tableRes.getTable().getColumn("Class"));
+		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(domain), SparqlResultTypes.TABLE);
+		this.loadProperties(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("Property"), tableRes.getTable().getColumn("Range"));
+		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
+		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
 	}
 	
 	/**
