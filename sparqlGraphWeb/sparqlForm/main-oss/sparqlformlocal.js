@@ -26,11 +26,13 @@ var gLoadDialog = null;
 var gQueryResults = null;
 
 require([	'local/sparqlformconfig',
-         	
+         	 
+         	'sparqlgraph/js/backcompatutils',
          	'sparqlgraph/js/msiclientquery',
          	'sparqlgraph/js/msiresultset',
          	'sparqlgraph/js/modaliidx',
          	'sparqlgraph/js/modalitemdialog',
+         	
          	
          	'jquery',
 		
@@ -45,7 +47,7 @@ require([	'local/sparqlformconfig',
 
 		],
 
-	function(Config, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, $) {
+	function(Config, BackwardCompatibleUtil, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, $) {
 	
 
 		//----- e d c ------/
@@ -94,10 +96,10 @@ require([	'local/sparqlformconfig',
 			var clientOrInterface;
 			
 			if (gAvoidQueryMicroserviceFlag) {
-				clientOrInterface = gConn.getDataInterface();
+				clientOrInterface = gConn.getDefaultQueryInterface();
 			}
 			else {
-				clientOrInterface = new MsiClientQuery(Config.services.query.url, gConn.getDataInterface(), failureCallback);
+				clientOrInterface = new MsiClientQuery(Config.services.query.url, gConn.getDefaultQueryInterface(), failureCallback);
 			}
 			
 			var dialog= new ModalItemDialog(item, gNodeGroup, clientOrInterface, itemDialogCallback, { "textId" : textId }, ghostItem, ghostNodegroup);    
@@ -127,7 +129,7 @@ require([	'local/sparqlformconfig',
 			var query = ndgp2.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 0);
 			if (gAvoidQueryMicroserviceFlag) {
 				/* Old non-microservice code */
-				gConn.getDataInterface().executeAndParse(query, doQueryCallback);
+				gConn.getDefaultQueryInterface().executeAndParse(query, doQueryCallback);
 		    	
 			} else {
 				gQueryClient.executeAndParse(query, doQueryCallback);
@@ -198,24 +200,17 @@ require([	'local/sparqlformconfig',
     		initForm(); 
 			clearResults();
 			enableButton('btnFormExecute'); // browser sometimes caches this disabled if user reloaded while a query is running.  wow.
-			gOInfo = new OntologyInfo();
     		
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;   // instead of gConnSetup()
-	    	gQueryClient =       new MsiClientQuery(Config.services.query.url, gConn.getDataInterface());
-	    	var ontQueryClient = new MsiClientQuery(Config.services.query.url, gConn.getOntologyInterface(), alertUser);
+	    	gQueryClient =       new MsiClientQuery(Config.services.query.url, gConn.getDefaultQueryInterface());
 	    	
 	    	kdlLogEvent("SF Loading", "connection", gConn.toString());
     		
-	    	
-    		if (gAvoidQueryMicroserviceFlag) {
-    			gOInfo.loadAsync(gConn, setStatus, function(){ loadSuccess2(); callback();}, loadFailure);
-    			
-    		} else {
-		    	// load ontology via microservice
-				gOInfo.load(gConn.getDomain(), ontQueryClient, setStatus, function(){ loadSuccess2(); callback();}, loadFailure);
-    		}
+	    	var queryServiceUrl = gAvoidQueryMicroserviceFlag ? null : Config.services.query.url;
 	  
+    		gOInfo = new OntologyInfo();
+    		BackwardCompatibleUtil.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){ loadSuccess2(); callback();}, loadFailure);
 	    };
 	
 		loadSuccess2 = function() {

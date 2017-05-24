@@ -467,10 +467,9 @@
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
     	
     	require(['sparqlgraph/js/msiclientquery',
-    	         'sparqlgraph/js/ontologyinfo',
     	         'sparqlgraph/js/backcompatutils',
     	         'jquery', 
-    	         'jsonp'], function(MsiClientQuery, OntologyInfo, BCUtils) {
+    	         'jsonp'], function(MsiClientQuery, BCUtils) {
     		
     		
 	    	// Clean out existing GUI
@@ -482,16 +481,11 @@
 	    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(0));
 	    	
 	    	logEvent("SG Loading", "connection", gConn.toString());
-    		
-	    	// never true any more
-	    	// old code which goes straight to triple-store without micro-services
-    		if (gAvoidQueryMicroserviceFlag) {
-    			gOInfo.loadAsync(gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-    			
-    		} else {
-		    	// load ontology via microservice
-    			BCUtils.loadSparqlConnection(gOInfo, gConn, g.service.sparqlQuery.url, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-    		}
+	    	
+	    	var queryServiceUrl = gAvoidQueryMicroserviceFlag ? null : g.service.sparqlQuery.url;
+	    	
+	    	// note: clearEverything creates a new gOInfo
+    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
     	});
     };
     
@@ -800,6 +794,7 @@
     };
     
     runQuery = function (){
+    	
     	var query = document.getElementById("queryText").value;
     	logEvent("SG Run Query", "sparql", query);
     	
@@ -814,8 +809,12 @@
 			clearResults();
 			
 			if (gAvoidQueryMicroserviceFlag) {
-				/* Old non-microservice code */
-				gConn.getDataInterface(0).executeAndParse(query, runQueryCallback);
+					
+				require(['sparqlgraph/js/sparqlserverinterface',
+		    	        ], function(SparqlServerInterface) {
+					
+					gConn.getDataInterface(0).executeAndParse(query, runQueryCallback);
+				});
 		    	
 			} else {
 				gQueryClient.executeAndParse(query, runQueryCallback);

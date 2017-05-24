@@ -59,9 +59,11 @@ define([// properly require.config'ed
 			/**
 			 * if not for javascript backwards compatibility, this is an   >> OntologyInfo <<  function
 
-			 * Load a SparqlConnection (with potentially multiple models)
-			 * into an OntologyInfo
-			 * using MsiClientQuery() microservice client.
+			 * Load a SparqlConnection (with potentially multiple models) into an OntologyInfo
+			 * 
+			 * queryServiceUrl: if not null or "", then using MsiClientQuery() microservice client.
+			 * 
+			 * Presumes this is a new OntologyInfo().  (empty)
 			 * 
 			 */
 			loadSparqlConnection : function(oInfo, conn, queryServiceUrl, statusCallback, successCallback, failureCallback, optRecursionIndex) {
@@ -69,6 +71,7 @@ define([// properly require.config'ed
 		    	
 		    	// first (non-private) call
 		    	if (typeof optRecursionIndex == "undefined") {
+		  
 		    		this.loadSparqlConnection(oInfo, conn, queryServiceUrl, statusCallback, successCallback, failureCallback, 0);
 		    	
 		    	// break recursion
@@ -78,11 +81,17 @@ define([// properly require.config'ed
 		    	// normal recursive call of next model
 		    	} else {
 		    		var i = optRecursionIndex;
-		    		var queryClient = new MsiClientQuery(queryServiceUrl, gConn.getModelInterface(i));
+		    		var queryClientOrSei = null;
+		    		
+		    		if (queryServiceUrl == null || queryServiceUrl == "") {
+		    			queryClientOrSei = conn.getModelInterface(i);
+		    		} else {
+		    			queryClientOrSei = new MsiClientQuery(queryServiceUrl, conn.getModelInterface(i));
+		    		}
 		    		
 		    		// load model i.   On success, call me again with next model number i+1
 		    		oInfo.load(	conn.getDomain(), 
-		    					queryClient, 
+		    					queryClientOrSei, 
 		    					statusCallback, 
 		    					this.loadSparqlConnection.bind(this, oInfo, conn, queryServiceUrl, statusCallback, successCallback, failureCallback, i+1), 
 		    					failureCallback

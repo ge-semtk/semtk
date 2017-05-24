@@ -33,6 +33,7 @@
 
 
 define([	// properly require.config'ed   bootstrap-modal
+         	'sparqlgraph/js/backcompatutils',        	
         	'sparqlgraph/js/msiclientquery', 
         	'sparqlgraph/js/msiclientontologyinfo', 
         	'sparqlgraph/js/msiresultset', 
@@ -48,7 +49,7 @@ define([	// properly require.config'ed   bootstrap-modal
 	        'sparqlgraph/js/belmont', 
 		],
 
-	function(MsiClientQuery, MsiClientOntologyInfo, MsiResultSet, MappingTab, SemtkImportAPI, SparqlGraphJson) {
+	function(BackwardCompatibleUtil, MsiClientQuery, MsiClientOntologyInfo, MsiResultSet, MappingTab, SemtkImportAPI, SparqlGraphJson) {
 	
 		/**
 		 * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link semtk_api_loader} instead 
@@ -83,7 +84,6 @@ define([	// properly require.config'ed   bootstrap-modal
 			// clients
 			this.queryServiceURL = null;
 			this.queryServiceTimeout = null;
-			this.modelQueryServiceClient = null;
 			this.dataQueryServiceClient = null;
 			
 			this.ontologyServiceClient = null;
@@ -166,8 +166,9 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @param {SemtkAPI~SemtkErrorCallback} failureCallback
 			 */
 			loadNodegroupJsonFullAsync : function (nodegroupJson, statusCallback, successCallback, failureCallback) {
-				this.loadModelConn(nodegroupJson);
-				this.loadDataConn(nodegroupJson);
+				var sgJson = new SparqlGraphJson();
+				sgJson.fromJson(nodegroupJson);
+				this.conn = sgJson.getSparqlConn();
 				
 				this.loadModelAsync(statusCallback,
 						            this.loadNodegroupJsonFullCallback.bind(this, nodegroupJson, statusCallback, successCallback, failureCallback), 
@@ -192,37 +193,6 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			/**
-			 * Load model connection from nodegroupJson<br>
-			 * Doesn't change the name.
-			 * @param {JSON} nodegroupJson JSON representing extended conn/nodegroup/importspec
-			 */
-			loadModelConn : function(nodegroupJson) {
-				var sgJson = new SparqlGraphJson();
-				sgJson.fromJson(nodegroupJson);
-				var conn = sgJson.getSparqlConn();
-				
-				this.setupSparqlConnection(this.conn.name === "" ? conn.name : this.conn.name, 
-						                   conn.serverType, 
-						                   conn.domain);
-				this.setSparqlModelConnection(conn.ontologyServerUrl, conn.ontologySourceDataset, this.ontologyKsServerUrl );
-			},
-			/**
-			 * Load data connection from nodegroupJson<br>
-			 * Doesn't change the name.
-			 * @param {JSON} nodegroupJson JSON representing extended conn/nodegroup/importspec
-			 */
-			loadDataConn : function(nodegroupJson) {
-				var sgJson = new SparqlGraphJson();
-				sgJson.fromJson(nodegroupJson);
-				var conn = sgJson.getSparqlConn();
-				
-				this.setupSparqlConnection(this.conn.name === "" ? conn.name : this.conn.name, 
-		                   conn.serverType, 
-		                   conn.domain);
-				this.setSparqlDataConnection(conn.dataServerUrl, conn.dataSourceDataset, this.dataKsServerUrl);
-			},
-			
-			/**
 			 * Load nodegroup and importspec nodegroupJson<br>
 			 * See {@link SemtkAPI#loadNodegroupJsonFullAsync} source code for usage<br>
 			 * and modify if you want to change the way connections are handled.<br>
@@ -231,6 +201,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * </font>
 			 * @throws error if the model connection doesn't match
 			 * @param {JSON} nodegroupJson JSON representing extended conn/nodegroup/importspec
+			 * @private
 			 */
 			loadNodegroupJson : function(nodegroupJson) {
 				var sgJson = new SparqlGraphJson();
@@ -243,7 +214,7 @@ define([	// properly require.config'ed   bootstrap-modal
 	    			
 	    			// nodegroup
 	    			this.clearNodegroup();
-	    			this.nodegroup.addJson(grpJson);
+	    			this.nodegroup.addJson(grpJson, this.oInfo);
 	    			
 	    			// import spec
 	    			this.mappingTab.load(this.nodegroup, importJson);
@@ -307,33 +278,25 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * 
 			 */
 			setupSparqlConnection : function(name, type, domain) {
-				this.console.log("semtk_api.js: using DERECATED setupSparqlConnection().");
-				this.conn.setup(name, type, domain);
+				throw new Error ("semtk_api.js: using DERECATED setupSparqlConnection().");
 			},
 			
 			
 			/**
 			 * set up SPARQL model connection 
-			 * @param {string} url      server holding the data         
+			 * @par^am {string} url      server holding the data         
 			 * @param {string} dataset  depending on server type, this is dataset or graph name             
 			 * @param {string} optKsUrl for SADLserver, otherwise ignored      
 			 * @return         none  
-			 * @deprecated       
+			 * @deprecated   
+			 * @example
+			 * Replaced by:
+			 * setSparqlConnectionName("name");
+			 * addSparqlModelGraph("virtuoso", url, dataset, domain, "my fav model");
+			 * addSparqlDataGraph("virtuoso", url, dataset, "data #1");    
 			 */
 			setSparqlModelConnection : function(url, dataset, optKsUrl) {
-				this.console.log("semtk_api.js: using DERECATED setupSparqlConnection().");
-				var ksUrl = typeof optKsUrl === "undefined" ? null : optKsUrl;
-				
-				// assert
-				this.assert(this.queryServiceURL != null, "setSparqlModelConnection", "There is no query service set.");
-				this.assert(this.conn.getName() != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
-				
-				// fill in ontology fields    
-				this.conn.setOntologyInterface(url, dataset, ksUrl);
-				
-				this.modelQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getOntologyInterface(), this.raiseError, this.queryServiceTimeout );
-
-				
+				throw new Error ("semtk_api.js: using DERECATED setupSparqlConnection().");
 			},
 			
 			/**
@@ -382,15 +345,11 @@ define([	// properly require.config'ed   bootstrap-modal
 			addModelGraph : function(sType, url, dataset) {
 				
 				// assert
-				this.assert(this.queryServiceURL != null, "setSparqlModelConnection", "There is no query service set.");
-				this.assert(this.conn.getName() != "", "setSparqlModelConnection", "Sparql connection has not been set up.");
+				this.assert(this.queryServiceURL != null, "addModelGraph", "There is no query service set.");
+				this.assert(this.conn.getName() != "", "addModelGraph", "Sparql connection has not been set up.");
 				
 				// fill in ontology fields    
 				this.conn.addModelInterface(sType, url, dataset);
-				
-				if (this.conn.getModelInterfaceCount() == 1) {
-					this.modelQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getModelInterface(0), this.raiseError, this.queryServiceTimeout );
-				}
 				
 			},
 			
@@ -404,11 +363,12 @@ define([	// properly require.config'ed   bootstrap-modal
 			 */
 			addDataGraph : function(sType, url, dataset) {
 				// assert
-				this.assert(this.queryServiceURL != null, "setSparqlDataConnection", "There is no query service set.");
-				this.assert(this.conn.getName() != "", "setSparqlDataConnection", "Sparql connection has not been set up.");
+				this.assert(this.queryServiceURL != null, "addDataGraph", "There is no query service set.");
+				this.assert(this.conn.getName() != "", "addDataGraph", "Sparql connection has not been set up.");
 				
 				this.conn.addDataInterface(sType, url, dataset);
 				
+				// build a client the first time a data interface is added
 				if (this.conn.getDataInterfaceCount() == 1) {
 					this.dataQueryServiceClient = new MsiClientQuery(this.queryServiceURL, this.conn.getDataInterface(0), this.raiseError, this.queryServiceTimeout );
 				}
@@ -422,12 +382,13 @@ define([	// properly require.config'ed   bootstrap-modal
 			 */
 			loadModelAsync : function( statusCallback, successCallback, failureCallback) {		
 				// assert
-				this.assert(this.modelQueryServiceClient != null, "loadModelAsync", "There is no sparql model connection set.");
+				this.assert(this.queryServiceURL != null, "loadModelAsync", "There is no sparql query servce URL set.");
 				
 				// refresh and reload the oInfo
 				this.oInfo = new OntologyInfo();
-				// PEC TODO: only loading first model
-				this.oInfo.load(this.conn.getDomain(), this.modelQueryServiceClient, statusCallback, successCallback, failureCallback);
+				
+	    		BackwardCompatibleUtil.loadSparqlConnection(this.oInfo, this.conn, this.queryServiceURL, statusCallback, successCallback, failureCallback);
+
 			},
 			
 			/* 
@@ -442,8 +403,11 @@ define([	// properly require.config'ed   bootstrap-modal
 			getModelDrawJSONAsync : function(successCallbackJson) {
 				// asserts
 				this.assertModelLoaded("getModelDrawJSONAsync");
-				// PEC TODO: only reading first model
-				var mi = conn.getModelInterface(0);
+				if (this.conn.getModelInterfaceCount() != 1) {
+					throw new Error("OInfo service does not handle models with multiple connections.");
+				}
+				
+				var mi = this.conn.getModelInterface(0);
 				this.ontologyServiceClient.execRetrieveDetailedOntologyInfo(mi.getServerURL(), 
 																			this.conn.getDomain(), 
 																			mi.getServerType(), 

@@ -2741,6 +2741,7 @@ SemanticNodeGroup.prototype = {
 		}
 		
 		// get datasets for first model server.  All others must be equal
+		// NOT DEPRECATED: proper use of getModelInterface()
 		var datasets = this.conn.getDatasetsForServer(this.conn.getModelInterface(0).getServerURL());
 		
 		if (datasets.length < 2) return "";
