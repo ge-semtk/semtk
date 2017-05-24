@@ -106,7 +106,10 @@ require([
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
 			}
 			
-			gNodeGroup.setSparqlConnection(gConn);
+			// add gConn to gNodeGroup if it exists
+			if (gNodeGroup != null) {
+				gNodeGroup.setSparqlConnection(gConn);
+			}
 		};
 
 		setStatus = function(msg) {
@@ -352,6 +355,7 @@ require([
 
 			// Build a node group
 			gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
+			gNodeGroup.setSparqlConnection(gConn)
 			return;
 
 		};
