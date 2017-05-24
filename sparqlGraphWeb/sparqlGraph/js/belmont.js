@@ -387,7 +387,7 @@ NodeItem.prototype = {
 			}
 		} else {
 			// backward compatibility		
-			for (var i=0; i < jObj.deletionFlags.length; i++) {
+			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
 				this.deletionFlags.push(false);
 			}
 		}
@@ -890,7 +890,7 @@ SemanticNode.prototype = {
 			isRuntimeConstrained : this.isRuntimeConstrained,
 			valueConstraint : this.valueConstraint,
 			instanceValue : this.instanceValue,
-			deletionMode : getNodeDeletionTypeName(this.deleteMode),
+			deletionMode : this.deletionMode,
 		};
 		
 		// add properties
@@ -928,7 +928,7 @@ SemanticNode.prototype = {
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;	
-		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? jObj.deletionMode : NodeDeletionTypes.NO_DELETE;
+		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? jObj.deletionMode : getNodeDeletionTypeName(NodeDeletionTypes.NO_DELETE);
 		
 		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {

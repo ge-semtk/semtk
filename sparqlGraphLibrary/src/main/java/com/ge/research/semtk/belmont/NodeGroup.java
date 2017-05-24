@@ -1803,6 +1803,8 @@ public class NodeGroup {
 		String retval = "";
 		
 		String primaryBody = this.getDeletionLeader(post, oInfo);
+		if(primaryBody == null || primaryBody.isEmpty() || primaryBody == ""){ throw new Exception("generateSparqlDelete :: error encountered while generating delete statement: nothing given to delete.");}
+		
 		String whereBody = this.getDeletionWhereBody(post, oInfo);
 		
 		retval = this.generateSparqlPrefix() + "\nDELETE { \n" + primaryBody + "}\n" ;
