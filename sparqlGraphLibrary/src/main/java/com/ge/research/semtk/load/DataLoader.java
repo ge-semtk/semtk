@@ -63,12 +63,7 @@ public class DataLoader {
 		
 		this.batchSize = bSize;
 		
-		SparqlConnection conn = sgJson.getSparqlConn();
-		if (conn.getDataInterfaceCount() != 1) {
-			throw new Exception("Expecting 1 data endpoint interface for inserting.  Found: " + conn.getDataInterfaceCount());
-		}
-		
-		this.endpoint = sgJson.getSparqlConn().getDataInterface(0);
+		this.endpoint = sgJson.getSparqlConn().getInsertInterface();
 		
 		System.out.println("Dataset graph name: " + endpoint.getDataset());
 		
