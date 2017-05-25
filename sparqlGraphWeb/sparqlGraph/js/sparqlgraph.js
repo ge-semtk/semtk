@@ -809,7 +809,7 @@
 			
 			if (gQueryMicroserviceFlag == "direct") {
 				setStatus("running DIRECT query...");
-				clearResults();
+				clearResults(); 
 				guiDisableAll();
 				
 				require(['sparqlgraph/js/sparqlserverinterface',
