@@ -1,0 +1,224 @@
+# Dump of graph <http://research.ge.com/test/popmusic/data>, as of 2017-05-10 09:34:28.993633
+@base <> .
+@prefix rdf:	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ns1:	<belmont/generateSparqlInsert#> .
+@prefix ns2:	<http://com.ge.research/knowledge/test/popMusic#> .
+ns1:SuperUnknown	rdf:type	ns2:Album .
+ns1:su_008	rdf:type	ns2:AlbumTrack .
+ns1:SoundGarden	rdf:type	ns2:Band .
+ns1:su_song_008	rdf:type	ns2:Song .
+ns1:su_007	rdf:type	ns2:AlbumTrack .
+ns1:su_song_007	rdf:type	ns2:Song .
+ns1:DownOnTheUpside	rdf:type	ns2:Album .
+ns1:dotu_007	rdf:type	ns2:AlbumTrack .
+ns1:dotu_song_007	rdf:type	ns2:Song .
+ns1:dotu_004	rdf:type	ns2:AlbumTrack .
+ns1:dotu_song_004	rdf:type	ns2:Song .
+ns1:dotu_003	rdf:type	ns2:AlbumTrack .
+ns1:dotu_song_003	rdf:type	ns2:Song .
+ns1:HowBigHowBlueHowBeautiful	rdf:type	ns2:Album .
+ns1:hbhbhb_005	rdf:type	ns2:AlbumTrack .
+ns1:FlorenceAndTheMachine	rdf:type	ns2:Band .
+ns1:hbhbhb_song_005	rdf:type	ns2:Song .
+ns1:hbhbhb_003	rdf:type	ns2:AlbumTrack .
+ns1:hbhbhb_song_003	rdf:type	ns2:Song .
+ns1:Wildflowers	rdf:type	ns2:Album .
+ns1:wf_004	rdf:type	ns2:AlbumTrack .
+ns1:TomPetty	rdf:type	ns2:Band .
+ns1:wf_song_004	rdf:type	ns2:Song .
+ns1:wf_002	rdf:type	ns2:AlbumTrack .
+ns1:wf_song_002	rdf:type	ns2:Song .
+ns1:wf_001	rdf:type	ns2:AlbumTrack .
+ns1:wf_song_001	rdf:type	ns2:Song .
+ns1:KansasSuperHits	rdf:type	ns2:Album .
+ns1:ksh_002	rdf:type	ns2:AlbumTrack .
+ns1:Kansas	rdf:type	ns2:Band .
+ns1:ksh_song_002	rdf:type	ns2:Song .
+ns1:ksh_001	rdf:type	ns2:AlbumTrack .
+ns1:ksh_song_001	rdf:type	ns2:Song .
+@prefix owl:	<http://www.w3.org/2002/07/owl#> .
+ns2:durationInSeconds	rdf:type	owl:DatatypeProperty .
+ns2:Album	rdf:type	owl:Class .
+ns2:AlbumTrack	rdf:type	owl:Class .
+ns2:Artist	rdf:type	owl:Class .
+ns2:Band	rdf:type	owl:Class .
+ns2:Genre	rdf:type	owl:Class .
+ns2:Song	rdf:type	owl:Class .
+ns2:band	rdf:type	owl:ObjectProperty .
+ns2:composer	rdf:type	owl:ObjectProperty .
+ns2:genre	rdf:type	owl:ObjectProperty .
+ns2:member	rdf:type	owl:ObjectProperty .
+ns2:name	rdf:type	owl:DatatypeProperty .
+ns2:originalArtrist	rdf:type	owl:ObjectProperty .
+ns2:producer	rdf:type	owl:ObjectProperty .
+ns2:recordingArtist	rdf:type	owl:ObjectProperty .
+ns2:recordingDate	rdf:type	owl:DatatypeProperty .
+ns2:releaseDate	rdf:type	owl:DatatypeProperty .
+ns2:song	rdf:type	owl:ObjectProperty .
+ns2:style	rdf:type	owl:DatatypeProperty .
+ns2:track	rdf:type	owl:ObjectProperty .
+ns2:trackNumber	rdf:type	owl:DatatypeProperty .
+@prefix ns4:	<http://com.ge.research/knowledge/test/> .
+ns4:popMusic	rdf:type	owl:Ontology .
+ns2:albumTtitle	rdf:type	owl:DatatypeProperty .
+ns2:songTitle	rdf:type	owl:DatatypeProperty .
+_:b66098474	rdf:type	owl:Restriction .
+_:b66098475	rdf:type	owl:Restriction .
+_:b66098476	rdf:type	owl:Restriction .
+_:b66098477	rdf:type	owl:Restriction .
+_:b66098478	rdf:type	owl:Restriction .
+_:b66098479	rdf:type	owl:Restriction .
+_:b66098480	rdf:type	owl:Restriction .
+_:b66098481	rdf:type	owl:Restriction .
+_:b66098482	rdf:type	owl:Restriction .
+_:b66098483	rdf:type	owl:Restriction .
+_:b66098484	rdf:type	owl:Restriction .
+@prefix rdfs:	<http://www.w3.org/2000/01/rdf-schema#> .
+ns2:durationInSeconds	rdfs:domain	ns2:AlbumTrack .
+ns2:band	rdfs:domain	ns2:Album .
+ns2:composer	rdfs:domain	ns2:Song .
+ns2:genre	rdfs:domain	ns2:Album .
+ns2:member	rdfs:domain	ns2:Band .
+ns2:name	rdfs:domain	ns2:Artist .
+ns2:originalArtrist	rdfs:domain	ns2:Song .
+ns2:producer	rdfs:domain	ns2:Album .
+ns2:recordingArtist	rdfs:domain	ns2:AlbumTrack .
+ns2:recordingDate	rdfs:domain	ns2:AlbumTrack .
+ns2:releaseDate	rdfs:domain	ns2:Album .
+ns2:song	rdfs:domain	ns2:AlbumTrack .
+ns2:style	rdfs:domain	ns2:Genre .
+ns2:track	rdfs:domain	ns2:Album .
+ns2:trackNumber	rdfs:domain	ns2:AlbumTrack .
+ns2:albumTtitle	rdfs:domain	ns2:Album .
+ns2:songTitle	rdfs:domain	ns2:Song .
+@prefix xsd:	<http://www.w3.org/2001/XMLSchema#> .
+ns2:durationInSeconds	rdfs:range	xsd:int .
+ns2:band	rdfs:range	ns2:Band .
+ns2:composer	rdfs:range	ns2:Artist .
+ns2:genre	rdfs:range	ns2:Genre .
+ns2:member	rdfs:range	ns2:Artist .
+ns2:name	rdfs:range	xsd:string .
+ns2:originalArtrist	rdfs:range	ns2:Artist .
+ns2:producer	rdfs:range	ns2:Artist .
+ns2:recordingArtist	rdfs:range	ns2:Artist .
+ns2:recordingDate	rdfs:range	xsd:date .
+ns2:releaseDate	rdfs:range	xsd:date .
+ns2:song	rdfs:range	ns2:Song .
+ns2:style	rdfs:range	xsd:string .
+ns2:track	rdfs:range	ns2:AlbumTrack .
+ns2:trackNumber	rdfs:range	xsd:int .
+ns2:albumTtitle	rdfs:range	xsd:string .
+ns2:songTitle	rdfs:range	xsd:string .
+ns4:popMusic	rdfs:comment	"This ontology was created from a SADL file 'music.sadl' and should not be edited."@en ;
+	owl:versionInfo	"$Revision:$ Last modified on   $Date:$" .
+_:b66098474	owl:onProperty	ns2:name .
+_:b66098475	owl:onProperty	ns2:song .
+_:b66098476	owl:onProperty	ns2:recordingDate .
+_:b66098477	owl:onProperty	ns2:trackNumber .
+_:b66098478	owl:onProperty	ns2:durationInSeconds .
+_:b66098479	owl:onProperty	ns2:releaseDate .
+_:b66098480	owl:onProperty	ns2:albumTtitle .
+_:b66098481	owl:onProperty	ns2:originalArtrist .
+_:b66098482	owl:onProperty	ns2:composer .
+_:b66098483	owl:onProperty	ns2:songTitle .
+_:b66098484	owl:onProperty	ns2:style .
+_:b66098474	owl:maxCardinality	"1"^^xsd:int .
+_:b66098476	owl:maxCardinality	"1"^^xsd:int .
+_:b66098477	owl:maxCardinality	"1"^^xsd:int .
+_:b66098478	owl:maxCardinality	"1"^^xsd:int .
+_:b66098479	owl:maxCardinality	"1"^^xsd:int .
+_:b66098480	owl:maxCardinality	"1"^^xsd:int .
+_:b66098483	owl:maxCardinality	"1"^^xsd:int .
+_:b66098484	owl:maxCardinality	"1"^^xsd:int .
+ns2:Album	rdfs:subClassOf	_:b66098479 ,
+		_:b66098480 .
+ns2:AlbumTrack	rdfs:subClassOf	_:b66098475 ,
+		_:b66098476 ,
+		_:b66098477 ,
+		_:b66098478 .
+ns2:Artist	rdfs:subClassOf	_:b66098474 .
+ns2:Band	rdfs:subClassOf	ns2:Artist .
+ns2:Genre	rdfs:subClassOf	_:b66098484 .
+ns2:Song	rdfs:subClassOf	_:b66098481 ,
+		_:b66098482 ,
+		_:b66098483 .
+_:b66098475	owl:maxQualifiedCardinality	"1"^^xsd:int .
+_:b66098481	owl:maxQualifiedCardinality	"1"^^xsd:int .
+_:b66098482	owl:maxQualifiedCardinality	"1"^^xsd:int .
+_:b66098475	owl:onClass	ns2:Song .
+_:b66098481	owl:onClass	ns2:Artist .
+_:b66098482	owl:onClass	ns2:Artist .
+ns1:su_008	ns2:durationInSeconds	"246"^^xsd:int .
+ns1:su_007	ns2:durationInSeconds	"318"^^xsd:int .
+ns1:dotu_007	ns2:durationInSeconds	"290"^^xsd:int .
+ns1:dotu_004	ns2:durationInSeconds	"258"^^xsd:int .
+ns1:dotu_003	ns2:durationInSeconds	"194"^^xsd:int .
+ns1:hbhbhb_005	ns2:durationInSeconds	"249"^^xsd:int .
+ns1:hbhbhb_003	ns2:durationInSeconds	"334"^^xsd:int .
+ns1:wf_004	ns2:durationInSeconds	"202"^^xsd:int .
+ns1:wf_002	ns2:durationInSeconds	"290"^^xsd:int .
+ns1:wf_001	ns2:durationInSeconds	"191"^^xsd:int .
+ns1:ksh_002	ns2:durationInSeconds	"206"^^xsd:int .
+ns1:ksh_001	ns2:durationInSeconds	"323"^^xsd:int .
+ns1:SuperUnknown	ns2:band	ns1:SoundGarden .
+ns1:DownOnTheUpside	ns2:band	ns1:SoundGarden .
+ns1:HowBigHowBlueHowBeautiful	ns2:band	ns1:FlorenceAndTheMachine .
+ns1:Wildflowers	ns2:band	ns1:TomPetty .
+ns1:KansasSuperHits	ns2:band	ns1:Kansas .
+ns1:SoundGarden	ns2:name	"SoundGarden"^^xsd:string .
+ns1:FlorenceAndTheMachine	ns2:name	"FlorenceAndTheMachine"^^xsd:string .
+ns1:TomPetty	ns2:name	"TomPetty"^^xsd:string .
+ns1:Kansas	ns2:name	"Kansas"^^xsd:string .
+ns1:su_008	ns2:song	ns1:su_song_008 .
+ns1:su_007	ns2:song	ns1:su_song_007 .
+ns1:dotu_007	ns2:song	ns1:dotu_song_007 .
+ns1:dotu_004	ns2:song	ns1:dotu_song_004 .
+ns1:dotu_003	ns2:song	ns1:dotu_song_003 .
+ns1:hbhbhb_005	ns2:song	ns1:hbhbhb_song_005 .
+ns1:hbhbhb_003	ns2:song	ns1:hbhbhb_song_003 .
+ns1:wf_004	ns2:song	ns1:wf_song_004 .
+ns1:wf_002	ns2:song	ns1:wf_song_002 .
+ns1:wf_001	ns2:song	ns1:wf_song_001 .
+ns1:ksh_002	ns2:song	ns1:ksh_song_002 .
+ns1:ksh_001	ns2:song	ns1:ksh_song_001 .
+ns1:SuperUnknown	ns2:track	ns1:su_008 ,
+		ns1:su_007 .
+ns1:DownOnTheUpside	ns2:track	ns1:dotu_007 ,
+		ns1:dotu_004 ,
+		ns1:dotu_003 .
+ns1:HowBigHowBlueHowBeautiful	ns2:track	ns1:hbhbhb_005 ,
+		ns1:hbhbhb_003 .
+ns1:Wildflowers	ns2:track	ns1:wf_004 ,
+		ns1:wf_002 ,
+		ns1:wf_001 .
+ns1:KansasSuperHits	ns2:track	ns1:ksh_002 ,
+		ns1:ksh_001 .
+ns1:su_008	ns2:trackNumber	"8"^^xsd:int .
+ns1:su_007	ns2:trackNumber	"7"^^xsd:int .
+ns1:dotu_007	ns2:trackNumber	"7"^^xsd:int .
+ns1:dotu_004	ns2:trackNumber	"4"^^xsd:int .
+ns1:dotu_003	ns2:trackNumber	"3"^^xsd:int .
+ns1:hbhbhb_005	ns2:trackNumber	"5"^^xsd:int .
+ns1:hbhbhb_003	ns2:trackNumber	"3"^^xsd:int .
+ns1:wf_004	ns2:trackNumber	"4"^^xsd:int .
+ns1:wf_002	ns2:trackNumber	"2"^^xsd:int .
+ns1:wf_001	ns2:trackNumber	"1"^^xsd:int .
+ns1:ksh_002	ns2:trackNumber	"2"^^xsd:int .
+ns1:ksh_001	ns2:trackNumber	"1"^^xsd:int .
+ns1:SuperUnknown	ns2:albumTtitle	"SuperUnknown"^^xsd:string .
+ns1:DownOnTheUpside	ns2:albumTtitle	"Down on the Upside"^^xsd:string .
+ns1:HowBigHowBlueHowBeautiful	ns2:albumTtitle	"How Big, How blue, How Beautiful"^^xsd:string .
+ns1:Wildflowers	ns2:albumTtitle	"Wildflowers"^^xsd:string .
+ns1:KansasSuperHits	ns2:albumTtitle	"Super Hits"^^xsd:string .
+ns1:su_song_008	ns2:songTitle	"spoonman"^^xsd:string .
+ns1:su_song_007	ns2:songTitle	"black hole sun"^^xsd:string .
+ns1:dotu_song_007	ns2:songTitle	"burden in my hand"^^xsd:string .
+ns1:dotu_song_004	ns2:songTitle	"dusty"^^xsd:string .
+ns1:dotu_song_003	ns2:songTitle	"zero chance"^^xsd:string .
+ns1:hbhbhb_song_005	ns2:songTitle	"various storms & saints"^^xsd:string .
+ns1:hbhbhb_song_003	ns2:songTitle	"how big, how blue, how beautiful"^^xsd:string .
+ns1:wf_song_004	ns2:songTitle	"you wreck me"^^xsd:string .
+ns1:wf_song_002	ns2:songTitle	"You don't know how it feels"^^xsd:string .
+ns1:wf_song_001	ns2:songTitle	"Wildflowers"^^xsd:string .
+ns1:ksh_song_002	ns2:songTitle	"Dust in the Wind"^^xsd:string .
+ns1:ksh_song_001	ns2:songTitle	"Carry on Wayward Son"^^xsd:string .

@@ -1,0 +1,209 @@
+{
+	"sparqlConn": {
+		"name": "pop music test - consolidated",
+		"type": "virtuoso",
+		"dsURL": "http://localhost:2420",
+		"dsKsURL": "",
+		"dsDataset": "http://dataset",
+		"domain": "http://"
+	},
+	"sNodeGroup": {
+		"version": 3,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "songTitle",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/test/popMusic#songTitle",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?songTitle",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Song",
+				"fullURIName": "http://com.ge.research/knowledge/test/popMusic#Song",
+				"subClassNames": [],
+				"SparqlID": "?Song",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "durationInSeconds",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://com.ge.research/knowledge/test/popMusic#durationInSeconds",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?durationInSeconds",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					},
+					{
+						"KeyName": "trackNumber",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://com.ge.research/knowledge/test/popMusic#trackNumber",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?trackNumber",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Song"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"KeyName": "song",
+						"ValueType": "Song",
+						"UriValueType": "http://com.ge.research/knowledge/test/popMusic#Song",
+						"ConnectBy": "song",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/knowledge/test/popMusic#song"
+					}
+				],
+				"NodeName": "AlbumTrack",
+				"fullURIName": "http://com.ge.research/knowledge/test/popMusic#AlbumTrack",
+				"subClassNames": [],
+				"SparqlID": "?AlbumTrack",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/test/popMusic#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Band",
+				"fullURIName": "http://com.ge.research/knowledge/test/popMusic#Band",
+				"subClassNames": [],
+				"SparqlID": "?Band",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "albumTtitle",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/test/popMusic#albumTtitle",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?albumTtitle",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Band"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"KeyName": "band",
+						"ValueType": "Band",
+						"UriValueType": "http://com.ge.research/knowledge/test/popMusic#Band",
+						"ConnectBy": "band",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/knowledge/test/popMusic#band"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?AlbumTrack"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"KeyName": "track",
+						"ValueType": "AlbumTrack",
+						"UriValueType": "http://com.ge.research/knowledge/test/popMusic#AlbumTrack",
+						"ConnectBy": "track",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/knowledge/test/popMusic#track"
+					}
+				],
+				"NodeName": "Album",
+				"fullURIName": "http://com.ge.research/knowledge/test/popMusic#Album",
+				"subClassNames": [],
+				"SparqlID": "?Album",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Album",
+				"type": "http://com.ge.research/knowledge/test/popMusic#Album",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Band",
+				"type": "http://com.ge.research/knowledge/test/popMusic#Band",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?AlbumTrack",
+				"type": "http://com.ge.research/knowledge/test/popMusic#AlbumTrack",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Song",
+				"type": "http://com.ge.research/knowledge/test/popMusic#Song",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

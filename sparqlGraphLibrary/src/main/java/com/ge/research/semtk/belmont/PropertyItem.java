@@ -38,6 +38,9 @@ public class PropertyItem extends Returnable {
 	private Boolean isOptional = false;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
 	
+	private Boolean isMarkedForDeletion = false;
+
+	
 	/**
 	 * Constructor
 	 * @param nome (e.g. pasteMaterial)
@@ -78,6 +81,12 @@ public class PropertyItem extends Returnable {
 		catch(Exception E){
 			this.setIsRuntimeConstrained(false);
 		}
+		try{
+			this.setIsMarkedForDeletion((Boolean)next.get("isMarkedForDeletion"));
+		}
+		catch(Exception eee){
+			this.setIsMarkedForDeletion(false);
+		}
 		
 		JSONArray instArr = (JSONArray)next.get("instanceValues");
 		Iterator<String> it = instArr.iterator();
@@ -94,9 +103,9 @@ public class PropertyItem extends Returnable {
 		for (int i=0; i < this.instanceValues.size(); i++) {
 			iVals.add(this.instanceValues.get(i));
 		}
-		
+
 		JSONObject ret = new JSONObject();
-		ret.put("KeyName", this.keyName);
+		ret.put("KeyName", this.keyName);		
 		ret.put("ValueType", this.valueType);
 		ret.put("relationship", this.valueTypeURI);
 		ret.put("UriRelationship", this.uriRelationship);
@@ -105,6 +114,7 @@ public class PropertyItem extends Returnable {
 		ret.put("SparqlID", this.sparqlID);
 		ret.put("isReturned", this.isReturned);
 		ret.put("isOptional", this.isOptional);
+		ret.put("isMarkedForDeletion", this.isMarkedForDeletion);
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("instanceValues", iVals);
 
@@ -172,6 +182,14 @@ public class PropertyItem extends Returnable {
 			this.constraints.changeSparqlID(this.sparqlID, ID);
 		}
 		this.sparqlID = ID;
+	}
+	
+	public void setIsMarkedForDeletion(boolean delete){
+		this.isMarkedForDeletion = delete;
+	}
+	
+	public boolean getIsMarkedForDeletion(){
+		return this.isMarkedForDeletion;
 	}
 
 }

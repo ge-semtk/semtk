@@ -45,7 +45,9 @@ public class SparqlGraphJsonTest_IT {
 		// so deflate the re-inflation and check
 		NodeGroup nodegroupDeflated2 = new NodeGroup();
 		ArrayList<PropertyItem> mappedProps = sgJson.getImportSpec().getMappedPropItems(nodegroupInflated);
-		nodegroupDeflated2.addJson((JSONArray) (nodegroupInflated.toJson(mappedProps).get("sNodeList")) );
+		mappedProps.size();
+		JSONArray generatedJSON = (JSONArray) (nodegroupInflated.toJson(mappedProps).get("sNodeList")) ;
+		nodegroupDeflated2.addJson( generatedJSON );
 		
 		// re-deflated should have same number of nodes
 		assertTrue(nodegroupDeflated.getNodeCount() == nodegroupDeflated2.getNodeCount());

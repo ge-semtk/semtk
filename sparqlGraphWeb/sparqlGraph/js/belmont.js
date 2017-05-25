@@ -310,7 +310,7 @@ var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
 		this.Connected = false; // toggled if a connection between this node and
 								// the Semantic node owning the NodeItem list are linked.
 		this.UriConnectBy = '';
-		
+		this.deletionFlags = [];
 	}
 };
 
@@ -326,6 +326,7 @@ NodeItem.prototype = {
 		var ret = {
 			SnodeSparqlIDs : [],
 			SnodeOptionals : [],
+			DeletionMarkers : [],
 			KeyName : this.KeyName,
 			ValueType : this.ValueType,
 			UriValueType : this.UriValueType,
@@ -337,6 +338,7 @@ NodeItem.prototype = {
 		for (var i=0; i < this.SNodes.length; i++) {
 			ret.SnodeSparqlIDs.push(this.SNodes[i].getSparqlID());
 			ret.SnodeOptionals.push(this.SNodeOptionals[i]);
+			ret.DeletionMarkers.push(this.deletionFlags[i]);
 		}
 		
 		return ret;
@@ -374,6 +376,19 @@ NodeItem.prototype = {
 		
 			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
 				this.SNodeOptionals.push(opt);
+			}
+		}
+		
+		// version 5: add in the deletion flags
+		this.deletionFlags = [];
+		if(jObj.hasOwnProperty("DeletionMarkers")) {
+			for (var i=0; i < jObj.DeletionMarkers.length; i++) {
+				this.deletionFlags.push(jObj.DeletionMarkers[i]);
+			}
+		} else {
+			// backward compatibility		
+			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
+				this.deletionFlags.push(false);
 			}
 		}
 		
@@ -438,6 +453,25 @@ NodeItem.prototype = {
 		return true;
 	},
 	
+	setSnodeDeletionMarker : function (snode, toDelete){
+		for (var i=0; i < this.SNodes.length; i++) {
+			if (this.SNodes[i] == snode) {
+				this.deletionFlags[i] = toDelete;
+				return;
+			}
+		}
+		throw new Error("NodeItem can't find link to semantic node");
+	},
+	
+	getSnodeDeletionMarker : function (snode){
+		for (var i=0; i < this.SNodes.length; i++) {
+			if (this.SNodes[i] == snode) {
+				return this.deletionFlags[i] ;
+			}
+		}
+		throw new Error("NodeItem can't find link to semantic node");
+	},
+	
 	getConnectsTo : function (snode) {
 		return (this.SNodes.indexOf(snode) > -1);
 	},
@@ -445,6 +479,13 @@ NodeItem.prototype = {
 	pushSNode : function(snode, optOptional) {
 		this.SNodes.push(snode);
 		this.SNodeOptionals.push( (typeof optOptional === "undefined") ? NodeItem.OPTIONAL_FALSE : optOptional );
+		this.deletionFlags.push(false);
+	},
+	
+	pushSNode : function(snode, optional, deletionFlag){
+		this.SNodes.push(snode);
+		this.SNodeOptionals.push( optional );
+		this.deletionFlags.push(deletionFlag);
 	},
 
 	// get values used by the NodeItem
@@ -483,6 +524,7 @@ NodeItem.prototype = {
 				// console.log("removing " + this.SNodes[i].getSparqlID);
 				this.SNodes.splice(i, 1);
 				this.SNodeOptionals.splice(i,1);
+				this.deletionFlags.splice(i, 1);
 			}
 		}
 		if (this.SNodes.length === 0) 
@@ -490,6 +532,22 @@ NodeItem.prototype = {
 			this.Connected = false;
 		}
 
+	},
+	
+	getSnodesWithDeletionFlagsEnabledOnThisNodeItem :function () {
+		// iterate over the nodes and return the ones that have a
+		// deletion set to true.
+		var retval = [];
+		
+		for( var i = 0; i < this.SNodes.length; i++){
+			var currNode = this.SNodes[i];
+			if(this.deletionFlags[i]){
+				retval.push(currNode);
+			}
+		}
+		
+		// ship it back
+		return retval;
 	},
 	
 	getItemType : function () {
@@ -517,6 +575,7 @@ var PropertyItem = function(keyname, valType, relationship, UriRelationship, jOb
 		this.isOptional = false;
 		this.isRuntimeConstrained = false;
 		this.instanceValues = [];
+		this.isMarkedForDeletion = false;
 	}
 };
 // the functions used by the property item to keep its stuff in order.
@@ -535,6 +594,7 @@ PropertyItem.prototype = {
 			isOptional : this.getIsOptional(),
 			isRuntimeConstrained : this.getIsRuntimeConstrained(),
 			instanceValues : this.instanceValues,
+			isMarkedForDeletion : this.isMarkedForDeletion,
 		};
 		return ret;
 	},
@@ -558,6 +618,10 @@ PropertyItem.prototype = {
         else{
         	this.instanceValues = [];
         }
+        
+        // check for the existance of the isMarkedForDeletion. if it exists, set it.
+        this.isMarkedForDeletion = jObj.hasOwnProperty("isMarkedForDeletion") ? jObj.isMarkedForDeletion : false;
+         
         
 	},
 	buildFilterConstraint : function(op, val) {
@@ -706,6 +770,14 @@ PropertyItem.prototype = {
 	getItemType : function () {
 		return "PropertyItem";
 	},
+	
+	setIsMarkedForDeletion : function(markToSet) {
+		this.isMarkedForDeletion = markToSet;
+	},
+	
+	getIsMarkedForDeletion : function(){
+		return this.isMarkedForDeletion;
+	}
 };
 
 var freeUnusedSparqlID = function(item) {
@@ -773,6 +845,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 		this.isRuntimeConstrained = false;
 		this.valueConstraint = "";
 		this.instanceValue = null;
+		this.deletionMode = getNodeDeletionTypeName(NodeDeletionTypes.NO_DELETE); 
 	}
 	this.node = setNode(this); // the dracula node used in this Semantic Node.
 								// this is the thing that gets drawn
@@ -817,6 +890,7 @@ SemanticNode.prototype = {
 			isRuntimeConstrained : this.isRuntimeConstrained,
 			valueConstraint : this.valueConstraint,
 			instanceValue : this.instanceValue,
+			deletionMode : this.deletionMode,
 		};
 		
 		// add properties
@@ -854,14 +928,14 @@ SemanticNode.prototype = {
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;	
-
+		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? jObj.deletionMode : getNodeDeletionTypeName(NodeDeletionTypes.NO_DELETE);
+		
 		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {
 			var p = new PropertyItem(null, null, null, null, jObj.propList[i]);
 			this.propList.push(p);
 		}
 	
-		
 		for (var i = 0; i < jObj.nodeList.length; i++) {
 			var n = new NodeItem(null, null, null, jObj.nodeList[i], nodeGroup);
 			this.nodeList.push(n);
@@ -1072,11 +1146,15 @@ SemanticNode.prototype = {
 	getNode : function() {
 		return this.node;
 	},
-	getPropsForSparql : function(forceRet) {
+	getPropsForSparql : function(forceRet, queryType) {
 		// return properties needed for a SPARQLquery
 
 		// forceRet can be empty or a propItem to return regardless of whether
 		// it is returned
+		
+		// queryType is going to be needed for the deletes. we need values labeled for deletion that may not have any 
+		// other meaningful features about them. this support will be added later.
+		
 		var retprops = [];
 		var t = this.propList.length;
 		for (var s = 0; s < t; s++) {
@@ -1483,9 +1561,50 @@ SemanticNode.prototype = {
 		return prop;
 	},
 
+	getDeletionMode : function () {
+		return this.deletionMode;
+	},
+	
+	setDeletionMode : function (nodeDeletionType) {
+		this.deletionMode = nodeDeletionType;
+	},
+	
 	getItemType : function () {
 		return "SemanticNode";
 	},
+};
+
+/* Node Deletion types */
+var NodeDeletionTypes = {
+	NO_DELETE : 0,
+	TYPE_INFO_ONLY : 1,
+	FULL_DELETE : 2,
+	LIMITED_TO_NODEGROUP : 3,
+	LIMITED_TO_MODEL : 4,
+};
+
+var getNodeDeletionTypeName = function(delVal){
+	
+	if(delVal === NodeDeletionTypes.NO_DELETE)				{ return "NO_DELETE";}
+	if(delVal === NodeDeletionTypes.TYPE_INFO_ONLY)			{ return "TYPE_INFO_INFO";}
+	if(delVal === NodeDeletionTypes.FULL_DELETE)		    	{ return "FULL_DELETE";}
+	if(delVal === NodeDeletionTypes.LIMITED_TO_NODEGROUP)	{ return "LIMITED_TO_NODEGROUP";}
+	if(delVal === NodeDeletionTypes.LIMITED_TO_MODEL)		{ return "LIMITED_TO_MODEL";}
+	
+	// did not find it.
+	throw new Error("No Deletion Type exists for " + delVal);
+};
+
+var getNodeDeletionTypeByName = function(delVal){
+	
+	if(delVal === "NO_DELETE")				{ return 0;}
+	if(delVal === "TYPE_INFO_ONLY")			{ return 1;}
+	if(delVal === "FULL_DELETE")  			{ return 2;}
+	if(delVal === "LIMITED_TO_NODEGROUP")	{ return 3;}
+	if(delVal === "LIMITED_TO_MODEL")		{ return 4;}
+	
+	// did not find it.
+	throw new Error("No Deletion Type exists for " + delVal);
 };
 
 /* the semantic node group */
@@ -1536,8 +1655,9 @@ SemanticNodeGroup.QUERY_CONSTRAINT = 1;
 SemanticNodeGroup.QUERY_COUNT = 2;
 SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
+SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 4;
+SemanticNodeGroup.JSON_VERSION = 5;
 // version 4 - multiple connections
 // version 3 - SNodeOptionals
 
@@ -2621,6 +2741,116 @@ SemanticNodeGroup.prototype = {
 		
 	},
 	
+	generateSparqlDelete : function(postFixString, oInfo) {
+		
+		this.prefixHash = {};			// we need the prefixes set reasonably.
+		this.buildPrefixHash();
+		
+		var retval = ""; 				// eventually, this will be our sparql statement.
+		
+		var primaryBody = this.getDeletionLeader(postFixString, oInfo);
+		var whereBody   = this.getDeletionWhereBody(postFixString, oInfo);
+		
+		retval = this.generateSparqlPrefix() + "\nDELETE {\n" + primaryBody + "}\n";
+		
+		if(whereBody.length > 0){
+			retval += " WHERE {\n" + whereBody + " }\n";
+		}
+		
+		return retval;
+	},
+	
+	getDeletionLeader : function(postFixString, oInfo) {
+		var retval = "";
+		
+		for(var i = 0; i < this.SNodeList.length; i += 1 ){
+			var n = this.SNodeList[i];
+			
+			var deletionMode = n.getDeletionMode();
+			
+			if(getNodeDeletionTypeByName(deletionMode) != NodeDeletionTypes.NO_DELETE){
+				// there is a deletion intended
+				retval += this.generateNodeDeletionSparql(n);
+			}
+			
+			// check the properties
+			for(var pCount = 0; pCount < n.propList.length; pCount += 1){
+				var pi = n.propList[pCount];
+				if( pi.getIsMarkedForDeletion() ){
+					retval += "    " + n.getSparqlID() + " " + this.getPrefixedUri( pi.getUriRelation() ) + " " +  pi.getSparqlID() + " . \n";
+				}
+			}
+			// get the NodeItems
+			for(var nCount = 0; nCount < n.nodeList.length; nCount += 1){
+				var nodeInUse = n.nodeList[nCount];
+				var nic = nodeInUse.getSnodesWithDeletionFlagsEnabledOnThisNodeItem();
+				// write up the delete for this....
+				for(var nicCount = 0; nicCount < nic.length; g++ ){
+					var connected = nic[nicCount];
+					retval += "    " + n.getSparqlID() + " " + this.getPrefixedUri(nodeInUsegetUriConnectBy() ) + " " + connected.getSparqlID() +  " . \n";
+				}
+				// this should contain all the deletion info for the node itself.
+			}
+	
+		}	
+		// ship it out
+		return retval;
+	},
+	
+	generateNodeDeletionSparql : function(nodeInScope) {
+		var retval = "";
+		var indent = "    ";
+		var delMode = getNodeDeletionTypeByName(nodeInScope.getDeletionMode());
+		
+		if(delMode === NodeDeletionTypes.TYPE_INFO_ONLY){
+			retval += indent + nodeInScope.getSparqlID() + " rdf:type  " + nodeInScope.getSparqlID() + "_type_info . \n";
+		}
+		else if(delMode === NodeDeletionTypes.FULL_DELETE){
+			retval += indent + nodeInScope.getSparqlID() + " rdf:type  " + nodeInScope.getSparqlID() + "_type_info . \n";
+			retval += indent + nodeInScope.getSparqlID() + " " + nodeInScope.getSparqlID() + "_related_predicate_outgoing " + nodeInScope.getSparqlID() + "_related_object_target . \n";
+			retval += indent + nodeInScope.getSparqlID() + "_related_subject " + nodeInScope.getSparqlID() + "_related_predicate_incoming " + nodeInScope.getSparqlID() + " . \n";
+		}
+		else if(delMode === NodeDeletionTypes.LIMITED_TO_NODEGROUP){
+			retval += indent + nodeInScope.getSparqlID() + " rdf:type  " + nodeInScope.getSparqlID() + "_type_info . \n";
+			
+			// get all incoming references to this particular node (in the current NodeGroup scope)
+			// and schedule them for removal...
+			for(var ndCounter = 0; ndCounter < this.SNodeList.length; ndCounter++){
+				var nd = this.SNodeList[ndCounter];
+				
+				// get the node items and check the targets.
+				var connections = nd.getConnectingNodeItems(nodeInScope);
+				for(var conNum = 0; conNum < connections.length; conNum++ ){
+					var ni = connection[conNum];
+					// set it so that the consequences of the decision are seen in the post-decision ND
+					ni.setSnodeDeletionMarker(n, true);
+					// generate the sparql snippet related to this deletion.
+					retval += indent + nd.getSparqlID() + " " + this.getPrefixedUri(ni.getUriConnectBy()) + " " + nodeInScope.getSparqlID() + " . \n";
+				}
+			}
+		}
+		else if(delMode === NodeDeletionTypes.LIMITED_TO_MODEL){
+			throw new Error("NodeDeletionTypes.LIMITED_TO_MODEL is not currently implemented. sorry.");
+		}
+		else {
+			throw new Error("generateNodeDeletionSparql :: node with sparqlID (" + nodeInScope.getSparqlID() + ") has an unimplemented DeletionMode"); 
+		}
+		
+		return retval;
+	},
+	getDeletionWhereBody : function (postFixString, oInfo) {
+		var retval = "";
+		
+		var doneNodes = [];
+		var headNode = this.getNextHeadNode(doneNodes);
+		while (headNode != null) {
+			retval += this.generateSparqlSubgraphClauses(SemanticNodeGroup.QUERY_DELETE_WHERE, headNode, null, null, null, doneNodes, "   ");
+			headNode = this.getNextHeadNode(doneNodes);
+		}
+
+		return retval;
+	},
+	
 	generateSparql : function(queryType, optionalFlag, limit, optTargetObj, optKeepTargetConstraints) {
 		//
 		// queryType:
@@ -2782,13 +3012,17 @@ SemanticNodeGroup.prototype = {
 			sparql += tab + snode.getSparqlID() + " a  " + snode.getSparqlID() + "_type . \n" ;
 		}
 		
+		// added for deletions
+		else if (queryType == SemanticNodeGroup.QUERY_DELETE_WHERE && getNodeDeletionTypeByName(snode.getDeletionMode()) != NodeDeletionTypes.NO_DELETE){
+			sparql += tab + this.generateNodeDeletionSparql(snode);
+		}
 		// This is the type-constraining statement for any type that needs
 		// NOTE: this is at the top due to a Virtuoso bug
 		//       If the first prop is optional and nothing matches then the whole query fails.
 		sparql += this.generateSparqlTypeClause(snode, tab);
 		
 		// PropItems: generate sparql for property and constraints
-		var props = snode.getPropsForSparql(targetObj);
+		var props = snode.getPropsForSparql(targetObj, queryType);
 		for (var l = 0; l < props.length; l++) {
 			
 			if (props[l].getIsOptional() && queryType !== SemanticNodeGroup.QUERY_CONSTRUCT) {
