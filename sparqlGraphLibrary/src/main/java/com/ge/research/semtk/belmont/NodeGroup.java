@@ -44,7 +44,7 @@ import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class NodeGroup {
-	private static final int VERSION = 4;
+	private static final int VERSION = 5;
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();

@@ -379,7 +379,7 @@ NodeItem.prototype = {
 			}
 		}
 		
-		// version 3: add in the deletion flags
+		// version 5: add in the deletion flags
 		this.deletionFlags = [];
 		if(jObj.hasOwnProperty("DeletionMarkers")) {
 			for (var i=0; i < jObj.DeletionMarkers.length; i++) {
@@ -1657,7 +1657,7 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 4;
+SemanticNodeGroup.JSON_VERSION = 5;
 // version 4 - multiple connections
 // version 3 - SNodeOptionals
 
