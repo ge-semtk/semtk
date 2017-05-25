@@ -25,7 +25,9 @@ import org.junit.Test;
 import com.ge.research.semtk.belmont.BelmontUtil;
 
 public class QueryPrefixTest {
-
+	// 
+	// Important note: prefixQuery() is no longer used
+	// Paul  5/9/2017
 	@Test
 	public void testPrefixQuery() throws Exception {	
 		

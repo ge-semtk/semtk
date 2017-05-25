@@ -118,6 +118,17 @@ SparqlServerInterface.prototype = {
 		return this.executeQueryJSONP(sparql,  callbackQSResult, undefined, this.getResultsType(optResultsType));
 	},
 	
+	getServerType : function() {
+		return this.serverType;
+	}, 
+	
+	getServerURL : function() {
+		return this.serverURL;
+	},
+	
+	getDataset : function() {
+		return this.dataset;
+	},
 	
 	getResultsType : function(optResultsType) {
 		return (typeof optResultsType === 'undefined') ? SparqlServerInterface.TABLE_RESULTS : optResultsType;

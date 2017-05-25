@@ -83,6 +83,12 @@ define([	// properly require.config'ed
 			this.setQuery(g_query);
 			
 			// Get oInfo, then continue formGroup initialization in initFormCallback
+			
+			// PEC DEPRECATION PROBLEMS HERE:
+			// This should use BackwardCompatibleUtil.loadSparqlConnection()
+			// but I don't know who's using this or how to test it.
+			// -Paul
+			// 5/24/2017
 			this.oInfo = new OntologyInfo();
 			this.oInfo.load(	domain, 
 								queryClient, 

@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.json.simple.JSONObject;
+import org.json.simple.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -88,10 +88,11 @@ public class IngestorRestClientTest_IT {
 		// get an override SPARQL connection, by getting the TestGraph dataset and appending "OTHER"
 		// TODO could not find a clean way to add this functionality to TestGraph for reusability - maybe in the future
 		JSONObject sparqlConnJson = sgJson_TestGraph.getSparqlConn().toJson();  // original TestGraph sparql conn 
-		String testGraphDataset = (String) sparqlConnJson.get(SparqlConnection.DSDATASET_JSONKEY);
-		String otherDataset = testGraphDataset + "OTHER";  						// make the override dataset
-		sparqlConnJson.put(SparqlConnection.DSDATASET_JSONKEY, otherDataset);  	// replace the dataset
+				
 		SparqlConnection sparqlConnectionOverride = new SparqlConnection(sparqlConnJson.toJSONString()); // get the connection object
+		String otherDataset = sparqlConnectionOverride.getDefaultQueryInterface().getDataset() + "OTHER";
+		sparqlConnectionOverride.getDataInterface(0).setDataset(otherDataset);
+		sparqlConnectionOverride.getModelInterface(0).setDataset(otherDataset);
 		
 		// clear the override graph and upload OWL to it (else the test load will fail)
 		SparqlEndpointInterface seiOverride = new VirtuosoSparqlEndpointInterface(TestGraph.getSparqlServer(), otherDataset, TestGraph.getUsername(), TestGraph.getPassword());

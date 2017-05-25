@@ -104,34 +104,28 @@ public class SparqlGraphJson {
 	 * @return NodeGroup - could be null
 	 * @throws Exception
 	 */
-	public NodeGroup getNodeGroupCopy() throws Exception {
-		return this.getNodeGroupCopy(null);
+	public NodeGroup getNodeGroup() throws Exception {
+		return this.getNodeGroup(null);
 	}
 	
-	public NodeGroup getNodeGroupCopy(OntologyInfo uncompressOInfo) throws Exception {
+	public NodeGroup getNodeGroup(OntologyInfo uncompressOInfo) throws Exception {
 		JSONObject json = getSNodeGroupJson();
 		if (json == null) {
 			return null;
 		} else {
-			return NodeGroup.getInstanceFromJson(json, uncompressOInfo);
+			NodeGroup ng = NodeGroup.getInstanceFromJson(json, uncompressOInfo);
+			ng.setSparqlConnection(this.getSparqlConn());
+			return ng;
 		}
 	}
 	
 	public String getDomain() throws Exception {
 		return getSparqlConn().getDomain();
 	}
-
-	public SparqlEndpointInterface getOntologyInterface() throws Exception {
-		return getSparqlConn().getOntologyInterface();
-	}
-	
-	public SparqlEndpointInterface getDataInterface() throws Exception {
-		return getSparqlConn().getDataInterface();
-	}
 	
 	public OntologyInfo getOntologyInfo() throws Exception {
 		if (oInfo == null) {
-			oInfo = new OntologyInfo(getOntologyInterface(), getDomain());
+			oInfo = new OntologyInfo(this.getSparqlConn());
 		}
 		return oInfo;
 	}
@@ -161,6 +155,7 @@ public class SparqlGraphJson {
 		jObj.remove("sparqlConn");					// remove the older one
 		jObj.put("sparqlConn", conn.toJson());		// add the new one.
 		this.conn = conn;							// insert the new one.
+		this.oInfo = null;
 	}
 	
 	public void parse(String jsonString) throws Exception {

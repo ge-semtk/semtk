@@ -107,7 +107,10 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 			deps : [ 'jquery', 'jsonp' ]
 		};
 	config.shim['sparqlgraph/js/ontologyinfo'] = {
-			deps : [ 'sparqlgraph/js/sparqlserverinterface' ]
+			deps : [ 'sparqlgraph/js/sparqlconnection',
+			         'sparqlgraph/js/msiclientquery',
+			       ],
+			exports: 'OntologyInfo',
 		};
 	
 	config.waitseconds = 45;
@@ -119,6 +122,7 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	        alert("Require.js page loading time-out. (Try reloading the page)  \nError: "+err);
 	    } 
 	    else {
+	    	console.log(err.stack);
 	        throw err;
 	    }   
 	};

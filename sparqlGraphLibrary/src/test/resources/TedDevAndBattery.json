@@ -1,0 +1,188 @@
+{
+	"sparqlConn": {
+		"name": "TEDDevAndBattery",
+		"domain": "(http://research.ge.com/)|(http://kdl.ge.com)",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius37.crd.ge.com:2420",
+				"dataset": "http://research.ge.com/energy/turbineeng-dev"
+			},
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius37.crd.ge.com:2420",
+				"dataset": "http://demo/paul"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius37.crd.ge.com:2420",
+				"dataset": "http://research.ge.com/energy/turbineeng-dev"
+			},
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius37.crd.ge.com:2420",
+				"dataset": "http://demo/paul"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 4,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "cellId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#cellId",
+						"Constraints": "FILTER regex(%id, ?mapName)",
+						"fullURIName": "",
+						"SparqlID": "?cellId",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "tag",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/externalDataConnection#tag",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?tag",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Measurement",
+				"fullURIName": "http://research.ge.com/energy/turbineeng/timeseries#Measurement",
+				"subClassNames": [],
+				"SparqlID": "?Measurement",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "mapName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/externalDataConnection#mapName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?mapName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": []
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Measurement"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"KeyName": "hasMeasurement",
+						"ValueType": "TimeSeriesGenerator",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/externalDataConnection#TimeSeriesGenerator",
+						"ConnectBy": "hasMeasurement",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/externalDataConnection#hasMeasurement"
+					}
+				],
+				"NodeName": "MeasurementMap",
+				"fullURIName": "http://research.ge.com/energy/turbineeng/timeseries#MeasurementMap",
+				"subClassNames": [],
+				"SparqlID": "?MeasurementMap",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?MeasurementMap"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"KeyName": "map",
+						"ValueType": "TimeSeriesGeneratorMap",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/externalDataConnection#TimeSeriesGeneratorMap",
+						"ConnectBy": "map",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/externalDataConnection#map"
+					}
+				],
+				"NodeName": "Table",
+				"fullURIName": "http://research.ge.com/energy/turbineeng/timeseries#Table",
+				"subClassNames": [],
+				"SparqlID": "?Table",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Table",
+				"type": "http://research.ge.com/energy/turbineeng/timeseries#Table",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?MeasurementMap",
+				"type": "http://research.ge.com/energy/turbineeng/timeseries#MeasurementMap",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Measurement",
+				"type": "http://research.ge.com/energy/turbineeng/timeseries#Measurement",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Cell",
+				"type": "http://kdl.ge.com/batterydemo#Cell",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

@@ -18,6 +18,9 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.util.ArrayList;
+
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -30,61 +33,70 @@ public class SparqlConnection {
  * To match files written by historical javascript, this is mostly a JSON wrangler.
  * 
  */
-
-	// TODO replace all hardcoded json keys with Strings like this
-	public final static String DSDATASET_JSONKEY = "dsDataset";
 	
-	private final static String NONE_SERVER = "";
 	private final static String QUERY_SERVER = "kdl";
 	private final static String FUSEKI_SERVER = "fuseki";
 	private final static String VIRTUOSO_SERVER = "virtuoso";
-	private final static char DELIM = '>';
 	
-	private String name = "";
-	private String serverType = "";
-	
-	private String dataServerUrl = "";
-	private String dataKsServerURL = "";   
-	private String dataSourceDataset = "";
-	
-	private String ontologyServerUrl = "";
-	private String ontologyKsServerURL = "";   
-	private String ontologySourceDataset = "";
-	
-	private String domain = "";
-	
-	private SparqlEndpointInterface dataInterface = null;
-	private SparqlEndpointInterface ontologyInterface = null;
+	private String name = null;
+	private String domain = null;
+	private ArrayList<SparqlEndpointInterface> modelInterfaces = null;
+	private ArrayList<SparqlEndpointInterface> dataInterfaces = null;
 	
 	public SparqlConnection () {
-		
+		this.name = "";
+		this.domain = "";
+		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
 	}
 	
 	public SparqlConnection(String jsonText) throws Exception {
+		this();
 	    this.fromString(jsonText);
 	}
 	
-	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain){
-		this.dataServerUrl = dataServicetURL;
-		this.dataKsServerURL = knowledgeServiceURL;
-		this.serverType = serverType;
-		this.dataSourceDataset = dataset;
+	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain) throws Exception{
+		this();
+		this.name = name;
 		this.domain = domain;
+		this.addDataInterface(serverType, 
+				dataServicetURL,
+				dataset);
+		this.addModelInterface(serverType, 
+				dataServicetURL,
+				dataset);
 	}
 
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
 		jObj.put("name", name);
-		jObj.put("type", serverType);
-		jObj.put("dsURL", dataServerUrl);
-		jObj.put("dsKsURL", dataKsServerURL);
-		jObj.put("dsDataset", dataSourceDataset);
 		jObj.put("domain", domain);
+		
+		JSONArray model = new JSONArray();
+		JSONArray data = new JSONArray();
 
-		if (! ontologyServerUrl.equals(dataServerUrl))         { jObj.put("onURL", ontologyServerUrl); }
-		if (! ontologyKsServerURL.equals(dataKsServerURL))     { jObj.put("onKsURL", ontologyKsServerURL); }
-		if (! ontologySourceDataset.equals(dataSourceDataset)) { jObj.put("onDataset", ontologySourceDataset); }
+		for (int i=0; i < this.modelInterfaces.size(); i++) {
+			SparqlEndpointInterface mi = this.modelInterfaces.get(i);
+			JSONObject inner = new JSONObject();
+			inner.put("type", mi.getServerType());
+			inner.put("url", mi.getServerAndPort());
+			inner.put("dataset", mi.getDataset());
+			model.add(inner);
+		}
+		
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			SparqlEndpointInterface di = this.dataInterfaces.get(i);
+			JSONObject inner = new JSONObject();
+			inner.put("type", di.getServerType());
+			inner.put("url", di.getServerAndPort());
+			inner.put("dataset", di.getDataset());
+			data.add(inner);
+		}
+		
+		jObj.put("model", model);
+		jObj.put("data", data);
+		
 		return jObj;
 	}
 	
@@ -94,23 +106,48 @@ public class SparqlConnection {
 			throw new Exception("Cannot create SparqlConnection object because the JSON is wrapped in \"sparqlConn\"");
 		}
 		
-		this.name = (String) jObj.get("name"); 
-		this.serverType = (String) jObj.get("type"); 
-			
-		this.dataServerUrl = (String) jObj.get("dsURL");
-		this.dataKsServerURL = (String) jObj.get("dsKsURL");
-		this.dataSourceDataset = (String) jObj.get("dsDataset");
-			
-		this.ontologyServerUrl =     jObj.containsKey("onURL") ?     (String) jObj.get("onURL") : (String) jObj.get("dsURL");
-		this.ontologyKsServerURL =   jObj.containsKey("onKsURL") ?   (String) jObj.get("onKsURL") : (String) jObj.get("dsKsURL");
-		this.ontologySourceDataset = jObj.containsKey("onDataset") ? (String) jObj.get("onDataset") : (String) jObj.get("dsDataset");
-		 
-		this.dataInterface = this.createDataInterface();
-		this.ontologyInterface = this.createOntologyInterface();
-		
+		this.name = (String) jObj.get("name");
 		this.domain = (String) jObj.get("domain");
+		
+		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+		
+		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
+		
+		if (jObj.containsKey("dsURL")) {
+			
+			// backwards compatible read
+		
+			// If any field doesn't exist, presume it exists in the other connection
+			this.addModelInterface(	(String)(jObj.get("type")), 
+								    (String)(jObj.containsKey("onURL") ? jObj.get("onURL") : jObj.get("dsURL")),
+								    (String)(jObj.containsKey("onDataset") ? jObj.get("onDataset") : jObj.get("dsDataset"))
+							        );
+			this.addDataInterface(	(String)(jObj.get("type")), 
+									(String)(jObj.containsKey("dsURL") ? jObj.get("dsURL") : jObj.get("onURL")),
+									(String)(jObj.containsKey("dsDataset") ? jObj.get("dsDataset")  : jObj.get("onDataset"))
+									);
+		} else {
+			// normal read
+			
+			// read model interfaces
+	    	for (int i=0; i < ((JSONArray)(jObj.get("model"))).size(); i++) {
+	    		JSONObject m = (JSONObject)((JSONArray)jObj.get("model")).get(i);
+	    		this.addModelInterface((String)(m.get("type")), (String)(m.get("url")), (String)(m.get("dataset")));
+	    	}
+	    	// read data interfaces
+	    	for (int i=0; i < ((JSONArray)(jObj.get("data"))).size(); i++) {
+	    		JSONObject d = (JSONObject)((JSONArray)jObj.get("data")).get(i);
+	    		this.addDataInterface((String)(d.get("type")), (String)(d.get("url")), (String)(d.get("dataset")));
+	    	}
+		}
+		
+		// no deprecated field-handling
 	}
 
+	public static SparqlConnection deepCopy(SparqlConnection other) throws Exception {
+		return new SparqlConnection(other.toJson().toString());
+	}
+	
 	public void fromString(String jsonText) throws Exception {
 		JSONParser parser = new JSONParser();
 		JSONObject jObj = (JSONObject) parser.parse(jsonText);
@@ -123,77 +160,157 @@ public class SparqlConnection {
 	}
 	
 	public boolean equals(SparqlConnection other, boolean ignoreName) {
-		
-		return ((ignoreName || this.name == other.name) && 
-				this.serverType == other.serverType &&
-				this.dataInterface.equals(other.dataInterface) && 
-				this.ontologyInterface.equals(other.ontologyInterface) && 
-				this.domain == other.domain);
-	}
-	
-	public void build() throws Exception {
-		// needs to be called after mucking with members
-		// PEC seems like a bad idea.  Historical.
-		this.dataInterface = this.createDataInterface();
-		this.ontologyInterface = this.createOntologyInterface();
-	}
-	
-	public SparqlEndpointInterface createDataInterface () throws Exception {
-	
-		if (serverType.equals(FUSEKI_SERVER)) {
-			return new FusekiSparqlEndpointInterface(dataServerUrl, dataSourceDataset);
-		} else if (this.serverType.equals(VIRTUOSO_SERVER)) {
-			return new VirtuosoSparqlEndpointInterface(dataServerUrl, dataSourceDataset);
-		} else if (this.serverType == SparqlConnection.QUERY_SERVER) {
-			throw new Exception("Attempt to createDataInferface with unsupported serverType: " + serverType);
+		String thisStr = this.toString();
+		String otherStr = other.toString();
+		if (ignoreName) {
+			thisStr = thisStr.replaceFirst(this.name, "NAME");
+			otherStr = otherStr.replaceFirst(other.name, "NAME");
 		}
-		return null;
-	}
-	
-	public SparqlEndpointInterface createOntologyInterface () throws Exception {
+		return (thisStr.equals(otherStr));
 		
-		if (serverType.equals(FUSEKI_SERVER)) {
-			return new FusekiSparqlEndpointInterface(ontologyServerUrl, ontologySourceDataset);
-		} else if (this.serverType.equals(VIRTUOSO_SERVER)) {
-			return new VirtuosoSparqlEndpointInterface(ontologyServerUrl, ontologySourceDataset);
-		} else if (this.serverType == SparqlConnection.QUERY_SERVER) {
-			throw new Exception("Attempt to createDataInferface with unsupported serverType: " + serverType);
-		}
-		return null;
 	}
 	
-	public SparqlEndpointInterface getDataInterface() {
-		return this.dataInterface;
+	public void setName (String name) {
+		this.name = name;
 	}
 	
-	public SparqlEndpointInterface getOntologyInterface() {
-		return this.ontologyInterface;
+	public void setDomain (String domain) {
+		this.domain = domain;
 	}
 	
-	public String getDomain () {
+	public void addModelInterface(String sType, String url, String dataset) throws Exception {
+		this.modelInterfaces.add(this.createInterface(sType, url, dataset));
+	}
+	
+	public void addDataInterface(String sType, String url, String dataset) throws Exception {
+		this.dataInterfaces.add(this.createInterface(sType, url, dataset));
+	}
+	public void addModelInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
+		this.modelInterfaces.add(this.createInterface(sType, url, dataset, user, passwd));
+	}
+	
+	public void addDataInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
+		this.dataInterfaces.add(this.createInterface(sType, url, dataset, user, passwd));
+	}
+	public int getModelInterfaceCount() {
+		return this.modelInterfaces.size();
+	}
+	
+	public SparqlEndpointInterface getModelInterface(int i) {
+		return this.modelInterfaces.get(i);
+	}
+	
+	public ArrayList<SparqlEndpointInterface> getModelInterfaces() {
+		return this.modelInterfaces;
+	}
+	
+	public String getDomain() {
 		return this.domain;
 	}
 	
-	// added to support more descriptive information retrieval about the connection:
-	// "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"
-	
-	public String getConnectionName(){
+	public String getName() {
 		return this.name;
 	}
+	
+	public int getDataInterfaceCount() {
+		return this.dataInterfaces.size();
+	}
+	
+	public SparqlEndpointInterface getDataInterface(int i) {
+			return this.dataInterfaces.get(i);
+	}
+	
+	public ArrayList<SparqlEndpointInterface> getDataInterfaces() {
+		return this.dataInterfaces;
+	}
+	
+	public SparqlEndpointInterface getDefaultQueryInterface() throws Exception {
+		if (this.dataInterfaces.size() > 0) {
+			return this.dataInterfaces.get(0);
+		} else if (this.modelInterfaces.size() > 0) {
+			return this.modelInterfaces.get(0);
+		} else {
+			throw new Exception("This SparqlConnection has no endpoints.");
+		}
+	}
+	
+	public SparqlEndpointInterface getInsertInterface() throws Exception {
+		if (this.dataInterfaces.size() == 1) {
+			return this.dataInterfaces.get(0);
+		} else {
+			throw new Exception("Expecting one data endpoint for INSERT.  Found " + this.dataInterfaces.size());
+		}
+	}
+	
+	// Is number of endpoint serverURLs == 1
+	public boolean isSingleServerURL() {
+		String url = "";
+		for (int i=0; i < this.modelInterfaces.size(); i++) {
+			String e =  this.modelInterfaces.get(i).getServerAndPort();
+			if (url.equals("")) {
+				url = e;
+			} else if (! e.equals(url)) {
+				return false;
+			}
+		}
+		
+		// add data interfaces
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			String e =  this.dataInterfaces.get(i).getServerAndPort();
+			if (url.equals("")) {
+				url = e;
+			} else if (! e.equals(url)) {
+				return false;
+			}
+		}
+		
+		// if there are no serverURLs then false
+		if (url.equals("")) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	// get list of datasets for a given serverURL
+	public ArrayList<String> getDatasetsForServer(String serverURL) {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (int i=0; i < this.modelInterfaces.size(); i++) {
+			SparqlEndpointInterface e =  this.modelInterfaces.get(i);
+			if (e.getServerAndPort().equals(serverURL) &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.add(e.getDataset());
+			}
+		}
+		
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			SparqlEndpointInterface e =  this.dataInterfaces.get(i);
+			if (e.getServerAndPort().equals(serverURL)  &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.add(e.getDataset());
+			}
+		}
+		
+		return ret;
+	}
 
-	public String getDataSourceDataset(){
-		return this.dataSourceDataset;
+	//---------- private function
+	private SparqlEndpointInterface createInterface(String stype, String url, String dataset) throws Exception{
+		if (stype.equals(SparqlConnection.FUSEKI_SERVER)) {
+			return new FusekiSparqlEndpointInterface(url, dataset);
+		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
+			return new VirtuosoSparqlEndpointInterface(url, dataset);
+		} else {
+			throw new Error("Unsupported SparqlConnection server type: " + stype);
+		}
 	}
 	
-	public String getDataSourceKnowledgeServiceURL(){
-		return this.dataKsServerURL;
-	}
-	
-	public String getDataSourceURL(){
-		return this.dataServerUrl;
-	}
-	
-	public String getServerType(){
-		return this.serverType;
+	private SparqlEndpointInterface createInterface(String stype, String url, String dataset, String user, String passwd) throws Exception{
+		if (stype.equals(SparqlConnection.FUSEKI_SERVER)) {
+			return new FusekiSparqlEndpointInterface(url, dataset, user, passwd);
+		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
+			return new VirtuosoSparqlEndpointInterface(url, dataset, user, passwd);
+		} else {
+			throw new Error("Unsupported SparqlConnection server type: " + stype);
+		}
 	}
 }

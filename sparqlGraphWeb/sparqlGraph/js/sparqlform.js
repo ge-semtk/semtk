@@ -70,36 +70,46 @@ require([
 		gConnSetup = function() {
 			// Establish Sparql Connection in gConn, using g		
 			gConn = new SparqlConnection();
-			gConn.name = g.conn.name;
-			gConn.serverType = SparqlConnection.VIRTUOSO_SERVER;
+			gConn.setName(g.conn.name);
+			gConn.setDomain(g.conn.domain);
+			var serverType = SparqlConnection.VIRTUOSO_SERVER;
 	
 			// backwards-compatible single connection
 			if (g.conn.hasOwnProperty('serverURL') && g.conn.hasOwnProperty('dataset')) {
-				gConn.dataServerUrl = g.conn.serverURL;
-				gConn.dataKsServerURL = ""; // fuseki will not have this
-				gConn.dataSourceDataset = g.conn.dataset;
-		
-				gConn.ontologyServerUrl = g.conn.serverURL;
-				gConn.ontologyKsServerURL = ""; // fuseki will not have this
-				gConn.ontologySourceDataset = g.conn.dataset;
+				gConn.addDataInterface(	
+						serverType,
+						g.conn.serverURL,
+						g.conn.dataset
+						);
+				gConn.addModelInterface(
+						serverType,
+						g.conn.serverURL,
+						g.conn.dataset
+						);
 				
 			// newer double connection
 			} else if (g.conn.hasOwnProperty('dataServerURL') && g.conn.hasOwnProperty('dataDataset') &&
 					   g.conn.hasOwnProperty('ontologyServerURL') && g.conn.hasOwnProperty('ontologyDataset')) {
-				gConn.dataServerUrl = g.conn.dataServerURL;
-				gConn.dataKsServerURL = ""; // fuseki will not have this
-				gConn.dataSourceDataset = g.conn.dataDataset;
-		
-				gConn.ontologyServerUrl = g.conn.ontologyServerURL;
-				gConn.ontologyKsServerURL = ""; // fuseki will not have this
-				gConn.ontologySourceDataset = g.conn.ontologyDataset;
 				
+				gConn.addDataInterface(	
+						serverType,
+						g.conn.dataServerURL,
+						g.conn.dataDataset
+						);
+				gConn.addModelInterface(
+						serverType,
+						g.conn.ontologyServerURL,
+						g.conn.ontologyDataset,
+						g.conn.domain
+						);
 			} else {
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
 			}
-	
-			gConn.domain = g.conn.domain;
-			gConn.build();
+			
+			// add gConn to gNodeGroup if it exists
+			if (gNodeGroup != null) {
+				gNodeGroup.setSparqlConnection(gConn);
+			}
 		};
 
 		setStatus = function(msg) {
@@ -345,6 +355,7 @@ require([
 
 			// Build a node group
 			gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
+			gNodeGroup.setSparqlConnection(gConn)
 			return;
 
 		};
@@ -530,9 +541,9 @@ require([
 	    			var singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
 	    			if (singleNodeItem != null) {
 	    				if (item.ownsNodeItem(singleNodeItem)) {
-	    					singleNodeItem.setSNodeOptional(item.getSNodes()[0], NodeItem.OPTIONAL_REVERSE);
+	    					singleNodeItem.setSNodeOptional(item.getSNodes()[0], optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE);
 						} else {
-							singleNodeItem.setSNodeOptional(item, NodeItem.OPTIONAL_TRUE);
+							singleNodeItem.setSNodeOptional(item, optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE);
 						}
 	    			}
 	    		}

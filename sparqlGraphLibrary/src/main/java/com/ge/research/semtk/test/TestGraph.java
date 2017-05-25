@@ -35,6 +35,7 @@ import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
@@ -54,7 +55,7 @@ public class TestGraph {
 	
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
-		SparqlEndpointInterface sei = new VirtuosoSparqlEndpointInterface(getSparqlServer(), generateDataset("both"), getUsername(), getPassword());
+		SparqlEndpointInterface sei = new VirtuosoSparqlEndpointInterface(getSparqlServer(), generateDatasetName("both"), getUsername(), getPassword());
 		try{
 			sei.executeTestQuery();
 		}catch(Exception e){
@@ -62,6 +63,17 @@ public class TestGraph {
 			throw e;
 		}
 		return sei;
+	}
+	
+	public static SparqlConnection getSparqlConn(String domain) throws Exception {
+		SparqlConnection conn = new SparqlConnection();
+		conn.setName("JUnitTest");
+		conn.setDomain(domain);
+		
+		SparqlEndpointInterface sei = getSei();
+		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getDataset());
+		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getDataset());
+		return conn;
 	}
 	
 	/**
@@ -181,7 +193,7 @@ public class TestGraph {
 	 */
 	public static NodeGroup getNodeGroup(String jsonFilename) throws Exception {
 		
-		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroupCopy();
+		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroup();
 	}
 	
 	/**
@@ -210,28 +222,41 @@ public class TestGraph {
 	@SuppressWarnings("unchecked")
 	public static SparqlGraphJson getSparqlGraphJsonFromJson(JSONObject jObj) throws Exception{
 		
+		/*
 		if (  ((JSONObject)jObj.get("sparqlConn")).containsKey("onDataset")) {
-			((JSONObject)jObj.get("sparqlConn")).put("onDataset", generateDataset("both"));    // "model"
+			((JSONObject)jObj.get("sparqlConn")).put("onDataset", generateDatasetName("both"));    // "model"
 			((JSONObject)jObj.get("sparqlConn")).put("onURL", getSparqlServer()); 
 			((JSONObject)jObj.get("sparqlConn")).put("onKsURL", getSparqlServer()); 
 			
-			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDataset("both"));   // "data"
+			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDatasetName("both"));   // "data"
 		} else {
-			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDataset("both"));   // "both"
+			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDatasetName("both"));   // "both"
 		}
 		
 		// modify dataset and URL
 		((JSONObject)jObj.get("sparqlConn")).put("dsURL", getSparqlServer()); 
 		((JSONObject)jObj.get("sparqlConn")).put("dsKsURL", getSparqlServer()); 
+		*/
 		
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
+		SparqlConnection conn = s.getSparqlConn();
+		for (int i=0; i < conn.getDataInterfaceCount(); i++) {
+			conn.getDataInterface(i).setDataset(generateDatasetName("both"));
+			conn.getDataInterface(i).setServerAndPort(getSparqlServer());
+		}
+		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
+			conn.getModelInterface(i).setDataset(generateDatasetName("both"));
+			conn.getModelInterface(i).setServerAndPort(getSparqlServer());
+		}
+		s.setSparqlConn(conn);
+		
 		return s;
 	}
 	
 	/**
 	 * Generate a dataset name (unique per user)
 	 */
-	public static String generateDataset(String sub) {
+	public static String generateDatasetName(String sub) {
 		return String.format("http://%s/junit/%s", System.getProperty("user.name"), sub);
 	}	
 	

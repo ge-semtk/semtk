@@ -14,6 +14,7 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @CrossOrigin
@@ -55,8 +56,11 @@ public class OntologyInfoServiceRestController {
 	    		serverUrl = requestBody.serverAndPort; 
 	    	}
 	    	
-	    	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, serverUrl, requestBody.dataset);
-	    	OntologyInfo oInfo = new OntologyInfo(sei, requestBody.domain);
+	    	SparqlConnection conn = new SparqlConnection();
+	    	conn.setDomain(requestBody.domain);
+	    	conn.addModelInterface(serverType, serverUrl, requestBody.dataset);
+	    	OntologyInfo oInfo = new OntologyInfo(conn);
+	    	
 	    	res.addResultsJSON(oInfo.toVisJs());
 	    	res.setSuccess(true);
 	    	
@@ -94,10 +98,12 @@ public class OntologyInfoServiceRestController {
 	    	} else {
 	    		serverUrl = requestBody.getUrl(); 
 	    	}
-	    		 
-	    		
-	       	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, serverUrl, requestBody.getDataset());
-	    	OntologyInfo oInfo = new OntologyInfo(sei, requestBody.getDomain());
+	    	
+	    	SparqlConnection conn = new SparqlConnection();
+	    	conn.setDomain(requestBody.getDomain());
+	    	conn.addModelInterface(serverType, serverUrl, requestBody.getDataset());
+	    	OntologyInfo oInfo = new OntologyInfo(conn);
+	    	
 	    	res.addResultsJSON( oInfo.toJSON(null) );
 	    	res.setSuccess(true);
 	    	

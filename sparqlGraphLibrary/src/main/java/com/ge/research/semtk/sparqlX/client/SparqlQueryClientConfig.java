@@ -18,7 +18,10 @@
 
 package com.ge.research.semtk.sparqlX.client; 
 
+import java.util.ArrayList;
+
 import com.ge.research.semtk.services.client.RestClientConfig;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
  * Configuration for SparqlQueryClient (non-auth query)
@@ -36,6 +39,36 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 		this.sparqlServerAndPort = sparqlServerAndPort;
 		this.sparqlServerType = sparqlServerType;
 		this.sparqlDataset = sparqlDataset;
+	}
+	
+	public SparqlQueryClientConfig(SparqlQueryClientConfig other) throws Exception {
+		super(other.serviceProtocol, other.serviceServer, other.servicePort, other.serviceEndpoint);
+		this.sparqlServerAndPort = other.sparqlServerAndPort;
+		this.sparqlServerType = other.sparqlServerType;
+		this.sparqlDataset = other.sparqlDataset;
+	}
+	
+	public void setEndpointInterfaceFields(SparqlEndpointInterface sei) {
+		this.sparqlServerAndPort = sei.getServerAndPort();
+		this.sparqlServerType = sei.getServerType();
+		this.sparqlDataset = sei.getDataset();
+	}
+	
+	/**
+	 * Translate this Config and a list of SparqlEndpointInterfaces into a list of Configs, one for each sei
+	 * @param seiList
+	 * @return
+	 * @throws Exception
+	 */
+	public ArrayList<SparqlQueryClientConfig> getArrayForEndpoints(ArrayList<SparqlEndpointInterface> seiList) throws Exception {
+		ArrayList<SparqlQueryClientConfig> ret = new ArrayList<SparqlQueryClientConfig>();
+		
+		for (int i=0; i < seiList.size(); i++) {
+			SparqlQueryClientConfig config = new SparqlQueryClientConfig(this);
+			config.setEndpointInterfaceFields(seiList.get(i));
+			ret.add(config);
+		}
+		return ret;
 	}
 	
 	public String getSparqlServerAndPort(){

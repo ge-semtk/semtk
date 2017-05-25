@@ -114,6 +114,15 @@ public abstract class SparqlEndpointInterface {
 		this.userName = user;
 		this.password = pass;
 		
+		this.setServerAndPort(serverAndPort);
+		
+	}
+
+	public String getServerAndPort() {		
+		return this.server + ":" + this.port;
+	}
+	
+	public void setServerAndPort(String serverAndPort) throws Exception {
 		String[] serverAndPortSplit = serverAndPort.split(":");  // protocol:server:port
 		if(serverAndPortSplit.length < 2){
 			throw new Exception("Error: must provide connection in format protocol:server:port (e.g. http://vesuvius37.crd.ge.com:2420)");
@@ -126,10 +135,6 @@ public abstract class SparqlEndpointInterface {
 		
 		String[] portandendpoint = serverAndPortSplit[2].split("/");
 		this.port = portandendpoint[0];
-	}
-
-	public String getServerAndPort() {		
-		return this.server + ":" + this.port;
 	}
 	
 	public String getServer() {
@@ -153,6 +158,9 @@ public abstract class SparqlEndpointInterface {
 		return password;
 	}
 
+	public void setDataset(String dataset) {
+		this.dataset = dataset;
+	}
 
 	public abstract String getServerType();
 	
@@ -236,7 +244,7 @@ public abstract class SparqlEndpointInterface {
 	// - Paul  5/26/2016
 	public static SparqlEndpointInterface getDataInterfaceFromJsonDEPRECATE(JSONObject json) throws Exception{
 		SparqlGraphJson sgJson = new SparqlGraphJson(json);
-		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDataInterface();
+		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDataInterface(0);
 		return sei;
 	}
 	

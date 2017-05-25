@@ -143,7 +143,7 @@ public class DataLoaderTest_IT {
 		}
 
 		// look for triples
-		NodeGroup nodegroup = sgJson.getNodeGroupCopy();
+		NodeGroup nodegroup = sgJson.getNodeGroup();
 		constrainUri(nodegroup, "Cell", uri);
 		returnProp(nodegroup, "Cell", "cellId");
 		returnProp(nodegroup, "ScreenPrinting", "pasteLot");
@@ -264,7 +264,7 @@ public class DataLoaderTest_IT {
 
 		// look for triples
 
-		NodeGroup nodegroup = sgJson.getNodeGroupCopy();
+		NodeGroup nodegroup = sgJson.getNodeGroup();
 		returnProp(nodegroup, "Cell", "cellId");
 		returnProp(nodegroup, "ScreenPrinting", "pasteVendor");
 		returnProp(nodegroup, "ScreenPrinting", "pasteMaterial");

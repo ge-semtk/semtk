@@ -314,7 +314,7 @@ div.canvas {
 				// drag-and-drop handler for files
 				noOpHandler(evt);
 				var files = evt.dataTransfer.files;
-				if (gNodeGroup.getNodeCount() == 0
+				if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0
 						|| confirm("Clearing current query to load new one.")) {
 					if (files.length == 1 && files[0].name.indexOf(".json") > 0) {
 						var fname = files[0].name;

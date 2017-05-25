@@ -47,23 +47,25 @@ define([	// properly require.config'ed   bootstrap-modal
 		MsiClientQuery.prototype = {
 				
 			execQuery : function (query, successCallback, optReturnType) {
-				this.data.returnType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
+				// BUG: this inexplicably has been "returnType", which doesn't work with the query service
+				this.data.resultType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
 				
 				this.data.query = query;
 				var myData = JSON.stringify(this.data);
 				delete this.data.query;
-				delete this.data.returnType;
+				delete this.data.resultType;
 				
 				this.msi.postToEndpoint("query", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 			
 			execAuthQuery : function (query, successCallback, optReturnType) {
-				this.data.returnType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
+				// BUG: this inexplicably has been "returnType", which doesn't work with the query service
+				this.data.resultType = typeof optReturnType === "undefined" ? "TABLE" : optReturnType;;
 				
 				this.data.query = query;
 				var myData = JSON.stringify(this.data);
 				delete this.data.query;
-				delete this.data.returnType;
+				delete this.data.resultType;
 				
 				this.msi.postToEndpoint("queryAuth", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
@@ -132,7 +134,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.data.query = sparql;
 				var myData = JSON.stringify(this.data);
 				delete this.data.query;
-				delete this.data.returnType;
+				delete this.data.resultType;
 				
 				// TODO: second callback is wrong because parameter for failing is different
 				this.msi.postToEndpoint("query", myData, "application/json", callback, this.optFailureCallback, this.optTimeout);

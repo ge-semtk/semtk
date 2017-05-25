@@ -27,7 +27,7 @@ public class ImportSpecHandlerTest_IT {
 		String jsonPath = "src/test/resources/sampleBattery_PlusConstraints.json";
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		OntologyInfo oInfo = sgJson.getOntologyInfo();
-		NodeGroup nodegroup = sgJson.getNodeGroupCopy();
+		NodeGroup nodegroup = sgJson.getNodeGroup();
 		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), oInfo);
 		
 		// Test

@@ -63,13 +63,12 @@ public class DataLoader {
 		
 		this.batchSize = bSize;
 		
-		this.endpoint = sgJson.getDataInterface();
-		System.out.println("Dataset graph name: " + getDatasetGraphName());
+		this.endpoint = sgJson.getSparqlConn().getInsertInterface();
 		
-		this.oInfo = sgJson.getOntologyInfo();
-						
-		this.master = sgJson.getNodeGroupCopy(this.oInfo);
+		System.out.println("Dataset graph name: " + endpoint.getDataset());
 		
+		this.oInfo = sgJson.getOntologyInfo();				
+		this.master = sgJson.getNodeGroup(this.oInfo);
 		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize);		
 	}
 	

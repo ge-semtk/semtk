@@ -17,229 +17,327 @@
  */
 
 /*
- * Double connection in case Ontology is in a different place than the data
- * 
- * NEEDS:
- 	<script type="text/javascript" src="../jquery/jquery.jsonp-1.0.4.min.js"></script>
- 	<script type="text/javascript" src="../js/fusekiserverinterface.js"></script>
- 	
-	<script type="text/javascript" src='../js/queryserverinterface.js'></script>	
-	
- * This has evolved into something embarrassing.  
- * It seems to duplicate everything in its two interfaces.
- * You also need to call build() after mucking with any of its name strings (except domain).
+ * Connection allowing Ontology to be in different place(s) than the data
+ * "Interface" for historical reasons is an endpoint plus "graph" or "dataset"
  */
 
+var SparqlConnection = function(jsonText) {
+	
+	//--used to support deprecated functions ---
+	this.depServerType ="";
+	this.depDomain="";
+	
+	//--old attributes still called by some legacy users ---
+	this.serverType = "";
 
+	this.dataServerUrl = "";
+	this.dataKsServerURL = "";
+	this.dataSourceDataset = "";
 
-var SparqlConnection = function(text) {
-	if (text) {
-    	this.fromString(text);
+	this.ontologyServerUrl = "";
+	this.ontologyKsServerURL = "";
+	this.ontologySourceDataset = "";
+
+	//-------------------------------------
+	
+	// The actual function:
+	if (jsonText) {
+    	this.fromString(jsonText);
     } else {
     	this.name = "";
-		this.serverType = "";
-		
-		this.dataServerUrl = "";
-		this.dataKsServerURL = "";   // fuseki will not have this
-		this.dataSourceDataset = "";
-		
-		this.ontologyServerUrl = "";
-		this.ontologyKsServerURL = "";   // fuseki will not have this
-		this.ontologySourceDataset = "";
-		
-		this.domain = "";
-		this.dataInterface = null;
-		this.ontologyInterface = null;
+    	this.domain = "";
+    	
+    	this.modelInterfaces = [];
+    	this.dataInterfaces = [];
     }
 };
 
-SparqlConnection.NONE_SERVER = "";
 SparqlConnection.QUERY_SERVER = "kdl";
 SparqlConnection.FUSEKI_SERVER = "fuseki";
 SparqlConnection.VIRTUOSO_SERVER = "virtuoso";
-SparqlConnection.DELIM = '>';
 
 SparqlConnection.prototype = {
 	
 	toJson : function () {
 		var jObj = {
 			name: this.name,
-			type:                 this.serverType,
-				
-			dsURL:        this.dataServerUrl,
-			dsKsURL:      this.dataKsServerURL,   // fuseki will not have this
-			dsDataset:    this.dataSourceDataset,
-				
-			domain:this.domain,	
+			domain: this.domain,
+			model: [],
+			data: []
 		};
 		
-		if (this.ontologyServerUrl != this.dataServerUrl)         { jObj.onURL=  this.ontologyServerUrl; }
-		if (this.ontologyKsServerURL != this.dataKsServerURL)     { jObj.onKsURL = this.ontologyKsServerURL; }
-		if (this.ontologySourceDataset != this.dataSourceDataset) { jObj.onDataset = this.ontologySourceDataset; }
+		// add model interfaces
+		for (var i=0; i < this.modelInterfaces.length; i++) {
+			var mi = this.modelInterfaces[i];
+			jObj.model.push({		
+					type: mi.getServerType(),
+					url: mi.getServerURL(),
+					dataset: mi.getDataset()
+			});
+		}
+		
+		// add data interfaces
+		for (var i=0; i < this.dataInterfaces.length; i++) {
+			var di = this.dataInterfaces[i];
+			jObj.data.push({
+					type: di.getServerType(),
+					url: di.getServerURL(),
+					dataset: di.getDataset()
+			});
+		}
+		
 		return jObj;
 	},
 	
 	fromJson : function (jObj) {
 		
-		// old verbose mode had "serverType"
-		if (jObj.hasOwnProperty("serverType")) {
-			this.name = jObj.name; 
-			this.serverType = jObj.serverType; 
-				
-			this.dataServerUrl = jObj.dataServerUrl;
-			this.dataKsServerURL = jObj.dataKsServerURL;
-			this.dataSourceDataset = jObj.dataSourceDataset;
-				
-			this.ontologyServerUrl = jObj.ontologyServerUrl;
-			this.ontologyKsServerURL = jObj.ontologyKsServerURL;
-			this.ontologySourceDataset = jObj.ontologySourceDataset;
-			 
-			this.dataInterface = this.createDataInterface();
-			this.ontologyInterface = this.createOntologyInterface();
-			this.domain = jObj.domain;
-			
-		// newer compact mode has "st"
+		this.name = jObj.name; 
+		this.domain = jObj.domain;
+		
+		this.modelInterfaces = [];
+    	this.modelDomains = [];
+    	this.modelNames = [];
+
+    	this.dataInterfaces = [];
+    	this.dataNames = [];
+    	
+		if (jObj.hasOwnProperty("dsURL")) {
+	
+			// backwards compatible read
+			console.log("SparqlConnection.fromJson() is reading old-fashioned connection JSON.")
+		
+			// If any field doesn't exist, presume it exists in the other connection
+			this.addModelInterface(jObj.type, 
+								  jObj.hasOwnProperty("onURL") ? jObj.onURL : jObj.dsURL,
+								  jObj.hasOwnProperty("onDataset") ? jObj.onDataset : jObj.dsDataset
+								  );
+			this.addDataInterface(jObj.type, 
+								  jObj.hasOwnProperty("dsURL") ? jObj.dsURL : jObj.onURL,
+								  jObj.hasOwnProperty("dsDataset") ? jObj.dsDataset : jObj.onDataset
+							      );
 		} else {
-			this.name = jObj.name; 
-			this.serverType = jObj.type; 
-				
-			this.dataServerUrl = jObj.dsURL;
-			this.dataKsServerURL = jObj.dsKsURL;
-			this.dataSourceDataset = jObj.dsDataset;
-				
-			this.ontologyServerUrl =     jObj.hasOwnProperty("onURL") ?     jObj.onURL : jObj.dsURL;
-			this.ontologyKsServerURL =   jObj.hasOwnProperty("onKsURL") ?   jObj.onKsURL : jObj.dsKsURL;
-			this.ontologySourceDataset = jObj.hasOwnProperty("onDataset") ? jObj.onDataset : jObj.dsDataset;
-			 
-			this.dataInterface = this.createDataInterface();
-			this.ontologyInterface = this.createOntologyInterface();
+			// normal read
 			
-			this.domain = jObj.domain;
+			// read model interfaces
+	    	for (var i=0; i < jObj.model.length; i++) {
+	    		var m = jObj.model[i];
+	    		this.addModelInterface(m.type, m.url, m.dataset);
+	    	}
+	    	// read data interfaces
+	    	for (var i=0; i < jObj.data.length; i++) {
+	    		var d = jObj.data[i];
+	    		this.addDataInterface(d.type, d.url, d.dataset);
+	    	}
 		}
+		
+		this.fillDeprecatedFields();
 	},
 	
-	fromString : function (text) {
-		
-		try {
-			// try JSON first
-			jObj = JSON.parse(text);
-			this.fromJson(jObj);
-			
-		} catch (e) {
-			// JSON failed, try backwards-compatibility mode
-			alert("Reading backwards-compatible sparql connection cookies.\nYou may get a bunch of these alerts in a row, but click through them.\nYou should never see this again.");
-			field = text.split(SparqlConnection.DELIM);
-			
-			this.name =              field[0];
-			this.serverType =        field[1];
-			
-			this.dataServerUrl =     field[2];
-			this.dataKsServerURL =   field[3];
-			this.dataSourceDataset = field[4];
-			
-			this.ontologyServerUrl =     field[5];
-			this.ontologyKsServerURL =   field[6];
-			this.ontologySourceDataset = field[7];
-			
-			this.dataInterface = this.createDataInterface();
-			this.ontologyInterface = this.createOntologyInterface();
-			this.domain =            field[8];
-		}
+	fromString : function (jsonText) {
+		jObj = JSON.parse(jsonText);
+		this.fromJson(jObj);
 	},
 	
 	toString : function () {
 		return JSON.stringify(this.toJson());
 	},
 	
-	// Deprecated
-	toStringBackwardsCompatible : function () {
-		var ret = "";
-		ret += this.name              + SparqlConnection.DELIM;
-		ret += this.serverType        + SparqlConnection.DELIM;
-
-		ret += this.dataServerUrl     + SparqlConnection.DELIM;
-		ret += this.dataKsServerURL   + SparqlConnection.DELIM;
-		ret += this.dataSourceDataset + SparqlConnection.DELIM;
-		
-		ret += this.ontologyServerUrl     + SparqlConnection.DELIM;
-		ret += this.ontologyKsServerURL   + SparqlConnection.DELIM;
-		ret += this.ontologySourceDataset + SparqlConnection.DELIM;
-		
-		ret += this.domain;
-		return ret;
-	},
-	
 	equals : function (other, ignoreName) {
-		return ((ignoreName || this.name == other.name) && 
-				this.serverType == other.serverType &&
-				this.dataInterface.equals(other.dataInterface) && 
-				this.ontologyInterface.equals(other.ontologyInterface) && 
-				this.domain == other.domain);
+		var thisStr = this.toString();
+		var otherStr = other.toString();
+		if (ignoreName) {
+			thisStr = thisStr.replace(this.name, "NAME");
+			otherStr = otherStr.replace(other.name, "NAME");
+		}
+		return (thisStr == otherStr);
 	},
 	
-	build : function () {
-		// needs to be called after mucking with members
-		this.dataInterface = this.createDataInterface();
-		this.ontologyInterface = this.createOntologyInterface();
-	},
-	
-	setup(name, serverType, domain) {
+	//== New-fashioned way to build a Connection ==
+	setName : function (name) {
 		this.name = name;
-		this.serverType = serverType;
-		this.domain = domain;
-	}, 
-	
-	setOntologyInterface(url, dataset, optKsURL) {
-		
-		this.ontologyServerUrl =     url;
-		this.ontologyKsServerURL =   optKsURL;
-		this.ontologySourceDataset = dataset;
-		
-		this.ontologyInterface = this.createOntologyInterface();
 	},
 	
-	setDataInterface(url, dataset, optKsURL) {
-		
-		this.dataServerUrl =     url;
-		this.dataKsServerURL =   optKsURL;
-		this.dataSourceDataset = dataset;
-		
-		this.dataInterface = this.createOntologyInterface();
+	setDomain : function (domain) {
+		this.domain = domain
 	},
 	
-	createDataInterface : function () {
-		if (this.serverType == SparqlConnection.FUSEKI_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, this.dataServerUrl, this.dataSourceDataset);
-		} else if (this.serverType == SparqlConnection.VIRTUOSO_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, this.dataServerUrl, this.dataSourceDataset);
-		} else if (this.serverType == SparqlConnection.QUERY_SERVER) {
-			return new QueryServerInterface(this.dataServerUrl, this.dataKsServerURL, this.dataSourceDataset);
-		} else {
-			return null;
-		}
+	addModelInterface : function (sType, url, dataset) {
+		this.modelInterfaces.push(this.createInterface(sType, url, dataset));
 	},
 	
-	createOntologyInterface : function () {
-		if (this.serverType == SparqlConnection.FUSEKI_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, this.ontologyServerUrl, this.ontologySourceDataset);
-		} else if (this.serverType == SparqlConnection.VIRTUOSO_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, this.ontologyServerUrl, this.ontologySourceDataset);
-		}else if (this.serverType == SparqlConnection.QUERY_SERVER) {
-			return new QueryServerInterface(this.ontologyServerUrl, this.ontologyKsServerURL, this.ontologySourceDataset);
-		} else {
-			return null;
-		}
-	}, 
+	addDataInterface : function (sType, url, dataset) {
+		this.dataInterfaces.push(this.createInterface(sType, url, dataset));
+	},
 	
-	getDataInterface : function () {
-		return this.dataInterface;
-	}, 
-	getOntologyInterface : function () {
-		return this.ontologyInterface;
+	getModelInterfaceCount : function () {
+		return this.modelInterfaces.length;
+	},
+	getModelInterface : function (i) {
+		return this.modelInterfaces[i];
 	},
 	getDomain : function () {
 		return this.domain;
 	},
+	getName : function() {
+		return this.name;
+	},
+	getDataInterfaceCount : function () {
+		return this.dataInterfaces.length;
+	},
+	getDataInterface : function (i) {
+		if (typeof i == "undefined") {
+			// DEPRECATED: old and new name are the same, but old had no param
+			console.log("NOTE: called deprecated SparqlConnection.getDataInterface() with no param");
+			return this.dataInterfaces[0];
+		} else {
+			return this.dataInterfaces[i];
+		}
+		
+	},
 	
+	getDefaultQueryInterface : function () {
+		if (this.dataInterfaces.length > 0) {
+			return this.dataInterfaces[0];
+		} else if (this.modelInterfaces.length > 0) {
+			return this.modelInterfaces[0];
+		} else {
+			throw new Error("This SparqlConnection has no endpoints.");
+		}
+	},
+	
+	getInsertInterface : function () {
+		if (this.dataInterfaces.length == 1) {
+			return this.dataInterfaces.get[0];
+		} else {
+			throw new Error("Expecting one data endpoint for INSERT.  Found " + this.dataInterfaces.length);
+		}
+	},
+	
+	// Is number of endpoint serverURLs == 1
+	isSingleServerURL : function() {
+		var url = "";
+		for (var i=0; i < this.modelInterfaces.length; i++) {
+			var e =  this.modelInterfaces[i].getServerURL();
+			if (url == "") {
+				url = e;
+			} else if (e != url) {
+				return false;
+			}
+		}
+		
+		// add data interfaces
+		for (var i=0; i < this.dataInterfaces.length; i++) {
+			var e =  this.dataInterfaces[i].getServerURL();
+			if (url == "") {
+				url = e;
+			} else if (e != url) {
+				return false;
+			}
+		}
+		
+		// if there are no serverURLs then false
+		if (url == "") {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	
+	// get list of datasets for a given serverURL
+	getDatasetsForServer : function(serverURL) {
+		var ret = [];
+		
+		for (var i=0; i < this.modelInterfaces.length; i++) {
+			var e =  this.modelInterfaces[i];
+			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.push(e.getDataset());
+			}
+		}
+		
+		for (var i=0; i < this.dataInterfaces.length; i++) {
+			var e =  this.dataInterfaces[i];
+			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.push(e.getDataset());
+			}
+		}
+		
+		return ret;
+	},
+	
+	//---------- private function
+	createInterface : function (stype, url, dataset) {
+		if (stype == SparqlConnection.FUSEKI_SERVER) {
+			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, dataset);
+		} else if (stype == SparqlConnection.VIRTUOSO_SERVER) {
+			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, dataset);
+		} else {
+			throw new Error("Unsupported SparqlConnection server type: " + stype);
+		}
+	},
+	
+	// DEPRECATED private
+	fillDeprecatedFields : function () {
+		// make deprecated things "work" using first of each interface
+		if (this.modelInterfaces.length < 1 || this.dataInterfaces.length < 1) { 
+			return; 
+		}
+		
+		this.serverType = this.modelInterfaces[0].getServerType()
+		this.ontologyServerUrl = this.modelInterfaces[0].getServerURL();
+		this.ontologySourceDataset = this.modelInterfaces[0].getDataset();
+		this.dataServerUrl = this.dataInterfaces[0].getServerURL();
+		this.dataSourceDataset = this.dataInterfaces[0].getDataset();
+				
+	},
+	
+	// DEPRECATED: kept for some legacy callers.
+	build : function () {
+		console.log("ERROR: Using DEPRECATED SparqlConnection functions.");
+		console.log("	    Change to setName() addDataInterface() addModelInterface().");
+		
+		// creating a single model and single data endpoint presuming that the
+		// caller has already set the old-fashioned attributes.
+		this.setName(this.name);
+		this.addModelInterface(	this.serverType,
+								this.ontologyServerUrl,
+								this.ontologySourceDataset,
+								this.domain,
+								""
+							);
+		this.addDataInterface(	this.serverType,
+								this.dataServerUrl,
+								this.dataSourceDataset,
+								""
+							);
+	},
+	
+	// DEPRECATED
+	setup(name, serverType, domain) {
+		console.log("NOTE: called deprecated SparqlConnection.setup();");
+		
+		this.name = name;
+		this.depServerType = serverType;
+		this.depDomain = domain;
+	}, 
+	// DEPRECATED
+	getOntologyInterface : function () {
+		console.log("NOTE: called deprecated SparqlConnection.getOntologyInterface()");
+		return this.modelInterfaces[0];
+	},
+	// DEPRECATED
+	setOntologyInterface(url, dataset, unused_KsURL) {
+		console.log("NOTE: called deprecated SparqlConnection.setOntologyInterface();");
+		
+		this.modelInterfaces = [this.createInterface(this.depServerType, url, dataset)];
+		this.modelDomains= [this.depDomain];
+		this.modelNames=[""];
+	},
+	// DEPRECATED
+	setDataInterface(url, dataset, unused_KsURL) {
+		console.log("Note: called deprecated SparqlConnection.setDataInterface();");
+		
+		this.dataInterfaces = [this.createInterface(this.depServerType, url, dataset)];
+		this.dataNames=[""];
+	}
 };
 

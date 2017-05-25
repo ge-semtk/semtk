@@ -177,7 +177,7 @@ ModalLoadDialog.prototype = {
 			this.document.getElementById("mdName").value = "unnamed_profile";
 		}
 
-		var profile = this.createProfileFromScreen();
+		var conn = this.createProfileFromScreen();
 		
 		var select = this.document.getElementById("mdSelectProfiles");
 		var name = this.document.getElementById("mdName").value;
@@ -185,10 +185,10 @@ ModalLoadDialog.prototype = {
 		
 		// change the selected profile if the names match
 		if (itemIdx > -1) {
-			select.options[itemIdx].value = profile.toString();
+			select.options[itemIdx].value = conn.toString();
 		// otherwise create a new profile
 		} else {
-			this.appendProfile(profile);
+			this.appendProfile(conn);
 			this.setSelectedIndex(select.length-1);
 			this.sortProfiles();
 		}
@@ -211,9 +211,9 @@ ModalLoadDialog.prototype = {
 	callbackSubmit : function () {
 		// save all the saved profiles and return whatever is showing
 		this.hide();
-		var profile = this.createProfileFromScreen();
+		var conn = this.createProfileFromScreen();
 		this.writeProfiles();
-		this.callback(profile);
+		this.callback(conn);
 	},
 	
 	callbackCancel : function () {
@@ -240,7 +240,7 @@ ModalLoadDialog.prototype = {
 				if (selectFlag) {
 					this.setSelectedIndex(i);
 				}
-				return other.name;
+				return other.getName();
 			} 
 		}
 		return false;
@@ -311,10 +311,10 @@ ModalLoadDialog.prototype = {
 			document.getElementById("mdDomain").value = "";
 			
 		} else {
-			var profile = new SparqlConnection();
-			profile.fromString(profileStr);
-			document.getElementById("mdName").value = profile.name;
-			switch (profile.serverType) {
+			var conn = new SparqlConnection();
+			conn.fromString(profileStr);
+			document.getElementById("mdName").value = conn.getName();
+			switch (conn.getModelInterface(0).getServerType()) {
 				case SparqlConnection.FUSEKI_SERVER:
 					this.document.getElementById("mdTypeFuseki").checked = true;
 					break;
@@ -325,18 +325,20 @@ ModalLoadDialog.prototype = {
 					this.document.getElementById("mdTypeGE").checked = true;
 					break;
 				default:
-					alert("Warning unknown server type in profile:" + profile.serverType)
+					alert("Warning unknown server type in profile:" + conn.getModelInterface(0).getServerType())
 			}
 			
-			this.document.getElementById("mdDataServerURL").value = profile.dataServerUrl;
-			this.document.getElementById("mdDataKsURL").value = profile.dataKsServerURL;
-			this.document.getElementById("mdDataSource").value = profile.dataSourceDataset;
+			var mi = conn.getModelInterface(0);
+			var di = conn.getDataInterface(0);
+			this.document.getElementById("mdDataServerURL").value = di.getServerURL();
+			this.document.getElementById("mdDataKsURL").value = "";
+			this.document.getElementById("mdDataSource").value = di.getDataset();
 			
-			this.document.getElementById("mdOntologyServerURL").value = profile.ontologyServerUrl;
-			this.document.getElementById("mdOntologyKsURL").value = profile.ontologyKsServerURL;
-			this.document.getElementById("mdOntologySource").value = profile.ontologySourceDataset;
+			this.document.getElementById("mdOntologyServerURL").value = mi.getServerURL();
+			this.document.getElementById("mdOntologyKsURL").value = "";
+			this.document.getElementById("mdOntologySource").value = mi.getDataset();
 
-			this.document.getElementById("mdDomain").value = profile.domain;
+			this.document.getElementById("mdDomain").value = conn.getDomain();
 		}
 		
 		this.callbackServerType(); // enable/disable fields based on 
@@ -344,45 +346,47 @@ ModalLoadDialog.prototype = {
 	
 	createProfileFromScreen : function() {
 		// create a profile from the ones on the screen
-		var profile = new SparqlConnection();
-		profile.name = this.document.getElementById("mdName").value.trim();
+		var conn = new SparqlConnection();
+		conn.setName(this.document.getElementById("mdName").value.trim());
 		
+		var serverType;
 		if (this.document.getElementById("mdTypeFuseki").checked) {
-			profile.serverType = SparqlConnection.FUSEKI_SERVER;
+			serverType = SparqlConnection.FUSEKI_SERVER;
 		} else if (this.document.getElementById("mdTypeVirtuoso").checked) {
-			profile.serverType = SparqlConnection.VIRTUOSO_SERVER;
+			serverType = SparqlConnection.VIRTUOSO_SERVER;
 		} else {
-			profile.serverType = SparqlConnection.QUERY_SERVER;
+			serverType = SparqlConnection.QUERY_SERVER;
 		}
 		
-		profile.dataServerUrl = this.document.getElementById("mdDataServerURL").value.trim();
-		profile.dataKsServerURL = this.document.getElementById("mdDataKsURL").value.trim();
-		profile.dataSourceDataset = this.document.getElementById("mdDataSource").value.trim();
+		var domain = this.document.getElementById("mdDomain").value;
+		// Adds the http:// on front of domain if needed
+		if (domain.indexOf("http") != 0) {
+			domain = "http://" + domain;
+		}
+		conn.setDomain(domain);
 		
-		profile.ontologyServerUrl = this.document.getElementById("mdOntologyServerURL").value.trim();
-		profile.ontologyKsServerURL = this.document.getElementById("mdOntologyKsURL").value.trim();
-		profile.ontologySourceDataset = this.document.getElementById("mdOntologySource").value.trim();
+		var modelURL = this.document.getElementById("mdOntologyServerURL").value.trim();
+		var modelKsURL = "";
+		var modelDataset = this.document.getElementById("mdOntologySource").value.trim();
+		var dataURL = this.document.getElementById("mdDataServerURL").value.trim();
+		var dataKsURL = "";
+		var dataDataset = this.document.getElementById("mdDataSource").value.trim();
+		
+		conn.addDataInterface(serverType,dataURL,dataDataset);
 		
 		// If ontology stuff is empty, set it to same as data stuff
-		if (profile.ontologyServerUrl == "" && profile.ontologyKsServerURL == "" && profile.ontologySourceDataset == "") {
-			profile.ontologyServerUrl = profile.dataServerUrl;
-			profile.ontologyKsServerURL = profile.dataKsServerURL;
-			profile.ontologySourceDataset = profile.dataSourceDataset;
-		}
-
-		profile.domain = this.document.getElementById("mdDomain").value;
-		// Adds the http:// on front of domain if needed
-		if (profile.domain.indexOf("http") != 0) {
-			profile.domain = "http://" + profile.domain;
+		if (modelURL == "" && modelDataset == "") {
+			conn.addModelInterface(serverType,dataURL,dataDataset);
+		} else {
+			conn.addModelInterface(serverType,modelURL,modelDataset);
 		}
 		
-		profile.build();
-		return profile;
+		return conn;
 	},
 	
-	appendProfile : function (profile) {
+	appendProfile : function (conn) {
 
-		var opt = new Option(profile.name, profile.toString());
+		var opt = new Option(conn.getName(), conn.toString());
 		this.document.getElementById("mdSelectProfiles").appendChild(opt);
 	},
 	
@@ -391,20 +395,20 @@ ModalLoadDialog.prototype = {
 
 		var i = 0;
 		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
-		var profile;
+		var conn;
 		var curIndex = -1;
 		var select = this.document.getElementById("mdSelectProfiles");
 		
 		// load all the connections from cookies
 		while (cookieStr != null) {
-			profile = new SparqlConnection(cookieStr);
+			conn = new SparqlConnection(cookieStr);
 			
 			// does this cookied profile match curConn.  
 			// 'True' indicates we want to ignore the curConn profile name.
-			if (curConn && curConn.equals(profile, true)) {
+			if (curConn && curConn.equals(conn, true)) {
 				curIndex = i;
 			}
-			this.appendProfile(profile);
+			this.appendProfile(conn);
 			
 			i += 1;
 			cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
@@ -500,13 +504,13 @@ ModalLoadDialog.prototype = {
 	importProfiles : function () {
 		var text = prompt("Paste profiles here:", " ");
 		var lines = text.split(/[{}\s]+/);
-		var profile = null;
+		var conn = null;
 		
 		for (var i=0; i < lines.length; i++) {
 			if (lines[i].length < 1) continue;
 			try {
-				profile = new SparqlConnection('{' + lines[i] + '}');
-				this.appendProfile(profile);
+				conn = new SparqlConnection('{' + lines[i] + '}');
+				this.appendProfile(conn);
 			} catch (err) {
 				alert("Could not import this line:\n" + lines[i]);
 			}

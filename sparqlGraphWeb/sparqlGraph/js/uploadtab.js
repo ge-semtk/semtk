@@ -450,9 +450,9 @@ define([	// properly require.config'ed
 				if (this.conn == null) {
 					ret = "";
 				} else if (document.getElementById("selectChooseDataset").value === "data") {
-					ret = this.conn.dataServerUrl;
+					ret = this.conn.getDataInterface(0).getServerURL();
 				} else {
-					ret = this.conn.ontologyServerUrl;
+					ret = this.conn.getModelInterface(0).getServerURL();
 				}
 				return ret;
 			},
@@ -466,9 +466,9 @@ define([	// properly require.config'ed
 				if (this.conn == null) {
 					ret = "";
 				} else if (document.getElementById("selectChooseDataset").value === "data") {
-					ret = this.conn.dataSourceDataset;
+					ret = this.conn.getDataInterface(0).getDataset();
 				} else {
-					ret = this.conn.ontologySourceDataset;
+					ret = this.conn.getModelInterface(0).getDataset();
 				}
 				return ret;
 			},
@@ -481,7 +481,8 @@ define([	// properly require.config'ed
 				if ( document.getElementById("selectChooseDataset").value === "model" ) {
 					return true;
 				// "model" and "data" are actually the same
-				} else if (this.conn.dataServerUrl === this.conn.ontologyServerUrl && this.conn.dataSourceDataset === this.conn.ontologySourceDataset) {
+				//} else if (this.conn.dataServerUrl === this.conn.ontologyServerUrl && this.conn.dataSourceDataset === this.conn.ontologySourceDataset) {
+				} else if (this.conn.getModelInterface(0).equals(this.conn.getDataInterface(0))) {
 					return true;
 				} else {
 					return false;
@@ -496,9 +497,9 @@ define([	// properly require.config'ed
 				if (this.conn == null) {
 					ret = null;
 				} else if (document.getElementById("selectChooseDataset").value === "data") {
-					ret = this.conn.getDataInterface();
+					ret = this.conn.getDataInterface(0);
 				} else {
-					ret = this.conn.getOntologyInterface();
+					ret = this.conn.getModelInterface(0);
 				}
 				return ret;
 			},

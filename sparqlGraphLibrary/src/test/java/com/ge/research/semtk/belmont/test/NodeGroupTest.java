@@ -37,7 +37,7 @@ public class NodeGroupTest {
 	public void nodeGroupFromJson() throws Exception {		
 
         SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json"));
-		NodeGroup ng = NodeGroup.getInstanceFromJson(sgJson.getSNodeGroupJson());
+		NodeGroup ng = sgJson.getNodeGroup();
 		
 		assertEquals(3, ng.getNodeList().size());
 		assertEquals(ng.getNodeList().get(0).getFullUriName(),"http://kdl.ge.com/batterydemo#Color");

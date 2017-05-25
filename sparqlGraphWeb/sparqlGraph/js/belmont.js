@@ -1633,6 +1633,9 @@ var SemanticNodeGroup = function(width, height, divName) {
 	                         // So I set this flag to false and skip drawing.
 	                         // JUSTIN / PAUL TODO.  Untangle this mess.
 	
+	this.conn = null;       // optional relevant SparqlConnection.
+	                        // this will need to be non-optional and expanded in the upcoming versions.
+	
 	this.prefixHash = {};
 	this.prefixNumberStart = 0;
 	
@@ -1654,8 +1657,10 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 3;
-// the functions used by the semanticNodeGroup to keep its stuff in order.
+SemanticNodeGroup.JSON_VERSION = 4;
+// version 4 - multiple connections
+// version 3 - SNodeOptionals
+
 
 SemanticNodeGroup.XMLSCHEMA_PREFIX = "XMLSchema:";
 SemanticNodeGroup.XMLSCHEMA_FULL = "http://www.w3.org/2001/XMLSchema#";
@@ -1688,8 +1693,7 @@ SemanticNodeGroup.prototype = {
 		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
 		
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
-			// TODO: do something smarter
-			console.log("Nodegroup json was created by a newer version of SemTK.");
+			throw new Error("SemanticNodeGroup.addJson only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
 		}
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
@@ -1833,6 +1837,12 @@ SemanticNodeGroup.prototype = {
 		// maybe less efficient but keeps avoids double implementation - Paul
 		var ret = new SemanticNodeGroup(this.width, this.height, this.divName);
 		ret.addJson(this.toJson());
+		
+		// connection
+		var conn = new SparqlConnection();
+		conn.fromJson(this.conn.toJson());
+		ret.setSparqlConnection(conn);
+		
 		ret.drawable = false;     // TODO: automatically make it illegal to draw a copy to get around raphael draw bugs.
 		return ret;
 	},
@@ -1873,10 +1883,23 @@ SemanticNodeGroup.prototype = {
 			// create a new prefix name
 			var fragments = chunks[0].split("/");
 			var newPrefixName = fragments[fragments.length - 1];
+			
+			// === Object.values() apparently isn't widely supported  ===
+			// === so populate prefixVals = Object.values(prefixHash) ===
+			var prefixVals = [];
+			for (var k in this.prefixHash) {
+				prefixVals.push(this.prefixHash[k]);
+			}
+			//============================================================
+			
+			// make sure prefix starts with a number
+			f = new SparqlFormatter();
+			newPrefixName = f.legalizePrefixName(newPrefixName);
+			
 			// make sure new prefix name is unique
-			if (Object.values(this.prefixHash).indexOf(newPrefixName) > -1) {
+			if (prefixVals.indexOf(newPrefixName) > -1) {
 				var i=0;
-				while (Object.values(this.prefixHash).indexOf(newPrefixName + "_" + i) > -1) {
+				while (prefixVals.indexOf(newPrefixName + "_" + i) > -1) {
 					i++;
 				}
 				newPrefixName = newPrefixName + "_" + i;
@@ -2056,6 +2079,10 @@ SemanticNodeGroup.prototype = {
 	setAsyncSNodeEditor : function (func) {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
 		this.asyncSNodeEditor = func;
+	},
+	
+	setSparqlConnection : function (sparqlConn) {
+		this.conn = sparqlConn;
 	},
 	
 	getNodeCount : function() {
@@ -2858,7 +2885,7 @@ SemanticNodeGroup.prototype = {
 		var sparql = this.generateSparqlPrefix() + "\n";
 
 		if (queryType == SemanticNodeGroup.QUERY_COUNT) {
-			sparql = "SELECT (COUNT(*) as ?count) { \n";
+			sparql += "SELECT (COUNT(*) as ?count) { \n";
 		}
 		
 		sparql += 'select distinct';
@@ -2892,6 +2919,8 @@ SemanticNodeGroup.prototype = {
 			sparql = "#Error: No values selected for return.\n" + sparql;
 		}
 
+		sparql += this.generateSparqlFromClause(tab);
+		
 		sparql += " where {\n";
 
 		var doneNodes = [];
@@ -2921,6 +2950,40 @@ SemanticNodeGroup.prototype = {
 
 		//sparql = fmt.prefixQuery(sparql);
 		console.log("Built SPARQL query:\n" + sparql);
+		return sparql;
+	},
+	
+	/**
+	 * Very simple FROM clause logic
+	 * Generates FROM clause if this.conn has
+	 *     - exactly 1 serverURL
+	 *     - more than one datasets (graphs)
+	 */
+	generateSparqlFromClause : function (tab) {
+		
+		
+		// do nothing if no conn
+		if (this.conn == null) return "";
+		
+		// multiple ServerURLs is not implemented
+		if (! this.conn.isSingleServerURL() ) {
+			throw new Error("SPARQL generation across multiple servers is not yet supported.");
+		}
+		
+		// get datasets for first model server.  All others must be equal
+		// NOT DEPRECATED: proper use of getModelInterface()
+		var datasets = this.conn.getDatasetsForServer(this.conn.getModelInterface(0).getServerURL());
+		
+		if (datasets.length < 2) return "";
+		
+		var sparql = "\n";
+		// multiple datasets: generate FROM clause
+		tab = this.tabIndent(tab);
+		for (var i=0; i < datasets.length; i++) {
+			sparql += tab + "FROM <" + datasets[i] + ">\n";
+		}
+		tab = this.tabOutdent(tab);
+		
 		return sparql;
 	},
 	
@@ -3381,6 +3444,7 @@ SemanticNodeGroup.prototype = {
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.drawNodes();
 		this.sparqlNameHash = {};
+		this.conn = null;
 
 	},
 	

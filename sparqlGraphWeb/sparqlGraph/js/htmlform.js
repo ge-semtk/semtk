@@ -97,19 +97,10 @@
 		setConn : function(g_conn) {
 			// Establish Sparql Connection in this.conn, using g		
 			this.conn = new SparqlConnection();
-			this.conn.name = g_conn.name;
-			this.conn.serverType = g_conn.serverType;
-	
-			this.conn.dataServerUrl = g_conn.serverURL;
-			this.conn.dataKsServerURL = ""; // fuseki will not have this
-			this.conn.dataSourceDataset = g_conn.dataset;
-	
-			this.conn.ontologyServerUrl = g_conn.serverURL;
-			this.conn.ontologyKsServerURL = ""; // fuseki will not have this
-			this.conn.ontologySourceDataset = g_conn.dataset;
-	
-			this.conn.domain = g_conn.domain;
-			this.conn.build();
+			this.conn.setName(g_conn.name);
+			this.conn.setDomain(g_conn.domain);
+			this.conn.addModelInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset);
+			this.conn.addDataInterface(g_conn.serverType, g_conn.serverURL, g_conn.dataset);
 		},	
 		
 		setFields : function(g_fields) {
@@ -189,10 +180,10 @@
 			var sparql = tmpNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 0, null);
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
+				this.conn.getDataInterface(0).executeAndParseGet(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
+				this.conn.getDataInterface(0).executeAndParse(sparql,  (function(res){this.runQueryCallback(res);}).bind(this)  );
 				
 			}
 		},
@@ -630,10 +621,10 @@
 			
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 					
 			}
 		}, 
@@ -663,10 +654,10 @@
 			this.registerQueryCall();
 			
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 							}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackSetChoices(res);}).bind(this));
 									
 			}
 			
@@ -1244,10 +1235,10 @@
 			
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackCountValidateQuery(res);}).bind(this) );
 					
 			}
 		},
@@ -1305,10 +1296,10 @@
 			
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackCountValidateOthers(res);}).bind(this));
 					
 			}
 		},
@@ -1343,10 +1334,10 @@
 
 			this.registerQueryCall();
 			if(this.getFlag){
-				this.conn.getDataInterface().executeAndParseGet(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParseGet(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
 			}
 			else{
-				this.conn.getDataInterface().executeAndParse(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
+				this.conn.getDataInterface(0).executeAndParse(sparql, (function(res){this.callbackCountQuery(res);}).bind(this));
 						
 			}
 		},

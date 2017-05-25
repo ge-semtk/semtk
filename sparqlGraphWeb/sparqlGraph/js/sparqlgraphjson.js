@@ -66,6 +66,19 @@ define([	// properly require.config'ed
 				return ret;
 			},
 			
+			getNodeGroup : function(ng, optInflateOInfo) {
+				// different from Java due to canvas stuff: takes ng param.
+				
+				ng.clear();
+				var json = this.getSNodeGroupJson();
+				if (json == null) {
+					return null;
+				} else {
+					ng.addJson(json, optInflateOInfo);
+					ng.setSparqlConnection(this.getSparqlConn());
+				}
+			},
+			
 			getSNodeGroupJson : function() {
 				return this.jObj.sNodeGroup;
 			},

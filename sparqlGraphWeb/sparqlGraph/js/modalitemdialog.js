@@ -148,12 +148,16 @@ define([	// properly require.config'ed
 				var sparqlID = this.getSparqlIDText();
 				var optionalCheckElem = this.getFieldElement(ModalItemDialog.OPTIONAL);
 				
+				var returnChecked = this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked;
+				var rtConstrainedChecked = this.getFieldElement(ModalItemDialog.RT_CONSTRAINED_CHECK).checked;
+				var constraintTxt = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
+				
 				// return a list containing just the text field
 				this.callback(	this.item, 
-								this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked ? sparqlID : "",
+								(returnChecked || rtConstrainedChecked || constraintTxt != "") ? sparqlID : "",
 								(optionalCheckElem == null) ? null : optionalCheckElem.checked,
-								this.getFieldElement(ModalItemDialog.RT_CONSTRAINED_CHECK).checked,
-								this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT),
+								rtConstrainedChecked,
+								constraintTxt,
 								this.data
 							  );
 			},

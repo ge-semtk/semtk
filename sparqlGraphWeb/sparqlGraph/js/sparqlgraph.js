@@ -446,14 +446,19 @@
     };
     
     doLoadFailure = function(msg) {
-    	logAndAlert(msg);
-    	setStatus("");    		
-    	clearTree();
-    	gOInfo = new OntologyInfo();
-	    gOInfoLoadTime = new Date();
-    	
-    	gMappingTab.updateNodegroup(gNodeGroup);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+    	require(['sparqlgraph/js/ontologyinfo'], 
+   	         function () {
+    		
+	    	logAndAlert(msg);
+	    	setStatus("");    		
+	    	clearTree();
+	    	gOInfo = new OntologyInfo();
+		    gOInfoLoadTime = new Date();
+	    	
+	    	gMappingTab.updateNodegroup(gNodeGroup);
+			gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+		
+    	});
  		// retains gConn
     };
     
@@ -462,8 +467,9 @@
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
     	
     	require(['sparqlgraph/js/msiclientquery',
+    	         'sparqlgraph/js/backcompatutils',
     	         'jquery', 
-    	         'jsonp'], function(MsiClientQuery) {
+    	         'jsonp'], function(MsiClientQuery, BCUtils) {
     		
     		
 	    	// Clean out existing GUI
@@ -471,25 +477,20 @@
 	    	
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
-	    	gQueryClient =       new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface());
-	    	var ontQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getOntologyInterface(), logAndAlert);
+	    	gNodeGroup.setSparqlConnection(gConn);
+	    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(0));
 	    	
 	    	logEvent("SG Loading", "connection", gConn.toString());
-    		
-	    	// never true any more
-	    	// old code which goes straight to triple-store without micro-services
-    		if (gAvoidQueryMicroserviceFlag) {
-    			gOInfo.loadAsync(gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-    			
-    		} else {
-		    	// load ontology via microservice
-				gOInfo.load(gConn.getDomain(), ontQueryClient, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-    		}
+	    	
+	    	var queryServiceUrl = gAvoidQueryMicroserviceFlag ? null : g.service.sparqlQuery.url;
+	    	
+	    	// note: clearEverything creates a new gOInfo
+    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
     	});
     };
     
     getQueryClientOrInterface = function() {
-    	return gAvoidQueryMicroserviceFlag ? gConn.getDataInterface() : gQueryClient;
+    	return gAvoidQueryMicroserviceFlag ? gConn.getDataInterface(0) : gQueryClient;
     };
     
     doQueryLoadFile = function (file) {
@@ -508,9 +509,7 @@
 	    		}
 	    		
 	    		try {
-	    			var grpJson = sgJson.getSNodeGroupJson();
 	    			var conn = sgJson.getSparqlConn();
-	    			var importJson = sgJson.getMappingTabJson();
 	    			
 	    			
 	    			// ask user to confirm if load will cause a connection switch
@@ -534,14 +533,14 @@
 	    					
 	    				} else {
 	    					// conn already exists in cookies.  Use the name in cookies, so we don't get duplicates
-	    					conn.name = existName;
+	    					conn.setName(existName);
 	    					gLoadDialog.writeProfiles();    // write so we save this as the selected connection
 	    				}
 	    				
 	    				// now load the right connection, then load the file
 	    				doLoadConnection(conn, 
 	    								 function (){
-	    									doQueryLoadFile2(grpJson, importJson);
+	    									doQueryLoadFile2(sgJson);
 	    								 });
 	    				
 	    				
@@ -549,7 +548,7 @@
 			        	
 	    				// Go straight to loading the nodegroup, 
 	    				// since the conn and oInfo are already OK
-			        	doQueryLoadFile2(grpJson, importJson);
+			        	doQueryLoadFile2(sgJson);
 	    			}
 		    		
 	    		} catch (e) {
@@ -567,17 +566,17 @@
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
-    doQueryLoadFile2 = function(grpJson, importJson) {
+    doQueryLoadFile2 = function(sgJson) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
-    	
     	clearGraph();
     	logEvent("SG Loaded Nodegroup");
-		gNodeGroup.addJson(grpJson, gOInfo); 
+    	sgJson.getNodeGroup(gNodeGroup, gOInfo);
+	
 		gNodeGroup.drawNodes();
 		guiGraphNonEmpty();
 		
-		gMappingTab.load(gNodeGroup, importJson);
+		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
     };
     
     doNodeGroupUploadCallback = function (evt) {
@@ -670,13 +669,13 @@
    	doTest = function () {
    		
 	   	 // test move OptionalsUpstream and generateSparql2
-   		
+  		
 	   	 var qElem = document.getElementById("queryText");
 	   	 gNodeGroup.expandOptionalSubgraphs();
 	     document.getElementById('queryText').value = gNodeGroup.generateSparqlDelete(null, null);
 	
 	     guiQueryNonEmpty();	
-   	};
+  	};
    	
    	doLayout = function() {
    		setStatus("Laying out graph...");
@@ -697,7 +696,7 @@
 				}
 			};
 			
-    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDataInterface());
+    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDataInterface(0));
     		mq.execAuthQuery("select ?x ?y ?z where {?x ?y ?z.} limit 10", successCallback);
     	});
     	
@@ -768,7 +767,7 @@
         document.getElementById('queryText').value = gNodeGroup.generateSparqlConstruct();
 		var query = document.getElementById("queryText").value;
    
-   		var dataInterface = gConn.getDataInterface();
+   		var dataInterface = gConn.getDataInterface(0);
 		   
    		var testInterface = new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, dataInterface.serverURL, dataInterface.dataset, SparqlServerInterface.GRAPH_RESULTS);		
 		
@@ -795,6 +794,7 @@
     };
     
     runQuery = function (){
+    	
     	var query = document.getElementById("queryText").value;
     	logEvent("SG Run Query", "sparql", query);
     	
@@ -809,8 +809,12 @@
 			clearResults();
 			
 			if (gAvoidQueryMicroserviceFlag) {
-				/* Old non-microservice code */
-				gConn.getDataInterface().executeAndParse(query, runQueryCallback);
+					
+				require(['sparqlgraph/js/sparqlserverinterface',
+		    	        ], function(SparqlServerInterface) {
+					
+					gConn.getDataInterface(0).executeAndParse(query, runQueryCallback);
+				});
 		    	
 			} else {
 				gQueryClient.executeAndParse(query, runQueryCallback);
