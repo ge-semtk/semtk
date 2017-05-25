@@ -42,7 +42,7 @@ define([	'sparqlgraph/js/msiresultset',
 				                            // optAllowHtml:  default is HTML_SAFE, which means show user the raw tags.
 				                            //                If you know you're sending HTML, set this to true.
 											var htmlFlag = (typeof optAllowHtml === "undefined" || !optAllowHtml) ? ModalIidx.HTML_SAFE : ModalIidx.HTML_ALLOW;
-											ModalIidx.alert("Microservice Failure", msg, ModalIidx.HTML_SAFE);
+											ModalIidx.alert("Microservice Failure", msg, ModalIidx.HTML_ALLOW);
 											if (typeof kdlLogEvent != "undefined") {
 												kdlLogEvent("SG Microservice Failure", "message", msg);
 											}

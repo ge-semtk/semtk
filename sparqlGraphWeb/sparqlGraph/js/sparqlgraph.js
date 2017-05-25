@@ -46,7 +46,7 @@
     var gUploadTab = null;
     var gReady = false;
     
-    var gAvoidQueryMicroserviceFlag = false;
+    var gQueryMicroserviceFlag = "normal";
     
     // READY FUNCTION 
     $('document').ready(function(){
@@ -60,7 +60,8 @@
     	initCanvas();
     	
 	    require([ 'sparqlgraph/js/mappingtab',
-	              'sparqlgraph/js/uploadtab' ], function (MappingTab, UploadTab) {
+	              'sparqlgraph/js/uploadtab',
+	              'local/sparqlgraphlocal'], function (MappingTab, UploadTab) {
 	    
 	    	console.log(".ready()");
 	    	
@@ -478,11 +479,11 @@
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
 	    	gNodeGroup.setSparqlConnection(gConn);
-	    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDataInterface(0));
+	    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDefaultQueryInterface());
 	    	
 	    	logEvent("SG Loading", "connection", gConn.toString());
 	    	
-	    	var queryServiceUrl = gAvoidQueryMicroserviceFlag ? null : g.service.sparqlQuery.url;
+	    	var queryServiceUrl = (gQueryMicroserviceFlag == "direct") ? null : g.service.sparqlQuery.url;
 	    	
 	    	// note: clearEverything creates a new gOInfo
     		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
@@ -490,7 +491,7 @@
     };
     
     getQueryClientOrInterface = function() {
-    	return gAvoidQueryMicroserviceFlag ? gConn.getDataInterface(0) : gQueryClient;
+    	return (gQueryMicroserviceFlag == "direct") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
     
     doQueryLoadFile = function (file) {
@@ -653,28 +654,28 @@
    	//-----  query directly -----//
 	var AQM_COOKIE = "avoidMs";
 	doAvoidQueryMicroservice = function(flag) {
-		gAvoidQueryMicroserviceFlag = flag;
+		gQueryMicroserviceFlag = flag;
 		var cookies = new CookieManager(document);
-		cookies.setCookie(AQM_COOKIE, gAvoidQueryMicroserviceFlag ? "t" : "f");
+		cookies.setCookie(AQM_COOKIE, gQueryMicroserviceFlag);
 	};
 	
 	initAvoidQueryMicroservice = function() {
 		var cookies = new CookieManager(document);
 		var flag = cookies.getCookie(AQM_COOKIE);
-		gAvoidQueryMicroserviceFlag = flag && flag == "t";
-		document.getElementById("chkboxAvoidMicroSvc").checked = gAvoidQueryMicroserviceFlag;
+		if (flag) {
+			// backwards compatibility
+			if (flag == "t") { flag = "direct"; }
+			if (flag == "f") { flag = "normal"; }
+			
+			gQueryMicroserviceFlag = flag;
+		}
+		setQueryFlagCheckboxes();
 	};
 	
    	
    	doTest = function () {
    		
-	   	 // test move OptionalsUpstream and generateSparql2
-  		
-	   	 var qElem = document.getElementById("queryText");
-	   	 gNodeGroup.expandOptionalSubgraphs();
-	     document.getElementById('queryText').value = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 50);
-	
-	     guiQueryNonEmpty();	
+	   	 doDispatcherQuery();
   	};
    	
    	doLayout = function() {
@@ -696,7 +697,7 @@
 				}
 			};
 			
-    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDataInterface(0));
+    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDefaultQueryInterface());
     		mq.execAuthQuery("select ?x ?y ?z where {?x ?y ?z.} limit 10", successCallback);
     	});
     	
@@ -767,7 +768,7 @@
         document.getElementById('queryText').value = gNodeGroup.generateSparqlConstruct();
 		var query = document.getElementById("queryText").value;
    
-   		var dataInterface = gConn.getDataInterface(0);
+   		var dataInterface = gConn.getDefaultQueryInterface();
 		   
    		var testInterface = new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, dataInterface.serverURL, dataInterface.dataset, SparqlServerInterface.GRAPH_RESULTS);		
 		
@@ -798,28 +799,40 @@
     	var query = document.getElementById("queryText").value;
     	logEvent("SG Run Query", "sparql", query);
     	
-		clearResults();
+    	
 
 		if (query.length < 1) {
 			logAndAlert("Can't run empty query.  Use 'build' button first.");
 			
 		} else {
 			// HTML: tell user query is running
-			setStatus("running query...");
-			clearResults();
 			
-			if (gAvoidQueryMicroserviceFlag) {
-					
+			if (gQueryMicroserviceFlag == "direct") {
+				setStatus("running DIRECT query...");
+				clearResults();
+				guiDisableAll();
+				
 				require(['sparqlgraph/js/sparqlserverinterface',
 		    	        ], function(SparqlServerInterface) {
 					
-					gConn.getDataInterface(0).executeAndParse(query, runQueryCallback);
+					gConn.getDefaultQueryInterface().executeAndParse(query, runQueryCallback);
 				});
 		    	
-			} else {
+			} else if (gQueryMicroserviceFlag == "normal") {
+				setStatus("running query...");
+				clearResults();
+				guiDisableAll();
+				
 				gQueryClient.executeAndParse(query, runQueryCallback);
+				
+			} else {
+				try {
+					// might not be defined for some os installations
+					doDispatcherQuery();
+				} catch (e) {
+	    			throw new Error("Can't run query of type " + gQueryMicroserviceFlag);
+	    		}
 			}
-			
 	    	
 		}
 	};
@@ -829,12 +842,13 @@
 	
 		// HTML: tell user query is done
 		setStatus("");
+		guiUnDisableAll();
 		
 		if (results.isSuccess()) {
    	
 			logEvent("SG Display Query Results", "rows", results.getRowCount());
 			
-			if (gAvoidQueryMicroserviceFlag) {
+			if (gQueryMicroserviceFlag == "direct") {
 				/* old non-microservice */
 				results.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
 													"resultsTableName",
@@ -936,6 +950,32 @@
     	//document.getElementById("btnDownloadCSV").disabled = false;
     };
 	
+    var classHash = {};
+    var disableHash = {};
+    
+    guiDisableAll = function () {
+    	classHash = {};
+        disableHash = {};
+        
+    	var buttons = document.getElementsByTagName("button");
+        for (var i = 0; i < buttons.length; i++) {
+        	
+        	classHash[buttons[i].id] = buttons[i].className;
+            disableHash[buttons[i].id] = buttons[i].disabled;
+            
+        	buttons[i].className = "btn disabled";
+            buttons[i].disabled = true;
+        }
+    };
+    
+    guiUnDisableAll = function () {
+    	var buttons = document.getElementsByTagName("button");
+        for (var i = 0; i < buttons.length; i++) {
+        	buttons[i].className = classHash[buttons[i].id];
+            buttons[i].disabled =  disableHash[buttons[i].id];
+        }
+    };
+    
 	// Clear functions
 	// NESTED:  Each one clears other things that depend upon it.
 	clearResults = function () {

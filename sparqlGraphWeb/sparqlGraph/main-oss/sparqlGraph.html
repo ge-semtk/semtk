@@ -84,6 +84,7 @@
 	    		"jsonp": "../sparqlGraph/jquery/jquery.jsonp-2.3.0.min",
 	    		"sparqlgraph": "../sparqlGraph",
 	    		"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
+	    		"local" :      "../sparqlGraph/main-oss"
 	      	},
 	  		
 	  		shim : {
@@ -100,6 +101,10 @@
 		    }   
 		};
 	</script>
+	
+	<script src="../js/sparqlgraph.js"></script>
+	<script src="./sparqlgraphlocal.js"></script>
+	
 	<!-- TODO Use iids table -->
 	<style type="text/css">
 		.tg  {border-collapse:collapse;border-spacing:0;border-color:#999;}
@@ -189,7 +194,7 @@
 							<li><a href="javascript:doNodeGroupUpload();">Upload...</a></li>
 							<li><a href="javascript:doNodeGroupDownload();">Download...</a></li>							
 							<li><hr></li>
-							<li><a href="javascript:chkboxAvoidMicroSvc.checked = ! chkboxAvoidMicroSvc.checked; doAvoidQueryMicroservice(chkboxAvoidMicroSvc.checked);"><input type="checkbox" disabled="disabled" id="chkboxAvoidMicroSvc" style="vertical-align:top;"> Query Directly</a></li>
+							<li><a href="javascript:chkboxAvoidMicroSvc.checked = (! chkboxAvoidMicroSvc.checked);  doAvoidQueryMicroservice(chkboxAvoidMicroSvc.checked ? 'direct' : 'normal');"><input type="checkbox" disabled="disabled" id="chkboxAvoidMicroSvc" style="vertical-align:top;"> Query Directly</a></li>
 						</ul>				
 					</li>
 					 
