@@ -57,6 +57,21 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 	<form id="loadDialogForm">\
 	<table border="1">\
 		<tr> \
+			<td valign="top"> <!-- TABLE: Right -->\
+				<center><legend>Server Profiles</legend></center>\
+				<select id="mdSelectProfiles" size=20 style="min-width:90%; margin-left:1ch; margin-right:1ch">\
+				</select>\
+				<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+		            <button type="button" class="btn" id="mdProfileCopy"   >Copy</button>\
+					<button type="button" class="btn" id="mdProfileNew"    >New</button>\
+					<button type="button" class="btn" id="mdProfileDelete" >Delete</button>\
+				</div>\
+				<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+					<button type="button" class="btn" id="mdProfileSaveAll" >Save All</button>\
+					<button type="button" class="btn" id="mdProfileImport"  >Import</button>\
+					<button type="button" class="btn" id="mdProfileExport"  >Export</button>\
+				</div>\
+			</td>\
 			<td valign="top"> <!-- TABLE: Left  -->\
 				<center><legend>Profile</legend></center>\
 	    		<form class="form-horizontal"> </form> \
@@ -85,21 +100,6 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 					</div>\
 				</fieldset>\
 				</form>\
-			</td>\
-			<td valign="top"> <!-- TABLE: Right -->\
-				<center><legend>Server Profiles</legend></center>\
-				<select id="mdSelectProfiles" size=20 style="min-width:90%; margin-left:1ch; margin-right:1ch">\
-				</select>\
-				<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
-		            <button type="button" class="btn" id="mdProfileCopy"   >Copy</button>\
-					<button type="button" class="btn" id="mdProfileNew"    >New</button>\
-					<button type="button" class="btn" id="mdProfileDelete" >Delete</button>\
-				</div>\
-				<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
-					<button type="button" class="btn" id="mdProfileSaveAll" >Save All</button>\
-					<button type="button" class="btn" id="mdProfileImport"  >Import</button>\
-					<button type="button" class="btn" id="mdProfileExport"  >Export</button>\
-				</div>\
 			</td>\
 		</table>\
 		<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
