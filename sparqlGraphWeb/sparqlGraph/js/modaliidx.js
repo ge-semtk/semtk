@@ -71,6 +71,21 @@ define([	// properly require.config'ed   bootstrap-modal
 							)
 		};
 		
+		ModalIidx.prompt = function (titleText, msgHtml, okCallback) {
+			kdlLogEvent("prompt", "title", titleTxt, "message", msgHtml);
+
+			var m = new ModalIidx("ModalIidxPrompt");
+			var div = document.createElement("div");
+			div.innerHTML = msgHtml + " " + '<input type="text" class="input-xlarge" id="modalIidxPrompt" >';
+			m.showOKCancel(	titleTxt, 
+							div, 
+							function() {return null;}, // always validate
+							okCallback(document.getElementById("modalIidxPrompt").value), 
+							function () {},    // no cancel callback
+							optOkButtonText
+							)
+		};
+		
 		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthStr) {
 			
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
