@@ -479,14 +479,17 @@
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
 	    	gNodeGroup.setSparqlConnection(gConn);
-	    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDefaultQueryInterface());
 	    	
-	    	logEvent("SG Loading", "connection", gConn.toString());
-	    	
-	    	var queryServiceUrl = (gQueryMicroserviceFlag == "direct") ? null : g.service.sparqlQuery.url;
-	    	
-	    	// note: clearEverything creates a new gOInfo
-    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+	    	if (gConn != null) {
+		    	gQueryClient = new MsiClientQuery(g.service.sparqlQuery.url, gConn.getDefaultQueryInterface());
+		    	
+		    	logEvent("SG Loading", "connection", gConn.toString());
+		    	
+		    	var queryServiceUrl = (gQueryMicroserviceFlag == "direct") ? null : g.service.sparqlQuery.url;
+		    	
+		    	// note: clearEverything creates a new gOInfo
+	    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+	    	}
     	});
     };
     

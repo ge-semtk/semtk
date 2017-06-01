@@ -527,7 +527,7 @@ define([	// properly require.config'ed
 			// get SparqlEndpointInterface or null
 			getSelectedSei : function () {
 				var val = document.getElementById("selectChooseDataset").value;
-				if (val == "") {
+				if (val == "" || this.conn == null) {
 					return null;
 				} else if (val.charAt(0) == "m") {
 					return this.conn.getModelInterface(parseInt(val.substring(1)));
@@ -567,10 +567,11 @@ define([	// properly require.config'ed
 			 */
 			isModelDatasetSelected : function () {
 				var sei = this.getSelectedSei();
-				
-				for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
-					if (this.conn.getModelInterface(i).equals(sei)) {
-						return true;
+				if (this.conn != null) {
+					for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
+						if (this.conn.getModelInterface(i).equals(sei)) {
+							return true;
+						}
 					}
 				}
 				return false;
