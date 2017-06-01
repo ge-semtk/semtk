@@ -39,9 +39,12 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		
 		// get nodegroup and sei from json
 		SparqlGraphJson sgJson = new SparqlGraphJson(encodedNodeGroupWithConnection);
-		System.err.println("processing incoming nodegroup");
+		System.err.println("processing incoming nodegroup - in base class");
 
+		System.err.println("about to get the nodegroup");
 		this.queryNodeGroup = sgJson.getNodeGroup();
+
+		System.err.println("about to get the default qry interface");
 		this.sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 		
 		SparqlConnection nodegroupConn = sgJson.getSparqlConn();
