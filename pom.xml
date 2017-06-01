@@ -39,6 +39,7 @@
 		<module>standaloneExecutables</module>
 		<module>nodeGroupStoreService</module>
 		<module>ontologyInfoService</module>
+		<module>sparqlExtDispatchService</module>
 	</modules>
 
 	<properties>
