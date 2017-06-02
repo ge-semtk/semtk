@@ -130,22 +130,22 @@ ModalLoadDialog.prototype = {
 		this.show();
 		// ==== Callbacks that don't use the (ahem) %VAR trick ====
 		
-		document.getElementById("mdName").onchange=this.changed.bind(this, true);
-		document.getElementById("mdDomain").onchange=this.changed.bind(this, true);
-		document.getElementById("mdServerURL").onchange=this.changed.bind(this, true);
-		document.getElementById("mdSelectSeiType").onchange=this.changed.bind(this, true);
-		document.getElementById("mdDataset").onchange=this.changed.bind(this, true);
+		document.getElementById("mdName").onchange         =this.callbackChangedName.bind(this);
+		document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);
+		document.getElementById("mdServerURL").onchange    =this.callbackChangedServerURL.bind(this);
+		document.getElementById("mdSelectSeiType").onchange=this.callbackChangedSelectSeiType.bind(this);
+		document.getElementById("mdDataset").onchange      =this.callbackChangedDataset.bind(this);
 		
 		document.getElementById("loadDialogForm")  .onsubmit=this.callbackSubmit.bind(this);
-		document.getElementById("mdSeiDelete")     .onclick=this.callbackDeleteSei.bind(this);
+		document.getElementById("mdSeiDelete")     .onclick =this.callbackDeleteSei.bind(this);
 		document.getElementById("mdSelectProfiles").onchange=this.callbackSelectionChange.bind(this);
-		document.getElementById("mdProfileCopy")   .onclick=this.callbackCopy.bind(this);
-		document.getElementById("mdProfileNew")    .onclick=this.callbackNew.bind(this);
-		document.getElementById("mdProfileDelete") .onclick=this.callbackDeleteProfile.bind(this);
-		document.getElementById("mdProfileSaveAll").onclick=this.saveAllProfiles.bind(this);
-		document.getElementById("mdProfileImport") .onclick=this.importProfiles.bind(this);
-		document.getElementById("mdProfileExport") .onclick=this.exportProfiles.bind(this);
-		document.getElementById("mdCancel")        .onclick=this.callbackCancel.bind(this);
+		document.getElementById("mdProfileCopy")   .onclick =this.callbackCopy.bind(this);
+		document.getElementById("mdProfileNew")    .onclick =this.callbackNew.bind(this);
+		document.getElementById("mdProfileDelete") .onclick =this.callbackDeleteProfile.bind(this);
+		document.getElementById("mdProfileSaveAll").onclick =this.callbackSaveAll.bind(this);
+		document.getElementById("mdProfileImport") .onclick =this.callbackImportProfiles.bind(this);
+		document.getElementById("mdProfileExport") .onclick =this.callbackExportProfiles.bind(this);
+		document.getElementById("mdCancel")        .onclick =this.callbackCancel.bind(this);
 		
 		this.readProfiles(curConn);
 		
@@ -153,6 +153,31 @@ ModalLoadDialog.prototype = {
 
 	},
 		
+	// changes don't store anything
+	callbackChangedName : function() {
+		var select = this.document.getElementById("mdSelectProfiles");
+		select[this.displayedIndex].text = document.getElementById("mdName").value.trim();
+		this.sortProfiles();
+		
+		this.changed(true);
+		return false;
+	},
+	callbackChangedDomain : function() {
+		this.changed(true);
+		return false;
+	},
+	callbackChangedServerURL : function() {
+		this.changed(true);
+		return false;
+	},
+	callbackChangedSelectSeiType : function() {
+		this.changed(true);
+		return false;
+	},
+	callbackChangedDataset : function() {
+		this.changed(true);
+		return false;
+	},
 	
 	callbackCopy : function() {
 		if (this.conn == null) {
@@ -160,8 +185,10 @@ ModalLoadDialog.prototype = {
 		} else {
 			var conn = new SparqlConnection(this.conn.toString());
 			conn.setName(this.conn.getName() + " copy");
-			this.switchToNewProfile(conn);
+			this.appendAndSelectProfile(conn);
+			this.sortProfiles();
 		}
+		return false;
 	},
 	
 	callbackNew : function() {
@@ -172,20 +199,9 @@ ModalLoadDialog.prototype = {
 		conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
 		conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
 		
-		this.switchToNewProfile(conn);
-	},
-	
-	switchToNewProfile : function (conn) {
-		this.storeProfileFromScreen();
+		this.appendAndSelectProfile(conn);
 		this.sortProfiles();
-		
-		this.conn = conn;
-		this.appendProfile(this.conn);
-		
-		var select = this.document.getElementById("mdSelectProfiles");
-		select.selectedIndex = select.options.length-1;
-		this.displaySelectedProfile();
-		this.changed(true);
+		return false;
 	},
 	
 	callbackDeleteProfile : function () {
@@ -201,12 +217,13 @@ ModalLoadDialog.prototype = {
 		
 		this.displaySelectedProfile();
 		this.changed(true);
+		return false;
 	},
 	
 	callbackSubmit : function () {
 		// save all the saved profiles and return whatever is showing
 		this.hide();
-		this.storeProfileFromScreen();
+		this.storeDisplayedProfile();
 		this.writeProfiles();
 		this.callback(this.conn);
 		return false;
@@ -218,16 +235,176 @@ ModalLoadDialog.prototype = {
 		} else {
 			this.hide();
 		}
-		
+		return false;
 	},
 	
 	callbackSelectionChange : function () {
 		// selection changes, including to -1
-		this.storeProfileFromScreen();
-		this.sortProfiles();
+		this.storeDisplayedProfile();
 		this.displaySelectedProfile();
+		return false;
 	},
 	
+	callbackDeleteSei : function() {
+		
+		if (this.currSeiType == "m") {
+			this.conn.delModelInterface(this.currSeiIndex);
+			
+			if (this.conn.getModelInterfaceCount() == 0) {
+				// add a 0th interface
+				this.conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+				this.currSeiIndex = 0;
+				
+			} else if (this.currSeiIndex >= this.conn.getModelInterfaceCount()) {
+				// delete button and move to prev
+				var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
+				button.parentNode.removeChild(button);
+				this.currSeiIndex = this.conn.getModelInterfaceCount() - 1;
+			} 
+			
+		} else {
+			this.conn.delDataInterface(this.currSeiIndex);
+			
+			if (this.conn.getDataInterfaceCount() == 0) {
+				// add a 0th interface
+				this.conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+				this.currSeiIndex = 0;
+				
+			} else if (this.currSeiIndex >= this.conn.getDataInterfaceCount()) {
+				// delete button and move to prev
+				var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
+				button.parentNode.removeChild(button);
+				this.currSeiIndex = this.conn.getDataInterfaceCount() - 1;
+			} 
+		}
+		
+		// tell storeDisplayedSei() there's nothing on the screen to save
+		var saveType = this.currSeiType;
+		this.currSeiType = null;  
+		
+		// change to new index
+		this.callbackChangeSei(saveType, this.currSeiIndex);
+		
+		this.changed(true);
+		
+	},
+	
+	// pressed "+" button
+	callbackAddSei : function(seiType) {
+		var div; 
+		var plusBut;
+		
+		// create new button
+		
+		var i = (seiType == "m") ? this.conn.getModelInterfaceCount() : this.conn.getDataInterfaceCount();
+		var button = this.createSeiButton(seiType, i);
+		
+		// find right list and plus button to insert before
+		if (seiType == "m") {
+			div = document.getElementById("mdModelButtonDiv");
+			plusBut = document.getElementById("mdSeiButtonModelPlus");
+			this.conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+		} else {
+			div = document.getElementById("mdDataButtonDiv");
+			plusBut = document.getElementById("mdSeiButtonDataPlus");
+			this.conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+
+		}
+		
+		// insert
+		div.insertBefore(button, plusBut);
+		
+		this.callbackChangeSei(seiType, i);
+		
+		this.changed(true);
+		return false;
+		
+	},
+	
+	// 
+	// save current screen     - unless this.currSeiType is null
+	// show the new sei        - (null,-1) just clears everything
+	callbackChangeSei : function(seiType, seiIndex) {
+		
+		// update all button active states
+		var buttons = document.getElementById("mdModelButtonDiv").children;
+		for (var i=0; i < buttons.length; i++) {
+			buttons[i].className = "btn";
+		}
+		buttons = document.getElementById("mdDataButtonDiv").children;
+		for (var i=0; i < buttons.length; i++) {
+			buttons[i].className = "btn";
+		}
+		
+		if (seiIndex > -1) {
+			document.getElementById("mdSeiButton_"+seiType+seiIndex).className = "btn active";
+		}
+		
+		// save current screen
+		this.storeDisplayedSei();
+		
+		// save new current sei identifiers
+		this.currSeiType = seiType;
+		this.currSeiIndex = seiIndex;
+		
+		// set screen fields from memory
+		if (seiIndex > -1) {
+			var sei = seiType == "m" ? this.conn.getModelInterface(seiIndex) : this.conn.getDataInterface(seiIndex);
+			document.getElementById("mdSelectSeiType").selectedIndex = (sei.getServerType() == SparqlConnection.FUSEKI_SERVER) ? 0 : 1;
+			document.getElementById("mdServerURL").value = sei.getServerURL();
+			document.getElementById("mdDataset").value = sei.getDataset();
+			
+			document.getElementById("mdSelectSeiType").disabled=false;
+			document.getElementById("mdServerURL").disabled=false;
+			document.getElementById("mdDataset").disabled=false;
+		} else {
+			document.getElementById("mdSelectSeiType").selectedIndex = 1;
+			document.getElementById("mdServerURL").value = "";
+			document.getElementById("mdDataset").value = "";
+			
+			document.getElementById("mdSelectSeiType").disabled=true;
+			document.getElementById("mdServerURL").disabled=true;
+			document.getElementById("mdDataset").disabled=true;
+		}
+		return false;
+	},
+	
+	callbackExportProfiles : function () {
+		this.storeDisplayedProfile();
+		
+		var result = this.getAllProfilesString();
+		
+		console.log(result);
+		this.downloadFile(result, "profiles.txt");
+		return false;
+	},
+	
+	callbackImportProfiles : function () {
+		var text = prompt("Paste profiles here:", " ");
+		if (text == null) {
+			return;
+		}
+		
+		this.appendProfilesString(text);
+		
+		this.sortProfiles();
+		this.changed(true);
+		return false;
+	},
+	
+	appendAndSelectProfile : function (conn) {
+		this.storeDisplayedProfile();
+		
+		this.conn = conn;
+		this.appendProfile(this.conn);
+		
+		var select = this.document.getElementById("mdSelectProfiles");
+		select.selectedIndex = select.options.length-1;
+		this.displaySelectedProfile();
+		this.changed(true);
+	},
+	
+	// External
 	connectionIsKnown : function (conn, selectFlag) {
 		// search through connections, ignoring the name and return the name if found
 		
@@ -249,6 +426,7 @@ ModalLoadDialog.prototype = {
 		return false;
 	},
 	
+	// External
 	addConnection : function(conn) {
 		// Appends and writes a profile
 		// So you must first call something that reads the profiles
@@ -296,143 +474,6 @@ ModalLoadDialog.prototype = {
 		return -1;
 	},
 	
-	callbackDeleteSei : function() {
-		
-		
-		if (this.currSeiType == "m") {
-			this.conn.delModelInterface(this.currSeiIndex);
-			
-			if (this.conn.getModelInterfaceCount() == 0) {
-				// add a 0th interface
-				this.conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
-				this.currSeiIndex = 0;
-				
-			} else if (this.currSeiIndex >= this.conn.getModelInterfaceCount()) {
-				// delete button and move to prev
-				var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
-				button.parentNode.removeChild(button);
-				this.currSeiIndex = this.conn.getModelInterfaceCount() - 1;
-			} 
-			
-		} else {
-			this.conn.delDataInterface(this.currSeiIndex);
-			
-			if (this.conn.getDataInterfaceCount() == 0) {
-				// add a 0th interface
-				this.conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
-				this.currSeiIndex = 0;
-				
-			} else if (this.currSeiIndex >= this.conn.getDataInterfaceCount()) {
-				// delete button and move to prev
-				var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
-				button.parentNode.removeChild(button);
-				this.currSeiIndex = this.conn.getDataInterfaceCount() - 1;
-			} 
-		}
-		
-		// tell storeSeiFromScreen() there's nothing on the screen to save
-		var saveType = this.currSeiType;
-		this.currSeiType = null;  
-		
-		// change to new index
-		this.callbackChangeSei(saveType, this.currSeiIndex);
-		
-		this.changed(true);
-		
-	},
-	
-	// pressed "+" button
-	callbackAddSei : function(seiType) {
-		var div; 
-		var plusBut;
-		
-		// create new button
-		
-		var i = (seiType == "m") ? this.conn.getModelInterfaceCount() : this.conn.getDataInterfaceCount();
-		var button = this.createSeiButton(seiType, i);
-		
-		// find right list and plus button to insert before
-		if (seiType == "m") {
-			div = document.getElementById("mdModelButtonDiv");
-			plusBut = document.getElementById("mdSeiButtonModelPlus");
-			this.conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
-		} else {
-			div = document.getElementById("mdDataButtonDiv");
-			plusBut = document.getElementById("mdSeiButtonDataPlus");
-			this.conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
-
-		}
-		
-		// insert
-		div.insertBefore(button, plusBut);
-		
-		this.callbackChangeSei(seiType, i);
-		
-		this.changed(true);
-		
-	},
-	
-	// 
-	// save current screen     - unless this.currSeiType is null
-	// show the new sei        - (null,-1) just clears everything
-	callbackChangeSei : function(seiType, seiIndex) {
-		
-		// update all button active states
-		var buttons = document.getElementById("mdModelButtonDiv").children;
-		for (var i=0; i < buttons.length; i++) {
-			buttons[i].className = "btn";
-		}
-		buttons = document.getElementById("mdDataButtonDiv").children;
-		for (var i=0; i < buttons.length; i++) {
-			buttons[i].className = "btn";
-		}
-		
-		if (seiIndex > -1) {
-			document.getElementById("mdSeiButton_"+seiType+seiIndex).className = "btn active";
-		}
-		
-		// save current screen
-		this.storeSeiFromScreen();
-		
-		// save new current sei identifiers
-		this.currSeiType = seiType;
-		this.currSeiIndex = seiIndex;
-		
-		// set screen fields from memory
-		if (seiIndex > -1) {
-			var sei = seiType == "m" ? this.conn.getModelInterface(seiIndex) : this.conn.getDataInterface(seiIndex);
-			document.getElementById("mdSelectSeiType").selectedIndex = (sei.getServerType() == SparqlConnection.FUSEKI_SERVER) ? 0 : 1;
-			document.getElementById("mdServerURL").value = sei.getServerURL();
-			document.getElementById("mdDataset").value = sei.getDataset();
-			
-			document.getElementById("mdSelectSeiType").disabled=false;
-			document.getElementById("mdServerURL").disabled=false;
-			document.getElementById("mdDataset").disabled=false;
-		} else {
-			document.getElementById("mdSelectSeiType").selectedIndex = 1;
-			document.getElementById("mdServerURL").value = "";
-			document.getElementById("mdDataset").value = "";
-			
-			document.getElementById("mdSelectSeiType").disabled=true;
-			document.getElementById("mdServerURL").disabled=true;
-			document.getElementById("mdDataset").disabled=true;
-		}
-	},
-	
-	// pull sei fields from screen into current sei
-	storeSeiFromScreen : function() {
-		
-		if (this.currSeiType != null) {
-			// get the current sei
-			var sei = (this.currSeiType == "m") ? this.conn.getModelInterface(this.currSeiIndex) : this.conn.getDataInterface(this.currSeiIndex);
-			
-			// set fields
-			sei.setServerType(document.getElementById("mdSelectSeiType").value == "F" ? SparqlConnection.FUSEKI_SERVER : SparqlConnection.VIRTUOSO_SERVER);
-			sei.setServerURL(this.document.getElementById("mdServerURL").value.trim());
-			sei.setDataset(this.document.getElementById("mdDataset").value.trim());
-		}
-	},
-	
 	// assemble a button
 	createSeiButton : function(butType, butIndex) {
 		var button = document.createElement("button");
@@ -443,9 +484,38 @@ ModalLoadDialog.prototype = {
 		return button;
 	},
 	
+	
+	
+	// pull profile into this.conn and display it
+	displaySelectedProfile : function() {
+		index = this.getSelectedIndex();
+		this.displayedIndex = index;
+		
+		var select = this.document.getElementById("mdSelectProfiles");
+		var profileStr = (select.selectedIndex > -1) ? select.options[select.selectedIndex].value : null;
+		
+		if (profileStr != null) {
+			this.conn = new SparqlConnection();
+			this.conn.fromString(profileStr);
+			
+			document.getElementById("mdName").value = this.conn.getName();
+			document.getElementById("mdDomain").value = this.conn.getDomain();
+			document.getElementById("mdName").disabled = false;
+			document.getElementById("mdDomain").disabled = false;
+		} else {
+			this.conn = null;
+			document.getElementById("mdName").value = "";
+			document.getElementById("mdDomain").value = "";
+			document.getElementById("mdName").disabled = true;
+			document.getElementById("mdDomain").disabled = true;
+		}
+		
+		this.displayProfileSei();
+	},
+	
 	// set up the correct number of buttons
 	// and populate the screen for current sei
-	displaySei : function() {
+	displayProfileSei : function() {
 		// clear state
 		this.currSeiType = null;
 		this.currSeiIndex = null;
@@ -498,63 +568,39 @@ ModalLoadDialog.prototype = {
 		} else {
 			this.callbackChangeSei("m", 0);
 		}
-		
-		
-	},
-	
-	// pull profile into this.conn and display it
-	displaySelectedProfile : function() {
-		index = this.getSelectedIndex();
-		this.displayedIndex = index;
-		
-		var select = this.document.getElementById("mdSelectProfiles");
-		var profileStr = (select.selectedIndex > -1) ? select.options[select.selectedIndex].value : null;
-		
-		if (profileStr != null) {
-			this.conn = new SparqlConnection();
-			this.conn.fromString(profileStr);
-			
-			document.getElementById("mdName").value = this.conn.getName();
-			document.getElementById("mdDomain").value = this.conn.getDomain();
-			document.getElementById("mdName").disabled = false;
-			document.getElementById("mdDomain").disabled = false;
-		} else {
-			this.conn = null;
-			document.getElementById("mdName").value = "";
-			document.getElementById("mdDomain").value = "";
-			document.getElementById("mdName").disabled = true;
-			document.getElementById("mdDomain").disabled = true;
-		}
-			
-		
-		this.displaySei();
 	},
 	
 	// store screen to this.conn, then into the select.option[].value
-	storeProfileFromScreen : function() {
+	storeDisplayedProfile : function() {
 		if (this.displayedIndex == -1) {
 			return;
 		}
 		
-		// create a profile from the ones on the screen
+		// put non-sei fields into this.conn
 		this.conn.setName(this.document.getElementById("mdName").value.trim());
+		this.conn.setDomain(this.document.getElementById("mdDomain").value.trim());
 		
+		// put sei into this.conn
+		this.storeDisplayedSei();
 		
-		
-		var domain = this.document.getElementById("mdDomain").value;
-		// Adds the http:// on front of domain if needed
-		if (domain.indexOf("http") != 0) {
-			domain = "http://" + domain;
-		}
-		
-		this.conn.setDomain(domain);
-		
-		this.storeSeiFromScreen();
-		
-		// put into select
+		// put this.conn into select[n]
 		var select = this.document.getElementById("mdSelectProfiles");
 		select.options[this.displayedIndex].value = this.conn.toString();
 		select.options[this.displayedIndex].text = this.conn.getName();
+	},
+	
+	// pull sei fields from screen into this.conn
+	storeDisplayedSei : function() {
+		
+		if (this.currSeiType != null) {
+			// get the current sei
+			var sei = (this.currSeiType == "m") ? this.conn.getModelInterface(this.currSeiIndex) : this.conn.getDataInterface(this.currSeiIndex);
+			
+			// set fields
+			sei.setServerType(document.getElementById("mdSelectSeiType").value == "F" ? SparqlConnection.FUSEKI_SERVER : SparqlConnection.VIRTUOSO_SERVER);
+			sei.setServerURL(this.document.getElementById("mdServerURL").value.trim());
+			sei.setDataset(this.document.getElementById("mdDataset").value.trim());
+		}
 	},
 	
 	// appends a connection to the select
@@ -647,35 +693,56 @@ ModalLoadDialog.prototype = {
 	// sort the profiles select, preserving selectedIndex
 	sortProfiles : function () {
 		var select = this.document.getElementById("mdSelectProfiles");
+		
+		// check for selectedIndex
 		var selectedValue = null; 
 		if (select.selectedIndex > -1) {
 			selectedValue = select[select.selectedIndex].value;
 		}
 		var newSelectedIndex=-1;
+		
+		// check for displayedIndex
+		var displayedValue = null;
+		if (this.displayedIndex > -1) {
+			displayedValue = select[this.displayedIndex].value;
+		}
+		var newDisplayedIndex =-1;
+		
+		// make a tmp Array
 		var tmpAry = new Array();
 	    for (var i=0;i<select.options.length;i++) {
 	        tmpAry[i] = new Array();
 	        tmpAry[i][0] = select.options[i].text;
 	        tmpAry[i][1] = select.options[i].value;
 	    }
+	    
+	    // sort
 	    tmpAry.sort();
+	    
+	    // clear
 	    while (select.options.length > 0) {
 	        select.options[0] = null;
 	    }
+	    
+	    // add sorted
 	    for (var i=0;i<tmpAry.length;i++) {
 	        var op = new Option(tmpAry[i][0], tmpAry[i][1]);
 	        select.options[i] = op;
 	        if (tmpAry[i][1] == selectedValue)
 	        	newSelectedIndex= i;
+	        if (tmpAry[i][1] == displayedValue)
+	        	newDisplayedIndex= i;
 	    }
+	    
+	    // fix selectedIndex and displayedIndex
 	    select.selectedIndex = newSelectedIndex;
+	    this.displayedIndex = newDisplayedIndex;
 	    return;
 	},
 	
 	// GUI call to save all the profiles
-	saveAllProfiles: function () {
-		this.storeProfileFromScreen();
-		this.sortProfiles();
+	callbackSaveAll: function () {
+		this.storeDisplayedProfile();
 		this.writeProfiles();
 		this.changed(false);
 	},
@@ -815,28 +882,6 @@ ModalLoadDialog.prototype = {
 				alert("Could not import this line:\n" + lines[i]);
 			}
 		}
-	},
-	
-	exportProfiles : function () {
-		this.storeProfileFromScreen();
-		this.sortProfiles();
-		
-		var result = this.getAllProfilesString();
-		
-		console.log(result);
-		this.downloadFile(result, "profiles.txt");
-	},
-	
-	importProfiles : function () {
-		var text = prompt("Paste profiles here:", " ");
-		if (text == null) {
-			return;
-		}
-		
-		this.appendProfilesString(text);
-		
-		this.sortProfiles();
-		this.changed(true);
 	},
 	
 	downloadFile : function (data, filename) {
