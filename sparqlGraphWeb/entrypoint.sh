@@ -7,7 +7,7 @@
 # Configure app
 echo ""
 echo "Configuring sparqlGraph UI ..."
-INGEST_SEARCH=http://vesuvius37.crd.ge.com:9191/ingestion/
+INGEST_SEARCH=http://vesuvius37.crd.ge.com:12091/ingestion/
 QUERY_SEARCH=http://vesuvius37.crd.ge.com:12050/sparqlQueryService/
 FILE_PATH=/usr/local/tomcat/webapps/sparqlGraph/main-oss/sparqlgraphconfigOss.js
 sed --in-place "s#${INGEST_SEARCH}#${INGEST_URL}#g" "${FILE_PATH}"

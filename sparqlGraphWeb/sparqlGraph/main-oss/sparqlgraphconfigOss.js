@@ -73,7 +73,7 @@ var g = {
 	
 	service : {
 		ingestion :{
-			url : "http://vesuvius37.crd.ge.com:9191/ingestion/",
+			url : "http://vesuvius37.crd.ge.com:12091/ingestion/",
 		},
 		sparqlQueryTEDS_AWS_VPC:{
 			url : "http://localhost:2450/sparqlQueryService/",
