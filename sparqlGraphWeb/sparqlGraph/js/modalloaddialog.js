@@ -153,19 +153,6 @@ ModalLoadDialog.prototype = {
 
 	},
 		
-	getLastConnectionInvisibly : function() {
-		// while remaining hidden, return last loaded conn or null
-		
-		// get the index
-		var index = this.cookieManager.getCookie(ModalLoadDialog.COOKIE_NAME_INDEX);
-		if (index == null) {
-			return null;
-		}
-		
-		// get cookie
-		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, index);
-		return new SparqlConnection(cookieStr);
-	},
 	
 	callbackCopy : function() {
 		if (this.conn == null) {
@@ -222,6 +209,7 @@ ModalLoadDialog.prototype = {
 		this.storeProfileFromScreen();
 		this.writeProfiles();
 		this.callback(this.conn);
+		return false;
 	},
 	
 	callbackCancel : function () {
@@ -577,7 +565,137 @@ ModalLoadDialog.prototype = {
 	},
 	
 	
+	
+	// while remaining hidden, return last loaded conn or null
+	getLastConnectionInvisibly : function() {
+		var lastConn =  localStorage.getItem("SPARQLgraph_curProfile");
+		
+		/**** handle conversion from deprecated cookles to new localStorage ***/
+		if (lastConn == null) {
+			var depConn = this.getLastConnectionInvisiblyCookiesDEPRECATED();
+			if (depConn != null) {
+				this.cookieManager.delCookie(ModalLoadDialog.COOKIE_NAME_INDEX);
+				return depConn;
+			}
+		}
+		/**** end deprecation handling ****/
+		
+		return (lastConn == null ? null : new SparqlConnection(lastConn));
+	},
+	
 	readProfiles : function (curConn) {
+
+		var allProfilesStr = localStorage.getItem("SPARQLgraph_allProfiles");
+		var select = this.document.getElementById("mdSelectProfiles");
+		
+		/**** handle conversion from deprecated cookies to new localStorage ***/
+		if (allProfilesStr == null) {
+			var i=0;
+			var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
+			allProfilesStr = "";
+			// load all the connections from cookies, and delete
+			while (cookieStr != null) {
+				allProfilesStr = allProfilesStr + cookieStr;
+				this.cookieManager.delIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
+				
+				i = i+ 1;
+				cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
+			} 
+		}
+		/**** end deprecation handling ****/
+
+		this.appendProfilesString(allProfilesStr);
+		
+		// if there is a connection loaded, make sure it is in the cookies
+		if (curConn) {
+			// try to find and select currConn, but if it fails then
+			if (! this.selectConnection(curConn)) {
+				
+				// add the current conn to the list of loaded connections and select it
+				this.appendProfile(curConn);
+				select.options.length - 1;
+			}
+			
+		// if no connection loaded, load the one from last session
+		} else {
+			this.selectConnection(this.getLastConnectionInvisibly());
+		}
+		
+		this.sortProfiles();
+		this.displaySelectedProfile();
+	},
+	
+	// selects a connection in the select element
+	// returns true if found
+	selectConnection : function(conn) {
+		var select = this.document.getElementById("mdSelectProfiles");
+		
+		if (conn != null) {
+			
+			for (var i=0; i < select.options.length; i++) {
+				var opt = new SparqlConnection(select.options[i].value);
+				if (conn.equals(opt, true)) { 
+					select.selectedIndex = i;
+					return true;
+				}
+			}
+			
+		}
+		return false;
+	},
+	
+	// sort the profiles select, preserving selectedIndex
+	sortProfiles : function () {
+		var select = this.document.getElementById("mdSelectProfiles");
+		var selectedValue = null; 
+		if (select.selectedIndex > -1) {
+			selectedValue = select[select.selectedIndex].value;
+		}
+		var newSelectedIndex=-1;
+		var tmpAry = new Array();
+	    for (var i=0;i<select.options.length;i++) {
+	        tmpAry[i] = new Array();
+	        tmpAry[i][0] = select.options[i].text;
+	        tmpAry[i][1] = select.options[i].value;
+	    }
+	    tmpAry.sort();
+	    while (select.options.length > 0) {
+	        select.options[0] = null;
+	    }
+	    for (var i=0;i<tmpAry.length;i++) {
+	        var op = new Option(tmpAry[i][0], tmpAry[i][1]);
+	        select.options[i] = op;
+	        if (tmpAry[i][1] == selectedValue)
+	        	newSelectedIndex= i;
+	    }
+	    select.selectedIndex = newSelectedIndex;
+	    return;
+	},
+	
+	// GUI call to save all the profiles
+	saveAllProfiles: function () {
+		this.storeProfileFromScreen();
+		this.sortProfiles();
+		this.writeProfiles();
+		this.changed(false);
+	},
+	
+	/***   DEPRECATED COOKIES ***/
+	getLastConnectionInvisiblyCookiesDEPRECATED : function() {
+		// while remaining hidden, return last loaded conn or null
+		
+		// get the index
+		var index = this.cookieManager.getCookie(ModalLoadDialog.COOKIE_NAME_INDEX);
+		if (index == null) {
+			return null;
+		}
+		
+		// get cookie
+		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, index);
+		return new SparqlConnection(cookieStr);
+	},
+	
+	readProfilesFromCookiesDEPRECATED : function (curConn) {
 
 		var i = 0;
 		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
@@ -623,42 +741,7 @@ ModalLoadDialog.prototype = {
 		this.sortProfiles();
 		this.displaySelectedProfile();
 	},
-	
-	// sort the profiles select, preserving selectedIndex
-	sortProfiles : function () {
-		var select = this.document.getElementById("mdSelectProfiles");
-		var selectedValue = null; 
-		if (select.selectedIndex > -1) {
-			selectedValue = select[select.selectedIndex].value;
-		}
-		var newSelectedIndex=-1;
-		var tmpAry = new Array();
-	    for (var i=0;i<select.options.length;i++) {
-	        tmpAry[i] = new Array();
-	        tmpAry[i][0] = select.options[i].text;
-	        tmpAry[i][1] = select.options[i].value;
-	    }
-	    tmpAry.sort();
-	    while (select.options.length > 0) {
-	        select.options[0] = null;
-	    }
-	    for (var i=0;i<tmpAry.length;i++) {
-	        var op = new Option(tmpAry[i][0], tmpAry[i][1]);
-	        select.options[i] = op;
-	        if (tmpAry[i][1] == selectedValue)
-	        	newSelectedIndex= i;
-	    }
-	    select.selectedIndex = newSelectedIndex;
-	    return;
-	},
-	
-	saveAllProfiles: function () {
-		this.storeProfileFromScreen();
-		this.sortProfiles();
-		this.writeProfiles();
-	},
-	
-	writeProfiles : function () {
+	writeProfilesToCookiesDEPRECATED : function () {
 		// save profiles in cookies
 		
 		var select = this.document.getElementById("mdSelectProfiles");
@@ -682,17 +765,64 @@ ModalLoadDialog.prototype = {
 		this.changed(false);
 	}, 
 	
-	exportProfiles : function () {
-		this.storeProfileFromScreen();
-		this.sortProfiles();
+	/***** End DEPRECATED COOKIES *****/
+	
+	
+	
+	writeProfiles : function () {
+		// save profiles in local storage
 		
+		var select = this.document.getElementById("mdSelectProfiles");
+
+		localStorage.setItem("SPARQLgraph_allProfiles", this.getAllProfilesString());
+		
+		if (this.conn != null) {
+			localStorage.setItem("SPARQLgraph_curProfile", this.conn.toString());
+		} else {
+			localStorage.removeItem("SPARQLgraph_curProfile");
+		}
+	}, 
+	
+	// build a string representing all profiles in the select
+	getAllProfilesString : function () {
 		var result = "";
+		
 		var select = this.document.getElementById("mdSelectProfiles");
 
 		// loop through profiles and save to cookieManager
 		for (var i=0; i < select.length; i++) {
 			result += select.options[i].value.toString() + "\n";
 		}
+		
+		return result;
+	},
+	
+	// append profiles from string to profiles
+	// No sorting, etc., just appendProfile() to the select
+	appendProfilesString : function (profilesStr) {
+		if (profilesStr == null) {
+			return;
+		}
+		var lines = profilesStr.split(/}]}/);
+		var conn = null;
+		
+		for (var i=0; i < lines.length; i++) {
+			if (lines[i].trim().length < 1) continue;
+			try {
+				conn = new SparqlConnection(lines[i] + '}]}');
+				this.appendProfile(conn);
+			} catch (err) {
+				alert("Could not import this line:\n" + lines[i]);
+			}
+		}
+	},
+	
+	exportProfiles : function () {
+		this.storeProfileFromScreen();
+		this.sortProfiles();
+		
+		var result = this.getAllProfilesString();
+		
 		console.log(result);
 		this.downloadFile(result, "profiles.txt");
 	},
@@ -703,18 +833,7 @@ ModalLoadDialog.prototype = {
 			return;
 		}
 		
-		var lines = text.split(/}]}/);
-		var conn = null;
-		
-		for (var i=0; i < lines.length; i++) {
-			if (lines[i].length < 1) continue;
-			try {
-				conn = new SparqlConnection(lines[i] + '}]}');
-				this.appendProfile(conn);
-			} catch (err) {
-				alert("Could not import this line:\n" + lines[i]);
-			}
-		}
+		this.appendProfilesString(text);
 		
 		this.sortProfiles();
 		this.changed(true);

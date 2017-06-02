@@ -6,5 +6,5 @@ export COMPOSE_PROJECT_NAME=host
 
 export SPARQL_PORT=8860
 
-export INGEST_URL=http://vesuvius37.crd.ge.com:9191/ingestion/
+export INGEST_URL=http://vesuvius37.crd.ge.com:12091/ingestion/
 export QUERY_URL=http://vesuvius37.crd.ge.com:12050/sparqlQueryService/
