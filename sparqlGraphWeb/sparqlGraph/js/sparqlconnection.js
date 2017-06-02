@@ -169,6 +169,14 @@ SparqlConnection.prototype = {
 		this.dataInterfaces.push(this.createInterface(sType, url, dataset));
 	},
 	
+	delModelInterface : function (i) {
+		this.modelInterfaces.splice(i, 1);
+	},
+	
+	delDataInterface : function (i) {
+		this.dataInterfaces.splice(i, 1);
+	},
+	
 	getModelInterfaceCount : function () {
 		return this.modelInterfaces.length;
 	},

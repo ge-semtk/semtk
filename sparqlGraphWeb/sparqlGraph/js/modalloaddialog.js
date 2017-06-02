@@ -33,81 +33,83 @@
         <script type="text/javascript" src="../sparqlconnection.js"></script>
  */
 
-/* 
- * Paul  Aug 2016
- * This is an early old-fashioned dialog with plenty of bad features.
- * Most dialogs have been updated to use ModalIidx, DOM, .bind(), require.js ... other things we now consider "normal"
- * varName, really?
- */
 
 
-var ModalLoadDialog = function(document, varName) {
-	// strangely, "varName" is the name of the variable holding this dialog in your HTML
-	// "divId" is the id of a <div> somewhere (anywhere) in your HTML that is otherwise unused
+var ModalLoadDialog = function(document, varNameOBSOLETE) {
 	
 	this.document = document;
 	this.div = document.getElementById("modaldialog");
 	this.cookieManager = new CookieManager(document);
 	
-	this.varName = varName;
 	this.callback = null;
 	this.numFields = 0;
 	
-	// HTML form with %VAR substituted for variable names and all ids starting with "md"
+	this.conn = null;
+	this.currSeiType = null;
+	this.currSeiIndex = null;
+	
+	this.changedFlag = false;
+	this.displayedIndex = -1;
+	
 	this.html = ' \
 	<div id="modaldialog_div" style="width:90ch;">\
 	<center>\
-	<form name="loadDialogForm" action="javascript:%VAR.callbackSubmit();">\
+	<form id="loadDialogForm">\
 	<table border="1">\
 		<tr> \
-			<td> <!-- TABLE: Left  -->\
-		\
-	    		<form class="form-horizontal"> </form> <!-- I have no idea why it all crashes and burns without this -->\
+			<td valign="top"> <!-- TABLE: Right -->\
+				<center><legend>Server Profiles</legend></center>\
+				<select id="mdSelectProfiles" size=20 style="min-width:90%; margin-left:1ch; margin-right:1ch">\
+				</select>\
+				<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+		            <button type="button" class="btn" id="mdProfileCopy"   >Copy</button>\
+					<button type="button" class="btn" id="mdProfileNew"    >New</button>\
+					<button type="button" class="btn" id="mdProfileDelete" >Delete</button>\
+				</div>\
+				<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+					<button type="button" class="btn" id="mdProfileSaveAll" >Save All</button>\
+					<button type="button" class="btn" id="mdProfileImport"  >Import</button>\
+					<button type="button" class="btn" id="mdProfileExport"  >Export</button>\
+				</div>\
+			</td>\
+			<td valign="top"> <!-- TABLE: Left  -->\
+				<center><legend>Profile</legend></center>\
+	    		<form class="form-horizontal"> </form> \
 				<form class="form-horizontal">\
 				<fieldset> \
-					<legend>Profile</legend>\
-					<div class="control-group"><label class="control-label">Name</label>     <div class="controls"><input type="text" class="input-xlarge" id="mdName"></div></div>\
-					<div class="control-group"><label class="control-label">Type:</label><div class="controls">\
-						<label class=radio><input type="radio" name="mdServer" id="mdTypeFuseki" onClick="%VAR.callbackServerType();" value="F">Fuseki</label>\
-						<label class=radio><input type="radio" name="mdServer" id="mdTypeVirtuoso" onClick="%VAR.callbackServerType();" value="V" checked>Virtuoso</label>\
-						<label class=radio><input type="radio" name="mdServer" id="mdTypeGE" onClick="%VAR.callbackServerType();" value="G">QueryServer</label>\
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Name</label>     <div class="controls"><input type="text" class="input-xlarge" id="mdName"></div></div>\
+					</div> \
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Domain:</label>          <div class="controls"><input title="URI prefix of model" rel="tooltip" type="text" class="input-xlarge"  id="mdDomain"></div></div>\
+					<hr style="margin-top: 1ch; margin-bottom: 1ch;">\
+					<table width="100%"><tr>\
+						<td style="padding: 1ch;"><h3>Graphs: </td> \
+						<td style="padding: 1ch;" align="right"> model <span id="mdModelButtonDiv" class="btn-group" float="right"></span></td> \
+						<td style="padding: 1ch;" align="right"> data  <span id="mdDataButtonDiv"  class="btn-group" float="right"></span></td> \
+					</tr></table> \
+					<hr style="margin-top: 1ch; margin-bottom: 2ch;">\
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdServerURL"></div></div>\
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Type:</label><div class="controls" align="left">\
+						<select id="mdSelectSeiType"> \
+							<option value="F"         >fuseki</label></option>\
+							<option value="V" selected>virtuoso</label></option>\
+						</select> \
 					</div></div> \
-					<div class="control-group"><label class="control-label">Domain:</label>          <div class="controls"><input title="URI prefix of model" rel="tooltip" type="text" class="input-xlarge"  id="mdDomain"></div></div>\
-\
-					<legend>Data Endpoint</legend>\
-					<div class="control-group"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdDataServerURL"></div></div>\
-					<div class="control-group"><label class="control-label">KS URL:</label>   <div class="controls"><input type="text" class="input-xlarge disabled" disabled id="mdDataKsURL"></div></div>\
-					<div class="control-group"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge" id="mdDataSource" title="Sub-graph or dataset containing the data" rel="tooltip"></div></div>\
-\
-					<legend>Ontology Endpoint</legend>\
-					<div class="control-group"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdOntologyServerURL"></div></div>\
-					<div class="control-group"><label class="control-label">KS URL:</label>   <div class="controls"><input type="text" class="input-xlarge disabled" disabled  id="mdOntologyKsURL"></div></div>\
-					<div class="control-group"><label class="control-label" id="mdSDS1">Dataset:</label><div class="controls"><input type="text" class="input-xlarge"  id="mdOntologySource"  title="Sub-graph or dataset containing the model" rel="tooltip"></div></div>\
-\
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge" id="mdDataset" ></div></div>\
+					<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+						<button type="button" class="btn" id="mdSeiDelete">Delete</button>\
+					</div>\
 				</fieldset>\
 				</form>\
 			</td>\
-			<td valign="top"> <!-- TABLE: Right -->\
-				<legend>Server Profiles</legend>\
-				<select id="mdSelectProfiles" size=20 style="min-width:100%;" onchange="%VAR.callbackSelectionChange();">\
-				</select>\
-				<div class="form-actions" align="right"> \
-					<button type="button" class="btn" id="mdProfileImport" onClick="%VAR.importProfiles();">Import</button>\
-					<button type="button" class="btn" id="mdProfileExport" onClick="%VAR.exportProfiles();">Export</button>\
-		        	<br><br>\
-					<button type="button" class="btn" id="mdProfileAdd"    onClick="%VAR.callbackSave();">Save</button>\
-					<button type="button" class="btn" id="mdProfileDelete" onClick="%VAR.callbackDelete();">Delete</button>\
-				</div>\
-			</td>\
 		</table>\
-		<div class="form-actions" align="right"> \
-			<input type="button" class="btn-danger" value="Cancel" onClick="%VAR.callbackCancel();"></input> \
+		<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+			<input type="button" id="mdCancel" class="btn-danger" value="Cancel" ></input> \
 		    <input type="submit" class="btn-primary" value="Submit"></input>\
 		</div>\
 	</form>\
 	</center>\
 	</div>\
-	'.replace(/%VAR/g, varName);
+	'.replace(/%VAR/g, varNameOBSOLETE);
 	
 	this.hide();
 };
@@ -116,21 +118,7 @@ ModalLoadDialog.COOKIE_NAME = "mdProfile";
 ModalLoadDialog.COOKIE_NAME_INDEX = "mdIndex";
 
 ModalLoadDialog.prototype = {
-
-	getLastConnectionInvisibly : function() {
-		// while remaining hidden, return last loaded conn or null
 		
-		// get the index
-		var index = this.cookieManager.getCookie(ModalLoadDialog.COOKIE_NAME_INDEX);
-		if (index == null) {
-			return null;
-		}
-		
-		// get cookie
-		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, index);
-		return new SparqlConnection(cookieStr);
-	},
-	
 	loadDialog : function (curConn, callback) {
 		// load dialog   
 		// callback(sparqlconnection)
@@ -139,63 +127,68 @@ ModalLoadDialog.prototype = {
 		
 		$("[rel='tooltip']").tooltip();		
 		
-		this.readProfiles(curConn);
 		this.show();
-	},
-	
-	//*** Callbacks ***//
-	callbackServerType : function () {
-		// for this part (at the moment), Fuseki and Virtuoso look the same
-		if (this.document.getElementById("mdTypeFuseki").checked || this.document.getElementById("mdTypeVirtuoso").checked) {
-			this.document.getElementById("mdDataKsURL").className = "input-xlarge disabled";
-			this.document.getElementById("mdOntologyKsURL").className = "input-xlarge disabled";
-			this.document.getElementById("mdDataKsURL").disabled = true;
-			this.document.getElementById("mdOntologyKsURL").disabled = true;
-			
-			this.document.getElementById("mdSDS0").innerHTML="Dataset";
-			this.document.getElementById("mdSDS0").innerHTML="Dataset";
-
-		// GE QueryServer
-		} else {
-			this.document.getElementById("mdDataKsURL").className = "input-xlarge";
-			this.document.getElementById("mdOntologyKsURL").className = "input-xlarge";
-			this.document.getElementById("mdDataKsURL").disabled = false;
-			this.document.getElementById("mdOntologyKsURL").disabled = false;
-			
-			this.document.getElementById("mdSDS0").innerHTML="Source";
-			this.document.getElementById("mdSDS0").innerHTML="Source";
-		}
-	},
-	
-	callbackSave : function () {
-		// Save the profile on the screen
-		//     give it a name if there is none
-		//     overwrite selected profile if names match, otherwise add it to the end
+		// ==== Callbacks that don't use the (ahem) %VAR trick ====
 		
-		// make sure profile has a name
-		if (this.document.getElementById("mdName").value == "") {
-			this.document.getElementById("mdName").value = "unnamed_profile";
-		}
+		document.getElementById("mdName").onchange=this.changed.bind(this, true);
+		document.getElementById("mdDomain").onchange=this.changed.bind(this, true);
+		document.getElementById("mdServerURL").onchange=this.changed.bind(this, true);
+		document.getElementById("mdSelectSeiType").onchange=this.changed.bind(this, true);
+		document.getElementById("mdDataset").onchange=this.changed.bind(this, true);
+		
+		document.getElementById("loadDialogForm")  .onsubmit=this.callbackSubmit.bind(this);
+		document.getElementById("mdSeiDelete")     .onclick=this.callbackDeleteSei.bind(this);
+		document.getElementById("mdSelectProfiles").onchange=this.callbackSelectionChange.bind(this);
+		document.getElementById("mdProfileCopy")   .onclick=this.callbackCopy.bind(this);
+		document.getElementById("mdProfileNew")    .onclick=this.callbackNew.bind(this);
+		document.getElementById("mdProfileDelete") .onclick=this.callbackDeleteProfile.bind(this);
+		document.getElementById("mdProfileSaveAll").onclick=this.saveAllProfiles.bind(this);
+		document.getElementById("mdProfileImport") .onclick=this.importProfiles.bind(this);
+		document.getElementById("mdProfileExport") .onclick=this.exportProfiles.bind(this);
+		document.getElementById("mdCancel")        .onclick=this.callbackCancel.bind(this);
+		
+		this.readProfiles(curConn);
+		
+		this.changed(false);
 
-		var conn = this.createProfileFromScreen();
+	},
+		
+	
+	callbackCopy : function() {
+		if (this.conn == null) {
+			this.callbackNew();
+		} else {
+			var conn = new SparqlConnection(this.conn.toString());
+			conn.setName(this.conn.getName() + " copy");
+			this.switchToNewProfile(conn);
+		}
+	},
+	
+	callbackNew : function() {
+		
+		// create a blank profile
+		var conn = new SparqlConnection();
+		conn.setName("-new-");
+		conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
+		conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
+		
+		this.switchToNewProfile(conn);
+	},
+	
+	switchToNewProfile : function (conn) {
+		this.storeProfileFromScreen();
+		this.sortProfiles();
+		
+		this.conn = conn;
+		this.appendProfile(this.conn);
 		
 		var select = this.document.getElementById("mdSelectProfiles");
-		var name = this.document.getElementById("mdName").value;
-		var itemIdx = this.findProfileByName(name);
-		
-		// change the selected profile if the names match
-		if (itemIdx > -1) {
-			select.options[itemIdx].value = conn.toString();
-		// otherwise create a new profile
-		} else {
-			this.appendProfile(conn);
-			this.setSelectedIndex(select.length-1);
-			this.sortProfiles();
-		}
+		select.selectedIndex = select.options.length-1;
 		this.displaySelectedProfile();
+		this.changed(true);
 	},
 	
-	callbackDelete : function () {
+	callbackDeleteProfile : function () {
 		var i = this.getSelectedIndex();
 		var select = this.document.getElementById("mdSelectProfiles");
 		// do nothing if nothing is selected
@@ -204,24 +197,34 @@ ModalLoadDialog.prototype = {
 		}
 		select.options[i].selected = false;
 		select.remove(i);
+		select.selectedIndex = (i < select.options.length) ? i : select.options.length -1 ;
 		
 		this.displaySelectedProfile();
+		this.changed(true);
 	},
 	
 	callbackSubmit : function () {
 		// save all the saved profiles and return whatever is showing
 		this.hide();
-		var conn = this.createProfileFromScreen();
+		this.storeProfileFromScreen();
 		this.writeProfiles();
-		this.callback(conn);
+		this.callback(this.conn);
+		return false;
 	},
 	
 	callbackCancel : function () {
-		this.hide();
+		if (this.changedFlag && !confirm("Discard changes?") ) {
+			return;
+		} else {
+			this.hide();
+		}
+		
 	},
 	
 	callbackSelectionChange : function () {
 		// selection changes, including to -1
+		this.storeProfileFromScreen();
+		this.sortProfiles();
 		this.displaySelectedProfile();
 	},
 	
@@ -258,6 +261,11 @@ ModalLoadDialog.prototype = {
 		this.writeProfiles();
 	},
 	
+	changed : function (bool) {
+		this.changedFlag = bool;
+		this.document.getElementById("mdProfileSaveAll").disabled = !bool;
+	},
+	
 	//***  Meant to be private ***//
 	hide : function () {
 		// private
@@ -288,102 +296,268 @@ ModalLoadDialog.prototype = {
 		return -1;
 	},
 	
+	callbackDeleteSei : function() {
+		
+		
+		if (this.currSeiType == "m") {
+			this.conn.delModelInterface(this.currSeiIndex);
+			
+			if (this.conn.getModelInterfaceCount() == 0) {
+				// add a 0th interface
+				this.conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+				this.currSeiIndex = 0;
+				
+			} else if (this.currSeiIndex >= this.conn.getModelInterfaceCount()) {
+				// delete button and move to prev
+				var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
+				button.parentNode.removeChild(button);
+				this.currSeiIndex = this.conn.getModelInterfaceCount() - 1;
+			} 
+			
+		} else {
+			this.conn.delDataInterface(this.currSeiIndex);
+			
+			if (this.conn.getDataInterfaceCount() == 0) {
+				// add a 0th interface
+				this.conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+				this.currSeiIndex = 0;
+				
+			} else if (this.currSeiIndex >= this.conn.getDataInterfaceCount()) {
+				// delete button and move to prev
+				var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
+				button.parentNode.removeChild(button);
+				this.currSeiIndex = this.conn.getDataInterfaceCount() - 1;
+			} 
+		}
+		
+		// tell storeSeiFromScreen() there's nothing on the screen to save
+		var saveType = this.currSeiType;
+		this.currSeiType = null;  
+		
+		// change to new index
+		this.callbackChangeSei(saveType, this.currSeiIndex);
+		
+		this.changed(true);
+		
+	},
+	
+	// pressed "+" button
+	callbackAddSei : function(seiType) {
+		var div; 
+		var plusBut;
+		
+		// create new button
+		
+		var i = (seiType == "m") ? this.conn.getModelInterfaceCount() : this.conn.getDataInterfaceCount();
+		var button = this.createSeiButton(seiType, i);
+		
+		// find right list and plus button to insert before
+		if (seiType == "m") {
+			div = document.getElementById("mdModelButtonDiv");
+			plusBut = document.getElementById("mdSeiButtonModelPlus");
+			this.conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+		} else {
+			div = document.getElementById("mdDataButtonDiv");
+			plusBut = document.getElementById("mdSeiButtonDataPlus");
+			this.conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, null, null);
+
+		}
+		
+		// insert
+		div.insertBefore(button, plusBut);
+		
+		this.callbackChangeSei(seiType, i);
+		
+		this.changed(true);
+		
+	},
+	
+	// 
+	// save current screen     - unless this.currSeiType is null
+	// show the new sei        - (null,-1) just clears everything
+	callbackChangeSei : function(seiType, seiIndex) {
+		
+		// update all button active states
+		var buttons = document.getElementById("mdModelButtonDiv").children;
+		for (var i=0; i < buttons.length; i++) {
+			buttons[i].className = "btn";
+		}
+		buttons = document.getElementById("mdDataButtonDiv").children;
+		for (var i=0; i < buttons.length; i++) {
+			buttons[i].className = "btn";
+		}
+		
+		if (seiIndex > -1) {
+			document.getElementById("mdSeiButton_"+seiType+seiIndex).className = "btn active";
+		}
+		
+		// save current screen
+		this.storeSeiFromScreen();
+		
+		// save new current sei identifiers
+		this.currSeiType = seiType;
+		this.currSeiIndex = seiIndex;
+		
+		// set screen fields from memory
+		if (seiIndex > -1) {
+			var sei = seiType == "m" ? this.conn.getModelInterface(seiIndex) : this.conn.getDataInterface(seiIndex);
+			document.getElementById("mdSelectSeiType").selectedIndex = (sei.getServerType() == SparqlConnection.FUSEKI_SERVER) ? 0 : 1;
+			document.getElementById("mdServerURL").value = sei.getServerURL();
+			document.getElementById("mdDataset").value = sei.getDataset();
+			
+			document.getElementById("mdSelectSeiType").disabled=false;
+			document.getElementById("mdServerURL").disabled=false;
+			document.getElementById("mdDataset").disabled=false;
+		} else {
+			document.getElementById("mdSelectSeiType").selectedIndex = 1;
+			document.getElementById("mdServerURL").value = "";
+			document.getElementById("mdDataset").value = "";
+			
+			document.getElementById("mdSelectSeiType").disabled=true;
+			document.getElementById("mdServerURL").disabled=true;
+			document.getElementById("mdDataset").disabled=true;
+		}
+	},
+	
+	// pull sei fields from screen into current sei
+	storeSeiFromScreen : function() {
+		
+		if (this.currSeiType != null) {
+			// get the current sei
+			var sei = (this.currSeiType == "m") ? this.conn.getModelInterface(this.currSeiIndex) : this.conn.getDataInterface(this.currSeiIndex);
+			
+			// set fields
+			sei.setServerType(document.getElementById("mdSelectSeiType").value == "F" ? SparqlConnection.FUSEKI_SERVER : SparqlConnection.VIRTUOSO_SERVER);
+			sei.setServerURL(this.document.getElementById("mdServerURL").value.trim());
+			sei.setDataset(this.document.getElementById("mdDataset").value.trim());
+		}
+	},
+	
+	// assemble a button
+	createSeiButton : function(butType, butIndex) {
+		var button = document.createElement("button");
+		button.className = "btn";
+		button.id="mdSeiButton_" + butType + butIndex;
+		button.innerHTML = butIndex+1;
+		button.onclick = this.callbackChangeSei.bind(this, butType, butIndex);
+		return button;
+	},
+	
+	// set up the correct number of buttons
+	// and populate the screen for current sei
+	displaySei : function() {
+		// clear state
+		this.currSeiType = null;
+		this.currSeiIndex = null;
+		
+		var mCount = (this.conn == null) ? 0 : this.conn.getModelInterfaceCount();
+		var dCount = (this.conn == null) ? 0 : this.conn.getDataInterfaceCount();
+		
+		//if (mCount == 0) { this.conn.addModelInterface( SparqlConnection.VIRTUOSO_SERVER, null, null); }
+		//if (dCount == 0) { this.conn.addDataInterface ( SparqlConnection.VIRTUOSO_SERVER, null, null); }
+
+		var toolbar;
+		var button;
+		
+		// add model buttons
+		toolbar = document.getElementById("mdModelButtonDiv");
+		toolbar.innerHTML = "";
+		for (var i=0; i < mCount; i++) {
+			toolbar.appendChild(this.createSeiButton("m", i));
+		}
+		
+		// model + button
+		button = document.createElement("button");
+		button.className = "btn";
+		button.id="mdSeiButtonModelPlus";
+		button.innerHTML = "+";
+		button.onclick = this.callbackAddSei.bind(this, "m");
+		button.disabled = (this.conn == null);
+		toolbar.appendChild(button);
+		
+		// add data buttons
+		toolbar = document.getElementById("mdDataButtonDiv");
+		toolbar.innerHTML = "";
+		for (var i=0; i < dCount; i++) {
+			toolbar.appendChild(this.createSeiButton("d", i));
+		}
+		
+		// data + button
+		button = document.createElement("button");
+		button.className = "btn";
+		button.id="mdSeiButtonDataPlus";
+		button.innerHTML = "+";
+		button.onclick = this.callbackAddSei.bind(this, "d");
+		button.disabled = (this.conn == null);
+
+		toolbar.appendChild(button);
+		
+		// display m0
+		if (this.conn == null) {
+			this.callbackChangeSei(null, -1);
+		} else {
+			this.callbackChangeSei("m", 0);
+		}
+		
+		
+	},
+	
+	// pull profile into this.conn and display it
 	displaySelectedProfile : function() {
 		index = this.getSelectedIndex();
+		this.displayedIndex = index;
+		
 		var select = this.document.getElementById("mdSelectProfiles");
 		var profileStr = (select.selectedIndex > -1) ? select.options[select.selectedIndex].value : null;
 		
-		if (profileStr == null) {
-			document.getElementById("mdName").value = "";
+		if (profileStr != null) {
+			this.conn = new SparqlConnection();
+			this.conn.fromString(profileStr);
 			
-			document.getElementById("mdTypeFuseki").checked = false;
-			document.getElementById("mdTypeVirtuoso").checked = false;
-			document.getElementById("mdTypeGE").checked = true;
-			
-			document.getElementById("mdDataServerURL").value = "";
-			document.getElementById("mdDataKsURL").value = "";
-			document.getElementById("mdDataSource").value = "";
-			
-			document.getElementById("mdOntologyServerURL").value = "";
-			document.getElementById("mdOntologyKsURL").value = "";
-			document.getElementById("mdOntologySource").value = "";
-
-			document.getElementById("mdDomain").value = "";
-			
+			document.getElementById("mdName").value = this.conn.getName();
+			document.getElementById("mdDomain").value = this.conn.getDomain();
+			document.getElementById("mdName").disabled = false;
+			document.getElementById("mdDomain").disabled = false;
 		} else {
-			var conn = new SparqlConnection();
-			conn.fromString(profileStr);
-			document.getElementById("mdName").value = conn.getName();
-			switch (conn.getModelInterface(0).getServerType()) {
-				case SparqlConnection.FUSEKI_SERVER:
-					this.document.getElementById("mdTypeFuseki").checked = true;
-					break;
-				case SparqlConnection.VIRTUOSO_SERVER:
-					this.document.getElementById("mdTypeVirtuoso").checked = true;
-					break;
-				case SparqlConnection.QUERY_SERVER:
-					this.document.getElementById("mdTypeGE").checked = true;
-					break;
-				default:
-					alert("Warning unknown server type in profile:" + conn.getModelInterface(0).getServerType())
-			}
-			
-			var mi = conn.getModelInterface(0);
-			var di = conn.getDataInterface(0);
-			this.document.getElementById("mdDataServerURL").value = di.getServerURL();
-			this.document.getElementById("mdDataKsURL").value = "";
-			this.document.getElementById("mdDataSource").value = di.getDataset();
-			
-			this.document.getElementById("mdOntologyServerURL").value = mi.getServerURL();
-			this.document.getElementById("mdOntologyKsURL").value = "";
-			this.document.getElementById("mdOntologySource").value = mi.getDataset();
-
-			this.document.getElementById("mdDomain").value = conn.getDomain();
+			this.conn = null;
+			document.getElementById("mdName").value = "";
+			document.getElementById("mdDomain").value = "";
+			document.getElementById("mdName").disabled = true;
+			document.getElementById("mdDomain").disabled = true;
 		}
+			
 		
-		this.callbackServerType(); // enable/disable fields based on 
+		this.displaySei();
 	},
 	
-	createProfileFromScreen : function() {
-		// create a profile from the ones on the screen
-		var conn = new SparqlConnection();
-		conn.setName(this.document.getElementById("mdName").value.trim());
-		
-		var serverType;
-		if (this.document.getElementById("mdTypeFuseki").checked) {
-			serverType = SparqlConnection.FUSEKI_SERVER;
-		} else if (this.document.getElementById("mdTypeVirtuoso").checked) {
-			serverType = SparqlConnection.VIRTUOSO_SERVER;
-		} else {
-			serverType = SparqlConnection.QUERY_SERVER;
+	// store screen to this.conn, then into the select.option[].value
+	storeProfileFromScreen : function() {
+		if (this.displayedIndex == -1) {
+			return;
 		}
+		
+		// create a profile from the ones on the screen
+		this.conn.setName(this.document.getElementById("mdName").value.trim());
+		
+		
 		
 		var domain = this.document.getElementById("mdDomain").value;
 		// Adds the http:// on front of domain if needed
 		if (domain.indexOf("http") != 0) {
 			domain = "http://" + domain;
 		}
-		conn.setDomain(domain);
 		
-		var modelURL = this.document.getElementById("mdOntologyServerURL").value.trim();
-		var modelKsURL = "";
-		var modelDataset = this.document.getElementById("mdOntologySource").value.trim();
-		var dataURL = this.document.getElementById("mdDataServerURL").value.trim();
-		var dataKsURL = "";
-		var dataDataset = this.document.getElementById("mdDataSource").value.trim();
+		this.conn.setDomain(domain);
 		
-		conn.addDataInterface(serverType,dataURL,dataDataset);
+		this.storeSeiFromScreen();
 		
-		// If ontology stuff is empty, set it to same as data stuff
-		if (modelURL == "" && modelDataset == "") {
-			conn.addModelInterface(serverType,dataURL,dataDataset);
-		} else {
-			conn.addModelInterface(serverType,modelURL,modelDataset);
-		}
-		
-		return conn;
+		// put into select
+		var select = this.document.getElementById("mdSelectProfiles");
+		select.options[this.displayedIndex].value = this.conn.toString();
+		select.options[this.displayedIndex].text = this.conn.getName();
 	},
 	
+	// appends a connection to the select
 	appendProfile : function (conn) {
 
 		var opt = new Option(conn.getName(), conn.toString());
@@ -391,7 +565,137 @@ ModalLoadDialog.prototype = {
 	},
 	
 	
+	
+	// while remaining hidden, return last loaded conn or null
+	getLastConnectionInvisibly : function() {
+		var lastConn =  localStorage.getItem("SPARQLgraph_curProfile");
+		
+		/**** handle conversion from deprecated cookles to new localStorage ***/
+		if (lastConn == null) {
+			var depConn = this.getLastConnectionInvisiblyCookiesDEPRECATED();
+			if (depConn != null) {
+				this.cookieManager.delCookie(ModalLoadDialog.COOKIE_NAME_INDEX);
+				return depConn;
+			}
+		}
+		/**** end deprecation handling ****/
+		
+		return (lastConn == null ? null : new SparqlConnection(lastConn));
+	},
+	
 	readProfiles : function (curConn) {
+
+		var allProfilesStr = localStorage.getItem("SPARQLgraph_allProfiles");
+		var select = this.document.getElementById("mdSelectProfiles");
+		
+		/**** handle conversion from deprecated cookies to new localStorage ***/
+		if (allProfilesStr == null) {
+			var i=0;
+			var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
+			allProfilesStr = "";
+			// load all the connections from cookies, and delete
+			while (cookieStr != null) {
+				allProfilesStr = allProfilesStr + cookieStr;
+				this.cookieManager.delIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
+				
+				i = i+ 1;
+				cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
+			} 
+		}
+		/**** end deprecation handling ****/
+
+		this.appendProfilesString(allProfilesStr);
+		
+		// if there is a connection loaded, make sure it is in the cookies
+		if (curConn) {
+			// try to find and select currConn, but if it fails then
+			if (! this.selectConnection(curConn)) {
+				
+				// add the current conn to the list of loaded connections and select it
+				this.appendProfile(curConn);
+				select.options.length - 1;
+			}
+			
+		// if no connection loaded, load the one from last session
+		} else {
+			this.selectConnection(this.getLastConnectionInvisibly());
+		}
+		
+		this.sortProfiles();
+		this.displaySelectedProfile();
+	},
+	
+	// selects a connection in the select element
+	// returns true if found
+	selectConnection : function(conn) {
+		var select = this.document.getElementById("mdSelectProfiles");
+		
+		if (conn != null) {
+			
+			for (var i=0; i < select.options.length; i++) {
+				var opt = new SparqlConnection(select.options[i].value);
+				if (conn.equals(opt, true)) { 
+					select.selectedIndex = i;
+					return true;
+				}
+			}
+			
+		}
+		return false;
+	},
+	
+	// sort the profiles select, preserving selectedIndex
+	sortProfiles : function () {
+		var select = this.document.getElementById("mdSelectProfiles");
+		var selectedValue = null; 
+		if (select.selectedIndex > -1) {
+			selectedValue = select[select.selectedIndex].value;
+		}
+		var newSelectedIndex=-1;
+		var tmpAry = new Array();
+	    for (var i=0;i<select.options.length;i++) {
+	        tmpAry[i] = new Array();
+	        tmpAry[i][0] = select.options[i].text;
+	        tmpAry[i][1] = select.options[i].value;
+	    }
+	    tmpAry.sort();
+	    while (select.options.length > 0) {
+	        select.options[0] = null;
+	    }
+	    for (var i=0;i<tmpAry.length;i++) {
+	        var op = new Option(tmpAry[i][0], tmpAry[i][1]);
+	        select.options[i] = op;
+	        if (tmpAry[i][1] == selectedValue)
+	        	newSelectedIndex= i;
+	    }
+	    select.selectedIndex = newSelectedIndex;
+	    return;
+	},
+	
+	// GUI call to save all the profiles
+	saveAllProfiles: function () {
+		this.storeProfileFromScreen();
+		this.sortProfiles();
+		this.writeProfiles();
+		this.changed(false);
+	},
+	
+	/***   DEPRECATED COOKIES ***/
+	getLastConnectionInvisiblyCookiesDEPRECATED : function() {
+		// while remaining hidden, return last loaded conn or null
+		
+		// get the index
+		var index = this.cookieManager.getCookie(ModalLoadDialog.COOKIE_NAME_INDEX);
+		if (index == null) {
+			return null;
+		}
+		
+		// get cookie
+		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, index);
+		return new SparqlConnection(cookieStr);
+	},
+	
+	readProfilesFromCookiesDEPRECATED : function (curConn) {
 
 		var i = 0;
 		var cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
@@ -423,8 +727,6 @@ ModalLoadDialog.prototype = {
 				select.selectedIndex = curIndex;
 			} else {
 				// add the current conn to the list of loaded connections and select it
-				// PEC TODO: This could add a new connection with a repeat name.  No real harm done, I think.
-				// PEC TODO: The new connection will be saved if the user hits "Save" or "Submit", but not if they hit "Cancel".  Not sure what is desired behavior.
 				this.appendProfile(curConn);
 				select.selectedIndex = i;
 			}
@@ -437,37 +739,9 @@ ModalLoadDialog.prototype = {
 			}
 		}
 		this.sortProfiles();
-		this.callbackSelectionChange();
+		this.displaySelectedProfile();
 	},
-	
-	sortProfiles : function () {
-		var select = this.document.getElementById("mdSelectProfiles");
-		var selectedValue = null; 
-		if (select.selectedIndex > -1) {
-			selectedValue = select[select.selectedIndex].value;
-		}
-		var newSelectedIndex=-1;
-		var tmpAry = new Array();
-	    for (var i=0;i<select.options.length;i++) {
-	        tmpAry[i] = new Array();
-	        tmpAry[i][0] = select.options[i].text;
-	        tmpAry[i][1] = select.options[i].value;
-	    }
-	    tmpAry.sort();
-	    while (select.options.length > 0) {
-	        select.options[0] = null;
-	    }
-	    for (var i=0;i<tmpAry.length;i++) {
-	        var op = new Option(tmpAry[i][0], tmpAry[i][1]);
-	        select.options[i] = op;
-	        if (tmpAry[i][1] == selectedValue)
-	        	newSelectedIndex= i;
-	    }
-	    select.selectedIndex = newSelectedIndex;
-	    return;
-	},
-	
-	writeProfiles : function () {
+	writeProfilesToCookiesDEPRECATED : function () {
 		// save profiles in cookies
 		
 		var select = this.document.getElementById("mdSelectProfiles");
@@ -487,34 +761,82 @@ ModalLoadDialog.prototype = {
 		
 		// save the index of the selected profile
 		this.cookieManager.setCookie(ModalLoadDialog.COOKIE_NAME_INDEX, select.selectedIndex);
+		
+		this.changed(false);
 	}, 
 	
-	exportProfiles : function () {
+	/***** End DEPRECATED COOKIES *****/
+	
+	
+	
+	writeProfiles : function () {
+		// save profiles in local storage
+		
+		var select = this.document.getElementById("mdSelectProfiles");
+
+		localStorage.setItem("SPARQLgraph_allProfiles", this.getAllProfilesString());
+		
+		if (this.conn != null) {
+			localStorage.setItem("SPARQLgraph_curProfile", this.conn.toString());
+		} else {
+			localStorage.removeItem("SPARQLgraph_curProfile");
+		}
+	}, 
+	
+	// build a string representing all profiles in the select
+	getAllProfilesString : function () {
 		var result = "";
+		
 		var select = this.document.getElementById("mdSelectProfiles");
 
 		// loop through profiles and save to cookieManager
 		for (var i=0; i < select.length; i++) {
 			result += select.options[i].value.toString() + "\n";
 		}
+		
+		return result;
+	},
+	
+	// append profiles from string to profiles
+	// No sorting, etc., just appendProfile() to the select
+	appendProfilesString : function (profilesStr) {
+		if (profilesStr == null) {
+			return;
+		}
+		var lines = profilesStr.split(/}]}/);
+		var conn = null;
+		
+		for (var i=0; i < lines.length; i++) {
+			if (lines[i].trim().length < 1) continue;
+			try {
+				conn = new SparqlConnection(lines[i] + '}]}');
+				this.appendProfile(conn);
+			} catch (err) {
+				alert("Could not import this line:\n" + lines[i]);
+			}
+		}
+	},
+	
+	exportProfiles : function () {
+		this.storeProfileFromScreen();
+		this.sortProfiles();
+		
+		var result = this.getAllProfilesString();
+		
 		console.log(result);
 		this.downloadFile(result, "profiles.txt");
 	},
 	
 	importProfiles : function () {
 		var text = prompt("Paste profiles here:", " ");
-		var lines = text.split(/[{}\s]+/);
-		var conn = null;
-		
-		for (var i=0; i < lines.length; i++) {
-			if (lines[i].length < 1) continue;
-			try {
-				conn = new SparqlConnection('{' + lines[i] + '}');
-				this.appendProfile(conn);
-			} catch (err) {
-				alert("Could not import this line:\n" + lines[i]);
-			}
+		if (text == null) {
+			return;
 		}
+		
+		this.appendProfilesString(text);
+		
+		this.sortProfiles();
+		this.changed(true);
 	},
 	
 	downloadFile : function (data, filename) {

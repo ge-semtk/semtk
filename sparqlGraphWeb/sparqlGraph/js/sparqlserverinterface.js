@@ -130,6 +130,17 @@ SparqlServerInterface.prototype = {
 		return this.dataset;
 	},
 	
+	setServerType : function(x) {
+		this.serverType = x;
+	}, 
+	
+	setServerURL : function(x) {
+		return this.serverURL = x;
+	},
+	
+	setDataset : function(x) {
+		return this.dataset = x;
+	},
 	getResultsType : function(optResultsType) {
 		return (typeof optResultsType === 'undefined') ? SparqlServerInterface.TABLE_RESULTS : optResultsType;
 	},

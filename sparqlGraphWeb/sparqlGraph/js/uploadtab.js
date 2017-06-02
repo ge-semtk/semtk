@@ -73,6 +73,7 @@ define([	// properly require.config'ed
 			draw : function () {
 				if (this.toolsDiv.innerHTML.indexOf("<") == -1) {
 					this.drawTools();
+					this.fillSelectChooseDataset();     // fill in nodegroup-specific the first time
 				}
 				
 				// draw body only if it's never been done before
@@ -254,16 +255,9 @@ define([	// properly require.config'ed
 				tr.appendChild(td2);
 				select = document.createElement("select");
 				select.id="selectChooseDataset";
-				option = document.createElement("option");
-				option.text = "Model Dataset";
-				option.value = "model";
-				select.add(option);
-				option = document.createElement("option");
-				option.text = "Instance Dataset";
-				option.value = "data";
-				select.add(option);
 				td2.appendChild(select);
 				select.onchange = this.fillTools.bind(this);
+				
 				table.appendChild(tr);
 				
 				
@@ -339,11 +333,100 @@ define([	// properly require.config'ed
 				this.toolsDiv.appendChild(div);
 			},
 			
+			// fill and reset the dataset select dropdown
+			// Build a unique list of options.
+			// Precede by "model" "data" or "both"
+			// Set option value to a lookup code "m1" (model 1) or ("d0" data 0) etc.
+			fillSelectChooseDataset : function() {
+				var select = document.getElementById("selectChooseDataset");
+				
+				// clear all options
+				while (select.options.length > 0) {
+					select.remove(0);
+				}
+				
+				if (this.conn != null) {
+					var mCount = this.conn.getModelInterfaceCount();
+					var dCount = this.conn.getDataInterfaceCount();
+					var seis = []; 
+					var src = [];
+					var vals = [];
+					
+					// loop through model sei's
+					for (var i=0; i < mCount; i++) {
+						var sei = this.conn.getModelInterface(i);
+			
+						// search already-added sei's
+						var found = -1;
+						for (var j=0; j < seis.length; j++) {
+							if (seis[j].equals(sei)) {
+								found = j;
+								break;
+							}
+						}
+						// if not found
+						if (found == -1) {
+							seis.push(sei);    // add sei
+							src.push("model"); // string for output
+							vals.push("m"+i);  // lookup code
+						}
+					}
+					// loop through data sei's
+					for (var i=0; i < dCount; i++) {
+						var sei = this.conn.getDataInterface(i);
+						
+						// search already-added sei's
+						var found = -1;
+						for (var j=0; j < seis.length; j++) {
+							if (seis[j].equals(sei)) {
+								found = j;
+								break;
+							}
+						}
+						if (found == -1) {
+							seis.push(sei);    // add sei
+							src.push("data");  // string for output
+							vals.push("d"+i);  // lookup code
+						} else {
+							src[found] = "both";
+						}
+					}
+					
+					// Only need "-- choose --" if there are 2 unequal SEI's 
+					if (seis.length > 1) {
+							option = document.createElement("option");
+							option.text = "-- choose --";
+							option.value = "";               // empty value
+							select.add(option);
+					}
+					
+					// fill rest of options
+					for (var i=0; i < seis.length; i++) {
+						var sei = seis[i];
+						
+						option = document.createElement("option");
+						option.text = src[i] + ": " + sei.getDataset();      // could add sei.getServerURL()
+						option.value = vals[i];           
+						select.add(option);
+					}
+					
+				} else {
+					// no connection to choose
+					option = document.createElement("option");
+					option.text = " ";
+					option.value = "";               // empty value
+					select.add(option);
+					select.selectedIndex = "0";
+				}
+				
+				select.selectedIndex = "0";
+			},
+			
 			/**
 			 * fillTools for just "clear prefix" so that it can also be used as oninput() callback for the input
 			 */
 			fillClearPrefix : function () {
-				var connFlag = (this.conn != null);
+				var connFlag = (this.getSelectedSei() != null);
 				var prefix = document.getElementById("inputClearPrefix").value.trim();
 				
 				// weird: revert any empty prefix to the suggestion
@@ -366,7 +449,7 @@ define([	// properly require.config'ed
 			 * Fill in values in the tools section
 			 */
 			fillTools : function () {
-				var connFlag = (this.conn != null);
+				var connFlag = (this.getSelectedSei() != null);
 				
 				// choose dataset
 				document.getElementById("tdChooseDataset1").innerHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br>" +
@@ -397,7 +480,7 @@ define([	// properly require.config'ed
 				if (!connFlag) {
 					// warn there's no connection
 					statusDiv.classList.add("alert");
-					statusDiv.innerHTML = "<strong>No nodegroup is loaded: </strong><br>Use file->load or drag a JSON nodegroup onto the query tab.";
+					statusDiv.innerHTML = "No valid endpoint/graph is chosen.";
 					
 				} else if (this.modelChangedFlag) {
 					// warn that model has changed
@@ -441,67 +524,57 @@ define([	// properly require.config'ed
 				}
 			},
 			
+			// get SparqlEndpointInterface or null
+			getSelectedSei : function () {
+				var val = document.getElementById("selectChooseDataset").value;
+				if (val == "" || this.conn == null) {
+					return null;
+				} else if (val.charAt(0) == "m") {
+					return this.conn.getModelInterface(parseInt(val.substring(1)));
+				} else if (val.charAt(0) == "d") {
+					return this.conn.getDataInterface(parseInt(val.substring(1)));
+				}
+			},
+			
 			/**
 			 * Get server URL for the selected connection (data or model)
 			 */
 			getGraphServerUrl : function () {
-				var ret = "";
+				var sei = this.getSelectedSei();
 				
-				if (this.conn == null) {
-					ret = "";
-				} else if (document.getElementById("selectChooseDataset").value === "data") {
-					ret = this.conn.getDataInterface(0).getServerURL();
+				if (sei == null) {
+					return "";
 				} else {
-					ret = this.conn.getModelInterface(0).getServerURL();
+					return sei.getServerURL();
 				}
-				return ret;
 			},
 			
 			/**
 			 * Get dataset for the selected connection (data or model)
 			 */
 			getGraphDataset : function () {
-				var ret = "";
+				var sei = this.getSelectedSei();
 				
-				if (this.conn == null) {
-					ret = "";
-				} else if (document.getElementById("selectChooseDataset").value === "data") {
-					ret = this.conn.getDataInterface(0).getDataset();
+				if (sei == null) {
+					return "";
 				} else {
-					ret = this.conn.getModelInterface(0).getDataset();
+					return sei.getDataset();
 				}
-				return ret;
 			},
 			
 			/**
 			 * Is the model dataset selecte   OR  data is selected but it is identical
 			 */
 			isModelDatasetSelected : function () {
-				// "model" is selected
-				if ( document.getElementById("selectChooseDataset").value === "model" ) {
-					return true;
-				// "model" and "data" are actually the same
-				//} else if (this.conn.dataServerUrl === this.conn.ontologyServerUrl && this.conn.dataSourceDataset === this.conn.ontologySourceDataset) {
-				} else if (this.conn.getModelInterface(0).equals(this.conn.getDataInterface(0))) {
-					return true;
-				} else {
-					return false;
+				var sei = this.getSelectedSei();
+				if (this.conn != null) {
+					for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
+						if (this.conn.getModelInterface(i).equals(sei)) {
+							return true;
+						}
+					}
 				}
-			},
-			
-			/**
-			 * Get connection server interface for the selected connection (data or model)
-			 */
-			getGraphInterface : function () {
-				var ret = null;
-				if (this.conn == null) {
-					ret = null;
-				} else if (document.getElementById("selectChooseDataset").value === "data") {
-					ret = this.conn.getDataInterface(0);
-				} else {
-					ret = this.conn.getModelInterface(0);
-				}
-				return ret;
+				return false;
 			},
 			
 			/**
@@ -549,7 +622,7 @@ define([	// properly require.config'ed
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-danger progress-striped active");
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
 				
-				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getGraphInterface(), this.msiFailureCallback.bind(this));
+				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
 	    		mq.execClearPrefix(prefix, successCallback.bind(this, mq));
 				
 			},
@@ -597,7 +670,7 @@ define([	// properly require.config'ed
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-success progress-striped active");
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
 				
-				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getGraphInterface(), this.msiFailureCallback.bind(this));
+				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
 	    		mq.execUploadOwl(this.owlFile, successCallback.bind(this, mq));
 			},
 			
@@ -646,7 +719,7 @@ define([	// properly require.config'ed
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-danger progress-striped active");
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
 				
-				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getGraphInterface(), this.msiFailureCallback.bind(this));
+				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
 	    		mq.execClearAll(successCallback.bind(this, mq));
 			},
 			
@@ -718,6 +791,7 @@ define([	// properly require.config'ed
 	    			this.oInfoLoadTime = oInfoLoadTime;
 	    		}
 	    		this.draw();
+	    		this.fillSelectChooseDataset();
 			},
 			
 			clearDataFile : function () {

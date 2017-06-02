@@ -476,16 +476,10 @@ NodeItem.prototype = {
 		return (this.SNodes.indexOf(snode) > -1);
 	},
 	
-	pushSNode : function(snode, optOptional) {
+	pushSNode : function(snode, optOptional, optDeletionFlag){
 		this.SNodes.push(snode);
-		this.SNodeOptionals.push( (typeof optOptional === "undefined") ? NodeItem.OPTIONAL_FALSE : optOptional );
-		this.deletionFlags.push(false);
-	},
-	
-	pushSNode : function(snode, optional, deletionFlag){
-		this.SNodes.push(snode);
-		this.SNodeOptionals.push( optional );
-		this.deletionFlags.push(deletionFlag);
+		this.SNodeOptionals.push((typeof optOptional === "undefined")     ? NodeItem.OPTIONAL_FALSE : optOptional );
+		this.deletionFlags.push( (typeof optDeletionFlag === "undefined") ? false                   : optDeletionFlag);
 	},
 
 	// get values used by the NodeItem
