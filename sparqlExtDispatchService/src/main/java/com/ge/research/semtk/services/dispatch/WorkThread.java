@@ -5,6 +5,7 @@ import java.net.ConnectException;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 
 
@@ -23,7 +24,8 @@ public class WorkThread extends Thread {
 
     	if(!test){
     		try {
-				this.dsp.execute(constraintJson);
+				TableResultSet trs = this.dsp.execute(constraintJson);
+					
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -17,6 +17,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
 public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 
@@ -53,6 +54,17 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		// load oInfo via the edcQueryClient.  Note the SparqlEndpointInterface is overwritten by the nodegroupConn,
 		// so we're just using the SparqlQueryClient, not any of the connections
 		this.oInfo = new OntologyInfo(edcQueryClient.getConfig(), nodegroupConn);
+		
+		SparqlQueryClientConfig config = new SparqlQueryClientConfig(	
+				edcQueryClient.getConfig().getServiceProtocol(),
+				edcQueryClient.getConfig().getServiceServer(), 
+				edcQueryClient.getConfig().getServicePort(), 
+				edcQueryClient.getConfig().getServiceEndpoint(),
+				sei.getServerAndPort(),
+				sei.getServerType(),
+				sei.getDataset());
+		
+		this.retrievalClient = new SparqlQueryClient(config);
 		
 		this.updateStatus(0);
 		

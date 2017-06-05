@@ -36,7 +36,6 @@ public class DispatchProperties {
 	
 	private String dispatcherClassName;
 	
-	
 	public String getSparqlServiceServer() {
 		return sparqlServiceServer;
 	}
@@ -160,4 +159,5 @@ public class DispatchProperties {
 	public void setDispatcherClassName(String dispatcherClassName) {
 		this.dispatcherClassName = dispatcherClassName;
 	}
+
 }
