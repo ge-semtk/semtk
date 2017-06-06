@@ -159,41 +159,26 @@ public class DispatcherServiceRestController {
 			// build it.
 			System.err.println("attempting to get constructor for dispatcher subtype:");
 
-			 Constructor ctor = null ; //dspType.getConstructor(String.class, JSONObject.class, ResultsClient.class, StatusClient.class, SparqlQueryClient.class);	
-			
-			System.err.println("found " + dspType.getConstructors().length + " constructors for the type " + dspType.getName());
-			
+			Constructor ctor = null ; //dspType.getConstructor(String.class, JSONObject.class, ResultsClient.class, StatusClient.class, SparqlQueryClient.class);	
+		
 			for (Constructor c : dspType.getConstructors() ){
 				// try to find the right constructor?
 				
 				Class[] params = c.getParameterTypes();
 				for(Class p : params){
-					System.err.print(p.getName() + ", ");
 				}
 				
 				if(params[0].isAssignableFrom( String.class )) {
-						System.err.println("matched string arg");
 					if(params[1].isAssignableFrom( JSONObject.class )) {
-							System.err.println("matched json arg");
 						if(params[2].isAssignableFrom( ResultsClient.class )){
-								System.err.println("matched results arg");
 							if( params[3].isAssignableFrom( StatusClient.class )){
-									System.err.println("matched status arg");
 								if(params[4].isAssignableFrom( SparqlQueryClient.class )){
-									System.err.println("matched queryclient arg");					
-									
-									System.err.println(" -- > Found my constructor!");
 									ctor = c;
 								}}}}
 				}
 				else{
-					System.err.println(" --> not my constructor!");
 				}
 			}
-			
-			
-			
-			System.err.println("attempting to get construct dispatcher subtype:");
 			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, requestBody.getJsonNodeGroup(), rClient, sClient, queryClient);
 			
 		}
