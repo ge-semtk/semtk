@@ -26,6 +26,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.google.protobuf.TextFormat.ParseException;
 
 public class NodeItem {
 	// this is the class that controls the access to nodes that a given belmont node 
@@ -118,7 +119,16 @@ public class NodeItem {
 			//JSONArray jsonDelMark = (JSONArray)next.get("DeletionMarkers");
 			ArrayList<Boolean> jsonDelMark = (ArrayList<Boolean>) next.get("DeletionMarkers");
 			for(int i = 0; i < jsonDelMark.size(); i++){
-				this.deletionFlags.add(Boolean.parseBoolean(jsonDelMark.get(i).toString()));
+				
+				String rawVal = jsonDelMark.get(i).toString();
+				try{
+					this.deletionFlags.add(Boolean.parseBoolean(rawVal));
+				}
+				catch( Exception pe){
+					System.err.println("value for deletion flag was null. this is being replaced with false.");
+					this.deletionFlags.add(false);
+				}
+
 			}
 		}
 		// if there were no deletion flag markers, set all of the potential ones to false.

@@ -27,5 +27,8 @@ multikill sparqlGraphStatusService
 multikill sparqlGraphResultsService
 multikill hiveService
 multikill oracleService
+multikill sparqlExtDispatchService
+multikill rdbTimeCoherentTimeSeriesQueryGenService
+multikill storedNodegroupExecutionService
 
 echo "=== DONE ==="
