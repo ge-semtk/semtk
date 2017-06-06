@@ -77,8 +77,8 @@ define([	// properly require.config'ed
 		ModalItemDialog.AUTO_TEXT = 5;
 		ModalItemDialog.AUTO_TEXT_LIST = 6;
 		ModalItemDialog.RT_CONSTRAINED_CHECK = 7;
-
-
+		ModalItemDialog.DELETE_CHECK = 8;
+		ModalItemDialog.DELETE_SELECT = 9;
 
 		
 		ModalItemDialog.prototype = {
@@ -152,10 +152,22 @@ define([	// properly require.config'ed
 				var rtConstrainedChecked = this.getFieldElement(ModalItemDialog.RT_CONSTRAINED_CHECK).checked;
 				var constraintTxt = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
 				
+				// delMarker will be boolean for propItem, int for snode, maybe null for either
+				var delMarker;
+				if (this.getFieldElement(ModalItemDialog.DELETE_CHECK) != null) {
+					delMarker = this.getFieldElement(ModalItemDialog.DELETE_CHECK).checked;
+				} else if (this.getFieldElement(ModalItemDialog.DELETE_SELECT) != null) {
+					var select = this.getFieldElement(ModalItemDialog.DELETE_SELECT);
+					delMarker = parseInt(select[select.selectedIndex].value);
+				} else {
+					delMarker = null;
+				}
+				
 				// return a list containing just the text field
 				this.callback(	this.item, 
 								(returnChecked || rtConstrainedChecked || constraintTxt != "") ? sparqlID : "",
 								(optionalCheckElem == null) ? null : optionalCheckElem.checked,
+								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
 								this.data
@@ -632,7 +644,35 @@ define([	// properly require.config'ed
 						td.appendChild(document.createTextNode(" optional"));
 						td.appendChild(document.createElement("br"));
 						td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+
 					}
+					
+					// ****** test: deletion
+					
+					if (this.item.getItemType() == "PropertyItem") {
+						var deleteCheck = IIDXHelper.createVAlignedCheckbox();
+						deleteCheck.id = this.getFieldID(ModalItemDialog.DELETE_CHECK);
+						deleteCheck.checked = this.item.getIsMarkedForDeletion();
+						td.appendChild(deleteCheck)
+						td.appendChild(document.createTextNode(" mark for delete"));
+					} else {
+						var options = [];
+						for (var key in NodeDeletionTypes) {
+							options.push(key);
+							options.push(NodeDeletionTypes[key]);
+						}
+						var deleteSelect = IIDXHelper.createSelect(this.getFieldID(ModalItemDialog.DELETE_SELECT),
+								  options,
+								  this.item.getDeletionMode());
+						deleteSelect.classList.add("input-medium");
+						td.appendChild(deleteSelect);
+					}
+					
+					td.appendChild(document.createElement("br"));
+					td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+		
+					// ******* end test
+					
 					td.appendChild(runtimeConstrainedCheck)
 					td.appendChild(document.createTextNode(" runtime constrained"));
 				}

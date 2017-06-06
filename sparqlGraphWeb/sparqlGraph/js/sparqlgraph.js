@@ -41,13 +41,10 @@
 
     var gCurrentTab = g.tab.query ;
     
-    var SPARQL_LIMIT = 50;
     var gMappingTab = null;
     var gUploadTab = null;
     var gReady = false;
-    
-    var gQueryMicroserviceFlag = "normal";
-    
+        
     // READY FUNCTION 
     $('document').ready(function(){
     
@@ -90,8 +87,6 @@
 	    	
 	    	document.getElementById("mapping-tab-but").disabled = false;
 	    
-	    	// get the query local flag gAvoidQueryMicroservice
-	        initAvoidQueryMicroservice();
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
 			if (conn) {
@@ -326,11 +321,11 @@
 			});
 	},
 	
-	linkEditorCallback = function(snode, nItem, targetSNode, data, optionalVal, deleteFlag) {
+	linkEditorCallback = function(snode, nItem, targetSNode, data, optionalVal, deleteMarkerVal, deleteFlag) {
 		
 		// optionalFlag
 		nItem.setSNodeOptional(targetSNode, optionalVal);
-		
+		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
 		// deleteFlag
 		if (deleteFlag) {
 			snode.removeLink(nItem, targetSNode);
@@ -370,7 +365,7 @@
   		});
      };
     
-    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, rtConstrainedFlag, constraintStr, data) {    	
+    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// update the property
@@ -378,12 +373,13 @@
     	propItem.setIsOptional(optionalFlag);
     	propItem.setIsRuntimeConstrained(rtConstrainedFlag);
     	propItem.setConstraints(constraintStr);
+    	propItem.setIsMarkedForDeletion(delMarker);
     	
     	// PEC TODO: pass draculaLabel through the dialog
     	displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
     };
     
-    snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, rtConstrainedFlag, constraintStr, data) {    	
+    snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// don't un-set an SNode's sparqlID
@@ -398,6 +394,7 @@
 		
 		// runtime constrained
     	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
+    	snodeItem.setDeletionMode(delMarker);
 
     	// constraints
     	snodeItem.setConstraints(constraintStr);
@@ -485,7 +482,8 @@
 		    	
 		    	logEvent("SG Loading", "connection", gConn.toString());
 		    	
-		    	var queryServiceUrl = (gQueryMicroserviceFlag == "direct") ? null : g.service.sparqlQuery.url;
+		    	// load through query service unless "DIRECT"
+		    	var queryServiceUrl = (getQuerySource() == "DIRECT") ? null : g.service.sparqlQuery.url;
 		    	
 		    	// note: clearEverything creates a new gOInfo
 	    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
@@ -494,7 +492,7 @@
     };
     
     getQueryClientOrInterface = function() {
-    	return (gQueryMicroserviceFlag == "direct") ? gConn.getDefaultQueryInterface() : gQueryClient;
+    	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
     
     doQueryLoadFile = function (file) {
@@ -653,27 +651,6 @@
     	}
    		
    	};
-   	
-   	//-----  query directly -----//
-	var AQM_COOKIE = "avoidMs";
-	doAvoidQueryMicroservice = function(flag) {
-		gQueryMicroserviceFlag = flag;
-		var cookies = new CookieManager(document);
-		cookies.setCookie(AQM_COOKIE, gQueryMicroserviceFlag);
-	};
-	
-	initAvoidQueryMicroservice = function() {
-		var cookies = new CookieManager(document);
-		var flag = cookies.getCookie(AQM_COOKIE);
-		if (flag) {
-			// backwards compatibility
-			if (flag == "t") { flag = "direct"; }
-			if (flag == "f") { flag = "normal"; }
-			
-			gQueryMicroserviceFlag = flag;
-		}
-		setQueryFlagCheckboxes();
-	};
 	
    	
    	doTest = function () {
@@ -709,9 +686,37 @@
     // only used for non-microservice code
     // Almost DEPRECATED
     getNamespaceFlag = function () {
-		var ret = document.getElementById("namespace").checked? SparqlServerResult.prototype.NAMESPACE_YES: SparqlServerResult.prototype.NAMESPACE_NO;
+		var ret = document.getElementById("SGQueryNamespace").checked? SparqlServerResult.prototype.NAMESPACE_YES: SparqlServerResult.prototype.NAMESPACE_NO;
 		// for sparqlgraph we always want raw HTML in the results.  No links or markup, etc.
 		return ret + SparqlServerResult.prototype.ESCAPE_HTML;
+    };
+    
+    /** Get query options **/
+    
+    // returns "SELECT", "COUNT", "CONSTRUCT", or "DELETE"
+    getQueryType = function () {
+    	var s = document.getElementById("SGQueryType");
+    	return s.options[s.selectedIndex].value;
+    };
+    
+    // returns "QUERY_SERVICE", "DIRECT", or "DISPATCHER"
+    getQuerySource = function () {
+    	var s = document.getElementById("SGQuerySource");
+    	return s.options[s.selectedIndex].value;
+    };
+    
+    getQueryLimit = function () {
+    	// input already guarantees only digits
+    	var value = document.getElementById("SGQueryLimit").value;
+    	if (value.length == 0) {
+    		return  0;
+    	} else {
+    		return parseInt(value);
+    	}
+    };
+    
+    getQueryShowNamespace = function () {
+    	return document.getElementById("SGQueryNamespace").checked;
     };
     
     doUnload = function () {
@@ -760,13 +765,32 @@
     
     buildQuery = function() {
     	logEvent("SG Build");
-        var qElem = document.getElementById("queryText");
-        document.getElementById('queryText').value = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, document.getElementById("optional").checked, SPARQL_LIMIT);
+        var sparql = "";
+        
+        switch (getQueryType()) {
+        case "SELECT":
+        	sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, getQueryLimit());
+        	break;
+        case "COUNT":
+        	sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_COUNT, false, getQueryLimit());
+        	break;
+        case "CONSTRUCT":
+        	sparql = gNodeGroup.generateSparqlConstruct();
+        	break;
+        case "DELETE":
+        	sparql = gNodeGroup.generateSparqlDelete("", null);
+        	break;
+        default:
+        	throw new Error("Unknown query type.");	
+        }
+        
+        document.getElementById('queryText').value = sparql;
 
         guiQueryNonEmpty();
         
     };
-    buildConstruct = function() {
+    
+    buildConstruct_TRAIN_WRECK = function() {
         var qElem = document.getElementById("queryText");
         document.getElementById('queryText').value = gNodeGroup.generateSparqlConstruct();
 		var query = document.getElementById("queryText").value;
@@ -797,7 +821,7 @@
     
     };
     
-    runQuery = function (){
+    runQuery = function () {
     	
     	var query = document.getElementById("queryText").value;
     	logEvent("SG Run Query", "sparql", query);
@@ -808,35 +832,73 @@
 			logAndAlert("Can't run empty query.  Use 'build' button first.");
 			
 		} else {
-			// HTML: tell user query is running
 			
-			if (gQueryMicroserviceFlag == "direct") {
-				setStatus("running DIRECT query...");
-				clearResults(); 
-				guiDisableAll();
-				
-				require(['sparqlgraph/js/sparqlserverinterface',
-		    	        ], function(SparqlServerInterface) {
+			clearResults();
+			
+			switch (getQueryType()) {
+			case "SELECT":
+			case "COUNT" :
+			case "CONSTRUCT":
+				switch (getQuerySource()) {
+				case "DIRECT":
+					setStatus("running DIRECT query...");
+					guiDisableAll();
 					
-					gConn.getDefaultQueryInterface().executeAndParse(query, runQueryCallback);
-				});
-		    	
-			} else if (gQueryMicroserviceFlag == "normal") {
-				setStatus("running query...");
-				clearResults();
-				guiDisableAll();
+					require(['sparqlgraph/js/sparqlserverinterface',
+			    	        ], function(SparqlServerInterface) {
+						
+						gConn.getDefaultQueryInterface().executeAndParse(query, runQueryCallback);
+					});
+			    	
+					break;
+					
+				case "QUERY_SERVICE":
+					setStatus("running query...");
+					guiDisableAll();
+					
+					gQueryClient.executeAndParse(query, runQueryCallback);
+					break;
+					
+				case "DISPATCHER":	
+					try {
+						// might not be defined for some os installations
+						doDispatcherQuery();
+					} catch (e) {
+		    			throw new Error("Can't run query of type " + getQuerySource());
+		    		}
+					break;
+				}
+				break;
 				
-				gQueryClient.executeAndParse(query, runQueryCallback);
+			case "DELETE":
 				
-			} else {
-				try {
-					// might not be defined for some os installations
-					doDispatcherQuery();
-				} catch (e) {
-	    			throw new Error("Can't run query of type " + gQueryMicroserviceFlag);
-	    		}
+				switch (getQuerySource()) {
+				case "DIRECT":
+					logAndAlert("Auth queries direct to triplestore are not implemented.");
+					break;
+				
+				case "QUERY_SERVICE":
+					require([ 'sparqlgraph/js/modaliidx'], function (ModalIidx) {
+						
+						var authQuery = function () {
+							setStatus("running delete query...");
+							guiDisableAll();
+							gQueryClient.execAuthQuery(query, runNoResultsQueryCallback);
+						}
+						
+						ModalIidx.okCancel(	"Auth Query", 
+											"About to run auth query which will modify data.<p>Hit 'Run' to confirm.", 
+											authQuery, 
+											"Run");
+					});
+					break;
+					
+				case "DISPATCHER":
+					logAndAlert("Auth queries can not be executed through a dispatcher.");
+					break;
+				}
+				break;
 			}
-	    	
 		}
 	};
 		
@@ -851,7 +913,7 @@
    	
 			logEvent("SG Display Query Results", "rows", results.getRowCount());
 			
-			if (gQueryMicroserviceFlag == "direct") {
+			if (getQuerySource() == "DIRECT") {
 				/* old non-microservice */
 				results.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
 													"resultsTableName",
@@ -865,7 +927,7 @@
 			} 
 			else {
 			    // new microservice results grid functionality
-				results.setLocalUriFlag(! document.getElementById("namespace").checked);
+				results.setLocalUriFlag(! getQueryShowNamespace());
 				results.setEscapeHtmlFlag(true);
 				results.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), "");
 			}
@@ -880,6 +942,25 @@
 		}
 	};
 	
+	// The query callback for anything where no results are expected
+	runNoResultsQueryCallback = function(results) {
+	
+		// HTML: tell user query is done
+		setStatus("");
+		guiUnDisableAll();
+		
+		if (results.isSuccess()) {
+			var res = results.getRsData(0,0);
+			
+			gQueryResults = null;
+			guiResultsEmpty();
+			
+			document.getElementById("resultsParagraph").innerHTML = 	'<div class="alert alert-info"> <strong>Query Response</strong><p>' + res + '</div>';
+		}
+		else {
+			logAndAlert(results.getStatusMessage());
+		}
+	};
 	
 	// Gui Functions
     // Inform the GUI which sections are empty
@@ -990,6 +1071,12 @@
     
 	clearQuery = function () {
 	 	document.getElementById('queryText').value = "";
+	 	
+	 	document.getElementById('SGQueryType').selectedIndex = 0;
+	 	document.getElementById('SGQuerySource').selectedIndex = 0;
+	 	document.getElementById('SGQueryLimit').value = "1000";
+	 	document.getElementById('SGQueryNamespace').checked = true;
+	 	
 	 	clearResults();
 	 	guiQueryEmpty();
 	};

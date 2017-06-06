@@ -520,7 +520,7 @@ require([
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 		
-		itemDialogCallback = function(item, sparqlID, optionalFlag, rtConstrainedFlag, constraintStr, data) {
+		itemDialogCallback = function(item, sparqlID, optionalFlag, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
 			
 	    	// Note: ModalItemDialog validates that sparqlID is legal

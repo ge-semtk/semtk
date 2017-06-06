@@ -839,7 +839,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 		this.isRuntimeConstrained = false;
 		this.valueConstraint = "";
 		this.instanceValue = null;
-		this.deletionMode = getNodeDeletionTypeName(NodeDeletionTypes.NO_DELETE); 
+		this.deletionMode = NodeDeletionTypes.NO_DELETE; 
 	}
 	this.node = setNode(this); // the dracula node used in this Semantic Node.
 								// this is the thing that gets drawn
@@ -884,7 +884,7 @@ SemanticNode.prototype = {
 			isRuntimeConstrained : this.isRuntimeConstrained,
 			valueConstraint : this.valueConstraint,
 			instanceValue : this.instanceValue,
-			deletionMode : this.deletionMode,
+			deletionMode :  getNodeDeletionTypeName(this.deletionMode),
 		};
 		
 		// add properties
@@ -922,7 +922,7 @@ SemanticNode.prototype = {
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;	
-		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? jObj.deletionMode : getNodeDeletionTypeName(NodeDeletionTypes.NO_DELETE);
+		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? getNodeDeletionTypeByName(jObj.deletionMode) : NodeDeletionTypes.NO_DELETE;
 		
 		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {
@@ -1555,10 +1555,12 @@ SemanticNode.prototype = {
 		return prop;
 	},
 
+	// returns the numeric constants
 	getDeletionMode : function () {
 		return this.deletionMode;
 	},
 	
+	// uses the numeric constants
 	setDeletionMode : function (nodeDeletionType) {
 		this.deletionMode = nodeDeletionType;
 	},
@@ -2633,10 +2635,12 @@ SemanticNodeGroup.prototype = {
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
-		sparql += "}\n";
+		sparql += "}";
 
+		sparql += this.generateSparqlFromClause("");
+		
 		// jm: borrowed from "GenerateSparql"				
-		sparql += " where {\n";
+		sparql += "\nwhere {\n";
 
 		queryType = SemanticNodeGroup.QUERY_CONSTRUCT;
 		doneNodes = [];
@@ -2745,10 +2749,12 @@ SemanticNodeGroup.prototype = {
 		var primaryBody = this.getDeletionLeader(postFixString, oInfo);
 		var whereBody   = this.getDeletionWhereBody(postFixString, oInfo);
 		
-		retval = this.generateSparqlPrefix() + "\nDELETE {\n" + primaryBody + "}\n";
+		retval = this.generateSparqlPrefix() + "\nDELETE {\n" + primaryBody + "}";
+		
+		retval += this.generateSparqlFromClause("");
 		
 		if(whereBody.length > 0){
-			retval += " WHERE {\n" + whereBody + " }\n";
+			retval += "\nWHERE {\n" + whereBody + " }\n";
 		}
 		
 		return retval;
@@ -2762,7 +2768,7 @@ SemanticNodeGroup.prototype = {
 			
 			var deletionMode = n.getDeletionMode();
 			
-			if(getNodeDeletionTypeByName(deletionMode) != NodeDeletionTypes.NO_DELETE){
+			if(deletionMode != NodeDeletionTypes.NO_DELETE){
 				// there is a deletion intended
 				retval += this.generateNodeDeletionSparql(n);
 			}
@@ -2779,9 +2785,9 @@ SemanticNodeGroup.prototype = {
 				var nodeInUse = n.nodeList[nCount];
 				var nic = nodeInUse.getSnodesWithDeletionFlagsEnabledOnThisNodeItem();
 				// write up the delete for this....
-				for(var nicCount = 0; nicCount < nic.length; g++ ){
+				for(var nicCount = 0; nicCount < nic.length; nicCount++ ){
 					var connected = nic[nicCount];
-					retval += "    " + n.getSparqlID() + " " + this.getPrefixedUri(nodeInUsegetUriConnectBy() ) + " " + connected.getSparqlID() +  " . \n";
+					retval += "    " + n.getSparqlID() + " " + this.getPrefixedUri(nodeInUse.getURIConnectBy() ) + " " + connected.getSparqlID() +  " . \n";
 				}
 				// this should contain all the deletion info for the node itself.
 			}
@@ -2794,7 +2800,7 @@ SemanticNodeGroup.prototype = {
 	generateNodeDeletionSparql : function(nodeInScope) {
 		var retval = "";
 		var indent = "    ";
-		var delMode = getNodeDeletionTypeByName(nodeInScope.getDeletionMode());
+		var delMode = nodeInScope.getDeletionMode();
 		
 		if(delMode === NodeDeletionTypes.TYPE_INFO_ONLY){
 			retval += indent + nodeInScope.getSparqlID() + " rdf:type  " + nodeInScope.getSparqlID() + "_type_info . \n";
@@ -3007,7 +3013,7 @@ SemanticNodeGroup.prototype = {
 		}
 		
 		// added for deletions
-		else if (queryType == SemanticNodeGroup.QUERY_DELETE_WHERE && getNodeDeletionTypeByName(snode.getDeletionMode()) != NodeDeletionTypes.NO_DELETE){
+		else if (queryType == SemanticNodeGroup.QUERY_DELETE_WHERE && snode.getDeletionMode() != NodeDeletionTypes.NO_DELETE){
 			sparql += tab + this.generateNodeDeletionSparql(snode);
 		}
 		// This is the type-constraining statement for any type that needs
