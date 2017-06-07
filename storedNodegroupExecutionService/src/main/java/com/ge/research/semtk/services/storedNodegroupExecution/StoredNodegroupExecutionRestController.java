@@ -43,7 +43,7 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 
 /**
- * service to run stored nodegroups. it assumes the query to run is a select or an EDC query
+ * service to run stored nodegroups. 
  * @author 200018594
  *
  */
