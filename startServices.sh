@@ -33,6 +33,9 @@ CONFIG_NODEGROUPSTORE_SERVICE="$SEMTK"/nodeGroupStoreService/src/main/resources/
 CONFIG_SPARQLGRAPH_STATUS_SERVICE="$SEMTK"/sparqlGraphStatusService/src/main/resources/status.properties 
 CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
 CONFIG_HIVE_SERVICE="$SEMTK"/hiveService/src/main/resources/hive.properties 
+CONFIG_DISPATCH_SERVICE="$SEMTK"/sparqlExtDispatchService/src/main/resources/dispatch.properties
+CONFIG_EXEC_SERVICE="$SEMTK"/storedNodegroupExecutionService/src/main/resources/exec.properties
+
 # use different config files if given a config directory parameter
 if [ $# -eq 1 ]; then
 	CONFIG_DIR=$1
@@ -42,6 +45,8 @@ if [ $# -eq 1 ]; then
     CONFIG_SPARQLGRAPH_STATUS_SERVICE="$CONFIG_DIR"/status.properties
     CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$CONFIG_DIR"/results.properties
     CONFIG_HIVE_SERVICE="$CONFIG_DIR"/hive.properties
+    CONFIG_DISPATCH_SERVICE="$CONFIG_DIR"/dispatch.properties
+    CONFIG_EXEC_SERVICE="$CONFIG_DIR"/exec.properties
 else
 	echo USING DEFAULT CONFIGS in src/main/resources/
 fi
