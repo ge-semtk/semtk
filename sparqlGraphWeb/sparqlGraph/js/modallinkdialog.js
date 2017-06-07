@@ -70,6 +70,7 @@ define([	// properly require.config'ed
 								this.targetSNode,
 								this.data,
 								document.getElementById("ModalLinkDialog.optionalSelect").value,
+								document.getElementById("ModalLinkDialog.deleteSelect").value == "true",
 								document.getElementById("ModalLinkDialog.deleteCheck").checked
 							  );
 			},
@@ -80,25 +81,17 @@ define([	// properly require.config'ed
 				dom.id = "ModalLinkDialogdom";
 				var title = this.sourceSNode.getSparqlID() + "-- " + this.item.getKeyName() + " --" + this.targetSNode.getSparqlID();
 				
+				// ********  horizontal form with fieldset *********
+				var form = IIDXHelper.buildHorizontalForm();
+				dom.appendChild(form);
+				var fieldset = IIDXHelper.addFieldset(form);
+
 				// optional checkbox
-				var select =  document.createElement("select");
-				select.id = "ModalLinkDialog.optionalSelect";
-				var option;
-				
-				option = document.createElement("option");
-				option.text = " ";
-				option.value = NodeItem.OPTIONAL_FALSE;
-				select.options.add(option);
-				
-				option = document.createElement("option");
-				option.text = "forward (normal)";
-				option.value = NodeItem.OPTIONAL_TRUE;
-				select.options.add(option);
-				
-				option = document.createElement("option");
-				option.text = "reverse";
-				option.value = NodeItem.OPTIONAL_REVERSE;
-				select.options.add(option);
+				var select = IIDXHelper.createSelect("ModalLinkDialog.optionalSelect",
+													[ " ",                NodeItem.OPTIONAL_FALSE,
+													  "forward (normal)", NodeItem.OPTIONAL_TRUE,
+													  "reverse",          NodeItem.OPTIONAL_REVERSE 
+													]);
 				
 				select.style.width = "20ch";
 				
@@ -111,19 +104,35 @@ define([	// properly require.config'ed
 					}
 				}
 				
+				fieldset.appendChild(IIDXHelper.buildControlGroup("Optional: ", select));
+				
+				// delete query checkbox
+				select = IIDXHelper.createSelect("ModalLinkDialog.deleteSelect",
+												  [	" "              , "false", 
+													"mark for delete", "true"
+												  ],
+												  this.item.getSnodeDeletionMarker(this.targetSNode) ? "true":"false");
+				select.style.width = "20ch";
+				fieldset.appendChild(IIDXHelper.buildControlGroup("Delete query: ", select));
+				
+				// *********** end form ***********
+				
 				// delete
+				
+				dom.appendChild(document.createElement("hr"));
+
+				var div = document.createElement("div");
+				div.setAttribute("align", "right");
+				dom.appendChild(div);
+				
 				deleteCheck = IIDXHelper.createVAlignedCheckbox();
 				deleteCheck.id = "ModalLinkDialog.deleteCheck";
-				deleteCheck.checked = false;			
-
-				// normal operation: put optional check into the top table
-				dom.appendChild(document.createTextNode("Optional: "));
+				deleteCheck.checked = false;		
+				div.appendChild(deleteCheck)
 				
-				dom.appendChild(select);
-				dom.appendChild(document.createElement("br"));
-				
-				dom.appendChild(deleteCheck)
-				dom.appendChild(document.createTextNode(" delete this link"));
+				var txt = document.createElement("span");
+				txt.innerHTML = " delete this link";
+				div.appendChild(txt);
 				
 				// compute a width: at least 40 but wide enough for the title too
 				var width = title.length * 1.3;

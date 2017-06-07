@@ -125,9 +125,9 @@
 		   extra += !col ?   '' : '\ncolumn: ' + col;
 		   extra += !error ? '' : '\nerror: '  + error;
 		
-		   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + extra);
-		
-		   return true;
+		   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + "\n" + extra);
+		   console.log(error.stack);
+		   return false;
 		};
 	</script>
 	
@@ -193,8 +193,6 @@
 						<ul class="dropdown-menu pull-right">
 							<li><a href="javascript:doNodeGroupUpload();">Upload...</a></li>
 							<li><a href="javascript:doNodeGroupDownload();">Download...</a></li>							
-							<li><hr></li>
-							<li><a href="javascript:chkboxAvoidMicroSvc.checked = (! chkboxAvoidMicroSvc.checked);  doAvoidQueryMicroservice(chkboxAvoidMicroSvc.checked ? 'direct' : 'normal');"><input type="checkbox" disabled="disabled" id="chkboxAvoidMicroSvc" style="vertical-align:top;"> Query Directly</a></li>
 						</ul>				
 					</li>
 					 
@@ -254,9 +252,7 @@
 						</td>
 						<td align="right">
 							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
-						    <input type="checkbox" class='checkbox' id="optional"> Optional Properties </input>
-							<input type="checkbox" class='checkbox' id="namespace" checked> Show namespaces </input>
-		   	    			<button class="btn btn-disabled" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
+							<button class="btn btn-disabled" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
 						    <button class="btn btn-disabled" id="btnGraphExecute" onclick="javascript:graphExecute(); return false;" disabled>Execute</button>
 						</td>
 					</tr></table>
@@ -318,11 +314,34 @@
 					<header class="module-header">Query:</header>
 					<div class="module-body collapse">
 				  		<div id="querydiv"  class="control-group" style="width:100%">
-					   		<form class="form-horizontal">
-						   		<button class='btn disabled' id="btnQueryBuild" onclick="javascript:buildQuery(); return false;" disabled>build</button>
-						   		<button class='btn disabled' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>run</button>
-					   		</form>
-				   		
+				  			<table width="100%"><tbody><tr>
+				  				<td>
+							   		<form class="form-horizontal">
+								   		<button class='btn disabled' id="btnQueryBuild" onclick="javascript:buildQuery(); return false;" disabled>build</button>
+								   		<button class='btn disabled' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>run</button>
+							   		</form>
+							   	</td>
+							   	<td align="right">
+							   		<form class="form-horizontal">
+							 			&nbsp; query: 
+							 			<select class="input-medium" id="SGQueryType">
+							 				<option value="SELECT">select distinct</option>
+							 				<option value="COUNT">count</option>
+							 				<option value="CONSTRUCT">construct</option>
+							 				<option value="DELETE">delete</option>
+							 			</select>
+							   			&nbsp; source: 
+							   			<select class="input-medium" id="SGQuerySource">
+							   				<option value="QUERY_SERVICE">query service</option>
+							   				<option value="DIRECT">direct</option>
+							   		<!--  	<option value="DISPATCHER">dispatcher</option> -->
+							   			</select>
+							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="1000" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces </input>
+						   			</form>
+							   	</td>
+					   		</tr></tbody></table>
+							   	    			
 					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:100%">
 					   		</textarea>
 				  		</div>
