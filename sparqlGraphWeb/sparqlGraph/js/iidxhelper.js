@@ -49,11 +49,24 @@ define([	// properly require.config'ed
 			return form;
 		};
 		
+		/*
+		 * @example
+		 *    form = IIDXHelper.buildHorizontalForm()
+		 *    fieldset = IIDXHelper.addFieldset(form)
+		 *    fieldset.appendChild(IIDXHelper.buildControlGroup("label: ", controlDom));
+		 *    myDom.appendChild(form);
+		 */
 		IIDXHelper.buildHorizontalForm = function () {
 			var form = document.createElement("form");
 			form.className = "form-horizontal";
 			form.onsubmit = function(){return false;};    // NOTE: forms shouldn't submit automatically on ENTER
 			return form;
+		};
+		
+		IIDXHelper.addFieldset = function (horizForm) {
+			var fieldset = document.createElement("fieldset");
+			horizForm.appendChild(fieldset);
+			return fieldset;
 		};
 		
 		IIDXHelper.createVAlignedCheckbox = function () {
@@ -81,6 +94,22 @@ define([	// properly require.config'ed
 			
 			table.appendChild(tr);
 			return table;
+		};
+		
+		IIDXHelper.createSelect = function(id, textValArray, optValue) {
+			var select =  document.createElement("select");
+			select.id = id;
+			var option;
+			
+			for (var i=0; i < textValArray.length; i=i+2) {
+				option = document.createElement("option");
+				option.text = textValArray[i];
+				option.value = textValArray[i+1];
+				option.selected = (typeof optValue != "undefined" && optValue == option.value);
+				select.options.add(option);
+			}
+			
+			return select;
 		};
 		
 		IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {

@@ -87,14 +87,14 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 						<td style="padding: 1ch;" align="right"> data  <span id="mdDataButtonDiv"  class="btn-group" float="right"></span></td> \
 					</tr></table> \
 					<hr style="margin-top: 1ch; margin-bottom: 2ch;">\
-					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdServerURL"></div></div>\
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdServerURL" list="mdDatalistServers"></div></div>\
 					<div class="control-group" style="margin-right: 1ch;"><label class="control-label">Type:</label><div class="controls" align="left">\
 						<select id="mdSelectSeiType"> \
 							<option value="F"         >fuseki</label></option>\
 							<option value="V" selected>virtuoso</label></option>\
 						</select> \
 					</div></div> \
-					<div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge" id="mdDataset" ></div></div>\
+					<div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge" id="mdDataset" list="mdDatalistDatasets" ></div></div>\
 					<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
 						<button type="button" class="btn" id="mdSeiDelete">Delete</button>\
 					</div>\
@@ -109,6 +109,8 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 	</form>\
 	</center>\
 	</div>\
+	<datalist id="mdDatalistServers"></datalist>\
+	<datalist id="mdDatalistDatasets"></datalist>\
 	'.replace(/%VAR/g, varNameOBSOLETE);
 	
 	this.hide();
@@ -366,7 +368,56 @@ ModalLoadDialog.prototype = {
 			document.getElementById("mdServerURL").disabled=true;
 			document.getElementById("mdDataset").disabled=true;
 		}
+		
+		this.updateDatalists();
 		return false;
+	},
+	
+	// update the datalists for serverURL and Dataset
+	// with the values from the other Sei's
+	updateDatalists : function () {
+		var servers = document.getElementById("mdDatalistServers");
+		var datasets = document.getElementById("mdDatalistDatasets");
+		var serverArr = [];
+		var datasetArr = [];
+		
+		// clear lists
+		servers.innerHTML = "";
+		datasets.innerHTML = "";
+		
+		if (this.conn != null) {
+			// add all Model Interfaces' ServerURL's and Datasets
+			for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
+				var s = this.conn.getModelInterface(i).getServerURL();
+				var d = this.conn.getModelInterface(i).getDataset();
+				
+				if (s!= null && s != "" && serverArr.indexOf(s) == -1) {
+					serverArr.push(s);
+					servers.innerHTML += '<option value="' + s + '">';
+				}
+				
+				if (d != null && d != "" && datasetArr.indexOf(d) == -1) {
+					datasetArr.push(d);
+					datasets.innerHTML += '<option value="' + d + '">';
+				}
+			}
+			// repeat for Data Interfaces
+			for (var i=0; i < this.conn.getDataInterfaceCount(); i++) {
+				var s = this.conn.getDataInterface(i).getServerURL();
+				var d = this.conn.getDataInterface(i).getDataset();
+				
+				if (s!= null && s != "" && serverArr.indexOf(s) == -1) {
+					serverArr.push(s);
+					servers.innerHTML += '<option value="' + s + '">';
+				}
+				
+				if (d != null && d != "" && datasetArr.indexOf(d) == -1) {
+					datasetArr.push(d);
+					datasets.innerHTML += '<option value="' + d + '">';
+				}
+			}
+		}
+		
 	},
 	
 	callbackExportProfiles : function () {
@@ -418,7 +469,8 @@ ModalLoadDialog.prototype = {
 			var other = new SparqlConnection(select.options[i].value);
 			if (conn.equals(other, true)) {   // true means ignore the name
 				if (selectFlag) {
-					this.setSelectedIndex(i);
+					this.conn = conn;
+					this.writeCurrProfile();
 				}
 				return other.getName();
 			} 
@@ -583,6 +635,15 @@ ModalLoadDialog.prototype = {
 		// put sei into this.conn
 		this.storeDisplayedSei();
 		
+		// If dataInterface[0] is empty then duplicate modelInterface[0]
+		var data0 = this.conn.getDataInterface(0);
+		if (data0.getServerURL() == "" && data0.getDataset() == "") {
+			var model0 = this.conn.getModelInterface(0);
+			data0.setServerURL(model0.getServerURL());
+			data0.setDataset(model0.getDataset());
+			this.changed(true);
+		};
+		
 		// put this.conn into select[n]
 		var select = this.document.getElementById("mdSelectProfiles");
 		select.options[this.displayedIndex].value = this.conn.toString();
@@ -605,7 +666,8 @@ ModalLoadDialog.prototype = {
 	
 	// appends a connection to the select
 	appendProfile : function (conn) {
-
+		
+		// change to string and store it in the select
 		var opt = new Option(conn.getName(), conn.toString());
 		this.document.getElementById("mdSelectProfiles").appendChild(opt);
 	},
@@ -843,12 +905,16 @@ ModalLoadDialog.prototype = {
 
 		localStorage.setItem("SPARQLgraph_allProfiles", this.getAllProfilesString());
 		
+		this.writeCurrProfile();
+	}, 
+	
+	writeCurrProfile : function () {
 		if (this.conn != null) {
 			localStorage.setItem("SPARQLgraph_curProfile", this.conn.toString());
 		} else {
 			localStorage.removeItem("SPARQLgraph_curProfile");
 		}
-	}, 
+	},
 	
 	// build a string representing all profiles in the select
 	getAllProfilesString : function () {
