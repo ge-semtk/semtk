@@ -64,11 +64,9 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java -jar "$SEMTK"/hiveService/target/hiveService-*.jar --spring.config.location="$CONFIG_HIVE_SERVICE" --server.port=$PORT_HIVE_SERVICE > "$LOGS"/hiveService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java  -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS",${HOME}/app/lib -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchServic\
-e.log 2>&1 &
+"$JAVA_HOME"/bin/java  -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS",${HOME}/app/lib -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/storedNodegroupExecutionService/target/storedNodegroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/sto\
-redNodegroupExecutionService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/storedNodegroupExecutionService/target/storedNodegroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/storedNodegroupExecutionService.log 2>&1 &
 
 #"$JAVA_HOME"/bin/java -jar "$SEMTK"/oracleService/target/oracleService-*.jar --server.port=$PORT_ORACLE_SERVICE > "$LOGS"/oracleService.log 2>&1 &
 
