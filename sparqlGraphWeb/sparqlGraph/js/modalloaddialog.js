@@ -57,7 +57,7 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 	<form id="loadDialogForm">\
 	<table border="1">\
 		<tr> \
-			<td valign="top"> <!-- TABLE: Right -->\
+			<td valign="top"> <!-- TABLE: Left -->\
 				<center><legend>Server Profiles</legend></center>\
 				<select id="mdSelectProfiles" size=20 style="min-width:90%; margin-left:1ch; margin-right:1ch">\
 				</select>\
@@ -72,7 +72,7 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 					<button type="button" class="btn" id="mdProfileExport"  >Export</button>\
 				</div>\
 			</td>\
-			<td valign="top"> <!-- TABLE: Left  -->\
+			<td valign="top"> <!-- TABLE: Right  -->\
 				<center><legend>Profile</legend></center>\
 	    		<form class="form-horizontal"> </form> \
 				<form class="form-horizontal">\
@@ -103,6 +103,7 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 			</td>\
 		</table>\
 		<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+        	<input type="checkbox" id="mdDirect" style="vertical-align: middle; position: relative; bottom: 0.25em;"> query directly &nbsp;&nbsp;\
 			<input type="button" id="mdCancel" class="btn-danger" value="Cancel" ></input> \
 		    <input type="submit" class="btn-primary" value="Submit"></input>\
 		</div>\
@@ -121,7 +122,7 @@ ModalLoadDialog.COOKIE_NAME_INDEX = "mdIndex";
 
 ModalLoadDialog.prototype = {
 		
-	loadDialog : function (curConn, callback) {
+	loadDialog : function (curConn, initialDirectFlag, callback) {
 		// load dialog   
 		// callback(sparqlconnection)
 		this.callback = callback;
@@ -130,8 +131,10 @@ ModalLoadDialog.prototype = {
 		$("[rel='tooltip']").tooltip();		
 		
 		this.show();
-		// ==== Callbacks that don't use the (ahem) %VAR trick ====
 		
+		document.getElementById("mdDirect").checked = initialDirectFlag;
+		
+		// ==== Callbacks that don't use the (ahem) %VAR trick ====
 		document.getElementById("mdName").onchange         =this.callbackChangedName.bind(this);
 		document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);
 		document.getElementById("mdServerURL").onchange    =this.callbackChangedServerURL.bind(this);
@@ -227,7 +230,7 @@ ModalLoadDialog.prototype = {
 		this.hide();
 		this.storeDisplayedProfile();
 		this.writeProfiles();
-		this.callback(this.conn);
+		this.callback(this.conn, document.getElementById("mdDirect").checked);
 		return false;
 	},
 	
@@ -622,6 +625,34 @@ ModalLoadDialog.prototype = {
 		}
 	},
 	
+	// Remove empty sei's
+	// Except model[0] (keep regardless)
+	// and data[0] (copy model[0] if it's empty
+	//
+	cleanupConnection : function (cn) {
+		// If dataInterface[0] is empty then duplicate modelInterface[0]
+		var data0 = cn.getDataInterface(0);
+		if (data0.getServerURL() == "" && data0.getDataset() == "") {
+			var model0 = cn.getModelInterface(0);
+			data0.setServerURL(model0.getServerURL());
+			data0.setDataset(model0.getDataset());
+		};
+		
+		// remove empty sei's with indices > 0
+		for (var i=cn.getDataInterfaceCount()-1; i > 0; i--) {
+			var sei = cn.getDataInterface(i);
+			if (sei.getServerURL() == "" && sei.getDataset() == "") {
+				cn.delDataInterface(i);
+			}
+		}
+		for (var i=cn.getModelInterfaceCount()-1; i > 0; i--) {
+			var sei = cn.getModelInterface(i);
+			if (sei.getServerURL() == "" && sei.getDataset() == "") {
+				cn.delModelInterface(i);
+			}
+		}
+	},
+	
 	// store screen to this.conn, then into the select.option[].value
 	storeDisplayedProfile : function() {
 		if (this.displayedIndex == -1) {
@@ -634,15 +665,6 @@ ModalLoadDialog.prototype = {
 		
 		// put sei into this.conn
 		this.storeDisplayedSei();
-		
-		// If dataInterface[0] is empty then duplicate modelInterface[0]
-		var data0 = this.conn.getDataInterface(0);
-		if (data0.getServerURL() == "" && data0.getDataset() == "") {
-			var model0 = this.conn.getModelInterface(0);
-			data0.setServerURL(model0.getServerURL());
-			data0.setDataset(model0.getDataset());
-			this.changed(true);
-		};
 		
 		// put this.conn into select[n]
 		var select = this.document.getElementById("mdSelectProfiles");
@@ -917,6 +939,7 @@ ModalLoadDialog.prototype = {
 	},
 	
 	// build a string representing all profiles in the select
+	// apply cleanupConnection() to each to tidy up messes the GUI allows during editing
 	getAllProfilesString : function () {
 		var result = "";
 		
@@ -924,7 +947,10 @@ ModalLoadDialog.prototype = {
 
 		// loop through profiles and save to cookieManager
 		for (var i=0; i < select.length; i++) {
-			result += select.options[i].value.toString() + "\n";
+			var conn = new SparqlConnection(select.options[i].value);
+			this.cleanupConnection(conn);
+			
+			result += conn.toString() + "\n";
 		}
 		
 		return result;

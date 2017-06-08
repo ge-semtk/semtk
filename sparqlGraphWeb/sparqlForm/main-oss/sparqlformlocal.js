@@ -189,10 +189,10 @@ require([	'local/sparqlformconfig',
 		
 		//-----  on load async callback chain functions -----//
 		doFileLoad = function() {
-			gLoadDialog.loadDialog(gConn, loadSuccess0);
+			gLoadDialog.loadDialog(gConn, gAvoidQueryMicroserviceFlag, loadSuccess0);
 		};
 		
-		loadSuccess0 = function(connProfile, optCallback) {
+		loadSuccess0 = function(connProfile, directFlag, optCallback) {
 	    	// Callback from the load dialog
 	    	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
 	    		
@@ -207,7 +207,7 @@ require([	'local/sparqlformconfig',
 	    	
 	    	kdlLogEvent("SF Loading", "connection", gConn.toString());
     		
-	    	var queryServiceUrl = gAvoidQueryMicroserviceFlag ? null : Config.services.query.url;
+	    	var queryServiceUrl = directFlag ? null : Config.services.query.url;
 	  
     		gOInfo = new OntologyInfo();
     		BackwardCompatibleUtil.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){ loadSuccess2(); callback();}, loadFailure);

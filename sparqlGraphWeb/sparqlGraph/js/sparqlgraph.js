@@ -93,6 +93,10 @@
 				doLoadConnection(conn);
 			}
 			
+			// make sure Query Source and Type disables are reset
+			onchangeQuerySource();  
+			onchangeQueryType(); 
+			
 	    	// SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
 	    	// gReady is at the end of the ready function
 	    	//        and tells us everything is loaded.
@@ -103,7 +107,7 @@
 		});
     });
     
-    checkBrowser = function() {
+    var checkBrowser = function() {
      	// Detect Browser
     	var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
         if (! isFirefox) {
@@ -111,7 +115,7 @@
         }
     };
     
-    initCanvas = function() {
+    var initCanvas = function() {
     	$("#canvas").droppable({
     	    hoverClass: "drophover",
     	    addClasses: true,
@@ -197,7 +201,7 @@
       	guiGraphNonEmpty();
     };
     
-    initDynatree = function() {
+    var initDynatree = function() {
     	
         // Attach the dynatree widget to an existing <div id="tree"> element
         // and pass the tree options as an argument to the dynatree() function:
@@ -238,10 +242,11 @@
   	
     // PEC LOGGING
     // temporary logging require.js workaround
-    logEvent = function (action, optDetailKey1, optDetailVal1, optDetailKey2, optDetailVal2) { 
+  	var logEvent = function (action, optDetailKey1, optDetailVal1, optDetailKey2, optDetailVal2) { 
     		kdlLogEvent(action, optDetailKey1, optDetailVal1, optDetailKey2, optDetailVal2);
-    }
-    logAndAlert = function (msgHtml, optTitle) {
+    };
+    
+    var logAndAlert = function (msgHtml, optTitle) {
     	var title = typeof optTitle === "undefined" ? "Alert" : optTitle
     	kdlLogEvent("SG: alert", "message", msgHtml);
     	   
@@ -251,11 +256,11 @@
 				});
     };
     
-    logAndThrow = function (msg) {
+    var logAndThrow = function (msg) {
     		kdlLogAndThrow(msg);
     };
     
-    logNewWindow = function (msg) {
+    var logNewWindow = function (msg) {
     		kdlLogNewWindow(msg);
     };
     
@@ -275,7 +280,7 @@
     };
     
     // application-specific property editing
-    launchPropertyItemDialog = function (propItem, draculaLabel) {
+    var launchPropertyItemDialog = function (propItem, draculaLabel) {
     	require([ 'sparqlgraph/js/modalitemdialog',
 	            ], function (ModalItemDialog) {
     		
@@ -286,7 +291,7 @@
 		});
     };
     
-    launchLinkBuilder = function(snode, nItem) {
+    var launchLinkBuilder = function(snode, nItem) {
 		// callback when user clicks on a nodeItem	
     	var rangeStr = nItem.getUriValueType();
     	
@@ -309,9 +314,9 @@
     	} else {
   			globalModalDialogue.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), "75%");
     	}
-	},
+	};
 	
-    launchLinkEditor = function(snode, nItem, targetSNode, edge) {
+	var launchLinkEditor = function(snode, nItem, targetSNode, edge) {
 		
 		require([ 'sparqlgraph/js/modallinkdialog',
 		            ], function (ModalLinkDialog) {
@@ -319,9 +324,9 @@
 	    		var dialog= new ModalLinkDialog(nItem, snode, targetSNode, gNodeGroup, linkEditorCallback, {"edge" : edge});
 	    		dialog.show();
 			});
-	},
+	};
 	
-	linkEditorCallback = function(snode, nItem, targetSNode, data, optionalVal, deleteMarkerVal, deleteFlag) {
+	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalVal, deleteMarkerVal, deleteFlag) {
 		
 		// optionalFlag
 		nItem.setSNodeOptional(targetSNode, optionalVal);
@@ -332,7 +337,7 @@
 		} 
 		
 		gNodeGroup.drawNodes();
-	},
+	};
 	
 	/**
 	 * Link from snode through it's nItem to rangeSNode
@@ -340,7 +345,7 @@
 	 * @param nItem - nodeItem
 	 * @param rangeSnode - range node, if null then create it
 	 */
-	buildLink = function(snode, nItem, rangeSnode) {
+	var buildLink = function(snode, nItem, rangeSnode) {
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
 		
@@ -352,9 +357,9 @@
 			snode.setConnection(rangeSnode, domainStr);
 		}
 		gNodeGroup.drawNodes();
-	},
+	};
 	
-    launchSNodeItemDialog = function (snodeItem, draculaLabel) {
+	var launchSNodeItemDialog = function (snodeItem, draculaLabel) {
     	require([ 'sparqlgraph/js/modalitemdialog',
   	            ], function (ModalItemDialog) {
       		
@@ -365,7 +370,7 @@
   		});
      };
     
-    propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+     var propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// update the property
@@ -379,7 +384,7 @@
     	displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
     };
     
-    snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// don't un-set an SNode's sparqlID
@@ -405,7 +410,7 @@
     	gNodeGroup.drawNodes();
     };
     
-    downloadFile = function (data, filename) {
+    var downloadFile = function (data, filename) {
     	// build an anchor and click on it
 		$('<a>invisible</a>')
 			.attr('id','downloadFile')
@@ -423,13 +428,13 @@
     };
     
     
-    doLoad = function() {
+    var doLoad = function() {
     	logEvent("SG Menu: File->Load");
-    	gLoadDialog.loadDialog(gConn, doLoadConnection);
+    	gLoadDialog.loadDialog(gConn, false, doLoadConnection);
     };
     
     //**** Start new load code *****//
-    doLoadOInfoSuccess = function() {
+    var doLoadOInfoSuccess = function() {
     	// now load gOInfo into gOTree
 		gOTree.addOntInfo(gOInfo);
     	gOTree.showAll(); 
@@ -443,7 +448,7 @@
 		logEvent("SG Load Success");
     };
     
-    doLoadFailure = function(msg) {
+    var doLoadFailure = function(msg) {
     	require(['sparqlgraph/js/ontologyinfo'], 
    	         function () {
     		
@@ -460,7 +465,7 @@
  		// retains gConn
     };
     
-    doLoadConnection = function(connProfile, optCallback) {
+    var doLoadConnection = function(connProfile, directFlag, optCallback) {
     	// Callback from the load dialog
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
     	
@@ -472,6 +477,9 @@
     		
 	    	// Clean out existing GUI
 	    	clearEverything();
+	    	if (directFlag) {
+	    		setQuerySource("DIRECT");
+	    	}
 	    	
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
@@ -483,7 +491,7 @@
 		    	logEvent("SG Loading", "connection", gConn.toString());
 		    	
 		    	// load through query service unless "DIRECT"
-		    	var queryServiceUrl = (getQuerySource() == "DIRECT") ? null : g.service.sparqlQuery.url;
+		    	var queryServiceUrl = (directFlag) ? null : g.service.sparqlQuery.url;
 		    	
 		    	// note: clearEverything creates a new gOInfo
 	    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
@@ -491,11 +499,11 @@
     	});
     };
     
-    getQueryClientOrInterface = function() {
+    var getQueryClientOrInterface = function() {
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
     
-    doQueryLoadFile = function (file) {
+    var doQueryLoadFile = function (file) {
     	var r = new FileReader();
     	
     	r.onload = function () {
@@ -568,7 +576,7 @@
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
-    doQueryLoadFile2 = function(sgJson) {
+    var doQueryLoadFile2 = function(sgJson) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
     	clearGraph();
@@ -581,12 +589,12 @@
 		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
     };
     
-    doNodeGroupUploadCallback = function (evt) {
+    var doNodeGroupUploadCallback = function (evt) {
     	// fileInput callback
     	doQueryLoadFile(evt.target.files[0]);
     };
     
-    doNodeGroupUpload = function () {
+    var doNodeGroupUpload = function () {
     	// menu pick callback
     	logEvent("SG menu: File->Upload");
 		if (gNodeGroup.getNodeCount() > 0) {
@@ -600,7 +608,7 @@
     	}
     };
     
-    doNodeGroupDownload = function () {
+    var doNodeGroupDownload = function () {
     	logEvent("SG menu: File->Download");
     	if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0) {
     		logAndAlert("Query canvas is empty.  Nothing to download.");
@@ -620,12 +628,12 @@
     
     // ======= drag-and-drop version of query-loading =======
     	
-    noOpHandler = function (evt) {
+    var noOpHandler = function (evt) {
 		 evt.stopPropagation();
 		 evt.preventDefault();
    	};
    	
-   	fileDrop = function (evt) {
+   	var fileDrop = function (evt) {
    		
    		if (! gReady) {
    			console.log("Ignoring file drop because I'm not ready.");
@@ -653,17 +661,17 @@
    	};
 	
    	
-   	doTest = function () {
+   	var doTest = function () {
    		
 	   	 doDispatcherQuery();
   	};
    	
-   	doLayout = function() {
+  	var doLayout = function() {
    		setStatus("Laying out graph...");
    		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, "")); 		
    	};
     
-    doTestMsi = function () {
+   	var doTestMsi = function () {
     	require(['sparqlgraph/js/microserviceinterface',
     	         'sparqlgraph/js/msiclientquery',
     	         'sparqlgraph/js/modaliidx'], 
@@ -685,7 +693,7 @@
     
     // only used for non-microservice code
     // Almost DEPRECATED
-    getNamespaceFlag = function () {
+    var getNamespaceFlag = function () {
 		var ret = document.getElementById("SGQueryNamespace").checked? SparqlServerResult.prototype.NAMESPACE_YES: SparqlServerResult.prototype.NAMESPACE_NO;
 		// for sparqlgraph we always want raw HTML in the results.  No links or markup, etc.
 		return ret + SparqlServerResult.prototype.ESCAPE_HTML;
@@ -694,18 +702,18 @@
     /** Get query options **/
     
     // returns "SELECT", "COUNT", "CONSTRUCT", or "DELETE"
-    getQueryType = function () {
+    var getQueryType = function () {
     	var s = document.getElementById("SGQueryType");
     	return s.options[s.selectedIndex].value;
     };
     
     // returns "QUERY_SERVICE", "DIRECT", or "DISPATCHER"
-    getQuerySource = function () {
+    var getQuerySource = function () {
     	var s = document.getElementById("SGQuerySource");
     	return s.options[s.selectedIndex].value;
     };
     
-    getQueryLimit = function () {
+    var getQueryLimit = function () {
     	// input already guarantees only digits
     	var value = document.getElementById("SGQueryLimit").value;
     	if (value.length == 0) {
@@ -715,35 +723,92 @@
     	}
     };
     
-    getQueryShowNamespace = function () {
+    var setQuerySource = function (val) {
+    	var s = document.getElementById("SGQuerySource");
+    	
+		for (var i=0; i < s.options.length; i++) {
+			s.options[i].selected = (s.options[i].value==val);
+		}
+    };
+    
+    var getQueryShowNamespace = function () {
     	return document.getElementById("SGQueryNamespace").checked;
     };
     
-    doUnload = function () {
+    var legalQueryTypeSourceCombo = function (qType, qSource) {
+    	switch (qSource) {
+    	case "DIRECT":
+    		return (qType != "DELETE");
+    		break;
+    	case "DISPATCHER":
+    		return (qType == "SELECT");
+    		break;
+    	default:
+    		return true;
+    	}
+    };
+    
+    var onchangeQueryType = function () {
+    	// clear query test
+    	document.getElementById('queryText').value = "";
+    	
+    	var qType = getQueryType();  // gets new one?
+    	
+    	// check query source
+    	var s = document.getElementById("SGQuerySource");
+		for (var i=0; i < s.options.length; i++) {
+			s.options[i].disabled = !legalQueryTypeSourceCombo(qType, s.options[i].value);
+		}
+
+    };
+    
+    var onchangeQuerySource = function () {
+    	
+    	var qSource = getQuerySource();  // gets new one?
+
+    	// check query type
+    	var s = document.getElementById("SGQueryType");
+    	
+		for (var i=0; i < s.options.length; i++) {
+			s.options[i].disabled = !legalQueryTypeSourceCombo(s.options[i].value, qSource);
+		}
+    	
+    };
+    
+    var doUnload = function () {
     	clearEverything();
     	
     	gMappingTab.updateNodegroup(gNodeGroup);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
     };
     
-    doSearch = function() {
+    var doSearch = function() {
     	gOTree.find($("#search").val());
     };
     
-    doCollapse = function() {
+    var doCollapse = function() {
     	document.getElementById("search").value="";
     	gOTree.collapseAll();
     };
     
-    doExpand = function() {
+    var doExpand = function() {
     	gOTree.expandAll();
     };
      
-    setStatus = function(msg) {
-    	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font>";
+    var setStatus = function(msg) {
+    	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
     };
     
-    graphExecute = function() {
+    var setStatusProgressBar = function(msg, percent) {
+		var p = (typeof percent === 'undefined') ? 50 : percent;
+
+		document.getElementById("status").innerHTML = msg
+				+ '<div class="progress progress-info progress-striped active"> \n'
+				+ '  <div class="bar" style="width: ' + p
+				+ '%;"></div></div>';
+	};
+	
+    var graphExecute = function() {
     	logEvent("SG Execute");
     	buildQuery();
     	
@@ -763,7 +828,7 @@
     	}
     };
     
-    buildQuery = function() {
+    var buildQuery = function() {
     	logEvent("SG Build");
         var sparql = "";
         
@@ -790,21 +855,7 @@
         
     };
     
-    buildConstruct_TRAIN_WRECK = function() {
-        var qElem = document.getElementById("queryText");
-        document.getElementById('queryText').value = gNodeGroup.generateSparqlConstruct();
-		var query = document.getElementById("queryText").value;
-   
-   		var dataInterface = gConn.getDefaultQueryInterface();
-		   
-   		var testInterface = new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, dataInterface.serverURL, dataInterface.dataset, SparqlServerInterface.GRAPH_RESULTS);		
-		
-		testInterface.executeAndParse(query, constructQryCallback);
-
-        guiQueryNonEmpty();    
-    };
-    
-    constructQryCallback = function(qsresult) {
+    var constructQryCallback = function(qsresult) {
     	// HTML: tell user query is done
 		setStatus("");
 		
@@ -821,7 +872,7 @@
     
     };
     
-    runQuery = function () {
+    var runQuery = function () {
     	
     	var query = document.getElementById("queryText").value;
     	logEvent("SG Run Query", "sparql", query);
@@ -841,7 +892,7 @@
 			case "CONSTRUCT":
 				switch (getQuerySource()) {
 				case "DIRECT":
-					setStatus("running DIRECT query...");
+					setStatusProgressBar("running DIRECT query...", 50);
 					guiDisableAll();
 					
 					require(['sparqlgraph/js/sparqlserverinterface',
@@ -853,7 +904,7 @@
 					break;
 					
 				case "QUERY_SERVICE":
-					setStatus("running query...");
+					setStatusProgressBar("running query...", 50);
 					guiDisableAll();
 					
 					gQueryClient.executeAndParse(query, runQueryCallback);
@@ -903,7 +954,7 @@
 	};
 		
 	// The query callback  
-	runQueryCallback = function(results) {
+	var runQueryCallback = function(results) {
 	
 		// HTML: tell user query is done
 		setStatus("");
@@ -943,7 +994,7 @@
 	};
 	
 	// The query callback for anything where no results are expected
-	runNoResultsQueryCallback = function(results) {
+	var runNoResultsQueryCallback = function(results) {
 	
 		// HTML: tell user query is done
 		setStatus("");
@@ -966,7 +1017,7 @@
     // Inform the GUI which sections are empty
     // NOT Nested
     
-	guiTreeNonEmpty = function () {
+	var guiTreeNonEmpty = function () {
     	document.getElementById("btnTreeExpand").className = "btn";
     	document.getElementById("btnTreeExpand").disabled = false;
     	
@@ -975,7 +1026,7 @@
 
     };
     
-    guiTreeEmpty = function () {
+    var guiTreeEmpty = function () {
     	document.getElementById("btnTreeExpand").className = "btn disabled";
     	document.getElementById("btnTreeExpand").disabled = true;
     	
@@ -983,7 +1034,7 @@
     	document.getElementById("btnTreeCollapse").disabled = true;
     };
    
-    guiGraphNonEmpty = function () {
+    var guiGraphNonEmpty = function () {
     	document.getElementById("btnLayout").className = "btn";
     	document.getElementById("btnLayout").disabled = false;
     	
@@ -998,7 +1049,7 @@
 
     };
     
-    giuGraphEmpty = function () {
+    var giuGraphEmpty = function () {
     	document.getElementById("btnLayout").className = "btn disabled";
     	document.getElementById("btnLayout").disabled = true;
     	
@@ -1013,22 +1064,22 @@
 
     };
     
-    guiQueryEmpty = function () {
+    var guiQueryEmpty = function () {
     	document.getElementById("btnQueryRun").className = "btn disabled";
     	document.getElementById("btnQueryRun").disabled = true;
     };
     
-    guiQueryNonEmpty = function () {
+    var guiQueryNonEmpty = function () {
     	document.getElementById("btnQueryRun").className = "btn-primary";
     	document.getElementById("btnQueryRun").disabled = false;
     };
     
-    guiResultsEmpty = function () {
+    var guiResultsEmpty = function () {
     	//document.getElementById("btnDownloadCSV").className = "btn disabled";
     	//document.getElementById("btnDownloadCSV").disabled = true;
     };
     
-    guiResultsNonEmpty = function () {
+    var guiResultsNonEmpty = function () {
     	
     	//document.getElementById("btnDownloadCSV").className = "btn";
     	//document.getElementById("btnDownloadCSV").disabled = false;
@@ -1037,7 +1088,7 @@
     var classHash = {};
     var disableHash = {};
     
-    guiDisableAll = function () {
+    var guiDisableAll = function () {
     	classHash = {};
         disableHash = {};
         
@@ -1052,7 +1103,7 @@
         }
     };
     
-    guiUnDisableAll = function () {
+    var guiUnDisableAll = function () {
     	var buttons = document.getElementsByTagName("button");
         for (var i = 0; i < buttons.length; i++) {
         	buttons[i].className = classHash[buttons[i].id];
@@ -1062,14 +1113,14 @@
     
 	// Clear functions
 	// NESTED:  Each one clears other things that depend upon it.
-	clearResults = function () {
+    var clearResults = function () {
 		document.getElementById("resultsParagraph").innerHTML = "<table id='resultsTable'></table>";
 		gQueryResults = null;
 		gTimeseriesResults = null;
 		guiResultsEmpty();
 	};
     
-	clearQuery = function () {
+	var clearQuery = function () {
 	 	document.getElementById('queryText').value = "";
 	 	
 	 	document.getElementById('SGQueryType').selectedIndex = 0;
@@ -1081,17 +1132,17 @@
 	 	guiQueryEmpty();
 	};
 	
-    clearGraph = function () {
+	var clearGraph = function () {
     	gNodeGroup.clear();
     	clearQuery();
     	giuGraphEmpty();
     };
     
-    clearMappingTab = function () {
+    var clearMappingTab = function () {
        gMappingTab.clear();
     };
     
-    clearTree = function () {
+    var clearTree = function () {
     	gOTree.removeAll();
     	clearGraph();
     	guiTreeEmpty();  //guiTreeEmpty();
@@ -1099,57 +1150,57 @@
 
     };
     
-    clearEverything = function () {
+    var clearEverything = function () {
     	clearTree();
     	gOInfo = new OntologyInfo();
     	gConn = null;
 	    gOInfoLoadTime = new Date();
     };
     
-		// ===  Tabs ====
-		$(function() {
-			$( "#tabs" ).tabs({
-			    activate: function(event) {
-			        // Enable / disable buttons on the navigation bar
-			        if (event.currentTarget.id == "anchorTab1") {
-			        	tabSparqlGraphActivated();
-			        	
-			        } else if (event.currentTarget.id == "anchorTab2") {
-			        	tabMappingActivated();
-			     
-				    } else if (event.currentTarget.id == "anchorTab3") {
-			        	tabUploadActivated();
-			        }
-			    }
-			});
+	// ===  Tabs ====
+	$(function() {
+		$( "#tabs" ).tabs({
+		    activate: function(event) {
+		        // Enable / disable buttons on the navigation bar
+		        if (event.currentTarget.id == "anchorTab1") {
+		        	tabSparqlGraphActivated();
+		        	
+		        } else if (event.currentTarget.id == "anchorTab2") {
+		        	tabMappingActivated();
+		     
+			    } else if (event.currentTarget.id == "anchorTab3") {
+		        	tabUploadActivated();
+		        }
+		    }
 		});
-		
-		tabSparqlGraphActivated = function() {
-			 gCurrentTab = g.tab.query;
-			 this.document.getElementById("query-tab-but").disabled = true;
-			 this.document.getElementById("mapping-tab-but").disabled = false;
-			 this.document.getElementById("upload-tab-but").disabled = false;
-
-		};
-		
-		tabMappingActivated = function() {
-			gCurrentTab = g.tab.mapping;
-			
-			this.document.getElementById("query-tab-but").disabled = false;
-			this.document.getElementById("mapping-tab-but").disabled = true;
-			this.document.getElementById("upload-tab-but").disabled = false;
-			
-			// PEC TODO: this overwrites everything each time
-			gMappingTab.updateNodegroup(gNodeGroup);
-		};
-		
-		tabUploadActivated = function() {
-			 gCurrentTab = g.tab.upload;
-			 
-			 this.document.getElementById("query-tab-but").disabled = false;
-			 this.document.getElementById("mapping-tab-but").disabled = false;
-			 this.document.getElementById("upload-tab-but").disabled = true;
-			 
-			 gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+	});
 	
-		};
+	var tabSparqlGraphActivated = function() {
+		 gCurrentTab = g.tab.query;
+		 this.document.getElementById("query-tab-but").disabled = true;
+		 this.document.getElementById("mapping-tab-but").disabled = false;
+		 this.document.getElementById("upload-tab-but").disabled = false;
+
+	};
+	
+	var tabMappingActivated = function() {
+		gCurrentTab = g.tab.mapping;
+		
+		this.document.getElementById("query-tab-but").disabled = false;
+		this.document.getElementById("mapping-tab-but").disabled = true;
+		this.document.getElementById("upload-tab-but").disabled = false;
+		
+		// PEC TODO: this overwrites everything each time
+		gMappingTab.updateNodegroup(gNodeGroup);
+	};
+	
+	var tabUploadActivated = function() {
+		 gCurrentTab = g.tab.upload;
+		 
+		 this.document.getElementById("query-tab-but").disabled = false;
+		 this.document.getElementById("mapping-tab-but").disabled = false;
+		 this.document.getElementById("upload-tab-but").disabled = true;
+		 
+		 gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+
+	};

@@ -523,7 +523,7 @@ SparqlServerResult.prototype = {
 		if (nsFlag == this.NAMESPACE_YES) {
 			return val.value;
 		
-		} else if (nsFlag == this.NAMESPACE_NO) {
+		} else {
 			if (val.type == "uri") {
 					return val.value.split('#')[1];
 			} else {

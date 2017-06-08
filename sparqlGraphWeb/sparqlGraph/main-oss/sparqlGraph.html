@@ -324,14 +324,14 @@
 							   	<td align="right">
 							   		<form class="form-horizontal">
 							 			&nbsp; query: 
-							 			<select class="input-medium" id="SGQueryType">
+							 			<select class="input-medium" id="SGQueryType" onchange="javascript:onchangeQueryType();" >
 							 				<option value="SELECT">select distinct</option>
 							 				<option value="COUNT">count</option>
 							 				<option value="CONSTRUCT">construct</option>
 							 				<option value="DELETE">delete</option>
 							 			</select>
 							   			&nbsp; source: 
-							   			<select class="input-medium" id="SGQuerySource">
+							   			<select class="input-medium" id="SGQuerySource"onchange="javascript:onchangeQuerySource();" >
 							   				<option value="QUERY_SERVICE">query service</option>
 							   				<option value="DIRECT">direct</option>
 							   		<!--  	<option value="DISPATCHER">dispatcher</option> -->
