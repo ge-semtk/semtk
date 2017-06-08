@@ -689,6 +689,7 @@ public class NodeGroup {
 		}
 		
 		sparql.append("select distinct");
+		int lastLen = sparql.length();
 		
 		if (targetObj != null) {
 			// QUERY_CONSTRAINT or QUERY_COUNT or anything that set targetObj:  simple
@@ -719,7 +720,7 @@ public class NodeGroup {
 		
 		// if there are no return values, it is an error. Prepend "#Error" to
 		// the SPARQL
-		if (sparql.toString().equals("select distinct")) {
+		if (sparql.length() == lastLen) {
 			throw new Exception("No values selected to return");
 		}
 		
