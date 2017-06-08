@@ -2889,7 +2889,8 @@ SemanticNodeGroup.prototype = {
 		}
 		
 		sparql += 'select distinct';
-
+		var lastLen = sparql.length;
+		
 		// add the return props names. 
 		if (targetObj !== null) {
 			// QUERY_CONSTRAINT or QUERY_COUNT or anything that set targetObj:  simple
@@ -2915,7 +2916,7 @@ SemanticNodeGroup.prototype = {
 
 		// if there are no return values, it is an error. Prepend "#Error" to
 		// the SPARQL
-		if (sparql == 'select distinct') {
+		if (sparql.length == lastLen) {
 			sparql = "#Error: No values selected for return.\n" + sparql;
 		}
 
