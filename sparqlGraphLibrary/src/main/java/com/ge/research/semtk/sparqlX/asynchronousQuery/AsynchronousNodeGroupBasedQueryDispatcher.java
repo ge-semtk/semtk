@@ -49,7 +49,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected OntologyInfo oInfo;
 	protected String domain;
 	
-	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, JSONObject encodedNodeGroupWithConnection, ResultsClient rClient, StatusClient sClient, SparqlQueryClient edcQueryClient) throws Exception{
+	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, JSONObject encodedNodeGroupWithConnection, ResultsClient rClient, StatusClient sClient, SparqlQueryClient queryClient) throws Exception{
 		this.jobID = jobId;
 		
 		this.resultsClient = rClient;
@@ -68,13 +68,13 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		SparqlConnection nodegroupConn = sgJson.getSparqlConn();
 		this.domain = nodegroupConn.getDomain();
 
-		this.oInfo = new OntologyInfo(edcQueryClient.getConfig(), nodegroupConn);
+		this.oInfo = new OntologyInfo(queryClient.getConfig(), nodegroupConn);
 		
 		SparqlQueryClientConfig config = new SparqlQueryClientConfig(	
-				edcQueryClient.getConfig().getServiceProtocol(),
-				edcQueryClient.getConfig().getServiceServer(), 
-				edcQueryClient.getConfig().getServicePort(), 
-				edcQueryClient.getConfig().getServiceEndpoint(),
+				queryClient.getConfig().getServiceProtocol(),
+				queryClient.getConfig().getServiceServer(), 
+				queryClient.getConfig().getServicePort(), 
+				queryClient.getConfig().getServiceEndpoint(),
 				sei.getServerAndPort(),
 				sei.getServerType(),
 				sei.getDataset());
