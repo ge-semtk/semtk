@@ -90,7 +90,7 @@
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
 			if (conn) {
-				doLoadConnection(conn);
+				doLoadConnection(conn, false);
 			}
 			
 			// make sure Query Source and Type disables are reset
@@ -465,9 +465,10 @@
  		// retains gConn
     };
     
-    var doLoadConnection = function(connProfile, directFlag, optCallback) {
+    var doLoadConnection = function(connProfile, optDirectFlag, optCallback) {
     	// Callback from the load dialog
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
+    	var directFlag = (typeof optDirectFlag === "undefined") ? false : optDirectFlag;
     	
     	require(['sparqlgraph/js/msiclientquery',
     	         'sparqlgraph/js/backcompatutils',
@@ -477,6 +478,8 @@
     		
 	    	// Clean out existing GUI
 	    	clearEverything();
+	    	
+	    	// Direct load defaults to direct queries
 	    	if (directFlag) {
 	    		setQuerySource("DIRECT");
 	    	}
@@ -549,6 +552,7 @@
 	    				
 	    				// now load the right connection, then load the file
 	    				doLoadConnection(conn, 
+	    								 false,   // no way to indicate a drag & drop should be queried directly
 	    								 function (){
 	    									doQueryLoadFile2(sgJson);
 	    								 });
