@@ -861,8 +861,8 @@ public class NodeGroup {
 		}
 		
 		
-		String retval = this.generateSparqlPrefix() + "ask {\n" + footer + "\n}";
-		//retval = BelmontUtil.prefixQuery(retval.toString());
+		String retval = this.generateSparqlPrefix() + "ask  " + generateSparqlFromClause(tab) +   "\n{\n" + footer + "\n}";
+ 
 		return retval;
 	}
 	

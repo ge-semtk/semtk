@@ -230,7 +230,7 @@ public class QueryGenerationTest {
 		NodeGroup ng = sgJson.getNodeGroup();
 		
 		String askQuery = ng.generateSparqlAsk();
-		assertEquals(askQuery.length(),591);
+		assertEquals(askQuery.length(),593);
 	}	
 	
 	@Test 
