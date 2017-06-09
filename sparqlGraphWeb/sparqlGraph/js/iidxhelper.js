@@ -53,7 +53,7 @@ define([	// properly require.config'ed
 		 * @example
 		 *    form = IIDXHelper.buildHorizontalForm()
 		 *    fieldset = IIDXHelper.addFieldset(form)
-		 *    fieldset.appendChild(IIDXHelper.buildControlGroup("label: ", controlDom));
+		 *    fieldset.appendChild(IIDXHelper.buildControlGroup("label: ", IIDXHelper.createTextInput("myId")));
 		 *    myDom.appendChild(form);
 		 */
 		IIDXHelper.buildHorizontalForm = function () {
@@ -67,6 +67,24 @@ define([	// properly require.config'ed
 			var fieldset = document.createElement("fieldset");
 			horizForm.appendChild(fieldset);
 			return fieldset;
+		};
+		
+		IIDXHelper.createTextInput = function (id, optClassName) {
+			var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
+			var elem = document.createElement("input");
+			elem.id = id;
+			elem.type = "text";
+			elem.classList.add(className);
+			return elem;
+		};
+		
+		IIDXHelper.createTextArea = function (id, rows, optClassName) {
+			var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
+			var elem = document.createElement("textarea");
+			elem.id = id;
+			elem.rows = rows;
+			elem.classList.add(className);
+			return elem;
 		};
 		
 		IIDXHelper.createVAlignedCheckbox = function () {
@@ -96,6 +114,9 @@ define([	// properly require.config'ed
 			return table;
 		};
 		
+		/*
+		 * textValArray is ["text1", "val1", "text2", "val2", ...]
+		 */
 		IIDXHelper.createSelect = function(id, textValArray, optValue) {
 			var select =  document.createElement("select");
 			select.id = id;

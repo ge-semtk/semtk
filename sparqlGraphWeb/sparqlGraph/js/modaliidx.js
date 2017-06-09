@@ -68,9 +68,10 @@ define([	// properly require.config'ed   bootstrap-modal
 							okCallback, 
 							function () {},    // no cancel callback
 							optOkButtonText
-							)
+							);
 		};
 		
+		// untested
 		ModalIidx.prompt = function (titleText, msgHtml, okCallback) {
 			kdlLogEvent("prompt", "title", titleTxt, "message", msgHtml);
 
@@ -83,16 +84,17 @@ define([	// properly require.config'ed   bootstrap-modal
 							okCallback(document.getElementById("modalIidxPrompt").value), 
 							function () {},    // no cancel callback
 							optOkButtonText
-							)
+							);
 		};
 		
 		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthStr) {
 			
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
 
-			var m = new ModalIidx("clearCancelSubmit");
 			var div = document.createElement("div");
 			div.appendChild(dom);
+			
+			var m = new ModalIidx("clearCancelSubmit");
 			m.showClearCancelSubmit(titleTxt, 
 									div, 
 									function() {return null;},     // validation is not implemented for this one
@@ -100,7 +102,33 @@ define([	// properly require.config'ed   bootstrap-modal
 									submitCallback,
 									optOKButText,
 									optWidthStr
-									)
+									);
+		};
+		
+		/**
+		 * Show a select,
+		 * submitCallback(v)  where v is selected value or null.
+		 */
+		ModalIidx.selectOption = function (titleTxt, textValArray, submitCallback, optOKButText, optWidthStr) {
+			kdlLogEvent("selectOption", "title", titleTxt);
+			var div = document.createElement("div");
+			var select = IIDXHelper.createSelect("mdSelectOption_select", textValArray);
+			select.size="20";
+			select.style.width = "95%";
+			div.appendChild(select);
+			
+			var m = new ModalIidx("selectOption");
+			m.showClearCancelSubmit(titleTxt,
+									div,
+									function() {return null;},
+									function() {select.selectedIndex = -1; },
+									function() {
+										var val = select.selectedIndex == -1 ? null : select.options[select.selectedIndex].value;
+										submitCallback(val);
+									},
+									optOKButText,
+									optWidthStr
+									);
 		};
 		
 		ModalIidx.prototype = {
