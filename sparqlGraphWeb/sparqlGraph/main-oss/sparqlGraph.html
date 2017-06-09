@@ -238,15 +238,13 @@
 		    <div class="container">
 		    	<br>
 		    	<!------------  button toolbar ------------>
-		   	    <form class="form-search" action="javascript:doSearch()">
-		   	    	
-		   			<div class="input-append">
-		   				<input type="text" id="search" class="input-medium search-query" align="left">
-		   				<button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
-		   			</div>
-		 			<br>
+		   	    <form class="form-search" action="javascript:doSearch()" style="margin-bottom:1ch;">
 		 			<table width="100%"><tr>  
 		 				<td align="left">  
+			 				<div class="input-append">
+				   				<input type="text" id="search" class="input-medium search-query" align="left">
+				   				<button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
+				   			</div>
 		   	    			<button class="btn btn-disabled" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled>Expand</button>
 						    <button class="btn btn-disabled" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
 						</td>
