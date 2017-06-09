@@ -72,10 +72,15 @@ public class NodeGroupStoreRestController {
 		SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
 																// the next line was removed to make sure the node group is not "stripped" -- cut down to just the nodegroup proper when stored. 
 																// the executor is smart enough to deal with both cases. 
-//		JSONObject ng = sgJson.getSNodeGroupJson();				
 		JSONObject ng = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 				
 		
 		JSONObject connectionInfo = sgJson.getSparqlConnJson();
+		
+		if(connectionInfo == null){
+			// we really should not continue if we are not sure where this came from originally. 
+			// throw an error and fail gracefully... ish.
+			throw new Exception("storeNodeGroup :: sparqlgraph jason serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
+		}
 		
 		// get the template information
 		JSONObject inputTemplateContents  = Utility.getJSONObjectFromFile(new File("/" + this.prop.getTemplateLocation()));
