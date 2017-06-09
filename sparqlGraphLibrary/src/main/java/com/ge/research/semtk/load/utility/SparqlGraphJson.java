@@ -54,6 +54,9 @@ public class SparqlGraphJson {
 	public SparqlConnection getSparqlConn() throws Exception {
 		if (this.conn == null) {
 			JSONObject connJson = (JSONObject) (jObj.get("sparqlConn"));
+			if (connJson == null) {
+				throw new Exception("JSON does not contain a sparqlConn");
+			}
 			this.conn = new SparqlConnection();
 			this.conn.fromJson(connJson);
 		}
