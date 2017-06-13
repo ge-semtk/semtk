@@ -102,5 +102,19 @@ public class SparqlQueries {
 						"}";
 		return retval;
 	}
+	
+	public static String getNodeGroupMetadata(){
+		String retval = "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
+						"prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+						"select distinct ?ID ?comments ?creationDate ?creator " +
+						"where { " +
+						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
+						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
+						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
+				   		"optional { ?PrefabNodeGroup prefabNodeGroup:creationDate ?creationDate . } " +
+				   		"optional { ?PrefabNodeGroup prefabNodeGroup:creator ?creator . } " +
+						"}";
+		return retval;
+	}
 
 }

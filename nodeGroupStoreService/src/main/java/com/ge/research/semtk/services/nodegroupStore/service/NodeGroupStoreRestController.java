@@ -145,6 +145,24 @@ public class NodeGroupStoreRestController {
 	}
 
 	@CrossOrigin
+	@RequestMapping(value="/getNodeGroupMetadata", method=RequestMethod.POST)
+	public JSONObject getNodeGroupMetadata(){
+		TableResultSet retval = null;		
+		try{
+			String qry = SparqlQueries.getNodeGroupMetadata();
+			SparqlQueryClient clnt = createClient(prop);
+			retval = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
+		}
+		catch(Exception e){
+			// something went wrong. report and exit. 
+			retval = new TableResultSet();
+			retval.setSuccess(false);
+			retval.addRationaleMessage(e.getMessage());
+		}
+		return retval.toJson();   
+	}
+	
+	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupRuntimeConstraints", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraints(@RequestBody NodeGroupByIdRequest requestBody){
 		TableResultSet retval = null;
