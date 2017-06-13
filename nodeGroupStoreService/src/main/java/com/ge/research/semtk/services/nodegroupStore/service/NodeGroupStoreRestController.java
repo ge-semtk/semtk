@@ -86,7 +86,7 @@ public class NodeGroupStoreRestController {
 		JSONObject inputTemplateContents  = Utility.getJSONObjectFromFile(new File("/" + this.prop.getTemplateLocation()));
 		
 		// try to store the values.
-		boolean retBool = StoreNodeGroup.storeNodeGroup(ng, connectionInfo, requestBody.getName(), requestBody.getComments(),
+		boolean retBool = StoreNodeGroup.storeNodeGroup(ng, connectionInfo, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
 				inputTemplateContents.toString(), prop.getIngestorLocation(), prop.getIngestorProtocol(), prop.getIngestorPort());
 		
 		retval = new SimpleResultSet(retBool);

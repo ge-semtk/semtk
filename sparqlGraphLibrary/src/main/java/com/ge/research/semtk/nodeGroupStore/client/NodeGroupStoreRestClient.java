@@ -115,13 +115,15 @@ public class NodeGroupStoreRestClient extends RestClient {
 		return retval;		
 	}
 	
-	public SimpleResultSet executeStoreNodeGroup(String proposedId, String comments, JSONObject nodeGroupJSON) throws Exception {
+	@SuppressWarnings({ "unchecked" })
+	public SimpleResultSet executeStoreNodeGroup(String proposedId, String comments, String creator, JSONObject nodeGroupJSON) throws Exception {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
 		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
 		this.parametersJSON.put("comments", comments);
+		this.parametersJSON.put("creator", creator); 
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toJSONString() );
 		
 		try{
@@ -129,9 +131,8 @@ public class NodeGroupStoreRestClient extends RestClient {
 			TableResultSet ret = new TableResultSet((JSONObject) this.execute());
 			if(ret.getTable().getNumRows() >= 1){
 				// this is a problem as this already exists. 
-				throw new Exception ("executeStoreNodeGroup :: nodegrouop with ID (" + proposedId + ") already exists. no work will be performed.");
-			}
-					
+				throw new Exception ("executeStoreNodeGroup :: nodegroup with ID (" + proposedId + ") already exists. Exiting without adding.");
+			}		
 			else{
 				this.parametersJSON.remove("id");
 				System.err.println("existence check succeeded. proceeding to insert node group: " + proposedId);
@@ -149,6 +150,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 			this.parametersJSON.remove("name");
 			this.parametersJSON.remove("jsonRenderedNodeGroup");
 			this.parametersJSON.remove("comments");
+			this.parametersJSON.remove("creator");
 		}
 		
 		return retval;				

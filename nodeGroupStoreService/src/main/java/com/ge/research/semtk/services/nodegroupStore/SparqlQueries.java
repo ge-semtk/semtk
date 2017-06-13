@@ -20,7 +20,7 @@ package com.ge.research.semtk.services.nodegroupStore;
 public class SparqlQueries {
 	
 	// headers to be used for the insertion of new nodegroups into the system.
-	public static String insertHeaders[] = {"id", "nodegroup", "comments", "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"};
+	public static String insertHeaders[] = {"id", "nodegroup", "comments", "creator", "creationDate", "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"};
 
 	public static String getHeaderRow(){
 		StringBuilder sb = new StringBuilder();

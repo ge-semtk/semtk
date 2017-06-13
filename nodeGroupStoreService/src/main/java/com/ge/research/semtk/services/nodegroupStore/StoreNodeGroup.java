@@ -19,11 +19,7 @@ package com.ge.research.semtk.services.nodegroupStore;
 
 import java.util.ArrayList;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.web.client.RestTemplate;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
@@ -32,21 +28,24 @@ import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.Utility;
 
 public class StoreNodeGroup {
 
 	
-	public static boolean storeNodeGroup(JSONObject ng, JSONObject connectionInfo, String id, String comments, String insertTemplate, String ingestorLocation, String ingestorProtocol, String ingestorPort) throws Exception{
+	public static boolean storeNodeGroup(JSONObject ng, JSONObject connectionInfo, String id, String comments, String creator, String insertTemplate, String ingestorLocation, String ingestorProtocol, String ingestorPort) throws Exception{
 		boolean retval = true;
 		
+		// generate creation date string, format MM/DD/YYYY
+		String creationDateString = Utility.getSPARQLCurrentDateString(); 
+		
 		// get everything we need to send. 
-		String data = SparqlQueries.getHeaderRow() + getInsertRow(ng, connectionInfo, id, comments); 
+		String data = SparqlQueries.getHeaderRow() + getInsertRow(ng, connectionInfo, id, comments, creator, creationDateString);  
 
-		//	System.err.println(":: csv data output ::");	
-		//	System.err.println(data);
+//		System.err.println(":: csv data output ::");	
+//		System.err.println(data);
 		
 		// should add better error handling here. 
 		try{
@@ -107,9 +106,9 @@ public class StoreNodeGroup {
 		return retval;
 	}
 	
-	public static String getInsertRow(JSONObject ng, JSONObject connectionInfo, String id, String comments) throws Exception{
+	public static String getInsertRow(JSONObject ng, JSONObject connectionInfo, String id, String comments, String creator, String creationDateString) throws Exception{
 		// the desired return format is this:
-		// "id", "nodegroup", "comments", "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"
+		// "id", "nodegroup", "comments", "creator", "creationDate", "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"
 
 		// see which strings we can get from the connectionInfo.
 		SparqlConnection tempConn = new SparqlConnection();
@@ -126,7 +125,7 @@ public class StoreNodeGroup {
 		//if(ksInfo == null || ksInfo.length() == 0 || ksInfo.isEmpty()) { ksInfo = dsInfo; }
 		
 		String retval = id + ",\"" + escapeQuotes(ng.toJSONString()) 
-				+ "\",\"" + escapeQuotes(comments) + "\"," + tempConn.getName() + "," + tempConn.getDomain() + "," + dsInfo + "," +
+				+ "\",\"" + escapeQuotes(comments) + "\",\"" + escapeQuotes(creator.trim()) + "\"," + creationDateString + "," + tempConn.getName() + "," + tempConn.getDomain() + "," + dsInfo + "," +
 				ksInfo  + "," + datasourceURL + "," + serverType;
 		
 		return retval;	// ready to ship it all out. 
