@@ -26,12 +26,14 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Properties;
 
 import org.json.simple.JSONArray;
@@ -307,6 +309,14 @@ public abstract class Utility {
 	        }
 		}				
 		throw new Exception("Cannot parse " + s + " using available formatters");
+	}
+	
+	/**
+	 * Create a SPARQL-friendly string (e.g. 2017-06-13) for the current date.
+	 */
+	public static String getSPARQLCurrentDateString() throws Exception {
+		String s = (new SimpleDateFormat("MM/dd/YYYY")).format(new Date());
+		return getSPARQLDateString(s);
 	}
 	
 	

@@ -18,7 +18,7 @@
 
 package com.ge.research.semtk.load.test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -42,6 +42,16 @@ public class UtilityTest {
 		assertTrue(Utility.getSPARQLDateTimeString("12-03-2011").equals("2011-12-03T00:00:00"));
 		assertTrue(Utility.getSPARQLDateTimeString("2011-12-03").equals("2011-12-03T00:00:00"));
 		
+	}
+	
+	
+	@Test
+	public void getSPARQLCurrentDateString() throws Exception{
+		// expect format 2017-06-13. Changes daily ...so just do some basic checks	
+		String dateString = Utility.getSPARQLCurrentDateString();
+		assertTrue(dateString.length() == 10);
+		assertTrue(dateString.startsWith("20"));  // the year
+		assertTrue(dateString.indexOf("-") == 4); // the dash after the year
 	}
 
 }
