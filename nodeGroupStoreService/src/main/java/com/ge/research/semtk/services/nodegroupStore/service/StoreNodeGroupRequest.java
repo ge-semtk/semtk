@@ -51,6 +51,24 @@ public class StoreNodeGroupRequest {
 		return retval;
 	}
 
+	/**
+	 * Validate the request.  Throw exception if there is a problem.
+	 */
+	public void validate() throws Exception {
+		if(getName() == null || getName().trim().isEmpty()){
+			throw new Exception("Invalid request to store node group: ID is not provided, or is empty");
+		}
+		if(getComments() == null){
+			throw new Exception("Invalid request to store node group: comments are not provided");
+		}
+		if(getCreator() == null){
+			throw new Exception("Invalid request to store node group: creator is not provided");
+		}
+		if(jsonRenderedNodeGroup == null || jsonRenderedNodeGroup.trim().isEmpty()){
+			throw new Exception("Invalid request to store node group: node group is not provided, or is empty");
+		}
+	}
+	
 	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
 		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
 	}

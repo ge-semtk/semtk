@@ -50,13 +50,20 @@ public class NodeGroupStoreRestController {
 	@Autowired
 	StoreProperties prop;
 	
+	/**
+	 * Store a new nodegroup to the nodegroup store.
+	 * @param requestBody
+	 * @return
+	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeNodeGroup", method=RequestMethod.POST)
 	public JSONObject storeNodeGroup(@RequestBody StoreNodeGroupRequest requestBody){
 		SimpleResultSet retval = null;
-		
+			
 		try{
-		// store a new nodegroup to the remote nodegroup store. 
+			
+		// throw a meaningful exception if needed info is not present in the request
+		requestBody.validate();	
 			
 		// check that the ID does not already exist. if it does, fail.
 		String qry = SparqlQueries.getNodeGroupByID(requestBody.getName());
@@ -65,7 +72,7 @@ public class NodeGroupStoreRestController {
 		TableResultSet instanceTable = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
 		
 		if(instanceTable.getTable().getNumRows() > 0){
-			throw new Exception("Uanble to store Nodegroup. The ID (" + requestBody.getName() + ") already exists. No work was performed.");
+			throw new Exception("Unable to store node group:  ID (" + requestBody.getName() + ") already exists");
 		}
 			
 		// get the nodeGroup and the connection info:
