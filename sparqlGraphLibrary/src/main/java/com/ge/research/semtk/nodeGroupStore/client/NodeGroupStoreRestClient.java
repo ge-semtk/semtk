@@ -119,6 +119,10 @@ public class NodeGroupStoreRestClient extends RestClient {
 	public SimpleResultSet executeStoreNodeGroup(String proposedId, String comments, String creator, JSONObject nodeGroupJSON) throws Exception {
 		SimpleResultSet retval = null;
 		
+		if(nodeGroupJSON == null){
+			throw new Exception("Cannot store null nodegroup");
+		}
+		
 		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
 		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
