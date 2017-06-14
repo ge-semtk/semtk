@@ -12,6 +12,7 @@ import org.junit.Test;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
@@ -130,6 +131,28 @@ public class NodeGroupStoreTest_IT {
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, "", NG_JSON);
 		assertTrue(result.getSuccess());
 		nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+	}
+	
+	
+	/**
+	 * Basic test of the getNodeGroupMetadata endpoint.
+	 */
+	@Test
+	public void testGetNodegroupMetadata() throws Exception {
+		TableResultSet res;
+		res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+		int countBefore = res.getResults().getNumRows();
+		nodeGroupStoreClient.executeStoreNodeGroup(ID + "a", COMMENTS, CREATOR, NG_JSON);
+		nodeGroupStoreClient.executeStoreNodeGroup(ID + "b", COMMENTS, CREATOR, NG_JSON);
+		nodeGroupStoreClient.executeStoreNodeGroup(ID + "c", "", "", NG_JSON);
+		res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+		int countAfter = res.getResults().getNumRows();
+		assertEquals(countBefore + 3, countAfter);		 // confirm that we get metadata for 3 more nodegroups (imperfect test)
+		assertEquals(res.getTable().getNumColumns(),4);  // confirm that there are 4 columns of metadata
+		// could add more tests.
+		nodeGroupStoreClient.deleteStoredNodeGroup(ID + "a");
+		nodeGroupStoreClient.deleteStoredNodeGroup(ID + "b");
+		nodeGroupStoreClient.deleteStoredNodeGroup(ID + "c");
 	}
 
 }

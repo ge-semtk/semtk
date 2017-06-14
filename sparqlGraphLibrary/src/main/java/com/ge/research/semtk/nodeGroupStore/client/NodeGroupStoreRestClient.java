@@ -91,6 +91,27 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 	}
 	
+	public TableResultSet executeGetNodeGroupMetadata() throws Exception {
+		TableResultSet retval = new TableResultSet();
+		
+		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupMetadata");
+		
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			JSONObject tblWrapper = (JSONObject)jobj.get("table");
+			
+			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
+			retval.addResults(tbl);
+			retval.readJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+		}
+		return retval;
+	}
+	
 	public TableResultSet executeGetNodeGroupRuntimeConstraints(String nodeGroupId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
