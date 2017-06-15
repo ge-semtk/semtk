@@ -447,7 +447,7 @@ public abstract class SparqlEndpointInterface {
 		String[] serverNoProtocol = this.server.split("://");
 		//System.err.println("the new server name is: " + serverNoProtocol[1]);
 
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), "http");
+		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);  //previous version assumes always http.
 
 		DigestScheme digestAuth = new DigestScheme();
 		AuthCache authCache = new BasicAuthCache();
@@ -528,7 +528,7 @@ public abstract class SparqlEndpointInterface {
 		String[] serverNoProtocol = this.server.split("://");
 		//System.err.println("the new server name is: " + serverNoProtocol[1]);
 
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), "http");
+		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
 
 		DigestScheme digestAuth = new DigestScheme();
 		AuthCache authCache = new BasicAuthCache();
@@ -689,7 +689,7 @@ System.out.println ("URL: " + url);
 		String[] serverNoProtocol = this.server.split("://");
 		System.err.println("the new server name is: " + serverNoProtocol[1]);
 
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), "http");
+		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
 
 		DigestScheme digestAuth = new DigestScheme();
 		AuthCache authCache = new BasicAuthCache();
