@@ -523,7 +523,9 @@
     };
     
     var doQueryLoadJsonStr = function(jsonStr) {
-    	require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
+    	require(['sparqlgraph/js/sparqlgraphjson',
+                 'sparqlgraph/js/modaliidx'], 
+                function(SparqlGraphJson, ModalIidx) {
 			
 	    	var sgJson = new SparqlGraphJson();
 	    	
@@ -536,56 +538,73 @@
 			
 			try {
 				var conn = sgJson.getSparqlConn();
-				
-				// ask user to confirm if load will cause a connection switch
-				if (gConn && ! conn.equals(gConn, true)) {
-					var ans = confirm("Nodegroup is from a different SPARQL connection\n\nDo you want to close the current connection and continue?");
-					if (! ans) {
-						return;
-					}
-				}
-				
-				// if no conn is loaded or something different is loaded then load the connection
-				// asynchronous.
-				if (!gConn || ! conn.equals(gConn, true)) {
-					
-					var existName = gLoadDialog.connectionIsKnown(conn, true);     // true: make this selected in cookies
-					if (! existName) {
-						var ans = confirm("New connection.\n\nDo you want to save it?");
-						if (ans) {
-	    					gLoadDialog.addConnection(conn);
-						}
-						
-					} else {
-						// conn already exists in cookies.  Use the name in cookies, so we don't get duplicates
-						conn.setName(existName);
-						gLoadDialog.writeProfiles();    // write so we save this as the selected connection
-					}
-					
-					// now load the right connection, then load the file
-					doLoadConnection(conn, 
-									 false,   // no way to indicate a drag & drop should be queried directly
-									 function (){
-										doQueryLoadFile2(sgJson);
-									 });
-				} else {
-		        	
-					// Go straight to loading the nodegroup, 
-					// since the conn and oInfo are already OK
-		        	doQueryLoadFile2(sgJson);
-				}
-	    		
 			} catch (e) {
-				logAndAlert("Error loading query file onto the canvas:\n" + e);
+				logAndAlert("Error reading connection from JSON file.\n" + e);
 				console.log(e.stack);
 				clearGraph();
-			}
+			}	
+            
+            // is this conn different from the one already loaded
+            if (gConn && ! conn.equals(gConn, true)) {
+                ModalIidx.choose("New Connection",
+                                 "Nodegroup is from a different SPARQL connection<br><br>Which one do you want to use?",
+                                 ["Cancel",     "Keep Current",                     "Load New"],
+                                 [function(){}, doQueryLoadFile2.bind(this, sgJson), doQueryLoadConn.bind(this, sgJson, conn)]
+                                 );
+            } else if (!gConn) {
+                doQueryLoadConn(sgJson, conn);
+            } else {
+                doQueryLoadFile2(sgJson);
+            }
 		});
 
     };
     
+    /* 
+     * loads connection and makes call to load rest of sgJson
+     * part of doQueryLoadJsonStr callback chain
+     */
+    var doQueryLoadConn = function(sgJson, conn) {
+    	require(['sparqlgraph/js/sparqlgraphjson',
+                 'sparqlgraph/js/modaliidx'], 
+                function(SparqlGraphJson, ModalIidx) {
+						
+            var existName = gLoadDialog.connectionIsKnown(conn, true);     // true: make this selected in cookies
+            
+            // function pointer for the thing we do next no matter what happens:
+            //    doLoadConnection() with doQueryLoadFile2() as the callback
+            var doLoadConnectionCall = doLoadConnection.bind(this, conn, false, doQueryLoadFile2.bind(this, sgJson));
+            
+            if (! existName) {
+                // new connection: ask if user wants to save it locally
+                ModalIidx.choose("New Connection",
+                                 "Connection is not saved locally.<br><br>Do you want to save it?",
+                                 ["Cancel",     "Don't Save",                     "Save"],
+                                 [function(){}, 
+                                  doLoadConnectionCall,
+                                  function(){ gLoadDialog.addConnection(conn); 
+                                              doLoadConnectionCall(); 
+                                            }
+                                 ]
+                                );
+
+            } else {
+                // conn already exists in cookies.  Use the name in cookies, so we don't get duplicates
+                conn.setName(existName);
+                gLoadDialog.writeProfiles();    // write so we save this as the selected connection
+
+                // now load the right connection, then load the file
+                doLoadConnectionCall();
+            }
+			
+		});
+
+    };
+
     /**
-     * loads a nodegroup onto the graph
+     * loads a nodegroup and importspec onto the graph
+     * part of doQueryLoadJsonStr callback chain
+     *
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
