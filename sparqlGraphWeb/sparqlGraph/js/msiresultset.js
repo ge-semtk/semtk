@@ -81,6 +81,25 @@ define([	// properly require.config'ed   bootstrap-modal
 				return html;
 			},
 			
+            getSimpleResultsHtml : function () {
+                // put message
+                var html =  "<p>" + this.xhr.simpleresults["@message"] + "<p>";
+                
+                // add any other fields
+                for (var key in this.xhr.simpleresults) {
+                    if (key != "@message") {
+                        html += "<bold>" + key + ":</bold>" + this.xhr.simpleresults[key] + "<br>";
+                    }
+                }
+                
+                // remove last <br>
+                if (html.slice(-4) == "<br>") {
+                    html = html.slice(0, -4);
+                }
+                
+                return html;
+            },
+            
 			getRecordProcessResultHtml : function () { 
 				// build html out of record process results
 				
@@ -281,6 +300,53 @@ define([	// properly require.config'ed   bootstrap-modal
 				return rows;
 			},
 			
+            tableGetNamedRows : function (colNameList, optUndefinedVal, optSortFlag) {
+                // get col numbers
+                var colNums = [];
+                for (var i=0; i < colNameList.length; i++) {
+                    colNums.push(this.getColumnNumber(colNameList[i]));
+                }
+                
+                var newRows = [];
+                var newRow = [];
+                var val = "";
+                var rows = this.tableGetRows();
+                
+                for (var i=0; i < rows.length; i++) {
+                    newRow = [];
+                    for (j=0; j < colNameList.length; j++) {
+                        val = rows[i][colNums[j]];
+                        if (val == undefined && typeof optUndefinedVal != "undefined") {
+                            newRow.push(optUndefinedVal);
+                        } else {
+                            newRow.push(val);
+                        }
+                    }
+                    newRows.push(newRow);
+                }
+                
+                // sort by left to right column string if optSortFlag
+                if (typeof optSortFlag != "undefined" && optSortFlag) {
+                    newRows = newRows.sort(function(a,b) {
+                        try {
+                            for (var col=0; col<a.length; col++) {
+                                if ( a[col] < b[col] ) {
+                                    return -1; 
+                                }
+                                else if ( a[col] > b[col] ) {
+                                    return 1;  
+                                }
+                            }
+                            return 0;
+                        } catch(err) {
+                            return 1;
+                        }
+                    } ); 
+                }
+                
+                return newRows;
+            },
+            
 			tableGetCsv : function () {
 				var table = this.getTable();
 				// translate into a csv string
@@ -305,7 +371,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			tableDownloadCsv : function () {
 				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv");
 			},
-			
+            
 			sort : function(colName) {
 				
 				var col = this.getTable().col_names.indexOf(colName);
@@ -324,21 +390,44 @@ define([	// properly require.config'ed   bootstrap-modal
 				} ); 
 				
 			}, 
+            
+            
 			
-			putTableResultsDatagridInDiv : function (div, headerHtml, optFinishedCallback) {
+			/**
+			 * build an html iidx datagrid and add it to the div.
+			 * return the datagrid table element.
+			 */
+			putTableResultsDatagridInDiv : function (div, headerHtml, optFinishedCallback, optMenuList, optMenuCallbackList) {
 				
 				if (! this.isTableResults()) {
 					div.innerHTML =  "<b>Error:</b> Results returned from service are not TableResults";
 					return;
 				}
 				
-				IIDXHelper.buildDatagridInDiv(div, 
-											  headerHtml,
-						                      this.tableGetCols.bind(this), 
-						                      this.tableGetRows.bind(this), 
-						                      ["Download CSV"], 
-						                      [this.tableDownloadCsv.bind(this)], 
-						                      optFinishedCallback);
+				return IIDXHelper.buildDatagridInDiv( div, 
+													  headerHtml,
+								                      this.tableGetCols.bind(this), 
+								                      this.tableGetRows.bind(this), 
+								                      typeof optMenuList == "undefined" ? ["Download CSV"] : optMenuList, 
+								                      typeof optMenuCallbackList == "undefined" ? [this.tableDownloadCsv.bind(this)] : optMenuCallbackList, 
+								                      optFinishedCallback);
+			},
+            
+            /**
+			 * build an html iidx datagrid and add it to the div.
+			 * return the datagrid table element.
+			 */
+			putTableSelectDatagridInDiv : function (div, optFinishedCallback) {
+				
+				if (! this.isTableResults()) {
+					div.innerHTML =  "<b>Error:</b> Results returned from service are not TableResults";
+					return;
+				}
+				
+				return IIDXHelper.buildSelectDatagridInDiv( div, 
+								                      this.tableGetCols.bind(this), 
+								                      this.tableGetRows.bind(this), 
+								                      optFinishedCallback);
 			},
 			
 			getColumnStringsByName : function(name) {

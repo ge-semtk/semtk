@@ -1,0 +1,284 @@
+/**
+ ** Copyright 2016 General Electric Company
+ **
+ ** Authors:  Paul Cuddihy, Justin McHugh
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
+
+define([	// properly require.config'ed
+    'sparqlgraph/js/msiclientnodegroupstore',
+    'sparqlgraph/js/modaliidx',
+    'sparqlgraph/js/iidxhelper',
+    'sparqlgraph/js/selecttable',
+    'sparqlgraph/js/sparqlgraphjson',
+
+    // shimmed
+    'jquery'
+    ],
+
+	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SelectTable, SparqlGraphJson, jquery) {
+	
+		/**
+		 *
+		 */
+		var ModalStoreDialog= function (optUserName) {
+            this.div = null;
+            this.selTable = null;
+            this.user = (typeof optUserName == "undefined" || optUserName == null) ? "" : optUserName;
+            this.callback = function () {};
+		};
+		
+		
+		ModalStoreDialog.prototype = {
+            
+            // user is sent in at creation or entered during storage of a nodegroup
+            // can be "" but never null or undefined.
+            getUser : function () {
+                return this.user;
+            },
+            
+            show : function () {
+                IIDXHelper.showDiv(this.div);
+            },
+            
+            hide : function () {
+                IIDXHelper.hideDiv(this.div);
+            },
+            
+            validateCallback : function() {
+				var selIndices = this.selTable.getSelectedIndices();
+				if (selIndices.length == 0) {
+					return "No nodegroups are selected";
+				} else {
+					return null;
+				}
+			},
+			
+			okCallback : function() {
+				var idList = this.selTable.getSelectedValues("ID");
+				this.callback(idList);
+			},
+			
+			cancelCallback : function() {
+                
+            },
+			
+            /**
+              * got nodegroup store contents.  Launch dialog.
+             **/
+            launchNodeGroupDialogCallback : function (multiFlag, resultSet) { 
+				if (! resultSet.isSuccess()) {
+					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
+				} else {
+
+                    // build this.div with a SelectTable
+                    var sortFlag = true;
+                    var colList = ["creator", "ID", "creationDate", "comments"];
+                    var undefVal = "";
+    
+                    var widthList = [15, 20, 15, 50];
+                    this.selTable = new SelectTable(resultSet.tableGetNamedRows(colList, undefVal, sortFlag),
+                                                    colList,
+                                                    widthList,
+                                                    10,
+                                                    multiFlag
+                                                    );
+                    
+                    this.div = document.createElement("div");
+                    this.div.appendChild(this.selTable.getTableDom());
+                    
+                    // launch the modal
+                    var m = new ModalIidx();
+					m.showOKCancel(	
+									this.title,
+									this.div,
+									this.validateCallback.bind(this),
+									this.okCallback.bind(this),
+									this.cancelCallback.bind(this),
+									"OK",
+									90); 
+                    
+				}
+			},
+    
+            /**
+              *  Call nodegroup store to get all nodegroups
+              *  Then launch generic dialog with title and callback linked to "OK"
+              *  callback(id)
+              */
+            launchNodeGroupDialog : function (title, callback, multiFlag) {
+                this.title = title;
+                this.callback = callback;
+                
+                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+    		    mq.getNodeGroupMetadata(this.launchNodeGroupDialogCallback.bind(this, multiFlag));
+            },
+            
+            /**
+              * Recieved nodegroup to load, now load it
+              */
+            retrieveNodeGroupCallback : function (resultSet) { 
+				if (! resultSet.isSuccess()) {
+					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
+				} else {
+					var nodegroupArr = resultSet.getColumnStringsByName("NodeGroup");
+					
+					if (nodegroupArr.length < 1) {
+						ModalIidx.alert("Service failed", "Returned no nodegroup");
+					} else {
+						doQueryLoadJsonStr(nodegroupArr[0]);
+					}
+				}
+			},
+			
+            /**
+              * load the id
+              */
+            retrieveNodeGroupOK : function (idList) {   
+                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                mq.getNodeGroupById(idList[0], this.retrieveNodeGroupCallback.bind(this));
+            },
+            
+            /**
+              * External call to retrieve a nodegroup from the store
+              */
+            launchRetrieveDialog : function () {
+                this.launchNodeGroupDialog("Retrieve from Nodegroup store",
+                                           this.retrieveNodeGroupOK.bind(this),
+                                           false // no multi
+                                          );
+            },
+            
+            /**
+              * Callback after deletion
+              */
+            deleteNodeGroupCallback : function (id, idList, resultSet) { 
+                // PEC TODO: add in successes that were actually failures
+				if (! resultSet.isSuccess()) {
+                    var msg = "failure deleting: " + id;
+                    msg += "<p>" + resultSet.getGeneralResultHtml();
+                    if (idList.length > 0) {
+                        msg += "<p><p>These were not processed:<br>" + idList;
+                    }
+					ModalIidx.alert("Service failed", msg);
+                    
+				} else {
+                    if (idList.length > 0) {
+                        this.deleteNodeGroupOK(idList);
+                    } else {
+                        //ModalIidx.alert("Delete Nodegroup", resultSet.getSimpleResultsHtml());
+                        ModalIidx.alert("Delete Nodegroup", "Success");
+                    }
+				}
+			},
+             /**
+              * delete the nodegroup
+              */
+            deleteNodeGroupOK : function (idList) {   
+                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+               
+                mq.deleteStoredNodeGroup(idList[0], this.deleteNodeGroupCallback.bind(this, idList[0], idList.slice(1)));
+            },
+            
+            /**
+              * External call to delete a nodegroup from the store
+              */
+            launchDeleteDialog : function () {
+                 this.launchNodeGroupDialog("Delete from Nodegroup store",
+                                           this.deleteNodeGroupOK.bind(this),
+                                            true // multi
+                                          );
+            },
+            
+            /**
+              * Totally different dialog but functionally related
+              * so I'm slamming it into this file
+              * -Paul
+              */
+            launchStoreDialog : function (conn, nodegroup, maptab, doneCallback) {
+                
+                var successCallback = function (id, resultSet) { 
+                    if (! resultSet.isSuccess()) {
+                        ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
+                    } else {
+                        // store returns nothing
+                        //ModalIidx.alert("Store Nodegroup", resultSet.getSimpleResultsHtml());
+                        ModalIidx.alert("Store Nodegroup", "Successfull stored " + id);
+                        doneCallback();
+                    }
+                };
+			
+                var validateCallback = function () { 
+                    var id = document.getElementById("sngIdText").value;
+                    var comments = document.getElementById("sngCommentsText").value;
+                    var creator = document.getElementById("sngCreatorText").value;
+
+                    if (id == null || id.length == 0) {
+                        return "Id cannot be null.";
+                    } else if (creator == null || creator.length == 0) {
+                        return "Creator cannot be null.";
+                    } else if (comments == null || comments.length == 0) {
+                        return "Comments cannot be null.";
+                    } else {
+                        return null;
+                    }
+                };
+
+                var clearCallback = function () { 
+                    document.getElementById("sngIdText").value="";
+                    document.getElementById("sngCommentsText").value="";
+                    document.getElementById("sngCreatorText").value=this.user;
+
+                };
+
+                var submitCallback = function () { 
+                    var name = document.getElementById("sngIdText").value;
+                    var comments = document.getElementById("sngCommentsText").value;
+                    var creator = document.getElementById("sngCreatorText").value;
+                    var sgJson = new SparqlGraphJson(conn, nodegroup, maptab, true);
+                    var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                    
+                    // save user/creator
+                    this.user = creator;
+                    
+                    mq.storeNodeGroup(sgJson, creator, name, comments, successCallback.bind(this, name));
+                };
+
+                var div = document.createElement("div");
+                var form = IIDXHelper.buildHorizontalForm();
+                div.appendChild(form);
+                var fieldset = IIDXHelper.addFieldset(form)
+
+                fieldset.appendChild(IIDXHelper.buildControlGroup("creator: ", IIDXHelper.createTextInput("sngCreatorText")));
+                fieldset.appendChild(IIDXHelper.buildControlGroup("id: ", IIDXHelper.createTextInput("sngIdText")));
+                fieldset.appendChild(IIDXHelper.buildControlGroup("comments: ", IIDXHelper.createTextArea("sngCommentsText", 2)));
+
+                var m = new ModalIidx("storeNodeGroupDialog");
+                m.showClearCancelSubmit("Save nodegroup to store",
+                                        div, 
+                                        validateCallback,
+                                        clearCallback, 
+                                        submitCallback.bind(this)
+                                        );
+                
+                document.getElementById("sngCreatorText").value=this.user;
+                
+            },
+            
+		};
+	
+		return ModalStoreDialog;
+	}
+);

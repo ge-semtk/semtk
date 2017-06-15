@@ -87,7 +87,7 @@ define([	// properly require.config'ed   bootstrap-modal
 							);
 		};
 		
-		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthStr) {
+		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent) {
 			
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
 
@@ -101,7 +101,7 @@ define([	// properly require.config'ed   bootstrap-modal
 									clearCallback, 
 									submitCallback,
 									optOKButText,
-									optWidthStr
+									optWidthPercent
 									);
 		};
 		
@@ -109,7 +109,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		 * Show a select,
 		 * submitCallback(v)  where v is selected value or null.
 		 */
-		ModalIidx.selectOption = function (titleTxt, textValArray, submitCallback, optOKButText, optWidthStr) {
+		ModalIidx.selectOption = function (titleTxt, textValArray, submitCallback, optOKButText, optWidthPercent) {
 			kdlLogEvent("selectOption", "title", titleTxt);
 			var div = document.createElement("div");
 			var select = IIDXHelper.createSelect("mdSelectOption_select", textValArray);
@@ -127,15 +127,15 @@ define([	// properly require.config'ed   bootstrap-modal
 										submitCallback(val);
 									},
 									optOKButText,
-									optWidthStr
+									optWidthPercent
 									);
 		};
 		
 		ModalIidx.prototype = {
-				showOK : function (headerText, bodyDOM, callback) {
+				showOK : function (headerText, bodyDOM, callback, optWidthPercent) {
 					// show a modal with header, body and callback.
 					
-					this.div = this.createModalDiv();
+					this.div = this.createModalDiv(optWidthPercent);
 					
 					if (headerText && headerText.length > 0) {
 						var header = this.createHeader(headerText);
@@ -154,14 +154,14 @@ define([	// properly require.config'ed   bootstrap-modal
 					$(this.div).modal('show');
 				},
 				
-				showOKCancel : function (headerText, bodyDOM, validate, callbackSuccess, callbackCancel, optOkButtonText) {
+				showOKCancel : function (headerText, bodyDOM, validate, callbackSuccess, callbackCancel, optOkButtonText, optWidthPercent) {
 					// show a modal with header, body and callback.
 					// validate must return one of:
 					//      error message : display an alert
 					//      null : call callbackSuccess
 					
 					var okButText = (typeof optOkButtonText == "undefined") ? "OK" : optOkButtonText;
-					this.div = this.createModalDiv();
+					this.div = this.createModalDiv(optWidthPercent);
 					
 					var header = this.createHeader(headerText);
 					this.div.appendChild(header);
@@ -178,14 +178,14 @@ define([	// properly require.config'ed   bootstrap-modal
 					$(this.div).modal('show');
 				},
 				
-				showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback, optOkButtonText, optWidthStr) {
+				showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback, optOkButtonText, optWidthPercent) {
 					// show a modal with header, body and callback.
 					// validate must return one of:
 					//      error message : display an alert
 					//      null : call callbackSuccess
 					
 					var okButText = (typeof optOkButtonText == "undefined") ? "OK" : optOkButtonText;
-					this.div = this.createModalDiv(optWidthStr);
+					this.div = this.createModalDiv(optWidthPercent);
 					
 					var header = this.createHeader(headerText);
 					this.div.appendChild(header);
@@ -202,7 +202,7 @@ define([	// properly require.config'ed   bootstrap-modal
 					$(this.div).modal('show');
 				},
 				
-				createModalDiv : function (optWidthStr) {
+				createModalDiv : function (optWidthPercent) {
 					// make sure modal exists and is attached to document.body
 					
 					// get rid of modal <div> if it already exists
@@ -214,8 +214,16 @@ define([	// properly require.config'ed   bootstrap-modal
 					// create the modal div
 					var modal = document.createElement("div");
 					modal.className = "modal hide fade";
-					modal.style = "display: none;" + ( (typeof optWidthStr != "undefined") ? ("width: " + optWidthStr) : "" );
-					modal.id = this.id;
+                    var style = "display: none;";
+                    
+                    if (typeof optWidthPercent != "undefined") {
+                        modal.style.margin = "0 auto auto 0";
+                        modal.style.width = optWidthPercent + "%";
+                        modal.style.left = (100 - optWidthPercent)/2 + "%";
+                        style += "margin: 0 auto auto 0; width: " + optWidthPercent + "%; left: " + (100 - optWidthPercent)/2 + "%;";
+                    }
+                    
+                    modal.id = this.id;
 					document.body.appendChild(modal);
 					
 					return modal;

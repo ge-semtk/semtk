@@ -35,6 +35,7 @@
     // drag stuff
     var gDragLabel = "hi";
     var gLoadDialog;
+    var gStoreDialog = null;
     
     var gNodeGroup = null;
     var gOInfoLoadTime = "";
@@ -58,7 +59,8 @@
     	
 	    require([ 'sparqlgraph/js/mappingtab',
 	              'sparqlgraph/js/uploadtab',
-	              'local/sparqlgraphlocal'], function (MappingTab, UploadTab) {
+                  'sparqlgraph/js/modalstoredialog',
+	              'local/sparqlgraphlocal'], function (MappingTab, UploadTab, ModalStoreDialog) {
 	    
 	    	console.log(".ready()");
 	    	
@@ -103,6 +105,8 @@
 	   	    gReady = true;
 	   	    console.log("Ready");
 	   	    logEvent("SG Page Load");
+                    
+            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
 	   	    
 		});
     });
@@ -671,147 +675,26 @@
 	
    	
    	var doTest = function () {
-   		doStoreNodeGroup();
-   		//doRetrieveFromNGStore();
-   		//doDeleteFromNGStore();
+        alert("test");
    	};
    	
    	var doRetrieveFromNGStore = function() {
-   		ngStoreSelectDialog(ngStoreGetNodegroupById);
-   	};
+        gModalStoreDialog.launchRetrieveDialog();
+    };
 
    	var doDeleteFromNGStore = function() {
-   		ngStoreSelectDialog(ngStoreDeleteStoredNodeGroup);
-   	};
+        gModalStoreDialog.launchDeleteDialog();
+    };
    	
-   	// generic modal dialog shows all stored nodegroups
-   	// and executes a callback on the id selected.
-   	var ngStoreSelectDialog = function(callback) {
-   		require(['sparqlgraph/js/msiclientnodegroupstore',
-    	         'sparqlgraph/js/modaliidx'], 
-    	         function (MsiClientNodeGroupStore, ModalIidx) {
-    		
-			var successCallback = function (resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-				} else {
-					var textValArr = [];
-					var idArr = resultSet.getColumnStringsByName("ID");
-					var commentArr = resultSet.getColumnStringsByName("comments");
-					for (var i=0; i < idArr.length; i++) {
-						textValArr.push(idArr[i]+" - "+commentArr[i]);
-						textValArr.push(idArr[i]);
-					}
-						
-					ModalIidx.selectOption(	"Retrieve nodegroup from store",
-											textValArr,
-											callback
-											); 
-				}
-			};
-			
-    		var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-    		mq.getNodeGroupList(successCallback);
-    	});
-  	};
-   	
-  	// get id from nodegroup store
-  	var ngStoreGetNodegroupById = function(id) {
-   		require(['sparqlgraph/js/msiclientnodegroupstore'], 
-    	         function (MsiClientNodeGroupStore) {
-   			var successCallback = function (resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-				} else {
-					var nodegroupArr = resultSet.getColumnStringsByName("NodeGroup");
-					
-					if (nodegroupArr.length < 1) {
-						ModalIidx.alert("Service failed: getNodeGroupById returned no nodegroup");
-					} else {
-						doQueryLoadJsonStr(nodegroupArr[0]);
-					}
-				}
-			};
-			
-    		var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-    		mq.getNodeGroupById(id, successCallback);
-   			
-   		});
-  	};
-  	
-  	// delete id from nodegroup store
-  	var ngStoreDeleteStoredNodeGroup = function(id) {
-   		require(['sparqlgraph/js/msiclientnodegroupstore'], 
-    	         function (MsiClientNodeGroupStore) {
-   			var successCallback = function (resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-				} 
-			};
-			
-    		var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-    		mq.deleteStoredNodeGroup(id, successCallback);
-   			
-   		});
-  	};
-  	
   	var doStoreNodeGroup = function () {
-  		require(['sparqlgraph/js/modaliidx',
-    	         'sparqlgraph/js/iidxhelper',
-    	         'sparqlgraph/js/msiclientnodegroupstore',
-    	         'sparqlgraph/js/sparqlgraphjson'], 
-    	         function (ModalIidx, IIDXHelper, MsiClientNodeGroupStore, SparqlGraphJson) {
-    		
-  			var successCallback = function (resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-				} 
-			};
-			
-			var validateCallback = function () { 
-				var id = document.getElementById("sngIdText").value;
-				var comments = document.getElementById("sngCommentsText").value;
-				if (id == null || id.length == 0) {
-					return "Id cannot be null.";
-				} else if (comments == null || comments.length == 0) {
-					return "Comments cannot be null.";
-				} else {
-					return null;
-				}
-			};
-			
-			var clearCallback = function () { 
-				document.getElementById("sngIdText").value="";
-				document.getElementById("sngCommentsText").value="";
-			};
-			
-			var submitCallback = function () { 
-				var id = document.getElementById("sngIdText").value;
-				var comments = document.getElementById("sngCommentsText").value;
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
-				var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-				
-	    		mq.storeNodeGroup(sgJson, id, comments, successCallback);
-			};
-			
-			gMappingTab.updateNodegroup(gNodeGroup);
-			
-			var div = document.createElement("div");
-    		var form = IIDXHelper.buildHorizontalForm();
-    		div.appendChild(form);
-    		var fieldset = IIDXHelper.addFieldset(form)
-    		
-    		fieldset.appendChild(IIDXHelper.buildControlGroup("id: ", IIDXHelper.createTextInput("sngIdText")));
-    		fieldset.appendChild(IIDXHelper.buildControlGroup("comments: ", IIDXHelper.createTextArea("sngCommentsText", 2)));
-    		
-    		var m = new ModalIidx("storeNodeGroupDialog");
-			m.showClearCancelSubmit("Save nodegroup to store",
-									div, 
-									validateCallback,
-									clearCallback, 
-									submitCallback
-									);
-    	});
+  		gMappingTab.updateNodegroup(gNodeGroup);
+        
+        // save user when done
+        var doneCallback = function () {
+            localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
+        }
+        
+		gModalStoreDialog.launchStoreDialog(gConn, gNodeGroup, gMappingTab, doneCallback); 		
   	};
   	
   	var doLayout = function() {
