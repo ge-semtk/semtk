@@ -261,7 +261,7 @@ public class NodeGroupStoreRestController {
 			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId()  +"\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
 			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			 "  optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 			 "}";
 		
 		try{
