@@ -163,23 +163,32 @@ define([	// properly require.config'ed
             
             /**
               * Callback after deletion
+              * @param id is nodegroup just deleted
+              * @param idList are additional nodegroups to delete
               */
             deleteNodeGroupCallback : function (id, idList, resultSet) { 
-                // PEC TODO: add in successes that were actually failures
-				if (! resultSet.isSuccess()) {
-                    var msg = "failure deleting: " + id;
-                    msg += "<p>" + resultSet.getGeneralResultHtml();
+               
+                // if there is a failure...
+                // PEC TODO: search for "0 triples" is a temporary hack until we have a new results set type
+				if (! resultSet.isSuccess() || resultSet.getSimpleResultsHtml().indexOf("0 triples") > -1) {
+                    
+                    // print results using SimpleResults in case it got that far.  It will default to GeneralResults.
+                    var msg = "<b>Failure deleting: " + id + "</b>";
+                    msg += "<p>" + resultSet.getSimpleResultsHtml();
+                    
+                    // stop processing and print list of unprocessed ids
                     if (idList.length > 0) {
-                        msg += "<p><p>These were not processed:<br>" + idList;
+                        msg += "<p><p><b>Deletes were not attempted on remaining ids:<br></b>" + idList;
                     }
 					ModalIidx.alert("Service failed", msg);
                     
 				} else {
+                    // if there's more to do
                     if (idList.length > 0) {
                         this.deleteNodeGroupOK(idList);
                     } else {
                         //ModalIidx.alert("Delete Nodegroup", resultSet.getSimpleResultsHtml());
-                        ModalIidx.alert("Delete Nodegroup", "Success");
+                        ModalIidx.alert("Delete Nodegroup", "Successfully deleted.");
                     }
 				}
 			},
@@ -189,6 +198,7 @@ define([	// properly require.config'ed
             deleteNodeGroupOK : function (idList) {   
                 var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
                
+                // delete idList[0] and queue up idList[1..end]
                 mq.deleteStoredNodeGroup(idList[0], this.deleteNodeGroupCallback.bind(this, idList[0], idList.slice(1)));
             },
             
@@ -215,7 +225,7 @@ define([	// properly require.config'ed
                     } else {
                         // store returns nothing
                         //ModalIidx.alert("Store Nodegroup", resultSet.getSimpleResultsHtml());
-                        ModalIidx.alert("Store Nodegroup", "Successfull stored " + id);
+                        ModalIidx.alert("Store Nodegroup", "Successfully stored " + id);
                         doneCallback();
                     }
                 };

@@ -70,25 +70,32 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				// don't repeat the message on "success"
 				if (status != "success") {
-					html += "<br><b>message:</b> " +  IIDXHelper.htmlSafe(this.xhr.message);
+					html += "<br><b>message: </b> " +  IIDXHelper.htmlSafe(this.xhr.message);
 				}
 				
 				// may have rationale regardless of status
 				if (this.xhr.hasOwnProperty("rationale")) {
-					html += "<br><b>rationale:</b> " +  IIDXHelper.htmlSafe(this.xhr.rationale).replace(/[\n]/, "<br>");
+					html += "<br><b>rationale: </b> " +  IIDXHelper.htmlSafe(this.xhr.rationale).replace(/[\n]/, "<br>");
 				}
 				
 				return html;
 			},
 			
             getSimpleResultsHtml : function () {
+                
+                // A simpleResultSet with no fields in it is generated
+                // by the java without "simpleresults".
+                if (! this.xhr.hasOwnProperty("simpleresults")) {
+                    return this.getGeneralResultHtml();
+                }
+                
                 // put message
-                var html =  "<p>" + this.xhr.simpleresults["@message"] + "<p>";
+                var html =  "<p><b>message: </b>" + IIDXHelper.htmlSafe(this.xhr.simpleresults["@message"]) + "<p>";
                 
                 // add any other fields
                 for (var key in this.xhr.simpleresults) {
                     if (key != "@message") {
-                        html += "<bold>" + key + ":</bold>" + this.xhr.simpleresults[key] + "<br>";
+                        html += "<b>" + IIDXHelper.htmlSafe(key) + ": </b>" + IIDXHelper.htmlSafe(this.xhr.simpleresults[key]) + "<br>";
                     }
                 }
                 
