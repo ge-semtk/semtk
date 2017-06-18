@@ -61,6 +61,11 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getNodeGroupMetadata", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 			
+            getNodeGroupRuntimeConstraints : function (id, successCallback) {
+				var data = JSON.stringify ({ "id": id });
+				this.msi.postToEndpoint("getNodeGroupRuntimeConstraints", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
+            
 			storeNodeGroup : function (sgJson, creator, name, comments, successCallback) {
 				var data = JSON.stringify ({
                       "creator" : creator,
