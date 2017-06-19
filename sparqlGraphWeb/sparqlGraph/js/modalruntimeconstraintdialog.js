@@ -22,12 +22,13 @@ define([	// properly require.config'ed
     'sparqlgraph/js/modaliidx',
     'sparqlgraph/js/iidxhelper',
     'sparqlgraph/js/sparqlgraphjson',
+    'sparqlgraph/js/runtimeconstraints',
 
     // shimmed
     'jquery'
     ],
 
-	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SelectTable, SparqlGraphJson, jquery) {
+	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SparqlGraphJson, RuntimeConstraints, jquery) {
 	
         // legal operations for runtime constraints
         var operationsArray = ["MATCHES", "MATCHES",
@@ -88,7 +89,10 @@ define([	// properly require.config'ed
                 }
                 runtimeConstraintJsonString += "]";
                 
-                this.callback(runtimeConstraintJsonString);
+                // call the callback with a RuntimeConstraints object 
+                var runtimeConstraints = new RuntimeConstraints();
+                runtimeConstraints.fromJson(runtimeConstraintJsonString);                
+                this.callback(runtimeConstraints);
 			},
 			
 			cancelCallback : function() {
