@@ -30,7 +30,7 @@ define([	// properly require.config'ed
          * TODO flesh this out with full runtime constraint functionality
 		 */
 		var RuntimeConstraints = function () {
-            this.json = null;
+            this.constraintsJson = [];  // a list of jsons, each for a single constraint
 		};
 			
 		RuntimeConstraints.prototype = {
@@ -39,13 +39,20 @@ define([	// properly require.config'ed
 			//      These methods' behaviors are not guaranteed to be stable in future releases.
 			//
 			
-			fromJson : function (jObj) {  
-                alert("fromJson..." + jObj);
-                this.json = jObj;
-			},
+            // add json for a single constraint
+            addConstraintJson : function (constraintJson){
+                this.constraintsJson.push(constraintJson);
+            },
 			
+            // gather all constraints into a single json
             toJson : function () {
-                return this.json;
+                var s = "RuntimeConstraints: ["; 
+                for(i = 0; i < this.constraintsJson.length; i++){
+                    s += this.constraintsJson[i];
+                    s += ",";
+                }
+                s += "]";
+                return s;
 			},
 		};
 	

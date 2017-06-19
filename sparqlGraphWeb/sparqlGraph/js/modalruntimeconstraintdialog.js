@@ -74,24 +74,24 @@ define([	// properly require.config'ed
              */
 			okCallback : function() {
                 
+                var runtimeConstraints = new RuntimeConstraints();
+                
                 // TODO move this code to its own function  
-                // TODO needs to vary by data type
-                var runtimeConstraintJsonString = "RuntimeConstraints: [";                
-                // for each sparql id, add to json
+                // TODO needs to vary by data type  
+                // for each sparql id, add a runtime constraint
                 for(i = 0; i < this.sparqlIDs.length; i++){
+                    var runtimeConstraintJsonString = "";
                     var sparqlId = this.sparqlIDs[i];
                     var operand = document.getElementById("operand" + sparqlId).value;
-                    if(operand.trim()){
+                    if(operand.trim()){  // only add if the constraint has a populated operand
                         runtimeConstraintJsonString += '{"SparqlID": "' + sparqlId + '",';
                         runtimeConstraintJsonString += '"Operator":"MATCHES",';  // TODO unhardcode
-                        runtimeConstraintJsonString += '"Operands":["' + operand + '"] }, ';
+                        runtimeConstraintJsonString += '"Operands":["' + operand + '"] }';
+                        runtimeConstraints.addConstraintJson(runtimeConstraintJsonString);
                     }
                 }
-                runtimeConstraintJsonString += "]";
                 
-                // call the callback with a RuntimeConstraints object 
-                var runtimeConstraints = new RuntimeConstraints();
-                runtimeConstraints.fromJson(runtimeConstraintJsonString);                
+                // call the callback with a RuntimeConstraints object                
                 this.callback(runtimeConstraints);
 			},
 			
