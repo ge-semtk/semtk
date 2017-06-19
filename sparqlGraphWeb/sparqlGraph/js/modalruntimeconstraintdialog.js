@@ -76,18 +76,14 @@ define([	// properly require.config'ed
                 
                 var runtimeConstraints = new RuntimeConstraints();
                 
-                // TODO move this code to its own function  
                 // TODO needs to vary by data type  
                 // for each sparql id, add a runtime constraint
                 for(i = 0; i < this.sparqlIDs.length; i++){
-                    var runtimeConstraintJsonString = "";
                     var sparqlId = this.sparqlIDs[i];
+                    var operator = "MATCHES"; // TODO UNHARDCODE
                     var operand = document.getElementById("operand" + sparqlId).value;
                     if(operand.trim()){  // only add if the constraint has a populated operand
-                        runtimeConstraintJsonString += '{"SparqlID": "' + sparqlId + '",';
-                        runtimeConstraintJsonString += '"Operator":"MATCHES",';  // TODO unhardcode
-                        runtimeConstraintJsonString += '"Operands":["' + operand + '"] }';
-                        runtimeConstraints.addConstraintJson(runtimeConstraintJsonString);
+                        runtimeConstraints.addConstraint(sparqlId, operator, operand);
                     }
                 }
                 

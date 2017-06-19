@@ -39,10 +39,21 @@ define([	// properly require.config'ed
 			//      These methods' behaviors are not guaranteed to be stable in future releases.
 			//
 			
-            // add json for a single constraint
-            addConstraintJson : function (constraintJson){
-                this.constraintsJson.push(constraintJson);
+            // TODO expand to support multiple operands, different operators, etc
+            addConstraint : function(sparqlId, operator, operand){
+                var s = '{';
+                s += '"SparqlID": "' + sparqlId + '",';
+                s += '"Operator": "' + operator + '",';  
+                s += '"Operands":["' + operand + '"]';
+                s += '}';
+                this.constraintsJson.push(s);
             },
+            
+            
+//            // add json for a single constraint
+//            addConstraintJson : function (constraintJson){
+//                this.constraintsJson.push(constraintJson);
+//            },
 			
             // gather all constraints into a single json
             toJson : function () {
