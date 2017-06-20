@@ -32,6 +32,7 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportUtil;
 import com.ge.research.semtk.belmont.XSDSupportedTypes;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
+import com.ge.research.semtk.resultSet.Table;
 
 public class RuntimeConstrainedItems {
 
@@ -367,6 +368,29 @@ public class RuntimeConstrainedItems {
 		else{
 			throw new Exception(itemSparqlId + " does not exist in the available runtime constrained items.");
 		}
+		return retval;
+	}
+	
+	public Table getConstrainedItemsDescription() throws Exception{
+		Table retval = null;
+		
+		ArrayList<ArrayList<String>> itemInfo = new ArrayList<ArrayList<String>>();
+		for(String item : this.getConstrainedItemIds()){
+			// add each to the table. 
+			ArrayList<String> currentItemInfo = new ArrayList<String>();
+			
+			currentItemInfo.add(item);
+			currentItemInfo.add(this.getItemType(item));
+			currentItemInfo.add(this.getValueType(item));
+			
+			// add to outgoing list
+			itemInfo.add(currentItemInfo);
+		}
+		String cols[] = {"valueId", "itemType", "valueType"};
+		String type[] = {"string", "string", "string"};
+		
+		retval = new Table(cols, type, itemInfo);
+		
 		return retval;
 	}
 }

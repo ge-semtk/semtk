@@ -152,24 +152,7 @@ public class StoreNodeGroup {
 		// get the constrained values from the NodeGroup.
 		RuntimeConstrainedItems rtci = new RuntimeConstrainedItems(temp);
 		
-		ArrayList<String> items = rtci.getConstrainedItemIds();
-		
-		// get the associated types for each.
-		
-		ArrayList<ArrayList<String>> itemInfo = new ArrayList<ArrayList<String>>();
-		for(String currItem : items){
-			ArrayList<String> currentItemInfo = new ArrayList<String>();
-			
-			currentItemInfo.add(currItem);
-			currentItemInfo.add(rtci.getItemType(currItem));
-			currentItemInfo.add(rtci.getValueType(currItem));
-			
-			itemInfo.add(currentItemInfo);
-		}
-		String cols[] = {"valueId", "itemType", "valueType"};
-		String type[] = {"string", "string", "string"};
-		
-		retval = new Table(cols, type, itemInfo);
+		retval = rtci.getConstrainedItemsDescription();
 		
 		return retval;					/// send it. 
 	}

@@ -51,6 +51,7 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupDispatcher;
+import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 
 
 @RestController
@@ -60,9 +61,38 @@ public class DispatcherServiceRestController {
 	@Autowired
 	DispatchProperties props;
 	
+	// select uses the original endpoint name for BC
 	@CrossOrigin
 	@RequestMapping(value="/queryFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+	public JSONObject querySelectFromNodeGroup_BC(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/querySelectFromNodeGroup", method=RequestMethod.POST)
+	public JSONObject querySelectFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/queryCountFromNodeGroup", method=RequestMethod.POST)
+	public JSONObject queryCounttFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/queryDeleteFromNodeGroup", method=RequestMethod.POST)
+	public JSONObject queryDeleteFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/queryFilterFromNodeGroup", method=RequestMethod.POST)
+	public JSONObject queryFilterFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+	}
+
+	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 		String requestId = this.getRequestId();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.addResult("requestID", requestId);
@@ -75,8 +105,16 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody);
 			
+			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), qt);
+			
+			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
+				// we should have a potential target object.				
+				String target = ((FilterConstraintsRequestBody)requestBody).getTargetObjectSparqlID();
+				doIt.setTargetObjectSparqlID(target);
+			}
+			
 			// set up a thread for the actual processing of the request
-			(new WorkThread(dsp, false, requestBody.getConstraintSetJson())).start();
+			doIt.start();
 			 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -107,7 +145,7 @@ public class DispatcherServiceRestController {
 		// the request is not finished but that is okay
 		return retval.toJson();
 	}
-	
+
 	@CrossOrigin
 	@RequestMapping(value="/getConstraintInfo", method=RequestMethod.POST)
 	public JSONObject getConstraintInfo(@RequestBody NodegroupRequestBody requestBody){
@@ -143,8 +181,18 @@ public class DispatcherServiceRestController {
 	
 	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody ) throws Exception{
 		
-		// check the qry request body.
+		// get the sgJson...
+		SparqlGraphJson sgJson = null;
 		
+		try{
+			sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup()) ;
+			if(sgJson == null){ throw new Exception("sgJson was null."); } 
+		}
+		catch(Exception sg){
+			throw new Exception("getDispatcher :: unable to get sparqlgraphJson from request. failure was reported as: " + sg.getMessage());
+		}
+		
+		// check the qry request body.		
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 
 		System.err.println("Dispatcher type in use: " + props.getDispatcherClassName() );
@@ -173,20 +221,19 @@ public class DispatcherServiceRestController {
 			
 			if(dspType == null) { System.err.println("DSPTYPE IS NULL!"); }
 			else{ System.err.println( "configured dispatcher type is " + dspType.getCanonicalName() ); }
-			// build it.
 			System.err.println("attempting to get constructor for dispatcher subtype:");
+			// build it.
 
 			Constructor ctor = null ; //dspType.getConstructor(String.class, JSONObject.class, ResultsClient.class, StatusClient.class, SparqlQueryClient.class);	
 		
 			for (Constructor c : dspType.getConstructors() ){
 				// try to find the right constructor?
-				
 				Class[] params = c.getParameterTypes();
 				for(Class p : params){
 				}
 				
 				if(params[0].isAssignableFrom( String.class )) {
-					if(params[1].isAssignableFrom( JSONObject.class )) {
+					if(params[1].isAssignableFrom( SparqlGraphJson.class )) {
 						if(params[2].isAssignableFrom( ResultsClient.class )){
 							if( params[3].isAssignableFrom( StatusClient.class )){
 								if(params[4].isAssignableFrom( SparqlQueryClient.class )){
@@ -196,7 +243,7 @@ public class DispatcherServiceRestController {
 				else{
 				}
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, requestBody.getJsonNodeGroup(), rClient, sClient, queryClient);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient);
 			
 		}
 		catch(Exception failedToFindClass){
