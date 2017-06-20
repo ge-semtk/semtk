@@ -76,6 +76,7 @@ define([	// properly require.config'ed
             // check for error conditions where we want to give the user a chance to correct their entries
             validateCallback : function() {
                       
+                // validate each constraint item
                 for(i = 0; i < this.sparqlIds.length; i++){
                     
                     var sparqlId = this.sparqlIds[i];
@@ -86,39 +87,52 @@ define([	// properly require.config'ed
                     var operator2Element = document.getElementById("operator2" + sparqlId);
                     var operand2Element = document.getElementById("operand2" + sparqlId);    
                     
-                    if(valueType == "INT"){ // TODO add other numeric types
-                        if(isNaN(operand1Element.value)){  // TODO implement for specific data types (e.g. check int, float)
-                            return "Error: bad please correct non-numeric entry for " + sparqlId + ": " + operand1Element.value; 
-                        }
-                        if(operator1Element.value == "=" && operand2Element.value.trim()){
-                            return "Error: remove second operand for " + sparqlId + " because the first operator is equals";
+                    if(valueType == "STRING"){                        
+                        // no checks needed yet
+                        
+                    }else if(valueType == "INT"){ // TODO add other numeric types
+                        if(isNaN(operand1Element.value.trim())){  // TODO do check for specific data types (e.g. int, float)
+                            // user entered a non-numeric value
+                            return "Error: invalid entry for " + sparqlId + ": " + operand1Element.value; 
                         }
                         
-                        // TODO disallow operand2 if operand1 is not present
-                        // TODO disallow any combos other than < > or <= >=
-                    }
-                      
-                }
-                
-				return null;    // validations will happen in the okCallback
+                        // if a second operand was entererd
+                        if(operand2Element.value){
+                            if(isNaN(operand2Element.value)){  // TODO do check for specific data types (e.g. int, float)
+                                // user entered non-numeric value
+                                return "Error: invalid entry for " + sparqlId + ": " + operand2Element.value; 
+                            }
+                            if(!operand1Element.value){
+                                // user entered the second operand, but not the first
+                                return "Error: invalid entry for " + sparqlId + ": second operand entered without first operand";
+                            }
+                            var operatorCombination = operator1Element.value + operator2Element.value;  // quick way to check 
+                            if(operatorCombination != "<>" && operatorCombination != "><" && operatorCombination != "<=>=" && operatorCombination != ">=<="){
+                                // disallow any combos other than < > or <= >=
+                                return "Error: unsupported combination of operators for " + sparqlId;
+                            }
+                        }
+                    }          
+                    
+                }                
+				return null;    // all checks passed
 			},
             
             
             /**
              * Build runtime constraint json and return it.
              * Basic validation has already been done in the validateCallback.
-             * TODO break some of this code into their own functions.
              */
 			okCallback : function() {
                 
                 var runtimeConstraints = new RuntimeConstraints();
                 
                 // for each runtime constrainable item, add a runtime constraint
-                for(i = 0; i < this.sparqlIds.length; i++){
+                for(j = 0; j < this.sparqlIds.length; j++){
                     
-                    var sparqlId = this.sparqlIds[i];
+                    var sparqlId = this.sparqlIds[j];
                     // TODO need/use itemType?
-                    var valueType = this.valueTypes[i];
+                    var valueType = this.valueTypes[j];
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
                     var operator2Element = document.getElementById("operator2" + sparqlId);
@@ -127,11 +141,12 @@ define([	// properly require.config'ed
                     if(!operator1Element){
                         continue;   // data type is not supported yet, so user could not have entered it - skip
                     }
-                    operator1 = operator1Element.value;
-                    operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
                     
                     // collect user input and create runtime constraint object (behavior varies per data type)
+                    // TODO: separate each datatype code block into its own function
                     if(valueType == "STRING"){
+                        operator1 = operator1Element.value;
+                        operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
                         if(!operand1.trim()){  
                             // user did not enter an operand - skip
                         }else if(operator1 == "="){
@@ -144,6 +159,8 @@ define([	// properly require.config'ed
                             // TODO cancel instead of skipping?
                         }
                     }else if(valueType == "INT"){
+                        operator1 = operator1Element.value;
+                        operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
                         operator2 = operator2Element.value;
                         operand2 = operand2Element.value;
                         
@@ -197,7 +214,6 @@ define([	// properly require.config'ed
                 // call the callback with a RuntimeConstraints object                
                 this.callback(runtimeConstraints);
 			},
-			
             
             // TODO I don't think this is being used.  Remove it?
 			cancelCallback : function() {
@@ -218,8 +234,8 @@ define([	// properly require.config'ed
                     this.sparqlIds = resultSet.getColumnStringsByName("valueId");
                     this.itemTypes = resultSet.getColumnStringsByName("itemType");   // TODO USE THIS
                     this.valueTypes = resultSet.getColumnStringsByName("valueType");
-//					this.sparqlIds = ["flavor","circumference", "frosting"];
-//                    this.valueTypes = ["STRING","INT","BOOLEAN"];                                
+//					this.sparqlIds = ["flavor","circumference", "frosting"]; // TODO REMOVE - FOR TESTING ONLY
+//                    this.valueTypes = ["STRING","INT","BOOLEAN"];          // TODO REMOVE - FOR TESTING ONLY                      
 
                     // create UI components for all runtime-constrained items 
                     // TODO improve formatting
@@ -238,12 +254,12 @@ define([	// properly require.config'ed
                             this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForStrings));
                             this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId));
                         }else if(valueType == "INT"){
-                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForNumerics));
+                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForNumerics, ">"));
                             this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId));
-                            this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorsForNumerics));
+                            this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorsForNumerics, "<"));
                             this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId));
                         }else{
-                            // TODO support all data types.  add validation with each one.
+                            // TODO support all data types, and also handle in validateCallback and okCallback
                             this.div.appendChild(IIDXHelper.createLabel("...type not supported yet"));
                         }
                     } 
