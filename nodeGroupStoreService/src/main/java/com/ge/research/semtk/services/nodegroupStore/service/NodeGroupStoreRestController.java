@@ -256,12 +256,16 @@ public class NodeGroupStoreRestController {
 			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId() + "\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
 			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup ." +
 			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:creator ?creator . " +
+			 "  ?PrefabNodeGroup prefabNodeGroup:creationDate ?creationDate . " +
 			"}" + 
 			 "where { " +
 			 "  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId()  +"\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
 			 "  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 			 "  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-			 "  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+			 "  optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
+			 "  optional { ?PrefabNodeGroup prefabNodeGroup:creator ?creator . } " +
+			 "  optional { ?PrefabNodeGroup prefabNodeGroup:creationDate ?creationDate . } " +
 			 "}";
 		
 		try{

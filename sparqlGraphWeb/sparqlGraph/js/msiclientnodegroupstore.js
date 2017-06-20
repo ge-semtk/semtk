@@ -36,7 +36,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		
 		
 		MsiClientNodeGroupStore.prototype = {
-			deleteStoredNodeGroup : function (successCallback) {
+			deleteStoredNodeGroup : function (id, successCallback) {
 				var data = JSON.stringify ({ "id": id });
 				this.msi.postToEndpoint("deleteStoredNodeGroup", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
@@ -50,14 +50,25 @@ define([	// properly require.config'ed   bootstrap-modal
 				var data = JSON.stringify ({});
 				this.msi.postToEndpoint("getNodeGroupList", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
-			
-			getRuntimeconstraints : function (successCallback) {
-				var data = JSON.stringify ({ "id": id });
-				this.msi.postToEndpoint("getRuntimeconstraints", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            
+            getNodeGroupList : function (successCallback) {
+				var data = JSON.stringify ({});
+				this.msi.postToEndpoint("getNodeGroupList", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 			
-			storeNodeGroup : function (sgJson, name, comments, successCallback) {
+			getNodeGroupMetadata : function (successCallback) {
+				var data = JSON.stringify ({});
+				this.msi.postToEndpoint("getNodeGroupMetadata", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
+			
+            getNodeGroupRuntimeConstraints : function (id, successCallback) {
+				var data = JSON.stringify ({ "id": id });
+				this.msi.postToEndpoint("getNodeGroupRuntimeConstraints", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
+            
+			storeNodeGroup : function (sgJson, creator, name, comments, successCallback) {
 				var data = JSON.stringify ({
+                      "creator" : creator,
 					  "comments": comments,
 					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
 					  "name": name

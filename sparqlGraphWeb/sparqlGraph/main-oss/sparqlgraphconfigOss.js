@@ -84,6 +84,9 @@ var g = {
 		nodeGroupStore:{
 			url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStore/",
 		},
+		nodeGroup:{
+			url : "http://vesuvius37.crd.ge.com:12059/nodeGroupService/",
+		},
 	},
 	
 	tab : {
