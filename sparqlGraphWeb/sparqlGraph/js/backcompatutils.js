@@ -2,7 +2,7 @@
 /**
  ** Copyright 2016 General Electric Company
  **
- ** Authors:  Paul Cuddihy, Justin McHugh
+ ** Authors:  Paul E Cuddihy, Justin McHugh
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
