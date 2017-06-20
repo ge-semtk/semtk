@@ -132,6 +132,14 @@ define([	// properly require.config'ed
         return select;
     };
 
+    IIDXHelper.createLabel = function (labelText) {
+        // create a label element with the given text and return it
+        var labelElem = document.createElement("label");
+        labelElem.className = "control-label";
+        labelElem.innerHTML = labelText;
+        return labelElem;
+    };
+
     IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {
         // take a text label, DOM control, and optional help text
         // Assemble a representative "control-group" div and return it
