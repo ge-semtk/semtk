@@ -168,19 +168,19 @@ define([	// properly require.config'ed
                             switch(operator1.trim()){
                                 case("="):
                                     // TODO support multiple operands for MATCHES
-                                    runtimeConstraints.add(sparqlId, "MATCHES", [operand1]);  
+                                    runtimeConstraints.add(sparqlId, "MATCHES", [operand1], false);  
                                     break;
                                 case("<"):
-                                    runtimeConstraints.add(sparqlId, "LESSTHAN", [operand1]);
+                                    runtimeConstraints.add(sparqlId, "LESSTHAN", [operand1], false);
                                     break;
                                 case("<="):
-                                    runtimeConstraints.add(sparqlId, "LESSTHANOREQUALS", [operand1]);
+                                    runtimeConstraints.add(sparqlId, "LESSTHANOREQUALS", [operand1], false);
                                     break;  
                                 case(">"):
-                                    runtimeConstraints.add(sparqlId, "GREATERTHAN", [operand1]);
+                                    runtimeConstraints.add(sparqlId, "GREATERTHAN", [operand1], false);
                                     break;
                                 case(">="):
-                                    runtimeConstraints.add(sparqlId, "GREATERTHANOREQUALS", [operand1]);
+                                    runtimeConstraints.add(sparqlId, "GREATERTHANOREQUALS", [operand1], false);
                                     break; 
                                 default:
                                     // if get this alert, then a fix is needed in the code
@@ -190,13 +190,13 @@ define([	// properly require.config'ed
                         }else if(operand1.trim() && operand2.trim()){
                             // user gave upper and lower bounds
                             if(operator1.trim() == ">" && operator2.trim() == "<"){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand1, operand2]);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand1, operand2], false);
                             }else if(operator1.trim() == "<" && operator2.trim() == ">"){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand2, operand1]);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand2, operand1], false);
                             }else if(operator1.trim() == ">=" && operator2.trim() == "<="){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand1, operand2]);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand1, operand2], false);
                             }else if(operator1.trim() == "<=" && operator2.trim() == ">="){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand2, operand1]);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand2, operand1], false);
                             }else{
                                 // should never get here if validation is implemented correctly
                                 alert("Skipping unsupported combination of operators for " + sparqlId + ": must be < and >, or <= and >=");

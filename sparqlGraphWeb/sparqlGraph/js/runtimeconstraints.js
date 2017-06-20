@@ -27,6 +27,7 @@ define([	// properly require.config'ed
 
 	function() {
 	
+        // TODO use an enum instead?
         //  Supported operators (from com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations)
         //  MATCHES, 				// value matches one of the operands (accepts collections)
         //	REGEX, 					// value matches the string indicated by the given operand
@@ -50,7 +51,10 @@ define([	// properly require.config'ed
 			// These methods' behaviors are not guaranteed to be stable in future releases.
 			           
             // add a constraint
-            add : function(sparqlId, operator, operands){
+            // optOperandQuotesFlag: true to enclose each operand in double quotes, false to not.  Defaults to true.
+            add : function(sparqlId, operator, operands, optOperandQuotesFlag){
+                
+                var operandQuotesFlag = (typeof optOperandQuotesFlag === "undefined") ? true : optOperandQuotesFlag;
                 
                 // confirm that the given operator is legal
                 if(!SUPPORTED_OPERATORS.includes(operator)){
@@ -63,14 +67,18 @@ define([	// properly require.config'ed
                 var s = '{';
                 s += '"SparqlID": "' + sparqlId + '",';
                 s += '"Operator": "' + operator + '",';
-                s += '"Operands":["';
+                s += '"Operands":[';
                 for(i = 0; i < operands.length; i++){
-                    s += operands[i];
+                    if(operandQuotesFlag){
+                        s += '"' + operands[i] + '"'; // enclose in double quotes  (e.g. for strings)
+                    }else{
+                        s += operands[i];             // don't enclose in double quotes (e.g. for numeric)
+                    }
                     if(i < operands.length - 1){
                         s+= ", ";
                     }
                 }
-                s += '"]'; 
+                s += ']'; 
                 s += '}';
                 this.constraintsJson.push(s);
             },
