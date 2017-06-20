@@ -213,6 +213,11 @@ define([	// properly require.config'ed   bootstrap-modal
 				}
 			},
 			
+            getGeneralField : function (field) {
+                // return a top-level field, or null if it doesn't exist
+                return (this.xhr.hasOwnProperty(field)) ? this.xhr[field] : null;
+            },
+            
 			getTable : function () {
 				// efficient helper function with no checks
 				return this.xhr.table["@table"];

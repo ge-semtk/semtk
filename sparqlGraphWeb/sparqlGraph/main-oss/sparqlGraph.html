@@ -336,7 +336,7 @@
 							   				<option value="DIRECT">direct</option>
 							   		<!--  	<option value="DISPATCHER">dispatcher</option> -->
 							   			</select>
-							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="1000" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
+							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeypress='return event.charCode >= 48 && event.charCode <= 57' onchange="javascript:onchangeLimit();">
 							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces </input>
 						   			</form>
 							   	</td>

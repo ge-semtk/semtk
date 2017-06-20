@@ -56,6 +56,23 @@ define([	// properly require.config'ed   bootstrap-modal
 				return resultSet.getGeneralResultHtml();
 			},
             
+            // Temporary:  if failure was just no valid SPARQL
+            //             then return a SPARQL comment.
+            //             Otherwise null.
+            getFailedTEMPBadSparql : function (resultSet) {
+                if (resultSet.getGeneralField("message") == "operations failed.") {
+                    var rationale = resultSet.getGeneralField("rationale");
+                    if (rationale != null) {
+                        if (rationale.indexOf("No values selected") > -1) {
+                            return "# Error: nothing to select";
+                        } else if (rationale.indexOf("nothing given to delete") > -1) {
+                            return "# Error: nothing to delete";
+                        }
+                    }
+                }
+                return null;
+            },
+            
             /**
               * @private
               */
