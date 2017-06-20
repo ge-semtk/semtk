@@ -385,6 +385,7 @@ Graph.Renderer.Raphael.prototype = {
             			if (mouseUpIsClick()) {
             				pnode.parentSNode.removeFromNodeGroup(false);		
                      	    pnode.parentSNode.nodeGrp.drawNodes();
+                            pnode.parentSNode.callAsyncSNodeRemover(); 
                      	    graph.removeNode(pnode.id);
             			}
             		}.bind("fake_this", node, graph);

@@ -129,7 +129,7 @@ define([	// properly require.config'ed
             /**
               * Recieved nodegroup to load, now load it
               */
-            retrieveNodeGroupCallback : function (resultSet) { 
+            retrieveNodeGroupCallback : function (retrieveCallback, resultSet) { 
 				if (! resultSet.isSuccess()) {
 					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
 				} else {
@@ -138,7 +138,7 @@ define([	// properly require.config'ed
 					if (nodegroupArr.length < 1) {
 						ModalIidx.alert("Service failed", "Returned no nodegroup");
 					} else {
-						doQueryLoadJsonStr(nodegroupArr[0]);
+						retrieveCallback(nodegroupArr[0]);
 					}
 				}
 			},
@@ -146,17 +146,17 @@ define([	// properly require.config'ed
             /**
               * load the id
               */
-            retrieveNodeGroupOK : function (idList) {   
+            retrieveNodeGroupOK : function (retrieveCallback, idList) {   
                 var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                mq.getNodeGroupById(idList[0], this.retrieveNodeGroupCallback.bind(this));
+                mq.getNodeGroupById(idList[0], this.retrieveNodeGroupCallback.bind(this, retrieveCallback));
             },
             
             /**
               * External call to retrieve a nodegroup from the store
               */
-            launchRetrieveDialog : function () {
+            launchRetrieveDialog : function (retrieveCallback) {
                 this.launchNodeGroupDialog("Retrieve from Nodegroup store",
-                                           this.retrieveNodeGroupOK.bind(this),
+                                           this.retrieveNodeGroupOK.bind(this, retrieveCallback),
                                            false // no multi
                                           );
             },

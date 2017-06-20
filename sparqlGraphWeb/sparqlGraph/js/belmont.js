@@ -1481,6 +1481,9 @@ SemanticNode.prototype = {
 	callAsyncSNodeEditor : function (draculaLabel) {
 		this.nodeGrp.asyncSNodeEditor(this, draculaLabel);
 	},
+    callAsyncSNodeRemover : function () {
+        this.nodeGrp.asyncSNodeRemover();
+    },
 	callAsyncNodeEditor : function (nodeKeyname, draculaLabel) {
 		var nodeItem = this.getNodeItemByKeyname(nodeKeyname);
 		this.nodeGrp.asyncNodeEditor(nodeItem, draculaLabel);
@@ -1606,6 +1609,7 @@ var getNodeDeletionTypeByName = function(delVal){
 /* the semantic node group */
 var SemanticNodeGroup = function(width, height, divName) {
 	this.SNodeList = [];
+    this.limit = 0;
 	this.graph = new Graph();
 	this.layouter = new Graph.Layout.Spring(this.graph, width, height);
 	this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
@@ -1616,7 +1620,8 @@ var SemanticNodeGroup = function(width, height, divName) {
 	this.isReturnNameSetterAsync = false;
 	this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
 	this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
-	this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
+	this.asuncSNodeRemover = function() {};  // 
+    this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
 	this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
 	this.asyncLinkEditor = function(){alert("Internal error: SemanticNodeGroup asyncLinkEditor function is not defined.")};
 
@@ -1653,7 +1658,9 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 5;
+SemanticNodeGroup.JSON_VERSION = 6;
+// version 6 - limit
+// version 5 - top-secret undocumented version 
 // version 4 - multiple connections
 // version 3 - SNodeOptionals
 
@@ -1676,6 +1683,7 @@ SemanticNodeGroup.prototype = {
 
 		var ret = {
 			version : SemanticNodeGroup.JSON_VERSION,
+            limit : this.limit,
 			sNodeList : [],
 		};
 		// add json snodes to sNodeList
@@ -1691,6 +1699,10 @@ SemanticNodeGroup.prototype = {
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
 			throw new Error("SemanticNodeGroup.addJson only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
 		}
+        
+        if (jObj.hasOwnProperty("limit")) {
+            this.limit = jObj.limit;
+        }
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
 
@@ -2051,6 +2063,15 @@ SemanticNodeGroup.prototype = {
 			}
 		}
 	},
+    
+    setLimit : function (l) {
+        this.limit = l;
+    },
+    
+    getLimit : function () {
+        return this.limit;
+    },
+    
 	// DEPRECATED
 	setCanvasOInfo : function (oInfo) {
 		this.canvasOInfo = oInfo;
@@ -2076,6 +2097,9 @@ SemanticNodeGroup.prototype = {
 		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
 		this.asyncSNodeEditor = func;
 	},
+    setAsyncSNodeRemover : function (func) {
+        this.asyncSNodeRemover = func;
+    },
 	
 	setSparqlConnection : function (sparqlConn) {
 		this.conn = sparqlConn;
@@ -2851,14 +2875,14 @@ SemanticNodeGroup.prototype = {
 		return retval;
 	},
 	
-	generateSparql : function(queryType, optionalFlag, limit, optTargetObj, optKeepTargetConstraints) {
+	generateSparql : function(queryType, optionalFlag, optLimitOverride, optTargetObj, optKeepTargetConstraints) {
 		//
 		// queryType:
 		//     QUERY_DISTINCT - select distinct.   Use of targetObj is undefined.
 		//     QUERY_CONSTRAINT - select distinct values for a specific node or prop item (targetObj) after removing any existing constraints
 		//     QUERY_COUNT - count results.  If targetObj the use that as the only object of "select distinct".  
 		//
-		// limit - if > 0 then add LIMIT clause to the SPARQL
+        // optLimitOverride - if > -1 then override this.limit
 		//
 		// targetObj - if not (null/undefined/0/false/'') then it should be a SemanticNode or a PropertyItem
 		//    QUERY_CONSTRAINT - must be set.   Return all legal values for this.   Remove constraints.
@@ -2942,9 +2966,9 @@ SemanticNodeGroup.prototype = {
 			// This is too slow.
 			// sparql += "ORDER BY " + targetObj.SparqlID + " ";
 		}
-		if (limit > 0) {
-			sparql += "LIMIT " + String(limit);
-		}
+        
+        sparql += this.generateLimitClause(optLimitOverride);
+        
 		if (queryType === SemanticNodeGroup.QUERY_COUNT) {
 			sparql += "\n}";
 		}
@@ -2954,6 +2978,19 @@ SemanticNodeGroup.prototype = {
 		return sparql;
 	},
 	
+    /**
+     *  optLimitOverride - if > -1 then override this.limit
+     */
+    generateLimitClause : function (optLimitOverride) {
+        var limit = typeof optLimitOverride != "undefined" && optLimitOverride > -1 ? optLimitOverride : this.limit;
+        
+        if (limit > 0) {
+			return "LIMIT " + String(limit);
+		} else {
+            return "";
+        }
+    },
+        
 	/**
 	 * Very simple FROM clause logic
 	 * Generates FROM clause if this.conn has

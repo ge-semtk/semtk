@@ -102,7 +102,7 @@ define([	// properly require.config'ed
 			    this.importSpec = new ImportSpec(this.importSpec.alertCallback);
 
 			    this.uniqueIndex = 0;  
-			    	    
+                this.changedFlag = false;
 			    this.elemHash = {};   
 			},
 			
@@ -127,7 +127,11 @@ define([	// properly require.config'ed
 				this.uniqueIndex += 1;
 				return this.uniqueIndex.toString();
 			},
-			
+            
+			getChangedFlag : function() {
+                return this.changedFlag;
+            },
+            
 			setChangedFlag : function (bool) {
 				this.changedFlag = bool;
 			},

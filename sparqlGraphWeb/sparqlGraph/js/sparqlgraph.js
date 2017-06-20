@@ -45,6 +45,9 @@
     var gMappingTab = null;
     var gUploadTab = null;
     var gReady = false;
+
+    var gNodeGroupChangedFlag = false;
+    var gSparqlChangedFlag = false;
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -72,6 +75,7 @@
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
+            gNodeGroup.setAsyncSNodeRemover(nodeGroupChanged.bind(this, true));
 	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
 	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
 	        
@@ -143,7 +147,7 @@
     				// Handle no paths or shift key during drag: drop node with no connections
     				if (event.shiftKey || paths.length == 0) {
     					gNodeGroup.addNode(gDragLabel, gOInfo);
-    			  		gNodeGroup.drawNodes();
+                        nodeGroupChanged(true);
     			  		guiGraphNonEmpty();
     			
     				} else {
@@ -170,9 +174,9 @@
     			  		}
     			  		
     			  		if (valList.length > 1) {
-    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropCallback, "90%");
+    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, "90%");
     			  		} else {
-    			  			dropCallback(valList[0]);
+    			  			dropClassCallback(valList[0]);
     			  		}
     				}
     			}
@@ -191,7 +195,7 @@
      * If there is no anchorSNode then just add path.startClass
      * @param val[] -  [path, anchorSNode, revFlag]
      */
-    var dropCallback = function(val) {
+    var dropClassCallback = function(val) {
     	var path = val[0];
     	var anchorNode = val[1];
     	var singleLoopFlag = val[2];
@@ -201,7 +205,7 @@
     	} else {
     		gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
     	}
-    	gNodeGroup.drawNodes();
+        nodeGroupChanged(true);
       	guiGraphNonEmpty();
     };
     
@@ -340,7 +344,7 @@
 			snode.removeLink(nItem, targetSNode);
 		} 
 		
-		gNodeGroup.drawNodes();
+        nodeGroupChanged(true);
 	};
 	
 	/**
@@ -360,7 +364,7 @@
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
-		gNodeGroup.drawNodes();
+        nodeGroupChanged(true);
 	};
 	
 	var launchSNodeItemDialog = function (snodeItem, draculaLabel) {
@@ -375,17 +379,19 @@
      };
     
      var propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
-    	// Note: ModalItemDialog validates that sparqlID is legal
-    	
-    	// update the property
-    	propItem.setReturnName(sparqlID);
-    	propItem.setIsOptional(optionalFlag);
-    	propItem.setIsRuntimeConstrained(rtConstrainedFlag);
-    	propItem.setConstraints(constraintStr);
-    	propItem.setIsMarkedForDeletion(delMarker);
-    	
-    	// PEC TODO: pass draculaLabel through the dialog
-    	displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
+        // Note: ModalItemDialog validates that sparqlID is legal
+
+        // update the property
+        propItem.setReturnName(sparqlID);
+        propItem.setIsOptional(optionalFlag);
+        propItem.setIsRuntimeConstrained(rtConstrainedFlag);
+        propItem.setConstraints(constraintStr);
+        propItem.setIsMarkedForDeletion(delMarker);
+
+        // PEC TODO: pass draculaLabel through the dialog
+        displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
+
+        nodeGroupChanged(true);
     };
     
     var snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
@@ -411,7 +417,8 @@
     	// PEC TODO: pass draculaLabel through the dialog
     	changeLabelText(data.draculaLabel, snodeItem.getSparqlID());
     	displayLabelOptions(data.draculaLabel, snodeItem.getDisplayOptions());
-    	gNodeGroup.drawNodes();
+        
+        nodeGroupChanged(true);
     };
     
     var downloadFile = function (data, filename) {
@@ -523,6 +530,30 @@
     };
     
     var doQueryLoadJsonStr = function(jsonStr) {
+        if (gNodeGroup.getNodeCount() > 0 && (gNodeGroupChangedFlag || gMappingTab.getChangedFlag()) ) {
+            require(['sparqlgraph/js/modaliidx'], 
+                function(ModalIidx) {
+                
+                ModalIidx.choose("Save your work",
+                                     "Changes to the nodegroup have not been saved<br><br>Do you want to download it first?",
+                                     ["Cancel", "Download", "Discard"],
+                                     [function(){}, 
+                                      function(){
+                                          doNodeGroupDownload();
+                                          doQueryLoadJsonStr1(jsonStr);
+                                      },
+                                      function(){
+                                          doQueryLoadJsonStr1(jsonStr);
+                                      },
+                                     ]
+                                );
+            });
+        } else {
+            doQueryLoadJsonStr1(jsonStr);
+        }
+    };
+
+    var doQueryLoadJsonStr1 = function(jsonStr) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'], 
                 function(SparqlGraphJson, ModalIidx) {
@@ -615,8 +646,11 @@
     	logEvent("SG Loaded Nodegroup");
     	sgJson.getNodeGroup(gNodeGroup, gOInfo);
 	
-		gNodeGroup.drawNodes();
+        this.setQueryLimit(gNodeGroup.getLimit());
 		guiGraphNonEmpty();
+        
+        // toggle nodegroup changed so screen is updated but then changed is false.
+        nodeGroupChanged(false);
 		
 		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
     };
@@ -629,15 +663,11 @@
     var doNodeGroupUpload = function () {
     	// menu pick callback
     	logEvent("SG menu: File->Upload");
-		if (gNodeGroup.getNodeCount() > 0) {
-    		logAndAlert("Clear the current query before uploading a new one.");
-    		
-    	} else {
-    		
-	    	var fileInput = document.getElementById("fileInput");
-	    	fileInput.addEventListener('change', doNodeGroupUploadCallback, false);
-	    	fileInput.click();
-    	}
+		
+        var fileInput = document.getElementById("fileInput");
+        fileInput.addEventListener('change', doNodeGroupUploadCallback, false);
+        fileInput.click();
+
     };
     
     var doNodeGroupDownload = function () {
@@ -676,19 +706,18 @@
    		logEvent("SG Drop Query File");
    		noOpHandler(evt);
    		var files = evt.dataTransfer.files;
-   		if (gNodeGroup.getNodeCount() == 0 || confirm("Clearing current query to load new one.")) {
    			
-	   		if (files.length == 1 && files[0].name.slice(-5).toLowerCase() == ".json") {
-	   			var fname = files[0].name;
-	   			doQueryLoadFile(files[0]);
-	   		
-	   		} else if (files.length != 1) {
-	   			logAndAlert("Can't handle drop of " + files.length.toString() + " files.");
-	   			
-	   		} else {
-	   			logAndAlert("Can't handle drop of file with unrecognized filename extenstion:" + files[0].name)
-	   		}
-    	}
+        if (files.length == 1 && files[0].name.slice(-5).toLowerCase() == ".json") {
+            var fname = files[0].name;
+            doQueryLoadFile(files[0]);
+
+        } else if (files.length != 1) {
+            logAndAlert("Can't handle drop of " + files.length.toString() + " files.");
+
+        } else {
+            logAndAlert("Can't handle drop of file with unrecognized filename extenstion:" + files[0].name)
+        }
+    	
    		
    	};
 	
@@ -698,7 +727,7 @@
    	};
    	
    	var doRetrieveFromNGStore = function() {
-        gModalStoreDialog.launchRetrieveDialog();
+        gModalStoreDialog.launchRetrieveDialog(doQueryLoadJsonStr);
     };
 
    	var doDeleteFromNGStore = function() {
@@ -773,6 +802,14 @@
     	}
     };
     
+    // sets what is shown on screen
+    // -1 or 0 mean no limit
+    var setQueryLimit = function (limit) {
+        var elem = document.getElementById("SGQueryLimit");
+        
+        elem.value = (limit < 1) ? "" : limit;
+    };
+    
     var setQuerySource = function (val) {
     	var s = document.getElementById("SGQuerySource");
     	
@@ -798,6 +835,20 @@
     	}
     };
     
+    // Set nodeGroupChangedFlag and update GUI for new nodegroup
+    var nodeGroupChanged = function(flag) {
+        gNodeGroupChangedFlag = flag;
+        
+        gNodeGroup.drawNodes();
+        buildQuery();
+    };
+        
+    var onchangeLimit = function () {
+        gNodeGroup.setLimit(getQueryLimit());
+        
+        nodeGroupChanged(true);
+    };
+
     var onchangeQueryType = function () {
     	// clear query test
     	document.getElementById('queryText').value = "";
@@ -809,7 +860,8 @@
 		for (var i=0; i < s.options.length; i++) {
 			s.options[i].disabled = !legalQueryTypeSourceCombo(qType, s.options[i].value);
 		}
-
+        
+        buildQuery();
     };
     
     var onchangeQuerySource = function () {
@@ -878,32 +930,82 @@
     	}
     };
     
-    var buildQuery = function() {
-    	logEvent("SG Build");
-        var sparql = "";
-        
-        switch (getQueryType()) {
-        case "SELECT":
-        	sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, getQueryLimit());
-        	break;
-        case "COUNT":
-        	sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_COUNT, false, getQueryLimit());
-        	break;
-        case "CONSTRUCT":
-        	sparql = gNodeGroup.generateSparqlConstruct();
-        	break;
-        case "DELETE":
-        	sparql = gNodeGroup.generateSparqlDelete("", null);
-        	break;
-        default:
-        	throw new Error("Unknown query type.");	
-        }
-        
-        document.getElementById('queryText').value = sparql;
+    var buildQueryLocal = function() {
+            logEvent("SG Build Local");
+            var sparql = "";
+            switch (getQueryType()) {
+            case "SELECT":
+                sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, -1);
+                break;
+            case "COUNT":
+                sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_COUNT, false, -1);
+                break;
+            case "CONSTRUCT":
+                sparql = gNodeGroup.generateSparqlConstruct();
+                break;
+            case "DELETE":
+                sparql = gNodeGroup.generateSparqlDelete("", null);
+                break;
+            default:
+                throw new Error("Unknown query type.");	
+            }
 
-        guiQueryNonEmpty();
+            document.getElementById('queryText').value = sparql;
+
+            guiQueryNonEmpty();
+        
         
     };
+
+    var buildQuery = function() {
+        require(['sparqlgraph/js/msiclientnodegroupservice',
+			    	        ], function(MsiClientNodeGroupService) {
+		
+            logEvent("SG Build");
+            var sparql = "";
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+            switch (getQueryType()) {
+            case "SELECT":
+                client.generateSelect(gNodeGroup, buildQueryCallback.bind(this, client));
+                break;
+            case "COUNT":
+                client.generateCountAll(gNodeGroup, buildQueryCallback.bind(this, client));
+                break;
+            case "CONSTRUCT":
+                client.generateConstruct(gNodeGroup, buildQueryCallback.bind(this, client));
+                break;
+            case "DELETE":
+                client.generateDelete(gNodeGroup, buildQueryCallback.bind(this, client));
+                break;
+            default:
+                throw new Error("Unknown query type.");	
+            }
+        });   
+    };
+
+    var buildQueryCallback = function (client, resultSet) {
+        
+        guiQueryNonEmpty();
+        
+        if (resultSet.isSuccess()) {
+            document.getElementById('queryText').value = client.getSuccessSparql(resultSet);
+        } else {
+            
+            // PEC TODO: temporary handling of actual service success but bad SPARQL
+            var failSparql = client.getFailedTEMPBadSparql(resultSet);
+            if (failSparql != null) {
+                document.getElementById('queryText').value = failSparql;
+            // ---------------------------------------------------------------------   
+                
+            } else {
+                document.getElementById('queryText').value = "#Error generating Sparql";
+                require(['sparqlgraph/js/modaliidx'], 
+                     function (ModalIidx) {
+                        ModalIidx.alert("Error generating SPARQL", client.getFailedResultHtml(resultSet));
+                    });
+            }
+        }
+    }
     
     var constructQryCallback = function(qsresult) {
     	// HTML: tell user query is done
@@ -912,8 +1014,9 @@
 		if (qsresult.isSuccess()) {
 			// try drawing the result to the graph
 			this.gNodeGroup.clear();
+            
 			this.gNodeGroup.fromConstructJson(qsresult.getAtGraph(), gOInfo);
-			this.gNodeGroup.drawNodes();
+			nodeGroupChanged(true);
 		}
 		else {
 			logAndAlert(qsresult.getStatusMessage());
@@ -1184,6 +1287,7 @@
 	
 	var clearGraph = function () {
     	gNodeGroup.clear();
+        nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();
     };
