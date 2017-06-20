@@ -30,15 +30,23 @@ define([	// properly require.config'ed
 
 	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SparqlGraphJson, RuntimeConstraints, jquery) {
 	
-        // legal operations for runtime constraints
-        var operationsArray = ["MATCHES", "MATCHES",
-				               "REGEX", "REGEX",
-				               "GREATERTHAN", "GREATERTHAN",
-                               "GREATERTHANOREQUALS", "GREATERTHANOREQUALS",
-                               "LESSTHAN", "LESSTHAN",
-                               "LESSTHANOREQUALS", "LESSTHANOREQUALS",
-                               "VALUEBETWEEN", "VALUEBETWEEN",
-                               "VALUEBETWEENUNINCLUSIVE", "VALUEBETWEENUNINCLUSIVE"];
+        //   Supported runtime-constrainable types (from com.ge.research.semtk.load.utility.ImportSpecHandler):
+        //   from the XSD data types:
+        //   string | boolean | decimal | int | integer | negativeInteger | nonNegativeInteger | 
+        //   positiveInteger | nonPositiveInteger | long | float | double | duration | 
+        //   dateTime | time | date | unsignedByte | unsignedInt | anySimpleType |
+        //   gYearMonth | gYear | gMonthDay;
+        //   added for the runtimeConstraint:
+        //   NODE_URI
+    
+        // dropdown operator choices for different types
+        var operatorsForStrings = ["=", "=",
+                                   "REGEX", "REGEX"];
+        var operatorsForNumerics = ["=", "=",
+                                    ">", ">",
+                                    ">=", ">=",
+                                    "<", "<",
+                                    "<=", "<="];
     
 		/**
 		 * A dialog allowing users to populate runtime constraints.
@@ -46,7 +54,7 @@ define([	// properly require.config'ed
 		 */
 		var ModalRuntimeConstraintDialog= function () {
             this.div = null;
-            this.sparqlIDs = null;
+            this.sparqlIds = null;
             this.callback = function () {};
 		};		
 		
@@ -64,39 +72,141 @@ define([	// properly require.config'ed
                 alert("clearCallback...do something");
 			},
             
-            // TODO add validations - and if fails return a string indicating the error
+            
+            // check for error conditions where we want to give the user a chance to correct their entries
             validateCallback : function() {
-				return null;
+                      
+                for(i = 0; i < this.sparqlIds.length; i++){
+                    
+                    var sparqlId = this.sparqlIds[i];
+                    // TODO need/use itemType?
+                    var valueType = this.valueTypes[i];
+                    var operator1Element = document.getElementById("operator1" + sparqlId);
+                    var operand1Element = document.getElementById("operand1" + sparqlId);
+                    var operator2Element = document.getElementById("operator2" + sparqlId);
+                    var operand2Element = document.getElementById("operand2" + sparqlId);    
+                    
+                    if(valueType == "INT"){ // TODO add other numeric types
+                        if(isNaN(operand1Element.value)){  // TODO implement for specific data types (e.g. check int, float)
+                            return "Error: bad please correct non-numeric entry for " + sparqlId + ": " + operand1Element.value; 
+                        }
+                        if(operator1Element.value == "=" && operand2Element.value.trim()){
+                            return "Error: remove second operand for " + sparqlId + " because the first operator is equals";
+                        }
+                        
+                        // TODO disallow operand2 if operand1 is not present
+                        // TODO disallow any combos other than < > or <= >=
+                    }
+                      
+                }
+                
+				return null;    // validations will happen in the okCallback
 			},
-			
+            
+            
             /**
-             * Build runtime constraint json and return it
+             * Build runtime constraint json and return it.
+             * Basic validation has already been done in the validateCallback.
+             * TODO break some of this code into their own functions.
              */
 			okCallback : function() {
                 
                 var runtimeConstraints = new RuntimeConstraints();
                 
-                // TODO needs to vary by data type  
-                // for each sparql id, add a runtime constraint
-                for(i = 0; i < this.sparqlIDs.length; i++){
-                    var sparqlId = this.sparqlIDs[i];
-                    var operator = "MATCHES"; // TODO UNHARDCODE
-                    var operand = document.getElementById("operand" + sparqlId).value;
-                    if(operand.trim()){  // only add if the constraint has a populated operand
-                        runtimeConstraints.addConstraint(sparqlId, operator, operand);
+                // for each runtime constrainable item, add a runtime constraint
+                for(i = 0; i < this.sparqlIds.length; i++){
+                    
+                    var sparqlId = this.sparqlIds[i];
+                    // TODO need/use itemType?
+                    var valueType = this.valueTypes[i];
+                    var operator1Element = document.getElementById("operator1" + sparqlId);
+                    var operand1Element = document.getElementById("operand1" + sparqlId);
+                    var operator2Element = document.getElementById("operator2" + sparqlId);
+                    var operand2Element = document.getElementById("operand2" + sparqlId);
+                    
+                    if(!operator1Element){
+                        continue;   // data type is not supported yet, so user could not have entered it - skip
                     }
+                    operator1 = operator1Element.value;
+                    operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
+                    
+                    // collect user input and create runtime constraint object (behavior varies per data type)
+                    if(valueType == "STRING"){
+                        if(!operand1.trim()){  
+                            // user did not enter an operand - skip
+                        }else if(operator1 == "="){
+                            runtimeConstraints.add(sparqlId, "MATCHES", [operand1]);
+                        }else if(operator1 == "REGEX"){
+                            runtimeConstraints.add(sparqlId, "REGEX", [operand1]);
+                        }else{
+                            // if get this alert, then a fix is needed in the code
+                            alert("Skipping unsupported operator for " + sparqlId + ": " + operator1.value);
+                            // TODO cancel instead of skipping?
+                        }
+                    }else if(valueType == "INT"){
+                        operator2 = operator2Element.value;
+                        operand2 = operand2Element.value;
+                        
+                        if(operand1.trim() && !operand2.trim()){  
+                            switch(operator1.trim()){
+                                case("="):
+                                    // TODO support multiple operands for MATCHES
+                                    runtimeConstraints.add(sparqlId, "MATCHES", [operand1]);  
+                                    break;
+                                case("<"):
+                                    runtimeConstraints.add(sparqlId, "LESSTHAN", [operand1]);
+                                    break;
+                                case("<="):
+                                    runtimeConstraints.add(sparqlId, "LESSTHANOREQUALS", [operand1]);
+                                    break;  
+                                case(">"):
+                                    runtimeConstraints.add(sparqlId, "GREATERTHAN", [operand1]);
+                                    break;
+                                case(">="):
+                                    runtimeConstraints.add(sparqlId, "GREATERTHANOREQUALS", [operand1]);
+                                    break; 
+                                default:
+                                    // if get this alert, then a fix is needed in the code
+                                    alert("Skipping unsupported operator for " + sparqlId + ": " + operator1.value);
+                                    // TODO cancel instead of skipping
+                            }
+                        }else if(operand1.trim() && operand2.trim()){
+                            // user gave upper and lower bounds
+                            if(operator1.trim() == ">" && operator2.trim() == "<"){
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand1, operand2]);
+                            }else if(operator1.trim() == "<" && operator2.trim() == ">"){
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand2, operand1]);
+                            }else if(operator1.trim() == ">=" && operator2.trim() == "<="){
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand1, operand2]);
+                            }else if(operator1.trim() == "<=" && operator2.trim() == ">="){
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand2, operand1]);
+                            }else{
+                                // should never get here if validation is implemented correctly
+                                alert("Skipping unsupported combination of operators for " + sparqlId + ": must be < and >, or <= and >=");
+                                // TODO cancel instead of skipping
+                            }
+                        }
+                        
+                    }else{
+                        // TODO SUPPORT ALL TYPES
+                        alert("Type " + valueType + " not supported...add it");   
+                    }
+
                 }
                 
                 // call the callback with a RuntimeConstraints object                
                 this.callback(runtimeConstraints);
 			},
 			
+            
+            // TODO I don't think this is being used.  Remove it?
 			cancelCallback : function() {
-                
+                alert("cancelCallback");
             },
             
+            
             /**
-              * Got runtime constraints for the node group.  Launch dialog.
+              * Got runtime constrainable items for the node group.  Build and launch a dialog for user to populate them.
               */
             launchRuntimeConstraintCallback : function (multiFlag, resultSet) { 
 				if (! resultSet.isSuccess()) {
@@ -104,24 +214,46 @@ define([	// properly require.config'ed
 				} else {
 
                     this.div = document.createElement("div");
-                    var form = IIDXHelper.buildHorizontalForm();
-                    this.div.appendChild(form);
-                    var fieldset = IIDXHelper.addFieldset(form);
+                    
+                    this.sparqlIds = resultSet.getColumnStringsByName("valueId");
+                    this.itemTypes = resultSet.getColumnStringsByName("itemType");   // TODO USE THIS
+                    this.valueTypes = resultSet.getColumnStringsByName("valueType");
+//					this.sparqlIds = ["flavor","circumference", "frosting"];
+//                    this.valueTypes = ["STRING","INT","BOOLEAN"];                                
 
-                    // create operator/operand inputs for each runtime-constrained sparql id 
-                    // TODO needs better formatting, including for different types
-                    this.sparqlIDs = resultSet.getColumnStringsByName("valueId");
-                    for(i = 0; i < this.sparqlIDs.length; i++){
-                        fieldset.appendChild(IIDXHelper.buildControlGroup(this.sparqlIDs[i] + " operator:", IIDXHelper.createSelect("ModalRuntimeConstraintDialog.select", operationsArray)));
-                        fieldset.appendChild(IIDXHelper.buildControlGroup(this.sparqlIDs[i] + " operand:", IIDXHelper.createTextInput("operand" + this.sparqlIDs[i])));  // e.g. operand?trNum
-                    }
+                    // create UI components for all runtime-constrained items 
+                    // TODO improve formatting
+                    for(i = 0; i < this.sparqlIds.length; i++){
+                        
+                        sparqlId = this.sparqlIds[i];                   // e.g. ?circumference
+                        valueType = this.valueTypes[i];                 // e.g. STRING, INT, etc
+						operator1ElementId = "operator1" + sparqlId;	// e.g. "operator1?circumference"
+						operand1ElementId = "operand1" + sparqlId;		// e.g. "operand1?circumference"
+						operator2ElementId = "operator2" + sparqlId;	// e.g. "operator2?circumference"
+						operand2ElementId = "operand2" + sparqlId;		// e.g. "operand2?circumference"
+                        
+                        this.div.appendChild(IIDXHelper.createLabel(sparqlId + " (" + valueType + "):"));
+                        // create UI components for operator/operand (varies per data type)
+                        if(valueType == "STRING"){
+                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForStrings));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId));
+                        }else if(valueType == "INT"){
+                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForNumerics));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId));
+                            this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorsForNumerics));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId));
+                        }else{
+                            // TODO support all data types.  add validation with each one.
+                            this.div.appendChild(IIDXHelper.createLabel("...type not supported yet"));
+                        }
+                    } 
                     
                     // launch the modal
                     var m = new ModalIidx();                            
                     m.showClearCancelSubmit(
                                     this.title,
                                     this.div, 
-                                    this.validateCallback,
+                                    this.validateCallback.bind(this),
                                     this.clearCallback, 
                                     this.okCallback.bind(this)
                                     );
@@ -133,7 +265,7 @@ define([	// properly require.config'ed
               *  Then launch dialog with callback linked to "OK"
               */
             launchDialogById : function (nodegroupId, callback, multiFlag) {
-                this.title = "Enter runtime constraints";
+                this.title = "Enter runtime constraints (**work in progress**)";
                 this.callback = callback;
 
                 var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);

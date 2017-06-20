@@ -16,6 +16,8 @@
  ** limitations under the License.
  */
 
+// Note: this is not a direct port of RuntimeConstraintItems.java, as it differing functionality
+
 define([	// properly require.config'ed
         
 			// shimmed
@@ -25,35 +27,53 @@ define([	// properly require.config'ed
 
 	function() {
 	
+        //  Supported operators (from com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations)
+        //  MATCHES, 				// value matches one of the operands (accepts collections)
+        //	REGEX, 					// value matches the string indicated by the given operand
+        //	GREATERTHAN, 			// value is greater than the operand
+        //	GREATERTHANOREQUALS, 	// value is greater than or equal to the operand
+        //	LESSTHAN, 				// value is less than the operand
+        //	LESSTHANOREQUALS, 		// value is less than or equal to the operand
+        //	VALUEBETWEEN,			// value is between the given operands, including both endpoints
+        //	VALUEBETWEENUNINCLUSIVE // value is between the given operands, not including endpoints
+        var SUPPORTED_OPERATORS = ["MATCHES", "REGEX", "GREATERTHAN", "GREATHERTHANOREQUALS", "LESSTHAN", "LESSTHANOREQUALS", "VALUEBETWEEN", "VALUEBETWEENUNINCLUSIVE"];
+    
 		/**
 		 * Runtime constraints object
-         * TODO flesh this out with full runtime constraint functionality
 		 */
 		var RuntimeConstraints = function () {
             this.constraintsJson = [];  // a list of jsons, each for a single constraint
 		};
 			
 		RuntimeConstraints.prototype = {
-			//
-			// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
-			//      These methods' behaviors are not guaranteed to be stable in future releases.
-			//
-			
-            // TODO expand to support multiple operands, different operators, etc
-            addConstraint : function(sparqlId, operator, operand){
+
+			// These methods' behaviors are not guaranteed to be stable in future releases.
+			           
+            // add a constraint
+            add : function(sparqlId, operator, operands){
+                
+                // confirm that the given operator is legal
+                if(!SUPPORTED_OPERATORS.includes(operator)){
+                    // if get this alert, then a fix is needed in the code
+                    alert("Cannot add runtime constraint for " + sparqlId + ": illegal  operator (" + operator + ")");
+                    return;
+                }
+                
+                // build the json for this constraint
                 var s = '{';
                 s += '"SparqlID": "' + sparqlId + '",';
-                s += '"Operator": "' + operator + '",';  
-                s += '"Operands":["' + operand + '"]';
+                s += '"Operator": "' + operator + '",';
+                s += '"Operands":["';
+                for(i = 0; i < operands.length; i++){
+                    s += operands[i];
+                    if(i < operands.length - 1){
+                        s+= ", ";
+                    }
+                }
+                s += '"]'; 
                 s += '}';
                 this.constraintsJson.push(s);
             },
-            
-            
-//            // add json for a single constraint
-//            addConstraintJson : function (constraintJson){
-//                this.constraintsJson.push(constraintJson);
-//            },
 			
             // gather all constraints into a single json
             toJson : function () {
