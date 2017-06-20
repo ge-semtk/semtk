@@ -22,12 +22,13 @@ define([	// properly require.config'ed
     'sparqlgraph/js/modaliidx',
     'sparqlgraph/js/iidxhelper',
     'sparqlgraph/js/sparqlgraphjson',
+    'sparqlgraph/js/runtimeconstraints',
 
     // shimmed
     'jquery'
     ],
 
-	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SelectTable, SparqlGraphJson, jquery) {
+	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SparqlGraphJson, RuntimeConstraints, jquery) {
 	
         // legal operations for runtime constraints
         var operationsArray = ["MATCHES", "MATCHES",
@@ -73,22 +74,21 @@ define([	// properly require.config'ed
              */
 			okCallback : function() {
                 
-                // TODO move this code to its own function  
-                // TODO needs to vary by data type
-                var runtimeConstraintJsonString = "RuntimeConstraints: [";                
-                // for each sparql id, add to json
+                var runtimeConstraints = new RuntimeConstraints();
+                
+                // TODO needs to vary by data type  
+                // for each sparql id, add a runtime constraint
                 for(i = 0; i < this.sparqlIDs.length; i++){
                     var sparqlId = this.sparqlIDs[i];
+                    var operator = "MATCHES"; // TODO UNHARDCODE
                     var operand = document.getElementById("operand" + sparqlId).value;
-                    if(operand.trim()){
-                        runtimeConstraintJsonString += '{"SparqlID": "' + sparqlId + '",';
-                        runtimeConstraintJsonString += '"Operator":"MATCHES",';  // TODO unhardcode
-                        runtimeConstraintJsonString += '"Operands":["' + operand + '"] }, ';
+                    if(operand.trim()){  // only add if the constraint has a populated operand
+                        runtimeConstraints.addConstraint(sparqlId, operator, operand);
                     }
                 }
-                runtimeConstraintJsonString += "]";
                 
-                this.callback(runtimeConstraintJsonString);
+                // call the callback with a RuntimeConstraints object                
+                this.callback(runtimeConstraints);
 			},
 			
 			cancelCallback : function() {
