@@ -41,7 +41,7 @@ import org.json.simple.parser.ParseException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ge.research.semtk.api.storedQueryExecution.StoredQueryExecutor;
+import com.ge.research.semtk.api.storedQueryExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.edc.client.ResultsClient;
@@ -57,6 +57,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 
@@ -79,7 +80,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
 			String results = sqe.getJobStatus();
 			retval.setSuccess(true);
@@ -102,7 +103,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
 			String results = sqe.getJobStatusMessage();
 			retval.setSuccess(true);
@@ -125,7 +126,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
 			Boolean results = sqe.getJobCompletion();
 			retval.setSuccess(true);
@@ -153,7 +154,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
 			int results = sqe.getJobPercentCompletion();
 			retval.setSuccess(true);
@@ -179,7 +180,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
 			URL[] results = sqe.getResultsLocation();
 			retval.setSuccess(true);
@@ -229,7 +230,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, null );
+			NodeGroupExecutor sqe = this.getExecutor(prop, null );
 			// try to create a sparql connection
 			SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
 			// create a json object from the external data constraints. 
@@ -245,7 +246,7 @@ public class StoredNodegroupExecutionRestController {
 			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
 			
 			// dispatch the job. 
-			sqe.dispatchJob(connection, requestBody.getNodeGroupId(), edcConstraints, runtimeConstraints );
+			sqe.dispatchJob(DispatcherSupportedQueryTypes.SELECT_DISTINCT, connection, requestBody.getNodeGroupId(), edcConstraints, runtimeConstraints, null);
 			String id = sqe.getJobID();
 			
 			retval.setSuccess(true);
@@ -271,7 +272,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			StoredQueryExecutor sqe = this.getExecutor(prop, null );
+			NodeGroupExecutor sqe = this.getExecutor(prop, null );
 			// try to create a sparql connection
 			SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
 			// create a json object from the external data constraints. 
@@ -307,7 +308,7 @@ public class StoredNodegroupExecutionRestController {
 			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
 			
 			// dispatch the job. 
-			sqe.dispatchJob(connection, ng, edcConstraints, runtimeConstraints);
+			sqe.dispatchJob(DispatcherSupportedQueryTypes.SELECT_DISTINCT, connection, ng, edcConstraints, runtimeConstraints, null);
 			String id = sqe.getJobID();
 			
 			retval.setSuccess(true);
@@ -330,7 +331,7 @@ public class StoredNodegroupExecutionRestController {
 	public JSONObject ingestFromTemplateIdAndCsvString(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
 		RecordProcessResults retval = null;
 		
-		StoredQueryExecutor sqe = this.getExecutor(prop, null );
+		NodeGroupExecutor sqe = this.getExecutor(prop, null );
 		// try to create a sparql connection
 		SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
 	
@@ -401,7 +402,7 @@ public class StoredNodegroupExecutionRestController {
 	}
 
 	// create the required StoredQueryExecutor
-	private StoredQueryExecutor getExecutor(NodegroupExecutionProperties prop, String jobID) throws Exception{
+	private NodeGroupExecutor getExecutor(NodegroupExecutionProperties prop, String jobID) throws Exception{
 		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
 		DispatchClientConfig dsConf  = new DispatchClientConfig(prop.getDispatchProtocol(), prop.getDispatchServer(), prop.getDispatchPort());
 		ResultsClientConfig  rConf   = new ResultsClientConfig(prop.getResultsProtocol(), prop.getResultsServer(), prop.getResultsPort());
@@ -416,7 +417,7 @@ public class StoredNodegroupExecutionRestController {
 		IngestorRestClient ingestClient = new IngestorRestClient(iConf);
 		
 		// create the actual executor
-		StoredQueryExecutor retval = new StoredQueryExecutor(nodegroupstoreclient, dispatchclient, resultsclient, statusclient, ingestClient);
+		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, statusclient, ingestClient);
 		if(jobID != null){ retval.setJobID(jobID); }
 		return retval;
 	}

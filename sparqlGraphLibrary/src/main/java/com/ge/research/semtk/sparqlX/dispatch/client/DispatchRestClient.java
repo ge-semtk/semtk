@@ -45,7 +45,8 @@ public class DispatchRestClient extends RestClient{
 		this.conf = config;
 	}
 	
-	public SimpleResultSet executeQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject constraints) throws Exception{
+	
+	public SimpleResultSet executeSelectQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject constraints) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -58,7 +59,69 @@ public class DispatchRestClient extends RestClient{
 		}
 		
 		// setup the arguments we intend to send.
-		conf.setServiceEndpoint("dispatcher/queryFromNodeGroup");
+		conf.setServiceEndpoint("dispatcher/querySelectFromNodeGroup");
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("constraintSet", constraints.toJSONString());
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("constraintSet");
+		}
+		
+		return retval;
+	}
+	
+	public SimpleResultSet executeCountQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject constraints) throws Exception{
+		SimpleResultSet retval = null;
+		
+		// in the event a null set of constraints was passed, create the minimally valid set.
+		// they are json formatted like this:
+		// {"@constraintSet":{"@op":"AND","@constraints":[]}}
+		
+		if(constraints == null){
+			JSONParser jParse = new JSONParser();
+			constraints = (JSONObject) jParse.parse("{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[]}}");	
+		}
+		
+		// setup the arguments we intend to send.
+		conf.setServiceEndpoint("dispatcher/queryCountFromNodeGroup");
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("constraintSet", constraints.toJSONString());
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("constraintSet");
+		}
+		
+		return retval;
+	}
+	
+	public SimpleResultSet executeDeleteQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject constraints) throws Exception{
+		SimpleResultSet retval = null;
+		
+		// in the event a null set of constraints was passed, create the minimally valid set.
+		// they are json formatted like this:
+		// {"@constraintSet":{"@op":"AND","@constraints":[]}}
+		
+		if(constraints == null){
+			JSONParser jParse = new JSONParser();
+			constraints = (JSONObject) jParse.parse("{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[]}}");	
+		}
+		
+		// setup the arguments we intend to send.
+		conf.setServiceEndpoint("dispatcher/queryDeleteFromNodeGroup");
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
 		this.parametersJSON.put("constraintSet", constraints.toJSONString());
 		
@@ -77,6 +140,63 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
+	public SimpleResultSet executeFilterQueryFromNodeGroup(JSONObject nodeGroupWithConnection, String targetObjectSparqlId, JSONObject constraints) throws Exception{
+		SimpleResultSet retval = null;
+		
+		// in the event a null set of constraints was passed, create the minimally valid set.
+		// they are json formatted like this:
+		// {"@constraintSet":{"@op":"AND","@constraints":[]}}
+		
+		if(constraints == null){
+			JSONParser jParse = new JSONParser();
+			constraints = (JSONObject) jParse.parse("{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[]}}");	
+		}
+		
+		// setup the arguments we intend to send.
+		conf.setServiceEndpoint("dispatcher/queryFilterFromNodeGroup");
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("constraintSet", constraints.toJSONString());
+		this.parametersJSON.put("targetObjectSparqlID", targetObjectSparqlId);
+		
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("constraintSet");
+			this.parametersJSON.remove("targetObjectSparqlID");
+		}
+		
+		return retval;
+	}
+	
+	public SimpleResultSet executeRawSparqlQuery(JSONObject nodeGroupWithConnection, String rawSparqlQuery) throws Exception{
+		SimpleResultSet retval = null;
+		
+		// setup the arguments we intend to send.
+		conf.setServiceEndpoint("dispatcher/queryFilterFromNodeGroup");
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
+	
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("rawSparqlQuery");
+		}
+		
+		return retval;
+	}
+
 	public TableResultSet executeGetConstraintInfo(JSONObject nodeGroup) throws Exception{
 		TableResultSet retval = new TableResultSet();
 		
