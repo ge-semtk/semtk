@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.hamcrest.core.IsInstanceOf;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -223,9 +224,9 @@ public class StoredNodegroupExecutionRestController {
 		return retval.toJson();
 	}
 	
-	@CrossOrigin
-	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
-	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody){
+	// base methods which others use
+	
+	public JSONObject dispatchAnyJobById(@RequestBody DispatchByIdRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
@@ -245,8 +246,15 @@ public class StoredNodegroupExecutionRestController {
 			// try to get the runtime constraints
 			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
 			
+			// check if this is actually for a filter query
+			String targetId = null;
+			if(requestBody instanceof FilterDispatchByIdRequestBody){
+				// set the target ID
+				targetId = ((FilterDispatchByIdRequestBody)requestBody).getTargetObjectSparqlId();
+			}
+			
 			// dispatch the job. 
-			sqe.dispatchJob(DispatcherSupportedQueryTypes.SELECT_DISTINCT, connection, requestBody.getNodeGroupId(), edcConstraints, runtimeConstraints, null);
+			sqe.dispatchJob(qt, connection, requestBody.getNodeGroupId(), edcConstraints, runtimeConstraints, targetId);
 			String id = sqe.getJobID();
 			
 			retval.setSuccess(true);
@@ -263,10 +271,8 @@ public class StoredNodegroupExecutionRestController {
 		return retval.toJson();
 
 	}
-	
-	@CrossOrigin
-	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){
+
+	public JSONObject dispatchAnyJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 
 		SimpleResultSet retval = new SimpleResultSet();
 		
@@ -307,8 +313,15 @@ public class StoredNodegroupExecutionRestController {
 			// try to get the runtime constraints
 			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
 			
+			
+			String targetId = null;
+			if(requestBody instanceof FilterDispatchFromNodeGroupRequestBody){
+				// set the target ID
+				targetId = ((FilterDispatchFromNodeGroupRequestBody)requestBody).getTargetObjectSparqlId();
+			}
+			
 			// dispatch the job. 
-			sqe.dispatchJob(DispatcherSupportedQueryTypes.SELECT_DISTINCT, connection, ng, edcConstraints, runtimeConstraints, null);
+			sqe.dispatchJob(qt, connection, ng, edcConstraints, runtimeConstraints, targetId);
 			String id = sqe.getJobID();
 			
 			retval.setSuccess(true);
@@ -325,6 +338,75 @@ public class StoredNodegroupExecutionRestController {
 		return retval.toJson();
 
 	}
+
+	// end base methods
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
+	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
+	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
+	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchCountFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
+
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/dispatchFilterById", method=RequestMethod.POST)
+	public JSONObject dispatchFilterJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchFilterFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/dispatchDeleteById", method=RequestMethod.POST)
+	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchDeleteFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchDeleteJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
+
+	}
+	
+	
 	
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
