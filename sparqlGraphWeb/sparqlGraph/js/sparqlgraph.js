@@ -47,7 +47,7 @@
     var gReady = false;
 
     var gNodeGroupChangedFlag = false;
-    var gSparqlChangedFlag = false;
+    var gQueryTextChangedFlag = false;
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -75,7 +75,7 @@
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
-            gNodeGroup.setAsyncSNodeRemover(nodeGroupChanged.bind(this, true));
+            gNodeGroup.setAsyncSNodeRemover(snodeRemover);
 	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
 	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
 	        
@@ -135,61 +135,72 @@
     	    	
     	    	var gSource = ui.helper.data("dtSourceNode") || ui.draggable;
     			
-    		  	// add the node to the canvas
-    			var tsk = gOInfo.containsClass(gDragLabel);
-    			
-    			if ( gOInfo.containsClass(gDragLabel) ){
-    				// the class was found. let's use it.
-    				var nodelist = gNodeGroup.getArrayOfURINames();
-    				var paths = gOInfo.findAllPaths(gDragLabel, nodelist, gConn.getDomain());
-    				logEvent("SG Drop Class", "label", gDragLabel);
-    				
-    				// Handle no paths or shift key during drag: drop node with no connections
-    				if (event.shiftKey || paths.length == 0) {
-    					gNodeGroup.addNode(gDragLabel, gOInfo);
-                        nodeGroupChanged(true);
-    			  		guiGraphNonEmpty();
-    			
-    				} else {
-    					// find possible anchor node(s) for each path
-    					// start with disconnected option
-    			  		var pathStrList = ["** Disconnected " + gDragLabel];
-    			  		var valList = [[new OntologyPath(gDragLabel), null, false]];
-    			  		
-    			  		// for each path
-    			  		for (var p=0; p < paths.length; p++) {
-    			  			// for each instance of the anchor class
-    			  			var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
-    			  			for (var n=0; n < nlist.length; n++) {
-    			  				
-    			  				pathStrList.push(genPathString(paths[p], nlist[n], false));
-    			  				valList.push( [paths[p], nlist[n], false ] );
-    			  				
-    			  				// push it again backwards if it is a special singleLoop
-    			  				if ( paths[p].isSingleLoop()) {
-    			  					pathStrList.push(genPathString(paths[p], nlist[n], true));
-    				  				valList.push( [paths[p], nlist[n], true ] );
-    			  				}
-    			  			}
-    			  		}
-    			  		
-    			  		if (valList.length > 1) {
-    			  			globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, "90%");
-    			  		} else {
-    			  			dropClassCallback(valList[0]);
-    			  		}
-    				}
-    			}
-    			else{
-    				// not found
-    				logAndAlert("Only classes can be dropped on the graph.");
-    				
-    			}
+                dropClass(gDragLabel, event.shiftKey);
     	    }
       	});
 
     };
     
+    /*
+     * Dropped a class onto the canvas
+     */
+    var dropClass = function (dragLabel, noPathFlag) {
+        checkQueryTextUnsavedThen(dropClass1.bind(this, dragLabel, noPathFlag));
+    };
+
+    var dropClass1 = function (dragLabel, noPathFlag) {
+        // add the node to the canvas
+        var tsk = gOInfo.containsClass(dragLabel);
+
+        if ( gOInfo.containsClass(dragLabel) ){
+            // the class was found. let's use it.
+            var nodelist = gNodeGroup.getArrayOfURINames();
+            var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
+            logEvent("SG Drop Class", "label", dragLabel);
+
+            // Handle no paths or shift key during drag: drop node with no connections
+            if (event.shiftKey || paths.length == 0) {
+                gNodeGroup.addNode(dragLabel, gOInfo);
+                nodeGroupChanged(true);
+                guiGraphNonEmpty();
+
+            } else {
+                // find possible anchor node(s) for each path
+                // start with disconnected option
+                var pathStrList = ["** Disconnected " + dragLabel];
+                var valList = [[new OntologyPath(dragLabel), null, false]];
+
+                // for each path
+                for (var p=0; p < paths.length; p++) {
+                    // for each instance of the anchor class
+                    var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
+                    for (var n=0; n < nlist.length; n++) {
+
+                        pathStrList.push(genPathString(paths[p], nlist[n], false));
+                        valList.push( [paths[p], nlist[n], false ] );
+
+                        // push it again backwards if it is a special singleLoop
+                        if ( paths[p].isSingleLoop()) {
+                            pathStrList.push(genPathString(paths[p], nlist[n], true));
+                            valList.push( [paths[p], nlist[n], true ] );
+                        }
+                    }
+                }
+
+                if (valList.length > 1) {
+                    globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, "90%");
+                } else {
+                    dropClassCallback(valList[0]);
+                }
+            }
+        }
+        else{
+            // not found
+            logAndAlert("Only classes can be dropped on the graph.");
+
+        }
+    };
+
     /**
      * Add a node via path from anchorSNode
      * If there is no anchorSNode then just add path.startClass
@@ -289,6 +300,10 @@
     
     // application-specific property editing
     var launchPropertyItemDialog = function (propItem, draculaLabel) {
+        checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, draculaLabel));
+    };
+
+    var launchPropertyItemDialog1 = function (propItem, draculaLabel) {
     	require([ 'sparqlgraph/js/modalitemdialog',
 	            ], function (ModalItemDialog) {
     		
@@ -300,6 +315,10 @@
     };
     
     var launchLinkBuilder = function(snode, nItem) {
+        checkQueryTextUnsavedThen(launchLinkBuilder1.bind(this, snode, nItem));
+    };
+
+    var launchLinkBuilder1 = function(snode, nItem) {
 		// callback when user clicks on a nodeItem	
     	var rangeStr = nItem.getUriValueType();
     	
@@ -324,7 +343,11 @@
     	}
 	};
 	
-	var launchLinkEditor = function(snode, nItem, targetSNode, edge) {
+    var launchLinkEditor = function(snode, nItem, targetSNode, edge) {
+        checkQueryTextUnsavedThen(launchLinkEditor1.bind(this, snode, nItem, targetSNode, edge));
+    };
+
+    var launchLinkEditor1 = function(snode, nItem, targetSNode, edge) {
 		
 		require([ 'sparqlgraph/js/modallinkdialog',
 		            ], function (ModalLinkDialog) {
@@ -347,7 +370,32 @@
         nodeGroupChanged(true);
 	};
 	
-	/**
+    var launchSNodeItemDialog = function (snodeItem, draculaLabel) {
+        checkQueryTextUnsavedThen(launchSNodeItemDialog1.bind(this, snodeItem, draculaLabel));
+    };
+
+    var launchSNodeItemDialog1 = function (snodeItem, draculaLabel) {
+        require([ 'sparqlgraph/js/modalitemdialog',
+                ], function (ModalItemDialog) {
+
+            var dialog= new ModalItemDialog(snodeItem, gNodeGroup, getQueryClientOrInterface(), snodeItemDialogCallback,
+                                            {"draculaLabel" : draculaLabel}
+                                            );
+            dialog.show();
+        });
+    };
+
+    var snodeRemover = function (snode) {
+        checkQueryTextUnsavedThen(snodeRemover1.bind(this, snode));
+    };
+
+    var snodeRemover1 = function (snode) {
+        snode.removeFromNodeGroup(false);
+        gNodeGroup.drawNodes();
+        nodeGroupChanged.bind(this, true)
+    };
+
+    /**
 	 * Link from snode through it's nItem to rangeSNode
 	 * @param snode - starting point
 	 * @param nItem - nodeItem
@@ -366,19 +414,8 @@
 		}
         nodeGroupChanged(true);
 	};
-	
-	var launchSNodeItemDialog = function (snodeItem, draculaLabel) {
-    	require([ 'sparqlgraph/js/modalitemdialog',
-  	            ], function (ModalItemDialog) {
-      		
-      		var dialog= new ModalItemDialog(snodeItem, gNodeGroup, getQueryClientOrInterface(), snodeItemDialogCallback,
-      				                        {"draculaLabel" : draculaLabel}
-      		                                );
-      		dialog.show();
-  		});
-     };
-    
-     var propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+
+    var propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
@@ -521,39 +558,76 @@
     	var r = new FileReader();
     	
     	r.onload = function () {
-    					
-    			doQueryLoadJsonStr(r.result);
+    			
+                checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, r.result));
 	    		
     	};
 	    r.readAsText(file);
     	
     };
     
-    var doQueryLoadJsonStr = function(jsonStr) {
+    var checkAnythingUnsavedThen = function(action) {
+        checkQueryTextUnsavedThen(checkNodeGroupUnsavedThen.bind(this, action));
+    };
+
+    /*
+     * Perform an action that will overwrite nodeGroup
+     * so first check that it is saved or ask user to save it
+     *
+     */
+    var checkNodeGroupUnsavedThen = function(action) {
         if (gNodeGroup.getNodeCount() > 0 && (gNodeGroupChangedFlag || gMappingTab.getChangedFlag()) ) {
             require(['sparqlgraph/js/modaliidx'], 
                 function(ModalIidx) {
                 
                 ModalIidx.choose("Save your work",
                                      "Changes to the nodegroup have not been saved<br><br>Do you want to download it first?",
-                                     ["Cancel", "Download", "Discard"],
+                                     ["Cancel", "Download", "Discard Changes"],
                                      [function(){}, 
                                       function(){
                                           doNodeGroupDownload();
-                                          doQueryLoadJsonStr1(jsonStr);
+                                          nodeGroupChanged(false);
+                                          action();
                                       },
                                       function(){
-                                          doQueryLoadJsonStr1(jsonStr);
+                                          nodeGroupChanged(false);
+                                          action();
                                       },
                                      ]
                                 );
             });
         } else {
-            doQueryLoadJsonStr1(jsonStr);
+            action();
         }
     };
 
-    var doQueryLoadJsonStr1 = function(jsonStr) {
+    var checkQueryTextUnsavedThen = function(action) {
+        if (gQueryTextChangedFlag ) {
+            require(['sparqlgraph/js/modaliidx'], 
+                function(ModalIidx) {
+                
+                ModalIidx.choose("Save custom query",
+                                     "Edits to the SPARQL have not been saved<br><br>Do you want to download it first?",
+                                     ["Cancel", "Download", "Discard Changes"],
+                                     [function(){}, 
+                                      function(){
+                                          downloadFile(document.getElementById('queryText').value, "sparql.txt");
+                                          queryTextChanged(false);
+                                          action();
+                                      },
+                                      function(){
+                                          queryTextChanged(false);
+                                          action();
+                                      },
+                                     ]
+                                );
+            });
+        } else {
+            action();
+        }
+    };
+
+    var doQueryLoadJsonStr = function(jsonStr) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'], 
                 function(SparqlGraphJson, ModalIidx) {
@@ -646,12 +720,12 @@
     	logEvent("SG Loaded Nodegroup");
     	sgJson.getNodeGroup(gNodeGroup, gOInfo);
 	
-        this.setQueryLimit(gNodeGroup.getLimit());
+        drawNodeGroup();
 		guiGraphNonEmpty();
-        
-        // toggle nodegroup changed so screen is updated but then changed is false.
         nodeGroupChanged(false);
 		
+        buildQuery();
+        
 		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
     };
     
@@ -682,8 +756,8 @@
     			
 				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
 	    		
-				gMappingTab.setChangedFlag(false);	
 	    		downloadFile(sgJson.stringify(), "sparql_graph.json");
+                nodeGroupChanged(false);
     		});
     	}
     };
@@ -727,7 +801,12 @@
    	};
    	
    	var doRetrieveFromNGStore = function() {
-        gModalStoreDialog.launchRetrieveDialog(doQueryLoadJsonStr);
+        // check that nodegroup is saved
+        // launch the retrieval dialog
+        // callback to the dialog is doQueryLoadJsonStr
+        checkAnythingUnsavedThen(
+            gModalStoreDialog.launchRetrieveDialog.bind(gModalStoreDialog, doQueryLoadJsonStr)
+        );
     };
 
    	var doDeleteFromNGStore = function() {
@@ -802,13 +881,15 @@
     	}
     };
     
-    // sets what is shown on screen
-    // -1 or 0 mean no limit
-    var setQueryLimit = function (limit) {
+    var drawNodeGroup = function () {
+        // query limit
+        var limit = gNodeGroup.getLimit();
         var elem = document.getElementById("SGQueryLimit");
-        
         elem.value = (limit < 1) ? "" : limit;
-    };
+        
+        // canvas
+        gNodeGroup.drawNodes();
+    }
     
     var setQuerySource = function (val) {
     	var s = document.getElementById("SGQuerySource");
@@ -839,14 +920,38 @@
     var nodeGroupChanged = function(flag) {
         gNodeGroupChangedFlag = flag;
         
-        gNodeGroup.drawNodes();
-        buildQuery();
+        if (flag) {
+            gNodeGroup.drawNodes();
+            buildQuery();
+            
+        } else {
+            gMappingTab.setChangedFlag(false);	
+            queryTextChanged(false);
+        }
     };
         
-    var onchangeLimit = function () {
-        gNodeGroup.setLimit(getQueryLimit());
+    var queryTextChanged = function(flag) {
+        gQueryTextChangedFlag = flag;
+    };
+
+    var onkeyupLimit = function () {
         
-        nodeGroupChanged(true);
+        // get legal new value
+        var elem = document.getElementById("SGQueryLimit");
+        var limitStr = elem.value;
+        limitStr = limitStr.replace(/\D/g,'');
+        var newLimit = parseInt(limitStr, 10);
+    	
+        // flicker it back to the old value
+        elem.value = gNodeGroup.getLimit().toString();
+        
+        // now change it if it's ok
+        checkQueryTextUnsavedThen(function(el, l) {
+            gNodeGroup.setLimit(l);
+            nodeGroupChanged(true);
+            el.value = l.toString();
+        }.bind(this, elem, newLimit));
+        
     };
 
     var onchangeQueryType = function () {
@@ -877,6 +982,12 @@
     	
     };
     
+    // for every key press.  
+    // Note that onchange will not work if the user presses a button do delete a node
+    var onkeyupQueryText = function () {
+        queryTextChanged(true);
+    };
+
     var doUnload = function () {
     	clearEverything();
     	
@@ -1278,7 +1389,7 @@
 	 	
 	 	document.getElementById('SGQueryType').selectedIndex = 0;
 	 	document.getElementById('SGQuerySource').selectedIndex = 0;
-	 	document.getElementById('SGQueryLimit').value = "1000";
+	 	document.getElementById('SGQueryLimit').value = "";
 	 	document.getElementById('SGQueryNamespace').checked = true;
 	 	
 	 	clearResults();
@@ -1287,6 +1398,7 @@
 	
 	var clearGraph = function () {
     	gNodeGroup.clear();
+        gNodeGroup.drawNodes();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();

@@ -383,10 +383,7 @@ Graph.Renderer.Raphael.prototype = {
             		cntrl.node.onmouseup = function (pnode, graph, e) {
             			registerMouseUp(e);
             			if (mouseUpIsClick()) {
-            				pnode.parentSNode.removeFromNodeGroup(false);		
-                     	    pnode.parentSNode.nodeGrp.drawNodes();
                             pnode.parentSNode.callAsyncSNodeRemover(); 
-                     	    graph.removeNode(pnode.id);
             			}
             		}.bind("fake_this", node, graph);
                 	
