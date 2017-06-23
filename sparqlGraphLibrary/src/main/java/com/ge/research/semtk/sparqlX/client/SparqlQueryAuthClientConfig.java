@@ -36,12 +36,34 @@ public class SparqlQueryAuthClientConfig extends SparqlQueryClientConfig {
 		this.sparqlServerPassword = sparqlServerPassword;
 	}
 	
+	public SparqlQueryAuthClientConfig(SparqlQueryClientConfig other) throws Exception{
+		super(other.getServiceProtocol(), other.getServiceServer(), other.getServicePort(), other.getServiceEndpoint(), other.getSparqlServerAndPort(), other.getSparqlServerType(), other.getSparqlDataset());
+	
+		// selectively add the username and password.
+		if(other instanceof SparqlQueryAuthClientConfig) {
+			// we can set the user name and pass
+			this.sparqlServerUser 		= ((SparqlQueryAuthClientConfig) other).getSparqlServerUser();
+			this.sparqlServerPassword	= ((SparqlQueryAuthClientConfig) other).getSparqlServerPassword();
+		}
+		else{
+			// we cannot
+			this.sparqlServerUser 		= null;
+			this.sparqlServerPassword 	= null;
+		}
+	}
+	
+	
 	public String getSparqlServerUser(){
 		return sparqlServerUser;
 	}
 	
 	public String getSparqlServerPassword(){
 		return sparqlServerPassword;
+	}
+	
+	@Override
+	public SparqlQueryClientConfig getSparqlQueryClientConfigFromExistingConfig(SparqlQueryClientConfig config) throws Exception{
+		return (new SparqlQueryAuthClientConfig(config) );
 	}
 
 }

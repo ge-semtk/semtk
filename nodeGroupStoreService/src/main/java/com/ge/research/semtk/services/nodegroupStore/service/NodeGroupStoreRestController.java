@@ -20,6 +20,8 @@ package com.ge.research.semtk.services.nodegroupStore.service;
 import java.io.File;
 import java.util.ArrayList;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +48,16 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 @CrossOrigin
 public class NodeGroupStoreRestController {
 
-
+	
+	@CrossOrigin
+	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
+	public void corsHeaders(HttpServletResponse response) {
+	    response.addHeader("Access-Control-Allow-Origin", "*");
+	    response.addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
+	    response.addHeader("Access-Control-Max-Age", "3600");
+	}
+	
 	@Autowired
 	StoreProperties prop;
 	

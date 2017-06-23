@@ -6,6 +6,7 @@ public enum DispatcherSupportedQueryTypes {
 		COUNT,
 		FILTERCONSTRAINT,
 		DELETE,
-		CONSTRUCT
+		CONSTRUCT,
+		RAW_SPARQL
 
 }

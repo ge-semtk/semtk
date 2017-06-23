@@ -64,7 +64,12 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 		ArrayList<SparqlQueryClientConfig> ret = new ArrayList<SparqlQueryClientConfig>();
 		
 		for (int i=0; i < seiList.size(); i++) {
-			SparqlQueryClientConfig config = new SparqlQueryClientConfig(this);
+			// note: this code has a hack to allow the creation of auth cients.... 
+			// the auth version specifically overrides the this.getSparqlQueryClientConfigFromExistingConfig(this) method
+			// to allow it to then be used to make either kind, even though the super class is not aware of the auth subclass.
+			
+			//SparqlQueryClientConfig config = new SparqlQueryClientConfig(this);
+			SparqlQueryClientConfig config = this.getSparqlQueryClientConfigFromExistingConfig(this);
 			config.setEndpointInterfaceFields(seiList.get(i));
 			ret.add(config);
 		}
@@ -83,4 +88,7 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 		return sparqlDataset;
 	}
 
+	public SparqlQueryClientConfig getSparqlQueryClientConfigFromExistingConfig(SparqlQueryClientConfig config) throws Exception{
+		return (new SparqlQueryClientConfig(config) );
+	}
 }

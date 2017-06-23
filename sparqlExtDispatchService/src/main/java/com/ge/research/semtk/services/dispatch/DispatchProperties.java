@@ -28,6 +28,10 @@ public class DispatchProperties {
 	private int    sparqlServicePort;
 	private String sparqlServiceProtocol;
 	private String sparqlServiceEndpoint;
+	private String sparqlServiceAuthEndpoint;
+	
+	private String sparqlServiceUser = null;
+	private String sparqlServicePass = null;
 	
 	private String dispatchSparqlServerAndPort;
 	private String dispatchSparqlServerType;
@@ -176,5 +180,23 @@ public class DispatchProperties {
 	public void setDispatcherClassName(String dispatcherClassName) {
 		this.dispatcherClassName = dispatcherClassName;
 	}
-
+	public String getSparqlServiceUser() {
+		return sparqlServiceUser;
+	}
+	public void setSparqlServiceUser(String sparqlServiceUser) {
+		this.sparqlServiceUser = sparqlServiceUser;
+	}
+	public String getSparqlServicePass() {
+		return sparqlServicePass;
+	}
+	public void setSparqlServicePass(String sparqlServicePass) {
+		this.sparqlServicePass = sparqlServicePass;
+	}
+	public String getSparqlServiceAuthEndpoint() {
+		return sparqlServiceAuthEndpoint;
+	}
+	public void setSparqlServiceAuthEndpoint(String sparqlServiceAuthEndpoint) {
+		this.sparqlServiceAuthEndpoint = sparqlServiceAuthEndpoint;
+	}
+	
 }

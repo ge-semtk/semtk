@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -56,6 +59,16 @@ import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 @RestController
 @RequestMapping("/sparqlQueryService")
 public class SparqlQueryServiceRestController {			
+	
+	
+	@CrossOrigin
+	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
+	public void corsHeaders(HttpServletResponse response) {
+	    response.addHeader("Access-Control-Allow-Origin", "*");
+	    response.addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
+	    response.addHeader("Access-Control-Max-Age", "3600");
+	}
 	
 	@Autowired
 	private SparqlQueryServiceProperties serviceProps; 

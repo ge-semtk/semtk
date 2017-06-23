@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.services.nodegroupService;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -40,6 +42,16 @@ public class NodeGroupServiceRestController {
 	public static final String QUERYFIELDLABEL = "SparqlQuery";
 	public static final String QUERYTYPELABEL = "QueryType";
 
+
+	@CrossOrigin
+	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
+	public void corsHeaders(HttpServletResponse response) {
+	    response.addHeader("Access-Control-Allow-Origin", "*");
+	    response.addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
+	    response.addHeader("Access-Control-Max-Age", "3600");
+	}
+	
 	@CrossOrigin
 	@RequestMapping(value="/generateSelect", method=RequestMethod.POST)
 	public JSONObject generateSelectSparql(@RequestBody NodegroupRequest requestBody){

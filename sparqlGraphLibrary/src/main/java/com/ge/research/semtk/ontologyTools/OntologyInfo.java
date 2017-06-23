@@ -40,6 +40,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
@@ -114,7 +115,16 @@ public class OntologyInfo {
 		ArrayList<SparqlQueryClientConfig> configs = clientConfig.getArrayForEndpoints(modelInterfaces);
 		
 		for (int i = 0; i < configs.size(); i++) {
-    		this.load(new SparqlQueryClient(configs.get(i)), conn.getDomain());
+			
+			// check if this is an authorized connection or not. this can be done by looking at the config files.
+			SparqlQueryClientConfig curr = configs.get(i);
+			
+			if(curr instanceof SparqlQueryAuthClientConfig){ 
+				this.load(new SparqlQueryClient( (SparqlQueryAuthClientConfig)curr ), conn.getDomain()); 
+			}
+			else{ 
+				this.load(new SparqlQueryClient(curr), conn.getDomain()); 
+			}
     	}
     }
 	

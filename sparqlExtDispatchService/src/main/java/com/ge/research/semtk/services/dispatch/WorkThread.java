@@ -31,10 +31,10 @@ import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryT
 public class WorkThread extends Thread {
 	AsynchronousNodeGroupBasedQueryDispatcher dsp;
 	JSONObject constraintJson;
-	
+
 	DispatcherSupportedQueryTypes myQT;
 	String targetObjectSparqlID;
-	
+	String rawSparqlQuery;
 	
 	
 	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, DispatcherSupportedQueryTypes qt){
@@ -44,15 +44,32 @@ public class WorkThread extends Thread {
 		
 	}
 	
-	public void setTargetObjectSparqlID(String targetObjectSparqlID){
+	public void setTargetObjectSparqlID(String targetObjectSparqlID) throws Exception{
+		if(targetObjectSparqlID == null || targetObjectSparqlID == "" || targetObjectSparqlID.isEmpty()){
+			throw new Exception("Target object for filter constraint was null or empty.");
+		}
 		this.targetObjectSparqlID = targetObjectSparqlID;
+	}
+	
+	public void setRawSparqlSquery(String query) throws Exception{
+		if(query == null || query == "" || query.isEmpty()){
+			throw new Exception("Given SPARQL query was null or empty.");
+		}
+		this.rawSparqlQuery = query;
 	}
 	
     public void run() {
 
 		try {
-			TableResultSet trs = this.dsp.execute(constraintJson, this.myQT, targetObjectSparqlID);
-				
+			if(this.rawSparqlQuery != null){
+				// a query was passed. use it.
+				TableResultSet trs = this.dsp.executePlainSparqlQuery(rawSparqlQuery);
+			}
+			
+			else{
+				// query from the node group itself. 
+				TableResultSet trs = this.dsp.execute(constraintJson, this.myQT, targetObjectSparqlID);
+			}	
 		} catch (Exception e) {
 			e.printStackTrace();		
 		}
