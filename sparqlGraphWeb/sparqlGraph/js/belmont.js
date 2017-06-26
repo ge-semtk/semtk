@@ -1482,7 +1482,7 @@ SemanticNode.prototype = {
 		this.nodeGrp.asyncSNodeEditor(this, draculaLabel);
 	},
     callAsyncSNodeRemover : function () {
-        this.nodeGrp.asyncSNodeRemover();
+        this.nodeGrp.asyncSNodeRemover(this);
     },
 	callAsyncNodeEditor : function (nodeKeyname, draculaLabel) {
 		var nodeItem = this.getNodeItemByKeyname(nodeKeyname);
@@ -3451,8 +3451,7 @@ SemanticNodeGroup.prototype = {
 					this.SNodeList[k].removeFromNodeList(this.SNodeList[i]);
 				}
 				// remove the node from the graph
-				// PEC ADDED THIS AND IT BROKE
-				//this.graph.removeNode(this.SNodeList[i].getNodeName());
+                this.graph.removeNode(this.SNodeList[i].node.id);
 				
 				// remove the sNode from the nodeGroup
 				this.SNodeList[i].node.hide();
@@ -3480,7 +3479,6 @@ SemanticNodeGroup.prototype = {
 		this.graph = new Graph();
 		this.layouter = new Graph.Layout.Spring(this.graph, this.width, this.height);
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
-		this.drawNodes();
 		this.sparqlNameHash = {};
 		this.conn = null;
 
@@ -3522,10 +3520,7 @@ SemanticNodeGroup.prototype = {
 		for (var i = 0; i < sparqlIDsToRemove.length; i++) {
 			this.freeSparqlID(sparqlIDsToRemove[i]);
 		}
-		// redraw the graph.
-		// console.log("calling draw nodes from removal code");
 
-		this.drawNodes();
 	},
 
 	

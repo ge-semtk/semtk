@@ -331,18 +331,18 @@
 							 				<option value="DELETE">delete</option>
 							 			</select>
 							   			&nbsp; source: 
-							   			<select class="input-medium" id="SGQuerySource"onchange="javascript:onchangeQuerySource();" >
+							   			<select class="input-medium" id="SGQuerySource" onchange="javascript:onchangeQuerySource();" >
 							   				<option value="QUERY_SERVICE">query service</option>
 							   				<option value="DIRECT">direct</option>
 							   		<!--  	<option value="DISPATCHER">dispatcher</option> -->
 							   			</select>
-							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeypress='return event.charCode >= 48 && event.charCode <= 57' onchange="javascript:onchangeLimit();">
+							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeyup="javascript:onkeyupLimit();">
 							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces </input>
 						   			</form>
 							   	</td>
 					   		</tr></tbody></table>
-							   	    			
-					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:100%">
+
+					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:100%" onkeyup="javascript:onkeyupQueryText();">							   	    			
 					   		</textarea>
 				  		</div>
 				  	</div>

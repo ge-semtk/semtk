@@ -361,7 +361,7 @@ define([// properly require.config'ed
 				
 				for (var key in oldRowHash) {
 					if (oldRowHash[key] !== null) {
-						this.alert("Threw out some rows.  e.g.:  " + key);   
+						this.alert("Threw out some mapping items that no longer exist in the query.  e.g.:  " + key);   
 						break;
 					};
 				}
