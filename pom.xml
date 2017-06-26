@@ -41,6 +41,7 @@
 		<module>ontologyInfoService</module>
 		<module>sparqlExtDispatchService</module>
 		<module>storedNodegroupExecutionService</module>
+		<module>NodegroupService</module>
 	</modules>
 
 	<properties>

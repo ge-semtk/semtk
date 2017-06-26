@@ -114,7 +114,8 @@ public class SparqlGraphJson {
 	public NodeGroup getNodeGroup(OntologyInfo uncompressOInfo) throws Exception {
 		JSONObject json = getSNodeGroupJson();
 		if (json == null) {
-			return null;
+			throw new Exception("SparqlGraphJson getNodeGroup:: nodegroup json was null.");
+			// return null;   // used to return null here. turned into Exception.
 		} else {
 			NodeGroup ng = NodeGroup.getInstanceFromJson(json, uncompressOInfo);
 			ng.setSparqlConnection(this.getSparqlConn());

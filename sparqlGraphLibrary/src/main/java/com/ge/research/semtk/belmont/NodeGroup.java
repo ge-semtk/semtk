@@ -778,13 +778,15 @@ public class NodeGroup {
 	/**
      *  limitOverride If non-null then override this.limit  DEPRECATED
      */
-    private String generateLimitClause(int limitOverride) {
-        int limit = (limitOverride > -1) ? limitOverride : this.limit;
+	private String generateLimitClause(Integer limitOverride) {
+        int limit = (limitOverride != null && limitOverride > -1) ? limitOverride : this.limit;
         if (limit > 0) {
 			return " LIMIT " + String.valueOf(limit); 
-		} else {
+		} 
+        else 
+		{
             return "";
-        }
+    	}
     }
 
 	/**

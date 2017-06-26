@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ge.research.semtk.api.storedQueryExecution.StoredQueryExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -339,7 +340,47 @@ public class StoredNodegroupExecutionRestController {
 		// set the rest of the results.
 		return retval.toJson();
 	}
+
 	
+	@CrossOrigin
+	@RequestMapping(value="/getRuntimeConstraintsByNodeGroupID", method=RequestMethod.POST)
+	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody){
+		TableResultSet retval = null;
+		
+		try {
+			NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
+			NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
+			retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
+		}
+		catch(Exception eee){
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(eee.getMessage());
+		}
+		
+		return retval.toJson();
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/getRuntimeConstraintsByNodeGroup", method=RequestMethod.POST)
+	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody){
+		TableResultSet retval = null;
+		
+		try {
+			NodeGroup ng = this.getNodeGroupFromJson(requestBody.getJsonNodeGroup());
+			RuntimeConstrainedItems rtci = new RuntimeConstrainedItems(ng);
+			
+			retval = new TableResultSet(true);
+			retval.addResults( rtci.getConstrainedItemsDescription() );
+		
+		}
+		catch(Exception eee){
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(eee.getMessage());
+		}
+		
+		return retval.toJson();
+	}
+
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;
@@ -358,7 +399,7 @@ public class StoredNodegroupExecutionRestController {
 		
 		return retval;
 	}
-	
+
 	// create the required StoredQueryExecutor
 	private StoredQueryExecutor getExecutor(NodegroupExecutionProperties prop, String jobID) throws Exception{
 		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
@@ -379,6 +420,29 @@ public class StoredNodegroupExecutionRestController {
 		if(jobID != null){ retval.setJobID(jobID); }
 		return retval;
 	}
+	
+	// helper method to figure out if we are looking at a nodegroup alone or a sparqlgraphJSON
+	// and return a nodegroup from it.
+	private NodeGroup getNodeGroupFromJson(JSONObject jobj) throws Exception{
+		NodeGroup retval = new NodeGroup();
+		
+		if(jobj.containsKey("sNodeGroup")){
+			// this was a sparqlGraphJson. unwrap before using.
+			JSONObject innerObj = (JSONObject) jobj.get("sNodeGroup");
+			retval.addJson((JSONArray) innerObj.get("sNodeList"));
+		}
+		else if(jobj.containsKey("sNodeList")){
+			// this was just a node group
+			retval.addJson((JSONArray) jobj.get("sNodeList"));
+		}
+		else{
+			// something insane was passed. fail with some dignity.
+			throw new Exception("Request object does not seem to contain a valid nodegroup serialization");
+		}
+		
+		return retval;
+	}
+	
 }
 
 

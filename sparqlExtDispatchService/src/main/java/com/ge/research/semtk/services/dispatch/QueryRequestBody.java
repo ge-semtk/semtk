@@ -40,14 +40,15 @@ public class QueryRequestBody extends NodegroupRequestBody {
 	public JSONObject getConstraintSetJson(){
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
-		try {
-			retval = (JSONObject) prsr.parse(this.constraintSet);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
+		if(this.constraintSet != null && this.constraintSet.length() != 0 && !this.constraintSet.isEmpty()){
+			try {
+				retval = (JSONObject) prsr.parse(this.constraintSet);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				
+			}
 		}
-		
 		return retval;
 	}
 }
