@@ -178,7 +178,7 @@ public class DispatchRestClient extends RestClient{
 		SimpleResultSet retval = null;
 		
 		// setup the arguments we intend to send.
-		conf.setServiceEndpoint("dispatcher/queryFilterFromNodeGroup");
+		conf.setServiceEndpoint("dispatcher/asynchronousDirectQuery");
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
 		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
 	

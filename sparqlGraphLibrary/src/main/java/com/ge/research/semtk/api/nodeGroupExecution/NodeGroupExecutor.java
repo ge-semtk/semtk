@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.api.storedQueryExecution;
+package com.ge.research.semtk.api.nodeGroupExecution;
 
 import java.net.URL;
 
@@ -157,7 +157,7 @@ public class NodeGroupExecutor {
 		// this would be used to simulate a synchronous call.
 		// warning: this sleeps between invocations to avoid just constantly polling the service and giving it a headache.
 		// if the sleep interval is less than a half second, it is reset to a half second.
-		if(sleepInterval < 500){ sleepInterval = 500; }
+		if(sleepInterval < 10){ sleepInterval = 10; }
 		
 		int percentComplete = 0;
 		

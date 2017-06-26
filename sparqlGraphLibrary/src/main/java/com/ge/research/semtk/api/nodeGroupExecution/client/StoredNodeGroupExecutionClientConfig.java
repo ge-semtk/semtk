@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.api.storedQueryExecution.client;
+package com.ge.research.semtk.api.nodeGroupExecution.client;
 
 import org.json.simple.JSONObject;
 
