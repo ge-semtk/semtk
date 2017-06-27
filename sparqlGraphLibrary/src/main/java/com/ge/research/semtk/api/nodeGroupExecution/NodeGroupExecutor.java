@@ -183,20 +183,11 @@ public class NodeGroupExecutor {
 	}
 	
 	// Dispatch actions
-	public void dispatchRawSparql(SparqlConnection sc, NodeGroup ng, String sparqlQuery) throws Exception {
+	public void dispatchRawSparql(SparqlConnection sc, String sparqlQuery) throws Exception {
 	
-		// serialize the nodeGroup and connection info to JSON...
-		JSONObject serializedNodeGroup  = ng.toJson();
-		JSONObject serializedConnection = sc.toJson();
-		
-		// assemble the nodeGroup and the connection into a nodegroup as the services want them.
-		JSONObject sendable = new JSONObject();
-		sendable.put("sparqlConn", serializedConnection);
-		sendable.put("sNodeGroup", serializedNodeGroup);
-		
 		SimpleResultSet simpleRes = null;
 		
-		simpleRes = this.drc.executeRawSparqlQuery(sendable, sparqlQuery);
+		simpleRes = this.drc.executeRawSparqlQuery(sc, sparqlQuery);
 		
 		// set up the Job ID
 		this.setJobID(simpleRes.getResult("requestID"));

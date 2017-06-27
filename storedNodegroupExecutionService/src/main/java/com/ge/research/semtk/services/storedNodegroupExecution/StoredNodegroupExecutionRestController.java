@@ -419,28 +419,8 @@ public class StoredNodegroupExecutionRestController {
 			// try to create a sparql connection
 			SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
 
-			// get the nodegroup. we are assuming that the user should send a node group complete with original connection info, since we 
-			// store them that way. we'll perform a quick check to find out though
-			JSONObject encodedNodeGroup = requestBody.getJsonNodeGroup();
-			NodeGroup ng = new NodeGroup();
-			
-			// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
-			if(encodedNodeGroup.containsKey("sNodeGroup")){
-				System.err.println("located key: sNodeGroup");
-				ng.addJsonEncodedNodeGroup((JSONObject) encodedNodeGroup.get("sNodeGroup"));
-			}
-			
-			// otherwise, check for a truncated one that is only the nodegroup proper.
-			else if(encodedNodeGroup.containsKey("sNodeList")){
-				ng.addJsonEncodedNodeGroup(encodedNodeGroup);
-			}
-			else{
-				// no idea what this is...
-				throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
-			}
-
 			// dispatch the job. 
-			sqe.dispatchRawSparql(connection, ng, requestBody.getSparql());
+			sqe.dispatchRawSparql(connection, requestBody.getSparql());
 			String id = sqe.getJobID();
 			
 			retval.setSuccess(true);

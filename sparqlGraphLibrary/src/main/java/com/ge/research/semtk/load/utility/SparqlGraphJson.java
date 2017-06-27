@@ -114,8 +114,9 @@ public class SparqlGraphJson {
 	public NodeGroup getNodeGroup(OntologyInfo uncompressOInfo) throws Exception {
 		JSONObject json = getSNodeGroupJson();
 		if (json == null) {
-			throw new Exception("SparqlGraphJson getNodeGroup:: nodegroup json was null.");
+			//throw new Exception("SparqlGraphJson getNodeGroup:: nodegroup json was null.");
 			// return null;   // used to return null here. turned into Exception.
+			return (new NodeGroup() );
 		} else {
 			NodeGroup ng = NodeGroup.getInstanceFromJson(json, uncompressOInfo);
 			ng.setSparqlConnection(this.getSparqlConn());
@@ -156,10 +157,18 @@ public class SparqlGraphJson {
 	}
 	
 	public void setSparqlConn(SparqlConnection conn) {
-		jObj.remove("sparqlConn");					// remove the older one
-		jObj.put("sparqlConn", conn.toJson());		// add the new one.
-		this.conn = conn;							// insert the new one.
-		this.oInfo = null;
+		if(jObj != null){
+			jObj.remove("sparqlConn");					// remove the older one
+			jObj.put("sparqlConn", conn.toJson());		// add the new one.
+			this.conn = conn;							// insert the new one.
+			this.oInfo = null;
+		}
+		else{
+			this.jObj = new JSONObject();
+			this.jObj.put("sparqlConn", conn.toJson());		// add the new one.
+			this.conn = conn;							// insert the new one.
+			this.oInfo = null;
+		}
 	}
 	
 	public void parse(String jsonString) throws Exception {

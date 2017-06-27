@@ -26,6 +26,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class DispatchRestClient extends RestClient{
 
@@ -174,12 +175,12 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
-	public SimpleResultSet executeRawSparqlQuery(JSONObject nodeGroupWithConnection, String rawSparqlQuery) throws Exception{
+	public SimpleResultSet executeRawSparqlQuery(SparqlConnection sc, String rawSparqlQuery) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/asynchronousDirectQuery");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("sparqlConnection", sc.toJson());
 		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
 	
 		

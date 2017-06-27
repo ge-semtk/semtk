@@ -109,7 +109,13 @@ public class DispatcherServiceRestController {
 		
 		// get the things we need for the dispatcher
 		try {
-			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, true);
+			SparqlGraphJson sgjson = new SparqlGraphJson();
+			sgjson.setSparqlConn( requestBody.getConnection());
+			
+			NodegroupRequestBody ngrb = new NodegroupRequestBody();
+			ngrb.setjsonRenderedNodeGroup(sgjson.getJson().toJSONString());
+			
+			dsp = getDispatcher(props, requestId, ngrb, true);
 			
 			WorkThread doIt = new WorkThread(dsp, null, qt);
 
