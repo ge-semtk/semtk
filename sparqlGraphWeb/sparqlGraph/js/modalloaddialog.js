@@ -103,7 +103,6 @@ var ModalLoadDialog = function(document, varNameOBSOLETE) {
 			</td>\
 		</table>\
 		<div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
-        	<input type="checkbox" id="mdDirect" style="vertical-align: middle; position: relative; bottom: 0.25em;"> query directly &nbsp;&nbsp;\
 			<input type="button" id="mdCancel" class="btn-danger" value="Cancel" ></input> \
 		    <input type="submit" class="btn-primary" value="Submit"></input>\
 		</div>\
@@ -122,7 +121,7 @@ ModalLoadDialog.COOKIE_NAME_INDEX = "mdIndex";
 
 ModalLoadDialog.prototype = {
 		
-	loadDialog : function (curConn, initialDirectFlag, callback) {
+	loadDialog : function (curConn, callback) {
 		// load dialog   
 		// callback(sparqlconnection)
 		this.callback = callback;
@@ -131,9 +130,7 @@ ModalLoadDialog.prototype = {
 		$("[rel='tooltip']").tooltip();		
 		
 		this.show();
-		
-		document.getElementById("mdDirect").checked = initialDirectFlag;
-		
+				
 		// ==== Callbacks that don't use the (ahem) %VAR trick ====
 		document.getElementById("mdName").onchange         =this.callbackChangedName.bind(this);
 		document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);

@@ -197,7 +197,14 @@
 							<li><a href="javascript:doDeleteFromNGStore();"  >Delete from store...</a></li>						
 						</ul>				
 					</li>
-					 
+				    
+                    <li class="dropdown"><a href="#" data-toggle="dropdown"  >Query<i class="icon-chevron-down"></i></a>
+						<ul class="dropdown-menu pull-right">
+							<li id="menu-query-services"><a href="javascript:doMenuQuerySource('SERVICES');"><i class="icon-circle">      </i> Service Layer</a></li>
+							<li id="menu-query-direct"  ><a href="javascript:doMenuQuerySource('DIRECT');"  ><i class="icon-circle-blank"></i> SPARQL Endpoint</a></li>	
+						</ul>				
+					</li>
+                  
 					<li class="dropdown"><a href="#" data-toggle="dropdown">Help<i class="icon-chevron-down"></i></a>
 						<ul class="dropdown-menu pull-right">
 							<li><a href="javascript:doHelpSparqlGraph();">Docs for SparqlGraph</a></li>
@@ -253,7 +260,6 @@
 						<td align="right">
 							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
 							<button class="btn btn-disabled" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
-						    <button class="btn btn-disabled" id="btnGraphExecute" onclick="javascript:graphExecute(); return false;" disabled>Execute</button>
 						</td>
 					</tr></table>
 		   		</form>
@@ -297,32 +303,22 @@
 				</style>
 					
 				<div id="treeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
-					<div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content">
+					<div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content" > 
 						<div id="treeDiv" ></div>
 				    </div>
 					<div id="canvasWrapper" class="canvaswrap">
 						<div id="canvas" style="" class="canvas ui-widget-content">
 						</div>
 					</div>	
+                    
 				</div>
 					
-				<br>
-				
-				<!------------  Query Section ------------>
-				
-				<section class="module collapsible in">
-					<header class="module-header">Query:</header>
-					<div class="module-body collapse">
-				  		<div id="querydiv"  class="control-group" style="width:100%">
-				  			<table width="100%"><tbody><tr>
-				  				<td>
-							   		<form class="form-horizontal">
-								   		<button class='btn disabled' id="btnQueryBuild" onclick="javascript:buildQuery(); return false;" disabled>build</button>
-								   		<button class='btn disabled' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>run</button>
-							   		</form>
-							   	</td>
+				<section class="module">
+                    <table width="100%">
+                        <tbody>
+                            <tr>
 							   	<td align="right">
-							   		<form class="form-horizontal">
+							   		<form class="form-horizontal" style="margin-bottom: 0px;">
 							 			&nbsp; query: 
 							 			<select class="input-medium" id="SGQueryType" onchange="javascript:onchangeQueryType();" >
 							 				<option value="SELECT">select distinct</option>
@@ -330,21 +326,39 @@
 							 				<option value="CONSTRUCT">construct</option>
 							 				<option value="DELETE">delete</option>
 							 			</select>
-							   			&nbsp; source: 
-							   			<select class="input-medium" id="SGQuerySource" onchange="javascript:onchangeQuerySource();" >
-							   				<option value="QUERY_SERVICE">query service</option>
-							   				<option value="DIRECT">direct</option>
-							   		<!--  	<option value="DISPATCHER">dispatcher</option> -->
-							   			</select>
+							   			
 							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeyup="javascript:onkeyupLimit();">
-							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces </input>
+							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces 
+                                        <button class="btn btn-disabled" id="btnGraphExecute" onclick="javascript:graphExecute(); return false;" disabled>Run</button>
 						   			</form>
 							   	</td>
-					   		</tr></tbody></table>
-
-					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:100%" onkeyup="javascript:onkeyupQueryText();">							   	    			
+					   		</tr>
+                        </tbody>
+                    </table>
+                </section>
+                
+                <div id="status" class="container"><br></div>
+                
+				<!------------  Query Section ------------>
+				
+				<section class="module collapsible in">
+					<header class="module-header">Query:</header>
+					<div class="module-body collapse">
+				  		<div id="querydiv"  class="control-group" style="width:100%">
+					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:99%" onkeyup="javascript:onkeyupQueryText();">							   	    			
 					   		</textarea>
 				  		</div>
+                        <table width="100%">
+                        <tbody>
+                            <tr>
+				  				<td align="right">
+							   		<form class="form-horizontal" style="margin-bottom: 0px;">
+								   		<button class='btn disabled' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>Run</button>
+							   		</form>
+							   	</td>
+					   		</tr>
+                        </tbody>
+                    </table>
 				  	</div>
 		  		</section>
 		  		

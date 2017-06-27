@@ -48,6 +48,9 @@
 
     var gNodeGroupChangedFlag = false;
     var gQueryTextChangedFlag = false;
+
+    var gQueryTypeIndex = 0;   // sel index of QueryType
+    var gQuerySource = "SERVICES";
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -96,11 +99,10 @@
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
 			if (conn) {
-				doLoadConnection(conn, false);
+				doLoadConnection(conn);
 			}
 			
 			// make sure Query Source and Type disables are reset
-			onchangeQuerySource();  
 			onchangeQueryType(); 
 			
 	    	// SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
@@ -392,7 +394,7 @@
     var snodeRemover1 = function (snode) {
         snode.removeFromNodeGroup(false);
         gNodeGroup.drawNodes();
-        nodeGroupChanged.bind(this, true)
+        nodeGroupChanged(true)
     };
 
     /**
@@ -478,7 +480,7 @@
     
     var doLoad = function() {
     	logEvent("SG Menu: File->Load");
-    	gLoadDialog.loadDialog(gConn, false, doLoadConnection);
+    	gLoadDialog.loadDialog(gConn, doLoadConnection);
     };
     
     //**** Start new load code *****//
@@ -513,10 +515,9 @@
  		// retains gConn
     };
     
-    var doLoadConnection = function(connProfile, optDirectFlag, optCallback) {
+    var doLoadConnection = function(connProfile, optCallback) {
     	// Callback from the load dialog
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
-    	var directFlag = (typeof optDirectFlag === "undefined") ? false : optDirectFlag;
     	
     	require(['sparqlgraph/js/msiclientquery',
     	         'sparqlgraph/js/backcompatutils',
@@ -526,11 +527,6 @@
     		
 	    	// Clean out existing GUI
 	    	clearEverything();
-	    	
-	    	// Direct load defaults to direct queries
-	    	if (directFlag) {
-	    		setQuerySource("DIRECT");
-	    	}
 	    	
 	    	// Get connection info from dialog return value
 	    	gConn = connProfile;
@@ -542,7 +538,7 @@
 		    	logEvent("SG Loading", "connection", gConn.toString());
 		    	
 		    	// load through query service unless "DIRECT"
-		    	var queryServiceUrl = (directFlag) ? null : g.service.sparqlQuery.url;
+		    	var queryServiceUrl = (getQuerySource() == "DIRECT") ? null : g.service.sparqlQuery.url;
 		    	
 		    	// note: clearEverything creates a new gOInfo
 	    		BCUtils.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
@@ -566,8 +562,9 @@
     	
     };
     
-    var checkAnythingUnsavedThen = function(action) {
-        checkQueryTextUnsavedThen(checkNodeGroupUnsavedThen.bind(this, action));
+    var checkAnythingUnsavedThen = function(action, optCancel) {
+        var cancel = (typeof optCancel == "undefined") ? function(){} : optCancel;
+        checkQueryTextUnsavedThen(checkNodeGroupUnsavedThen.bind(this, action, cancel));
     };
 
     /*
@@ -575,7 +572,9 @@
      * so first check that it is saved or ask user to save it
      *
      */
-    var checkNodeGroupUnsavedThen = function(action) {
+    var checkNodeGroupUnsavedThen = function(action, optCancel) {
+        var cancel = (typeof optCancel == "undefined") ? function(){} : optCancel;
+
         if (gNodeGroup.getNodeCount() > 0 && (gNodeGroupChangedFlag || gMappingTab.getChangedFlag()) ) {
             require(['sparqlgraph/js/modaliidx'], 
                 function(ModalIidx) {
@@ -583,7 +582,7 @@
                 ModalIidx.choose("Save your work",
                                      "Changes to the nodegroup have not been saved<br><br>Do you want to download it first?",
                                      ["Cancel", "Download", "Discard Changes"],
-                                     [function(){}, 
+                                     [cancel, 
                                       function(){
                                           doNodeGroupDownload();
                                           nodeGroupChanged(false);
@@ -601,7 +600,8 @@
         }
     };
 
-    var checkQueryTextUnsavedThen = function(action) {
+    var checkQueryTextUnsavedThen = function(action, optCancel) {
+        var cancel = (typeof optCancel == "undefined") ? function(){} : optCancel;
         if (gQueryTextChangedFlag ) {
             require(['sparqlgraph/js/modaliidx'], 
                 function(ModalIidx) {
@@ -609,7 +609,7 @@
                 ModalIidx.choose("Save custom query",
                                      "Edits to the SPARQL have not been saved<br><br>Do you want to download it first?",
                                      ["Cancel", "Download", "Discard Changes"],
-                                     [function(){}, 
+                                     [cancel, 
                                       function(){
                                           downloadFile(document.getElementById('queryText').value, "sparql.txt");
                                           queryTextChanged(false);
@@ -678,7 +678,7 @@
             
             // function pointer for the thing we do next no matter what happens:
             //    doLoadConnection() with doQueryLoadFile2() as the callback
-            var doLoadConnectionCall = doLoadConnection.bind(this, conn, false, doQueryLoadFile2.bind(this, sgJson));
+            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson));
             
             if (! existName) {
                 // new connection: ask if user wants to save it locally
@@ -762,6 +762,28 @@
     	}
     };
     
+    var doMenuQuerySource = function (val) {
+        gQuerySource = val;
+        
+        // grab the <li> and the <icon>
+        var svc = document.getElementById("menu-query-services");  // class="disabled" looks sloppy
+        var sIcon = svc.getElementsByTagName("i")[0];
+        var dir = document.getElementById("menu-query-direct");
+        var dIcon = dir.getElementsByTagName("i")[0];
+
+        if (val == "SERVICES") {
+            sIcon.className = "icon-circle";
+            dIcon.className = "icon-circle-blank";
+        } else {
+            sIcon.className = "icon-circle-blank";
+            dIcon.className = "icon-circle";
+        }
+    };
+
+    var doMenuQueryEndpoint = function (e) {
+        gQuerySource = "DIRECT";
+    };
+
     // ======= drag-and-drop version of query-loading =======
     	
     var noOpHandler = function (evt) {
@@ -865,10 +887,9 @@
     	return s.options[s.selectedIndex].value;
     };
     
-    // returns "QUERY_SERVICE", "DIRECT", or "DISPATCHER"
+    // returns "DIRECT", or "SERVICES"
     var getQuerySource = function () {
-    	var s = document.getElementById("SGQuerySource");
-    	return s.options[s.selectedIndex].value;
+    	return gQuerySource;
     };
     
     var getQueryLimit = function () {
@@ -890,14 +911,6 @@
         // canvas
         gNodeGroup.drawNodes();
     }
-    
-    var setQuerySource = function (val) {
-    	var s = document.getElementById("SGQuerySource");
-    	
-		for (var i=0; i < s.options.length; i++) {
-			s.options[i].selected = (s.options[i].value==val);
-		}
-    };
     
     var getQueryShowNamespace = function () {
     	return document.getElementById("SGQueryNamespace").checked;
@@ -936,50 +949,46 @@
 
     var onkeyupLimit = function () {
         
-        // get legal new value
-        var elem = document.getElementById("SGQueryLimit");
-        var limitStr = elem.value;
-        limitStr = limitStr.replace(/\D/g,'');
-        var newLimit = parseInt(limitStr, 10);
-    	
-        // flicker it back to the old value
-        elem.value = gNodeGroup.getLimit().toString();
-        
         // now change it if it's ok
-        checkQueryTextUnsavedThen(function(el, l) {
-            gNodeGroup.setLimit(l);
-            nodeGroupChanged(true);
-            el.value = l.toString();
-        }.bind(this, elem, newLimit));
+        checkQueryTextUnsavedThen(
+            // success
+            function(el, l) {
+                // get legal new value
+                var newLimit = parseInt(document.getElementById("SGQueryLimit").value.replace(/\D/g,''), 10);
+                gNodeGroup.setLimit(newLimit);
+                nodeGroupChanged(true);
+            },
+            
+            // cancel
+            function() {
+                // put it back to the old value
+                document.getElementById("SGQueryLimit").value = gNodeGroup.getLimit().toString();
+            });
         
     };
 
     var onchangeQueryType = function () {
+        
+        // verify it's ok to move forward
+        checkQueryTextUnsavedThen(
+            // success
+            function () {
+                gQueryTypeIndex = document.getElementById("SGQueryType").selectedIndex;
+                onchangeQueryType1();
+            },
+            
+            // cancel
+            function() {
+                document.getElementById("SGQueryType").selectedIndex = gQueryTypeIndex;
+            });
+        
+    };
+
+    var onchangeQueryType1 = function () {
     	// clear query test
     	document.getElementById('queryText').value = "";
     	
-    	var qType = getQueryType();  // gets new one?
-    	
-    	// check query source
-    	var s = document.getElementById("SGQuerySource");
-		for (var i=0; i < s.options.length; i++) {
-			s.options[i].disabled = !legalQueryTypeSourceCombo(qType, s.options[i].value);
-		}
-        
         buildQuery();
-    };
-    
-    var onchangeQuerySource = function () {
-    	
-    	var qSource = getQuerySource();  // gets new one?
-
-    	// check query type
-    	var s = document.getElementById("SGQueryType");
-    	
-		for (var i=0; i < s.options.length; i++) {
-			s.options[i].disabled = !legalQueryTypeSourceCombo(s.options[i].value, qSource);
-		}
-    	
     };
     
     // for every key press.  
@@ -1041,7 +1050,9 @@
     	}
     };
     
+    // build query using javascript
     var buildQueryLocal = function() {
+            console.log("sparqlgraph.js: Called DEPRECATED buildQueryLocal");
             logEvent("SG Build Local");
             var sparql = "";
             switch (getQueryType()) {
@@ -1096,12 +1107,18 @@
 
     var buildQueryCallback = function (client, resultSet) {
         
-        guiQueryNonEmpty();
-        
         if (resultSet.isSuccess()) {
-            document.getElementById('queryText').value = client.getSuccessSparql(resultSet);
-        } else {
+            var sparql = client.getSuccessSparql(resultSet);
+            document.getElementById('queryText').value = sparql;
             
+            if (sparql.length > 0) {
+                guiQueryNonEmpty();
+            } else {
+                guiQueryEmpty();
+            }
+            
+        } else {
+            guiQueryEmpty();
             // PEC TODO: temporary handling of actual service success but bad SPARQL
             var failSparql = client.getFailedTEMPBadSparql(resultSet);
             if (failSparql != null) {
@@ -1166,14 +1183,16 @@
 					});
 			    	
 					break;
-					
+				
+                // Never happens any more PEC TODO
 				case "QUERY_SERVICE":
 					setStatusProgressBar("running query...", 50);
 					guiDisableAll();
 					
 					gQueryClient.executeAndParse(query, runQueryCallback);
 					break;
-					
+				
+                // Never happens any more  PEC TODO
 				case "DISPATCHER":	
 					try {
 						// might not be defined for some os installations
@@ -1182,7 +1201,17 @@
 		    			throw new Error("Can't run query of type " + getQuerySource());
 		    		}
 					break;
-				}
+                    
+                // change to executor PEC TODO
+                case "SERVICES":
+					try {
+						// might not be defined for some os installations
+						doDispatcherQuery();
+					} catch (e) {
+		    			throw new Error("Can't run query of type " + getQuerySource());
+		    		}
+					break;
+				}   
 				break;
 				
 			case "DELETE":
@@ -1192,6 +1221,7 @@
 					logAndAlert("Auth queries direct to triplestore are not implemented.");
 					break;
 				
+				// Never happens any more  PEC TODO
 				case "QUERY_SERVICE":
 					require([ 'sparqlgraph/js/modaliidx'], function (ModalIidx) {
 						
@@ -1208,7 +1238,13 @@
 					});
 					break;
 					
+				// Never happens any more  PEC TODO
 				case "DISPATCHER":
+					logAndAlert("Auth queries can not be executed through a dispatcher.");
+					break;
+            
+                // Use Query Executor  PEC TODO
+				case "SERVICES":
 					logAndAlert("Auth queries can not be executed through a dispatcher.");
 					break;
 				}
@@ -1304,13 +1340,6 @@
     	
     	document.getElementById("btnGraphClear").className = "btn";
     	document.getElementById("btnGraphClear").disabled = false;
-    	
-    	document.getElementById("btnGraphExecute").className = "btn";
-    	document.getElementById("btnGraphExecute").disabled = false;
-    	
-    	document.getElementById("btnQueryBuild").className = "btn";
-    	document.getElementById("btnQueryBuild").disabled = false;
-
     };
     
     var giuGraphEmpty = function () {
@@ -1319,23 +1348,23 @@
     	
     	document.getElementById("btnGraphClear").className = "btn disabled";
     	document.getElementById("btnGraphClear").disabled = true;
-    	
-    	document.getElementById("btnGraphExecute").className = "btn disabled";
-    	document.getElementById("btnGraphExecute").disabled = true;
-    	
-    	document.getElementById("btnQueryBuild").className = "btn disabled";
-    	document.getElementById("btnQueryBuild").disabled = true;
-
     };
     
     var guiQueryEmpty = function () {
     	document.getElementById("btnQueryRun").className = "btn disabled";
     	document.getElementById("btnQueryRun").disabled = true;
+        
+    	document.getElementById("btnGraphExecute").className = "btn disabled";
+    	document.getElementById("btnGraphExecute").disabled = true;
+
     };
     
     var guiQueryNonEmpty = function () {
     	document.getElementById("btnQueryRun").className = "btn-primary";
     	document.getElementById("btnQueryRun").disabled = false;
+        
+        document.getElementById("btnGraphExecute").className = "btn-primary";
+    	document.getElementById("btnGraphExecute").disabled = false;
     };
     
     var guiResultsEmpty = function () {
@@ -1388,7 +1417,6 @@
 	 	document.getElementById('queryText').value = "";
 	 	
 	 	document.getElementById('SGQueryType').selectedIndex = 0;
-	 	document.getElementById('SGQuerySource').selectedIndex = 0;
 	 	document.getElementById('SGQueryLimit').value = "";
 	 	document.getElementById('SGQueryNamespace').checked = true;
 	 	
