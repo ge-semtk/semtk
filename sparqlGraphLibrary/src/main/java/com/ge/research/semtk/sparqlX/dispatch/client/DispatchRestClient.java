@@ -180,9 +180,13 @@ public class DispatchRestClient extends RestClient{
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/asynchronousDirectQuery");
-		this.parametersJSON.put("sparqlConnection", sc.toJson());
+		this.parametersJSON.put("sparqlConnectionJson", sc.toJson().toJSONString());
 		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
 	
+		
+		System.err.println("-- the outgoing connection json was: ---");
+		System.err.println(sc.toJson());
+		System.err.println("-- the outgoing connection json closed ---");
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
@@ -191,7 +195,7 @@ public class DispatchRestClient extends RestClient{
 		finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("sparqlConnectionJson");
 			this.parametersJSON.remove("rawSparqlQuery");
 		}
 		
