@@ -31,6 +31,7 @@ package com.ge.research.semtk.services.results;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -157,17 +158,30 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
-	public ResponseEntity<Resource> getTableResultsCsv(@RequestBody ResultsRequestBodyMaxRows requestBody){
+	public ResponseEntity<Resource> getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody){
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 			byte[] retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows); 			
 			ByteArrayResource resource = new ByteArrayResource(retval);
-		    return ResponseEntity.ok()
+			
+			if(requestBody.getAppendDownloadHeaders()){
+				HttpHeaders header = new HttpHeaders();
+				header.add("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
+				
+				return ResponseEntity.ok()
+			        .headers(header)
+		            .contentLength(retval.length)
+		            .contentType(MediaType.parseMediaType("text/csv"))
+		            .body(resource);
+			}
+			else{
+				return ResponseEntity.ok()
 		        //    .headers(headers)
 		            .contentLength(retval.length)
 		            .contentType(MediaType.parseMediaType("text/csv"))
 		            .body(resource);		
+			}
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    e.printStackTrace();

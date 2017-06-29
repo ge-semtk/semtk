@@ -21,12 +21,13 @@ public class ResultsRequestBodyMaxRows extends ResultsRequestBody {
 	
 	public Integer maxRows;
 
+	
+
 	public Integer getMaxRows() {
 		return maxRows;
 	}
 
 	public void setMaxRows(Integer maxRows) {
 		this.maxRows = maxRows;
-	}
-	
+	}	
 }
