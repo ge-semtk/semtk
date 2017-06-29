@@ -23,10 +23,11 @@ import java.net.URL;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
 public class ResultsClient extends RestClient implements Runnable {
@@ -46,25 +47,10 @@ public class ResultsClient extends RestClient implements Runnable {
 	public void handleEmptyResponse() throws Exception {
 		throw new Exception("Received empty response");
 	}	
-
-	/**
-	 * Not meant to be used.
-	 * @return
-	 * @throws Exception
-	 */
-	public SimpleResultSet execute() throws ConnectException, EndpointNotFoundException, Exception{
-		
-		if (conf.getServiceEndpoint().isEmpty()) {
-			throw new Exception("Attempting to execute StatusClient with no enpoint specified.");
-		}
-		JSONObject resultJSON = (JSONObject)super.execute();	
-		
-		SimpleResultSet ret = (SimpleResultSet) SimpleResultSet.fromJson(resultJSON);  
-		return ret;
-	}
 	
 	/**
-	 * Store a table (as json)
+	 * Store a table (as json).  
+	 * Uses 3 endpoints to initialize, incrementally add data, and finalize the result.
 	 * @param contents
 	 * @throws Exception
 	 */
@@ -213,6 +199,56 @@ public class ResultsClient extends RestClient implements Runnable {
 		if (timerFlag) { System.err.println(String.format("prep=%.2f sec   send=%.2f sec", prepSec, sendSec)); }
 		return;
 	}
+
+	
+	/**
+	 * Get results (possibly truncated) in JSON format for a job
+	 * @return a TableResultSet object
+	 */
+	@SuppressWarnings("unchecked")
+	public TableResultSet execTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("results/getTableResultsJson");
+		this.parametersJSON.put("jobId", jobId);
+		if(maxRows != null){
+			this.parametersJSON.put("maxRows", maxRows.intValue());
+		}
+
+		try {
+			TableResultSet res = this.executeWithTableResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return res;			
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jobId");
+			this.parametersJSON.remove("maxRows");
+		}
+	}		
+	
+	/**
+	 * Get results (possibly truncated) in CSV format for a job
+	 * @return a CSVDataset object
+	 */
+	@SuppressWarnings("unchecked")
+	public CSVDataset execTableResultsCsv(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("results/getTableResultsCsv");
+		this.parametersJSON.put("jobId", jobId);
+		if(maxRows != null){
+			this.parametersJSON.put("maxRows", maxRows.intValue());
+		}
+		this.parametersJSON.put("appendDownloadHeaders", false);
+
+		try {
+			String s = (String) super.execute();
+			return new CSVDataset(s, false);
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jobId");
+			this.parametersJSON.remove("maxRows");
+			this.parametersJSON.remove("appendDownloadHeaders");
+		}
+	}	
 	
 	/**
 	 * This is for backwards compatibility only.
@@ -223,7 +259,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("jobId", jobId);
 
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			String sampleUrlStr = res.getResult("sampleURL");
 			String fullUrlStr = res.getResult("fullURL");
@@ -246,7 +282,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("jobId", jobId);
 		
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();			
 		} finally {
 			// reset conf and parametersJSON

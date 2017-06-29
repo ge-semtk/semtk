@@ -19,23 +19,21 @@
 package com.ge.research.semtk.services.client;
 
 import java.net.ConnectException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+
+import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**
  * An abstract class containing code for a REST client.
@@ -78,8 +76,6 @@ public abstract class RestClient extends Client implements Runnable {
 	public Exception getRunException() {
 		return runException;
 	}
-
-
 	
 	/**
 	 * Abstract method to set up service parameters available upon instantiation
@@ -90,6 +86,28 @@ public abstract class RestClient extends Client implements Runnable {
 	 * Abstract method to handle an empty response from the service
 	 */
 	public abstract void handleEmptyResponse() throws Exception;
+	
+	/**
+	 * Execute and get result as SimpleResultSet
+	 */
+	public SimpleResultSet executeWithSimpleResultReturn() throws ConnectException, EndpointNotFoundException, Exception{		
+		if (conf.getServiceEndpoint().isEmpty()) {
+			throw new Exception("Attempting to execute StatusClient with no enpoint specified.");
+		}
+		JSONObject resultJSON = (JSONObject) execute();			
+		return (SimpleResultSet) SimpleResultSet.fromJson(resultJSON);  
+	}
+	
+	/**
+	 * Execute and get result as TableResultSet
+	 */
+	public TableResultSet executeWithTableResultReturn() throws ConnectException, EndpointNotFoundException, Exception{		
+		if (conf.getServiceEndpoint().isEmpty()) {
+			throw new Exception("Attempting to execute StatusClient with no enpoint specified.");
+		}
+		JSONObject resultJSON = (JSONObject) execute();	 
+		return new TableResultSet(resultJSON);
+	}
 	
 	/**
 	 * Make the service call.  
