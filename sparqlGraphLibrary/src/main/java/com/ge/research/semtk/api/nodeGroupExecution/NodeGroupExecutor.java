@@ -182,6 +182,19 @@ public class NodeGroupExecutor {
 		return retval;
 	}
 	
+	public Table getTableResults() throws Exception{
+		Table retval = null;
+		
+		if(this.currentJobId == null){
+			throw new Exception("StoredQueryExecutor::getTableResults -- the current job ID is null. unable to get info on nonexistent job.");
+		}
+		else{
+			retval = this.rc.execTableResultsJson(this.currentJobId, null).getTable();
+		}
+		return retval;
+		
+	}
+	
 	// Dispatch actions
 	public void dispatchRawSparql(SparqlConnection sc, String sparqlQuery) throws Exception {
 	

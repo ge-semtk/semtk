@@ -173,6 +173,26 @@ public class StoredNodegroupExecutionRestController {
 	}
 	
 	@CrossOrigin
+	@RequestMapping(value="/getResultsTable", method=RequestMethod.POST)
+	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody ){
+		TableResultSet retval = new TableResultSet();
+		
+		try{
+			NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
+			Table retTable = nge.getTableResults();
+			retval.setSuccess(true);
+			retval.addResults(retTable);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			retval = new TableResultSet();
+			retval.setSuccess(false);
+			retval.addRationaleMessage(e.getMessage());
+		}
+		return retval.toJson();
+	}
+	
+	@CrossOrigin
 	@RequestMapping(value="/getResultsLocation", method=RequestMethod.POST)
 	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody ){
 		TableResultSet retval = new TableResultSet();

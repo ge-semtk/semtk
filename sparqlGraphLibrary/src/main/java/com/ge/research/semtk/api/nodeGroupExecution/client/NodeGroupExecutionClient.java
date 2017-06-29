@@ -44,6 +44,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static String dispatchByIdEndpoint = "/dispatchById";
 	private static String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
 	private static String ingestFromCsvStringsNewConnection = "/ingestFromCsvStringsNewConnection";
+	private static String getResultsTable = "/getResultsTable";
 	
 	// action-specific endpoints
 	private static String dispatchSelectByIdEndpoint = "/dispatchSelectById";
@@ -168,15 +169,22 @@ public class NodeGroupExecutionClient extends RestClient {
 		return retval;
 	}
 	
-	public Table executeGetResults(String jobID) throws Exception {
-		Table ret = this.executeGetResultsLocationWithSimpleReturn(jobID);
+	public Table executeGetResultsTable(String jobID) throws Exception {
+		TableResultSet retval = new TableResultSet();
 		
-		// get the actual location of the full result.
-		String locationForFullResults = ret.getCell(1, 0); // this is the cell with the full results location.
+		conf.setServiceEndpoint(this.mappingPrefix + this.getResultsTable);
+		this.parametersJSON.put("jobID", jobID);
 		
-		// get the results themselves.
-		Table retval = Utility.getURLResultsContentAsTable(new URL(locationForFullResults));
-		return retval;
+		try{
+			retval = this.executeWithTableResultReturn();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jobID");
+		}
+		
+		return retval.getTable();
 	}
 	
 	public Table executeGetResultsLocationWithSimpleReturn(String jobId) throws Exception{
@@ -185,7 +193,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	public TableResultSet executeGetResultsLocation(String jobId) throws Exception{
-	TableResultSet retval = new TableResultSet();
+		TableResultSet retval = new TableResultSet();
 		
 		conf.setServiceEndpoint(this.mappingPrefix + this.resultsLocationEndpoint);
 		this.parametersJSON.put("jobID", jobId);

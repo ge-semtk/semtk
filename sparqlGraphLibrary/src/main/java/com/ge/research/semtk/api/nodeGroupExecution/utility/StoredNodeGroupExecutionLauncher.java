@@ -62,7 +62,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -103,7 +103,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -144,7 +144,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -185,7 +185,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -228,7 +228,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -270,7 +270,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -312,7 +312,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
@@ -354,7 +354,7 @@ public class StoredNodeGroupExecutionLauncher {
 		if(status.equalsIgnoreCase("success") ){
 			System.err.println("requested job succeeded");
 			// get results.
-			Table retTable = snec.executeGetResults(jobId);
+			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
 			retval.addResults(retTable); 
 		}
