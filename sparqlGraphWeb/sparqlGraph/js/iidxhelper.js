@@ -114,13 +114,20 @@ define([	// properly require.config'ed
     };
 
     /*
+     * Create a dropdown element.
+     * id is the element id
      * textValArray is ["text1", "val1", "text2", "val2", ...]
+     * optValue is the default selected value
+     * optClassName can be used to control the width of the select box (e.g. input-mini for a narrow dropdown)
      */
-    IIDXHelper.createSelect = function (id, textValArray, optValue) {
+    IIDXHelper.createSelect = function (id, textValArray, optValue, optClassName) {
         var select =  document.createElement("select");
         select.id = id;
+        if(typeof optClassName != "undefined"){
+            select.className = optClassName;
+        }
+        
         var option;
-
         for (var i=0; i < textValArray.length; i=i+2) {
             option = document.createElement("option");
             option.text = textValArray[i];

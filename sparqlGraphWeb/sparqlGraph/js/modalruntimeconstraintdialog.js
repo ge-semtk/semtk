@@ -41,7 +41,8 @@ define([	// properly require.config'ed
     
         // dropdown operator choices for different types
         var operatorsForStrings = ["=", "=",
-                                   "REGEX", "REGEX"];
+                                   "regex", "regex"];
+        var operatorsForUris = ["=", "="];
         var operatorsForNumerics = ["=", "=",
                                     ">", ">",
                                     ">=", ">=",
@@ -89,7 +90,10 @@ define([	// properly require.config'ed
                     
                     if(valueType == "STRING"){                        
                         // no checks needed yet
-                        
+                    }else if(valueType == "NODE_URI"){                        
+                        if(operand1Element.value.trim().indexOf(" ") > -1){
+                            return "Error: invalid entry for " + sparqlId + ": uri cannot contain spaces";
+                        }                  
                     }else if(valueType == "INT"){ // TODO add other numeric types
                         if(isNaN(operand1Element.value.trim())){  // TODO do check for specific data types (e.g. int, float)
                             // user entered a non-numeric value
@@ -144,14 +148,14 @@ define([	// properly require.config'ed
                     
                     // collect user input and create runtime constraint object (behavior varies per data type)
                     // TODO: separate each datatype code block into its own function
-                    if(valueType == "STRING"){
+                    if(valueType == "STRING" || valueType == "NODE_URI"){
                         operator1 = operator1Element.value;
-                        operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
+                        operand1 = operand1Element.value.trim();    // TODO support multiple operands for MATCHES
                         if(!operand1.trim()){  
                             // user did not enter an operand - skip
                         }else if(operator1 == "="){
                             runtimeConstraints.add(sparqlId, "MATCHES", [operand1]);
-                        }else if(operator1 == "REGEX"){
+                        }else if(operator1 == "regex"){
                             runtimeConstraints.add(sparqlId, "REGEX", [operand1]);
                         }else{
                             // if get this alert, then a fix is needed in the code
@@ -238,7 +242,6 @@ define([	// properly require.config'ed
 //                    this.valueTypes = ["STRING","INT","BOOLEAN"];          // TODO REMOVE - FOR TESTING ONLY                      
 
                     // create UI components for all runtime-constrained items 
-                    // TODO improve formatting
                     for(i = 0; i < this.sparqlIds.length; i++){
                         
                         sparqlId = this.sparqlIds[i];                   // e.g. ?circumference
@@ -251,13 +254,17 @@ define([	// properly require.config'ed
                         this.div.appendChild(IIDXHelper.createLabel(sparqlId + " (" + valueType + "):"));
                         // create UI components for operator/operand (varies per data type)
                         if(valueType == "STRING"){
-                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForStrings));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId));
+                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForStrings, "=", "input-mini"));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                        }else if(valueType == "NODE_URI"){
+                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForUris, "=", "input-mini"));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
                         }else if(valueType == "INT"){
-                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForNumerics, ">"));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId));
-                            this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorsForNumerics, "<"));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId));
+                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorsForNumerics, ">", "input-mini"));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                            this.div.appendChild(IIDXHelper.createLabel("  ")); // forces a newline
+                            this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorsForNumerics, "<", "input-mini"));
+                            this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId, "input-xlarge"));
                         }else{
                             // TODO support all data types, and also handle in validateCallback and okCallback
                             this.div.appendChild(IIDXHelper.createLabel("...type not supported yet"));
