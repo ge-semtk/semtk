@@ -105,7 +105,7 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonAddIncremental", method=RequestMethod.POST)
-	public JSONObject addIncrementalTableResultsJson(@RequestBody ResultsRequestBodyFileExtContents requestBody){
+	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody){
 
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
@@ -132,7 +132,7 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonFinalize", method=RequestMethod.POST)
-	public JSONObject finalizeTableResultsJson(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody){
+	public JSONObject storeTableResultsJsonFinalize(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody){
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
