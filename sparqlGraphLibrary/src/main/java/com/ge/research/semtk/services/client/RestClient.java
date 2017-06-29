@@ -92,7 +92,7 @@ public abstract class RestClient extends Client implements Runnable {
 	 */
 	public SimpleResultSet executeWithSimpleResultReturn() throws ConnectException, EndpointNotFoundException, Exception{		
 		if (conf.getServiceEndpoint().isEmpty()) {
-			throw new Exception("Attempting to execute StatusClient with no enpoint specified.");
+			throw new Exception("Attempting to execute client with no endpoint specified.");
 		}
 		JSONObject resultJSON = (JSONObject) execute();			
 		return (SimpleResultSet) SimpleResultSet.fromJson(resultJSON);  
@@ -103,7 +103,7 @@ public abstract class RestClient extends Client implements Runnable {
 	 */
 	public TableResultSet executeWithTableResultReturn() throws ConnectException, EndpointNotFoundException, Exception{		
 		if (conf.getServiceEndpoint().isEmpty()) {
-			throw new Exception("Attempting to execute StatusClient with no enpoint specified.");
+			throw new Exception("Attempting to execute client with no endpoint specified.");
 		}
 		JSONObject resultJSON = (JSONObject) execute();	 
 		return new TableResultSet(resultJSON);
