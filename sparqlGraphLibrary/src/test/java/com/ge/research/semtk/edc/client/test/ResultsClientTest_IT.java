@@ -71,7 +71,7 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);
 			URL[] urls = client.execGetResults(jobId);
 			
-			assertTrue(urls[0].toString().endsWith("_sample.json")); 
+			assertTrue(urls[0].toString().endsWith(".json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// check the results.
@@ -204,23 +204,27 @@ public class ResultsClientTest_IT {
 		row.add("one");
 		row.add("two");
 		
+		boolean retrievedResultsAfterStoring = false;
 		try {			
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
 			table.addRow(row);
 			
 			client.execStoreTableResults(jobId, table);
-			
+			client.execGetResults(jobId);				// this should succeed
+			retrievedResultsAfterStoring = true;
 			client.execDeleteStorage(jobId);
-			URL[] urls = client.execGetResults(jobId);
-
-			String sample = IOUtils.toString(urls[0]);
-			assertTrue(sample == null);
-			
-		} catch (FileNotFoundException e) {
+			client.execGetResults(jobId); 	// this should throw an exception, because the results are deleted
+			fail();  // expect it to not get here
+		} catch (Exception e) {
 			// success			
 		} finally {
 			cleanup(client, jobId);
+		}
+		
+		// confirm that it could retrieve results after storing
+		if(!retrievedResultsAfterStoring){
+			fail();	
 		}
 	}	
 	

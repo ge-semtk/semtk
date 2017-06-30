@@ -34,10 +34,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URL;
@@ -77,8 +79,8 @@ public class ResultsServiceRestController {
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-		LoggerRestClient.easyLog(logger, "ResultsService", "initializeTableResultsJson start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service initializeTableResultsJson start JobId=" + requestBody.jobId);
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service storeTableResultsJsonInitialize start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -109,8 +111,8 @@ public class ResultsServiceRestController {
 
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-		LoggerRestClient.easyLog(logger, "ResultsService", "addIncrementalTableResultsJson start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service addIncrementalTableResultsJson start JobId=" + requestBody.jobId);
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service storeTableResultsJsonAddIncremental start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -137,7 +139,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service finalizeTableResultsJson start JobId=" + requestBody.jobId);
+    	logToStdout("Results Service storeTableResultsJsonFinalize start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -147,7 +149,7 @@ public class ResultsServiceRestController {
 		} catch(Exception e){
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(e.toString());
-		    LoggerRestClient.easyLog(logger, "ResultsService", "finalizeTableResultsJson exception", "message", e.toString());
+		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize exception", "message", e.toString());
 		    e.printStackTrace();
 		}    	
 		return res.toJson();
@@ -189,6 +191,64 @@ public class ResultsServiceRestController {
 		// if nothing, return nothing
 		return null;
 	}
+
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsJsonForWebClient", method= RequestMethod.GET)
+	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	
+		try{
+			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
+			
+	    	URL url = getJobTracker().getFullResultsURL(jobId);  
+			byte[] retval = getTableResultsStorage().getJsonTable(url, maxRows); 			
+			ByteArrayResource resource = new ByteArrayResource(retval);
+			
+			HttpHeaders header = new HttpHeaders();
+			header.add("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
+				
+			return ResponseEntity.ok()
+			       .headers(header)
+		           .contentLength(retval.length)
+		           .contentType(MediaType.parseMediaType("application/json"))
+		           .body(resource);
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+		// if nothing, return nothing
+		return null;
+	}
+
+	
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
+	public ResponseEntity<Resource> getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	
+		try{
+			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
+			
+	    	URL url = getJobTracker().getFullResultsURL(jobId);  
+			byte[] retval = getTableResultsStorage().getCsvTable(url, maxRows); 			
+			ByteArrayResource resource = new ByteArrayResource(retval);
+			
+			HttpHeaders header = new HttpHeaders();
+			header.add("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
+				
+			return ResponseEntity.ok()
+			       .headers(header)
+		           .contentLength(retval.length)
+		           .contentType(MediaType.parseMediaType("text/csv"))
+		           .body(resource);
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+		// if nothing, return nothing
+		return null;
+	}
+	
 	
 	/**
 	 * Return a JSON object containing results (possibly truncated) for job
@@ -230,12 +290,13 @@ public class ResultsServiceRestController {
     	logToStdout("Results Service getResults start JobId=" + jobId);
 
 	    try {
-	    	URL url =  getJobTracker().getFullResultsURL(jobId);  // full json url
 	    	
-			URL[] retUrls = getTableResultsStorage().getJsonAndCsvTableUrls(url, new Integer(200), null);	    	
-		    res.addResult("fullURL", retUrls[1].toString());  	// csv  - retain bad label for backward compatibility
-		    res.addResult("sampleURL", retUrls[0].toString());	// json - retain bad label for backward compatibility
-		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", retUrls[0].toString(), "fullURL", retUrls[1].toString());
+	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&rowCount=200");
+	    	URL csv  =  new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + requestBody.jobId);
+	    	
+	    	res.addResult("fullURL", csv.toString());  	// csv  - retain bad label for backward compatibility
+		    res.addResult("sampleURL", json.toString());	// json - retain bad label for backward compatibility
+		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", json.toString(), "fullURL", csv.toString());
 		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);

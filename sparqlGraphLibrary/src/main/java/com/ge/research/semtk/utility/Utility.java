@@ -76,6 +76,14 @@ public abstract class Utility {
 		return (JSONArray) (new JSONParser()).parse(s);
 	}
 	
+	public static JSONArray getJsonArray(String[] arr) throws Exception{
+		JSONArray ret = new JSONArray();
+		for(String s : arr){
+			ret.add(s);
+		}
+		return ret;
+	}
+	
 	public static JSONObject getJsonObjectFromString(String s) throws Exception{
 		return (JSONObject) (new JSONParser()).parse(s);
    	}
