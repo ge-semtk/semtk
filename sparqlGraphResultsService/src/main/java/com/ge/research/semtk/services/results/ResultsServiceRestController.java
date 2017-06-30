@@ -194,8 +194,8 @@ public class ResultsServiceRestController {
 
 	
 	@CrossOrigin
-	@RequestMapping(value="/getTableResultsCsvFromForm", method= RequestMethod.GET)
-	public ResponseEntity<Resource> getTableResultsCsvFromForm(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
+	public ResponseEntity<Resource> getTableResultsCsvForSparqlGraph(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
