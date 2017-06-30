@@ -270,7 +270,7 @@ public class TableResultsStorage {
 	 * Get a URL for a given file name
 	 */
 	private URL getURL(String filename) throws MalformedURLException {
-		return new URL(baseURL + "/" + filename);
+		return new URL("file:////" +  filename);
 	}
 	
 	/**
@@ -285,11 +285,18 @@ public class TableResultsStorage {
 	 * @throws Exception if the url didn't come from this ResultsStorage
 	 */
 	private Path urlToPath(URL url) throws Exception {
-		if (! url.toString().startsWith(this.baseURL.toString())) {
-			throw new Exception (String.format("Invalid URL wasn't created by this ResultsStorage: %s", url.toString()));
-		}
+	//	if (! url.toString().startsWith("file:////" + this.fileLocation.toString())) {
+	//		throw new Exception (String.format("Invalid URL wasn't created by this ResultsStorage: %s", url.toString()));
+	//	}
 		String fullURL = url.toString();
-		return Paths.get(this.fileLocation, fullURL.substring( this.baseURL.toString().length() + 1, fullURL.length()));
+	//	return Paths.get(this.fileLocation, fullURL.substring( this.baseURL.toString().length() + 1, fullURL.length()));
+		
+		if(fullURL.contains("file:")){
+			fullURL = fullURL.substring(5, fullURL.length());
+		}
+		
+		return Paths.get(this.fileLocation, fullURL);
+		
 	}
 	
 }   
