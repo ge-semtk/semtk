@@ -249,7 +249,6 @@ public class ResultsServiceRestController {
 		return null;
 	}
 	
-	
 	/**
 	 * Return a JSON object containing results (possibly truncated) for job
 	 */
