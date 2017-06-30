@@ -186,7 +186,7 @@ public class TableResultsStorage {
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
 			table = Table.fromJson(jsonObj);	
 		}catch(Exception e){
-			throw new Exception("Could not read results from store for " + url);
+			throw new Exception("Could not read results from store for " + url + ": " + e.toString());
 		}
 		
 		// truncate the table 

@@ -114,13 +114,20 @@ define([	// properly require.config'ed
     };
 
     /*
+     * Create a dropdown element.
+     * id is the element id
      * textValArray is ["text1", "val1", "text2", "val2", ...]
+     * optValue is the default selected value
+     * optClassName can be used to control the width of the select box (e.g. input-mini for a narrow dropdown)
      */
-    IIDXHelper.createSelect = function (id, textValArray, optValue) {
+    IIDXHelper.createSelect = function (id, textValArray, optValue, optClassName) {
         var select =  document.createElement("select");
         select.id = id;
+        if(typeof optClassName != "undefined"){
+            select.className = optClassName;
+        }
+        
         var option;
-
         for (var i=0; i < textValArray.length; i=i+2) {
             option = document.createElement("option");
             option.text = textValArray[i];
@@ -132,13 +139,36 @@ define([	// properly require.config'ed
         return select;
     };
 
-    IIDXHelper.createLabel = function (labelText) {
-        // create a label element with the given text and return it
+    /* Creates a label element with the given text.  Optionally provide a tooltip. */
+    IIDXHelper.createLabel = function (labelText, optTooltip) {
         var labelElem = document.createElement("label");
         labelElem.className = "control-label";
         labelElem.innerHTML = labelText;
+        if(optTooltip != "undefined"){
+            labelElem.title = optTooltip;
+        }
         return labelElem;
     };
+    
+    /*
+     * Create a button group.
+     * optDataToggleAttribute can be set to "buttons-radio" (single-select) or "buttons-checkbox" (multi-select)
+     */
+    IIDXHelper.createButtonGroup = function (id, optionsArray, optDataToggleAttribute) {
+        var dataToggleAttribute = (typeof optDataToggleAttribute != "undefined") ? optDataToggleAttribute : "buttons-radio";
+        var buttonGroupDiv = document.createElement("div");
+        buttonGroupDiv.id = id;
+        buttonGroupDiv.className = "btn-group";
+        buttonGroupDiv.setAttribute("data-toggle", dataToggleAttribute);  // checkbox or radio
+        for(var i=0; i < optionsArray.length; i++){
+            var button = document.createElement("button");
+            button.className = "btn";
+            button.id=operand1ElementId + "-" + optionsArray[i];
+            button.innerHTML = optionsArray[i];
+            buttonGroupDiv.appendChild(button);
+        }
+        return buttonGroupDiv;
+    }
 
     IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {
         // take a text label, DOM control, and optional help text
@@ -432,8 +462,8 @@ define([	// properly require.config'ed
 
         var finishedCallback = (typeof optFinishedCallback == 'undefined' || optFinishedCallback == null) ? function(){} : optFinishedCallback;
 
-        // search
-        var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
+        // search (moved into the grid)
+        // var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
 
         var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
 
@@ -450,11 +480,11 @@ define([	// properly require.config'ed
         td.innerHTML = headerHTML;
         tr.appendChild(td);
 
-        // search cell
-        td = document.createElement("td");
-        td.align="right";
-        td.innerHTML = searchHTML;
-        tr.appendChild(td);
+        // search cell (moved into the grid)
+        //td = document.createElement("td");
+        //td.align="right";
+        //td.innerHTML = searchHTML;
+        //tr.appendChild(td);
 
         // menu cell
         td = document.createElement("td");
