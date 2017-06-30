@@ -146,6 +146,26 @@ define([	// properly require.config'ed
         labelElem.innerHTML = labelText;
         return labelElem;
     };
+    
+    /*
+     * Create a button group.
+     * optDataToggleAttribute can be set to "buttons-radio" (single-select) or "buttons-checkbox" (multi-select)
+     */
+    IIDXHelper.createButtonGroup = function (id, optionsArray, optDataToggleAttribute) {
+        var dataToggleAttribute = (typeof optDataToggleAttribute != "undefined") ? optDataToggleAttribute : "buttons-radio";
+        var buttonGroupDiv = document.createElement("div");
+        buttonGroupDiv.id = id;
+        buttonGroupDiv.className = "btn-group";
+        buttonGroupDiv.setAttribute("data-toggle", dataToggleAttribute);  // checkbox or radio
+        for(var i=0; i < optionsArray.length; i++){
+            var button = document.createElement("button");
+            button.className = "btn";
+            button.id=operand1ElementId + "-" + optionsArray[i];
+            button.innerHTML = optionsArray[i];
+            buttonGroupDiv.appendChild(button);
+        }
+        return buttonGroupDiv;
+    }
 
     IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {
         // take a text label, DOM control, and optional help text
