@@ -432,8 +432,8 @@ define([	// properly require.config'ed
 
         var finishedCallback = (typeof optFinishedCallback == 'undefined' || optFinishedCallback == null) ? function(){} : optFinishedCallback;
 
-        // search
-        var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
+        // search (moved into the grid)
+        // var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
 
         var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
 
@@ -450,11 +450,11 @@ define([	// properly require.config'ed
         td.innerHTML = headerHTML;
         tr.appendChild(td);
 
-        // search cell
-        td = document.createElement("td");
-        td.align="right";
-        td.innerHTML = searchHTML;
-        tr.appendChild(td);
+        // search cell (moved into the grid)
+        //td = document.createElement("td");
+        //td.align="right";
+        //td.innerHTML = searchHTML;
+        //tr.appendChild(td);
 
         // menu cell
         td = document.createElement("td");
