@@ -157,7 +157,6 @@ define([	// properly require.config'ed
                 for(j = 0; j < this.sparqlIds.length; j++){
                     
                     var sparqlId = this.sparqlIds[j];
-                    // TODO need/use itemType?
                     var valueType = this.valueTypes[j];
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
@@ -169,7 +168,6 @@ define([	// properly require.config'ed
                     }
                     
                     // collect user input and create runtime constraint object (behavior varies per data type)
-                    // TODO: separate each datatype code block into its own function
                     if(valueType == "STRING" || valueType == "NODE_URI"){
                         operator1 = operator1Element.value;
                         operand1 = operand1Element.value.trim();    // TODO support multiple operands for MATCHES
@@ -247,7 +245,6 @@ define([	// properly require.config'ed
                         }
                         
                     }else{
-                        // TODO SUPPORT ALL TYPES
                         alert("Type " + valueType + " not supported...add it");   
                     }
 
@@ -255,13 +252,7 @@ define([	// properly require.config'ed
                 
                 // call the callback with a RuntimeConstraints object                
                 this.callback(runtimeConstraints);
-			},
-            
-            // TODO I don't think this is being used.  Remove it?
-			cancelCallback : function() {
-                alert("cancelCallback");
-            },
-            
+			},    
             
             /**
               * Got runtime constrainable items for the node group.  Build and launch a dialog for user to populate them.
@@ -274,10 +265,10 @@ define([	// properly require.config'ed
                     this.div = document.createElement("div");
                     
                     this.sparqlIds = resultSet.getColumnStringsByName("valueId");
-                    this.itemTypes = resultSet.getColumnStringsByName("itemType");   // TODO need this?
+                    //this.itemTypes = resultSet.getColumnStringsByName("itemType");   
                     this.valueTypes = resultSet.getColumnStringsByName("valueType");
 //					this.sparqlIds = ["flavor","circumference", "frosting"]; // TODO REMOVE - FOR TESTING ONLY
-//                    this.valueTypes = ["STRING","INT","BOOLEAN"];          // TODO REMOVE - FOR TESTING ONLY                      
+//                  this.valueTypes = ["STRING","INT","BOOLEAN"];          // TODO REMOVE - FOR TESTING ONLY                      
 
                     // create UI components for all runtime-constrained items 
                     for(i = 0; i < this.sparqlIds.length; i++){
@@ -334,8 +325,6 @@ define([	// properly require.config'ed
                 var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
     		    mq.getNodeGroupRuntimeConstraints(nodegroupId, this.launchRuntimeConstraintCallback.bind(this, multiFlag));
             },
-            
-            // TODO add launchDialogByNodegroup
             
 		};
 	
