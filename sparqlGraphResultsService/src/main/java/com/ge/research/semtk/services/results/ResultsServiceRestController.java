@@ -194,8 +194,8 @@ public class ResultsServiceRestController {
 
 	
 	@CrossOrigin
-	@RequestMapping(value="/getTableResultsCsvFromForm", method= RequestMethod.GET, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public ResponseEntity<Resource> getTableResultsCsvFromForm(@RequestParam String jobId, @RequestParam Integer maxRows){
+	@RequestMapping(value="/getTableResultsCsvFromForm", method= RequestMethod.GET)
+	public ResponseEntity<Resource> getTableResultsCsvFromForm(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
