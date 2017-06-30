@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URL;
@@ -193,19 +194,18 @@ public class ResultsServiceRestController {
 
 	
 	@CrossOrigin
-	@RequestMapping(value="/getTableResultsCsvFromForm", method= RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public ResponseEntity<Resource> getTableResultsCsvFromForm(@RequestBody MultiValueMap requestBody){
+	@RequestMapping(value="/getTableResultsCsvFromForm", method= RequestMethod.GET, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public ResponseEntity<Resource> getTableResultsCsvFromForm(@RequestParam String jobId, @RequestParam Integer maxRows){
 	
 		try{
-			if(requestBody == null){ throw new Exception("no parameters presented to endpoint"); }
-			if(requestBody.get("jobId") == null){ throw new Exception("no jobId passed to endpoint."); }
+			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
-	    	URL url = getJobTracker().getFullResultsURL((String) requestBody.get("jobId"));  
-			byte[] retval = getTableResultsStorage().getCsvTable(url, (Integer) requestBody.get("maxRows")); 			
+	    	URL url = getJobTracker().getFullResultsURL(jobId);  
+			byte[] retval = getTableResultsStorage().getCsvTable(url, maxRows); 			
 			ByteArrayResource resource = new ByteArrayResource(retval);
 			
 			HttpHeaders header = new HttpHeaders();
-			header.add("Content-Disposition", "attachment; filename=\"" + requestBody.get("jobId") + ".csv" + "\"; filename*=\"" + requestBody.get("jobId") + ".csv" +"\"");
+			header.add("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
 				
 			return ResponseEntity.ok()
 			       .headers(header)
