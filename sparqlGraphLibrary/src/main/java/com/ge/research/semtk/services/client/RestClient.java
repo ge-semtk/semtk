@@ -166,6 +166,12 @@ public abstract class RestClient extends Client implements Runnable {
 		return responseParsed;
 	}
 	
-	
+	private SimpleResultSet getRunResAsSimpleResultSet() throws Exception{
+		SimpleResultSet retval = new SimpleResultSet();
+		if(this.runRes == null){ throw new Exception("last service communication resulted in null and cannot be converted");}
+		retval = SimpleResultSet.fromJson((JSONObject)this.runRes);
+		return retval;
+	}
+
 	
 }
