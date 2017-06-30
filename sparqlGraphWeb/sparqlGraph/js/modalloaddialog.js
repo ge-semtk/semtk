@@ -227,7 +227,7 @@ ModalLoadDialog.prototype = {
 		this.hide();
 		this.storeDisplayedProfile();
 		this.writeProfiles();
-		this.callback(this.conn, document.getElementById("mdDirect").checked);
+		this.callback(this.conn);
 		return false;
 	},
 	

@@ -39,16 +39,105 @@ define([	// properly require.config'ed   bootstrap-modal
 		
 		MsiClientResults.prototype = {
 				
-			getJobIdData : function () {
+			getJobIdDataStr : function () {
 				return JSON.stringify ({
 					"jobId" : this.jobId,
 				});	
 			},
-			
-			execGetResults : function (successCallback) {			
-				this.msi.postToEndpoint("getResults", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            
+            getJobIdData : function () {
+				return {
+					"jobId" : this.jobId,
+				};	
 			},
 			
+			execGetResults : function (successCallback) {			
+				this.msi.postToEndpoint("getResults", this.getJobIdDataStr(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
+			
+            execGetTableResultsJson : function (maxRows, successCallback) {
+                var data = this.getJobIdData();
+                
+                if (maxRows != null && maxRows > 0) {
+                    data.maxRows = maxRows;
+                }
+                    
+                this.msi.postToEndpoint("getTableResultsJson", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+
+            },
+            
+            /* downloadFlag won't work in Ajax */
+             execGetTableResultsCsv : function (maxRows, downloadFlag, successCallback) {
+                var data = this.getJobIdData();
+                
+                if (maxRows != null && maxRows > 0) {
+                    data.maxRows = maxRows;
+                }
+                
+                if (downloadFlag) {
+                    data.appendDownloadHeaders = true;
+                }
+                    
+                this.msi.postToEndpoint("getTableResultsCsv", SON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+
+            },
+            
+            /*
+             * tableResCallback(tableResults)
+             */
+            execGetTableResultsJsonTableRes : function (maxRows, tableResCallback) {
+                
+                var successCallback = function(tableCallback0, resultSet) {
+                        
+                    if (resultSet.isSuccess()) {
+                        var table = resultSet.getTable();
+
+                        if ( table == null) {
+                            this.doFailureCallback(resultSet, 
+                                                   "Results service getTableResultsJson did not return a table.",
+                                                   );
+                        } else {
+                            tableCallback0(resultSet);
+                        }
+                    } else {
+                        this.doFailureCallback(resultSet);
+                    }
+                }.bind(this, tableResCallback);
+                
+                this.execGetTableResultsJson(maxRows, successCallback);
+            },
+            
+            /*
+             * return a URL where CSV file can be found
+             */
+            getTableResultsCsvDownloadUrl : function (optMaxRows) {
+                var ret =  this.msi.url + "getTableResultsCsvForWebClient?jobId=" + this.jobId;
+                
+                if (typeof optMaxRows != "undefined") {
+                    ret += "&maxRows=" + optMaxRows;
+                }
+                return ret;
+            },
+            
+            
+			getFailedResultHtml : function (resultSet) {
+				return resultSet.getGeneralResultHtml();
+			},
+            
+            // Add a header and run failure callback
+            // or override it with another failure callback
+            doFailureCallback : function (resultSet, optHeader) {
+                var html = (typeof optHeader == "undefined" || optHeader == null) ? "" : "<b>" + optHeader + "</b><hr>";
+                html += resultSet.getSimpleResultsHtml();
+                
+                if (typeof this.optFailureCallback == "undefined") {
+                    ModalIidx.alert("Results Service Failure", html);
+                } else {
+                    this.optFailureCallback(html);
+                }
+            },
+            
+            /* soon to be deprecated */
 			getResultsSampleUrl : function (resultSet) {
 				return resultSet.getSimpleResultField("sampleURL");
 			},
@@ -56,10 +145,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			getResultsFullUrl : function (resultSet) {
 				return resultSet.getSimpleResultField("fullURL");
 			},
+            
 			
-			getFailedResultHtml : function (resultSet) {
-				return resultSet.getGeneralResultHtml();
-			},
 		};
 	
 		return MsiClientResults;            // return the constructor

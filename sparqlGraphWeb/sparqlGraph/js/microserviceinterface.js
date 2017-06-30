@@ -38,10 +38,7 @@ define([	'sparqlgraph/js/msiresultset',
 			}
 			this.lastUrl = "";
 			this.timeout = 45000;
-			this.userFailureCallback = function (msg, optAllowHtml) {
-				                            // optAllowHtml:  default is HTML_SAFE, which means show user the raw tags.
-				                            //                If you know you're sending HTML, set this to true.
-											var htmlFlag = (typeof optAllowHtml === "undefined" || !optAllowHtml) ? ModalIidx.HTML_SAFE : ModalIidx.HTML_ALLOW;
+			this.userFailureCallback = function (msg) {
 											ModalIidx.alert("Microservice Failure", msg, ModalIidx.HTML_ALLOW);
 											if (typeof kdlLogEvent != "undefined") {
 												kdlLogEvent("SG Microservice Failure", "message", msg);
@@ -58,7 +55,7 @@ define([	'sparqlgraph/js/msiresultset',
 				},
 				
 				errorCallback : function (xhr, status, err) { 
-					this.userFailureCallback(this.generatePostFailureHtml(xhr, status, err), true);
+					this.userFailureCallback(this.generatePostFailureHtml(xhr, status, err));
 				},
 				
 				statusCodeCallback : function (statusCode, object) {
@@ -69,7 +66,7 @@ define([	'sparqlgraph/js/msiresultset',
 					if (statusCode == 403) {
 						html += "<br><b>meaning: &nbsp</b>" + status;
 					}
-					this.userFailureCallback(html, true);
+					this.userFailureCallback(html);
 				},
 				
 				successCallback : function (xhr, status, err) { 
@@ -83,7 +80,16 @@ define([	'sparqlgraph/js/msiresultset',
 				
 				generatePostFailureHtml : function (xhr, status, err) { 
 					// make a message out of failure callback parameters
-					var ret =  "<h3>" + this.getServiceName() + " service failed</h3>";
+					var ret = ""; 
+                    
+                    if (xhr.hasOwnProperty("status") && xhr.status == 0 &&
+                        xhr.hasOwnProperty("readyState") && xhr.readyState == "" && 
+                        xhr.hasOwnProperty("statusText") && xhr.statusText == "error"  ) {
+                        
+                        ret = "<h3>" + this.getServiceName() + " may be down</h3>";
+                    } else {
+                        ret = "<h3>" + this.getServiceName() + " service failed</h3>";
+                    }
 					ret += "<br><b>url: &nbsp</b>" + this.lastUrl;
 					ret += "<br><b>status: &nbsp</b>" + status;
 					ret += "<br><b>error: &nbsp</b>" + err;
@@ -147,7 +153,7 @@ define([	'sparqlgraph/js/msiresultset',
 					return errorHTML;
 				},
 				
-				
+                
 				postToEndpoint : function (endpoint, data, contentType, successCallback, optFailureCallback, optTimeout) {
 					// contentType:  
 					//      false - when data is a FormData()
@@ -155,7 +161,7 @@ define([	'sparqlgraph/js/msiresultset',
 					//
 					// successCallback(resultSet) 
 					//
-					// optFailureCallback - defaults to ModalIidx.alert(title, message)
+					// optFailureCallback(HTML) - defaults to form of ModalIidx.alert()
 					//                    
 					if (typeof optFailureCallback !== 'undefined') {
 						this.userFailureCallback = optFailureCallback;
@@ -170,7 +176,7 @@ define([	'sparqlgraph/js/msiresultset',
 					if (contentType === false) {
 						var errorHTML = this.checkFormData(data);
 						if (errorHTML) {
-							this.userFailureCallback(errorHTML, true);
+							this.userFailureCallback(errorHTML);
 							return;
 						}
 					}
