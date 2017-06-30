@@ -29,6 +29,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClient extends RestClient implements Runnable {
 	
@@ -72,10 +73,10 @@ public class ResultsClient extends RestClient implements Runnable {
 		Thread thread = null;
 
 		// write the start of the JSON
-		conf.setServiceEndpoint("results/initializeTableResultsJson"); 
+		conf.setServiceEndpoint("results/storeTableResultsJsonInitialize"); 
 		this.parametersJSON.put("jobId", jobId);
-		this.parametersJSON.put("columnNames", table.getColumnNames());
-		this.parametersJSON.put("columnTypes", table.getColumnTypes());
+		this.parametersJSON.put("columnNames", Utility.getJsonArray(table.getColumnNames()));
+		this.parametersJSON.put("columnTypes", Utility.getJsonArray(table.getColumnTypes()));
 		thread = new Thread(this);
 		thread.run();
 		
@@ -165,7 +166,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			}
 
 			// send the current batch  
-			conf.setServiceEndpoint("results/storeTableResultsJsonIncremental"); 
+			conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
 			this.parametersJSON.put("contents", resultsSoFar.toString());
 			this.parametersJSON.put("jobId", jobId);
 			thread = new Thread(this);
@@ -180,7 +181,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		} // end of while loop.
 		
 		// write the end of the JSON
-		conf.setServiceEndpoint("results/finalizeTableResultsJson"); 
+		conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
 		this.parametersJSON.put("jobId", jobId);
 		this.parametersJSON.put("rowCount", table.getNumRows());
 		thread = new Thread(this);

@@ -71,7 +71,7 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);
 			URL[] urls = client.execGetResults(jobId);
 			
-			assertTrue(urls[0].toString().endsWith("_sample.json")); 
+			assertTrue(urls[0].toString().endsWith(".json")); 
 			assertTrue(urls[1].toString().endsWith(".csv")); 
 
 			// check the results.
