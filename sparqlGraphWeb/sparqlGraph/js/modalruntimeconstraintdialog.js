@@ -50,6 +50,25 @@ define([	// properly require.config'ed
                                     "<=", "<="];
         var operandChoicesForBoolean = ["true","false","unspecified"];
     
+        var isNumericType = function(dataType){
+            // TODO only INT has been tested so far
+            if(dataType == "INT" || dataType.indexOf("INTEGER") >= 0){
+                return true;                
+            }
+            if(dataType == "DECIMAL" || dataType == "LONG" || dataType == "FLOAT" || dataType == "DOUBLE"){
+                return true;
+            }
+            return false;
+        }
+        
+        var isInteger = function(value){
+            if((parseFloat(value) == parseInt(value)) && !isNaN(value)){
+                return true;
+            } else {
+                return false;
+            }
+        }
+    
 		/**
 		 * A dialog allowing users to populate runtime constraints.
          * Callback provides json for runtime constraint object.  Sample: 
@@ -82,36 +101,34 @@ define([	// properly require.config'ed
                 for(i = 0; i < this.sparqlIds.length; i++){
                     
                     var sparqlId = this.sparqlIds[i];
-                    // TODO need/use itemType?
                     var valueType = this.valueTypes[i];
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
                     var operator2Element = document.getElementById("operator2" + sparqlId);
                     var operand2Element = document.getElementById("operand2" + sparqlId);    
                     
-                    if(valueType == "STRING"){                        
-                        // no checks needed yet
-                    }else if(valueType == "NODE_URI"){                        
+                    if(valueType == "NODE_URI"){                        
                         if(operand1Element.value.trim().indexOf(" ") > -1){
                             return "Error: invalid entry for " + sparqlId + ": uri cannot contain spaces";
                         }  
-                    }else if(valueType == "BOOLEAN"){                                                
-                        // no checks needed yet
-                    }else if(valueType == "INT"){ // TODO add other numeric types
-                        if(isNaN(operand1Element.value.trim())){  // TODO do check for specific data types (e.g. int, float)
-                            // user entered a non-numeric value
-                            return "Error: invalid entry for " + sparqlId + ": " + operand1Element.value; 
+                    }else if(isNumericType(valueType)){ 
+                        if(isNaN(operand1Element.value.trim())){    
+                            return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be numeric"; 
                         }
+                        if(valueType.indexOf("INT") >= 0 && !isInteger(operand1Element.value.trim())){
+                            return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be an integer"
+                        }
+                        // TODO add more detailed checks for other numeric datatypes
                         
                         // if a second operand was entererd
                         if(operand2Element.value){
                             if(isNaN(operand2Element.value)){  // TODO do check for specific data types (e.g. int, float)
                                 // user entered non-numeric value
-                                return "Error: invalid entry for " + sparqlId + ": " + operand2Element.value; 
+                                return "Error: invalid entry for " + sparqlId.substring(1) + ": " + operand2Element.value; 
                             }
                             if(!operand1Element.value){
                                 // user entered the second operand, but not the first
-                                return "Error: invalid entry for " + sparqlId + ": second operand entered without first operand";
+                                return "Error: invalid entry for " + sparqlId.substring(1) + ": second operand entered without first operand";
                             }
                             var operatorCombination = operator1Element.value + operator2Element.value;  // quick way to check 
                             if(operatorCombination != "<>" && operatorCombination != "><" && operatorCombination != "<=>=" && operatorCombination != ">=<="){
@@ -181,7 +198,7 @@ define([	// properly require.config'ed
                                 break;
                             // do nothing if unspecified
                         }
-                    }else if(valueType == "INT"){
+                    }else if(isNumericType(valueType)){
                         operator1 = operator1Element.value;
                         operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
                         operator2 = operator2Element.value;
@@ -280,7 +297,7 @@ define([	// properly require.config'ed
                             this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
                         }else if(valueType == "BOOLEAN"){
                             this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
-                        }else if(valueType == "INT"){
+                        }else if(isNumericType(valueType)){
                             this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, ">", "input-mini"));
                             this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
                             this.div.appendChild(IIDXHelper.createLabel("  ")); // forces a newline
@@ -309,7 +326,7 @@ define([	// properly require.config'ed
               *  Then launch dialog with callback linked to "OK"
               */
             launchDialogById : function (nodegroupId, callback, multiFlag) {
-                this.title = "Enter runtime constraints (**work in progress**)";
+                this.title = "Enter runtime constraints";
                 this.callback = callback;
 
                 var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
