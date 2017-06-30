@@ -3451,7 +3451,9 @@ SemanticNodeGroup.prototype = {
 					this.SNodeList[k].removeFromNodeList(this.SNodeList[i]);
 				}
 				// remove the node from the graph
-                this.graph.removeNode(this.SNodeList[i].node.id);
+                if (this.drawable) {
+                    this.graph.removeNode(this.SNodeList[i].node.id);
+                }
 				
 				// remove the sNode from the nodeGroup
 				this.SNodeList[i].node.hide();
