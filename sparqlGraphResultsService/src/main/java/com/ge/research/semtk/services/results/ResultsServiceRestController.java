@@ -77,8 +77,8 @@ public class ResultsServiceRestController {
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-		LoggerRestClient.easyLog(logger, "ResultsService", "initializeTableResultsJson start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service initializeTableResultsJson start JobId=" + requestBody.jobId);
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service storeTableResultsJsonInitialize start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -109,8 +109,8 @@ public class ResultsServiceRestController {
 
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-		LoggerRestClient.easyLog(logger, "ResultsService", "addIncrementalTableResultsJson start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service addIncrementalTableResultsJson start JobId=" + requestBody.jobId);
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service storeTableResultsJsonAddIncremental start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -137,7 +137,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service finalizeTableResultsJson start JobId=" + requestBody.jobId);
+    	logToStdout("Results Service storeTableResultsJsonFinalize start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -147,7 +147,7 @@ public class ResultsServiceRestController {
 		} catch(Exception e){
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(e.toString());
-		    LoggerRestClient.easyLog(logger, "ResultsService", "finalizeTableResultsJson exception", "message", e.toString());
+		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize exception", "message", e.toString());
 		    e.printStackTrace();
 		}    	
 		return res.toJson();
