@@ -95,6 +95,7 @@ define([	// properly require.config'ed
             
             
             // check for error conditions where we want to give the user a chance to correct their entries
+            // TODO add more detailed checks for other numeric datatypes
             validateCallback : function() {
                       
                 // validate each constraint item
@@ -118,13 +119,14 @@ define([	// properly require.config'ed
                         if(valueType.indexOf("INT") >= 0 && !isInteger(operand1Element.value.trim())){
                             return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be an integer"
                         }
-                        // TODO add more detailed checks for other numeric datatypes
                         
                         // if a second operand was entererd
                         if(operand2Element.value){
-                            if(isNaN(operand2Element.value)){  // TODO do check for specific data types (e.g. int, float)
-                                // user entered non-numeric value
+                            if(isNaN(operand2Element.value)){  
                                 return "Error: invalid entry for " + sparqlId.substring(1) + ": " + operand2Element.value; 
+                            }
+                            if(valueType.indexOf("INT") >= 0 && !isInteger(operand2Element.value.trim())){
+                                return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be an integer"
                             }
                             if(!operand1Element.value){
                                 // user entered the second operand, but not the first
