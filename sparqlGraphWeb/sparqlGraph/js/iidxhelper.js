@@ -139,11 +139,14 @@ define([	// properly require.config'ed
         return select;
     };
 
-    IIDXHelper.createLabel = function (labelText) {
-        // create a label element with the given text and return it
+    /* Creates a label element with the given text.  Optionally provide a tooltip. */
+    IIDXHelper.createLabel = function (labelText, optTooltip) {
         var labelElem = document.createElement("label");
         labelElem.className = "control-label";
         labelElem.innerHTML = labelText;
+        if(optTooltip != "undefined"){
+            labelElem.title = optTooltip;
+        }
         return labelElem;
     };
     
