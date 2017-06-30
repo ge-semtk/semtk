@@ -34,6 +34,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -189,6 +190,37 @@ public class ResultsServiceRestController {
 		// if nothing, return nothing
 		return null;
 	}
+
+	
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsCsvFromForm", method= RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public ResponseEntity<Resource> getTableResultsCsvFromForm(@RequestBody MultiValueMap requestBody){
+	
+		try{
+			if(requestBody == null){ throw new Exception("no parameters presented to endpoint"); }
+			if(requestBody.get("jobId") == null){ throw new Exception("no jobId passed to endpoint."); }
+			
+	    	URL url = getJobTracker().getFullResultsURL((String) requestBody.get("jobId"));  
+			byte[] retval = getTableResultsStorage().getCsvTable(url, (Integer) requestBody.get("maxRows")); 			
+			ByteArrayResource resource = new ByteArrayResource(retval);
+			
+			HttpHeaders header = new HttpHeaders();
+			header.add("Content-Disposition", "attachment; filename=\"" + requestBody.get("jobId") + ".csv" + "\"; filename*=\"" + requestBody.get("jobId") + ".csv" +"\"");
+				
+			return ResponseEntity.ok()
+			       .headers(header)
+		           .contentLength(retval.length)
+		           .contentType(MediaType.parseMediaType("text/csv"))
+		           .body(resource);
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+		// if nothing, return nothing
+		return null;
+	}
+	
 	
 	/**
 	 * Return a JSON object containing results (possibly truncated) for job
