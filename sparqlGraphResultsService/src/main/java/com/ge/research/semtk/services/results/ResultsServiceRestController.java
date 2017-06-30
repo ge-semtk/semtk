@@ -192,10 +192,38 @@ public class ResultsServiceRestController {
 		return null;
 	}
 
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsJsonForWebClient", method= RequestMethod.GET)
+	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	
+		try{
+			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
+			
+	    	URL url = getJobTracker().getFullResultsURL(jobId);  
+			byte[] retval = getTableResultsStorage().getJsonTable(url, maxRows); 			
+			ByteArrayResource resource = new ByteArrayResource(retval);
+			
+			HttpHeaders header = new HttpHeaders();
+			header.add("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
+				
+			return ResponseEntity.ok()
+			       .headers(header)
+		           .contentLength(retval.length)
+		           .contentType(MediaType.parseMediaType("application/json"))
+		           .body(resource);
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+		// if nothing, return nothing
+		return null;
+	}
+
 	
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
-	public ResponseEntity<Resource> getTableResultsCsvForSparqlGraph(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	public ResponseEntity<Resource> getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
@@ -262,12 +290,13 @@ public class ResultsServiceRestController {
     	logToStdout("Results Service getResults start JobId=" + jobId);
 
 	    try {
-	    	URL url =  getJobTracker().getFullResultsURL(jobId);  // full json url
 	    	
-			URL[] retUrls = getTableResultsStorage().getJsonAndCsvTableUrls(url, new Integer(200), null);	    	
-		    res.addResult("fullURL", retUrls[1].toString());  	// csv  - retain bad label for backward compatibility
-		    res.addResult("sampleURL", retUrls[0].toString());	// json - retain bad label for backward compatibility
-		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", retUrls[0].toString(), "fullURL", retUrls[1].toString());
+	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&rowCount=200");
+	    	URL csv  =  new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + requestBody.jobId);
+	    	
+	    	res.addResult("fullURL", csv.toString());  	// csv  - retain bad label for backward compatibility
+		    res.addResult("sampleURL", json.toString());	// json - retain bad label for backward compatibility
+		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", json.toString(), "fullURL", csv.toString());
 		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
