@@ -63,7 +63,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		int tableRowsDone = 0;
 		int totalRows     = table.getNumRows();
 		int segment       = 0;
-		int finalSegmentNumber = (int) (Math.ceil(totalRows/ROWS_TO_PROCESS) - 1);
+		int finalSegmentNumber = ((int) (Math.ceil((double)totalRows/ROWS_TO_PROCESS))) - 1;
 		
 		long startTime=0, endTime=0;
 		double prepSec = 0.0;
@@ -96,10 +96,10 @@ public class ResultsClient extends RestClient implements Runnable {
 					// but if any element contained commas, then can't use ArrayList.toString()
 					if(StringUtils.countMatches(curr, ",") != (table.getNumColumns() - 1)){
 						// at least one comma exists within an element
-						// the following approach is relatively slow, so only use when needed
-						// escape double quotes (using "" for csv files), then enclose each element in double quotes 
+						// the following approach is relatively slow, so only use when needed					
+						// escape double quotes (using \" for json files), then enclose each element in double quotes
 						curr = table.getRow(tableRowsDone).stream()
-								.map(s -> (new StringBuilder()).append("\"").append(s.replace("\"","\"\"")).append("\"").toString())
+								.map(s -> (new StringBuilder()).append("\"").append(s.replace("\"","\\\"")).append("\"").toString())
 								.collect(Collectors.joining(","));
 					}else{
 						// there are no commas within elements
@@ -164,7 +164,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				this.parametersJSON.remove("contents");
 				this.parametersJSON.remove("jobId");
 			}
-
+			
 			// send the current batch  
 			conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
 			this.parametersJSON.put("contents", resultsSoFar.toString());
