@@ -154,7 +154,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			// take care of last run
 			if (thread != null) {
 				thread.join();
-				((SimpleResultSet) this.getRunRes()).throwExceptionIfUnsuccessful();
+				(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
 				if (this.getRunException() != null) {
 					throw this.getRunException();
 				}
@@ -190,7 +190,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		// take care of last run
 		if (thread != null) {
 			thread.join();
-			((SimpleResultSet) this.getRunRes()).throwExceptionIfUnsuccessful();
+			(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
 			if (this.getRunException() != null) {
 				throw this.getRunException();
 			}
