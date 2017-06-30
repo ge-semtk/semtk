@@ -29,6 +29,11 @@ package com.ge.research.semtk.services.results;
  */
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,13 +46,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.edc.JobTracker;
-import com.ge.research.semtk.edc.ResultsStorage;
+import com.ge.research.semtk.edc.TableResultsStorage;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**
- * Service to get status of a query.
+ * Service to get query results.
  */
 @CrossOrigin
 @RestController
@@ -62,159 +68,156 @@ public class ResultsServiceRestController {
 	ResultsLoggingProperties log_prop;
 	
 	/**
-	 * Store a chunk of text as a csv file and sample csv file save URLS with jobId
-	 * @param requestBody where contents are contents of a csv file
-	 * @return sampleURL, fullURL
+	 * Call 1 of 3 for storing JSON results.
+	 * Writes JSON start, column names, and column types.
 	 */
-	
 	@CrossOrigin
-	@RequestMapping(value="/storeSingleFileResults", method= RequestMethod.POST)
-	public JSONObject storeSingleFileResults(@RequestBody ResultsRequestBodyFileContents requestBody){
-		String jobId = requestBody.jobId;
-	    SimpleResultSet res = new SimpleResultSet();
-	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-	    LoggerRestClient.easyLog(logger, "ResultsService", "storeCsvResults start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeSingleFileResults start JobId=" + jobId);
-
-	    
-	    try {
-		    ResultsStorage storage = getResultsStorage();
-		     
-		    // store the data
-		    URL url = storage.storeSingleFile(requestBody.getContents(), requestBody.getExtension());
-		    
-		    // store the location via JobTracker
-		    JobTracker tracker = new JobTracker(edc_prop);
-	    	tracker.setJobResultsURL(requestBody.jobId, url);
-	    	
-		    res.setSuccess(true);
-		    
-	    } catch (Exception e) {
-	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
-		    LoggerRestClient.easyLog(logger, "ResultsService", "storeSingleFileResults exception", "message", e.toString());
-		    e.printStackTrace();
-
-	    }
-	    
-	    return res.toJson();
-	}
-	/**
-	 * Store a chunk of text as a csv file and sample csv file save URLS with jobId
-	 * @param requestBody where contents are contents of a csv file
-	 * @return sampleURL, fullURL
-	 */
-	
-	@CrossOrigin
-	@RequestMapping(value="/storeCsvResults", method= RequestMethod.POST)
-	public JSONObject storeCsvResults(@RequestBody ResultsRequestBodyFileContents requestBody){
-		String jobId = requestBody.jobId;
-	    SimpleResultSet res = new SimpleResultSet();
-	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-	    LoggerRestClient.easyLog(logger, "ResultsService", "storeCsvResults start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeCsvResults start JobId=" + jobId);
-
-	    
-	    try {
-		    ResultsStorage storage = getResultsStorage();
-		     
-		    // store the data
-		    URL [] urls = storage.storeCsvFile(requestBody.getContents(), prop.getSampleLines());
-		    
-		    // store the location via JobTracker
-		    JobTracker tracker = new JobTracker(edc_prop);
-	    	tracker.setJobResultsURLs(requestBody.jobId, urls[0], urls[1]);
-	    	
-		    res.setSuccess(true);
-		    
-	    } catch (Exception e) {
-	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
-		    LoggerRestClient.easyLog(logger, "ResultsService", "storeCsvResults exception", "message", e.toString());
-		    e.printStackTrace();
-
-	    }
-	    
-	    return res.toJson();
-	}
-	
-	@CrossOrigin
-	@RequestMapping(value="/storeIncrementalCsvResults", method=RequestMethod.POST)
-	public JSONObject storeIncrementalCsvResults(@RequestBody ResultsRequestBodyIncrementalFileContents requestBody){
-		SimpleResultSet res = new SimpleResultSet();
-		String jobId = requestBody.jobId;
+	@RequestMapping(value="/storeTableResultsJsonInitialize", method=RequestMethod.POST)
+	public JSONObject storeTableResultsJsonInitialize(@RequestBody ResultsRequestBodyInitializeTableResultsJson requestBody){
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-		LoggerRestClient.easyLog(logger, "ResultsService", "storeIncrementalCsvResults start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeCsvResults start JobId=" + jobId + " with segment number: " + requestBody.getSegmentNumber());
-		
+		LoggerRestClient.easyLog(logger, "ResultsService", "initializeTableResultsJson start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service initializeTableResultsJson start JobId=" + requestBody.jobId);
+
+		SimpleResultSet res = new SimpleResultSet();
 		try{
-			ResultsStorage storage = getResultsStorage();
-			URL [] urls = storage.storeCsvFileIncremental(requestBody.getContents(), prop.getSampleLines(), requestBody.jobId, requestBody.getSegmentNumber());
-			
-		    // store the location via JobTracker
-		    JobTracker tracker = new JobTracker(edc_prop);
-	    	tracker.setJobResultsURLs(requestBody.jobId, urls[0], urls[1]);
-	    	
+			getTableResultsStorage().storeTableResultsJsonInitialize(requestBody.jobId, requestBody.getColumnNames(), requestBody.getColumnTypes()); 	
+		    res.setSuccess(true);
+		} catch(Exception e){
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(e.toString());
+		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize exception", "message", e.toString());
+		    e.printStackTrace();
+		}    	
+		return res.toJson();
+	}
+	
+	/**
+	 * Call 2 of 3 for storing JSON results.  Repeat for multiple batches.
+	 * Writes rows of data.  
+	 * Caller must omit tailing comma for the last row of the last call.
+	 * 
+	 * Sample input:
+	 * ["a1","b1","c1"],
+	 * ["a2","b2","c2"],
+	 * ["a3","b3","c3"]
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/storeTableResultsJsonAddIncremental", method=RequestMethod.POST)
+	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody){
+
+		// logging
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
+		LoggerRestClient.easyLog(logger, "ResultsService", "addIncrementalTableResultsJson start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service addIncrementalTableResultsJson start JobId=" + requestBody.jobId);
+
+		SimpleResultSet res = new SimpleResultSet();
+		try{
+			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, requestBody.getContents());
 		    res.setSuccess(true);
 		}
 		catch(Exception e){
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(e.toString());
-		    LoggerRestClient.easyLog(logger, "ResultsService", "storeCsvTableResults exception", "message", e.toString());
+		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
 		    e.printStackTrace();
-		}
-    	
+		}    	
 		return res.toJson();
 	}
 	
 	/**
-	 * Store a chunk of text as a csv file and sample json file save URLS with jobId
-	 * @param requestBody where contents are json string representing Table
-	 * @return sampleURL, fullURL
+	 * Call 3 of 3 for storing JSON results.
+	 * Writes row count and JSON end.
 	 */
 	@CrossOrigin
-	@RequestMapping(value="/storeTableResults", method= RequestMethod.POST)
-	public JSONObject storeTableResults(@RequestBody ResultsRequestBodyFileContents requestBody){
-		String jobId = requestBody.jobId;
-	    SimpleResultSet res = new SimpleResultSet();
-	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-	    LoggerRestClient.easyLog(logger, "ResultsService", "storeCsvResults start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeTableResults start JobId=" + jobId);
+	@RequestMapping(value="/storeTableResultsJsonFinalize", method=RequestMethod.POST)
+	public JSONObject storeTableResultsJsonFinalize(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody){
+		
+		// logging
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service finalizeTableResultsJson start JobId=" + requestBody.jobId);
 
-	    
-	    try {
-		    ResultsStorage storage = getResultsStorage();
-		     
-		    // make the table
-		    JSONParser parser = new JSONParser();
-		    JSONObject json = (JSONObject) parser.parse(requestBody.getContents());
-		    Table table = Table.fromJson(json);
-		    
-		    URL [] urls = storage.storeTable(table, prop.getSampleLines());
-		    
-		    // store the location via JobTracker
-		    JobTracker tracker = new JobTracker(edc_prop);
-	    	tracker.setJobResultsURLs(requestBody.jobId, urls[0], urls[1]);
-	    	
+		SimpleResultSet res = new SimpleResultSet();
+		try{
+			URL url = getTableResultsStorage().storeTableResultsJsonFinalize(requestBody.jobId, requestBody.getRowCount()); 
+		    getJobTracker().setJobResultsURL(requestBody.jobId, url);  // store URL with the job		
 		    res.setSuccess(true);
-		    
-	    } catch (Exception e) {
+		} catch(Exception e){
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(e.toString());
-		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResults exception", "message", e.toString());
+		    LoggerRestClient.easyLog(logger, "ResultsService", "finalizeTableResultsJson exception", "message", e.toString());
 		    e.printStackTrace();
-
-	    }
-	    
-	    return res.toJson();
+		}    	
+		return res.toJson();
 	}
 	
 	/**
-	 * 
-	 * @param requestBody
-	 * @return sampleURL fullURL
+	 * Return a CSV file containing results (possibly truncated) for job
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
+	public ResponseEntity<Resource> getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody){
+	
+		try{
+	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
+			byte[] retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows); 			
+			ByteArrayResource resource = new ByteArrayResource(retval);
+			
+			if(requestBody.getAppendDownloadHeaders()){
+				HttpHeaders header = new HttpHeaders();
+				header.add("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
+				
+				return ResponseEntity.ok()
+			        .headers(header)
+		            .contentLength(retval.length)
+		            .contentType(MediaType.parseMediaType("text/csv"))
+		            .body(resource);
+			}
+			else{
+				return ResponseEntity.ok()
+		        //    .headers(headers)
+		            .contentLength(retval.length)
+		            .contentType(MediaType.parseMediaType("text/csv"))
+		            .body(resource);		
+			}
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+		// if nothing, return nothing
+		return null;
+	}
+	
+	/**
+	 * Return a JSON object containing results (possibly truncated) for job
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
+	public JSONObject getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody){
+	
+		TableResultSet res = new TableResultSet();
+		try{
+	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
+			byte[] retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);			
+			Table retTable =  Table.fromJson((JSONObject)new JSONParser().parse(new String(retval)));
+			res.setSuccess(true);
+			res.addResults(retTable);			
+	    } catch (Exception e) {
+		    res.setSuccess(false);
+	    	res.addRationaleMessage(e.toString()); 
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsJson exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+		return res.toJson();
+	}
+	
+	/**
+	 * Gets a CSV URL and a JSON URL containing results for a job 
+	 * Keeping this only for backwards compatibility with v1.3 or earlier
+	 * "fullURL"   is the CSV  file (retaining bad label for backward compatibility)
+	 * "sampleURL" is the JSON file (retaining bad label for backward compatibility)
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getResults", method= RequestMethod.POST)
@@ -223,81 +226,61 @@ public class ResultsServiceRestController {
 		    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-    	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", jobId);
-    	
+    	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", jobId);    	
     	logToStdout("Results Service getResults start JobId=" + jobId);
 
 	    try {
-	    	JobTracker tracker = new JobTracker(edc_prop);
+	    	URL url =  getJobTracker().getFullResultsURL(jobId);  // full json url
 	    	
-	    	URL sampleURL = tracker.getSampleResultsURL(jobId);
-	    	URL fullURL =  tracker.getFullResultsURL(jobId);
-	    	String sampleURLStr = sampleURL != null ? sampleURL.toString() : "";
-		    res.addResult("fullURL", fullURL.toString());
-		    res.addResult("sampleURL", sampleURLStr);
-		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", sampleURLStr, "fullURL", fullURL.toString());
-
-		    res.setSuccess(true);
-		    
+			URL[] retUrls = getTableResultsStorage().getJsonAndCsvTableUrls(url, new Integer(200), null);	    	
+		    res.addResult("fullURL", retUrls[1].toString());  	// csv  - retain bad label for backward compatibility
+		    res.addResult("sampleURL", retUrls[0].toString());	// json - retain bad label for backward compatibility
+		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", retUrls[0].toString(), "fullURL", retUrls[1].toString());
+		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(e.toString());
 		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults exception", "message", e.toString());
 		    e.printStackTrace();
-
-	    }
-	    
+	    }	    
 	    return res.toJson();
 	}
 	
 	/**
-	 * Delete files associated with this jobId
-	 * @param requestBody
-	 * @return
+	 * Delete file associated with this jobId
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStorage", method= RequestMethod.POST)
 	public JSONObject deleteStorage(@RequestBody ResultsRequestBody requestBody){
-	    
-		String jobId = requestBody.jobId;
-    	logToStdout("Results Service deleteStorage start JobId=" + jobId);
+    	logToStdout("Results Service deleteStorage start JobId=" + requestBody.jobId);
 
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-    	LoggerRestClient.easyLog(logger, "Results Service", "deleteStorage start", "JobId", jobId);
+    	LoggerRestClient.easyLog(logger, "Results Service", "deleteStorage start", "JobId", requestBody.jobId);
     	
-	    try {
-		    ResultsStorage storage = getResultsStorage();
-	    	JobTracker tracker = new JobTracker(edc_prop);
-	    	
-	    	URL sampleURL = tracker.getSampleResultsURL(jobId);
-	    	URL fullURL =  tracker.getFullResultsURL(jobId);
-		    
-	    	if (sampleURL != null) {
-	    		storage.deleteStoredFile(sampleURL);
-	    		LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage URLs", "sampleURL", sampleURL.toString());
-	    	}
+	    try {   	
+	    	URL fullURL = getJobTracker().getFullResultsURL(requestBody.jobId);
 	    	if (fullURL != null) {
-	    		storage.deleteStoredFile(fullURL);
+	    		getTableResultsStorage().deleteStoredFile(fullURL);
 	    		LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage URLs", "fullURL", fullURL.toString());
-	    	}
-
-		    
-		    
-		    res.setSuccess(true);
-		    
+	    	}		    
+		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(e.toString());
 		    LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage exception", "message", e.toString());
-	    }
-	    
+	    }	    
 	    return res.toJson();
 	}
-	private ResultsStorage getResultsStorage() throws Exception {
-		return new ResultsStorage(new URL(prop.getBaseURL()), prop.getFileLocation());
+	
+	private TableResultsStorage getTableResultsStorage() throws Exception {
+		return new TableResultsStorage(new URL(prop.getBaseURL()), prop.getFileLocation());
 	}
 
+	private JobTracker getJobTracker() throws Exception{
+		return new JobTracker(edc_prop);
+	}
+	
 	private void logToStdout (String message) {
 		System.out.println(message);
 	}

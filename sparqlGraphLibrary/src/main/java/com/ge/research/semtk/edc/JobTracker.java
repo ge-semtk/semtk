@@ -294,25 +294,21 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	    }
 	}
 
-	public void setJobResultsURL(String jobId, URL fullResultsURL) throws Exception {
-		setJobResultsURLs(jobId, null, fullResultsURL);
-		return;
-	}
 	
 	/**
-	 * Set the results URLs for a job,
+	 * Set the results URL for a job,
 	 *    creating it if it doesn't exist.
 	 * @param jobId
-	 * @param sampleResultsURL
 	 * @param fullResultsURL
 	 * @throws Exception
 	 */
-	public void setJobResultsURLs(String jobId, URL sampleResultsURL, URL fullResultsURL) throws Exception {
+	public void setJobResultsURL(String jobId, URL fullResultsURL) throws Exception {
 		
 		if (! jobExists(jobId)) {
 	    	createJob(jobId);
 	    }
 		
+		URL sampleResultsURL = null;	// temporary measure to disable sample while not changing SPARQL query.  Matching functionality of removed utility method. 
 		String uriFullURL = "URL_" + UUID.randomUUID().toString();
 		String uriSampleURL = "URL_" + UUID.randomUUID().toString();
 

@@ -88,7 +88,7 @@ define([	// properly require.config'ed
                 var s = "RuntimeConstraints: ["; 
                 for(i = 0; i < this.constraintsJson.length; i++){
                     s += this.constraintsJson[i];
-                    s += ",";
+                    s += (i < this.constraintsJson.length - 1) ? "," : "";  // don't include comma if it's the last entry
                 }
                 s += "]";
                 return s;

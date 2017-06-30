@@ -42,9 +42,6 @@ public class ResultsClientTest_IT {
 	private static String SERVICE_SERVER;
 	private static int SERVICE_PORT;
 	
-	private final String CSV_CONTENTS = "one,two,three\n1,2,3\n10,20,30\n100,200,300\n";
-	private final String EXTENSION = "csv";
-	
 	private static ResultsClient client = null;
 	
 	@BeforeClass
@@ -55,8 +52,6 @@ public class ResultsClientTest_IT {
 		client = new ResultsClient(new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT));
 	}
 
-	
-	
 	@Test
 	public void testStoreTable() throws Exception {
 
@@ -198,56 +193,24 @@ public class ResultsClientTest_IT {
 			cleanup(client, jobId);
 		}
 	}
-	
-	
-	@Test
-	public void testStoreSingleFile() throws Exception {
-
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
 		
-		try {	
-			client.execStoreSingleFileResults(jobId, CSV_CONTENTS, EXTENSION);
-			URL[] urls = client.execGetResults(jobId);
-			
-			assertTrue(urls[0] == null); 
-			String contents = IOUtils.toString(urls[1]);
-			assertTrue(contents.equals(CSV_CONTENTS));
-			assertTrue(urls[1].toString().endsWith(EXTENSION));
-			
-		} finally {
-			cleanup(client, jobId);
-		}
-	}
-	
-	
-	@Test
-	public void testStoreCsv() throws Exception {
-
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
-		
-		try {	
-			client.execStoreCsvResults(jobId, CSV_CONTENTS);
-			URL[] urls = client.execGetResults(jobId);
-			
-			String sample = IOUtils.toString(urls[0]);
-			assertTrue(sample.equals(CSV_CONTENTS)); 
-		
-			String contents = IOUtils.toString(urls[1]);
-			assertTrue(contents.equals(CSV_CONTENTS));
-		
-		} finally {
-			cleanup(client, jobId);
-		}
-	}
-	
-	
 	@Test
 	public void test_delete() throws Exception {
 		
 		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		String [] cols = {"col1", "col2"};
+		String [] types = {"String", "String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("one");
+		row.add("two");
 		
-		try {
-			client.execStoreCsvResults(jobId, CSV_CONTENTS);
+		try {			
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			table.addRow(row);
+			
+			client.execStoreTableResults(jobId, table);
+			
 			client.execDeleteStorage(jobId);
 			URL[] urls = client.execGetResults(jobId);
 
@@ -259,8 +222,7 @@ public class ResultsClientTest_IT {
 		} finally {
 			cleanup(client, jobId);
 		}
-	}
-	
+	}	
 	
 	private void cleanup(ResultsClient client, String jobId) throws Exception {
 		client.execDeleteStorage(jobId);

@@ -163,7 +163,6 @@ public class JobTrackerTest_IT {
 		tracker = new JobTracker(getProp());
 		tracker.deleteJob(jobId);
 		
-		URL SAMPLE_URL = new URL("http://machine:80/sampleResults.json");
 		URL FULL_URL = new URL("http://machine:80/fullResults.csv");
 		int PERCENT = 2;
 			
@@ -172,7 +171,7 @@ public class JobTrackerTest_IT {
 		String status0 = tracker.getJobStatus(jobId);
 			
 		// create job if needed, and set success things
-		tracker.setJobResultsURLs(jobId, SAMPLE_URL, FULL_URL);
+		tracker.setJobResultsURL(jobId, FULL_URL);
 			
 		// query things back
 		URL fullURL = tracker.getFullResultsURL(jobId);
@@ -181,7 +180,6 @@ public class JobTrackerTest_IT {
 		String status = tracker.getJobStatus(jobId);
 		String statusMessage = tracker.getJobStatusMessage(jobId);
 			
-		assertTrue(sampleURL.toString().equals(SAMPLE_URL.toString()));
 		assertTrue(fullURL.toString().equals(FULL_URL.toString()));
 		assertTrue(percent == PERCENT);
 		assertTrue(percent0 == PERCENT);
@@ -199,7 +197,6 @@ public class JobTrackerTest_IT {
 		tracker = new JobTracker(getProp());
 		tracker.deleteJob(jobId);
 		
-		URL SAMPLE_URL = null;
 		URL FULL_URL = new URL("http://machine:80/fullResults.csv");
 		int PERCENT = 2;
 			
@@ -208,7 +205,7 @@ public class JobTrackerTest_IT {
 		String status0 = tracker.getJobStatus(jobId);
 			
 		// create job if needed, and set success things
-		tracker.setJobResultsURLs(jobId, SAMPLE_URL, FULL_URL);
+		tracker.setJobResultsURL(jobId, FULL_URL);
 			
 		// query things back
 		URL fullURL = tracker.getFullResultsURL(jobId);

@@ -20,8 +20,6 @@ package com.ge.research.semtk.edc.client;
 
 import java.net.ConnectException;
 
-import org.json.simple.JSONObject;
-
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
@@ -48,22 +46,6 @@ public class StatusClient extends RestClient {
 	}
 	
 	/**
-	 * Not meant to be used.
-	 * @return
-	 * @throws Exception
-	 */
-	public SimpleResultSet execute() throws ConnectException, EndpointNotFoundException, Exception {
-		
-		if (conf.getServiceEndpoint().isEmpty()) {
-			throw new Exception("Attempting to execute StatusClient with no enpoint specified.");
-		}
-		JSONObject resultJSON = (JSONObject)super.execute();	
-		
-		SimpleResultSet ret = (SimpleResultSet) SimpleResultSet.fromJson(resultJSON);  
-		return ret;
-	}
-	
-	/**
 	 * 
 	 * @return percent as integer 0 - 100
 	 * @throws Exception
@@ -71,7 +53,7 @@ public class StatusClient extends RestClient {
 	public int execGetPercentComplete() throws ConnectException, EndpointNotFoundException, Exception {
 		conf.setServiceEndpoint("status/getPercentComplete");
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return res.getResultInt("percentComplete");
 		} finally {
@@ -88,7 +70,7 @@ public class StatusClient extends RestClient {
 	public String execGetStatus() throws ConnectException, EndpointNotFoundException, Exception {
 		conf.setServiceEndpoint("status/getStatus");
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return res.getResult("status");
 		} finally {
@@ -105,7 +87,7 @@ public class StatusClient extends RestClient {
 	public String execGetStatusMessage() throws ConnectException, EndpointNotFoundException, Exception {
 		conf.setServiceEndpoint("status/getStatusMessage");
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return res.getResult("statusMessage");
 		} finally {
@@ -127,7 +109,7 @@ public class StatusClient extends RestClient {
 		this.parametersJSON.put("maxWaitMsec", maxWaitMsec);
 		
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return;
 		} finally {
@@ -153,7 +135,7 @@ public class StatusClient extends RestClient {
 		this.parametersJSON.put("message", message);
 
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return;
 		} finally {
@@ -177,7 +159,7 @@ public class StatusClient extends RestClient {
 		this.parametersJSON.put("message", message);
 		
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return;
 		} finally {
@@ -197,7 +179,7 @@ public class StatusClient extends RestClient {
 		this.parametersJSON.put("message", message);
 		
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return;
 		} finally {
@@ -214,7 +196,7 @@ public class StatusClient extends RestClient {
 		conf.setServiceEndpoint("status/deleteJob");
 		
 		try {
-			SimpleResultSet res = this.execute();
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			return;
 		} finally {
