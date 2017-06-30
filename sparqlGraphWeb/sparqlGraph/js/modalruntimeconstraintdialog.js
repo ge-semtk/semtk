@@ -116,7 +116,7 @@ define([	// properly require.config'ed
                         if(isNaN(operand1Element.value.trim())){    
                             return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be numeric"; 
                         }
-                        if(valueType.indexOf("INT") >= 0 && !isInteger(operand1Element.value.trim())){
+                        if(valueType.indexOf("INT") >= 0 && operand1Element.value && !isInteger(operand1Element.value.trim())){
                             return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be an integer"
                         }
                         
@@ -267,8 +267,8 @@ define([	// properly require.config'ed
                     this.sparqlIds = resultSet.getColumnStringsByName("valueId");
                     //this.itemTypes = resultSet.getColumnStringsByName("itemType");   
                     this.valueTypes = resultSet.getColumnStringsByName("valueType");
-//					this.sparqlIds = ["flavor","circumference", "frosting"]; // TODO REMOVE - FOR TESTING ONLY
-//                  this.valueTypes = ["STRING","INT","BOOLEAN"];          // TODO REMOVE - FOR TESTING ONLY                      
+					//this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
+                    //this.valueTypes = ["STRING","INT","DOUBLE"];          // TODO REMOVE - FOR TESTING ONLY                      
 
                     // create UI components for all runtime-constrained items 
                     for(i = 0; i < this.sparqlIds.length; i++){
@@ -298,7 +298,7 @@ define([	// properly require.config'ed
                             this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId, "input-xlarge"));
                         }else{
                             // TODO support all data types, and also handle in validateCallback and okCallback
-                            this.div.appendChild(IIDXHelper.createLabel("...type not supported yet"));
+                            this.div.appendChild(IIDXHelper.createLabel("...not supported yet..."));
                         }
                     } 
                     
