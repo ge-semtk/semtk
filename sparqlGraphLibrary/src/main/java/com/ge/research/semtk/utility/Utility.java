@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
@@ -36,6 +37,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Properties;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -72,6 +75,23 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss"));
 	}
 
+	/**
+	 * Gets a CSV record string from an arraylist of Strings.
+	 * Does not include a record separator (will not append \n at the end of the line)
+	 */
+	public static String getCSVString(ArrayList<String> row) throws IOException{
+		StringWriter stringWriter = new StringWriter();
+		CSVFormat csvFormat = CSVFormat.EXCEL.withRecordSeparator("");  // don't include a record separator
+		CSVPrinter csvPrinter = new CSVPrinter(stringWriter, csvFormat);		
+		csvPrinter.printRecord(row);
+		csvPrinter.close();
+		
+		String ret = stringWriter.toString();
+		stringWriter.close();
+		return ret;
+		
+	}
+	
 	public static JSONArray getJsonArrayFromString(String s) throws Exception{
 		return (JSONArray) (new JSONParser()).parse(s);
 	}

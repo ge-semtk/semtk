@@ -203,19 +203,9 @@ public class Table {
 	/**
 	 * Get a single table row by index, and convert it to a CSV string.
 	 */
-	public String getRowAsCSVString(int rowNum) throws IOException{
-		
+	public String getRowAsCSVString(int rowNum) throws IOException{		
 		ArrayList<String> row = this.getRow(rowNum);
-
-		StringWriter stringWriter = new StringWriter();
-		CSVFormat csvFormat = CSVFormat.EXCEL.withRecordSeparator("");  // don't include a record separator
-		CSVPrinter csvPrinter = new CSVPrinter(stringWriter, csvFormat);		
-		csvPrinter.printRecord(row);
-		csvPrinter.close();
-		
-		String ret = stringWriter.toString();
-		stringWriter.close();
-		return ret;
+		return Utility.getCSVString(row);
 	}
 	
 	public String getCell(int row, int col) {
@@ -284,7 +274,6 @@ public class Table {
 	
 	/**
 	 * Create a CSV string containing the table rows and columns.
-	 * @throws IOException 
 	 */
 	public String toCSVString() throws IOException{
 		
@@ -294,16 +283,12 @@ public class Table {
 		
 		StringBuffer buf = new StringBuffer();
 		
-		// gather column names
-		String[] columnNamesInOrder = this.getColumnNames();
-		// TODO use Apache CSVPrinter
-		for(String c : columnNamesInOrder){
-			buf.append(c).append(",");
-		}
-		buf.setLength(buf.length() - 1); // strip off the tailing comma
+		// get CSV for column names	
+		ArrayList<String> headers = new ArrayList<String>( Arrays.asList( this.getColumnNames() ) ); // gets col names in order
+		buf.append(Utility.getCSVString(headers));
 		buf.append("\n");
 
-		// gather data rows
+		// get CSV for data rows
 		for(int i = 0; i < this.getNumRows(); i++){	
 			buf.append(getRowAsCSVString(i));			
 			buf.append("\n");
