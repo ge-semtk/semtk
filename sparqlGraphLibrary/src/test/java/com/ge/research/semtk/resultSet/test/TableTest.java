@@ -51,8 +51,37 @@ public class TableTest {
 		rows.add(rowNames);
 		Table table = new Table(cols, colTypes, rows);
 		
-		assertEquals(table.toCSVString(),"colA,colB,colC\napple,banana,\"coconut,comma\"\nadam,barbara,chester\n");
+		String result = table.toCSVString();
+		String expected = "colA,colB,colC\napple,banana,\"coconut,comma\"\nadam,barbara,chester\n";	
+		assertEquals(result,expected);
+	}
+	
+	
+	@Test
+	public void testTableToCSV_WithInternalQuotes() throws Exception {
 		
+		String[] cols = {"colA","colB","colC","colD"};
+		String[] colTypes = {"String","String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("coconut,comma");
+		rowFruit.add("\"dingleberry, doo\"");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("chester");
+		rowNames.add("daniel (\"dan\")");
+		rows.add(rowNames);
+		Table table = new Table(cols, colTypes, rows);
+		
+		String result = table.toCSVString();
+		System.out.println(result);
+		// confirmed correct expected result by printing a file and opening it in Excel
+		String expected = "colA,colB,colC,colD\napple,banana,\"coconut,comma\",\"\"\"dingleberry, doo\"\"\"\nadam,barbara,chester,\"daniel (\"\"dan\"\")\"\n";
+		assertEquals(result,expected);
 	}
 	
 	@Test 
