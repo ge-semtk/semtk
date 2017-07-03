@@ -116,7 +116,7 @@ public class NodeGroupServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/generateFilter", method=RequestMethod.POST)
-	public JSONObject generateDeleteSparql(@RequestBody NodegroupSparqlIdRequest requestBody){
+	public JSONObject generateFilterSparql(@RequestBody NodegroupSparqlIdRequest requestBody){
 		SimpleResultSet retval = null;
 		
 		try{
