@@ -89,45 +89,40 @@ public class ResultsClientTest_IT {
 	}
 	
 	
-// TODO PUT THIS BACK IN
-//	@Test
-//	public void testStoreTable_WithCommasAndQuotes() throws Exception {
-//		
-//		String jobId = "test_jobid_" + UUID.randomUUID();
-//		
-//		String [] cols = {"colA", "colB","colC","colD"};
-//		String [] types = {"String", "String", "String","String"};
-//		ArrayList<String> row = new ArrayList<String>();
-//		row.add("apple,ant");  					// this element has a comma
-//		row.add("bench");
-//		row.add("\"cabana\"");					// this element has quotes
-//		row.add("Dan declared \"hi, dear\"");	// this element has quotes and a comma
-//		
-//		try {
-//			Table table = new Table(cols, types, null);
-//			table.addRow(row);
-//			client.execStoreTableResults(jobId, table);	
-//			
-//			URL[] urls = client.execGetResults(jobId);
-//			
-//			// check the JSON results
-//			String resultJSONString = Utility.getURLContentsAsString(urls[0]);
-//			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}\n";
-//			assertEquals(expectedJSONString, resultJSONString);
-//			
-//			// check the CSV results
-//			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
-//			System.out.println("resultCSVString:\n" + resultCSVString);
-//			FileWriter writer = new FileWriter(new File("jww-deletedelete.csv"));
-//			writer.write(resultCSVString);
-//			writer.close();
-//			String expectedCSVString = "colA,colB,colC,colD\n\"apple,ant\",\"bench\",\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n"; // unconfirmed
-//			assertEquals(expectedCSVString, resultCSVString);
-//			
-//		} finally {
-//			cleanup(client, jobId);
-//		}
-//	}
+	@Test
+	public void testStoreTable_WithCommasAndQuotes() throws Exception {
+		
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"colA", "colB","colC","colD"};
+		String [] types = {"String", "String", "String","String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("apple,ant");  					// this element has a comma
+		row.add("bench");
+		row.add("\"cabana\"");					// this element has quotes
+		row.add("Dan declared \"hi, dear\"");	// this element has quotes and a comma
+		
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			client.execStoreTableResults(jobId, table);	
+			
+			URL[] urls = client.execGetResults(jobId);
+			
+			// check the JSON results
+			String resultJSONString = Utility.getURLContentsAsString(urls[0]);
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}\n";  // validated json
+			assertEquals(expectedJSONString, resultJSONString);
+			
+			// check the CSV results
+			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
+			String expectedCSVString = "colA,colB,colC,colD\n\"apple,ant\",bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";  // validated by opening in Excel
+			assertEquals(expectedCSVString, resultCSVString);
+			
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
 	
 	
 	@Test
