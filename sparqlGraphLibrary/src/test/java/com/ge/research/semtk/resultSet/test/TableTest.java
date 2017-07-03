@@ -51,8 +51,36 @@ public class TableTest {
 		rows.add(rowNames);
 		Table table = new Table(cols, colTypes, rows);
 		
-		assertEquals(table.toCSVString(),"colA,colB,colC\napple,banana,\"coconut,comma\"\nadam,barbara,chester\n");
+		String result = table.toCSVString();
+		String expected = "colA,colB,colC\napple,banana,\"coconut,comma\"\nadam,barbara,chester\n";	
+		assertEquals(result,expected);
+	}
+	
+	
+	@Test
+	public void testTableToCSV_WithInternalQuotes() throws Exception {
 		
+		String[] cols = {"colA","colB","colC","colD"};
+		String[] colTypes = {"String","String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("coconut,comma");
+		rowFruit.add("\"dingleberry, doo\"");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("chester");
+		rowNames.add("daniel (\"dan\")");
+		rows.add(rowNames);
+		Table table = new Table(cols, colTypes, rows);
+		
+		String result = table.toCSVString();
+		// confirmed correct expected result by printing a file and opening it in Excel
+		String expected = "colA,colB,colC,colD\napple,banana,\"coconut,comma\",\"\"\"dingleberry, doo\"\"\"\nadam,barbara,chester,\"daniel (\"\"dan\"\")\"\n";
+		assertEquals(result,expected);
 	}
 	
 	@Test 
@@ -204,7 +232,6 @@ public class TableTest {
 		Table table = new Table(cols, colTypes, rows);
 		assertEquals(table.toJson().get(Table.JSON_KEY_COL_COUNT), 1);
 		assertEquals(table.toJson().get(Table.JSON_KEY_ROW_COUNT), 1);
-		System.out.println(table.toJson());
 	}	
 	
 	@Test
@@ -239,7 +266,6 @@ public class TableTest {
 		
 		assertEquals(tableMerged.getNumRows(),5);		
 		assertEquals(tableMerged.getNumColumns(),3);
-		System.out.println(tableMerged.toJson());
 		String res = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"],[\"apple pie\",\"bonbons\",\"cheesewhiz\"],[\"apple juice\",\"bourbon\",\"cider\"],[\"Anderson\",\"Bobberson\",\"Chisholm\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":5}";
 		assertEquals(tableMerged.toJson().toString(),res);
 	}
