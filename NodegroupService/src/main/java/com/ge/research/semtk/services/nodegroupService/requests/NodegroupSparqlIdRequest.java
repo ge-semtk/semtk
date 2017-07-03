@@ -2,13 +2,15 @@ package com.ge.research.semtk.services.nodegroupService.requests;
 
 public class NodegroupSparqlIdRequest extends NodegroupRequest {
 
-	private String sparqlId;
+	private String targetObjectSparqlId;
 
-	public String getSparqlId() {
-		return sparqlId;
+	public String getTargetObjectSparqlId() {
+		return targetObjectSparqlId;
 	}
 
-	public void setSparqlId(String sparqlId) {
-		this.sparqlId = sparqlId;
+	public void setTargetObjectSparqlId(String targetObjectSparqlId) {
+		this.targetObjectSparqlId = targetObjectSparqlId;
 	}
+
+	
 }
