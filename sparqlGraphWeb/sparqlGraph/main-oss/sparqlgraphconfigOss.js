@@ -81,11 +81,20 @@ var g = {
 		sparqlQuery:{
 			url : "http://vesuvius37.crd.ge.com:12050/sparqlQueryService/",
 		},
+        status : {
+			"url" : "http://vesuvius37.crd.ge.com:12051/status/",    
+		},
+		results : {
+			"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
+		},
 		nodeGroupStore:{
 			url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStore/",
 		},
 		nodeGroup:{
 			url : "http://vesuvius37.crd.ge.com:12059/nodeGroupService/",
+		},
+        nodeGroupExec:{
+			url : "http://vesuvius37.crd.ge.com:12058/nodegroupExecution/",
 		},
 	},
 	

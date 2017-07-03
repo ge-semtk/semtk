@@ -136,7 +136,7 @@ define([	// properly require.config'ed
 					var nodegroupArr = resultSet.getColumnStringsByName("NodeGroup");
 					
 					if (nodegroupArr.length < 1) {
-						ModalIidx.alert("Service failed", "Returned no nodegroup");
+						ModalIidx.alert("Retrieval Failure", "<b>Failure retrieving nodegroup.</b><br>Diagnostic: getNodeGroupById returned zero rows.");
 					} else {
 						retrieveCallback(nodegroupArr[0]);
 					}

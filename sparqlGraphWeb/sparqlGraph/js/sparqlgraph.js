@@ -51,6 +51,8 @@
 
     var gQueryTypeIndex = 0;   // sel index of QueryType
     var gQuerySource = "SERVICES";
+
+    var RESULTS_MAX_ROWS = 5000;
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -286,7 +288,7 @@
     };
     
     // application-specific sub-class choosing
-    subclassChooserDialog = function (oInfo, classUri, callback) {
+    var subclassChooserDialog = function (oInfo, classUri, callback) {
     	var subClassUris = [classUri];
     	subClassUris.concat(oInfo.getSubclassNames(classUri));
     	
@@ -778,10 +780,8 @@
             sIcon.className = "icon-circle-blank";
             dIcon.className = "icon-circle";
         }
-    };
-
-    var doMenuQueryEndpoint = function (e) {
-        gQuerySource = "DIRECT";
+        
+        guiUpdateGraphRunButton();
     };
 
     // ======= drag-and-drop version of query-loading =======
@@ -819,9 +819,118 @@
 	
    	
    	var doTest = function () {
-        alert("test");
+        ngExecSuccessCallback("justinIsTesting");
+        
+        testCsv();
    	};
-   	
+
+    var ngExecByQueryType = function () {
+        
+    	require(['sparqlgraph/js/msiclientnodegroupexec'], 
+    	         function (MsiClientNodeGroupExec) {
+			
+            guiDisableAll();
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
+    		
+            switch (getQueryType()) {
+			case "SELECT":
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, null, ngExecJobIdCallback, ngExecFailureCallback);
+                break;
+			case "COUNT" :
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, null, ngExecJobIdCallback, ngExecFailureCallback);
+                break;
+            case "CONSTRUCT":
+                alert("not implemented");
+                break;
+			case "DELETE":
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, null, ngExecJobIdCallback, ngExecFailureCallback);
+                break;
+			}
+            
+    	});
+    	
+    };
+
+    var ngExecQueryText = function () {
+        require(['sparqlgraph/js/msiclientnodegroupexec',
+    	         'sparqlgraph/js/modaliidx'], 
+    	         function (MsiClientNodeGroupExec, ModalIidx) {
+			
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
+    		
+            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, ngExecJobIdCallback, ngExecFailureCallback);
+
+    	});
+    };
+
+    var ngExecFailureCallback = function (html) {
+        require(['sparqlgraph/js/modaliidx'], 
+                function(ModalIidx) {
+            
+            ModalIidx.alert("Query Failed", html);
+            guiUnDisableAll();
+            setStatus("");
+        });
+    };
+
+    /*
+     * first callback in ngExec chain
+     * Got the jobId.  Now monitor status.
+     * @private
+     */
+    var ngExecJobIdCallback = function (jobId) {
+        require(['sparqlgraph/js/msiclientstatus'], 
+                function(MsiClientStatus) {
+            
+            var statusClient = new MsiClientStatus( g.service.status.url,
+                                                    jobId,
+                                                    ngExecFailureCallback);
+            statusClient.execAsyncPercentUntilDone(ngExecSuccessCallback.bind(this, jobId), setStatusProgressBar.bind(this, "Running Query"));
+          
+        });
+    };
+
+    /*
+     * callback in ngExec chain
+     * Status success.  Now get results.
+     * @private
+     */
+    var ngExecSuccessCallback = function (jobId) {
+        require(['sparqlgraph/js/msiclientresults'], 
+                function(MsiClientResults) {
+        
+            setStatusProgressBar("Retreiving results", 100);
+            var resultsClient = new MsiClientResults(g.service.results.url,
+                                                    jobId,     
+                                                    ngExecFailureCallback);
+            
+            var fullURL = resultsClient.getTableResultsCsvDownloadUrl();
+            
+            resultsClient.execGetTableResultsJsonTableRes(RESULTS_MAX_ROWS, this.ngExecTableResCallback.bind(this, fullURL));
+            
+        });
+    };
+    
+     /*
+     * callback in ngExec chain
+     * Results success.  Display them.
+     * @private
+     */
+    var ngExecTableResCallback = function (fullURL, tableResults) { 
+        var headerHtml = "";
+        if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
+            headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
+        }
+        headerHtml += "Full csv: <a href='" + fullURL + "' download>download</a>";
+        tableResults.setLocalUriFlag(! getQueryShowNamespace());
+        tableResults.setEscapeHtmlFlag(true);
+        tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml);
+        
+        guiUnDisableAll();
+        guiResultsNonEmpty();
+        setStatus("");
+    };
+
    	var doRetrieveFromNGStore = function() {
         // check that nodegroup is saved
         // launch the retrieval dialog
@@ -851,25 +960,7 @@
    		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, "")); 		
    	};
     
-   	var doTestMsi = function () {
-    	require(['sparqlgraph/js/microserviceinterface',
-    	         'sparqlgraph/js/msiclientquery',
-    	         'sparqlgraph/js/modaliidx'], 
-    	         function (MicroServiceInterface, MsiQueryClient, ModalIidx) {
-    		
-			var successCallback = function (resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-				} else {
-					ModalIidx.alert("ResultSet", JSON.stringify(resultSet)); 
-				}
-			};
-			
-    		var mq = new MsiQueryClient(g.service.sparqlQuery.url, gConn.getDefaultQueryInterface());
-    		mq.execAuthQuery("select ?x ?y ?z where {?x ?y ?z.} limit 10", successCallback);
-    	});
-    	
-    };
+   	
     
     // only used for non-microservice code
     // Almost DEPRECATED
@@ -916,22 +1007,11 @@
     	return document.getElementById("SGQueryNamespace").checked;
     };
     
-    var legalQueryTypeSourceCombo = function (qType, qSource) {
-    	switch (qSource) {
-    	case "DIRECT":
-    		return (qType != "DELETE");
-    		break;
-    	case "DISPATCHER":
-    		return (qType == "SELECT");
-    		break;
-    	default:
-    		return true;
-    	}
-    };
-    
     // Set nodeGroupChangedFlag and update GUI for new nodegroup
     var nodeGroupChanged = function(flag) {
         gNodeGroupChangedFlag = flag;
+        
+        guiUpdateGraphRunButton();
         
         if (flag) {
             gNodeGroup.drawNodes();
@@ -1017,6 +1097,12 @@
     	gOTree.expandAll();
     };
      
+    var doQueryDownload = function() {
+        var query = document.getElementById('queryText').value;
+        downloadFile(query, "query.txt");
+        queryTextChanged(false);
+    };
+
     var setStatus = function(msg) {
     	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
     };
@@ -1029,27 +1115,8 @@
 				+ '  <div class="bar" style="width: ' + p
 				+ '%;"></div></div>';
 	};
-	
-    var graphExecute = function() {
-    	logEvent("SG Execute");
-    	buildQuery();
-    	
-    	var query = document.getElementById('queryText').value
-    	
-    	if (query.match("#Error")) {
-    		var q = query.split('\n');
-    		var msg = "Invalid query:";
-    		var i = 0;
-    		while (q[i].match("#Error")) {
-    			msg += "\n- " + q[i].slice(7);
-    			i += 1;
-    		}
-    		logAndAlert(msg);
-    	} else {
-    		runQuery();
-    	}
-    };
     
+    // PEC TODO
     // build query using javascript
     var buildQueryLocal = function() {
             console.log("sparqlgraph.js: Called DEPRECATED buildQueryLocal");
@@ -1073,10 +1140,7 @@
             }
 
             document.getElementById('queryText').value = sparql;
-
             guiQueryNonEmpty();
-        
-        
     };
 
     var buildQuery = function() {
@@ -1119,13 +1183,15 @@
             
         } else {
             guiQueryEmpty();
-            // PEC TODO: temporary handling of actual service success but bad SPARQL
+            
+            // PEC TODO: if service "failure" is actually #BAD SPARQL then put that in queryText
+            //           instead of raising a dialog
             var failSparql = client.getFailedTEMPBadSparql(resultSet);
             if (failSparql != null) {
                 document.getElementById('queryText').value = failSparql;
-            // ---------------------------------------------------------------------   
                 
             } else {
+                // else raise the dialog and put our own #Error comment in queryText
                 document.getElementById('queryText').value = "#Error generating Sparql";
                 require(['sparqlgraph/js/modaliidx'], 
                      function (ModalIidx) {
@@ -1135,6 +1201,7 @@
         }
     }
     
+    // PEC TODO unused
     var constructQryCallback = function(qsresult) {
     	// HTML: tell user query is done
 		setStatus("");
@@ -1153,143 +1220,90 @@
     
     };
     
+
+    /* 
+     * top-level callback to run the nodegroup
+     */
+
+    var runGraph = function() {
+    	logEvent("SG Run graph");
+    	
+        // choose how to run the nodegroup
+        if (getQuerySource() == "DIRECT") {
+            logAndAlert("Attempting direct query of nodegroup.  Button should be disabled.");
+            
+        } else {
+            clearResults();
+            ngExecByQueryType();
+    	}
+    };
+
+    /* 
+     * top-level call back to execute raw SPARQL
+     */
     var runQuery = function () {
     	
     	var query = document.getElementById("queryText").value;
-    	logEvent("SG Run Query", "sparql", query);
     	
-    	
-
 		if (query.length < 1) {
 			logAndAlert("Can't run empty query.  Use 'build' button first.");
 			
 		} else {
-			
+            
+			logEvent("SG Run Query", "sparql", query);
 			clearResults();
 			
-			switch (getQueryType()) {
-			case "SELECT":
-			case "COUNT" :
-			case "CONSTRUCT":
-				switch (getQuerySource()) {
-				case "DIRECT":
-					setStatusProgressBar("running DIRECT query...", 50);
-					guiDisableAll();
-					
-					require(['sparqlgraph/js/sparqlserverinterface',
-			    	        ], function(SparqlServerInterface) {
-						
-						gConn.getDefaultQueryInterface().executeAndParse(query, runQueryCallback);
-					});
-			    	
-					break;
-				
-                // Never happens any more PEC TODO
-				case "QUERY_SERVICE":
-					setStatusProgressBar("running query...", 50);
-					guiDisableAll();
-					
-					gQueryClient.executeAndParse(query, runQueryCallback);
-					break;
-				
-                // Never happens any more  PEC TODO
-				case "DISPATCHER":	
-					try {
-						// might not be defined for some os installations
-						doDispatcherQuery();
-					} catch (e) {
-		    			throw new Error("Can't run query of type " + getQuerySource());
-		    		}
-					break;
-                    
-                // change to executor PEC TODO
-                case "SERVICES":
-					try {
-						// might not be defined for some os installations
-						doDispatcherQuery();
-					} catch (e) {
-		    			throw new Error("Can't run query of type " + getQuerySource());
-		    		}
-					break;
-				}   
-				break;
-				
-			case "DELETE":
-				
-				switch (getQuerySource()) {
-				case "DIRECT":
-					logAndAlert("Auth queries direct to triplestore are not implemented.");
-					break;
-				
-				// Never happens any more  PEC TODO
-				case "QUERY_SERVICE":
-					require([ 'sparqlgraph/js/modaliidx'], function (ModalIidx) {
-						
-						var authQuery = function () {
-							setStatus("running delete query...");
-							guiDisableAll();
-							gQueryClient.execAuthQuery(query, runNoResultsQueryCallback);
-						}
-						
-						ModalIidx.okCancel(	"Auth Query", 
-											"About to run auth query which will modify data.<p>Hit 'Run' to confirm.", 
-											authQuery, 
-											"Run");
-					});
-					break;
-					
-				// Never happens any more  PEC TODO
-				case "DISPATCHER":
-					logAndAlert("Auth queries can not be executed through a dispatcher.");
-					break;
-            
-                // Use Query Executor  PEC TODO
-				case "SERVICES":
-					logAndAlert("Auth queries can not be executed through a dispatcher.");
-					break;
-				}
-				break;
-			}
-		}
+            if (getQuerySource() == "DIRECT") {
+                runQueryDirect(query);
+            } else {
+                ngExecQueryText();
+            }
+        }
 	};
-		
-	// The query callback  
-	var runQueryCallback = function(results) {
+
+    // run direct query given SPARQL
+    var runQueryDirect = function (sparql) {
+        setStatusProgressBar("running DIRECT query...", 50);
+        guiDisableAll();
+
+        require(['sparqlgraph/js/sparqlserverinterface',
+                ], function(SparqlServerInterface) {
+
+            gConn.getDefaultQueryInterface().executeAndParse(sparql, runQueryDirectCallback);
+        });
+    };
+
+	// The direct query callback  
+	var runQueryDirectCallback = function(sparqlServerResult) {
 	
 		// HTML: tell user query is done
 		setStatus("");
 		guiUnDisableAll();
 		
-		if (results.isSuccess()) {
+		if (sparqlServerResult.isSuccess()) {
    	
-			logEvent("SG Display Query Results", "rows", results.getRowCount());
+			logEvent("SG Display Query Results", "rows", sparqlServerResult.getRowCount());
 			
 			if (getQuerySource() == "DIRECT") {
 				/* old non-microservice */
-				results.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
-													"resultsTableName",
-													"resultsTableId",
-													"table table-bordered table-condensed", 
-													results.getRowCount() > 10, // filter flag
-													"gQueryResults",
-													null,
-													null,
-													getNamespaceFlag());
+				sparqlServerResult.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
+                                                            "resultsTableName",
+                                                            "resultsTableId",
+                                                            "table table-bordered table-condensed", 
+                                                            sparqlServerResult.getRowCount() > 10, // filter flag
+                                                            "gQueryResults",
+                                                            null,
+                                                            null,
+                                                            getNamespaceFlag());
 			} 
-			else {
-			    // new microservice results grid functionality
-				results.setLocalUriFlag(! getQueryShowNamespace());
-				results.setEscapeHtmlFlag(true);
-				results.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), "");
-			}
 			
 			guiResultsNonEmpty();
 			
-			gQueryResults = results;
+			gQueryResults = sparqlServerResult;
 
 		}
 		else {
-			logAndAlert(results.getStatusMessage());
+			logAndAlert(sparqlServerResult.getStatusMessage());
 		}
 	};
 	
@@ -1318,89 +1332,81 @@
     // NOT Nested
     
 	var guiTreeNonEmpty = function () {
-    	document.getElementById("btnTreeExpand").className = "btn";
     	document.getElementById("btnTreeExpand").disabled = false;
-    	
-    	document.getElementById("btnTreeCollapse").className = "btn";
     	document.getElementById("btnTreeCollapse").disabled = false;
-
     };
     
     var guiTreeEmpty = function () {
-    	document.getElementById("btnTreeExpand").className = "btn disabled";
     	document.getElementById("btnTreeExpand").disabled = true;
-    	
-    	document.getElementById("btnTreeCollapse").className = "btn disabled";
     	document.getElementById("btnTreeCollapse").disabled = true;
     };
    
     var guiGraphNonEmpty = function () {
-    	document.getElementById("btnLayout").className = "btn";
     	document.getElementById("btnLayout").disabled = false;
-    	
-    	document.getElementById("btnGraphClear").className = "btn";
     	document.getElementById("btnGraphClear").disabled = false;
     };
     
     var giuGraphEmpty = function () {
-    	document.getElementById("btnLayout").className = "btn disabled";
     	document.getElementById("btnLayout").disabled = true;
-    	
-    	document.getElementById("btnGraphClear").className = "btn disabled";
-    	document.getElementById("btnGraphClear").disabled = true;
+    	guiUpdateGraphRunButton();
     };
     
     var guiQueryEmpty = function () {
-    	document.getElementById("btnQueryRun").className = "btn disabled";
+    	document.getElementById("btnQueryTextMenu").disabled = true;
     	document.getElementById("btnQueryRun").disabled = true;
-        
-    	document.getElementById("btnGraphExecute").className = "btn disabled";
-    	document.getElementById("btnGraphExecute").disabled = true;
-
+    	guiUpdateGraphRunButton();
     };
     
     var guiQueryNonEmpty = function () {
-    	document.getElementById("btnQueryRun").className = "btn-primary";
+    	document.getElementById("btnQueryTextMenu").disabled = false;
     	document.getElementById("btnQueryRun").disabled = false;
-        
-        document.getElementById("btnGraphExecute").className = "btn-primary";
-    	document.getElementById("btnGraphExecute").disabled = false;
+    	
+    };
+
+    var guiUpdateGraphRunButton = function () {
+        var d = gNodeGroup == null || gNodeGroup.getSNodeList().length < 1 || getQuerySource() == "DIRECT";
+        document.getElementById("btnGraphExecute").disabled = d;
     };
     
     var guiResultsEmpty = function () {
-    	//document.getElementById("btnDownloadCSV").className = "btn disabled";
-    	//document.getElementById("btnDownloadCSV").disabled = true;
+    	
     };
     
     var guiResultsNonEmpty = function () {
     	
-    	//document.getElementById("btnDownloadCSV").className = "btn";
-    	//document.getElementById("btnDownloadCSV").disabled = false;
     };
 	
-    var classHash = {};
     var disableHash = {};
     
+    /*
+     * For all buttons with an id:
+     *     disable
+     *     save state
+     */
     var guiDisableAll = function () {
-    	classHash = {};
         disableHash = {};
         
     	var buttons = document.getElementsByTagName("button");
         for (var i = 0; i < buttons.length; i++) {
-        	
-        	classHash[buttons[i].id] = buttons[i].className;
-            disableHash[buttons[i].id] = buttons[i].disabled;
-            
-        	buttons[i].className = "btn disabled";
-            buttons[i].disabled = true;
+        	if (buttons[i].id && buttons[i].id.length > 0) {
+                disableHash[buttons[i].id] = buttons[i].disabled;
+
+                buttons[i].disabled = true;
+            }
         }
     };
     
+    /*
+     * For all buttons with an id:
+     *     restore state from last call to guiDisableAll()
+     */
     var guiUnDisableAll = function () {
     	var buttons = document.getElementsByTagName("button");
         for (var i = 0; i < buttons.length; i++) {
-        	buttons[i].className = classHash[buttons[i].id];
-            buttons[i].disabled =  disableHash[buttons[i].id];
+            // if button has an id, and its state has been hashed
+            if (buttons[i].id && buttons[i].id.length > 0 && disableHash[buttons[i].id] != undefined) {
+                buttons[i].disabled =  disableHash[buttons[i].id];
+            }
         }
     };
     
