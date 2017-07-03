@@ -71,7 +71,7 @@ public class ResultsClientTest_IT {
 			URL[] urls = client.execGetResults(jobId);
 			
 			// check the URLs
-			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&rowCount=200")); 
+			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200")); 
 			assertTrue(urls[1].toString().endsWith("/results/getTableResultsCsvForWebClient?jobId=" + jobId)); 
 			
 			// check the JSON results
