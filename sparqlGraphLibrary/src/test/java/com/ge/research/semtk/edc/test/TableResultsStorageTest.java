@@ -34,13 +34,11 @@ import com.ge.research.semtk.resultSet.Table;
 
 public class TableResultsStorageTest {
 
-	//private static String BASE_URL;
 	private static String FILE_LOC;
 	
 	@BeforeClass
 	public static void setup() throws IOException {
 		FILE_LOC = (new java.io.File( "." ).getCanonicalPath());  // write test files to current directory (they will be deleted)
-		//BASE_URL = "file:///" + FILE_LOC;	
 	}
 	
 	
@@ -73,7 +71,6 @@ public class TableResultsStorageTest {
 			String s;
 			JSONObject jsonObj;
 			Table table;
-			URL[] urls;
 			
 			// check retrieving full result as JSON
 			s = new String(rs.getJsonTable(fullJsonUrl)); // convert from byte array
@@ -94,7 +91,7 @@ public class TableResultsStorageTest {
 			s = new String(rs.getCsvTable(fullJsonUrl)); 	// convert from byte array
 			assertEquals(s, table.toCSVString());   // compare against json result above
 			
-			// check retrieving sample result as JSON
+			// check retrieving truncated result as JSON 
 			s = new String(rs.getJsonTable(fullJsonUrl, 2)); // convert from byte array
 			jsonObj = (JSONObject) (new JSONParser().parse(s));
 			table = Table.fromJson(jsonObj);			
@@ -107,7 +104,7 @@ public class TableResultsStorageTest {
 			assertEquals(table.getCell(0, 2),"coconut");
 			assertEquals(table.getCell(1, 2),"canteloupe");
 			
-			// check retrieving full result as CSV
+			// check retrieving truncated result as CSV
 			s = new String(rs.getCsvTable(fullJsonUrl, 2)); // convert from byte array
 			assertEquals(s, table.toCSVString());  			// compare against json result above
 			
