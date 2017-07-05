@@ -262,6 +262,10 @@ define([	// properly require.config'ed
     IIDXHelper.htmlSafe = function(str) {
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&percnt;");
     },
+    
+    IIDXHelper.removeHtml = function(str) {
+        return String(str).replace(/<(br|p|h1|h2|h3)>/g, '\n').replace(/<[^>]+>/g, '');
+    },
 
     IIDXHelper.isFirefox = function () {
         return (navigator.userAgent.toLowerCase().indexOf('firefox') > -1);

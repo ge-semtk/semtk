@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.nodegroupService;
+package com.ge.research.semtk.services.nodeGroupService;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.nodegroupService.requests;
+package com.ge.research.semtk.services.nodeGroupService.requests;
 
 public class NodegroupSparqlIdRequest extends NodegroupRequest {
 

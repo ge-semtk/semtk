@@ -42,7 +42,8 @@ define([	// properly require.config'ed
 		],
 	function(IIDXHelper, ModalIidx, $) {
 	
-		var ModalItemDialog = function(item, nodegroup, clientOrInterface, callback, data, optGhostItem, optGhostNodegroup) {
+        // PEC TODO:  getValuesCallback must have limit of 10,000 or "..." feature fails
+		var ModalItemDialog = function(item, nodegroup, getValuesCallback, callback, data, optGhostItem, optGhostNodegroup) {
 			// callback(item, sparqlID, optionalFlag, constraintStr, data)
 			//          where sparqlID and contraintStr could be ""
 			//          optionalFlag can be null, true, or false
@@ -55,7 +56,7 @@ define([	// properly require.config'ed
 			//  These will be used to generate the SPARQL
 			this.item = item;
 			this.nodegroup = nodegroup;
-			this.clientOrInterface = clientOrInterface;
+			this.getValuesCallback = getValuesCallback;
 			this.callback = callback;
 			this.data = data;
 			
@@ -204,33 +205,34 @@ define([	// properly require.config'ed
 				
 				this.setRunningQuery(true);
 				
-				// assign temp sparqlID if needed
-				var blankFlag = false;
+                var tmpNodegroup;
+                var tmpSparqlId;
+                // make sure there is a sparqlID
 				if (queryItem.getSparqlID() == "") {
-					blankFlag = true;
+                    // set it, make a copy, set it back
 					queryItem.setSparqlID(this.getSparqlIDText());
-				}
-				
-				// generate query
-				var sparql = queryNodegroup.generateSparql(SemanticNodeGroup.QUERY_CONSTRAINT, false, this.limit, queryItem);
-				
-				// reset blank sparqlID if needed
-				if (blankFlag) {
-					queryItem.setSparqlID("");
-				}
+                    tmpNodegroup = queryNodegroup.deepCopy();
+                    tmpSparqlId = queryItem.getSparqlID();
+                    queryItem.setSparqlID("");
+				} else {
+                    tmpNodegroup = queryNodegroup;
+                    tmpSparqlId = queryItem.getSparqlID();
+                }
 				
 				// run query
-				this.clientOrInterface.executeAndParse(sparql, this.queryCallback.bind(this));
+				this.getValuesCallback(tmpNodegroup, tmpSparqlId, this.getValuesSuccess.bind(this), this.getValuesFailure.bind(this), function(){});
 			},
 			
-			queryCallback : function (qsResult) {
-				
-				this.setRunningQuery(false);
-		
-				if (!qsResult.isSuccess()) {
-					alert("Error retrieving possible values from the SPARQL server\n\n" + qsResult.getStatusMessage()); 
-					
-				} else if (qsResult.getRowCount() < 1) {
+            getValuesFailure : function (msg) {
+                this.setRunningQuery(false);
+                alert("Error retrieving values\n\n" + IIDXHelper.removeHtml(msg));
+                this.setStatusAlert("Error retrieving values");
+            },
+            
+            getValuesSuccess : function (res) {
+                this.setRunningQuery(false);
+                
+                if (res.getRowCount() < 1) {
 					this.setStatusAlert("No possible values exist.<br>Constraints are too tight or no instance data exists.");
 				
 				} else {
@@ -239,9 +241,9 @@ define([	// properly require.config'ed
 					
 					var element = [];
 					
-					for (var i=0; i <qsResult.getRowCount(); i++) {
-						element[i] = {	name: qsResult.getRsData(i, 0, this.sparqlformFlag ? 2 : 0),  // strip ns from name if sparqlform
-								      	val: qsResult.getRsData(i, 0, false)
+					for (var i=0; i <res.getRowCount(); i++) {
+						element[i] = {	name: res.getRsData(i, 0, this.sparqlformFlag ? res.NAMESPACE_NO : res.NAMESPACE_YES),  // strip ns from name if sparqlform
+								      	val: res.getRsData(i, 0, res.NAMESPACE_YES)
 								     };
 						
 						if (element[i].val == "" || element[i].name=="") {
@@ -257,7 +259,7 @@ define([	// properly require.config'ed
 											});				
 					
 					// insert "..." if we hit the limit
-					if (qsResult.getRowCount() == this.limit) {
+					if (res.getRowCount() == this.limit) {
 						this.setStatusAlert("Too many values.  A random subset of " + this.limit + " are shown."); 
 						element[this.limit] = {name: "", val: ""};
 						element[this.limit].name = "...";

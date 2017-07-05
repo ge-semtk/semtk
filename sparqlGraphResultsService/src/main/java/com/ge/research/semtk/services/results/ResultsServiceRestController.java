@@ -34,7 +34,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -281,14 +280,18 @@ public class ResultsServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getResults", method= RequestMethod.POST)
 	public JSONObject getResults(@RequestBody ResultsRequestBody requestBody){
-		String jobId = requestBody.jobId;
 		    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-    	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", jobId);    	
-    	logToStdout("Results Service getResults start JobId=" + jobId);
-
+    	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", requestBody.jobId);    	
+    	logToStdout("Results Service getResults start JobId=" + requestBody.jobId);
+    	
 	    try {
+	    	
+	    	// check that the job id exists
+	    	if(!getJobTracker().jobExists(requestBody.jobId)){
+	    		throw new Exception("No job exists with id " + requestBody.jobId);
+	    	}
 	    	
 	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&maxRows=200");
 	    	URL csv  =  new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + requestBody.jobId);
@@ -307,7 +310,7 @@ public class ResultsServiceRestController {
 	}
 	
 	/**
-	 * Delete file associated with this jobId
+	 * Delete file and metadata associated with this jobId
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStorage", method= RequestMethod.POST)
@@ -322,6 +325,7 @@ public class ResultsServiceRestController {
 	    	URL fullURL = getJobTracker().getFullResultsURL(requestBody.jobId);
 	    	if (fullURL != null) {
 	    		getTableResultsStorage().deleteStoredFile(fullURL);
+	    		getJobTracker().deleteJob(requestBody.jobId); 
 	    		LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage URLs", "fullURL", fullURL.toString());
 	    	}		    
 		    res.setSuccess(true);		    
@@ -334,7 +338,7 @@ public class ResultsServiceRestController {
 	}
 	
 	private TableResultsStorage getTableResultsStorage() throws Exception {
-		return new TableResultsStorage(new URL(prop.getBaseURL()), prop.getFileLocation());
+		return new TableResultsStorage(prop.getFileLocation());
 	}
 
 	private JobTracker getJobTracker() throws Exception{

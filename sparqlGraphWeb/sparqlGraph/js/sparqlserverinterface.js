@@ -98,6 +98,19 @@ SparqlServerInterface.prototype = {
 		return this.executeQuery(sparql, callbackQSResult, this.getResultsType(optResultsType));
 	},
 	
+    executeAndParseToSuccess(sparql, successQSResCallback, failureCallback, optResultsType) {
+        
+        var successCallback = function(qsResCallback, failCallback, qsResult) {
+            if (qsResult.isSuccess()) {
+                qsResCallback(qsResult);
+            } else {
+                failCallback(qsResult.getStatusMessage());
+            }
+        }.bind(this, successQSResCallback, failureCallback);
+        
+        this.executeAndParse(sparql, successCallback, optResultsType);
+    },
+    
 	executeAndParseGet : function(sparql, callbackQSResult, optResultsType) {
 		// Just for backwards compatibility and compatibility with QueryServerInterface
 		
