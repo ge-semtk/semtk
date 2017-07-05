@@ -19,7 +19,6 @@
 package com.ge.research.semtk.edc.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -32,17 +31,16 @@ import org.junit.Test;
 
 import com.ge.research.semtk.edc.TableResultsStorage;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.utility.Utility;
 
 public class TableResultsStorageTest {
 
-	private static String BASE_URL;
+	//private static String BASE_URL;
 	private static String FILE_LOC;
 	
 	@BeforeClass
 	public static void setup() throws IOException {
 		FILE_LOC = (new java.io.File( "." ).getCanonicalPath());  // write test files to current directory (they will be deleted)
-		BASE_URL = "file:///" + FILE_LOC;	
+		//BASE_URL = "file:///" + FILE_LOC;	
 	}
 	
 	
@@ -53,7 +51,7 @@ public class TableResultsStorageTest {
 		URL fullJsonUrl = null;
 		
 		try {
-			rs = new TableResultsStorage(new URL(BASE_URL), FILE_LOC);
+			rs = new TableResultsStorage(FILE_LOC);
 			
 			// write a result set
 			String jobId = "12451345"; 
@@ -71,8 +69,7 @@ public class TableResultsStorageTest {
 			
 			// now do various checks
 			
-			// check that the file was stored properly
-			assertTrue(fullJsonUrl.toString().endsWith("results_" + jobId + ".json"));			
+			// check that the file was stored properly		
 			String s;
 			JSONObject jsonObj;
 			Table table;
@@ -113,44 +110,6 @@ public class TableResultsStorageTest {
 			// check retrieving full result as CSV
 			s = new String(rs.getCsvTable(fullJsonUrl, 2)); // convert from byte array
 			assertEquals(s, table.toCSVString());  			// compare against json result above
-			
-			// check the function that's only in here for backwards compatibility
-			urls = rs.getJsonAndCsvTableUrls(fullJsonUrl, null, null);  
-			s = Utility.getURLContentsAsString(urls[0]);
-			jsonObj = (JSONObject) (new JSONParser().parse(s));
-			table = Table.fromJson(jsonObj);			
-			// check the json url contents
-			assertEquals(table.getNumColumns(),3);
-			assertEquals(table.getNumRows(),5);
-			assertEquals(table.getColumnNames()[0],"colA");
-			assertEquals(table.getColumnTypes()[0],"String");
-			assertEquals(table.getCell(0, 2),"coconut");
-			assertEquals(table.getCell(4, 2),"capers");
-			// check the CSV url contents
-			s = Utility.getURLContentsAsString(urls[1]);	
-			assertEquals(s, table.toCSVString());  			// (compare against json result above)
-			// delete the files
-			rs.deleteStoredFile(urls[0]);
-			rs.deleteStoredFile(urls[1]);
-			
-			// check the function that's only in here for backwards compatibility
-			urls = rs.getJsonAndCsvTableUrls(fullJsonUrl, new Integer(2), new Integer(2));
-			s = Utility.getURLContentsAsString(urls[0]);
-			jsonObj = (JSONObject) (new JSONParser().parse(s));
-			table = Table.fromJson(jsonObj);			
-			// check the json url contents
-			assertEquals(table.getNumColumns(),3);
-			assertEquals(table.getNumRows(),2);
-			assertEquals(table.getColumnNames()[0],"colA");
-			assertEquals(table.getColumnTypes()[0],"String");
-			assertEquals(table.getCell(0, 2),"coconut");
-			assertEquals(table.getCell(1, 2),"canteloupe");
-			// check the CSV url contents
-			s = Utility.getURLContentsAsString(urls[1]);	
-			assertEquals(s, table.toCSVString());  			// (compare against json result above)
-			// delete the files
-			rs.deleteStoredFile(urls[0]);
-			rs.deleteStoredFile(urls[1]);
 			
 		} catch(Exception e){
 			e.printStackTrace();

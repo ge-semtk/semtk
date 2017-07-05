@@ -34,7 +34,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -334,7 +333,7 @@ public class ResultsServiceRestController {
 	}
 	
 	private TableResultsStorage getTableResultsStorage() throws Exception {
-		return new TableResultsStorage(new URL(prop.getBaseURL()), prop.getFileLocation());
+		return new TableResultsStorage(prop.getFileLocation());
 	}
 
 	private JobTracker getJobTracker() throws Exception{

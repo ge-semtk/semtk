@@ -17,8 +17,6 @@
 
 package com.ge.research.semtk.edc;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -26,7 +24,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.UUID;
 
 import org.json.simple.JSONObject;
 
@@ -42,11 +39,9 @@ public class TableResultsStorage {
 
 	public static enum TableResultsStorageTypes { JSON, CSV };
 	
-	private URL baseURL = null;
 	private String fileLocation = null;
 	
-	public TableResultsStorage(URL base_URL, String file_location) {
-		this.baseURL = base_URL;
+	public TableResultsStorage(String file_location) {
 		this.fileLocation = file_location;
 	}
 
@@ -204,48 +199,6 @@ public class TableResultsStorage {
 		}		
 	}
 	
-	/**
-	 * For backwards compatibility only.  Generates a CSV and JSON and returns the URLs.
-	 * @param fullJsonURL 		the url of the full json file
-	 * @param maxRowsJson		maximum number of rows to return for the json
-	 * @param maxRowsCsv		maximum number of rows to return for the csv
-	 * @return the two URLs
-	 */
-	public URL[] getJsonAndCsvTableUrls(URL fullJsonUrl, Integer maxRowsJson, Integer maxRowsCsv) throws Exception{
-		
-		String uuidString = UUID.randomUUID().toString();		
-		String[] fileNames = {uuidString + ".json", uuidString + ".csv"};
-		
-		URL[] urls = new URL[2];
-		urls[0] = getURL(fileNames[0]);
-		urls[1] = getURL(fileNames[1]);
-		
-		// generate the json
-		File jsonFile = new File(Paths.get(fileLocation, fileNames[0]).toString());
-		FileWriter jsonFileWriter = null;
-		try{
-			jsonFileWriter = new FileWriter(jsonFile);
-			jsonFileWriter.write(new String(getJsonTable(fullJsonUrl, maxRowsJson)));
-		}catch(Exception e){
-			throw new Exception("getJsonAndCsvTableUrls: Could not write json file: " + e.toString());
-		}finally{
-			jsonFileWriter.close();
-		}
-		
-		// generate the csv
-		File csvFile = new File(Paths.get(fileLocation, fileNames[1]).toString());
-		FileWriter csvFileWriter = null;
-		try{
-			csvFileWriter = new FileWriter(csvFile);
-			csvFileWriter.write(new String(getCsvTable(fullJsonUrl, maxRowsCsv)));
-		}catch(Exception e){
-			throw new Exception("getJsonAndCsvTableUrls: Could not write csv file: " + e.toString());
-		}finally{
-			csvFileWriter.close();
-		}
-		
-		return urls;
-	}
 		
 	/**
 	 * Write line(s) of data to the results file for a given job id.
