@@ -82,6 +82,6 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar --spring.config.location="$CONFIG_INGESTION_SERVICE" --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_NODEGROUP_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
 echo "=== DONE ==="
