@@ -207,7 +207,7 @@ public class NodeGroupServiceRestController {
 		if(jobj.containsKey("sNodeGroup")){
 			// this was a sparqlGraphJson. unwrap before using.
 			JSONObject innerObj = (JSONObject) jobj.get("sNodeGroup");
-			retval.addJson((JSONArray) innerObj.get("sNodeList"));
+			retval.addJsonEncodedNodeGroup(innerObj);
 		}
 		else if(jobj.containsKey("sNodeList")){
 			// this was just a node group
