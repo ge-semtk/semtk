@@ -155,7 +155,10 @@ public class ResultsClientTest_IT {
 			JSONObject resultJsonObject = (JSONObject) ((new JSONParser()).parse(resultJsonString));
 			assertEquals(Table.fromJson(resultJsonObject).getNumRows(), 200);	
 			
-			// TODO test that we got full 9000 rows of CSV ...
+			// test that we got full 9000 rows of CSV 
+			String resultCsvString = Utility.getURLContentsAsString(urls[1]);
+			String[] resultCsvLines = resultCsvString.split("\n");
+			assertEquals(resultCsvLines.length, 9001);
 			
 		} finally {
 			cleanup(client, jobId);
