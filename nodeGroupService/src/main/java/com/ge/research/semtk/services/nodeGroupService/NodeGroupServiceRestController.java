@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodegroupService;
+package com.ge.research.semtk.services.nodeGroupService;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,8 +33,8 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.nodegroupService.requests.NodegroupRequest;
-import com.ge.research.semtk.services.nodegroupService.requests.NodegroupSparqlIdRequest;
+import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest;
+import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdRequest;
 
 @RestController
 @RequestMapping("/nodeGroupService")
