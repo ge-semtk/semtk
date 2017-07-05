@@ -13,6 +13,9 @@ PORT_ORACLE_SERVICE=none
 PORT_NODEGROUPSTORE_SERVICE=12056
 PORT_ONTOLOGYINFO_SERVICE=12057
 PORT_NODEGROUPEXECUTION_SERVICE=12058
+PORT_SPARQL_QUERY_SERVICE=12050
+PORT_INGESTION_SERVICE=12091
+PORT_NODEGROUP_SERVICE=12059
 
 LOCATION_ADDITIONAL_DISPATCHER_JARS=""
 
@@ -34,7 +37,7 @@ CONFIG_SPARQLGRAPH_STATUS_SERVICE="$SEMTK"/sparqlGraphStatusService/src/main/res
 CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
 CONFIG_HIVE_SERVICE="$SEMTK"/hiveService/src/main/resources/hive.properties 
 CONFIG_DISPATCH_SERVICE="$SEMTK"/sparqlExtDispatchService/src/main/resources/dispatch.properties
-CONFIG_EXEC_SERVICE="$SEMTK"/storedNodegroupExecutionService/src/main/resources/exec.properties
+CONFIG_EXEC_SERVICE="$SEMTK"/nodeGroupExecutionService/src/main/resources/exec.properties
 
 # use different config files if given a config directory parameter
 if [ $# -eq 1 ]; then
@@ -47,6 +50,7 @@ if [ $# -eq 1 ]; then
     CONFIG_HIVE_SERVICE="$CONFIG_DIR"/hive.properties
     CONFIG_DISPATCH_SERVICE="$CONFIG_DIR"/dispatch.properties
     CONFIG_EXEC_SERVICE="$CONFIG_DIR"/exec.properties
+    CONFIG_INGESTION_SERVICE="$CONFIG_DIR"/ingest.properties
 else
 	echo USING DEFAULT CONFIGS in src/main/resources/
 fi
@@ -57,7 +61,6 @@ mkdir -p $LOGS
 echo "=== START MICROSERVICES... ==="
 
 # start SPARQL query service, ingestion service
-"$SEMTK"/startSparqlgraphServices.sh "$CONFIG_DIR"
 
 "$JAVA_HOME"/bin/java -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar --spring.config.location="$CONFIG_ONTOLOGYINFO_SERVICE" --server.port=$PORT_ONTOLOGYINFO_SERVICE > "$LOGS"/ontologyInfoService.log 2>&1 &
 
@@ -71,8 +74,14 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java  -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS",${HOME}/app/lib -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/storedNodegroupExecutionService/target/storedNodegroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/storedNodegroupExecutionService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupExecutionService/target/storedNodegroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/storedNodegroupExecutionService.log 2>&1 &
 
 #"$JAVA_HOME"/bin/java -jar "$SEMTK"/oracleService/target/oracleService-*.jar --server.port=$PORT_ORACLE_SERVICE > "$LOGS"/oracleService.log 2>&1 &
+
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-*.jar --server.port=$PORT_SPARQL_QUERY_SERVICE > "$LOGS"/sparqlQueryService.log 2>&1 &
+
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar --spring.config.location="$CONFIG_INGESTION_SERVICE" --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
+
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
 echo "=== DONE ==="
