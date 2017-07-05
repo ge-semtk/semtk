@@ -35,7 +35,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class NodeGroupExecutionClient extends RestClient {
 
-	private static String mappingPrefix = "/nodegroupExecution";
+	private static String mappingPrefix = "/nodeGroupExecution";
 	private static String jobStatusEndpoint = "/jobStatus";
 	private static String jobStatusMessageEndpoint = "/jobStatusMessage";
 	private static String jobCompletionCheckEndpoint = "/getJobCompletionCheck";
