@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.storedNodegroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
 import java.io.IOException;
 import java.net.URL;
