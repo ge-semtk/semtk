@@ -32,21 +32,21 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 	  
 	  System.out.println("----- PROPERTIES: -----");
 	  
-	  System.out.println("storedNodegroupExecution.ngStoreProtocol: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.ngStoreProtocol"));
-	  System.out.println("storedNodegroupExecution.ngStoreServer: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.ngStoreServer"));
-	  System.out.println("storedNodegroupExecution.ngStorePort: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.ngStorePort"));
+	  System.out.println("nodeGroupExecution.ngStoreProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.ngStoreProtocol"));
+	  System.out.println("nodeGroupExecution.ngStoreServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.ngStoreServer"));
+	  System.out.println("nodeGroupExecution.ngStorePort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.ngStorePort"));
 
-	  System.out.println("storedNodegroupExecution.dispatchProtocol: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.dispatchProtocol"));
-	  System.out.println("storedNodegroupExecution.dispatchServer: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.dispatchServer"));
-	  System.out.println("storedNodegroupExecution.dispatchPort: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.dispatchPort"));
+	  System.out.println("nodeGroupExecution.dispatchProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.dispatchProtocol"));
+	  System.out.println("nodeGroupExecution.dispatchServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.dispatchServer"));
+	  System.out.println("nodeGroupExecution.dispatchPort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.dispatchPort"));
 
-	  System.out.println("storedNodegroupExecution.resultsProtocol: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.resultsProtocol"));
-	  System.out.println("storedNodegroupExecution.resultsServer: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.resultsServer"));
-	  System.out.println("storedNodegroupExecution.resultsPort: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.resultsPort"));
+	  System.out.println("nodeGroupExecution.resultsProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.resultsProtocol"));
+	  System.out.println("nodeGroupExecution.resultsServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.resultsServer"));
+	  System.out.println("nodeGroupExecution.resultsPort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.resultsPort"));
 
-	  System.out.println("storedNodegroupExecution.statusProtocol: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.statusProtocol"));
-	  System.out.println("storedNodegroupExecution.statusServer: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.statusServer"));
-	  System.out.println("storedNodegroupExecution.statusPort: " + event.getApplicationContext().getEnvironment().getProperty("storedNodegroupExecution.statusPort"));
+	  System.out.println("nodeGroupExecution.statusProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.statusProtocol"));
+	  System.out.println("nodeGroupExecution.statusServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.statusServer"));
+	  System.out.println("nodeGroupExecution.statusPort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.statusPort"));
 	  
 	  System.out.println("-----------------------");
 	  

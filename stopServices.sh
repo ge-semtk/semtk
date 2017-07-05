@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Stop microservices, including the ones needed for SparqlGraph. 
+# Stop microservices. 
 #
 
 # SEMTK = directory holding this script
@@ -18,17 +18,17 @@ function multikill {
 	fi
 }
 
-# stop SPARQL query service, ingestion service
-"$SEMTK"/stopSparqlgraphServices.sh
-
+multikill sparqlQueryService
+multikill sparqlGraphIngestionService
 multikill ontologyInfoService
-multikill odeGroupStoreService
+multikill nodeGroupStoreService
 multikill sparqlGraphStatusService
 multikill sparqlGraphResultsService
 multikill hiveService
 multikill oracleService
 multikill sparqlExtDispatchService
 multikill rdbTimeCoherentTimeSeriesQueryGenService
-multikill storedNodegroupExecutionService
+multikill nodeGroupExecutionService
+multikill nodeGroupService
 
 echo "=== DONE ==="
