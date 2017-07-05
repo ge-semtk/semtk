@@ -50,7 +50,7 @@
 	      <groupId>org.springframework.boot</groupId>
 	      <artifactId>spring-boot-maven-plugin</artifactId>
 	      <configuration>
-	      	<mainClass>com.ge.research.semtk.services.nodegroupExecution.ServiceApplication</mainClass>
+	      	<mainClass>com.ge.research.semtk.services.nodeGroupExecution.ServiceApplication</mainClass>
 	      </configuration>
 	    </plugin>
 	  </plugins>

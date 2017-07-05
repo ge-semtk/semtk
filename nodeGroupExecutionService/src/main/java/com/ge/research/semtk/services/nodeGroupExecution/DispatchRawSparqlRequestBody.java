@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.storedNodegroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
