@@ -306,7 +306,7 @@ public class ResultsServiceRestController {
 	}
 	
 	/**
-	 * Delete file associated with this jobId
+	 * Delete file and metadata associated with this jobId
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStorage", method= RequestMethod.POST)
@@ -321,6 +321,7 @@ public class ResultsServiceRestController {
 	    	URL fullURL = getJobTracker().getFullResultsURL(requestBody.jobId);
 	    	if (fullURL != null) {
 	    		getTableResultsStorage().deleteStoredFile(fullURL);
+	    		getJobTracker().deleteJob(requestBody.jobId); 
 	    		LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage URLs", "fullURL", fullURL.toString());
 	    	}		    
 		    res.setSuccess(true);		    
