@@ -995,7 +995,7 @@ define([	// properly require.config'ed
 					var csv = client.getFromCsvErrorTable(resultSet);
 					if (csv) {
 						html += "<h3><b>CSV containing failed rows is being downloaded.</b>";
-						IIDXHelper.downloadFile(csv, "error_report.csv");
+						IIDXHelper.downloadFile(csv, "error_report.csv", "text/csv;charset=utf8");
 					}
 					
 					// display to user

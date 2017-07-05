@@ -81,6 +81,11 @@ define([	// properly require.config'ed   bootstrap-modal
 				return html;
 			},
 			
+            /*
+             * If simple results, build html out of just those fields
+             * otherwise, do general results html
+             *
+             */
             getSimpleResultsHtml : function () {
                 
                 // A simpleResultSet with no fields in it is generated
@@ -89,8 +94,8 @@ define([	// properly require.config'ed   bootstrap-modal
                     return this.getGeneralResultHtml();
                 }
                 
-                // put message
-                var html =  "<p><b>message: </b>" + IIDXHelper.htmlSafe(this.xhr.simpleresults["@message"]) + "<p>";
+                // put message if there is one
+                var html = (this.xhr.hasOwnProperty("@message")) ? "<p><b>message: </b>" + IIDXHelper.htmlSafe(this.xhr.simpleresults["@message"]) + "<p>" : "";
                 
                 // add any other fields
                 for (var key in this.xhr.simpleresults) {
@@ -381,7 +386,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 			
 			tableDownloadCsv : function () {
-				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv");
+				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv", "text/csv;charset=utf8");
 			},
             
 			sort : function(colName) {

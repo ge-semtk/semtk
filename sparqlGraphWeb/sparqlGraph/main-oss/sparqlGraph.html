@@ -233,7 +233,6 @@
 	
 	<script src="../../iidx-oss/components/respond/respond.src.js"></script>
 	
-    <div id="status" class="container"></div>
 	<div id="tabs">
 		<ul hidden>
 			    <li><a id='anchorTab1' href="#tabs-1">SparqlGraph</a></li>
@@ -254,12 +253,12 @@
 				   				<input type="text" id="search" class="input-medium search-query" align="left">
 				   				<button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
 				   			</div>
-		   	    			<button class="btn btn-disabled" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled>Expand</button>
-						    <button class="btn btn-disabled" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
+		   	    			<button class="btn" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled>Expand</button>
+						    <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
 						</td>
 						<td align="right">
 							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
-							<button class="btn btn-disabled" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
+							<button class="btn" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
 						</td>
 					</tr></table>
 		   		</form>
@@ -329,7 +328,7 @@
 							   			
 							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeyup="javascript:onkeyupLimit();">
 							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces 
-                                        <button class="btn btn-disabled" id="btnGraphExecute" onclick="javascript:graphExecute(); return false;" disabled>Run</button>
+                                        <button class="btn btn-primary" id="btnGraphExecute" onclick="javascript:runGraph(); return false;" disabled>Run</button>
 						   			</form>
 							   	</td>
 					   		</tr>
@@ -344,6 +343,15 @@
 				<section class="module collapsible in">
 					<header class="module-header">Query:</header>
 					<div class="module-body collapse">
+                        
+                        <!------------  Query Text Menu ------------>
+                        <div class="btn-group" align="right" style="width: 100%;">
+                            <button id="btnQueryTextMenu" class="btn dropdown-toggle" data-toggle="dropdown"><i class="icon-chevron-down"></i></button>
+                            <ul class="dropdown-menu pull-right">
+                                <li><a onclick="javascript:doQueryDownload();">Download SPARQL</a></li>
+                            </ul>
+                        </div>
+                        
 				  		<div id="querydiv"  class="control-group" style="width:100%">
 					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:99%" onkeyup="javascript:onkeyupQueryText();">							   	    			
 					   		</textarea>
@@ -353,7 +361,7 @@
                             <tr>
 				  				<td align="right">
 							   		<form class="form-horizontal" style="margin-bottom: 0px;">
-								   		<button class='btn disabled' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>Run</button>
+								   		<button class='btn btn-primary' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>Run</button>
 							   		</form>
 							   	</td>
 					   		</tr>

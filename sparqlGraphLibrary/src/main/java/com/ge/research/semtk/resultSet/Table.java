@@ -18,10 +18,14 @@
 
 package com.ge.research.semtk.resultSet;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -197,21 +201,11 @@ public class Table {
 	}
 	
 	/**
-	 * Get a single table row by index, and convert it to a string.
-	 * @param rowNum
-	 * @return
+	 * Get a single table row by index, and convert it to a CSV string.
 	 */
-	public String getRowAsCSVString(int rowNum){
-		StringBuilder sb = new StringBuilder();
-		for(String s : this.getRow(rowNum)) {
-			if(s.indexOf(",") > -1){
-				sb.append("\"").append(s).append("\",");  // if the element contains a comma, wrap in quotes				
-			}else{
-				sb.append(s).append(",");
-			}
-		}
-		sb.setLength(sb.length() - 1); // strip off the tailing comma
-		return sb.toString();
+	public String getRowAsCSVString(int rowNum) throws IOException{		
+		ArrayList<String> row = this.getRow(rowNum);
+		return Utility.getCSVString(row);
 	}
 	
 	public String getCell(int row, int col) {
@@ -280,9 +274,8 @@ public class Table {
 	
 	/**
 	 * Create a CSV string containing the table rows and columns.
-	 * TODO should use a package like Apache Commons CSV
 	 */
-	public String toCSVString(){
+	public String toCSVString() throws IOException{
 		
 		if(this.getColumnNames().length == 0){
 			return "";
@@ -290,15 +283,12 @@ public class Table {
 		
 		StringBuffer buf = new StringBuffer();
 		
-		// gather column names
-		String[] columnNamesInOrder = this.getColumnNames();
-		for(String c : columnNamesInOrder){
-			buf.append(c).append(",");
-		}
-		buf.setLength(buf.length() - 1); // strip off the tailing comma
+		// get CSV for column names	
+		ArrayList<String> headers = new ArrayList<String>( Arrays.asList( this.getColumnNames() ) ); // gets col names in order
+		buf.append(Utility.getCSVString(headers));
 		buf.append("\n");
 
-		// gather data rows
+		// get CSV for data rows
 		for(int i = 0; i < this.getNumRows(); i++){	
 			buf.append(getRowAsCSVString(i));			
 			buf.append("\n");

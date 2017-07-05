@@ -13,11 +13,6 @@
 		document.getElementById("chkboxAvoidMicroSvc").checked = gQueryMicroserviceFlag == "direct";
 	};
 	
-	
-	
-	var doDispatcherQuery = function() {
-		alert("doDispatcherQuery() is not implemented.");
-	};
 
 	
 	

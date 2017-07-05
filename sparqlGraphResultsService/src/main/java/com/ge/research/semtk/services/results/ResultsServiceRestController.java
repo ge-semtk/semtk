@@ -290,7 +290,7 @@ public class ResultsServiceRestController {
 
 	    try {
 	    	
-	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&rowCount=200");
+	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&maxRows=200");
 	    	URL csv  =  new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + requestBody.jobId);
 	    	
 	    	res.addResult("fullURL", csv.toString());  	// csv  - retain bad label for backward compatibility

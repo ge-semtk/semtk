@@ -20,13 +20,12 @@ package com.ge.research.semtk.edc.client.test;
 
 import static org.junit.Assert.*;
 
-import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -55,7 +54,7 @@ public class ResultsClientTest_IT {
 	@Test
 	public void testStoreTable() throws Exception {
 
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		String jobId = "test_jobid_" + UUID.randomUUID();
 		
 		String [] cols = {"col1", "col2"};
 		String [] types = {"String", "String"};
@@ -71,13 +70,19 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);
 			URL[] urls = client.execGetResults(jobId);
 			
-			assertTrue(urls[0].toString().endsWith(".json")); 
-			assertTrue(urls[1].toString().endsWith(".csv")); 
-
-			// check the results.
-			String resultString = Utility.getURLContentsAsString(urls[1]);
-			String expectedResultString = "col1,col2\none,two\none,two\n";		
-			assertEquals(expectedResultString, resultString);
+			// check the URLs
+			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200")); 
+			assertTrue(urls[1].toString().endsWith("/results/getTableResultsCsvForWebClient?jobId=" + jobId)); 
+			
+			// check the JSON results
+			String resultJsonString = Utility.getURLContentsAsString(urls[0]);
+			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"one\",\"two\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}\n";		
+			assertEquals(expectedJsonString, resultJsonString);
+			
+			// check the CSV result
+			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
+			String expectedCSVString = "col1,col2\none,two\none,two\n";
+			assertEquals(expectedCSVString, resultCSVString);			
 		} finally {
 			cleanup(client, jobId);
 		}
@@ -87,7 +92,7 @@ public class ResultsClientTest_IT {
 	@Test
 	public void testStoreTable_WithCommasAndQuotes() throws Exception {
 		
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		String jobId = "test_jobid_" + UUID.randomUUID();
 		
 		String [] cols = {"colA", "colB","colC","colD"};
 		String [] types = {"String", "String", "String","String"};
@@ -100,13 +105,19 @@ public class ResultsClientTest_IT {
 		try {
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
-
-			client.execStoreTableResults(jobId, table);
+			client.execStoreTableResults(jobId, table);	
+			
 			URL[] urls = client.execGetResults(jobId);
 			
-			String resultString = Utility.getURLContentsAsString(urls[1]);
-			String expectedResultString = "colA,colB,colC,colD\n\"apple,ant\",\"bench\",\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";
-			assertEquals(expectedResultString, resultString);
+			// check the JSON results
+			String resultJSONString = Utility.getURLContentsAsString(urls[0]);
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}\n";  // validated json
+			assertEquals(expectedJSONString, resultJSONString);
+			
+			// check the CSV results
+			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
+			String expectedCSVString = "colA,colB,colC,colD\n\"apple,ant\",bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";  // validated by opening in Excel
+			assertEquals(expectedCSVString, resultCSVString);
 			
 		} finally {
 			cleanup(client, jobId);
@@ -117,7 +128,7 @@ public class ResultsClientTest_IT {
 	@Test
 	public void testStoreTable_Medium() throws Exception {
 
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		String jobId = "test_jobid_" + UUID.randomUUID();
 		
 		try {
 			long startTime = System.nanoTime();
@@ -139,10 +150,13 @@ public class ResultsClientTest_IT {
 			// --- test results ---
 			URL[] urls = client.execGetResults(jobId);
 			
-			assertTrue(urls[0].toString().endsWith(".json")); 
-			assertTrue(urls[1].toString().endsWith(".csv")); 
-
-			// trust ResultsStorageTest.java to test the contents
+			// test that we got 200 (truncated by getResults()) rows of JSON
+			String resultJsonString = Utility.getURLContentsAsString(urls[0]);
+			JSONObject resultJsonObject = (JSONObject) ((new JSONParser()).parse(resultJsonString));
+			assertEquals(Table.fromJson(resultJsonObject).getNumRows(), 200);	
+			
+			// TODO test that we got full 9000 rows of CSV ...
+			
 		} finally {
 			cleanup(client, jobId);
 		}
@@ -155,7 +169,7 @@ public class ResultsClientTest_IT {
 	@Test
 	public void testStoreTable_Huge() throws Exception {
 
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		String jobId = "test_jobid_" + UUID.randomUUID();
 		
 		try {
 			
@@ -185,8 +199,7 @@ public class ResultsClientTest_IT {
 			// --- test results ---
 			URL[] urls = client.execGetResults(jobId);
 			
-			assertTrue(urls[0].toString().endsWith(".json")); 
-			assertTrue(urls[1].toString().endsWith(".csv")); 
+			// TODO check contents
 
 			// trust ResultsStorageTest.java to test the contents
 		} finally {
@@ -197,7 +210,7 @@ public class ResultsClientTest_IT {
 	@Test
 	public void test_delete() throws Exception {
 		
-		String jobId = "results_test_jobid_" + UUID.randomUUID();
+		String jobId = "test_jobid_" + UUID.randomUUID();
 		String [] cols = {"col1", "col2"};
 		String [] types = {"String", "String"};
 		ArrayList<String> row = new ArrayList<String>();
