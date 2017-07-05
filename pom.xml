@@ -40,7 +40,7 @@
 		<module>nodeGroupStoreService</module>
 		<module>ontologyInfoService</module>
 		<module>sparqlExtDispatchService</module>
-		<module>storedNodegroupExecutionService</module>
+		<module>nodeGroupExecutionService</module>
 		<module>nodeGroupService</module>
 	</modules>
 
