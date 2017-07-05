@@ -280,14 +280,18 @@ public class ResultsServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getResults", method= RequestMethod.POST)
 	public JSONObject getResults(@RequestBody ResultsRequestBody requestBody){
-		String jobId = requestBody.jobId;
 		    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-    	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", jobId);    	
-    	logToStdout("Results Service getResults start JobId=" + jobId);
-
+    	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", requestBody.jobId);    	
+    	logToStdout("Results Service getResults start JobId=" + requestBody.jobId);
+    	
 	    try {
+	    	
+	    	// check that the job id exists
+	    	if(!getJobTracker().jobExists(requestBody.jobId)){
+	    		throw new Exception("No job exists with id " + requestBody.jobId);
+	    	}
 	    	
 	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&maxRows=200");
 	    	URL csv  =  new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + requestBody.jobId);
