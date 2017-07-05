@@ -1608,31 +1608,38 @@ var getNodeDeletionTypeByName = function(delVal){
 
 /* the semantic node group */
 var SemanticNodeGroup = function(width, height, divName) {
+    var drawFlag = (typeof width !== "undefined");
+    
 	this.SNodeList = [];
     this.limit = 0;
-	this.graph = new Graph();
-	this.layouter = new Graph.Layout.Spring(this.graph, width, height);
-	this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
-			height);
-	this.rangeSetter = '';
-	this.isRangeSetterAsync = false;
-	this.returnNameSetter = '';
-	this.isReturnNameSetterAsync = false;
-	this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
-	this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
-	this.asuncSNodeRemover = function() {};  // 
-    this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
-	this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
-	this.asyncLinkEditor = function(){alert("Internal error: SemanticNodeGroup asyncLinkEditor function is not defined.")};
+    if (drawFlag) {
+        this.graph = new Graph();
+        this.layouter = new Graph.Layout.Spring(this.graph, width, height);
+        this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
+                height);
+        this.rangeSetter = '';
+        this.isRangeSetterAsync = false;
+        this.returnNameSetter = '';
+        this.isReturnNameSetterAsync = false;
+        this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
+        this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
+        this.asuncSNodeRemover = function() {};  // 
+        this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
+        this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
+        this.asyncLinkEditor = function(){alert("Internal error: SemanticNodeGroup asyncLinkEditor function is not defined.")};
 
-	
-	this.height = height;
-	this.width = width;
-	this.sparqlNameHash = {};
-	this.divName = divName;
-	this.drawable = true;    // when I make copies and delete stuff, drawing fails
+
+        this.height = height;
+        this.width = width;
+        this.divName = divName;
+        this.drawable = true;    // when I make copies and delete stuff, drawing fails
 	                         // So I set this flag to false and skip drawing.
 	                         // JUSTIN / PAUL TODO.  Untangle this mess.
+    } else {
+        this.drawable = false;
+    }
+    
+	this.sparqlNameHash = {};
 	
 	this.conn = null;       // optional relevant SparqlConnection.
 	                        // this will need to be non-optional and expanded in the upcoming versions.
@@ -1843,7 +1850,7 @@ SemanticNodeGroup.prototype = {
 	deepCopy : function() {
 		// use the json functionality to implement deepCopy
 		// maybe less efficient but keeps avoids double implementation - Paul
-		var ret = new SemanticNodeGroup(this.width, this.height, this.divName);
+		var ret = new SemanticNodeGroup();
 		ret.addJson(this.toJson());
 		
 		// connection
@@ -2630,8 +2637,517 @@ SemanticNodeGroup.prototype = {
 		}
 		return ret;
 	},
+    
+	expandOptionalSubgraphs : function() {
+		// Find nodes with only optional returns
+		// and add incoming optional nodeItem so that entire snode is optional
+		// then move the optional nodeItem outward until some non-optional return is found
+		// this way the "whole chain" becomes optional.
+		// Leave original optionals in place
+		
+		// For nodes with only one non-optional connection, and optional properties
+		// make the node connection optional too
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			var snode = this.SNodeList[i];
+			
+			// count optional and non-optional returns properties
+			var optRet = 0;
+			var nonOptRet = snode.getIsReturned() ? 1 : 0;
+			var retProps = snode.getReturnedPropertyItems();
+			for (var j=0; j < retProps.length; j++) {
+				var prop = retProps[j];
+				if (prop.getIsOptional()) {
+					optRet += 1;
+				} else {
+					nonOptRet += 1;
+				}
+			}
+			
+			// if all returned props are optional
+			if (optRet > 0 && nonOptRet == 0) {		
+				var connectedSnodes = this.getAllConnectedNodes(snode);
+				
+				// if there's only one snode connected
+				if (connectedSnodes.length == 1) {
+					var otherSnode = connectedSnodes[0];
+					var nodeItems = this.getNodeItemsBetween(snode, otherSnode);
+					
+					// if it's only connected once between snode and otherSnode 
+					// and connection is non-optional
+					// then make it optional
+					if (nodeItems.length == 1) {
+						var nodeItem = nodeItems[0];
+						if (snode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(otherSnode) == NodeItem.OPTIONAL_FALSE) {
+							nodeItem.setSNodeOptional(otherSnode, NodeItem.OPTIONAL_REVERSE);
+						}
+						
+						if (otherSnode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(snode) == NodeItem.OPTIONAL_FALSE) {
+							nodeItem.setSNodeOptional(snode, NodeItem.OPTIONAL_TRUE);
+						}
+					} 
+				}
+			}
+		}
+		
+		// now move optional nodeItems as far away from subgraph leafs as possible
+		var changedFlag = true;
+		while (changedFlag) {
+			changedFlag = false;
+			
+			// loop through all snodes
+			for (var i = 0; i < this.SNodeList.length; i++) {
+				var snode = this.SNodeList[i];
+				
+				// count non-optional returns and optional properties
+				var nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				var optPropCount = 0;
+				var retItems = snode.getReturnedPropertyItems();
+				for (var p=0; p < retItems.length; p++) {
+					var pItem = retItems[p];
+					if (! pItem.getIsOptional()) {
+						nonOptReturnCount++;
+					} else if (pItem.getIsReturned()) {
+						optPropCount++;
+					}
+				}
+				
+				// sort all connected node items by their optional status: none, in, out
+				var normItems = [];
+				var optOutItems = [];
+				var optInItems= [];
+				
+				// outgoing nodes
+				var nItems = snode.getNodeList();
+				for (var n=0; n < nItems.length; n++) {
+					var nItem = nItems[n];
+					if (nItem.getConnected()) {
+						var targets = nItem.getSNodes();
+						for (var t=0; t < targets.length; t++) {
+							var target = targets[t];
+							var opt = nItem.getSNodeOptional(target);
+							
+							if (opt == NodeItem.OPTIONAL_FALSE) {
+								normItems.push([nItem, target]);
+								
+							} else if (opt == NodeItem.OPTIONAL_TRUE) {
+								optOutItems.push([nItem, target]);
+									
+							} else {// OPTIONAL_REVERSE
+								optInItems.push([nItem, target]); 
+							}
+						}
+					}
+				}
+				
+				// incoming nodes
+				var nItems = this.getConnectingNodeItems(snode); 
+				for (var n=0; n < nItems.length; n++) {
+					var nItem = nItems[n];
+					
+					var opt = nItem.getSNodeOptional(snode);
+					
+					if (opt == NodeItem.OPTIONAL_FALSE) {
+						normItems.push([nItem, snode]);
 	
+					} else if (opt == NodeItem.OPTIONAL_REVERSE) {
+						optOutItems.push([nItem, snode]);
+							
+					} else {// OPTIONAL_TRUE
+						optInItems.push([nItem, snode]); 
+					}
+					
+				}
+				
+				// if nothing is returned AND
+				//  one normal connection AND
+				//  >= 1 optional outward connections AND
+				// no optional in connections AND
+				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length >= 1 && optInItems.length == 0) {
+				
+					// set the single normal nodeItem to incoming optional
+					var nItem = normItems[0][0];
+					var target = normItems[0][1];
+					if (target != snode) {
+						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_REVERSE);
+					} else {
+						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_TRUE);
+					}
+					
+					// if there is only one outgoing optional, than it can be set to non-optional for performance
+					if (optOutItems.length == 1 && optPropCount == 0) {
+						var oItem = optOutItems[0][0];
+						var oTarget = optOutItems[0][1];
+						oItem.setSNodeOptional(oTarget, NodeItem.OPTIONAL_FALSE);
+					}
+					
+					changedFlag = true;
+				}
+			}
+		}
+	},
 	
+	alreadyExists : function(SNode) {
+		var retval = false;
+		var namedSNode = SNode.getNodeName();
+		var t = this.SNodeList.length;
+		for (var l = 0; l < t; l++) {
+			if (this.SNodeList[l].getNodeName() == namedSNode) {
+				retval = true;
+				break;
+			}
+		}
+		return retval;
+	},
+
+	getNodesByURI : function(uri) {
+		// get all nodes with the given uri
+		var ret = [];
+
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			if (this.SNodeList[i].getURI() == uri) {
+				ret.push(this.SNodeList[i]);
+			}
+		}
+		return ret;
+	},
+	
+	getNodesBySuperclassURI : function(uri, oInfo) {
+		// get all nodes with the given uri
+		var ret = [];
+
+		// get all subclasses
+		var classes = [uri].concat(oInfo.getSubclassNames(uri));
+		
+		// for each class / sub-class
+		for (var i=0; i < classes.length; i++) {
+			// get all nodes
+			var c = this.getNodesByURI(classes[i]);
+			// push node if it isn't already in ret
+			for (var j=0; j < c.length; j++) {
+				if (ret.indexOf(c[j]) == -1) {
+					ret.push(c[j]);
+				}
+			}
+		}
+		
+		return ret;
+	},
+	
+	getNodeBySparqlID : function(id) {
+		// gets first node by uri, or null if it doesn't exist
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			if (this.SNodeList[i].getSparqlID() == id) {
+				return this.SNodeList[i];
+			}
+		}
+		return null;
+	},
+	// unused ?
+	getArrayOfURINames : function() {
+		var retval = [];
+		var t = this.SNodeList.length;
+		for (var l = 0; l < t; l++) {
+			// output the name
+			retval.push(this.SNodeList[l].getURI());
+			// alert(this.SNodeList[l].getURI());
+		}
+		return retval;
+
+	},
+
+	changeSparqlID : function(obj, requestID) {
+		// API call for any object with get/setSparqlID:
+		// set an object's sparqlID, making sure it is legal, unique, nameHash,
+		// etc...
+		// return the new id, which may be slightly different than the requested
+		// id.
+
+		this.freeSparqlID(obj.getSparqlID());
+		var newID = new SparqlFormatter().genSparqlID(requestID,
+				this.sparqlNameHash);
+		this.reserveSparqlID(newID);
+		obj.setSparqlID(newID);
+		return newID;
+	},
+
+	reserveSparqlID : function(id) {
+		if (id != null && id != "") {
+			this.sparqlNameHash[id] = 1;
+		}
+	},
+
+	freeSparqlID : function(id) {
+		// alert("retiring " + id);
+		if (id != null && id != "") {
+			delete this.sparqlNameHash[id];
+		}
+	},
+
+	removeTaggedNodes : function() {
+
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			if (this.SNodeList[i].getRemovalTag()) {
+				// remove the current sNode from all links.
+				for (var k = 0; k < this.SNodeList.length; k++) {
+					this.SNodeList[k].removeFromNodeList(this.SNodeList[i]);
+				}
+				// remove the node from the graph
+                if (this.drawable) {
+                    this.graph.removeNode(this.SNodeList[i].node.id);
+                }
+				
+				// remove the sNode from the nodeGroup
+				this.SNodeList[i].node.hide();
+				this.SNodeList.splice(i, 1);
+				
+			}
+		}
+		// console.log("NODES STILL REMAINING AFTER REMOVAL:");
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			// console.log("node: " + this.SNodeList[i].getSparqlID() );
+		}
+
+	},
+
+	clear : function() {
+		// remove all nodes and redraw
+		for (var k = 0; k < this.SNodeList.length; k++) {
+			this.SNodeList[k].node.hide();
+		}
+
+		this.SNodeList = [];
+		// this.graph = new Graph();
+		// this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph,
+		// this.width, this.height);
+		this.graph = new Graph();
+		this.layouter = new Graph.Layout.Spring(this.graph, this.width, this.height);
+		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
+		this.sparqlNameHash = {};
+		this.conn = null;
+
+	},
+	
+
+	deleteNode : function(nd, recurse) {
+		// delete a given node (nd), usually at its request.
+		// if "recurse" is true, remove all the child nodes that connect to this
+		// one, recursively.
+		var sparqlIDsToRemove = [];
+		var nodesToRemove = [];
+
+		// console.log("called removal. reached node group.");
+
+		// add the requested node
+		nodesToRemove.push(nd);
+
+		// if appropriate, get the children recursively.
+		if (recurse) {
+			var tempVal = this.getSubNodes(nd);
+			nodesToRemove = nodesToRemove.concat(tempVal);
+		} else {
+			// do nothing extra at all.
+		}
+		// remove the nodes, as many as needed.
+		for (var j = 0; j < nodesToRemove.length; j++) {
+			// console.log("set " + nodesToRemove[j].getSparqlID() + " to
+			// null.");
+			var k = nodesToRemove[j].getSparqlIDList();
+			sparqlIDsToRemove = sparqlIDsToRemove.concat(k);
+			nodesToRemove[j].setRemovalTag();
+		}
+
+		// pull the nulls from the list
+		this.removeTaggedNodes();
+
+		// free sparqlIDs
+		for (var i = 0; i < sparqlIDsToRemove.length; i++) {
+			this.freeSparqlID(sparqlIDsToRemove[i]);
+		}
+
+	},
+
+	
+	pruneUnusedSubGraph : function(snode, optInstanceOnly) {
+		// deletes a node if 
+		//       - it contains no returns or constraints
+		//       - it has one or less subGraphs hanging off it that contain no returns or constraints
+		// also deletes those subGraphs with no returns or constraints.
+		// This means it could delete the entire node group if there are not contraints or returns set.
+		//
+		// If node or multiple subgraphs have returns and constraints: does nothing and returns false
+		// If anything was deleted: return true
+		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+		
+		if (! snode.isUsed(instanceOnly)) {
+			var subNodes = this.getAllConnectedNodes(snode);
+			var subGraphs = [];
+			var needSubTree = [];
+			var needSubTreeCount = 0;
+			
+			// build a subGraph for every connection
+			for (var i=0; i<subNodes.length; i++) {
+				subGraphs[i] = this.getSubGraph(subNodes[i], [snode]);
+				needSubTree[i] = 0;
+				// check to see if the subGraph contains any constraints or returns
+				for (var j=0; j < subGraphs[i].length; j++) {
+					if (subGraphs[i][j].isUsed(instanceOnly)) {
+						needSubTree[i] = 1;
+						needSubTreeCount += 1;
+						break;
+					}
+				}
+				if (needSubTreeCount > 1) break;
+			}
+			
+			// if only one subGraph has nodes that are constrained or returned
+			if (needSubTreeCount < 2) {
+				
+				// delete any subGraph with no returned or constrained nodes
+				for (var i=0; i < subGraphs.length; i++) {
+					if (!needSubTree[i]) {
+						for (var j=0; j < subGraphs[i].length; j++) {
+							this.deleteNode(subGraphs[i][j], false);
+						}
+					}
+				}
+				
+				// recursively walk up the 'needed' subtree
+				// pruning off any unUsed nodes and subGraphs
+				var connList = this.getAllConnectedNodes(snode);
+				this.deleteNode(snode, false);
+				for (var i=0; i < connList.length; i++) {
+					this.pruneUnusedSubGraph(connList[i], optInstanceOnly);
+				}
+				
+				return true;
+			}
+		}
+		return false;
+	},
+	
+	pruneAllUnused : function(optInstanceOnly) {
+		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+
+		// prune all unused subgraphs
+		
+		var pruned = [];        // sparqlID's of nodes already pruned
+		var prunedSomething = true;
+		
+		// continue until every node has been pruned
+		while (prunedSomething) {
+			// list is different each time, so start over to find first unpruned node
+			prunedSomething = false;
+			for (var i=0; i < this.SNodeList.length; i++) {
+				if (pruned.indexOf(this.SNodeList[i].getSparqlID()) == -1) {
+					pruned.push(this.SNodeList[i].getSparqlID());
+					this.pruneUnusedSubGraph(this.SNodeList[i], instanceOnly);
+					prunedSomething = true;
+					break;   // go back to "while" since this.SNodeList is now changed
+				}
+			}
+		}
+	},
+	
+	getOrAddNode : function(classURI, oInfo, domain, optSuperclassFlag, optOptionalFlag) {
+		// return first (randomly selected) node with this URI
+		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
+		// if superclassFlag, then any subclass of classURI "counts"
+		// if optOptionalFlag: ONLY if node is added, change first nodeItem connection in path's isOptional to true
+		
+		// if gNodeGroup is empty: simple add
+		var sNode;
+		var scFlag =       (typeof optSuperclassFlag === "undefined") ? false : optSuperclassFlag;
+		var optionalFlag = (typeof optOptionalFlag   === "undefined") ? false : optOptionalFlag;
+		
+		if (this.getNodeCount() === 0) {
+			sNode = this.addNode(classURI, oInfo);
+			
+		} else {
+			// if node already exists, return first one
+			var sNodes; 
+			
+			// if superclassFlag, then any subclass of classURI "counts"
+			if (scFlag) {
+				sNodes = this.getNodesBySuperclassURI(classURI, oInfo);
+			// otherwise find nodes with exact classURI
+			} else {
+				sNodes = this.getNodesByURI(classURI);
+			}
+			
+			if (sNodes.length > 0) {
+				sNode = sNodes[0];
+			} else {
+				sNode = this.addClassFirstPath(classURI, oInfo, domain, optOptionalFlag);
+			}
+		}
+		return sNode;
+	},
+	
+	setConnectingNodeItemsOptional : function(snode, val) {
+		// set setSNodeOptional(val) on every nodeItem pointing to this snode
+		
+		var nItemList = this.getConnectingNodeItems(snode);
+		for (var i=0; i < nItemList.length; i++) {
+			nItemList[i].setSNodeOptional(snode, val);
+		}
+	},
+	
+	addClassFirstPath : function(classURI, oInfo, domain, optOptionalFlag) {
+		// attach a classURI using the first path found.
+		// Error if less than one path is found.
+		// return the new node
+		// return null if there are no paths
+
+		// get first path from classURI to this nodeGroup
+		var paths = oInfo.findAllPaths(classURI, this.getArrayOfURINames(), domain);
+		if (paths.length === 0) {
+			return null;
+		}
+		var path = paths[0];
+		
+		// get first node matching anchor of first path
+		var nlist = this.getNodesByURI(path.getAnchorClassName());
+		
+		// add sNode
+		var sNode = this.addPath(path, nlist[0], oInfo, false, optOptionalFlag);
+
+		return sNode;
+	},
+	
+	addSubclassPropertyByURI : function(snode, propURI, oInfo) {
+		// add a subclass's property to this sNode
+		// silently return NULL the keyname isn't found
+		
+		var oProp = oInfo.findSubclassProperty(snode.getURI(), propURI );
+		if (oProp == null) {
+			return null;
+		}
+		
+		
+		var prop = snode.addSubclassProperty(oProp.getName().getLocalName(),
+				                             oProp.getRange().getLocalName(),
+				                             oProp.getRange().getFullName(),
+				                             oProp.getName().getFullName()
+				                             );
+		return prop;
+	},
+	
+	getSingleConnectedNodeItem : function(snode) {
+		// GUI helper function: 
+		// find single connected nodeItem (either direction) with single connected SNode
+		// otherwise null.
+		
+		var nItems = this.getAllConnectedConnectedNodeItems(snode);
+		// one nItem && one SNode
+		if (nItems.length == 1 && nItems[0].getSNodes().length == 1) {
+			return nItems[0];
+		} else {
+			return null;
+		}
+		
+	},
+	
+	//--- move start ----
 	tabIndent : function (tab) {
 		return tab + "   ";
 	},
@@ -3197,514 +3713,5 @@ SemanticNodeGroup.prototype = {
 		return sparql;
 	},
 	
-	expandOptionalSubgraphs : function() {
-		// Find nodes with only optional returns
-		// and add incoming optional nodeItem so that entire snode is optional
-		// then move the optional nodeItem outward until some non-optional return is found
-		// this way the "whole chain" becomes optional.
-		// Leave original optionals in place
-		
-		// For nodes with only one non-optional connection, and optional properties
-		// make the node connection optional too
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			var snode = this.SNodeList[i];
-			
-			// count optional and non-optional returns properties
-			var optRet = 0;
-			var nonOptRet = snode.getIsReturned() ? 1 : 0;
-			var retProps = snode.getReturnedPropertyItems();
-			for (var j=0; j < retProps.length; j++) {
-				var prop = retProps[j];
-				if (prop.getIsOptional()) {
-					optRet += 1;
-				} else {
-					nonOptRet += 1;
-				}
-			}
-			
-			// if all returned props are optional
-			if (optRet > 0 && nonOptRet == 0) {		
-				var connectedSnodes = this.getAllConnectedNodes(snode);
-				
-				// if there's only one snode connected
-				if (connectedSnodes.length == 1) {
-					var otherSnode = connectedSnodes[0];
-					var nodeItems = this.getNodeItemsBetween(snode, otherSnode);
-					
-					// if it's only connected once between snode and otherSnode 
-					// and connection is non-optional
-					// then make it optional
-					if (nodeItems.length == 1) {
-						var nodeItem = nodeItems[0];
-						if (snode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(otherSnode) == NodeItem.OPTIONAL_FALSE) {
-							nodeItem.setSNodeOptional(otherSnode, NodeItem.OPTIONAL_REVERSE);
-						}
-						
-						if (otherSnode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(snode) == NodeItem.OPTIONAL_FALSE) {
-							nodeItem.setSNodeOptional(snode, NodeItem.OPTIONAL_TRUE);
-						}
-					} 
-				}
-			}
-		}
-		
-		// now move optional nodeItems as far away from subgraph leafs as possible
-		var changedFlag = true;
-		while (changedFlag) {
-			changedFlag = false;
-			
-			// loop through all snodes
-			for (var i = 0; i < this.SNodeList.length; i++) {
-				var snode = this.SNodeList[i];
-				
-				// count non-optional returns and optional properties
-				var nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
-				var optPropCount = 0;
-				var retItems = snode.getReturnedPropertyItems();
-				for (var p=0; p < retItems.length; p++) {
-					var pItem = retItems[p];
-					if (! pItem.getIsOptional()) {
-						nonOptReturnCount++;
-					} else if (pItem.getIsReturned()) {
-						optPropCount++;
-					}
-				}
-				
-				// sort all connected node items by their optional status: none, in, out
-				var normItems = [];
-				var optOutItems = [];
-				var optInItems= [];
-				
-				// outgoing nodes
-				var nItems = snode.getNodeList();
-				for (var n=0; n < nItems.length; n++) {
-					var nItem = nItems[n];
-					if (nItem.getConnected()) {
-						var targets = nItem.getSNodes();
-						for (var t=0; t < targets.length; t++) {
-							var target = targets[t];
-							var opt = nItem.getSNodeOptional(target);
-							
-							if (opt == NodeItem.OPTIONAL_FALSE) {
-								normItems.push([nItem, target]);
-								
-							} else if (opt == NodeItem.OPTIONAL_TRUE) {
-								optOutItems.push([nItem, target]);
-									
-							} else {// OPTIONAL_REVERSE
-								optInItems.push([nItem, target]); 
-							}
-						}
-					}
-				}
-				
-				// incoming nodes
-				var nItems = this.getConnectingNodeItems(snode); 
-				for (var n=0; n < nItems.length; n++) {
-					var nItem = nItems[n];
-					
-					var opt = nItem.getSNodeOptional(snode);
-					
-					if (opt == NodeItem.OPTIONAL_FALSE) {
-						normItems.push([nItem, snode]);
-	
-					} else if (opt == NodeItem.OPTIONAL_REVERSE) {
-						optOutItems.push([nItem, snode]);
-							
-					} else {// OPTIONAL_TRUE
-						optInItems.push([nItem, snode]); 
-					}
-					
-				}
-				
-				// if nothing is returned AND
-				//  one normal connection AND
-				//  >= 1 optional outward connections AND
-				// no optional in connections AND
-				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length >= 1 && optInItems.length == 0) {
-				
-					// set the single normal nodeItem to incoming optional
-					var nItem = normItems[0][0];
-					var target = normItems[0][1];
-					if (target != snode) {
-						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_REVERSE);
-					} else {
-						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_TRUE);
-					}
-					
-					// if there is only one outgoing optional, than it can be set to non-optional for performance
-					if (optOutItems.length == 1 && optPropCount == 0) {
-						var oItem = optOutItems[0][0];
-						var oTarget = optOutItems[0][1];
-						oItem.setSNodeOptional(oTarget, NodeItem.OPTIONAL_FALSE);
-					}
-					
-					changedFlag = true;
-				}
-			}
-		}
-	},
-	
-	alreadyExists : function(SNode) {
-		var retval = false;
-		var namedSNode = SNode.getNodeName();
-		var t = this.SNodeList.length;
-		for (var l = 0; l < t; l++) {
-			if (this.SNodeList[l].getNodeName() == namedSNode) {
-				retval = true;
-				break;
-			}
-		}
-		return retval;
-	},
-
-	getNodesByURI : function(uri) {
-		// get all nodes with the given uri
-		var ret = [];
-
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			if (this.SNodeList[i].getURI() == uri) {
-				ret.push(this.SNodeList[i]);
-			}
-		}
-		return ret;
-	},
-	
-	getNodesBySuperclassURI : function(uri, oInfo) {
-		// get all nodes with the given uri
-		var ret = [];
-
-		// get all subclasses
-		var classes = [uri].concat(oInfo.getSubclassNames(uri));
-		
-		// for each class / sub-class
-		for (var i=0; i < classes.length; i++) {
-			// get all nodes
-			var c = this.getNodesByURI(classes[i]);
-			// push node if it isn't already in ret
-			for (var j=0; j < c.length; j++) {
-				if (ret.indexOf(c[j]) == -1) {
-					ret.push(c[j]);
-				}
-			}
-		}
-		
-		return ret;
-	},
-	
-	getNodeBySparqlID : function(id) {
-		// gets first node by uri, or null if it doesn't exist
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			if (this.SNodeList[i].getSparqlID() == id) {
-				return this.SNodeList[i];
-			}
-		}
-		return null;
-	},
-	// unused ?
-	getArrayOfURINames : function() {
-		var retval = [];
-		var t = this.SNodeList.length;
-		for (var l = 0; l < t; l++) {
-			// output the name
-			retval.push(this.SNodeList[l].getURI());
-			// alert(this.SNodeList[l].getURI());
-		}
-		return retval;
-
-	},
-
-	changeSparqlID : function(obj, requestID) {
-		// API call for any object with get/setSparqlID:
-		// set an object's sparqlID, making sure it is legal, unique, nameHash,
-		// etc...
-		// return the new id, which may be slightly different than the requested
-		// id.
-
-		this.freeSparqlID(obj.getSparqlID());
-		var newID = new SparqlFormatter().genSparqlID(requestID,
-				this.sparqlNameHash);
-		this.reserveSparqlID(newID);
-		obj.setSparqlID(newID);
-		return newID;
-	},
-
-	reserveSparqlID : function(id) {
-		if (id != null && id != "") {
-			this.sparqlNameHash[id] = 1;
-		}
-	},
-
-	freeSparqlID : function(id) {
-		// alert("retiring " + id);
-		if (id != null && id != "") {
-			delete this.sparqlNameHash[id];
-		}
-	},
-
-	removeTaggedNodes : function() {
-
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			if (this.SNodeList[i].getRemovalTag()) {
-				// remove the current sNode from all links.
-				for (var k = 0; k < this.SNodeList.length; k++) {
-					this.SNodeList[k].removeFromNodeList(this.SNodeList[i]);
-				}
-				// remove the node from the graph
-                if (this.drawable) {
-                    this.graph.removeNode(this.SNodeList[i].node.id);
-                }
-				
-				// remove the sNode from the nodeGroup
-				this.SNodeList[i].node.hide();
-				this.SNodeList.splice(i, 1);
-				
-			}
-		}
-		// console.log("NODES STILL REMAINING AFTER REMOVAL:");
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			// console.log("node: " + this.SNodeList[i].getSparqlID() );
-		}
-
-	},
-
-	clear : function() {
-		// remove all nodes and redraw
-		for (var k = 0; k < this.SNodeList.length; k++) {
-			this.SNodeList[k].node.hide();
-		}
-
-		this.SNodeList = [];
-		// this.graph = new Graph();
-		// this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph,
-		// this.width, this.height);
-		this.graph = new Graph();
-		this.layouter = new Graph.Layout.Spring(this.graph, this.width, this.height);
-		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
-		this.sparqlNameHash = {};
-		this.conn = null;
-
-	},
-	
-
-	deleteNode : function(nd, recurse) {
-		// delete a given node (nd), usually at its request.
-		// if "recurse" is true, remove all the child nodes that connect to this
-		// one, recursively.
-		var sparqlIDsToRemove = [];
-		var nodesToRemove = [];
-
-		// console.log("called removal. reached node group.");
-
-		// add the requested node
-		nodesToRemove.push(nd);
-
-		// if appropriate, get the children recursively.
-		if (recurse) {
-			var tempVal = this.getSubNodes(nd);
-			nodesToRemove = nodesToRemove.concat(tempVal);
-		} else {
-			// do nothing extra at all.
-		}
-		// remove the nodes, as many as needed.
-		for (var j = 0; j < nodesToRemove.length; j++) {
-			// console.log("set " + nodesToRemove[j].getSparqlID() + " to
-			// null.");
-			var k = nodesToRemove[j].getSparqlIDList();
-			sparqlIDsToRemove = sparqlIDsToRemove.concat(k);
-			nodesToRemove[j].setRemovalTag();
-		}
-
-		// pull the nulls from the list
-		this.removeTaggedNodes();
-
-		// free sparqlIDs
-		for (var i = 0; i < sparqlIDsToRemove.length; i++) {
-			this.freeSparqlID(sparqlIDsToRemove[i]);
-		}
-
-	},
-
-	
-	pruneUnusedSubGraph : function(snode, optInstanceOnly) {
-		// deletes a node if 
-		//       - it contains no returns or constraints
-		//       - it has one or less subGraphs hanging off it that contain no returns or constraints
-		// also deletes those subGraphs with no returns or constraints.
-		// This means it could delete the entire node group if there are not contraints or returns set.
-		//
-		// If node or multiple subgraphs have returns and constraints: does nothing and returns false
-		// If anything was deleted: return true
-		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
-		
-		if (! snode.isUsed(instanceOnly)) {
-			var subNodes = this.getAllConnectedNodes(snode);
-			var subGraphs = [];
-			var needSubTree = [];
-			var needSubTreeCount = 0;
-			
-			// build a subGraph for every connection
-			for (var i=0; i<subNodes.length; i++) {
-				subGraphs[i] = this.getSubGraph(subNodes[i], [snode]);
-				needSubTree[i] = 0;
-				// check to see if the subGraph contains any constraints or returns
-				for (var j=0; j < subGraphs[i].length; j++) {
-					if (subGraphs[i][j].isUsed(instanceOnly)) {
-						needSubTree[i] = 1;
-						needSubTreeCount += 1;
-						break;
-					}
-				}
-				if (needSubTreeCount > 1) break;
-			}
-			
-			// if only one subGraph has nodes that are constrained or returned
-			if (needSubTreeCount < 2) {
-				
-				// delete any subGraph with no returned or constrained nodes
-				for (var i=0; i < subGraphs.length; i++) {
-					if (!needSubTree[i]) {
-						for (var j=0; j < subGraphs[i].length; j++) {
-							this.deleteNode(subGraphs[i][j], false);
-						}
-					}
-				}
-				
-				// recursively walk up the 'needed' subtree
-				// pruning off any unUsed nodes and subGraphs
-				var connList = this.getAllConnectedNodes(snode);
-				this.deleteNode(snode, false);
-				for (var i=0; i < connList.length; i++) {
-					this.pruneUnusedSubGraph(connList[i], optInstanceOnly);
-				}
-				
-				return true;
-			}
-		}
-		return false;
-	},
-	
-	pruneAllUnused : function(optInstanceOnly) {
-		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
-
-		// prune all unused subgraphs
-		
-		var pruned = [];        // sparqlID's of nodes already pruned
-		var prunedSomething = true;
-		
-		// continue until every node has been pruned
-		while (prunedSomething) {
-			// list is different each time, so start over to find first unpruned node
-			prunedSomething = false;
-			for (var i=0; i < this.SNodeList.length; i++) {
-				if (pruned.indexOf(this.SNodeList[i].getSparqlID()) == -1) {
-					pruned.push(this.SNodeList[i].getSparqlID());
-					this.pruneUnusedSubGraph(this.SNodeList[i], instanceOnly);
-					prunedSomething = true;
-					break;   // go back to "while" since this.SNodeList is now changed
-				}
-			}
-		}
-	},
-	
-	getOrAddNode : function(classURI, oInfo, domain, optSuperclassFlag, optOptionalFlag) {
-		// return first (randomly selected) node with this URI
-		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
-		// if superclassFlag, then any subclass of classURI "counts"
-		// if optOptionalFlag: ONLY if node is added, change first nodeItem connection in path's isOptional to true
-		
-		// if gNodeGroup is empty: simple add
-		var sNode;
-		var scFlag =       (typeof optSuperclassFlag === "undefined") ? false : optSuperclassFlag;
-		var optionalFlag = (typeof optOptionalFlag   === "undefined") ? false : optOptionalFlag;
-		
-		if (this.getNodeCount() === 0) {
-			sNode = this.addNode(classURI, oInfo);
-			
-		} else {
-			// if node already exists, return first one
-			var sNodes; 
-			
-			// if superclassFlag, then any subclass of classURI "counts"
-			if (scFlag) {
-				sNodes = this.getNodesBySuperclassURI(classURI, oInfo);
-			// otherwise find nodes with exact classURI
-			} else {
-				sNodes = this.getNodesByURI(classURI);
-			}
-			
-			if (sNodes.length > 0) {
-				sNode = sNodes[0];
-			} else {
-				sNode = this.addClassFirstPath(classURI, oInfo, domain, optOptionalFlag);
-			}
-		}
-		return sNode;
-	},
-	
-	setConnectingNodeItemsOptional : function(snode, val) {
-		// set setSNodeOptional(val) on every nodeItem pointing to this snode
-		
-		var nItemList = this.getConnectingNodeItems(snode);
-		for (var i=0; i < nItemList.length; i++) {
-			nItemList[i].setSNodeOptional(snode, val);
-		}
-	},
-	
-	addClassFirstPath : function(classURI, oInfo, domain, optOptionalFlag) {
-		// attach a classURI using the first path found.
-		// Error if less than one path is found.
-		// return the new node
-		// return null if there are no paths
-
-		// get first path from classURI to this nodeGroup
-		var paths = oInfo.findAllPaths(classURI, this.getArrayOfURINames(), domain);
-		if (paths.length === 0) {
-			return null;
-		}
-		var path = paths[0];
-		
-		// get first node matching anchor of first path
-		var nlist = this.getNodesByURI(path.getAnchorClassName());
-		
-		// add sNode
-		var sNode = this.addPath(path, nlist[0], oInfo, false, optOptionalFlag);
-
-		return sNode;
-	},
-	
-	addSubclassPropertyByURI : function(snode, propURI, oInfo) {
-		// add a subclass's property to this sNode
-		// silently return NULL the keyname isn't found
-		
-		var oProp = oInfo.findSubclassProperty(snode.getURI(), propURI );
-		if (oProp == null) {
-			return null;
-		}
-		
-		
-		var prop = snode.addSubclassProperty(oProp.getName().getLocalName(),
-				                             oProp.getRange().getLocalName(),
-				                             oProp.getRange().getFullName(),
-				                             oProp.getName().getFullName()
-				                             );
-		return prop;
-	},
-	
-	getSingleConnectedNodeItem : function(snode) {
-		// GUI helper function: 
-		// find single connected nodeItem (either direction) with single connected SNode
-		// otherwise null.
-		
-		var nItems = this.getAllConnectedConnectedNodeItems(snode);
-		// one nItem && one SNode
-		if (nItems.length == 1 && nItems[0].getSNodes().length == 1) {
-			return nItems[0];
-		} else {
-			return null;
-		}
-		
-	},
-	
-	
+    //----- move end -----
 };

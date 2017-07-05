@@ -42,12 +42,36 @@ define([	// properly require.config'ed   bootstrap-modal
              *     this.getSuccessSparql(resultSet)
              *     this.getFailedResultHtml(resultSet)
              */
-            generateAsk : function (nodegroup, successCallback)       { return this.execNodegroupOnly("generateAsk",       nodegroup, successCallback); },
-            generateConstruct : function (nodegroup, successCallback) { return this.execNodegroupOnly("generateConstruct", nodegroup, successCallback); },
-            generateCountAll : function (nodegroup, successCallback)  { return this.execNodegroupOnly("generateCountAll",  nodegroup, successCallback); },
-            generateDelete : function (nodegroup, successCallback)    { return this.execNodegroupOnly("generateDelete",    nodegroup, successCallback); },
-            generateSelect : function (nodegroup, successCallback)    { return this.execNodegroupOnly("generateSelect",    nodegroup, successCallback); },
-
+            execGenerateAsk : function (nodegroup, successCallback)       { return this.execNodegroupOnly("generateAsk",       nodegroup, successCallback); },
+            execGenerateConstruct : function (nodegroup, successCallback) { return this.execNodegroupOnly("generateConstruct", nodegroup, successCallback); },
+            execGenerateCountAll : function (nodegroup, successCallback)  { return this.execNodegroupOnly("generateCountAll",  nodegroup, successCallback); },
+            execGenerateDelete : function (nodegroup, successCallback)    { return this.execNodegroupOnly("generateDelete",    nodegroup, successCallback); },
+            execGenerateSelect : function (nodegroup, successCallback)    { return this.execNodegroupOnly("generateSelect",    nodegroup, successCallback); },
+            
+            execGenerateFilter : function (nodegroup, sparqlId, successCallback)    { return this.execNodegroupSparqlId("generateFilter", nodegroup, sparqlId, successCallback); },
+            
+            execAsyncGenerateFilter : function (nodegroup, sparqlId, sparqlCallback, failureCallback) {
+                this.execGenerateFilter(nodegroup, sparqlId, 
+                                        this.asyncSparqlCallback.bind(this, sparqlCallback, failureCallback));
+            },
+            
+            /*
+             * @private
+             */
+            asyncSparqlCallback(sparqlCallback, failureCallback, resultSet) {
+                if (resultSet.isSuccess()) {
+                    // get the jobId
+                    var sparql = resultSet.getSimpleResultField("SparqlQuery");
+                    if (sparql) {
+                        sparqlCallback(sparql);
+                    } else {
+                        failureCallback(this.getFailureMessage(resultSet, endpoint + " did not return a SparqlQuery."));
+                    }
+                } else {
+                    failureCallback(this.getFailureMessage(resultSet));
+                }
+            },
+            
             getSuccessSparql : function (resultSet) {
 				return resultSet.getSimpleResultField("SparqlQuery");
 			},
@@ -79,6 +103,17 @@ define([	// properly require.config'ed   bootstrap-modal
 			execNodegroupOnly : function (endpoint, nodegroup, successCallback) {
 				var data = JSON.stringify ({
 					  "jsonRenderedNodeGroup": JSON.stringify(nodegroup.toJson()),
+					});
+				this.msi.postToEndpoint(endpoint, data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
+            
+            /**
+              * @private
+              */
+            execNodegroupSparqlId : function (endpoint, nodegroup, sparqlId, successCallback) {
+				var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(nodegroup.toJson()),
+                      "targetObjectSparqlId": sparqlId
 					});
 				this.msi.postToEndpoint(endpoint, data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},

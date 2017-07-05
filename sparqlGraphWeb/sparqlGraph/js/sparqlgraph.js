@@ -163,7 +163,7 @@
             logEvent("SG Drop Class", "label", dragLabel);
 
             // Handle no paths or shift key during drag: drop node with no connections
-            if (event.shiftKey || paths.length == 0) {
+            if (noPathFlag || paths.length == 0) {
                 gNodeGroup.addNode(dragLabel, gOInfo);
                 nodeGroupChanged(true);
                 guiGraphNonEmpty();
@@ -311,7 +311,10 @@
     	require([ 'sparqlgraph/js/modalitemdialog',
 	            ], function (ModalItemDialog) {
     		
-    		var dialog= new ModalItemDialog(propItem, gNodeGroup, getQueryClientOrInterface(), propertyItemDialogCallback,
+    		var dialog= new ModalItemDialog(propItem, 
+                                            gNodeGroup, 
+                                            this.runItemDialogQuery.bind(this, g, gConn), 
+                                            propertyItemDialogCallback,
     				                        {"draculaLabel" : draculaLabel}
     		                                );
     		dialog.show();
@@ -382,7 +385,10 @@
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
-            var dialog= new ModalItemDialog(snodeItem, gNodeGroup, getQueryClientOrInterface(), snodeItemDialogCallback,
+            var dialog= new ModalItemDialog(snodeItem, 
+                                            gNodeGroup, 
+                                            this.runItemDialogQuery.bind(this, g, gConn), 
+                                            snodeItemDialogCallback,
                                             {"draculaLabel" : draculaLabel}
                                             );
             dialog.show();
@@ -552,6 +558,39 @@
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
     
+    var runItemDialogQuery = function(g, conn, ng, sparqlId, msiOrQsResultCallback, failureCallback, statusCallback) {
+        require(['sparqlgraph/js/msiclientnodegroupexec',
+                 'sparqlgraph/js/msiclientnodegroupservice'], 
+    	            function (MsiClientNodeGroupExec, MsiClientNodeGroupService) {
+            
+            var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
+            
+            if (getQuerySource() == "DIRECT") {
+                
+                // get answer for msiOrQsResultCallback
+                var sparqlCallback = function (cn, resCallback, failCallback, sparql) {
+                    var ssi = cn.getDefaultQueryInterface();
+                    ssi.executeAndParseToSuccess(sparql, resCallback, failCallback );
+                    
+                }.bind(this, conn, msiOrQsResultCallback, failureCallback);
+                
+                // generate sparql and send to sparqlCallback
+                var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+                ngClient.execAsyncGenerateFilter(ng, sparqlId, sparqlCallback, failureCallback);
+                
+            } else {
+                var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
+                                                                                 failureCallback,
+                                                                                 statusCallback,
+                                                                                 g.service.status.url,
+                                                                                 g.service.results.url);
+
+                client.execAsyncDispatchFilterFromNodeGroup(ng, conn, sparqlId, null, null, jobIdCallback, failureCallback);
+
+            }
+        }); 
+    };
+
     var doQueryLoadFile = function (file) {
     	var r = new FileReader();
     	
@@ -830,20 +869,26 @@
     	         function (MsiClientNodeGroupExec) {
 			
             guiDisableAll();
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
     		
+            var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+                                                                                     ngExecTableResCallback,
+                                                                                     ngExecFailureCallback,
+                                                                                     setStatusProgressBar.bind(this, "Running Query"),
+                                                                                     g.service.status.url,
+                                                                                     g.service.results.url);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, null, ngExecJobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, null, ngExecJobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
                 break;
             case "CONSTRUCT":
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, null, ngExecJobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
                 break;
 			}
             
@@ -858,7 +903,14 @@
 			
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
     		
-            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, ngExecJobIdCallback, ngExecFailureCallback);
+             var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+                                                                                      ngExecTableResCallback,
+                                                                                      ngExecFailureCallback,
+                                                                                      setStatusProgressBar.bind(this, "Running Query"),
+                                                                                      g.service.status.url,
+                                                                                      g.service.results.url);
+            
+            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, ngExecFailureCallback);
 
     	});
     };
@@ -872,46 +924,8 @@
             setStatus("");
         });
     };
-
-    /*
-     * first callback in ngExec chain
-     * Got the jobId.  Now monitor status.
-     * @private
-     */
-    var ngExecJobIdCallback = function (jobId) {
-        require(['sparqlgraph/js/msiclientstatus'], 
-                function(MsiClientStatus) {
-            
-            var statusClient = new MsiClientStatus( g.service.status.url,
-                                                    jobId,
-                                                    ngExecFailureCallback);
-            statusClient.execAsyncPercentUntilDone(ngExecSuccessCallback.bind(this, jobId), setStatusProgressBar.bind(this, "Running Query"));
-          
-        });
-    };
-
-    /*
-     * callback in ngExec chain
-     * Status success.  Now get results.
-     * @private
-     */
-    var ngExecSuccessCallback = function (jobId) {
-        require(['sparqlgraph/js/msiclientresults'], 
-                function(MsiClientResults) {
-        
-            setStatusProgressBar("Retreiving results", 100);
-            var resultsClient = new MsiClientResults(g.service.results.url,
-                                                    jobId,     
-                                                    ngExecFailureCallback);
-            
-            var fullURL = resultsClient.getTableResultsCsvDownloadUrl();
-            
-            resultsClient.execGetTableResultsJsonTableRes(RESULTS_MAX_ROWS, this.ngExecTableResCallback.bind(this, fullURL));
-            
-        });
-    };
     
-     /*
+    /*
      * callback in ngExec chain
      * Results success.  Display them.
      * @private
@@ -1152,16 +1166,16 @@
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url);
             switch (getQueryType()) {
             case "SELECT":
-                client.generateSelect(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execGenerateSelect(gNodeGroup, buildQueryCallback.bind(this, client));
                 break;
             case "COUNT":
-                client.generateCountAll(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execGenerateCountAll(gNodeGroup, buildQueryCallback.bind(this, client));
                 break;
             case "CONSTRUCT":
-                client.generateConstruct(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execGenerateConstruct(gNodeGroup, buildQueryCallback.bind(this, client));
                 break;
             case "DELETE":
-                client.generateDelete(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execGenerateDelete(gNodeGroup, buildQueryCallback.bind(this, client));
                 break;
             default:
                 throw new Error("Unknown query type.");	
@@ -1268,44 +1282,41 @@
 
         require(['sparqlgraph/js/sparqlserverinterface',
                 ], function(SparqlServerInterface) {
+            
+            var failureCallback = function (html) {
+                logAndAlert(html);
+                setStatus("");
+                guiUnDisableAll();
+            }
 
-            gConn.getDefaultQueryInterface().executeAndParse(sparql, runQueryDirectCallback);
+            var successCallback = function (sparqlServerResult) {
+                logEvent("SG Display Query Results", "rows", sparqlServerResult.getRowCount());
+
+                if (getQuerySource() == "DIRECT") {
+                    /* old non-microservice */
+                    sparqlServerResult.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
+                                                                "resultsTableName",
+                                                                "resultsTableId",
+                                                                "table table-bordered table-condensed", 
+                                                                sparqlServerResult.getRowCount() > 10, // filter flag
+                                                                "gQueryResults",
+                                                                null,
+                                                                null,
+                                                                getNamespaceFlag());
+                } 
+                // terrible artifact of old javascript
+                gQueryResults = sparqlServerResult;
+                
+                guiResultsNonEmpty();
+                setStatus("");
+                guiUnDisableAll();
+                
+            }
+            
+            gConn.getDefaultQueryInterface().executeAndParseToSuccess(sparql, successCallback, failureCallback);
         });
     };
 
-	// The direct query callback  
-	var runQueryDirectCallback = function(sparqlServerResult) {
-	
-		// HTML: tell user query is done
-		setStatus("");
-		guiUnDisableAll();
-		
-		if (sparqlServerResult.isSuccess()) {
-   	
-			logEvent("SG Display Query Results", "rows", sparqlServerResult.getRowCount());
-			
-			if (getQuerySource() == "DIRECT") {
-				/* old non-microservice */
-				sparqlServerResult.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
-                                                            "resultsTableName",
-                                                            "resultsTableId",
-                                                            "table table-bordered table-condensed", 
-                                                            sparqlServerResult.getRowCount() > 10, // filter flag
-                                                            "gQueryResults",
-                                                            null,
-                                                            null,
-                                                            getNamespaceFlag());
-			} 
-			
-			guiResultsNonEmpty();
-			
-			gQueryResults = sparqlServerResult;
-
-		}
-		else {
-			logAndAlert(sparqlServerResult.getStatusMessage());
-		}
-	};
 	
 	// The query callback for anything where no results are expected
 	var runNoResultsQueryCallback = function(results) {

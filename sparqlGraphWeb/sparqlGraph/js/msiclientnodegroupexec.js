@@ -28,19 +28,98 @@ define([	// properly require.config'ed   bootstrap-modal
 
 	function(MicroServiceInterface, MsiResultSet, MsiClientStatus, MsiClientResults) {
 	
-		/*
-         * optFailureCallback(messageHTML) 
-         */
+		
 		var MsiClientNodeGroupExec = function (serviceURL, optTimeout) {
 			
 			this.msi = new MicroServiceInterface(serviceURL);
             this.optTimeout = optTimeout;
 		};
 		
-		
-		MsiClientNodeGroupExec.prototype = {
-           
+        /* 
+         * Create a jobIdCallback suitable for the execAsync* functions, that 
+         *      handles the status and results clients
+         *      sends any errors to failureCallback(html)
+         *      updates progress with progressCallback(percent)
+         *      calls tableResCallback(fullCsvUrl, tableResults)
+         *
+         * Given these:
+         *      maxRows - max rows in tableResults
+         *
+         *      tableResCallback(fullCsvUrl, tableResults)
+         *          this - will be the document not any object 
+         *          fullCsvUrl - url of full results in csv form
+         *          tableResults - MsiResultSet where isTableResults() == true
+         *
+         *      failureCallback(html)
+         *
+         *      progressCallback(progressPercentInteger)
+         *  
+         *      statusUrl - url of status service
+         *
+         *      resultUrl - url of results service
+         */
+		MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback = function(maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, statusUrl, resultUrl) {
+            
+            // callback for the nodegroup execution service to send jobId
+            var ngExecJobIdCallback = function(maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, statusUrl, resultUrl, jobId) {
+            
+                // callback for status service after job successfully finishes
+                var ngStatusSuccessCallback = function(jobId, maxRows, csvUrlSampleJsonCallback1, failureCallback1, progressCallback1, resultUrl) {
+                    
+                    progressCallback1(100);
+                    
+                    // get csv url
+                    var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
+                    var fullURL = resultsClient.getTableResultsCsvDownloadUrl();
+                    
+                    // ask for json results and give csvUrlSampleJsonCallback with the csv Url bound
+                    resultsClient.execGetTableResultsJsonTableRes(maxRows, csvUrlSampleJsonCallback1.bind(this, fullURL));
 
+                }.bind(this, jobId, maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, resultUrl);
+                
+                // call status service loop
+                var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
+                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, progressCallback0);
+                
+            }.bind(this, maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, statusUrl, resultUrl);
+            
+            return ngExecJobIdCallback;
+        };
+    
+        /*
+         * just like buildCsvUrlSampleJsonCallback 
+         * EXCEPT:
+         *    no max rows or csv URL
+         *    tableResCallback(tableRes)
+         */
+        MsiClientNodeGroupExec.buildFullJsonCallback = function(tableResCallback, failureCallback, progressCallback, statusUrl, resultUrl) {
+            
+            // callback for the nodegroup execution service to send jobId
+            var ngExecJobIdCallback = function(tableResCallback0, failureCallback0, progressCallback0, statusUrl, resultUrl, jobId) {
+                
+                // callback for status service after job successfully finishes
+                var ngStatusSuccessCallback = function(jobId, tableResCallback1, failureCallback1, progressCallback1, resultUrl) {
+                    progressCallback1(100);
+                    
+                    // send json results to tableResCallback 
+                    var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
+                    resultsClient.execGetTableResultsJsonTableRes(null, tableResCallback1);
+
+                }.bind(this, jobId, tableResCallback0, failureCallback0, progressCallback0, resultUrl);
+                
+                // call status service loop
+                var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
+                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, progressCallback0);
+                
+            }.bind(this, tableResCallback, failureCallback, progressCallback, statusUrl, resultUrl);
+            
+            return ngExecJobIdCallback;
+        };
+    
+    
+		MsiClientNodeGroupExec.prototype = {
+
+            
             execGetJobCompletionPercentage : function(jobId, percentCallback, failureCallback) {
                 
                 // Callback checks for success and gets a percent int before calling percentCallback
@@ -109,6 +188,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.execJobId("jobStatusMessage", jobId, successCallback, failureCallback);
             },
             
+            /*==========  functions with jobIdCallback ============*/
             execAsyncDispatchSelectFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchSelectFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
@@ -122,6 +202,11 @@ define([	// properly require.config'ed   bootstrap-modal
             execAsyncDispatchCountFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchCountFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
+        
+            execAsyncDispatchFilterFromNodeGroup : function(nodegroup, conn, sparqlId, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupSparqlId("dispatchFilterFromNodegroup",
+                                        nodegroup, sparqlId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
             
             execAsyncDispatchRawSparql : function(sparql, conn, jobIdCallback, failureCallback) {
@@ -160,7 +245,7 @@ define([	// properly require.config'ed   bootstrap-modal
               * Package data for endpoint requiring nodegroup, conn, edcConstraints, runtimeconstraints
               * and call runAsync()
               *
-              * tableResCallback(table)
+              * csvUrlSampleJsonCallback(table)
               * failureCallback(html)
               * statusCallback(percentCompleteInt)     hint for statusCallback: setStatus.bind(this, "Running an XYZ")
               *
@@ -177,6 +262,20 @@ define([	// properly require.config'ed   bootstrap-modal
 
 				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
 			},
+            
+            runAsyncNodegroupSparqlId : function (endpoint, nodegroup, sparqlId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                
+				var data = JSON.stringify ({
+                    "jsonRenderedNodeGroup": JSON.stringify(nodegroup.toJson()),
+                    "sparqlConnection":      JSON.stringify(conn.toJson()),
+                    "targetObjectSparqlId":  sparqlId,
+                    "runtimeConstraints":    (typeof runtimeConstraints == "undefined" || runtimeConstraints == null) ? "" : JSON.stringify(runtimeConstraints.toJson()),
+                    "externalDataConnectionConstraints": (typeof edcConstraints == "undefined" || edcConstraints == null) ? "" : JSON.stringify(edcConstraints.toJson())
+                });
+
+				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
+			},
+            
             
             /*
              * start an async chain where results service is used.

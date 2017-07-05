@@ -116,7 +116,7 @@ require([	'local/sparqlformconfig',
 		
 		//----- Query -----/
 		
-		doQuery = function() {
+		doQueryOLD = function() {
 			// User hit the "run" button
 			setStatusProgressBar("Running query", 0);
 
@@ -139,7 +139,7 @@ require([	'local/sparqlformconfig',
 		};
  
 		
-		doQueryCallback = function (results) {
+		doQueryCallbackOLD = function (results) {
 			setStatusProgressBar("Running query", 100);
 
 			if (results.isSuccess()) {
