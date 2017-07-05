@@ -37,7 +37,7 @@ import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdRequest;
 
 @RestController
-@RequestMapping("/nodeGroupService")
+@RequestMapping("/nodeGroup")
 @CrossOrigin
 public class NodeGroupServiceRestController {
 	

@@ -68,7 +68,7 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
  *
  */
 @RestController
-@RequestMapping("/nodegroupExecution")
+@RequestMapping("/nodeGroupExecution")
 public class StoredNodegroupExecutionRestController {
 
 	@Autowired
