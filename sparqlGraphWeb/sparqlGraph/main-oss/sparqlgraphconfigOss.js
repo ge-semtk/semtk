@@ -88,13 +88,13 @@ var g = {
 			"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
 		},
 		nodeGroupStore:{
-			url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStore/",
+			url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStoreService/",
 		},
 		nodeGroup:{
 			url : "http://vesuvius37.crd.ge.com:12059/nodeGroupService/",
 		},
         nodeGroupExec:{
-			url : "http://vesuvius37.crd.ge.com:12058/nodegroupExecution/",
+			url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecutionService/",
 		},
 	},
 	

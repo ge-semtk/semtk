@@ -26,6 +26,18 @@ define([], function() {
 			"query" : {
 				"url" : "http://vesuvius37.crd.ge.com:12050/sparqlQueryService",  
 			},
+			"status" : {
+				"url" : "http://vesuvius37.crd.ge.com:12051/status/",    
+			},
+			"results" : {
+				"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
+			},
+            nodeGroup:{
+                url : "http://vesuvius37.crd.ge.com:12059/nodeGroupService/",
+            },
+            "nodeGroupExec" : {
+			     url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecutionService/",
+            },
 		},
 		help : {
 			"aboutHtml" : '<b>SparqlForm Opensource build 2016-06-23</b><br>\

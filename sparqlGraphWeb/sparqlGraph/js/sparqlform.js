@@ -50,9 +50,11 @@ var gFormConstraint = null;
 //
 //      Put the shimmed stuff last.  They will be in scope.
 
-require([	 	
+require([	'local/sparqlformconfig',
+         
          	'sparqlgraph/js/modaliidx',
          	'sparqlgraph/js/iidxhelper',
+            'sparqlgraph/js/msiclientnodegroupexec',
          	
          	'jquery',
 		
@@ -65,7 +67,7 @@ require([
 			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
 		],
 
-	function(ModalIidx, IIDXHelper, $) {
+	function(Config, ModalIidx, IIDXHelper, MsiClientNodeGroupExec, $) {
 		
 		gConnSetup = function() {
 			// Establish Sparql Connection in gConn, using g		
@@ -712,8 +714,41 @@ require([
 
 			doQuery();
 		};
+    
+        doQuery = function() {
+            if (typeof gAvoidQueryMicroserviceFlag != "undefined" && gAvoidQueryMicroserviceFlag) {
+                alert("Not implemented");
+            } else {
+                kdlLogEvent("SF: Query vi Dispatcher");
+                
+                var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 15000);
+                var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+                                                                                     doQueryTableResCallback,
+                                                                                     guiEndQuery,
+                                                                                     setStatusProgressBar.bind(this, "Running Query"),
+                                                                                     Config.services.status.url,
+                                                                                     Config.services.results.url);
+                
+               client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, gFormConstraint.getConstraintSet(), null, jobIdCallback, guiEndQuery);
+
+            }
+        };
 		
-		
+		doQueryTableResCallback = function(fullURL, results) {
+                    
+            // display anchor for fullURL
+            var hdiv = document.getElementById("hrefDiv");
+            var filename = fullURL.split('/').pop();
+            var anchor = "<a href='" + fullURL + "'>" + filename + "</a>";
+            hdiv.innerHTML = "<b>Full Results:</b><br>";
+            hdiv.innerHTML += anchor;
+            hdiv.innerHTML += "<br>";  
+                    
+            results.setLocalUriFlag(true);
+			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), "<b>Sample of results:</b>");
+											
+			guiEndQuery();
+        };
 		
 		//***********  save and restore *************//
 		getQueryJson = function() {

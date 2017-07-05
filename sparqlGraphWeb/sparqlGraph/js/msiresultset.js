@@ -35,7 +35,10 @@ define([	// properly require.config'ed   bootstrap-modal
 		
 		
 		MsiResultSet.prototype = {
-				
+			NAMESPACE_YES : 1,
+            NAMESPACE_NO : 2,
+            NAMESPACE_ONLY : 3,	
+            
 			isSuccess : function () {
 				return JSON.stringify(this.xhr.status).indexOf("success") == 1;
 			},
