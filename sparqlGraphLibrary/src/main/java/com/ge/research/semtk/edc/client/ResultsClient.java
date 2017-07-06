@@ -93,23 +93,21 @@ public class ResultsClient extends RestClient implements Runnable {
 
 					// get the next row into a comma separated string.
 					String curr = new StringBuilder(table.getRow(tableRowsDone).toString()).toString(); // ArrayList.toString() is fast
-					// but if any element contained commas, then can't use ArrayList.toString()
 					if(StringUtils.countMatches(curr, ",") != (table.getNumColumns() - 1)){
-						// at least one comma exists within an element
-						// the following approach is relatively slow, so only use when needed					
-						// escape double quotes (using \" for json files), then enclose each element in double quotes
+						// at least one element contains an internal comma, so can't use ArrayList.toString(), use this (slow) approach instead
+						// escape internal double quotes (using \" for json), then enclose each element in double quotes
 						curr = table.getRow(tableRowsDone).stream()
 								.map(s -> (new StringBuilder()).append("\"").append(s.replace("\"","\\\"")).append("\"").toString())
 								.collect(Collectors.joining(","));
 					}else{
-						// there are no commas within elements
-						// do a simple fast replace to remove spaces after commas (added by ArrayList.toString()) and enclose each element in quotes
+						// there are no elements with internal commas, so can use a fast replace to continue formatting the row
 						curr = StringUtils.substring(curr, 1, curr.length() - 1);		// remove the brackets added by ArrayList.toString()
-						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes
+						curr = StringUtils.replace(curr, "\"", "\\\"");					// escape internal double quotes (using \" for json)
+						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes (encloses each element in double quotes AND eliminates spaces after commas added by ArrayList.toString()) 
 					}
 					curr = "[" + curr + "]";	// add enclosing brackets
 
-					// the row now has: 1) quoted elements 2) no spaces after delimiter commas 3) enclosing brackets
+					// the row now has: 1) elements surrounded by double quotes 2) no spaces after delimiter commas 3) internal double quotes escaped 4)  enclosing brackets
 
 					tableRowsDone += 1;
 
