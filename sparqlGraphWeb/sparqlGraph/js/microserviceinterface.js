@@ -86,7 +86,7 @@ define([	'sparqlgraph/js/msiresultset',
                         xhr.hasOwnProperty("readyState") && xhr.readyState == "" && 
                         xhr.hasOwnProperty("statusText") && xhr.statusText == "error"  ) {
                         
-                        ret = "<h3>" + this.getServiceName() + " may be down</h3>";
+                        ret = "<h3>Service may be down: " + this.getServiceName() + "</h3>";
                     } else {
                         ret = "<h3>" + this.getServiceName() + " service failed</h3>";
                     }

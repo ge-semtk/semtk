@@ -879,14 +879,29 @@ SparqlServerResult.prototype = {
 	    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	},
 	
-	getResultsInDatagridDiv : function(divElement, dataTableName, tableId, tableClass, gridFilterFlag, thisResultGlobalName, optColHash, optCallback, optSuperNsFlag) {
+    putSparqlResultsDatagridInDiv : function (div, optFinishedCallback, nsFlag) {
+        var myUnique = Math.floor(Math.random() * 100000).toString();
+        this.getResultsInDatagridDiv(div, 
+                                     "ssiDataTableName"+myUnique,
+                                     "ssiDataTableId" + myUnique,
+                                     "table table-bordered table-condensed",
+                                     this.getRowCount() > 10,
+                                     null,
+                                     null,
+                                     optFinishedCallback,
+                                     nsFlag
+                                    );
+    },
+    
+    // Really old function with backwards compatibility
+    // to some projects we don't know about
+	getResultsInDatagridDiv : function(divElement, dataTableName, tableId, tableClass, gridFilterFlag, DEPRECATED, optColHash, optCallback, optSuperNsFlag) {
 		// put the results into a table and put the table into a divElement.
 		// make the whole thing IIDX datagrid-friendly
 		//
 		// PARAMS:
 		//  divElement - an empty html div element where the table can be inserted
 		//  dataTableName and tableId just need to be unique for this HTML
-		//  thisResultGlobalName is a global variable name pointing to this object and accessible by the HTML.  (sorry, this is javascript)
 		//  optColHash is an optional list of column headers specifying the subset and order to display the columns.  optColHash["colName"] = "display name"
 		//
 		// NOTE:  needs require.js with IIDX dependencies in the require line down below to be defined
@@ -895,14 +910,17 @@ SparqlServerResult.prototype = {
 		var nsFlag =      (typeof optSuperNsFlag == 'undefined') ? this.NAMESPACE_NO : (optSuperNsFlag %  this.ESCAPE_HTML);
 		var superNsFlag = (typeof optSuperNsFlag == 'undefined') ? this.NAMESPACE_NO : (optSuperNsFlag);
 		var callback = (typeof optCallback == 'undefined' || optCallback == null) ? function(){} : optCallback;
-		// PEC: I am now clever enough to fix "thisResultGlobalName" but there will be backwards compatibility issues.  sigh.
-		var callbackStr = thisResultGlobalName + '.downloadFile(' + thisResultGlobalName + '.getResultsCSV(' + nsFlag + "), 'table.csv');";
+		
+        var downloadCallback = function() {
+            this.downloadFile(this.getResultsCSV(nsFlag), "table.csv");
+        }.bind(this);
+
 		var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
 		// build a button
 		var buttonHTML = 	'<div class="btn-group" align="right" style="width:100%">' +
 							'  <button class="btn dropdown-toggle" data-toggle="dropdown" id="btnDownloadCSV"><i class="icon-chevron-down"></i></button>' +
 							'  <ul class="dropdown-menu pull-right">' +
-							'    <li><a href="javascript:' + callbackStr + '">Save as CSV</a></li>' +
+							'    <li><a id="ssiDownloadCsvAnchor">Save table csv</a></li>' +
 							'  </ul>' +
 							'</div>';
 		
@@ -917,6 +935,7 @@ SparqlServerResult.prototype = {
 		html += "</tr></table><br><br>";
 		html += tableHTML;
 		divElement.innerHTML = html;
+        document.getElementById("ssiDownloadCsvAnchor").onclick=downloadCallback;
 		
 		// define a variable since 'this' isn't legal inside the require js function / function 
 		var tableStr = 'table[data-table-name="' + dataTableName + '"]';

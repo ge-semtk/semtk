@@ -62,10 +62,7 @@ define([	// properly require.config'ed
 			
 			this.limit = 10000;
 			this.lastSparqlID = "";
-			
-			this.ghostItem = typeof optGhostItem === "undefined" ? false : optGhostItem;
-			this.ghostNodegroup = typeof optGhostNodegroup === "undefined" ? false : optGhostNodegroup;
-			
+					
 			this.sparqlformFlag = false;
 		};
 		
@@ -90,16 +87,21 @@ define([	// properly require.config'ed
 				var select = this.getFieldElement(ModalItemDialog.SELECT);
 				var opt;
 				var valList = [];
+                
+                /*  Very slow with large 10,000 element selects
+                    Code is still here in case there are browser compatibility issues 
+                
 				var len = select.length;
 				for (var i=0; i < len;i++) {
-					opt = select[i];
-					// if option is selected and value is not null then use it
-					// note: javascript and html team up to change null to "null"
-					if (opt.selected && opt.value != null && opt.value !== "null") {
-						// PEC TODO: separator is currently hard-coded " "
-						valList.push(opt.value);
+					if (select[i].selected) {
+						valList.push(select[i].value);
 					}
 				}
+                */
+                // faster building valList
+                for (var i=0; i < select.selectedOptions.length; i++) {
+                    valList.push(select.selectedOptions[i].value);
+                }
 				
 				// swap in sparqlID
 				var savedID = this.item.getSparqlID();
@@ -197,30 +199,17 @@ define([	// properly require.config'ed
 				};
 			},
 			
+            /* run query to suggest values 
+             *
+             */
 			query : function () {
-				
-				// use ghosts if they exist
-				var queryItem = this.ghostItem ? this.ghostItem : this.item;
-				var queryNodegroup = this.ghostNodegroup ? this.ghostNodegroup : this.nodegroup;
 				
 				this.setRunningQuery(true);
 				
-                var tmpNodegroup;
-                var tmpSparqlId;
-                // make sure there is a sparqlID
-				if (queryItem.getSparqlID() == "") {
-                    // set it, make a copy, set it back
-					queryItem.setSparqlID(this.getSparqlIDText());
-                    tmpNodegroup = queryNodegroup.deepCopy();
-                    tmpSparqlId = queryItem.getSparqlID();
-                    queryItem.setSparqlID("");
-				} else {
-                    tmpNodegroup = queryNodegroup;
-                    tmpSparqlId = queryItem.getSparqlID();
-                }
-				
 				// run query
-				this.getValuesCallback(tmpNodegroup, tmpSparqlId, this.getValuesSuccess.bind(this), this.getValuesFailure.bind(this), function(){});
+				this.getValuesCallback(this.getValuesSuccess.bind(this), 
+                                       this.getValuesFailure.bind(this), 
+                                       function(){});
 			},
 			
             getValuesFailure : function (msg) {
@@ -445,7 +434,7 @@ define([	// properly require.config'ed
 				
 				// handle blank sparqlID
 				if (retName === "") {
-					retName = f.genSparqlID(this.item.getKeyName(), gNodeGroup.sparqlNameHash);
+					retName = f.genSparqlID("ID", gNodeGroup.sparqlNameHash);
 					ModalIidx.alert("Blank SparqlID Invalid", "Using " + retName + ".");
 					
 				// check legality of non-blank sparqlID

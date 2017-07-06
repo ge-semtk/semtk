@@ -53,8 +53,10 @@ var gFormConstraint = null;
 require([	'local/sparqlformconfig',
          
          	'sparqlgraph/js/modaliidx',
+            'sparqlgraph/js/modalitemdialog',
          	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/msiclientnodegroupexec',
+            'sparqlgraph/js/msiclientnodegroupservice',
          	
          	'jquery',
 		
@@ -67,7 +69,7 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
 		],
 
-	function(Config, ModalIidx, IIDXHelper, MsiClientNodeGroupExec, $) {
+	function(Config, ModalIidx, ModalItemDialog, IIDXHelper, MsiClientNodeGroupExec, MsiClientNodeGroupService, $) {
 		
 		gConnSetup = function() {
 			// Establish Sparql Connection in gConn, using g		
@@ -329,11 +331,63 @@ require([	'local/sparqlformconfig',
 			
 			showDebug("Constraining " + sNode.getSparqlID() + "->" + item.getSparqlID(), tmpNodeGroup);
 			kdlLogEvent("SF: Filter Button", "Node", sNode.getURI(), "itemSparqlID", item.getSparqlID());
-			
-			launchConstraintDialog(item, alertUser, tmpItem, tmpNodeGroup, textId);
-			
+			            
+			var dialog= new ModalItemDialog(item, 
+                                            gNodeGroup, 
+                                            runSfSuggestValuesQuery.bind(this, tmpNodeGroup, tmpItem), 
+                                            itemDialogCallback,
+    				                        {"textId": textId}
+    		                                );
+            var sparqlFormFlag = true;
+    		dialog.show(sparqlFormFlag);
 		};
 
+        runSfSuggestValuesQuery = function (ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
+        
+            // make sure there is a sparqlID
+            var runNodegroup;
+            var runId;
+            // make sure there is a sparqlID
+            if (item.getSparqlID() == "") {
+                // set it, make a copy, set it back
+                item.setSparqlID("SG_runItemDialogQuery_Temp");
+                runNodegroup = ng.deepCopy();
+                runId = item.getSparqlID();
+                item.setSparqlID("");
+            } else {
+                runNodegroup = ng;
+                runId = item.getSparqlID();
+            }
+
+            
+            if (typeof gAvoidQueryMicroserviceFlag != "undefined" && gAvoidQueryMicroserviceFlag) {
+                // Generate sparql and run via query interface
+                
+                // get answer for msiOrQsResultCallback
+                var sparqlCallback = function (cn, resCallback, failCallback, sparql) {
+                    var ssi = cn.getDefaultQueryInterface();
+                    ssi.executeAndParseToSuccess(sparql, resCallback, failCallback );
+                    
+                }.bind(this, gConn, msiOrQsResultCallback, failureCallback);
+                
+                // generate sparql and send to sparqlCallback
+                var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
+                ngClient.execAsyncGenerateFilter(runNodegroup, runId, sparqlCallback, failureCallback);
+                
+            } else {
+                // Run nodegroup via Node Group Exec Svc
+                var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
+                                                                                 failureCallback,
+                                                                                 statusCallback,
+                                                                                 Config.services.status.url,
+                                                                                 Config.services.results.url);
+                var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 5000);
+
+                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, gConn, runId, null, null, jobIdCallback, failureCallback);
+
+            }
+        };
+    
 		doTreeSearch = function() {
 			//gOTree.find($("#search").val());
 			gOTree.powerSearch($("#search").val());
@@ -716,11 +770,27 @@ require([	'local/sparqlformconfig',
 		};
     
         doQuery = function() {
+            
+            // DIRECT
             if (typeof gAvoidQueryMicroserviceFlag != "undefined" && gAvoidQueryMicroserviceFlag) {
-                alert("Not implemented");
+                 // get answer for msiOrQsResultCallback
+                var sparqlCallback = function (cn, resCallback, failCallback, sparql) {
+                    setStatusProgressBar("Running direct query", 25);
+                    var ssi = cn.getDefaultQueryInterface();
+                    ssi.executeAndParseToSuccess(sparql, resCallback, failCallback );
+                    
+                }.bind(this, gConn, doQueryDirectCallback, guiEndQuery);
+                
+                // generate sparql and send to sparqlCallback
+                setStatusProgressBar("Running direct query", 5);
+                var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
+                ngClient.execAsyncGenerateSelect(gNodeGroup, sparqlCallback, guiEndQuery);
+             
+            // Microservices
             } else {
                 kdlLogEvent("SF: Query vi Dispatcher");
                 
+                setStatusProgressBar.bind(this, "Running Query", 0);
                 var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 15000);
                 var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
                                                                                      doQueryTableResCallback,
@@ -729,17 +799,34 @@ require([	'local/sparqlformconfig',
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
                 
-               client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, gFormConstraint.getConstraintSet(), null, jobIdCallback, guiEndQuery);
+               client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, 
+                                                           gConn, 
+                                                           gFormConstraint ? gFormConstraint.getConstraintSet() : null, 
+                                                           null, 
+                                                           jobIdCallback, 
+                                                           guiEndQuery);
 
             }
         };
 		
-		doQueryTableResCallback = function(fullURL, results) {
+        doQueryDirectCallback = function (sparqlServerResult) {
+            setStatusProgressBar("Running direct query", 95);
+            
+            var doneCallback = function () {
+                setStatusProgressBar("Running direct query", 100);
+                guiEndQuery();
+            }
+            
+            sparqlServerResult.putSparqlResultsDatagridInDiv(	document.getElementById("gridDiv"), doneCallback, true );
+            
+        };
+    
+		doQueryTableResCallback = function(csvFilename, fullURL, results) {
                     
             // display anchor for fullURL
             var hdiv = document.getElementById("hrefDiv");
             var filename = fullURL.split('/').pop();
-            var anchor = "<a href='" + fullURL + "'>" + filename + "</a>";
+            var anchor = "<a href='" + fullURL + "'>" + csvFilename + "</a>";
             hdiv.innerHTML = "<b>Full Results:</b><br>";
             hdiv.innerHTML += anchor;
             hdiv.innerHTML += "<br>";  

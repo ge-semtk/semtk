@@ -103,7 +103,7 @@ public class ResultsClient extends RestClient implements Runnable {
 						// there are no elements with internal commas, so can use a fast replace to continue formatting the row
 						curr = StringUtils.substring(curr, 1, curr.length() - 1);		// remove the brackets added by ArrayList.toString()
 						curr = StringUtils.replace(curr, "\"", "\\\"");					// escape internal double quotes (using \" for json)
-						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes (encloses each element in double quotes AND eliminates spaces after commas added by ArrayList.toString()) 
+						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes (encloses each element in double quotes AND eliminates spaces after commas added by ArrayList.toString()) 						 
 					}
 					curr = "[" + curr + "]";	// add enclosing brackets
 
@@ -112,8 +112,7 @@ public class ResultsClient extends RestClient implements Runnable {
 					tableRowsDone += 1;
 
 					// add to the existing results we want to send.
-					//lastResults = resultsSoFar.toString(); // PEC changed  
-					resultsSoFar.append(curr); // TODO when this was using +=, it would have triggered the batch-too-big behavior, but now that it's a StringBuilder, not sure
+					resultsSoFar.append(curr);
 					if(segment != finalSegmentNumber){
 						resultsSoFar.append(",");
 					}
@@ -124,18 +123,6 @@ public class ResultsClient extends RestClient implements Runnable {
 					i = this.ROWS_TO_PROCESS;
 				}
 
-				// TODO review with Justin.  Removing the "revert to slightly smaller batch size" for now because saving the lastBatch after every row
-				// was slowing the performance.  We can reintroduce it in a better way later.  For now, let any exceptions flow up
-				//				catch(Exception eee){
-				//					// the send size would have been too large.
-				//					tableRowsDone = tableRowsDone - 1;
-				//					
-				//					System.out.println("*** caught an exception trying to process a result: " +  tableRowsDone);
-				//					System.out.println(eee.getMessage());
-				//			
-				//					i = this.ROWS_TO_PROCESS; // remove the one that broke things. this way, we reprocess it
-				//					//resultsSoFar = new StringBuilder(lastResults); // reset the values.  
-				//				}
 			}
 
 			// fail if tableRowsDone has not changed. this implies that even the first result was too large.
@@ -150,7 +137,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				startTime = endTime;
 			}
 
-			// take care of last run
+			// wait for previous batch to finish
 			if (thread != null) {
 				thread.join();
 				(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();

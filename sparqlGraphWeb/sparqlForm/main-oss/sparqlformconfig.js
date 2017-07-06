@@ -33,10 +33,10 @@ define([], function() {
 				"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
 			},
             nodeGroup:{
-                url : "http://vesuvius37.crd.ge.com:12059/nodeGroupService/",
+                url : "http://vesuvius37.crd.ge.com:12059/nodeGroup/",
             },
             "nodeGroupExec" : {
-			     url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecutionService/",
+			     url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/",
             },
 		},
 		help : {
