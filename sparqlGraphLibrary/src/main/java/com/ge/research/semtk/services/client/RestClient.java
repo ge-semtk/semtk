@@ -110,10 +110,22 @@ public abstract class RestClient extends Client implements Runnable {
 	}
 	
 	/**
-	 * Make the service call.  
-	 * @return an Object that can be cast to a JSONObject.  Subclasses may override and return a more useful Object.   
+	 * Make the service call. 
+	 * Subclasses may override and return a more useful Object. 
+	 * Returns the response parsed into JSON. 
+	 * @return an Object that can be cast to a JSONObject.    
 	 */
 	public Object execute() throws ConnectException, Exception {
+		return execute(false);
+	}
+	
+	/**
+	 * Make the service call.  
+	 * Subclasses may override and return a more useful Object.
+	 * @param returnRawResponse True to return raw response.  False to return response parsed into JSON.
+	 * @return the raw response string (if returnRawResponse is true), or an Object that can be cast to a JSONObject (if returnRawResponse is false).     
+	 */
+	public Object execute(boolean returnRawResponse) throws ConnectException, Exception {
 		
 		// TODO can we do this before calling execute()?
 		buildParametersJSON();  // set all parameters available upon instantiation
@@ -156,14 +168,18 @@ public abstract class RestClient extends Client implements Runnable {
 			System.err.println("RestClient received: " + responseTxt.substring(0,200) + "... (" + responseTxt.length() + " chars)");
 		}
 		
-		JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
-		if (responseParsed == null) {
-			System.err.println("The response could not be transformed into json");
-			if(responseTxt.contains("Error")){
-				throw new Exception(responseTxt); 
+		if(returnRawResponse){
+			return responseTxt;		// return the raw string
+		}else{
+			JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
+			if (responseParsed == null) {
+				System.err.println("The response could not be transformed into json");
+				if(responseTxt.contains("Error")){
+					throw new Exception(responseTxt); 
+				}
 			}
+			return responseParsed;	// return the response parsed into JSON
 		}
-		return responseParsed;
 	}
 	
 	protected SimpleResultSet getRunResAsSimpleResultSet() throws Exception{

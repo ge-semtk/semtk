@@ -31,7 +31,9 @@ import org.junit.Test;
 
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
@@ -68,21 +70,34 @@ public class ResultsClientTest_IT {
 			table.addRow(row);
 			
 			client.execStoreTableResults(jobId, table);
-			URL[] urls = client.execGetResults(jobId);
-			
-			// check the URLs
-			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200")); 
-			assertTrue(urls[1].toString().endsWith("/results/getTableResultsCsvForWebClient?jobId=" + jobId)); 
-			
-			// check the JSON results
-			String resultJsonString = Utility.getURLContentsAsString(urls[0]);
+
 			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"one\",\"two\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}\n";		
-			assertEquals(expectedJsonString, resultJsonString);
-			
-			// check the CSV result
-			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
 			String expectedCSVString = "col1,col2\none,two\none,two\n";
-			assertEquals(expectedCSVString, resultCSVString);			
+
+			URL[] urls = client.execGetResults(jobId);
+			// check the URLs from getResults
+			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200")); 
+			assertTrue(urls[1].toString().endsWith("/results/getTableResultsCsvForWebClient?jobId=" + jobId)); 			
+			// check the contents from getResults
+			assertEquals(Utility.getURLContentsAsString(urls[0]), expectedJsonString); 		// check the JSON results
+			assertEquals(Utility.getURLContentsAsString(urls[1]), expectedCSVString);		// check the CSV result
+			
+			// check getting results as json
+			TableResultSet res = client.execTableResultsJson(jobId, null);
+			assertEquals(res.getTable().toJson().toString() + "\n", expectedJsonString);
+			
+			// check getting results as csv
+			CSVDataset resCsvDataset = client.execTableResultsCsv(jobId, null);
+			assertEquals(resCsvDataset.getColumnNamesinOrder().get(0), "col1");
+			assertEquals(resCsvDataset.getColumnNamesinOrder().get(1), "col2");
+			ArrayList<ArrayList<String>> resCsvRows = resCsvDataset.getNextRecords(5);
+			assertEquals(resCsvRows.size(), 2);				// 2 rows
+			assertEquals(resCsvRows.get(0).size(), 2);		// 2 columns
+			assertEquals(resCsvRows.get(0).get(0), "one");
+			assertEquals(resCsvRows.get(0).get(1), "two");
+			assertEquals(resCsvRows.get(1).get(0), "one");
+			assertEquals(resCsvRows.get(1).get(1), "two");
+			
 		} finally {
 			cleanup(client, jobId);
 		}
@@ -124,7 +139,9 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
-	
+	/**
+	 * Test a storing a medium-size dataset
+	 */
 	@Test
 	public void testStoreTable_Medium() throws Exception {
 
@@ -166,6 +183,7 @@ public class ResultsClientTest_IT {
 	}
 	
 	/**
+	 * Test a storing a large dataset
 	 * Adjust NUM_COLS and NUM_ROWS to make this bigger when performance testing.  
 	 * (Committing them on the smaller size)
 	 */
@@ -234,9 +252,7 @@ public class ResultsClientTest_IT {
 			fail();  // expect it to not get here
 		} catch (Exception e) {
 			// success			
-		} finally {
-			cleanup(client, jobId);
-		}
+		} 
 		
 		// confirm that it could retrieve results after storing
 		if(!retrievedResultsAfterStoring){

@@ -240,8 +240,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("appendDownloadHeaders", false);
 
 		try {
-			String s = (String) super.execute();
-			return new CSVDataset(s, false);
+			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			return new CSVDataset(s, true);
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
