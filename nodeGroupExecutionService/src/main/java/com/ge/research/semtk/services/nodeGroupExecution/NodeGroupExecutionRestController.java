@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.storedNodegroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
 import java.io.IOException;
 import java.net.URL;
@@ -68,8 +68,8 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
  *
  */
 @RestController
-@RequestMapping("/nodegroupExecution")
-public class StoredNodegroupExecutionRestController {
+@RequestMapping("/nodeGroupExecution")
+public class NodeGroupExecutionRestController {
 
 	@Autowired
 	NodegroupExecutionProperties prop;

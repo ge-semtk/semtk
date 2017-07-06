@@ -93,29 +93,26 @@ public class ResultsClient extends RestClient implements Runnable {
 
 					// get the next row into a comma separated string.
 					String curr = new StringBuilder(table.getRow(tableRowsDone).toString()).toString(); // ArrayList.toString() is fast
-					// but if any element contained commas, then can't use ArrayList.toString()
 					if(StringUtils.countMatches(curr, ",") != (table.getNumColumns() - 1)){
-						// at least one comma exists within an element
-						// the following approach is relatively slow, so only use when needed					
-						// escape double quotes (using \" for json files), then enclose each element in double quotes
+						// at least one element contains an internal comma, so can't use ArrayList.toString(), use this (slow) approach instead
+						// escape internal double quotes (using \" for json), then enclose each element in double quotes
 						curr = table.getRow(tableRowsDone).stream()
 								.map(s -> (new StringBuilder()).append("\"").append(s.replace("\"","\\\"")).append("\"").toString())
 								.collect(Collectors.joining(","));
 					}else{
-						// there are no commas within elements
-						// do a simple fast replace to remove spaces after commas (added by ArrayList.toString()) and enclose each element in quotes
+						// there are no elements with internal commas, so can use a fast replace to continue formatting the row
 						curr = StringUtils.substring(curr, 1, curr.length() - 1);		// remove the brackets added by ArrayList.toString()
-						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes
+						curr = StringUtils.replace(curr, "\"", "\\\"");					// escape internal double quotes (using \" for json)
+						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes (encloses each element in double quotes AND eliminates spaces after commas added by ArrayList.toString()) 						 
 					}
 					curr = "[" + curr + "]";	// add enclosing brackets
 
-					// the row now has: 1) quoted elements 2) no spaces after delimiter commas 3) enclosing brackets
+					// the row now has: 1) elements surrounded by double quotes 2) no spaces after delimiter commas 3) internal double quotes escaped 4)  enclosing brackets
 
 					tableRowsDone += 1;
 
 					// add to the existing results we want to send.
-					//lastResults = resultsSoFar.toString(); // PEC changed  
-					resultsSoFar.append(curr); // TODO when this was using +=, it would have triggered the batch-too-big behavior, but now that it's a StringBuilder, not sure
+					resultsSoFar.append(curr);
 					if(segment != finalSegmentNumber){
 						resultsSoFar.append(",");
 					}
@@ -126,18 +123,6 @@ public class ResultsClient extends RestClient implements Runnable {
 					i = this.ROWS_TO_PROCESS;
 				}
 
-				// TODO review with Justin.  Removing the "revert to slightly smaller batch size" for now because saving the lastBatch after every row
-				// was slowing the performance.  We can reintroduce it in a better way later.  For now, let any exceptions flow up
-				//				catch(Exception eee){
-				//					// the send size would have been too large.
-				//					tableRowsDone = tableRowsDone - 1;
-				//					
-				//					System.out.println("*** caught an exception trying to process a result: " +  tableRowsDone);
-				//					System.out.println(eee.getMessage());
-				//			
-				//					i = this.ROWS_TO_PROCESS; // remove the one that broke things. this way, we reprocess it
-				//					//resultsSoFar = new StringBuilder(lastResults); // reset the values.  
-				//				}
 			}
 
 			// fail if tableRowsDone has not changed. this implies that even the first result was too large.
@@ -152,7 +137,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				startTime = endTime;
 			}
 
-			// take care of last run
+			// wait for previous batch to finish
 			if (thread != null) {
 				thread.join();
 				(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
@@ -240,8 +225,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("appendDownloadHeaders", false);
 
 		try {
-			String s = (String) super.execute();
-			return new CSVDataset(s, false);
+			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			return new CSVDataset(s, true);
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);

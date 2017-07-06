@@ -74,7 +74,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java  -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS",${HOME}/app/lib -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupExecutionService/target/storedNodegroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/storedNodegroupExecutionService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/storedNodegroupExecutionService.log 2>&1 &
 
 #"$JAVA_HOME"/bin/java -jar "$SEMTK"/oracleService/target/oracleService-*.jar --server.port=$PORT_ORACLE_SERVICE > "$LOGS"/oracleService.log 2>&1 &
 
@@ -82,6 +82,6 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar --spring.config.location="$CONFIG_INGESTION_SERVICE" --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_INGESTION_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_NODEGROUP_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
 echo "=== DONE ==="

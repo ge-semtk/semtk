@@ -15,20 +15,34 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.storedNodegroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
-public class DispatchByIdRequestBody {
-	private String nodeGroupId;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+public class DispatchFromNodegroupRequestBody {
+	private String jsonRenderedNodeGroup;
 	private String sparqlConnection;
 	private String externalDataConnectionConstraints;
 	private String runtimeConstraints;
 	
-	public void setNodeGroupId(String nodeGroupId){
-		this.nodeGroupId = nodeGroupId;
+	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
+		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
 	}
-	public String getNodeGroupId(){
-		return this.nodeGroupId;
+	
+	public JSONObject getJsonNodeGroup(){
+		JSONParser prsr = new JSONParser();
+		JSONObject retval = null;
+		try {
+			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return retval;
 	}
+
 	public String getSparqlConnection() {
 		return sparqlConnection;
 	}

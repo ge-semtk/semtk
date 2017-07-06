@@ -15,13 +15,13 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.storedNodegroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="storedNodegroupExecution", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="nodeGroupExecution", ignoreUnknownFields = true)
 public class NodegroupExecutionProperties {
 
 	// all of the values we are likely to need
