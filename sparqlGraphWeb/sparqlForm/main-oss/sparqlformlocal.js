@@ -102,6 +102,10 @@ require([	'local/sparqlformconfig',
 				clientOrInterface = new MsiClientQuery(Config.services.query.url, gConn.getDefaultQueryInterface(), failureCallback);
 			}
 			
+            // PEC HERE
+            // Removing EDC seems to be done in the modal item dialog
+            // This is bad.
+            // sparqlformlocal could simply have removeEDC.  Rest could be in sparqlform.js
 			var dialog= new ModalItemDialog(item, gNodeGroup, clientOrInterface, itemDialogCallback, { "textId" : textId }, ghostItem, ghostNodegroup);    
 			dialog.show(true);
 		};
@@ -114,62 +118,6 @@ require([	'local/sparqlformconfig',
 			ModalIidx.alert("Testing", "No tests to run.");
 		};
 		
-		//----- Query -----/
-		
-		doQueryOLD = function() {
-			// User hit the "run" button
-			setStatusProgressBar("Running query", 0);
-
-			kdlLogEvent("SF: Query");
-			
-			// special handling of optional paths
-			var ndgp2 = gNodeGroup.deepCopy();
-			ndgp2.expandOptionalSubgraphs();
-			
-			var query = ndgp2.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, 0);
-			if (gAvoidQueryMicroserviceFlag) {
-				/* Old non-microservice code */
-				gConn.getDefaultQueryInterface().executeAndParse(query, doQueryCallback);
-		    	
-			} else {
-				gQueryClient.executeAndParse(query, doQueryCallback);
-			}
-			
-			setStatusProgressBar("Running query", 50);
-		};
- 
-		
-		doQueryCallbackOLD = function (results) {
-			setStatusProgressBar("Running query", 100);
-
-			if (results.isSuccess()) {
-				var gridDiv = document.getElementById("gridDiv");
-				var localUriFlag = true;
-				
-				if (gAvoidQueryMicroserviceFlag) {
-					/* old non-microservice */
-					results.getResultsInDatagridDiv(	gridDiv, 
-														"resultsTableName",
-														"resultsTableId",
-														"table table-bordered table-condensed", 
-														results.getRowCount() > 10, // filter flag
-														"gQueryResults",
-														null,
-														null,
-														localUriFlag);
-				} 
-				else {
-				    // query microservice results grid functionality
-					results.setLocalUriFlag(localUriFlag);
-					results.setEscapeHtmlFlag(true);
-					results.putTableResultsDatagridInDiv(gridDiv, "");
-				}
-				gQueryResults = results;
-				guiEndQuery();
-			} else {
-				guiEndQuery(results.getStatusMessage());
-			}
-		};
 		
 		//-----  query directly -----//
 
@@ -207,7 +155,7 @@ require([	'local/sparqlformconfig',
 	    	
 	    	kdlLogEvent("SF Loading", "connection", gConn.toString());
     		
-	    	var queryServiceUrl = directFlag ? null : Config.services.query.url;
+	    	var queryServiceUrl = gAvoidQueryMicroserviceFlag ? null : Config.services.query.url;
 	  
     		gOInfo = new OntologyInfo();
     		BackwardCompatibleUtil.loadSparqlConnection(gOInfo, gConn, queryServiceUrl, setStatus, function(){ loadSuccess2(); callback();}, loadFailure);

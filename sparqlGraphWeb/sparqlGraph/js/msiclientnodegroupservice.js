@@ -50,8 +50,13 @@ define([	// properly require.config'ed   bootstrap-modal
             
             execGenerateFilter : function (nodegroup, sparqlId, successCallback)    { return this.execNodegroupSparqlId("generateFilter", nodegroup, sparqlId, successCallback); },
             
+            /*==== sparqlCallback functions ====*/
             execAsyncGenerateFilter : function (nodegroup, sparqlId, sparqlCallback, failureCallback) {
                 this.execGenerateFilter(nodegroup, sparqlId, 
+                                        this.asyncSparqlCallback.bind(this, sparqlCallback, failureCallback));
+            },
+            execAsyncGenerateSelect : function (nodegroup, sparqlCallback, failureCallback) {
+                this.execGenerateSelect(nodegroup, 
                                         this.asyncSparqlCallback.bind(this, sparqlCallback, failureCallback));
             },
             
