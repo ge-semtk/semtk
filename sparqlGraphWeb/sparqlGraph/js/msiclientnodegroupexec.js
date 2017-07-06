@@ -70,14 +70,20 @@ define([	// properly require.config'ed   bootstrap-modal
                 // callback for status service after job successfully finishes
                 var ngStatusSuccessCallback = function(jobId, maxRows, csvUrlSampleJsonCallback1, failureCallback1, progressCallback1, resultUrl) {
                     
-                   
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (csvUrlSampleJsonCallback2, progressCallback2, csvFilename, fullURL, results) {
+                        progressCallback2(99);
+                        csvUrlSampleJsonCallback2(csvFilename, fullURL, results);
+                    };
+                    
                     // get csv url
                     var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
                     var fullURL = resultsClient.getTableResultsCsvDownloadUrl();
                     var csvFilename = jobId + ".csv";
                     
                     // ask for json results and give csvUrlSampleJsonCallback with the csv Url bound
-                    resultsClient.execGetTableResultsJsonTableRes(maxRows, csvUrlSampleJsonCallback1.bind(this, csvFilename, fullURL));
+                    resultsClient.execGetTableResultsJsonTableRes(maxRows, 
+                                                                  ngResultsSuccessCallback.bind(this, csvUrlSampleJsonCallback1, progressCallback1, csvFilename, fullURL));
 
                 }.bind(this, jobId, maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, resultUrl);
                 
@@ -109,9 +115,16 @@ define([	// properly require.config'ed   bootstrap-modal
                 // callback for status service after job successfully finishes
                 var ngStatusSuccessCallback = function(jobId, tableResCallback1, failureCallback1, progressCallback1, resultUrl) {
                     
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (tableResCallback2, progressCallback2, results) {
+                        progressCallback2(99);
+                        tableResCallback2(results);
+                    };
+                    
                     // send json results to tableResCallback 
                     var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
-                    resultsClient.execGetTableResultsJsonTableRes(null, tableResCallback1);
+                    resultsClient.execGetTableResultsJsonTableRes(null, 
+                                                                  ngResultsSuccessCallback.bind(this, tableResCallback1, progressCallback1));
 
                 }.bind(this, jobId, tableResCallback0, failureCallback0, progressCallback0, resultUrl);
                 
