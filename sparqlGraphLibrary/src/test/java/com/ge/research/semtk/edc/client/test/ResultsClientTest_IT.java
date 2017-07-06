@@ -105,7 +105,7 @@ public class ResultsClientTest_IT {
 	
 	
 	@Test
-	public void testStoreTable_WithCommasAndQuotes() throws Exception {
+	public void testStoreTable_WithQuotesAndCommas() throws Exception {
 		
 		String jobId = "test_jobid_" + UUID.randomUUID();
 		
@@ -136,6 +136,44 @@ public class ResultsClientTest_IT {
 			
 		} finally {
 			cleanup(client, jobId);
+		}
+	}
+	
+	/**
+	 * Test a row with quotes but no commas (hits different logic in the ResultsClient)
+	 */
+	@Test
+	public void testStoreTable_WithQuotesNoCommas() throws Exception {
+		
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"colA", "colB","colC","colD"};
+		String [] types = {"String", "String", "String","String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("apple");  				
+		row.add("bench");
+		row.add("\"cabana\"");			// this element has internal quotes and no commas
+		row.add("Dan declared \"hi\"");	// this element has internal quotes and no commas
+		
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			client.execStoreTableResults(jobId, table);	
+			
+			URL[] urls = client.execGetResults(jobId);
+			
+			// check the JSON results
+			String resultJSONString = Utility.getURLContentsAsString(urls[0]);
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}\n";  // validated json		
+			assertEquals(expectedJSONString, resultJSONString);
+			
+			// check the CSV results
+			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
+			String expectedCSVString = "colA,colB,colC,colD\napple,bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi\"\"\"\n";  // validated by opening in Excel
+			assertEquals(expectedCSVString, resultCSVString);
+			
+		} finally {
+			//cleanup(client, jobId);
 		}
 	}
 	
@@ -218,11 +256,11 @@ public class ResultsClientTest_IT {
 			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
 			
 			// --- test results ---
-			URL[] urls = client.execGetResults(jobId);
+			TableResultSet res = client.execTableResultsJson(jobId, null);
+			assertEquals(res.getTable().getNumRows(), NUM_ROWS);
+			assertEquals(res.getTable().getNumColumns(), NUM_COLS);
+			assertEquals(res.getTable().getCell(0,0), "Element0");
 			
-			// TODO check contents
-
-			// trust ResultsStorageTest.java to test the contents
 		} finally {
 			cleanup(client, jobId);
 		}
