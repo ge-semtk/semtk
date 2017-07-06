@@ -218,11 +218,11 @@ public class ResultsClientTest_IT {
 			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
 			
 			// --- test results ---
-			URL[] urls = client.execGetResults(jobId);
+			TableResultSet res = client.execTableResultsJson(jobId, null);
+			assertEquals(res.getTable().getNumRows(), NUM_ROWS);
+			assertEquals(res.getTable().getNumColumns(), NUM_COLS);
+			assertEquals(res.getTable().getCell(0,0), "Element0");
 			
-			// TODO check contents
-
-			// trust ResultsStorageTest.java to test the contents
 		} finally {
 			cleanup(client, jobId);
 		}
