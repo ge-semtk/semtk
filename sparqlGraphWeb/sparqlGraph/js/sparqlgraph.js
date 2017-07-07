@@ -313,7 +313,7 @@
     		
     		var dialog= new ModalItemDialog(propItem, 
                                             gNodeGroup, 
-                                            this.runItemDialogQuery.bind(this, g, gConn), 
+                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, propItem), 
                                             propertyItemDialogCallback,
     				                        {"draculaLabel" : draculaLabel}
     		                                );
@@ -387,7 +387,7 @@
 
             var dialog= new ModalItemDialog(snodeItem, 
                                             gNodeGroup, 
-                                            this.runItemDialogQuery.bind(this, g, gConn), 
+                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, snodeItem), 
                                             snodeItemDialogCallback,
                                             {"draculaLabel" : draculaLabel}
                                             );
@@ -558,14 +558,29 @@
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
     
-    var runItemDialogQuery = function(g, conn, ng, sparqlId, msiOrQsResultCallback, failureCallback, statusCallback) {
+    var runSuggestValuesQuery = function(g, conn, ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
         require(['sparqlgraph/js/msiclientnodegroupexec',
                  'sparqlgraph/js/msiclientnodegroupservice'], 
     	            function (MsiClientNodeGroupExec, MsiClientNodeGroupService) {
             
-            var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
+            // make sure there is a sparqlID
+            var runNodegroup;
+            var runId;
+            // make sure there is a sparqlID
+            if (item.getSparqlID() == "") {
+                // set it, make a copy, set it back
+                item.setSparqlID("SG_runSuggestValuesQuery_Temp");
+                runNodegroup = ng.deepCopy();
+                runId = item.getSparqlID();
+                item.setSparqlID("");
+            } else {
+                runNodegroup = ng;
+                runId = item.getSparqlID();
+            }
+
             
             if (getQuerySource() == "DIRECT") {
+                // Generate sparql and run via query interface
                 
                 // get answer for msiOrQsResultCallback
                 var sparqlCallback = function (cn, resCallback, failCallback, sparql) {
@@ -576,16 +591,18 @@
                 
                 // generate sparql and send to sparqlCallback
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
-                ngClient.execAsyncGenerateFilter(ng, sparqlId, sparqlCallback, failureCallback);
+                ngClient.execAsyncGenerateFilter(runNodegroup, runId, sparqlCallback, failureCallback);
                 
             } else {
+                // Run nodegroup via Node Group Exec Svc
                 var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
                                                                                  g.service.status.url,
                                                                                  g.service.results.url);
+                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
 
-                client.execAsyncDispatchFilterFromNodeGroup(ng, conn, sparqlId, null, null, jobIdCallback, failureCallback);
+                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, null, jobIdCallback, failureCallback);
 
             }
         }); 
@@ -858,12 +875,34 @@
 	
    	
    	var doTest = function () {
-        ngExecSuccessCallback("justinIsTesting");
-        
-        testCsv();
+        testServices();
    	};
 
-    var ngExecByQueryType = function () {
+    var testServices = function () {
+        require(['sparqlgraph/js/modaliidx'], 
+    	         function (ModalIidx) {
+            
+            var div = document.createElement("div");
+            var m = new ModalIidx();
+            m.showOK("Services", div,  function(){});
+            
+            addLine = function(div, message) {
+                div.innerHTML += "<br>message";
+            }.bind(div);
+            
+            $.ajax({
+                type: "POST",  
+                url: "http://vesuvius37:12050/sparqlQueryService",
+                success: addLine.bind("12050 is up"),
+                error:   addLine.bind("12050 error"),
+            });
+        });
+        
+    };
+
+    var runGraphByQueryType = function (optRtConstraints) {
+        // PEC HERE
+        var rtConstraints = (typeof optRtConstraints == "undefined") ? null : optRtConstraints;
         
     	require(['sparqlgraph/js/msiclientnodegroupexec'], 
     	         function (MsiClientNodeGroupExec) {
@@ -872,23 +911,23 @@
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
     		
             var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
-                                                                                     ngExecTableResCallback,
-                                                                                     ngExecFailureCallback,
+                                                                                     queryTableResCallback,
+                                                                                     queryFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
 			}
             
@@ -896,7 +935,7 @@
     	
     };
 
-    var ngExecQueryText = function () {
+    var runQueryText = function () {
         require(['sparqlgraph/js/msiclientnodegroupexec',
     	         'sparqlgraph/js/modaliidx'], 
     	         function (MsiClientNodeGroupExec, ModalIidx) {
@@ -904,18 +943,18 @@
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
     		
              var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
-                                                                                      ngExecTableResCallback,
-                                                                                      ngExecFailureCallback,
+                                                                                      queryTableResCallback,
+                                                                                      queryFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
             
-            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, ngExecFailureCallback);
+            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, queryFailureCallback);
 
     	});
     };
 
-    var ngExecFailureCallback = function (html) {
+    var queryFailureCallback = function (html) {
         require(['sparqlgraph/js/modaliidx'], 
                 function(ModalIidx) {
             
@@ -926,16 +965,15 @@
     };
     
     /*
-     * callback in ngExec chain
      * Results success.  Display them.
      * @private
      */
-    var ngExecTableResCallback = function (fullURL, tableResults) { 
+    var queryTableResCallback = function (csvFilename, fullURL, tableResults) { 
         var headerHtml = "";
         if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
             headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
         }
-        headerHtml += "Full csv: <a href='" + fullURL + "' download>download</a>";
+        headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
         tableResults.setLocalUriFlag(! getQueryShowNamespace());
         tableResults.setEscapeHtmlFlag(true);
         tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml);
@@ -1247,9 +1285,28 @@
             logAndAlert("Attempting direct query of nodegroup.  Button should be disabled.");
             
         } else {
-            clearResults();
-            ngExecByQueryType();
+            require(['sparqlgraph/js/msiclientnodegroupservice',
+                    ], function(MsiClientNodeGroupService) {
+                clearResults();
+
+                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, queryFailureCallback);
+                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, runGraphWithConstraints, queryFailureCallback);
+            });
     	}
+    };
+
+    var runGraphWithConstraints = function(resultSet) {
+        if (resultSet.getRowCount() > 0) {
+            require(['sparqlgraph/js/modalruntimeconstraintdialog',
+                    ], function(ModalRuntimeConstraintDialog) {
+                
+                var dialog = new ModalRuntimeConstraintDialog();
+                dialog.launchDialog(resultSet, runGraphByQueryType.bind(this));
+                
+            });
+        } else {
+            runGraphByQueryType();
+        }
     };
 
     /* 
@@ -1270,7 +1327,7 @@
             if (getQuerySource() == "DIRECT") {
                 runQueryDirect(query);
             } else {
-                ngExecQueryText();
+                runQueryText();
             }
         }
 	};
@@ -1293,19 +1350,10 @@
                 logEvent("SG Display Query Results", "rows", sparqlServerResult.getRowCount());
 
                 if (getQuerySource() == "DIRECT") {
-                    /* old non-microservice */
-                    sparqlServerResult.getResultsInDatagridDiv(	document.getElementById("resultsParagraph"), 
-                                                                "resultsTableName",
-                                                                "resultsTableId",
-                                                                "table table-bordered table-condensed", 
-                                                                sparqlServerResult.getRowCount() > 10, // filter flag
-                                                                "gQueryResults",
-                                                                null,
-                                                                null,
-                                                                getNamespaceFlag());
+                    sparqlServerResult.putSparqlResultsDatagridInDiv(   document.getElementById("resultsParagraph"), 
+                                                                        null,
+                                                                        getNamespaceFlag());
                 } 
-                // terrible artifact of old javascript
-                gQueryResults = sparqlServerResult;
                 
                 guiResultsNonEmpty();
                 setStatus("");

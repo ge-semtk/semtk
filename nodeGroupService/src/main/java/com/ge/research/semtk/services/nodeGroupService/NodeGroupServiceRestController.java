@@ -211,7 +211,7 @@ public class NodeGroupServiceRestController {
 		}
 		else if(jobj.containsKey("sNodeList")){
 			// this was just a node group
-			retval.addJson((JSONArray) jobj.get("sNodeList"));
+			retval.addJsonEncodedNodeGroup(jobj);
 		}
 		else{
 			// something insane was passed. fail with some dignity.

@@ -428,7 +428,7 @@ define([	// properly require.config'ed   bootstrap-modal
 													  headerHtml,
 								                      this.tableGetCols.bind(this), 
 								                      this.tableGetRows.bind(this), 
-								                      typeof optMenuList == "undefined" ? ["Download CSV"] : optMenuList, 
+								                      typeof optMenuList == "undefined" ? ["Save table csv"] : optMenuList, 
 								                      typeof optMenuCallbackList == "undefined" ? [this.tableDownloadCsv.bind(this)] : optMenuCallbackList, 
 								                      optFinishedCallback);
 			},

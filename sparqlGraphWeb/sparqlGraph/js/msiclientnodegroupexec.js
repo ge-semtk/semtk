@@ -35,6 +35,10 @@ define([	// properly require.config'ed   bootstrap-modal
             this.optTimeout = optTimeout;
 		};
 		
+        MsiClientNodeGroupExec.scaleProgress = function(progressCallback, min, max, val) {
+            progressCallback(min + Math.floor((max - min) * val / 100));
+        };
+    
         /* 
          * Create a jobIdCallback suitable for the execAsync* functions, that 
          *      handles the status and results clients
@@ -45,7 +49,7 @@ define([	// properly require.config'ed   bootstrap-modal
          * Given these:
          *      maxRows - max rows in tableResults
          *
-         *      tableResCallback(fullCsvUrl, tableResults)
+         *      tableResCallback(csvFilename, fullCsvUrl, tableResults)
          *          this - will be the document not any object 
          *          fullCsvUrl - url of full results in csv form
          *          tableResults - MsiResultSet where isTableResults() == true
@@ -66,22 +70,33 @@ define([	// properly require.config'ed   bootstrap-modal
                 // callback for status service after job successfully finishes
                 var ngStatusSuccessCallback = function(jobId, maxRows, csvUrlSampleJsonCallback1, failureCallback1, progressCallback1, resultUrl) {
                     
-                    progressCallback1(100);
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (csvUrlSampleJsonCallback2, progressCallback2, csvFilename, fullURL, results) {
+                        progressCallback2(99);
+                        csvUrlSampleJsonCallback2(csvFilename, fullURL, results);
+                    };
                     
                     // get csv url
                     var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
                     var fullURL = resultsClient.getTableResultsCsvDownloadUrl();
+                    var csvFilename = jobId + ".csv";
                     
                     // ask for json results and give csvUrlSampleJsonCallback with the csv Url bound
-                    resultsClient.execGetTableResultsJsonTableRes(maxRows, csvUrlSampleJsonCallback1.bind(this, fullURL));
+                    resultsClient.execGetTableResultsJsonTableRes(maxRows, 
+                                                                  ngResultsSuccessCallback.bind(this, csvUrlSampleJsonCallback1, progressCallback1, csvFilename, fullURL));
 
                 }.bind(this, jobId, maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, resultUrl);
                 
+                progressCallback0(5); // got jobId
+                var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, progressCallback0, 10, 90);
+                
                 // call status service loop
                 var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
-                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, progressCallback0);
+                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, sProgress);
                 
             }.bind(this, maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, statusUrl, resultUrl);
+            
+            progressCallback(1);   // just starting
             
             return ngExecJobIdCallback;
         };
@@ -99,20 +114,30 @@ define([	// properly require.config'ed   bootstrap-modal
                 
                 // callback for status service after job successfully finishes
                 var ngStatusSuccessCallback = function(jobId, tableResCallback1, failureCallback1, progressCallback1, resultUrl) {
-                    progressCallback1(100);
+                    
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (tableResCallback2, progressCallback2, results) {
+                        progressCallback2(99);
+                        tableResCallback2(results);
+                    };
                     
                     // send json results to tableResCallback 
                     var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
-                    resultsClient.execGetTableResultsJsonTableRes(null, tableResCallback1);
+                    resultsClient.execGetTableResultsJsonTableRes(null, 
+                                                                  ngResultsSuccessCallback.bind(this, tableResCallback1, progressCallback1));
 
                 }.bind(this, jobId, tableResCallback0, failureCallback0, progressCallback0, resultUrl);
                 
+                progressCallback0(5); // got jobId
+                var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, progressCallback0, 10, 90);
+                
                 // call status service loop
                 var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
-                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, progressCallback0);
+                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, sProgress);
                 
             }.bind(this, tableResCallback, failureCallback, progressCallback, statusUrl, resultUrl);
             
+            progressCallback(1);  // just starting
             return ngExecJobIdCallback;
         };
     
