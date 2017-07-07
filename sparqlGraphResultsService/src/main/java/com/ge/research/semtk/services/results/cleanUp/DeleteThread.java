@@ -10,18 +10,17 @@ import com.ge.research.semtk.services.results.ResultsEdcConfigProperties;
 
 public class DeleteThread extends Thread {
 
-	@Autowired
-	ResultsEdcConfigProperties edc_prop;
-	
 	private int runFrequencyInMilliseconds;
+	private int frequencyInMinutes;
 	private File locationToDeleteFrom;	
 	private JobTracker jTracker;
 	
-	public DeleteThread(String fileStorageLocation, int frequencyInMinutes){
+	public DeleteThread(String fileStorageLocation, int frequencyInMinutes, ResultsEdcConfigProperties edcProp){
 		this.locationToDeleteFrom = new File(fileStorageLocation);
 		this.runFrequencyInMilliseconds = frequencyInMinutes * 60 * 1000;
+		this.frequencyInMinutes = frequencyInMinutes;
 		try {
-			this.jTracker = new JobTracker(edc_prop);
+			this.jTracker = new JobTracker(edcProp);
 		} catch (Exception e) {
 			// something failed when getting the jobtracker. report it but continue anyway
 			System.err.println("unable to get a job tracker instance. reason given: " + e.getMessage());
@@ -49,7 +48,7 @@ public class DeleteThread extends Thread {
                 }
     			
     			// cleanup meta data.
-    			
+    			this.jTracker.deleteJobsBeforeGivenMinutesAgo(frequencyInMinutes);
     			
     		}
     		catch(Exception iei){

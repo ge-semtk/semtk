@@ -439,7 +439,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	public void createJob(String jobId) throws Exception {	    
 	    
 		// get the current date and time...
-		DateFormat xsdFormat = new SimpleDateFormat("yyyy/MM/ddHH:mm:ss");
+		DateFormat xsdFormat = new SimpleDateFormat("yyyy/MM/dd'T'HH:mm:ss");
 		Calendar cal = Calendar.getInstance();
 
 		Date initialDate = cal.getTime();
@@ -463,6 +463,38 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
+	}
+	
+	
+	public void deleteJobsBeforeGivenMinutesAgo(int minutesAgo) throws Exception {
+	
+		// get the current date and time...
+		DateFormat xsdFormat = new SimpleDateFormat("yyyy/MM/dd'T'HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.MINUTE, (-1 * minutesAgo) );
+		
+		Date initialDate = cal.getTime();
+		
+		
+		 String query = "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
+			        	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
+			        	" \n" +
+			        	"DELETE  {  \n" +
+			        	"   ?Job ?y ?z.    \n" +
+			        	"   ?z ?zo ?zp.  \n" +
+			        	"} \n" +
+			        	"where { \n" +
+			        	"   ?Job a job:Job. \n" +
+			        	"   ?Job job:creationTime ?time. \n" +
+			        	"	      VALUES ?time { '" + xsdFormat.format(initialDate) + "'^^XMLSchema:string }. \n" +
+			        	"   ?Job ?y ?z." +
+			        	"   optional { ?z ?zo ?zp. }  \n" +
+			        	"}";
+		    try {
+		    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
+		    } catch (Exception e) {
+		    	throw new Exception(e.getMessage());
+		    }
 	}
 	
 	/**

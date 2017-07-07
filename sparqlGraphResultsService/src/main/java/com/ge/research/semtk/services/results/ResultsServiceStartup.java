@@ -1,6 +1,7 @@
 package com.ge.research.semtk.services.results;
 
 import org.mortbay.jetty.security.ClientCertAuthenticator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -11,7 +12,10 @@ import com.ge.research.semtk.services.results.cleanUp.DeleteThread;
 public class ResultsServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
   private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
-	
+
+  @Autowired
+  ResultsEdcConfigProperties edcProp;
+  
   /**
    * Code to run after the service starts up.
    */
@@ -61,7 +65,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 		  String fileStore = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
 			  
 		  // setup and run the actual thread. 
-		  DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq);
+		  DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, edcProp);
 		  ripper.run();
 	  }
 	  else{
