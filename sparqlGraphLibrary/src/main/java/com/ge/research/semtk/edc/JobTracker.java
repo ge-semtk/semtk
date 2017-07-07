@@ -456,7 +456,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	        + "%s job:percentComplete '0'^^XMLSchema:integer. "
 	        + "%s job:creationTime '%s'^^XMLSchema:dateTime."
 	        + "} \n",
-	    	uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri, xsdFormat.format(initialDate));
+	    	uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri, uri, xsdFormat.format(initialDate));
 	    System.err.println(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);

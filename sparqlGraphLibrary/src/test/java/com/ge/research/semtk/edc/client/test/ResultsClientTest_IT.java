@@ -248,18 +248,32 @@ public class ResultsClientTest_IT {
 				table.addRow(row);
 			}
 			
-			// --- store results ----
-			long startTime = System.nanoTime();		
-			client.execStoreTableResults(jobId, table);
-			long endTime = System.nanoTime();
-			double elapsed = ((endTime - startTime) / 1000000000.0);
-			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
+			long startTime, endTime;
+			double elapsed;
 			
-			// --- test results ---
+			// --- store results ----
+			startTime = System.nanoTime();		
+			client.execStoreTableResults(jobId, table);
+			endTime = System.nanoTime();
+			elapsed = ((endTime - startTime) / 1000000000.0);
+			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
+			
+			// --- test retrieving json results ---
+			startTime = System.nanoTime();
 			TableResultSet res = client.execTableResultsJson(jobId, null);
+			endTime = System.nanoTime();
+			elapsed = ((endTime - startTime) / 1000000000.0);
+			System.err.println(String.format(">>> client.execTableResultsJson()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
 			assertEquals(res.getTable().getNumRows(), NUM_ROWS);
 			assertEquals(res.getTable().getNumColumns(), NUM_COLS);
 			assertEquals(res.getTable().getCell(0,0), "Element0");
+			
+			// --- test retrieving csv results ---
+			startTime = System.nanoTime();
+			CSVDataset resultCsv = client.execTableResultsCsv(jobId, null);
+			endTime = System.nanoTime();
+			elapsed = ((endTime - startTime) / 1000000000.0);
+			System.err.println(String.format(">>> client.execTableResultsCsv()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
 			
 		} finally {
 			cleanup(client, jobId);
