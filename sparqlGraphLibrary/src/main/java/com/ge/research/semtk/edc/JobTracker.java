@@ -19,6 +19,10 @@
 package com.ge.research.semtk.edc;
 
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -434,6 +438,12 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	 */
 	public void createJob(String jobId) throws Exception {	    
 	    
+		// get the current date and time...
+		DateFormat xsdFormat = new SimpleDateFormat("yyyy/MM/ddHH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+
+		Date initialDate = cal.getTime();
+		
 		// Caller must first ensure that job doesn't exist
 		
 		String uri = String.format("<Job_%s>", UUID.randomUUID().toString());
@@ -442,7 +452,10 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 
 	        " \n" +
-	        "INSERT  {%s a job:Job.  %s job:id '%s'^^XMLSchema:string. %s job:percentComplete '0'^^XMLSchema:integer. } \n",
+	        "INSERT  {%s a job:Job.  %s job:id '%s'^^XMLSchema:string. "
+	        + "%s job:percentComplete '0'^^XMLSchema:integer. "
+	        + "%s job:creationTime '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime."
+	        + "} \n",
 	    	uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri);
 	    System.err.println(query);
 	    try {

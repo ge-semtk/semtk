@@ -29,6 +29,8 @@ public class ResultsProperties {
 	private String fileLocation = "";
 	private String baseURL = "";
 	private int sampleLines = 1;
+	private Boolean cleanUpThreadEnabled = true;
+	private Integer cleanUpThreadFrequency;
 	
 	public String getBaseURL() {
 		return baseURL;
@@ -47,5 +49,17 @@ public class ResultsProperties {
 	}
 	public void setSampleLines(int sampleLines) {
 		this.sampleLines = sampleLines;
+	}
+	public Boolean getCleanUpThreadEnabled() {
+		return cleanUpThreadEnabled;
+	}
+	public void setCleanUpThreadEnabled(Boolean cleanUpThreadEnabled) {
+		this.cleanUpThreadEnabled = cleanUpThreadEnabled;
+	}
+	public Integer getCleanUpThreadFrequency() {
+		return cleanUpThreadFrequency;
+	}
+	public void setCleanUpThreadFrequency(Integer cleanUpThreadFrequency) {
+		this.cleanUpThreadFrequency = cleanUpThreadFrequency;
 	}
 }
