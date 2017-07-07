@@ -16,15 +16,6 @@
  ** limitations under the License.
  */
 
-/*
- *	Create a set of nodes that are, ultimately compatible with the 
- *	nodes for graph Dracula.
- */
-
-/* 
- * Just trying to localize sparql parsing knowledge in one place.
- * This is a work-in-progress.
- */
 
 var SparqlUtil = function() {
 	// only static functions
@@ -3156,6 +3147,7 @@ SemanticNodeGroup.prototype = {
 	},
 
 	generateSparqlConstruct : function() {   
+        console.log("Using deprecated belmont.js:generateSparqlConstruct.  Replaced by NodeGroupService.");
 		this.prefixHash = {};
 		this.buildPrefixHash();
 		
@@ -3201,6 +3193,8 @@ SemanticNodeGroup.prototype = {
 	},
 
 	generateSparqlInsert : function() {
+        console.log("Using deprecated belmont.js:generateSparqlInsert.  Replaced by NodeGroupService.");
+
 		this.prefixHash = {};
 		this.buildPrefixHash();
 		this.addToPrefixHash(SemanticNodeGroup.INSERT_FULL);   // make sure to force the inclusion of the old ones.
@@ -3280,7 +3274,8 @@ SemanticNodeGroup.prototype = {
 	},
 	
 	generateSparqlDelete : function(postFixString, oInfo) {
-		
+        console.log("Using deprecated belmont.js:generateSparqlDelete.  Replaced by NodeGroupService.");
+
 		this.prefixHash = {};			// we need the prefixes set reasonably.
 		this.buildPrefixHash();
 		
@@ -3408,6 +3403,7 @@ SemanticNodeGroup.prototype = {
 		//
 		// Error handling: For each error, inserts a comment at the beginning.
 		//    #Error: explanation
+        console.log("Using deprecated belmont.js:generateSparql.  Replaced by NodeGroupService.");
 		
 		this.prefixHash = {};
 		this.buildPrefixHash();
