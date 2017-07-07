@@ -900,7 +900,9 @@
         
     };
 
-    var ngExecByQueryType = function () {
+    var runGraphByQueryType = function (optRtConstraints) {
+        // PEC HERE
+        var rtConstraints = (typeof optRtConstraints == "undefined") ? null : optRtConstraints;
         
     	require(['sparqlgraph/js/msiclientnodegroupexec'], 
     	         function (MsiClientNodeGroupExec) {
@@ -909,23 +911,23 @@
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
     		
             var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
-                                                                                     ngExecTableResCallback,
-                                                                                     ngExecFailureCallback,
+                                                                                     queryTableResCallback,
+                                                                                     queryFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, ngExecFailureCallback);
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
 			}
             
@@ -933,7 +935,7 @@
     	
     };
 
-    var ngExecQueryText = function () {
+    var runQueryText = function () {
         require(['sparqlgraph/js/msiclientnodegroupexec',
     	         'sparqlgraph/js/modaliidx'], 
     	         function (MsiClientNodeGroupExec, ModalIidx) {
@@ -941,18 +943,18 @@
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
     		
              var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
-                                                                                      ngExecTableResCallback,
-                                                                                      ngExecFailureCallback,
+                                                                                      queryTableResCallback,
+                                                                                      queryFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
             
-            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, ngExecFailureCallback);
+            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, queryFailureCallback);
 
     	});
     };
 
-    var ngExecFailureCallback = function (html) {
+    var queryFailureCallback = function (html) {
         require(['sparqlgraph/js/modaliidx'], 
                 function(ModalIidx) {
             
@@ -963,11 +965,10 @@
     };
     
     /*
-     * callback in ngExec chain
      * Results success.  Display them.
      * @private
      */
-    var ngExecTableResCallback = function (csvFilename, fullURL, tableResults) { 
+    var queryTableResCallback = function (csvFilename, fullURL, tableResults) { 
         var headerHtml = "";
         if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
             headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
@@ -1284,9 +1285,28 @@
             logAndAlert("Attempting direct query of nodegroup.  Button should be disabled.");
             
         } else {
-            clearResults();
-            ngExecByQueryType();
+            require(['sparqlgraph/js/msiclientnodegroupservice',
+                    ], function(MsiClientNodeGroupService) {
+                clearResults();
+
+                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, queryFailureCallback);
+                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, runGraphWithConstraints, queryFailureCallback);
+            });
     	}
+    };
+
+    var runGraphWithConstraints = function(resultSet) {
+        if (resultSet.getRowCount() > 0) {
+            require(['sparqlgraph/js/modalruntimeconstraintdialog',
+                    ], function(ModalRuntimeConstraintDialog) {
+                
+                var dialog = new ModalRuntimeConstraintDialog();
+                dialog.launchDialog(resultSet, runGraphByQueryType.bind(this));
+                
+            });
+        } else {
+            runGraphByQueryType();
+        }
     };
 
     /* 
@@ -1307,7 +1327,7 @@
             if (getQuerySource() == "DIRECT") {
                 runQueryDirect(query);
             } else {
-                ngExecQueryText();
+                runQueryText();
             }
         }
 	};
