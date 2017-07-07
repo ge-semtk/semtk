@@ -51,11 +51,8 @@ define([	// properly require.config'ed
 			// These methods' behaviors are not guaranteed to be stable in future releases.
 			           
             // add a constraint
-            // optOperandQuotesFlag: true to enclose each operand in double quotes, false to not.  Defaults to true.
-            add : function(sparqlId, operator, operands, optOperandQuotesFlag){
-                
-                var operandQuotesFlag = (typeof optOperandQuotesFlag === "undefined") ? true : optOperandQuotesFlag;
-                
+            add : function(sparqlId, operator, operands){
+               
                 // confirm that the given operator is legal
                 if(!SUPPORTED_OPERATORS.includes(operator)){
                     // if get this alert, then a fix is needed in the code
@@ -64,35 +61,23 @@ define([	// properly require.config'ed
                 }
                 
                 // build the json for this constraint
-                var s = '{';
-                s += '"SparqlID": "' + sparqlId + '",';
-                s += '"Operator": "' + operator + '",';
-                s += '"Operands":[';
+                var s = {
+                    "SparqlID": sparqlId,
+                    "Operator": operator,
+                    "Operands":[]
+                };                
                 for(i = 0; i < operands.length; i++){
-                    if(operandQuotesFlag){
-                        s += '"' + operands[i] + '"'; // enclose in double quotes  (e.g. for strings)
-                    }else{
-                        s += operands[i];             // don't enclose in double quotes (e.g. for numeric)
-                    }
-                    if(i < operands.length - 1){
-                        s+= ", ";
-                    }
+                    s["Operands"].push(operands[i]); 
                 }
-                s += ']'; 
-                s += '}';
+                
+                // store the json for this constraint
                 this.constraintsJson.push(s);
             },
-			
-            // gather all constraints into a single json
+            
             toJson : function () {
-                var s = "RuntimeConstraints: ["; 
-                for(i = 0; i < this.constraintsJson.length; i++){
-                    s += this.constraintsJson[i];
-                    s += (i < this.constraintsJson.length - 1) ? "," : "";  // don't include comma if it's the last entry
-                }
-                s += "]";
-                return s;
-			},
+                return this.constraintsJson;
+            }
+            
 		};
 	
 		return RuntimeConstraints;            // return the constructor
