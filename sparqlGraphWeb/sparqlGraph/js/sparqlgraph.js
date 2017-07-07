@@ -900,7 +900,9 @@
         
     };
 
-    var runGraphByQueryType = function () {
+    var runGraphByQueryType = function (optRtConstraints) {
+        // PEC HERE
+        var rtConstraints = (typeof optRtConstraints == "undefined") ? null : optRtConstraints;
         
     	require(['sparqlgraph/js/msiclientnodegroupexec'], 
     	         function (MsiClientNodeGroupExec) {
@@ -916,16 +918,16 @@
                                                                                      g.service.results.url);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, null, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
                 break;
 			}
             
@@ -1283,9 +1285,28 @@
             logAndAlert("Attempting direct query of nodegroup.  Button should be disabled.");
             
         } else {
-            clearResults();
-            runGraphByQueryType();
+            require(['sparqlgraph/js/msiclientnodegroupservice',
+                    ], function(MsiClientNodeGroupService) {
+                clearResults();
+
+                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, queryFailureCallback);
+                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, runGraphWithConstraints, queryFailureCallback);
+            });
     	}
+    };
+
+    var runGraphWithConstraints = function(resultSet) {
+        if (resultSet.getRowCount() > 0) {
+            require(['sparqlgraph/js/modalruntimeconstraintdialog',
+                    ], function(ModalRuntimeConstraintDialog) {
+                
+                var dialog = new ModalRuntimeConstraintDialog();
+                dialog.launchDialog(resultSet, runGraphByQueryType.bind(this));
+                
+            });
+        } else {
+            runGraphByQueryType();
+        }
     };
 
     /* 
