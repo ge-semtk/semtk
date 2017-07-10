@@ -101,7 +101,7 @@ public class ResultsClient extends RestClient implements Runnable {
 					resultsSoFar.append("[");
 					ArrayList<String> row = table.getRow(tableRowsDone);
 					for(int j = 0; j < row.size(); j++){
-						resultsSoFar.append("\"").append(row.get(j)).append("\"");	// enclose in quotes
+						resultsSoFar.append("\"").append(row.get(j)).append("\"");	// enclose in quotes (tried putting in thread, but resulted in worse performance)
 						if(j < row.size() - 1){
 							resultsSoFar.append(",");								// don't append comma to the last element of the row
 						}
@@ -295,7 +295,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			}
 			TableFormatter thread = new TableFormatter(table.getRows(), startIndex, endIndex);
 			threads.add(thread);
-			thread.run();
+			thread.start();
 		}
 		
 		// wait for all threads to finish
@@ -305,24 +305,25 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 }
-	
+
 /**
  * Thread to format a subset of a table
+ * Note: tried enclosing each element in double quotes here as well, but resulted in overall worse performance
  */
 class TableFormatter extends Thread{  
-	
+
 	private ArrayList<ArrayList<String>> rows;
 	private int startIndex, endIndex;
-	
+
 	public TableFormatter(ArrayList<ArrayList<String>> rows, int startIndex, int endIndex){
 		this.rows = rows;
 		this.startIndex = startIndex;
 		this.endIndex = endIndex;
 	}
-	
+
 	public void run(){  
 		for(int i = startIndex; i < endIndex; i++){
-			for(int j = 0; j < rows.get(i).size(); j++){
+			for(int j = 0; j < rows.get(i).size(); j++){				
 				if(rows.get(i).get(j).indexOf('\"') > -1){
 					rows.get(i).set(j, StringUtils.replace(rows.get(i).get(j), "\"", "\\\"")); // escape internal double quotes
 				}
@@ -330,3 +331,4 @@ class TableFormatter extends Thread{
 		}
 	} 
 }
+
