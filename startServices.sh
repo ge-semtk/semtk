@@ -7,7 +7,7 @@
 
 
 # uniform JVM config for all services, for now
-JVM_OPTIONS="-Xmx50G -Xincgc" 
+JVM_OPTIONS="-Xmx20G -Xincgc" 
 
 PORT_SPARQLGRAPH_STATUS_SERVICE=12051
 PORT_SPARQLGRAPH_RESULTS_SERVICE=12052
