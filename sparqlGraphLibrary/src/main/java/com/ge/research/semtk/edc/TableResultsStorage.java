@@ -176,19 +176,25 @@ public class TableResultsStorage {
 	 */
 	private byte[] getTable(URL url, Integer maxRows, TableResultsStorageTypes storageType) throws Exception{
 				
+		System.out.println("** TableResultsStorage.getTable()");  // TODO DELETE THIS
+		
+		System.out.println("** Get JSON object from file...");  // TODO DELETE THIS
 		Table table;
 		try{
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
 			table = Table.fromJson(jsonObj);	
 		}catch(Exception e){
+			e.printStackTrace();
 			throw new Exception("Could not read results from store for " + url + ": " + e.toString());
 		}
 		
+		System.out.println("** Truncate the table...");  // TODO DELETE THIS
 		// truncate the table 
 		if(maxRows != null){
 			table.truncate(maxRows.intValue());
 		}
 		
+		System.out.println("** Return as a JSON or CSV string...");  // TODO DELETE THIS
 		// return byte array in requested format
 		if(storageType == TableResultsStorageTypes.CSV){
 			return table.toCSVString().getBytes();
