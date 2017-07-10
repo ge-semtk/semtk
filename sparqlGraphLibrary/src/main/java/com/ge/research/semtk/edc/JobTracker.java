@@ -486,7 +486,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 			        	"where { \n" +
 			        	"   ?Job a job:Job. \n" +
 			        	"   ?Job job:creationTime ?time. \n" +
-			        	"	      VALUES ?time { '" + xsdFormat.format(initialDate) + "'^^XMLSchema:string }. \n" +
+			        	"    FILTER (?time < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime) \n" +
 			        	"   ?Job ?y ?z." +
 			        	"   optional { ?z ?zo ?zp. }  \n" +
 			        	"}";
