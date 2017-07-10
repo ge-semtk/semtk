@@ -439,7 +439,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	public void createJob(String jobId) throws Exception {	    
 	    
 		// get the current date and time...
-		DateFormat xsdFormat = new SimpleDateFormat("yyyy/MM/dd'T'HH:mm:ss");
+		DateFormat xsdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		Calendar cal = Calendar.getInstance();
 
 		Date initialDate = cal.getTime();
@@ -469,7 +469,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	public void deleteJobsBeforeGivenMinutesAgo(int minutesAgo) throws Exception {
 	
 		// get the current date and time...
-		DateFormat xsdFormat = new SimpleDateFormat("yyyy/MM/dd'T'HH:mm:ss");
+		DateFormat xsdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.MINUTE, (-1 * minutesAgo) );
 		

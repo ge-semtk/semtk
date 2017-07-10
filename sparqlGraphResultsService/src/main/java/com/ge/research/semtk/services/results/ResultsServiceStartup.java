@@ -67,7 +67,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 			  
 		  // setup and run the actual thread. 
 		  DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, edcProp);
-		  ripper.run();
+		  ripper.start();
 	  }
 	  else{
 		  System.err.println("cleanup disabled. no cleanup will be performed.");
