@@ -182,6 +182,7 @@ public class TableResultsStorage {
 		Table table;
 		try{
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
+			System.out.println("** Got json");
 			table = Table.fromJson(jsonObj);	
 		}catch(Exception e){
 			e.printStackTrace();
