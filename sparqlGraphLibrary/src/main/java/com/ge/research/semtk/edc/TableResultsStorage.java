@@ -178,11 +178,11 @@ public class TableResultsStorage {
 				
 		System.out.println("** TableResultsStorage.getTable()");  // TODO DELETE THIS
 		
-		System.out.println("** Get JSON object from file...");  // TODO DELETE THIS
 		Table table;
 		try{
+			System.out.println("** Calling getJSONObjectFromFilePath()...");  // TODO DELETE THIS
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
-			System.out.println("** Got json");
+			System.out.println("** Calling Table.fromJson() ...");		// DELETE THIS
 			table = Table.fromJson(jsonObj);	
 		}catch(Exception e){
 			e.printStackTrace();
