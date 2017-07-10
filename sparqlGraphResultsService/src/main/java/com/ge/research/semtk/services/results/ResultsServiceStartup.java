@@ -29,7 +29,9 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  System.out.println("results.edc.services.jobEndpointServerUrl: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointServerUrl"));
 	  System.out.println("results.edc.services.jobEndpointDataset: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDataset"));
 	  System.out.println("results.edc.services.jobEndpointUsername: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointUsername"));
-	  System.out.println("results.edc.services.jobEndpointPassword: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword"));	  
+	  System.out.println("results.edc.services.jobEndpointPassword: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword"));	
+	  System.out.println("results.cleanUpThreadEnabled: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadEnabled"));
+	  System.out.println("results.cleanUpThreadFrequency: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
 	  System.out.println("-----------------------");
 	  
 	  cleanUpFileLocation(event);
@@ -55,7 +57,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  Integer cleanUpFreq = null;
 	  if(runCleanUp.equalsIgnoreCase("yes")){
 		  try{
-			  cleanUpFreq = Integer.getInteger(event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
+			  cleanUpFreq = Integer.parseInt(event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
 			  System.err.println("Declared cleanup frequency is " + cleanUpFreq + " minutes.");
 			  
 			                                                                                               
