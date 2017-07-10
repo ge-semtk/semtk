@@ -63,16 +63,19 @@ public class ResultsClientTest_IT {
 		ArrayList<String> row = new ArrayList<String>();
 		row.add("one");
 		row.add("two");
+		ArrayList<String> row2 = new ArrayList<String>();
+		row2.add("three");
+		row2.add("four");
 		
 		try {
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
-			table.addRow(row);
+			table.addRow(row2);
 			
 			client.execStoreTableResults(jobId, table);
 
-			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"one\",\"two\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}\n";		
-			String expectedCSVString = "col1,col2\none,two\none,two\n";
+			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"three\",\"four\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}\n";		
+			String expectedCSVString = "col1,col2\none,two\nthree,four\n";
 
 			URL[] urls = client.execGetResults(jobId);
 			// check the URLs from getResults
@@ -95,8 +98,8 @@ public class ResultsClientTest_IT {
 			assertEquals(resCsvRows.get(0).size(), 2);		// 2 columns
 			assertEquals(resCsvRows.get(0).get(0), "one");
 			assertEquals(resCsvRows.get(0).get(1), "two");
-			assertEquals(resCsvRows.get(1).get(0), "one");
-			assertEquals(resCsvRows.get(1).get(1), "two");
+			assertEquals(resCsvRows.get(1).get(0), "three");
+			assertEquals(resCsvRows.get(1).get(1), "four");
 			
 		} finally {
 			cleanup(client, jobId);
@@ -140,7 +143,7 @@ public class ResultsClientTest_IT {
 	}
 	
 	/**
-	 * Test a row with quotes but no commas (hits different logic in the ResultsClient)
+	 * Test a row with quotes but no commas (in the past this triggered different logic in the ResultsClient)
 	 */
 	@Test
 	public void testStoreTable_WithQuotesNoCommas() throws Exception {
@@ -245,7 +248,7 @@ public class ResultsClientTest_IT {
 			}
 			Table table = new Table(cols, colTypes, null);
 			for(int i = 0; i < NUM_ROWS; i++){
-				table.addRow(row);
+				table.addRow((ArrayList<String>) row.clone());  // need to clone, otherwise formatter recursively formats the same row
 			}
 			
 			long startTime, endTime;
@@ -274,7 +277,8 @@ public class ResultsClientTest_IT {
 			endTime = System.nanoTime();
 			elapsed = ((endTime - startTime) / 1000000000.0);
 			System.err.println(String.format(">>> client.execTableResultsCsv()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
-			
+		} catch (Exception e){
+			e.printStackTrace();
 		} finally {
 			cleanup(client, jobId);
 		}
