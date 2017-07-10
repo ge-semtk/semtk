@@ -450,7 +450,6 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	    String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
-
 	        " \n" +
 	        "INSERT  {%s a job:Job.  %s job:id '%s'^^XMLSchema:string. "
 	        + "%s job:percentComplete '0'^^XMLSchema:integer. "
