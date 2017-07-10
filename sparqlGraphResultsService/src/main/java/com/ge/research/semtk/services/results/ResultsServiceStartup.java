@@ -56,10 +56,18 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  if(runCleanUp.equalsIgnoreCase("yes")){
 		  try{
 			  cleanUpFreq = Integer.getInteger(event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
-			  if(cleanUpFreq == null){ cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY; }
+			  System.err.println("Declared cleanup frequency is " + cleanUpFreq + " minutes.");
+			  
+			                                                                                               
+			  if(cleanUpFreq == null){ 
+				  cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY; 
+				  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
+			  }
 		  }
 		  catch(Exception eee){
+			  System.err.println( eee.getMessage() );
 			  cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY;
+			  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
 		  }
 		  
 		  // get the file storage location:

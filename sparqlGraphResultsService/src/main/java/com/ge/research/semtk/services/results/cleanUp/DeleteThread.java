@@ -55,7 +55,7 @@ public class DeleteThread extends Thread {
     			System.err.println(iei.getMessage());
     		}
     		try {
-    			System.err.println("Clean up about to sleep...");
+    			System.err.println("Clean up about to sleep for " + (double)runFrequencyInMilliseconds/(60 * 1000) + " minutes. ");
 				Thread.sleep(runFrequencyInMilliseconds);
 			} catch (InterruptedException e) {
 				System.err.println("Sleep failed");
