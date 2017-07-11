@@ -20,7 +20,7 @@ package com.ge.research.semtk.edc.client;
 
 import java.net.ConnectException;
 import java.net.URL;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -80,6 +80,9 @@ public class ResultsClient extends RestClient implements Runnable {
 		thread = new Thread(this);
 		thread.run();
 		
+		// do formatting tasks in parallel
+		formatTableElements(table);		// escapes double quotes
+		
 		// write the data rows to JSON, in batches
 		while(tableRowsDone < totalRows){
 			if (timerFlag) { startTime = System.nanoTime();}
@@ -88,31 +91,32 @@ public class ResultsClient extends RestClient implements Runnable {
 			StringBuilder resultsSoFar = new StringBuilder();
 
 			// get the next allocation of rows. 
-			for(int i = 0; i < this.ROWS_TO_PROCESS; i += 1){
+			for(int i = 0; i < this.ROWS_TO_PROCESS; i++){
+				
+				if(!(tableRowsDone < table.getNumRows())){
+					break;	// processed all rows - we're done
+				}
 				try{
 
-					// get the next row into a comma separated string.
-					String curr = new StringBuilder(table.getRow(tableRowsDone).toString()).toString(); // ArrayList.toString() is fast
-					if(StringUtils.countMatches(curr, ",") != (table.getNumColumns() - 1)){
-						// at least one element contains an internal comma, so can't use ArrayList.toString(), use this (slow) approach instead
-						// escape internal double quotes (using \" for json), then enclose each element in double quotes
-						curr = table.getRow(tableRowsDone).stream()
-								.map(s -> (new StringBuilder()).append("\"").append(s.replace("\"","\\\"")).append("\"").toString())
-								.collect(Collectors.joining(","));
-					}else{
-						// there are no elements with internal commas, so can use a fast replace to continue formatting the row
-						curr = StringUtils.substring(curr, 1, curr.length() - 1);		// remove the brackets added by ArrayList.toString()
-						curr = StringUtils.replace(curr, "\"", "\\\"");					// escape internal double quotes (using \" for json)
-						curr = "\"" + StringUtils.replace(curr, ", ", "\",\"") + "\""; 	// replace comma-space with quotes-comma-quotes (encloses each element in double quotes AND eliminates spaces after commas added by ArrayList.toString()) 						 
+					resultsSoFar.append("[");
+					ArrayList<String> row = table.getRow(tableRowsDone);
+					for(int j = 0; j < row.size(); j++){
+						resultsSoFar.append("\"").append(row.get(j)).append("\"");	// enclose in quotes (tried putting in thread, but resulted in worse performance)
+						if(j < row.size() - 1){
+							resultsSoFar.append(",");								// don't append comma to the last element of the row
+						}
 					}
-					curr = "[" + curr + "]";	// add enclosing brackets
-
-					// the row now has: 1) elements surrounded by double quotes 2) no spaces after delimiter commas 3) internal double quotes escaped 4)  enclosing brackets
+					resultsSoFar.append("]");
+					
+					// each row has: 1) internal double quotes escaped 2) elements surrounded by double quotes 3) enclosing brackets
 
 					tableRowsDone += 1;
+					
+					if(i < ROWS_TO_PROCESS - 1){
+						resultsSoFar.append(",");
+					}
 
 					// add to the existing results we want to send.
-					resultsSoFar.append(curr);
 					if(segment != finalSegmentNumber){
 						resultsSoFar.append(",");
 					}
@@ -171,9 +175,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("rowCount", table.getNumRows());
 		thread = new Thread(this);
 		thread.run();
-
-		// cleanup
-		// take care of last run
+		// wait for the finalize run to finish
 		if (thread != null) {
 			thread.join();
 			(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
@@ -277,4 +279,56 @@ public class ResultsClient extends RestClient implements Runnable {
 		}
 	}
 	
+	/**
+	 * Iterate through each table element, and format: 1) escape internal quotes
+	 */
+	private void formatTableElements(Table table) throws InterruptedException{
+		
+		int THREAD_BATCH_SIZE = 100;	// number of rows for each thread to handle
+		ArrayList<TableFormatter> threads = new ArrayList<TableFormatter>();
+		
+		for(int i = 0; i < table.getNumRows(); i += THREAD_BATCH_SIZE){
+			int startIndex = i;
+			int endIndex = i + THREAD_BATCH_SIZE;
+			if(endIndex > table.getNumRows()){
+				endIndex = table.getNumRows();
+			}
+			TableFormatter thread = new TableFormatter(table.getRows(), startIndex, endIndex);
+			threads.add(thread);
+			thread.start();
+		}
+		
+		// wait for all threads to finish
+		for(TableFormatter t : threads){
+			t.join();
+		}
+	}
+	
 }
+
+/**
+ * Thread to format a subset of a table
+ * Note: tried enclosing each element in double quotes here as well, but resulted in overall worse performance
+ */
+class TableFormatter extends Thread{  
+
+	private ArrayList<ArrayList<String>> rows;
+	private int startIndex, endIndex;
+
+	public TableFormatter(ArrayList<ArrayList<String>> rows, int startIndex, int endIndex){
+		this.rows = rows;
+		this.startIndex = startIndex;
+		this.endIndex = endIndex;
+	}
+
+	public void run(){  
+		for(int i = startIndex; i < endIndex; i++){
+			for(int j = 0; j < rows.get(i).size(); j++){				
+				if(rows.get(i).get(j).indexOf('\"') > -1){
+					rows.get(i).set(j, StringUtils.replace(rows.get(i).get(j), "\"", "\\\"")); // escape internal double quotes
+				}
+			}
+		}
+	} 
+}
+

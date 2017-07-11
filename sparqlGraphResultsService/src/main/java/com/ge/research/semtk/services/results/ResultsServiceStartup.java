@@ -1,12 +1,20 @@
 package com.ge.research.semtk.services.results;
 
+import org.mortbay.jetty.security.ClientCertAuthenticator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.services.results.cleanUp.DeleteThread;
+
 @Component
 public class ResultsServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
+  private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
+
+  ResultsEdcConfigProperties edcProp;
+  
   /**
    * Code to run after the service starts up.
    */
@@ -21,10 +29,75 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  System.out.println("results.edc.services.jobEndpointServerUrl: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointServerUrl"));
 	  System.out.println("results.edc.services.jobEndpointDataset: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDataset"));
 	  System.out.println("results.edc.services.jobEndpointUsername: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointUsername"));
-	  System.out.println("results.edc.services.jobEndpointPassword: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword"));	  
+	  System.out.println("results.edc.services.jobEndpointPassword: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword"));	
+	  System.out.println("results.cleanUpThreadEnabled: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadEnabled"));
+	  System.out.println("results.cleanUpThreadFrequency: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
 	  System.out.println("-----------------------");
+	  
+	  cleanUpFileLocation(event);
 	  
 	  return;
   }
  
+  private void cleanUpFileLocation(final ApplicationReadyEvent event){
+	  
+	  this.createResultsEdcConfigProperties(event);
+	  
+	  // check for the presence of the "cleanUpThreadEnabled" property and 
+	  System.err.println("set up for cleanup job");
+	  
+	  String runCleanUp = null;
+	  try{
+		  runCleanUp = event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadEnabled");
+	  }
+	  catch(Exception eee){
+		  System.err.println("Unable to convert results.cleanUpThreadEnabled to a boolean value. no cleanup will be performed.");
+		  return;
+	  }
+	  Integer cleanUpFreq = null;
+	  if(runCleanUp.equalsIgnoreCase("yes")){
+		  try{
+			  cleanUpFreq = Integer.parseInt(event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
+			  System.err.println("Declared cleanup frequency is " + cleanUpFreq + " minutes.");
+			  
+			                                                                                               
+			  if(cleanUpFreq == null){ 
+				  cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY; 
+				  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
+			  }
+		  }
+		  catch(Exception eee){
+			  System.err.println( eee.getMessage() );
+			  cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY;
+			  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
+		  }
+		  
+		  // get the file storage location:
+		  String fileStore = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
+			  
+		  // setup and run the actual thread. 
+		  DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, edcProp);
+		  ripper.start();
+	  }
+	  else{
+		  System.err.println("cleanup disabled. no cleanup will be performed.");
+		  return;		  
+	  }
+	  
+  }
+  
+  private void createResultsEdcConfigProperties(final ApplicationReadyEvent event){
+	  
+	  this.edcProp = new ResultsEdcConfigProperties();
+	  
+	  this.edcProp.setJobEndpointDataset( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDataset") );
+	  this.edcProp.setJobEndpointDomain( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDomain") );
+	  this.edcProp.setJobEndpointServerUrl( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointServerUrl") );
+	  this.edcProp.setJobEndpointType( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointType") );
+	  this.edcProp.setJobEndpointUsername( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointUsername") );
+	  this.edcProp.setJobEndpointPassword( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword") );
+	  
+	  
+  }
+  
 }

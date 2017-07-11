@@ -264,6 +264,7 @@ public abstract class Utility {
 	}
 
 	public static JSONArray getJSONArrayFromFile(File f) throws Exception{
+		System.out.println("** about to read the file"); // TODO DELETE THIS
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
 		StringBuilder jsonStr = new StringBuilder();
 		String line;
@@ -271,8 +272,11 @@ public abstract class Utility {
 			jsonStr.append(" " + line);
 		}
 		bufferedReader.close();
+		System.out.println("** parse..."); // TODO DELETE THIS
 		JSONParser parser = new JSONParser();
-		return (JSONArray) parser.parse(jsonStr.toString());	
+		JSONArray ret = (JSONArray) parser.parse(jsonStr.toString());	
+		System.out.println("** parsed."); // TODO DELETE THIS
+		return ret;
 	}
 	
 	/**

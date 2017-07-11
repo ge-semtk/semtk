@@ -208,19 +208,19 @@ define([	// properly require.config'ed
                             switch(operator1.trim()){
                                 case("="):
                                     // TODO support multiple operands for MATCHES
-                                    runtimeConstraints.add(sparqlId, "MATCHES", [operand1], false);  
+                                    runtimeConstraints.add(sparqlId, "MATCHES", [operand1]);  
                                     break;
                                 case("<"):
-                                    runtimeConstraints.add(sparqlId, "LESSTHAN", [operand1], false);
+                                    runtimeConstraints.add(sparqlId, "LESSTHAN", [operand1]);
                                     break;
                                 case("<="):
-                                    runtimeConstraints.add(sparqlId, "LESSTHANOREQUALS", [operand1], false);
+                                    runtimeConstraints.add(sparqlId, "LESSTHANOREQUALS", [operand1]);
                                     break;  
                                 case(">"):
-                                    runtimeConstraints.add(sparqlId, "GREATERTHAN", [operand1], false);
+                                    runtimeConstraints.add(sparqlId, "GREATERTHAN", [operand1]);
                                     break;
                                 case(">="):
-                                    runtimeConstraints.add(sparqlId, "GREATERTHANOREQUALS", [operand1], false);
+                                    runtimeConstraints.add(sparqlId, "GREATERTHANOREQUALS", [operand1]);
                                     break; 
                                 default:
                                     // if get this alert, then a fix is needed in the code
@@ -230,13 +230,13 @@ define([	// properly require.config'ed
                         }else if(operand1.trim() && operand2.trim()){
                             // user gave upper and lower bounds
                             if(operator1.trim() == ">" && operator2.trim() == "<"){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand1, operand2], false);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand1, operand2]);
                             }else if(operator1.trim() == "<" && operator2.trim() == ">"){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand2, operand1], false);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEENUNINCLUSIVE", [operand2, operand1]);
                             }else if(operator1.trim() == ">=" && operator2.trim() == "<="){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand1, operand2], false);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand1, operand2]);
                             }else if(operator1.trim() == "<=" && operator2.trim() == ">="){
-                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand2, operand1], false);
+                                runtimeConstraints.add(sparqlId, "VALUEBETWEEN", [operand2, operand1]);
                             }else{
                                 // should never get here if validation is implemented correctly
                                 alert("Skipping unsupported combination of operators for " + sparqlId + ": must be < and >, or <= and >=");
@@ -256,75 +256,64 @@ define([	// properly require.config'ed
             
             /**
               * Got runtime constrainable items for the node group.  Build and launch a dialog for user to populate them.
+              * resultSet contains a table with runtime constrainable items.
               */
-            launchRuntimeConstraintCallback : function (multiFlag, resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-				} else {
-
-                    this.div = document.createElement("div");
-                    
-                    this.sparqlIds = resultSet.getColumnStringsByName("valueId");
-                    //this.itemTypes = resultSet.getColumnStringsByName("itemType");   
-                    this.valueTypes = resultSet.getColumnStringsByName("valueType");
-					//this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
-                    //this.valueTypes = ["STRING","INT","DOUBLE"];          // TODO REMOVE - FOR TESTING ONLY                      
-
-                    // create UI components for all runtime-constrained items 
-                    for(i = 0; i < this.sparqlIds.length; i++){
-                        
-                        sparqlId = this.sparqlIds[i];                   // e.g. ?circumference
-                        valueType = this.valueTypes[i];                 // e.g. STRING, INT, etc
-						operator1ElementId = "operator1" + sparqlId;	// e.g. "operator1?circumference"
-						operand1ElementId = "operand1" + sparqlId;		// e.g. "operand1?circumference"
-						operator2ElementId = "operator2" + sparqlId;	// e.g. "operator2?circumference"
-						operand2ElementId = "operand2" + sparqlId;		// e.g. "operand2?circumference"
-                        
-                        this.div.appendChild(IIDXHelper.createLabel(sparqlId.substring(1) + ":", valueType));  // value type is a tooltip
-                        // create UI components for operator/operand (varies per data type)
-                        if(valueType == "STRING"){
-                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, "=", "input-mini"));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
-                        }else if(valueType == "NODE_URI"){
-                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, "=", "input-mini"));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
-                        }else if(valueType == "BOOLEAN"){
-                            this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
-                        }else if(isNumericType(valueType)){
-                            this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, ">", "input-mini"));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
-                            this.div.appendChild(IIDXHelper.createLabel("  ")); // forces a newline
-                            this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorChoicesForNumerics, "<", "input-mini"));
-                            this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId, "input-xlarge"));
-                        }else{
-                            // TODO support all data types, and also handle in validateCallback and okCallback
-                            this.div.appendChild(IIDXHelper.createLabel("...not supported yet..."));
-                        }
-                    } 
-                    
-                    // launch the modal
-                    var m = new ModalIidx();                            
-                    m.showClearCancelSubmit(
-                                    this.title,
-                                    this.div, 
-                                    this.validateCallback.bind(this),
-                                    this.clearCallback, 
-                                    this.okCallback.bind(this)
-                                    );
-				}
-			},            
-                        
-            /**
-              *  Call nodegroup store to get runtime constraints for the given nodegroup id
-              *  Then launch dialog with callback linked to "OK"
-              */
-            launchDialogById : function (nodegroupId, callback, multiFlag) {
+              launchDialog : function (resultSet, callback) { 
+                  
                 this.title = "Enter runtime constraints";
                 this.callback = callback;
 
-                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-    		    mq.getNodeGroupRuntimeConstraints(nodegroupId, this.launchRuntimeConstraintCallback.bind(this, multiFlag));
-            },
+                this.div = document.createElement("div");
+                    
+                this.sparqlIds = resultSet.getColumnStringsByName("valueId");
+                //this.itemTypes = resultSet.getColumnStringsByName("itemType");   
+                this.valueTypes = resultSet.getColumnStringsByName("valueType");
+				//this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
+                //this.valueTypes = ["STRING","INT","DOUBLE"];          // TODO REMOVE - FOR TESTING ONLY                      
+
+                // create UI components for all runtime-constrained items 
+                for(i = 0; i < this.sparqlIds.length; i++){
+                        
+                    sparqlId = this.sparqlIds[i];                   // e.g. ?circumference
+                    valueType = this.valueTypes[i];                 // e.g. STRING, INT, etc
+					operator1ElementId = "operator1" + sparqlId;	// e.g. "operator1?circumference"
+					operand1ElementId = "operand1" + sparqlId;		// e.g. "operand1?circumference"
+					operator2ElementId = "operator2" + sparqlId;	// e.g. "operator2?circumference"
+					operand2ElementId = "operand2" + sparqlId;		// e.g. "operand2?circumference"
+                        
+                    this.div.appendChild(IIDXHelper.createLabel(sparqlId.substring(1) + ":", valueType));  // value type is a tooltip
+                    // create UI components for operator/operand (varies per data type)
+                    if(valueType == "STRING"){
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, "=", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                    }else if(valueType == "NODE_URI"){
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, "=", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                    }else if(valueType == "BOOLEAN"){
+                        this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
+                    }else if(isNumericType(valueType)){
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, ">", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                        this.div.appendChild(IIDXHelper.createLabel("  ")); // forces a newline
+                        this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorChoicesForNumerics, "<", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId, "input-xlarge"));
+                    }else{
+                        // TODO support all data types, and also handle in validateCallback and okCallback
+                        this.div.appendChild(IIDXHelper.createLabel("...not supported yet..."));
+                    }
+                } 
+                    
+                // launch the modal
+                var m = new ModalIidx();                            
+                m.showClearCancelSubmit(
+                                this.title,
+                                this.div, 
+                                this.validateCallback.bind(this),
+                                this.clearCallback, 
+                                this.okCallback.bind(this)
+                                );
+				
+			},            
             
 		};
 	
