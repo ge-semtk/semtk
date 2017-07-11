@@ -279,6 +279,7 @@ public class ResultsClientTest_IT {
 			System.err.println(String.format(">>> client.execTableResultsCsv()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
 		} catch (Exception e){
 			e.printStackTrace();
+			fail();
 		} finally {
 			cleanup(client, jobId);
 		}
