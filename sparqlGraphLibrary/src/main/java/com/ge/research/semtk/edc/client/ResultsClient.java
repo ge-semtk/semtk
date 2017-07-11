@@ -78,7 +78,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("columnNames", Utility.getJsonArray(table.getColumnNames()));
 		this.parametersJSON.put("columnTypes", Utility.getJsonArray(table.getColumnTypes()));
 		thread = new Thread(this);
-		thread.run();
+		thread.start();
 		
 		// do formatting tasks in parallel
 		formatTableElements(table);		// escapes double quotes
@@ -142,24 +142,16 @@ public class ResultsClient extends RestClient implements Runnable {
 			}
 
 			// wait for previous batch to finish
-			if (thread != null) {
-				thread.join();
-				(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
-				if (this.getRunException() != null) {
-					throw this.getRunException();
-				}
-				segment += 1;
-				conf.setServiceEndpoint(null);
-				this.parametersJSON.remove("contents");
-				this.parametersJSON.remove("jobId");
-			}
+			waitForThreadToFinish(thread);
+			segment += 1;
+			conf.setServiceEndpoint(null);			
 			
 			// send the current batch  
 			conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
 			this.parametersJSON.put("contents", resultsSoFar.toString());
 			this.parametersJSON.put("jobId", jobId);
 			thread = new Thread(this);
-			thread.run();
+			thread.start();
 
 			if (timerFlag) { 
 				endTime = System.nanoTime();
@@ -169,25 +161,22 @@ public class ResultsClient extends RestClient implements Runnable {
 			}
 		} // end of while loop.
 		
+		// wait for the final batch to finish
+		waitForThreadToFinish(thread);
+		
 		// write the end of the JSON
 		conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
 		this.parametersJSON.put("jobId", jobId);
 		this.parametersJSON.put("rowCount", table.getNumRows());
 		thread = new Thread(this);
-		thread.run();
+		thread.start();
 		// wait for the finalize run to finish
-		if (thread != null) {
-			thread.join();
-			(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
-			if (this.getRunException() != null) {
-				throw this.getRunException();
-			}
-		}
+		waitForThreadToFinish(thread);
 
 		if (timerFlag) { System.err.println(String.format("prep=%.2f sec   send=%.2f sec", prepSec, sendSec)); }
+		
 		return;
 	}
-
 	
 	/**
 	 * Get results (possibly truncated) in JSON format for a job
@@ -208,8 +197,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
-			this.parametersJSON.remove("maxRows");
+			this.parametersJSON.clear();
 		}
 	}		
 	
@@ -232,9 +220,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
-			this.parametersJSON.remove("maxRows");
-			this.parametersJSON.remove("appendDownloadHeaders");
+			this.parametersJSON.clear();
 		}
 	}	
 	
@@ -259,8 +245,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("contents");
-			this.parametersJSON.remove("jobId");
+			this.parametersJSON.clear();
 		}
 	}
 	
@@ -275,7 +260,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
+			this.parametersJSON.clear();
 		}
 	}
 	
@@ -302,6 +287,20 @@ public class ResultsClient extends RestClient implements Runnable {
 		for(TableFormatter t : threads){
 			t.join();
 		}
+	}
+
+	/**
+	 * Waits for the thread to finish, and throws an exception if not successful
+	 */
+	private void waitForThreadToFinish(Thread thread) throws Exception{
+		if (thread != null) {
+			thread.join();
+			(this.getRunResAsSimpleResultSet()).throwExceptionIfUnsuccessful();
+			if (this.getRunException() != null) {
+				throw this.getRunException();
+			}
+		}
+		this.parametersJSON.clear();  // clear parameters for next time
 	}
 	
 }
