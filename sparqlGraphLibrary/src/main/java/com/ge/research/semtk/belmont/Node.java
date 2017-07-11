@@ -438,8 +438,14 @@ public class Node extends Returnable {
 		try{
 			this.setDeletionMode(NodeDeletionTypes.valueOf((String)nodeEncoded.get("deletionMode")));
 		}
+		catch(IllegalArgumentException iae) {
+			throw iae;   // known bad enum exception
+		}
+		catch(NullPointerException enpe){
+			this.setDeletionMode(NodeDeletionTypes.NO_DELETE);  // deletionMode is missing
+		}
 		catch(Exception ee){
-			this.setDeletionMode(NodeDeletionTypes.NO_DELETE);;
+			throw ee;   // other unexpected exception
 		}
 		
 		

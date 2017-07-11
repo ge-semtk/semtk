@@ -263,7 +263,22 @@ public class QueryGenerationTest {
 		assertEquals(selectQuery.length(),569);
 		assertTrue(selectQuery.contains("LIMIT 100"));
 		
-	}	
+	}
+	
+	
+	@Test 
+	public void generateSimpleDelete() throws Exception {
+		// load a v6 nodegroup containing this.limit
+		JSONObject json = Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery_DeleteSimple.json");
+		SparqlGraphJson sgJson = new SparqlGraphJson(json);
+		NodeGroup ng = sgJson.getNodeGroup();
+			
+		// generate sparql using the limit from the json
+		String selectQuery = ng.generateSparqlDelete(new OntologyInfo());
+		assertTrue(selectQuery.contains("DELETE"));
+		assertTrue(selectQuery.contains("?Cell_type_info"));
+		
+	}
 	
 		
 	

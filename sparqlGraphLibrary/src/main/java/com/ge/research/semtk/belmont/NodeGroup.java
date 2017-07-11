@@ -1891,6 +1891,10 @@ public class NodeGroup {
 		return retval;
 	}
 	
+	/*
+	 * PEC TODO: some of the following oInfo parameters are optional (empty oInfo works fine?)
+	 *           and some are not.  It is confusing.  Can they be renamed or commented.
+	 */
 	public String generateSparqlDelete(OntologyInfo oInfo) throws Exception{
 		return this.generateSparqlDelete(null, oInfo);
 	}

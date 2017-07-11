@@ -19,6 +19,7 @@ package com.ge.research.semtk.belmont.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -47,6 +48,22 @@ public class NodeGroupTest {
 		// Make sure old fashioned "isOptional: false" on a node translates to new version
 		Node color = ng.getNodeBySparqlID("?Color");
 		assertEquals(ng.getNodeList().get(1).getNodeItemList().get(0).getSNodeOptional(color), NodeItem.OPTIONAL_FALSE);
+	}
+	
+	@Test
+	public void nodeGroupFromJsonBadDeleteMode() throws Exception {		
+
+        SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery_ErrDeleteMode.json"));
+		
+        try {
+        	NodeGroup ng = sgJson.getNodeGroup();
+        	fail("Nodegroup with invalid delete mode loaded");
+        	
+        } catch (Exception e) {
+        	System.out.println("Exception as expected:" + e.getMessage());
+        }
+		
+		
 	}
 		
 	

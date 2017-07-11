@@ -1576,7 +1576,7 @@ var NodeDeletionTypes = {
 var getNodeDeletionTypeName = function(delVal){
 	
 	if(delVal === NodeDeletionTypes.NO_DELETE)				{ return "NO_DELETE";}
-	if(delVal === NodeDeletionTypes.TYPE_INFO_ONLY)			{ return "TYPE_INFO_INFO";}
+	if(delVal === NodeDeletionTypes.TYPE_INFO_ONLY)			{ return "TYPE_INFO_ONLY";}
 	if(delVal === NodeDeletionTypes.FULL_DELETE)		    	{ return "FULL_DELETE";}
 	if(delVal === NodeDeletionTypes.LIMITED_TO_NODEGROUP)	{ return "LIMITED_TO_NODEGROUP";}
 	if(delVal === NodeDeletionTypes.LIMITED_TO_MODEL)		{ return "LIMITED_TO_MODEL";}
