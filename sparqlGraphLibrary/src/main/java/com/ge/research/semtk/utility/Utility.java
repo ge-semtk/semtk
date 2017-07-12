@@ -252,6 +252,7 @@ public abstract class Utility {
 	 * @throws IOException 
 	 */
 	public static JSONObject getJSONObjectFromFile(File f) throws Exception{
+		System.out.println("** getJSONObjectFromFile: about to read the file"); // TODO DELETE THIS
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
 		StringBuilder jsonStr = new StringBuilder();
 		String line;
@@ -260,11 +261,13 @@ public abstract class Utility {
 		}
 		bufferedReader.close();
 		JSONParser parser = new JSONParser();
-		return (JSONObject) parser.parse(jsonStr.toString());	
+		System.out.println("** about to parse..."); // TODO DELETE THIS
+		JSONObject ret = (JSONObject) parser.parse(jsonStr.toString());	
+		System.out.println("** parsed."); // TODO DELETE THIS
+		return ret;
 	}
 
 	public static JSONArray getJSONArrayFromFile(File f) throws Exception{
-		System.out.println("** about to read the file"); // TODO DELETE THIS
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
 		StringBuilder jsonStr = new StringBuilder();
 		String line;
@@ -272,11 +275,8 @@ public abstract class Utility {
 			jsonStr.append(" " + line);
 		}
 		bufferedReader.close();
-		System.out.println("** parse..."); // TODO DELETE THIS
 		JSONParser parser = new JSONParser();
-		JSONArray ret = (JSONArray) parser.parse(jsonStr.toString());	
-		System.out.println("** parsed."); // TODO DELETE THIS
-		return ret;
+		return (JSONArray) parser.parse(jsonStr.toString());	
 	}
 	
 	/**
