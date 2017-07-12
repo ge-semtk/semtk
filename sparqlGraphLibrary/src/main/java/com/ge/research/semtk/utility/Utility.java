@@ -20,13 +20,13 @@ package com.ge.research.semtk.utility;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -243,40 +243,24 @@ public abstract class Utility {
 		return jsonArr;
 	}
 
-	
 	/**
 	 * Get a JSON object from a file
 	 * @param f the file
 	 * @return the JSON object
-	 * @throws ParseException 
-	 * @throws IOException 
 	 */
 	public static JSONObject getJSONObjectFromFile(File f) throws Exception{
-		System.out.println("** getJSONObjectFromFile: about to read the file"); // TODO DELETE THIS
-		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
-		StringBuilder jsonStr = new StringBuilder();
-		String line;
-		while((line = bufferedReader.readLine()) != null){
-			jsonStr.append(" " + line);
-		}
-		bufferedReader.close();
-		JSONParser parser = new JSONParser();
-		System.out.println("** about to parse..."); // TODO DELETE THIS
-		JSONObject ret = (JSONObject) parser.parse(jsonStr.toString());	
-		System.out.println("** parsed."); // TODO DELETE THIS
-		return ret;
-	}
+		InputStreamReader reader = new InputStreamReader(new FileInputStream(f.getAbsolutePath()));
+		return (JSONObject) (new JSONParser()).parse(reader);
+	}	
 
+	/**
+	 * Get a JSON array from a file
+	 * @param f the file
+	 * @return the JSON array
+	 */
 	public static JSONArray getJSONArrayFromFile(File f) throws Exception{
-		BufferedReader bufferedReader = new BufferedReader(new FileReader(f.getAbsolutePath())); 
-		StringBuilder jsonStr = new StringBuilder();
-		String line;
-		while((line = bufferedReader.readLine()) != null){
-			jsonStr.append(" " + line);
-		}
-		bufferedReader.close();
-		JSONParser parser = new JSONParser();
-		return (JSONArray) parser.parse(jsonStr.toString());	
+		InputStreamReader reader = new InputStreamReader(new FileInputStream(f.getAbsolutePath()));
+		return (JSONArray) (new JSONParser()).parse(reader);	
 	}
 	
 	/**
