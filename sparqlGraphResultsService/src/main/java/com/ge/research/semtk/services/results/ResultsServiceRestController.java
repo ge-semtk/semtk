@@ -52,6 +52,7 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * Service to get query results.
@@ -115,7 +116,7 @@ public class ResultsServiceRestController {
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
-			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, requestBody.getContents());
+			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, Utility.decompress(requestBody.getContents()));
 		    res.setSuccess(true);
 		}
 		catch(Exception e){
@@ -258,7 +259,7 @@ public class ResultsServiceRestController {
 		TableResultSet res = new TableResultSet();
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			byte[] retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);			
+			byte[] retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
 			Table retTable =  Table.fromJson((JSONObject)new JSONParser().parse(new String(retval)));
 			res.setSuccess(true);
 			res.addResults(retTable);			
