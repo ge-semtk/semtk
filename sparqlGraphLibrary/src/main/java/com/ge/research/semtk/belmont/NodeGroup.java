@@ -36,11 +36,13 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedObject;
 import com.ge.research.semtk.load.utility.UriResolver;
+import com.ge.research.semtk.ontologyTools.ClassException;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.PathException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class NodeGroup {
@@ -68,8 +70,9 @@ public class NodeGroup {
 	 * 
 	 * DANGER: no connection info, which is now required for multi-graph sparql generation
 	 *         Strongly consider using SparqlGraphJson.getNodeGroup()
+	 * @throws Exception 
 	 */
-	public static NodeGroup getInstanceFromJson(JSONObject json) throws Exception {
+	public static NodeGroup getInstanceFromJson(JSONObject json) throws Exception  {
 		return NodeGroup.getInstanceFromJson(json, null);
 	}
 	
@@ -78,8 +81,9 @@ public class NodeGroup {
 	 * 
 	 * DANGER: no connection info, which is now required for multi-graph sparql generation
 	 *         Strongly consider using SparqlGraphJson.getNodeGroup()
+	 * @throws Exception 
 	 */
-	public static NodeGroup getInstanceFromJson(JSONObject json, OntologyInfo uncompressOInfo) throws Exception{
+	public static NodeGroup getInstanceFromJson(JSONObject json, OntologyInfo uncompressOInfo) throws Exception {
 		NodeGroup nodegroup = new NodeGroup();
 		nodegroup.addJsonEncodedNodeGroup(json, uncompressOInfo);
 		return nodegroup;
@@ -90,8 +94,9 @@ public class NodeGroup {
 	 * @param jobj the output of a SPARQL construct query (assume key is @graph)
 	 * @return a NodeGroup containing the construct query results
 	 * @throws Exception 
+	 * @ 
 	 */
-	public static NodeGroup fromConstructJSON(JSONObject jobj) throws Exception{
+	public static NodeGroup fromConstructJSON(JSONObject jobj) throws Exception {
 				
 		if(jobj == null){
 			throw new Exception("Cannot create NodeGroup from null JSON object");
@@ -247,9 +252,10 @@ public class NodeGroup {
 	 * Use JSON fuctionality to implement deepCopy
 	 * @param nodegroup
 	 * @return a deep copy
-	 * @throws Exception
+	 * @throws Exception 
+	 * @
 	 */
-	public static NodeGroup deepCopy(NodeGroup nodegroup) throws Exception {
+	public static NodeGroup deepCopy(NodeGroup nodegroup) throws Exception  {
 		NodeGroup copy = new NodeGroup();
 		copy.addJsonEncodedNodeGroup(nodegroup.toJson());
 		
@@ -269,7 +275,7 @@ public class NodeGroup {
 		this.limit = limit;
 	}
 	
-	private String getPrefixedUri(String originalUri) throws Exception{
+	private String getPrefixedUri(String originalUri) throws Exception {
 		String retval = "";
 		if(originalUri == null ){
 			throw new Exception("prefixed URI " + originalUri + " does not seem to contain a proper prefix.");
@@ -415,11 +421,11 @@ public class NodeGroup {
 	public static String tabOutdent(String tab) {
 		return tab.substring(0, tab.length()-1);
 	}
-	public void addJsonEncodedNodeGroup(JSONObject jobj) throws Exception{
+	public void addJsonEncodedNodeGroup(JSONObject jobj) throws Exception {
 		this.addJsonEncodedNodeGroup(jobj, null);
 	}
 	
-	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception{
+	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception {
 		HashMap<String, String> changedHash = new HashMap<String, String>();
 		this.resolveSparqlIdCollisions(jobj, changedHash);
 		int version = Integer.parseInt(jobj.get("version").toString());
@@ -435,7 +441,7 @@ public class NodeGroup {
 		this.addJson((JSONArray) jobj.get("sNodeList"), uncompressOInfo); 
 	}
 	
-	public void addJson(JSONArray nodeArr) throws Exception {
+	public void addJson(JSONArray nodeArr) throws Exception  {
 		this.addJson(nodeArr, null);
 	}
 	
@@ -443,9 +449,10 @@ public class NodeGroup {
 	 * Add json to a nodegroup
 	 * @param nodeArr
 	 * @param uncompressOInfo If non-null, use this to uncompress any Node properties
-	 * @throws Exception
+	 * @throws Exception 
+	 * @
 	 */
-	public void addJson(JSONArray nodeArr, OntologyInfo uncompressOInfo) throws Exception {
+	public void addJson(JSONArray nodeArr, OntologyInfo uncompressOInfo) throws Exception  {
 		for (int j = 0; j < nodeArr.size(); ++j) {
 			JSONObject nodeJson = (JSONObject) nodeArr.get(j);
 			
@@ -486,7 +493,7 @@ public class NodeGroup {
 		return this.nodes;
 	}
 	
-	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri) throws Exception {
+	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri) throws Exception  {
 
 
 		// reserve the node SparqlID
@@ -664,7 +671,7 @@ public class NodeGroup {
 		return retval;
 	}
 
-	public String generateSparql(AutoGeneratedQueryTypes qt, Boolean allPropertiesOptional, Integer limitOverride, Returnable targetObj) throws Exception{
+	public String generateSparql(AutoGeneratedQueryTypes qt, Boolean allPropertiesOptional, Integer limitOverride, Returnable targetObj) throws Exception {
 		return this.generateSparql(qt, allPropertiesOptional, limitOverride, targetObj, false);
 	}
 
@@ -736,7 +743,7 @@ public class NodeGroup {
 		// if there are no return values, it is an error. Prepend "#Error" to
 		// the SPARQL
 		if (sparql.length() == lastLen) {
-			throw new Exception("No values selected to return");
+			throw new NoValidSparqlException("No values selected to return");
 		}
 		
 		sparql.append(this.generateSparqlFromClause(tab));
@@ -821,7 +828,7 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 	
-	public String generateSparqlConstruct() throws Exception{
+	public String generateSparqlConstruct() throws Exception {
 	
 		this.buildPrefixHash();
 		
@@ -872,7 +879,7 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 	
-	public String generateSparqlAsk() throws Exception{
+	public String generateSparqlAsk() throws Exception {
 		
 		this.buildPrefixHash();
 		
@@ -894,7 +901,7 @@ public class NodeGroup {
 		return retval;
 	}
 	
-	private String generateSparqlSubgraphClauses(AutoGeneratedQueryTypes queryType, Node snode, NodeItem skipNodeItem, Node skipNodeTarget, Returnable targetObj, ArrayList<Node> doneNodes, String tab) throws Exception {
+	private String generateSparqlSubgraphClauses(AutoGeneratedQueryTypes queryType, Node snode, NodeItem skipNodeItem, Node skipNodeTarget, Returnable targetObj, ArrayList<Node> doneNodes, String tab) throws Exception  {
 		StringBuilder sparql = new StringBuilder();
 		
 		// check to see if this node has already been processed. 
@@ -1034,7 +1041,7 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 
-	private String generateSparqlTypeClause(Node curr, String tab) throws Exception {
+	private String generateSparqlTypeClause(Node curr, String tab) throws Exception  {
 		String retval = "";
 		// Generates SPARQL to constrain the type of this node if
 		// There is no edge that constrains it's type OR
@@ -1057,7 +1064,7 @@ public class NodeGroup {
 		return retval;
 	}
 
-	public void expandOptionalSubgraphs() throws Exception {
+	public void expandOptionalSubgraphs() throws Exception  {
 		// Find nodes with only optional returns
 		// and add incoming optional nodeItem so that entire snode is optional
 		// then move the optional nodeItem outward until some non-optional return is found
@@ -1206,7 +1213,7 @@ public class NodeGroup {
 		}
 	}
 	
-	private ArrayList<Node> getOrderedNodeList() throws Exception {
+	private ArrayList<Node> getOrderedNodeList()  {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		
 		ArrayList<Node> headList = this.getHeadNodes();
@@ -1363,15 +1370,15 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo ) throws Exception {
+	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo ) throws Exception  {
 		return this.addPath(path, anchorNode, oInfo, false, false);
 	}
 	
-	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag) throws Exception {
+	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag) throws Exception  {
 		return this.addPath(path, anchorNode, oInfo, reverseFlag, false);
 	}
 
-	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag, Boolean optionalFlag) throws Exception {
+	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag, Boolean optionalFlag) throws Exception  {
 		// Adds a path to the canvas.
 		// path start class is the new one
 		// path end class already exists
@@ -1486,8 +1493,9 @@ public class NodeGroup {
 	 * @param oInfo
 	 * @return Node
 	 * @throws Exception 
+	 * @ 
 	 */
-	public Node addNode(String classUri, OntologyInfo oInfo) throws Exception {
+	public Node addNode(String classUri, OntologyInfo oInfo) throws Exception  {
 		Node node = this.returnBelmontSemanticNode(classUri, oInfo);
 		this.addOneNode(node, null, null, null);
 		return node;
@@ -1571,7 +1579,7 @@ public class NodeGroup {
 		return newID;
 	}
 
-	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, String domain, Boolean optionalFlag) throws Exception {
+	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, String domain, Boolean optionalFlag) throws Exception  {
 		// attach a classURI using the first path found.
 		// Error if less than one path is found.
 		// return the new node
@@ -1593,15 +1601,15 @@ public class NodeGroup {
 		return sNode;
 	}
 	
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain) throws Exception {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain) throws Exception  {
 		return this.getOrAddNode(classURI, oInfo, domain, false, false);
 	}
 	
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag) throws Exception {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag) throws Exception  {
 		return this.getOrAddNode(classURI, oInfo, domain, superclassFlag, false);
 	}
 
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag, Boolean optionalFlag ) throws Exception {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag, Boolean optionalFlag ) throws Exception  {
 		// return first (randomly selected) node with this URI
 		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
 		// if superclassFlag, then any subclass of classURI "counts"
@@ -1731,7 +1739,7 @@ public class NodeGroup {
 		return subNodes;
 	}
 	
-	private ArrayList<Node> getHeadNodes() throws Exception {
+	private ArrayList<Node> getHeadNodes()  {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		
 		for (Node n : nodes) {
@@ -1756,7 +1764,7 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception {
+	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception  {
 		if (skipNodes.size() == this.nodes.size()) {
 			return null;
 		}
@@ -1819,7 +1827,7 @@ public class NodeGroup {
 		return linkHash;
 	}
 	
-	private HashMap<String, Integer>  calcOptionalHash(ArrayList<Node> skipNodes) throws Exception {
+	private HashMap<String, Integer>  calcOptionalHash(ArrayList<Node> skipNodes) throws Exception  {
 		
 		// ---- set optHash ----
 		// so optHash[snode.getSparqlID()] == count of nodeItems indicating this node is optional
@@ -1874,7 +1882,7 @@ public class NodeGroup {
 		return optHash;
 	}
 	
-	private ArrayList<String> getConnectedRange(Node node) throws Exception {
+	private ArrayList<String> getConnectedRange(Node node) throws Exception  {
 		ArrayList<String> retval = new ArrayList<String>();
 		
 		
@@ -1895,17 +1903,17 @@ public class NodeGroup {
 	 * PEC TODO: some of the following oInfo parameters are optional (empty oInfo works fine?)
 	 *           and some are not.  It is confusing.  Can they be renamed or commented.
 	 */
-	public String generateSparqlDelete(OntologyInfo oInfo) throws Exception{
+	public String generateSparqlDelete(OntologyInfo oInfo) throws Exception {
 		return this.generateSparqlDelete(null, oInfo);
 	}
 	
-	public String generateSparqlDelete(String post, OntologyInfo oInfo) throws Exception{
+	public String generateSparqlDelete(String post, OntologyInfo oInfo) throws Exception {
 		this.buildPrefixHash();
 		
 		StringBuilder retval = new StringBuilder();
 		
 		String primaryBody = this.getDeletionLeader(post, oInfo);
-		if(primaryBody == null || primaryBody.isEmpty() || primaryBody == ""){ throw new Exception("generateSparqlDelete :: error encountered while generating delete statement: nothing given to delete.");}
+		if(primaryBody == null || primaryBody.isEmpty() || primaryBody == ""){ throw new NoValidSparqlException("nothing given to delete.");}
 		
 		String whereBody = this.getDeletionWhereBody(post, oInfo);
 		
@@ -1920,7 +1928,7 @@ public class NodeGroup {
 		return retval.toString();
 	}
 
-	public String getDeletionLeader(String post, OntologyInfo oInfo) throws Exception{
+	public String getDeletionLeader(String post, OntologyInfo oInfo) throws Exception {
 		
 		StringBuilder retval = new StringBuilder();
 		
@@ -1952,7 +1960,7 @@ public class NodeGroup {
 		return retval.toString();
 	}
 	
-	private String generateNodeDeletionSparql(Node n) throws Exception{
+	private String generateNodeDeletionSparql(Node n) throws Exception {
 		String retval = "";
 		String indent = "   ";
 		NodeDeletionTypes delMode = n.getDeletionMode();
@@ -1992,7 +2000,7 @@ public class NodeGroup {
 		return retval;
 	}
 
-	public String getDeletionWhereBody(String post, OntologyInfo oInfo) throws Exception{
+	public String getDeletionWhereBody(String post, OntologyInfo oInfo) throws Exception {
 		StringBuilder retval = new StringBuilder();
 		
 		ArrayList<Node> doneNodes = new ArrayList<Node>();
@@ -2007,11 +2015,11 @@ public class NodeGroup {
 	}
 	
 	
-	public String generateSparqlInsert(OntologyInfo oInfo) throws Exception{
+	public String generateSparqlInsert(OntologyInfo oInfo) throws Exception {
 		return this.generateSparqlInsert(null, oInfo);
 	}
 	
-	public String generateSparqlInsert(String post, OntologyInfo oInfo) throws Exception{
+	public String generateSparqlInsert(String post, OntologyInfo oInfo) throws Exception {
 		this.buildPrefixHash();
 		
 		String retval = "";
@@ -2027,7 +2035,7 @@ public class NodeGroup {
 	}
 	
 
-	public String getInsertLeader(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception {
+	public String getInsertLeader(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception  {
 		// this method creates the top section of the insert statements.
 		// the single argument is used to post-fix the sparqlIDs, if required. 
 		// this is used in the generation of bulk insertions. 
@@ -2083,7 +2091,7 @@ public class NodeGroup {
 		return retval;
 	}
 	
-	public String getInsertWhereBody(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception {
+	public String getInsertWhereBody(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception  {
 		
 		this.buildPrefixHash();
 		StringBuilder sparql = new StringBuilder();
@@ -2165,7 +2173,7 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 
-	public JSONObject toJson() throws Exception {
+	public JSONObject toJson()  {
 		return this.toJson(null);
 	}
 
@@ -2173,10 +2181,10 @@ public class NodeGroup {
 	 * 
 	 * @param mappedPropItems - null=don't deflate ;  non-null=deflate
 	 * @return
-	 * @throws Exception
+	 * @
 	 */
 	@SuppressWarnings("unchecked")
-	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems) throws Exception {
+	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems)  {
 		JSONObject ret = new JSONObject();
 		
 		// get list in order such that linked nodes always preceed the node that
@@ -2230,7 +2238,7 @@ public class NodeGroup {
 		return retval;
 	}
 	
-	public void validateAgainstModel(OntologyInfo oInfo) throws Exception {
+	public void validateAgainstModel(OntologyInfo oInfo) throws Exception  {
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
 			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
 		}
