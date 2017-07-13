@@ -26,7 +26,10 @@ define([	// properly require.config'ed   bootstrap-modal
 
 	function(MicroServiceInterface, MsiResultSet) {
 	
-		
+		/*
+         *  FailureCallback(htmlMessage, optionalNoValidSparqlMessage)
+         *     where optionalNoValidSparqlMessage is the reason no valid sparql was generated, if that's the failure
+         */
 		var MsiClientNodeGroupService = function (serviceURL, optFailureCallback, optTimeout) {
 			// optFailureCallback(html)
 			this.optFailureCallback = optFailureCallback;
@@ -60,6 +63,18 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.execGenerateSelect(nodegroup, 
                                         this.asyncSparqlCallback.bind(this, "generateSelect", sparqlCallback, failureCallback));
             },
+            execAsyncGenerateCountAll : function (nodegroup, sparqlCallback, failureCallback) {
+                this.execGenerateCountAll(nodegroup, 
+                                        this.asyncSparqlCallback.bind(this, "generateCountAll", sparqlCallback, failureCallback));
+            },
+            execAsyncGenerateConstruct : function (nodegroup, sparqlCallback, failureCallback) {
+                this.execGenerateConstruct(nodegroup, 
+                                        this.asyncSparqlCallback.bind(this, "generateConstruct", sparqlCallback, failureCallback));
+            },
+            execAsyncGenerateDelete : function (nodegroup, sparqlCallback, failureCallback) {
+                this.execGenerateDelete(nodegroup, 
+                                        this.asyncSparqlCallback.bind(this, "generateDelete", sparqlCallback, failureCallback));
+            },
             
             execAsyncGetRuntimeConstraints : function (nodegroup, tableResCallback, failureCallback) {
                 this.execGetRuntimeConstraints(nodegroup, 
@@ -76,10 +91,10 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (sparql) {
                         sparqlCallback(sparql);
                     } else {
-                        failureCallback(this.getFailureMessage(resultSet, endpoint + " did not return a SparqlQuery."));
+                        failureCallback(resultSet.buildFailureHtml("did not return a SparqlQuery"));
                     }
                 } else {
-                    failureCallback(this.getFailureMessage(resultSet));
+                    failureCallback(resultSet.buildFailureHtml(), this.getNoValidSparqlMessage(resultSet));
                 }
             },
             
@@ -91,7 +106,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (resultSet.isTableResults()) {
                         tableResCallback(resultSet);
                     } else {
-                        failureCallback(this.getFailureMessage(resultSet, endpoint + " did not return a table result."));
+                        failureCallback(resultSet.buildFailureHtml("did not return a table result."));
                     }
                 } else {
                     if (resultSet.isTableResults()) {
@@ -99,7 +114,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         //   have justin change microservice behavior
                         tableResCallback(resultSet);
                     } else {
-                        failureCallback(this.getFailureMessage(resultSet));
+                        failureCallback(resultSet.buildFailureHtml());
                     }
                 }
             },
@@ -112,21 +127,15 @@ define([	// properly require.config'ed   bootstrap-modal
 				return resultSet.getGeneralResultHtml();
 			},
             
-            // Temporary:  if failure was just no valid SPARQL
-            //             then return a SPARQL comment.
-            //             Otherwise null.
-            getFailedTEMPBadSparql : function (resultSet) {
-                if (resultSet.getGeneralField("message") == "operations failed.") {
-                    var rationale = resultSet.getGeneralField("rationale");
-                    if (rationale != null) {
-                        if (rationale.indexOf("No values selected") > -1) {
-                            return "# Error: nothing to select";
-                        } else if (rationale.indexOf("nothing given to delete") > -1) {
-                            return "# Error: nothing to delete";
-                        }
-                    }
-                }
-                return null;
+            /* 
+             * returns the Invalid Sparql Rationale if it exists
+             * otherwise undefined
+             *
+             * undefined - allows this to be used as an optional param in the usual way
+             */
+            getNoValidSparqlMessage : function (resultSet) {
+                var msg = resultSet.getSimpleResultField("InvalidSparqlRationale");
+                return (msg == null ? undefined : msg);
             },
             
             /**
@@ -150,13 +159,6 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint(endpoint, data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 			
-            // Add a header and convert resultSet to html
-            getFailureMessage : function (resultSet, optHeader) {
-                var html = (typeof optHeader == "undefined" || optHeader == null) ? "" : "<b>" + optHeader + "</b><hr>";
-                html += resultSet.getSimpleResultsHtml();
-                
-                return html;
-            },
 		};
 	
 		return MsiClientNodeGroupService;            // return the constructor

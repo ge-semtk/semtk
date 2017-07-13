@@ -68,6 +68,9 @@
 	    require([ 'sparqlgraph/js/mappingtab',
 	              'sparqlgraph/js/uploadtab',
                   'sparqlgraph/js/modalstoredialog',
+                 
+                  // shim
+                  'sparqlgraph/js/belmont',
 	              'local/sparqlgraphlocal'], function (MappingTab, UploadTab, ModalStoreDialog) {
 	    
 	    	console.log(".ready()");
@@ -260,7 +263,11 @@
             
             persist: true,
         });
-        gOTree = new OntologyTree($("#treeDiv").dynatree("getTree"));
+        require([ 'sparqlgraph/js/ontologytree',
+	            ], function () {
+                     
+                     gOTree = new OntologyTree($("#treeDiv").dynatree("getTree"));
+                 });
   	}; 
   	
     // PEC LOGGING
@@ -1195,25 +1202,33 @@
             guiQueryNonEmpty();
     };
 
+    // PEC TODO: build and use async functions and a fail callback
     var buildQuery = function() {
+        
+        if (gNodeGroup.getNodeCount() == 0) {
+            document.getElementById('queryText').value = "";
+            guiQueryEmpty();
+            return;
+        }
+        
         require(['sparqlgraph/js/msiclientnodegroupservice',
 			    	        ], function(MsiClientNodeGroupService) {
 		
             logEvent("SG Build");
             var sparql = "";
-            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
             switch (getQueryType()) {
             case "SELECT":
-                client.execGenerateSelect(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execAsyncGenerateSelect(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case "COUNT":
-                client.execGenerateCountAll(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execAsyncGenerateCountAll(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case "CONSTRUCT":
-                client.execGenerateConstruct(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execAsyncGenerateConstruct(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case "DELETE":
-                client.execGenerateDelete(gNodeGroup, buildQueryCallback.bind(this, client));
+                client.execAsyncGenerateDelete(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             default:
                 throw new Error("Unknown query type.");	
@@ -1221,36 +1236,32 @@
         });   
     };
 
-    var buildQueryCallback = function (client, resultSet) {
-        
-        if (resultSet.isSuccess()) {
-            var sparql = client.getSuccessSparql(resultSet);
-            document.getElementById('queryText').value = sparql;
-            
-            if (sparql.length > 0) {
-                guiQueryNonEmpty();
-            } else {
-                guiQueryEmpty();
-            }
-            
+    var buildQuerySuccess = function (sparql) {
+        document.getElementById('queryText').value = sparql;
+
+        if (sparql.length > 0) {
+            guiQueryNonEmpty();
         } else {
             guiQueryEmpty();
-            
-            // PEC TODO: if service "failure" is actually #BAD SPARQL then put that in queryText
-            //           instead of raising a dialog
-            var failSparql = client.getFailedTEMPBadSparql(resultSet);
-            if (failSparql != null) {
-                document.getElementById('queryText').value = failSparql;
-                
-            } else {
-                // else raise the dialog and put our own #Error comment in queryText
-                document.getElementById('queryText').value = "#Error generating Sparql";
-                require(['sparqlgraph/js/modaliidx'], 
-                     function (ModalIidx) {
-                        ModalIidx.alert("Error generating SPARQL", client.getFailedResultHtml(resultSet));
-                    });
-            }
         }
+
+    };
+
+    var buildQueryFailure = function (msgHtml, optNoValidSparqlMessage) {
+        var sparql = "";
+        if (typeof optNoValidSparqlMessage != undefined) {
+            sparql = "#" + optNoValidSparqlMessage.replace(/\n/g, '#');
+            
+        } else {
+            require(['sparqlgraph/js/modaliidx'], 
+    	         function (ModalIidx) {
+					ModalIidx.alert("Query Generation Failed", msgHtml);
+				});
+            
+        } 
+        
+        document.getElementById('queryText').value = sparql;
+        guiQueryEmpty();
     }
     
     // PEC TODO unused
