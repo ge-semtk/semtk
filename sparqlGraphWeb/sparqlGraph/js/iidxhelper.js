@@ -264,7 +264,7 @@ define([	// properly require.config'ed
     },
     
     IIDXHelper.removeHtml = function(str) {
-        return String(str).replace(/<(br|p|h1|h2|h3)>/g, '\n').replace(/<[^>]+>/g, '');
+        return String(str).replace(/<(br|p|h1|h2|h3)>/g, '\n').replace(/<[^>]+>/g, '').replace("&nbsp", ' ');
     },
 
     IIDXHelper.isFirefox = function () {

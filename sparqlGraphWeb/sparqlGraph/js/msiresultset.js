@@ -115,6 +115,24 @@ define([	// properly require.config'ed   bootstrap-modal
                 return html;
             },
             
+            /*
+             *   If simple results, show those fields.  Otherwise just basic general fields.  No table.
+             *   optTitle should be of the form: "did not return a table".  Default is "failed"
+             */
+            buildFailureHtml : function (optTitle) {
+                var title = (typeof optTitle == "undefined" || optTitle == null) ? "failed" :  optTitle;
+                
+                var urlParts = this.serviceURL.split('/');
+                var endpoint = urlParts.pop();
+                var service = urlParts.pop();
+                
+                var html = "<b>Service " + service + " " + title + "</b><br><hr>";
+                html += "<b>endpoint: </b>" + endpoint + " <br>";
+                html += "<b>full URL: </b>" + this.serviceURL + " <br>";
+                html += this.getSimpleResultsHtml();
+                return html;
+            },
+            
 			getRecordProcessResultHtml : function () { 
 				// build html out of record process results
 				

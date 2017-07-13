@@ -152,13 +152,12 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (resultSet.isSuccess()) {
                         var thisPercent = resultSet.getSimpleResultField("percent");
                         if (thisPercent == null) {
-                            fCallback(this.getFailureMessage(resultSet, 
-                                              "NodeGroupExecution/getJobCompletionPercentage did not return a percent."));
+                            fCallback(resultSet.buildFailureHtml("did not return a percent."));
                         } else {
                             percCallback(parseInt(thisPercent));
                         } 
                     } else {
-                        fCallback(this.getFailureMessage(resultSet));
+                        fCallback(resultSet.buildFailureHtml());
                     }
                 }.bind(this, percentCallback, failureCallback);
                 
@@ -175,15 +174,14 @@ define([	// properly require.config'ed   bootstrap-modal
                         var status = resultSet.getSimpleResultField("status");
 
                         if ( status == null) {
-                            failureCallback0(this.getFailureMessage(resultSet, 
-                                                                    "NodeGroupExecution/jobStatus did not return a status."));
+                            failureCallback0(resultSet.buildFailureHtml("did not return a status."));
                         } else if (status == "Success") {
                             successBoolCallback0(true);
                         } else {
                             successBoolCallback0(false);
                         }
                     } else {
-                        failureCallback0(this.getFailureMessage(resultSet, null, failureCallback0));
+                        failureCallback0(resultSet.buildFailureHtml());
                     }
                 }.bind(this, successBoolCallback, failureCallback);
                 
@@ -199,14 +197,12 @@ define([	// properly require.config'ed   bootstrap-modal
                         var message = resultSet.getSimpleResultField("message");
 
                         if ( message == null) {
-                            failureCallback0(this.getFailureMessage(resultSet, 
-                                                   "NodeGroupExecution/jobStatusMessage did not return a message.",
-                                                   ));
+                            failureCallback0(resultSet.buildFailureHtml("did not return a message."));
                         } else {
                             messageCallback0(message);
                         }
                     } else {
-                        failureCallback0(this.getFailureMessage(resultSet));
+                        failureCallback0(resultSet.buildFailureHtml());
                     }
                 }.bind(this, messageCallback, failureCallback);
                 
@@ -326,25 +322,16 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (jobId) {
                         jobIdCallback(jobId);
                     } else {
-                        failureCallback(this.getFailureMessage(resultSet, endpoint + " did not return a requestID."));
+                        failureCallback(resultSet.buildFailureHtml("did not return a requestID."));
                     }
                 } else {
-                    failureCallback(this.getFailureMessage(resultSet));
+                    failureCallback(tresultSet.buildFailureHtml());
                 }
             },
             
             runAsynctableResCallback : function (tableRes) {
                 this.tableResCallback(tableRes);
             },
-            
-            // Add a header and convert resultSet to html
-            getFailureMessage : function (resultSet, optHeader) {
-                var html = (typeof optHeader == "undefined" || optHeader == null) ? "" : "<b>" + optHeader + "</b><hr>";
-                html += resultSet.getSimpleResultsHtml();
-                
-                return html;
-            },
-			
 		};
 	
 		return MsiClientNodeGroupExec;            // return the constructor
