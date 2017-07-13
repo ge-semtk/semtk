@@ -244,7 +244,7 @@ public class ResultsClientTest_IT {
 			for(int i = 0; i < NUM_COLS; i++){
 				cols[i] = "col" + i;
 				colTypes[i] = "String";
-				row.add("Element" + i);
+				row.add(UUID.randomUUID().toString().substring(0,10));	// non-repetitive to realistically test compression
 			}
 			Table table = new Table(cols, colTypes, null);
 			for(int i = 0; i < NUM_ROWS; i++){
