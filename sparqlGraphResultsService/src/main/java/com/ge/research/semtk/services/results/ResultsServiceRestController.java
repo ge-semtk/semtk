@@ -98,9 +98,11 @@ public class ResultsServiceRestController {
 	/**
 	 * Call 2 of 3 for storing JSON results.  Repeat for multiple batches.
 	 * Writes rows of data.  
-	 * Caller must omit tailing comma for the last row of the last call.
+	 * The input data ("contents") must:
+	 * 		1) be ZLIB compressed, using Utility.compress() or other
+	 * 		2) omit tailing comma for the last row of the last call
 	 * 
-	 * Sample input:
+	 * Sample input (decompressed):
 	 * ["a1","b1","c1"],
 	 * ["a2","b2","c2"],
 	 * ["a3","b3","c3"]
