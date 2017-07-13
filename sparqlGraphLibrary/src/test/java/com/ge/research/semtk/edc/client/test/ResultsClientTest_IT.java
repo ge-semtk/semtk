@@ -269,7 +269,7 @@ public class ResultsClientTest_IT {
 			System.err.println(String.format(">>> client.execTableResultsJson()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
 			assertEquals(res.getTable().getNumRows(), NUM_ROWS);
 			assertEquals(res.getTable().getNumColumns(), NUM_COLS);
-			assertEquals(res.getTable().getCell(0,0), "Element0");
+			assertEquals(res.getTable().getCell(0,0).length(), 10);
 			
 			// --- test retrieving csv results ---
 			startTime = System.nanoTime();
