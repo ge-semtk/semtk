@@ -19,6 +19,7 @@
 package com.ge.research.semtk.utility;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -27,6 +28,8 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Properties;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -50,7 +55,9 @@ import com.ge.research.semtk.resultSet.Table;
  * Utility methods
  */
 public abstract class Utility {
-		
+	
+	private final static Charset CHAR_ENCODING = StandardCharsets.ISO_8859_1; // needed for string compression
+	
 	public static String SPARQL_QUERY_TRIPLE_COUNT = "select count(*) where {?x ?y ?z}"; // SPARQL query to count triples
 	
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
@@ -357,5 +364,42 @@ public abstract class Utility {
 		
 		return ret.trim();
 	}	
-	
+
+	/**
+	 * Compress a string.
+	 */
+	public static String compress(String s) throws Exception {  
+		byte[] inputBytes = s.getBytes(CHAR_ENCODING);
+		Deflater deflater = new Deflater();  
+		deflater.setInput(inputBytes);  
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputBytes.length);   
+		deflater.finish();  
+		byte[] buffer = new byte[1024];   
+		while (!deflater.finished()) {  
+			int count = deflater.deflate(buffer); 
+			outputStream.write(buffer, 0, count);   
+		}  
+		outputStream.close();  
+		byte[] compressedBytes = outputStream.toByteArray();  
+		return new String(compressedBytes, CHAR_ENCODING);
+	}  
+
+	/**
+	 * Decompress a string.
+	 */
+	public static String decompress(String s) throws Exception {   
+		byte[] inputBytes = s.getBytes(CHAR_ENCODING);
+		Inflater inflater = new Inflater();   
+		inflater.setInput(inputBytes);  
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputBytes.length);  
+		byte[] buffer = new byte[1024];  
+		while (!inflater.finished()) {  
+			int count = inflater.inflate(buffer);  
+			outputStream.write(buffer, 0, count);  
+		}  
+		outputStream.close();  
+		byte[] decompressedBytes = outputStream.toByteArray();  
+		return new String(decompressedBytes, CHAR_ENCODING);
+	}  
+
 }

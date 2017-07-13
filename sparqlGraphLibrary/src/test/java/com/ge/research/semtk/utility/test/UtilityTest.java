@@ -20,8 +20,11 @@ package com.ge.research.semtk.utility.test;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Random;
+import java.util.UUID;
 
 import org.junit.Test;
 
@@ -66,4 +69,16 @@ public class UtilityTest {
 		assertTrue(exceptionThrown);
 	}
 	
+	@Test
+	public void testCompress() throws Exception{
+		Random random = new Random();
+		StringBuilder builder = new StringBuilder();
+		for(int i = 0; i < 20000; i++){
+			builder.append("here is some text " + i + " " + (new BigInteger(130, random).toString(32)) + " "); // make sure it's not too repetitive
+		}
+		String s = builder.toString();
+		String compressedString = Utility.compress(s);
+		String decompressedString = Utility.decompress(compressedString);
+		assertEquals(s, decompressedString);
+	}
 }
