@@ -244,7 +244,7 @@ public class ResultsClientTest_IT {
 			for(int i = 0; i < NUM_COLS; i++){
 				cols[i] = "col" + i;
 				colTypes[i] = "String";
-				row.add("Element" + i);
+				row.add(UUID.randomUUID().toString().substring(0,10));	// non-repetitive to realistically test compression
 			}
 			Table table = new Table(cols, colTypes, null);
 			for(int i = 0; i < NUM_ROWS; i++){
@@ -269,7 +269,7 @@ public class ResultsClientTest_IT {
 			System.err.println(String.format(">>> client.execTableResultsJson()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
 			assertEquals(res.getTable().getNumRows(), NUM_ROWS);
 			assertEquals(res.getTable().getNumColumns(), NUM_COLS);
-			assertEquals(res.getTable().getCell(0,0), "Element0");
+			assertEquals(res.getTable().getCell(0,0).length(), 10);
 			
 			// --- test retrieving csv results ---
 			startTime = System.nanoTime();

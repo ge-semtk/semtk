@@ -52,6 +52,7 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * Service to get query results.
@@ -97,9 +98,11 @@ public class ResultsServiceRestController {
 	/**
 	 * Call 2 of 3 for storing JSON results.  Repeat for multiple batches.
 	 * Writes rows of data.  
-	 * Caller must omit tailing comma for the last row of the last call.
+	 * The input data ("contents") must:
+	 * 		1) be ZLIB compressed, using Utility.compress() or other
+	 * 		2) omit tailing comma for the last row of the last call
 	 * 
-	 * Sample input:
+	 * Sample input (decompressed):
 	 * ["a1","b1","c1"],
 	 * ["a2","b2","c2"],
 	 * ["a3","b3","c3"]
@@ -115,7 +118,7 @@ public class ResultsServiceRestController {
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
-			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, requestBody.getContents());
+			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, Utility.decompress(requestBody.getContents()));
 		    res.setSuccess(true);
 		}
 		catch(Exception e){
@@ -258,7 +261,7 @@ public class ResultsServiceRestController {
 		TableResultSet res = new TableResultSet();
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			byte[] retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);			
+			byte[] retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
 			Table retTable =  Table.fromJson((JSONObject)new JSONParser().parse(new String(retval)));
 			res.setSuccess(true);
 			res.addResults(retTable);			

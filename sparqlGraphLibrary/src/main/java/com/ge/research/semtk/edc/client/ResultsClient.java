@@ -148,7 +148,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			
 			// send the current batch  
 			conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
-			this.parametersJSON.put("contents", resultsSoFar.toString());
+			this.parametersJSON.put("contents", Utility.compress(resultsSoFar.toString())); 
 			this.parametersJSON.put("jobId", jobId);
 			thread = new Thread(this);
 			thread.start();
@@ -177,7 +177,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		
 		return;
 	}
-	
+		
 	/**
 	 * Get results (possibly truncated) in JSON format for a job
 	 * @return a TableResultSet object
