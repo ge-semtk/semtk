@@ -71,7 +71,6 @@
                  
                   // shim
                   'sparqlgraph/js/belmont',
-                  'sparqlgraph/js/modaldialog',   // PEC TODO: supposed to be deprecated for ModalIidx
                  
 	              'local/sparqlgraphlocal'], 
                 function (MappingTab, ModalLoadDialog, ModalStoreDialog, UploadTab) {

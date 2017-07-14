@@ -95,7 +95,6 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 		          'sparqlgraph/js/sparqlconnection', 
 		          'sparqlgraph/js/ontologyinfo', 
 		          'sparqlgraph/js/belmont', 
-		          'sparqlgraph/js/modaldialog',
 		      ]
 		};
 	config.shim['sparqlgraph/js/modalloaddialog'] =  {
