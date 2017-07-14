@@ -33,7 +33,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClient extends RestClient implements Runnable {
 	
-	private int ROWS_TO_PROCESS = 1000;  // the default row allocation to send. this can be tuned if things may fail.
+	private int ROWS_TO_PROCESS = 5000;  // the default row allocation to send. this can be tuned if things may fail.
 
 	public ResultsClient (ResultsClientConfig config) {
 		this.conf = config;
