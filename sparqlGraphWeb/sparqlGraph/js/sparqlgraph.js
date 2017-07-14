@@ -29,9 +29,7 @@
     var gServerURL = null;
     var gKSURL = null;
     var gSource = null;
-    
-    var globalModalDialogue = null;
-    
+        
     // drag stuff
     var gDragLabel = "hi";
     var gLoadDialog;
@@ -82,7 +80,6 @@
 	    	
 	    	// create the modal dialogue 
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
-	    	globalModalDialogue = new ModalDialog(document, "globalModalDialogue");
 	    	
 	    	 // set up the node group
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
@@ -208,7 +205,13 @@
                 }
 
                 if (valList.length > 1) {
-                    globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, "90%");
+                     require([ 'sparqlgraph/js/modaliidx',
+                             ], function (ModalIidx) {
+                         
+                       ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
+
+                     });
+                    
                 } else {
                     dropClassCallback(valList[0]);
                 }
@@ -374,7 +377,12 @@
     	if (unlinkedTargetSNodes.length == 1) {
     		buildLink(snode, nItem, null);			
     	} else {
-  			globalModalDialogue.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), "75%");
+            require([ 'sparqlgraph/js/modaliidx',
+                             ], function (ModalIidx) {
+                         
+                       ModalIidx.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), 75);
+
+                     });
     	}
 	};
 	

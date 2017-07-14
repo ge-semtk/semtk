@@ -31,7 +31,6 @@ var EMPTY = "";
 //
 var g = null;
 var gConn = null;
-var gModalDialog = null;
 var gNodeGroup = null;
 var gExtNodeGroup = null;
 var gOInfo = null;
@@ -65,7 +64,6 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/js/belmont',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/js/modaldialog',
 			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
 		],
 

@@ -140,8 +140,45 @@ define([	// properly require.config'ed   bootstrap-modal
             m.showChoices(headerText, div, buttonNameList, callbackList, optWidthPercent);
         };
 
+        // old ModalDialog.listDialog
+        ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent) {
+
+            var div = document.createElement("div");
+            div.align = "center";
+            
+            // create the select
+            var textValArray = [];
+            for (var i=0; i < nameArray.length; i++) {
+                textValArray.push(nameArray[i]);
+                textValArray.push(i.toString());
+            }
+            
+            var defaultValue = (defaultIndex != null && defaultIndex > -1) ? defaultIndex.toString() : "-1";
+            var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, defaultValue);
+            select.size = "6";
+            select.style.width = "100%";
+            div.appendChild(select);
+
+            // callbacks
+            var listDialogSubmit = function (sel, vArr, cback) {		
+                cback(vArr[sel.selectedIndex]);
+            }.bind(this, select, valArray, callback);
+            
+            var listDialogValidate = function (sel) {
+                if (sel.selectedIndex == -1) {
+                    return "Nothing is selected";
+                } else {
+                    return null;
+                }
+            }.bind(this, select);
+            
+            var m = new ModalIidx("ModalIidx_listDialog");
+            m.showOKCancel(headerText, div, listDialogValidate, listDialogSubmit, function(){}, buttonLabel, optWidthPercent);
+
+        };
 		
 		ModalIidx.prototype = {
+                
             showOK : function (headerText, bodyDOM, callback, optWidthPercent) {
                 // show a modal with header, body and callback.
 

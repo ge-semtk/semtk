@@ -16,6 +16,10 @@
  ** limitations under the License.
  */
 
+//
+// >>>>>>   NOT USED IN SPARQLGRAPH 2   <<<<<
+//
+
 /*
  *  A simple HTML modal dialog.    DEPRECATED in favor of ModalIidx
  *
