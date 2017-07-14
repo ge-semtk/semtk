@@ -916,6 +916,7 @@
                 }
             }.bind(div);
             
+            // launch service for each
             for (var key in g.service) {
                 if (g.service.hasOwnProperty(key)) {
                     var msi = new MicroServiceInterface(g.service[key].url);
