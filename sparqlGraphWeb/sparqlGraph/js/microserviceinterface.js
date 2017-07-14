@@ -153,7 +153,28 @@ define([	'sparqlgraph/js/msiresultset',
 					return errorHTML;
 				},
 				
-                
+                /*
+                 * shortcut to ping endpoing
+                 * successCallback(resultSet) is only called if success and availability is "yes"
+                 * failureCallback(htmlMsg)
+                 */
+                ping : function (successCallback, optFailureCallback, optTimeout) {
+                    
+                    var success = function (successCall0, res) {
+                        if (res.isSuccess() && res.getSimpleResultField("available") == "yes") {
+                            successCall0(res);
+                        } else {
+                            this.userFailureCallback(res.buildFailureHtml());
+                        }
+                    }.bind(this, successCallback);
+                    
+                    var saveUrl = this.url;
+                    // change the service name to serviceInfo
+                    this.url = this.url.split('/').slice(0,-2).join('/') + '/serviceInfo/';
+                    this.postToEndpoint("ping", "", "application/json", success, optFailureCallback, optTimeout);
+                    this.url = saveUrl;
+                },
+            
 				postToEndpoint : function (endpoint, data, contentType, successCallback, optFailureCallback, optTimeout) {
 					// contentType:  
 					//      false - when data is a FormData()
