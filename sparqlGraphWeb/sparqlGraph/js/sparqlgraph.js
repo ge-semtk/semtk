@@ -24,11 +24,6 @@
     var gQueryClient = null;
     var gTimeseriesResults = null;
     var gQueryResults = null;
-    
-    // PEC TODO: suspicious: are these used?  why?
-    var gServerURL = null;
-    var gKSURL = null;
-    var gSource = null;
         
     // drag stuff
     var gDragLabel = "hi";
@@ -61,7 +56,6 @@
     	// checkBrowser();
     	
     	initDynatree(); 
-    	initCanvas();
     	
 	    require([ 'sparqlgraph/js/mappingtab',
 	              'sparqlgraph/js/modalloaddialog',
@@ -134,26 +128,6 @@
         if (! isFirefox) {
         	logAndAlert("This application uses right-clicks, which may be blocked by this browser.<br>Firefox is recommended.")
         }
-    };
-    
-    var initCanvas = function() {
-    	$("#canvas").droppable({
-    	    hoverClass: "drophover",
-    	    addClasses: true,
-    	    over: function(event, ui) {
-    	      logMsg("droppable.over, %o, %o", event, ui);
-    	    },
-    	    drop: function(event, ui) {
-    	    	// drop nodes onto graph
-    	    	
-                /*
-    	    	var gSource = ui.helper.data("dtSourceNode") || ui.draggable;
-    			
-                dropClass(gDragLabel, event.shiftKey);
-                */
-    	    }
-      	});
-
     };
     
     /*
@@ -1250,7 +1224,6 @@
             guiQueryNonEmpty();
     };
 
-    // PEC TODO: build and use async functions and a fail callback
     var buildQuery = function() {
         
         if (gNodeGroup.getNodeCount() == 0) {
