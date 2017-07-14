@@ -30,17 +30,23 @@ public class UtilityTest {
 	@Test
 	public void getSPARQLDateString() throws Exception{
 
-		assertTrue(Utility.getSPARQLDateString("12/03/2011").equals("2011-12-03"));
-		assertTrue(Utility.getSPARQLDateString("12-03-2011").equals("2011-12-03"));
-		assertTrue(Utility.getSPARQLDateString("2011-12-03").equals("2011-12-03"));
+		assertEquals(Utility.getSPARQLDateString("12/03/2011"),"2011-12-03");
+		assertEquals(Utility.getSPARQLDateString("12-03-2011"),"2011-12-03");
+		assertEquals(Utility.getSPARQLDateString("2011-12-03"),"2011-12-03");
+		assertEquals(Utility.getSPARQLDateString("12-Jun-2008"),"2008-06-12");
+		assertEquals(Utility.getSPARQLDateString("12-MAY-2008"),"2008-05-12");
 		
-		assertTrue(Utility.getSPARQLDateTimeString("12/03/2011 20:15:30").equals("2011-12-03T20:15:30"));
-		assertTrue(Utility.getSPARQLDateTimeString("2011-12-03T10:15:30").equals("2011-12-03T10:15:30"));
-		assertTrue(Utility.getSPARQLDateTimeString("2011-12-03T10:15:30+01:00").equals("2011-12-03T10:15:30+01:00"));
-		assertTrue(Utility.getSPARQLDateTimeString("1979-03-05T12:00:00-04:00").equals("1979-03-05T12:00:00-04:00"));
-		assertTrue(Utility.getSPARQLDateTimeString("12/03/2011").equals("2011-12-03T00:00:00"));
-		assertTrue(Utility.getSPARQLDateTimeString("12-03-2011").equals("2011-12-03T00:00:00"));
-		assertTrue(Utility.getSPARQLDateTimeString("2011-12-03").equals("2011-12-03T00:00:00"));
+		assertEquals(Utility.getSPARQLDateTimeString("12/03/2011 20:15:30"),"2011-12-03T20:15:30");
+		assertEquals(Utility.getSPARQLDateTimeString("2011-12-03T10:15:30"),"2011-12-03T10:15:30");
+		assertEquals(Utility.getSPARQLDateTimeString("2011-12-03T10:15:30+01:00"),"2011-12-03T10:15:30+01:00");
+		assertEquals(Utility.getSPARQLDateTimeString("1979-03-05T12:00:00-04:00"),"1979-03-05T12:00:00-04:00");
+		assertEquals(Utility.getSPARQLDateTimeString("12/03/2011"),"2011-12-03T00:00:00");
+		assertEquals(Utility.getSPARQLDateTimeString("12-03-2011"),"2011-12-03T00:00:00");
+		assertEquals(Utility.getSPARQLDateTimeString("2011-12-03"),"2011-12-03T00:00:00");
+		assertEquals(Utility.getSPARQLDateTimeString("12-Jun-2008"),"2008-06-12T00:00:00");
+		assertEquals(Utility.getSPARQLDateTimeString("12-MAY-2008"),"2008-05-12T00:00:00");
+		assertEquals(Utility.getSPARQLDateTimeString("12-Jun-2008 05:00:00"),"2008-06-12T05:00:00");
+		assertEquals(Utility.getSPARQLDateTimeString("12-MAY-2008 05:00:00"),"2008-05-12T05:00:00");
 		
 	}
 	

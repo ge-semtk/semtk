@@ -35,6 +35,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -70,9 +71,23 @@ public abstract class Utility {
 		 *  https://github.com/ge-semtk/semtk/wiki/Ingestion-type-handling
 		 */
 		
+		// need a builder for some special ones
+		DateTimeFormatterBuilder builder;
+		DateTimeFormatter dateFormat;
+		
+		// date formatters:
+		
 		DATE_FORMATTERS.add(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
 		DATE_FORMATTERS.add(DateTimeFormatter.ofPattern("MM-dd-yyyy"));
 		DATE_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		
+		// case-insensitive dd-MMM-yyyy (e.g. 12-Jun-2008 or 12-JUN-2008)
+		builder = new DateTimeFormatterBuilder();
+		builder.parseCaseInsensitive().appendPattern("dd-MMM-yyyy");
+		dateFormat = builder.toFormatter();
+		DATE_FORMATTERS.add(dateFormat);
+		
+		// date time formatters:
 		
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"));
@@ -80,6 +95,12 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss"));
+	
+		// case-insensitive dd-MMM-yyyy HH:mm:ss (e.g. 12-Jun-2008 05:00:00 or 12-JUN-2008 05:00:00)
+		builder = new DateTimeFormatterBuilder();
+		builder.parseCaseInsensitive().appendPattern("dd-MMM-yyyy HH:mm:ss");
+		dateFormat = builder.toFormatter();
+		DATETIME_FORMATTERS.add(dateFormat);
 	}
 
 	/**
@@ -321,7 +342,6 @@ public abstract class Utility {
 	 * Create a SPARQL-friendly string (e.g. 2011-12-03) from a date string
 	 */
 	public static String getSPARQLDateString(String s) throws Exception{
-
 		// try all formatters until find one that works
 		for (DateTimeFormatter formatter : DATE_FORMATTERS){  
 	        try{        	
