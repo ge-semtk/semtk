@@ -66,12 +66,17 @@
     	initCanvas();
     	
 	    require([ 'sparqlgraph/js/mappingtab',
-	              'sparqlgraph/js/uploadtab',
+	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
+                  'sparqlgraph/js/uploadtab',
+
                  
                   // shim
                   'sparqlgraph/js/belmont',
-	              'local/sparqlgraphlocal'], function (MappingTab, UploadTab, ModalStoreDialog) {
+                  'sparqlgraph/js/modaldialog',   // PEC TODO: supposed to be deprecated for ModalIidx
+                 
+	              'local/sparqlgraphlocal'], 
+                function (MappingTab, ModalLoadDialog, ModalStoreDialog, UploadTab) {
 	    
 	    	console.log(".ready()");
 	    	
@@ -110,15 +115,20 @@
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType(); 
 			
-	    	// SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
+            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
+	   	    
+            var dropbox = document.getElementById("treeCanvasWrapper");
+            dropbox.addEventListener("dragenter", noOpHandler, false);
+            dropbox.addEventListener("dragexit",  noOpHandler, false);
+            dropbox.addEventListener("dragover",  noOpHandler, false);
+            dropbox.addEventListener("drop",      fileDrop, false);
+            
+            // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
 	    	// gReady is at the end of the ready function
 	    	//        and tells us everything is loaded.
 	   	    gReady = true;
 	   	    console.log("Ready");
 	   	    logEvent("SG Page Load");
-                    
-            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
-	   	    
 		});
     });
     
@@ -140,9 +150,11 @@
     	    drop: function(event, ui) {
     	    	// drop nodes onto graph
     	    	
+                /*
     	    	var gSource = ui.helper.data("dtSourceNode") || ui.draggable;
     			
                 dropClass(gDragLabel, event.shiftKey);
+                */
     	    }
       	});
 
@@ -156,6 +168,7 @@
     };
 
     var dropClass1 = function (dragLabel, noPathFlag) {
+        
         // add the node to the canvas
         var tsk = gOInfo.containsClass(dragLabel);
 
@@ -183,12 +196,12 @@
                     var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
                     for (var n=0; n < nlist.length; n++) {
 
-                        pathStrList.push(genPathString(paths[p], nlist[n], false));
+                        pathStrList.push(paths[p].genPathString(nlist[n], false));
                         valList.push( [paths[p], nlist[n], false ] );
 
                         // push it again backwards if it is a special singleLoop
                         if ( paths[p].isSingleLoop()) {
-                            pathStrList.push(genPathString(paths[p], nlist[n], true));
+                            pathStrList.push(paths[p].genPathString(nlist[n], true));
                             valList.push( [paths[p], nlist[n], true ] );
                         }
                     }
@@ -206,6 +219,7 @@
             logAndAlert("Only classes can be dropped on the graph.");
 
         }
+        
     };
 
     /**
@@ -229,45 +243,52 @@
     
     var initDynatree = function() {
     	
-        // Attach the dynatree widget to an existing <div id="tree"> element
-        // and pass the tree options as an argument to the dynatree() function:
-        $("#treeDiv").dynatree({
-            onActivate: function(node) {
-                // A DynaTreeNode object is passed to the activation handler
-                // Note: we also get this event, if persistence is on, and the page is reloaded.
-                console.log("You activated " + node.data.title);
-            },
-            onDblClick: function(node) {
-                // A DynaTreeNode object is passed to the activation handler
-                // Note: we also get this event, if persistence is on, and the page is reloaded.
-                console.log("You double-clicked " + node.data.title);
-            },
-    		
-            dnd: {
-            	onDragStart: function(node) {
-                /** This function MUST be defined to enable dragging for the tree.
-                 *  Return false to cancel dragging of node.
-                 */
-                	logMsg("tree.onDragStart(%o)", node);
-                	console.log("dragging " + gOTree.nodeGetURI(node));
-                	gDragLabel = gOTree.nodeGetURI(node);
-                	return true;
-            	},
-            	onDragStop: function(node) {
-        			logMsg("tree.onDragStop(%o)", node);
-        			console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
-      			}
-            	
-        	},	
-        	
-            
-            persist: true,
-        });
-        require([ 'sparqlgraph/js/ontologytree',
+        require([ 'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
+                  'sparqlgraph/js/ontologytree',
 	            ], function () {
                      
-                     gOTree = new OntologyTree($("#treeDiv").dynatree("getTree"));
-                 });
+                     
+
+            // Attach the dynatree widget to an existing <div id="tree"> element
+            // and pass the tree options as an argument to the dynatree() function:
+            $("#treeDiv").dynatree({
+                onActivate: function(node) {
+                    // A DynaTreeNode object is passed to the activation handler
+                    // Note: we also get this event, if persistence is on, and the page is reloaded.
+                    console.log("You activated " + node.data.title);
+                },
+                onDblClick: function(node) {
+                    // A DynaTreeNode object is passed to the activation handler
+                    // Note: we also get this event, if persistence is on, and the page is reloaded.
+                    console.log("You double-clicked " + node.data.title);
+                },
+
+                dnd: {
+                    onDragStart: function(node) {
+                    /** This function MUST be defined to enable dragging for the tree.
+                     *  Return false to cancel dragging of node.
+                     */
+                        logMsg("tree.onDragStart(%o)", node);
+                        console.log("dragging " + gOTree.nodeGetURI(node));
+                        gDragLabel = gOTree.nodeGetURI(node);
+                        return true;
+                    },
+                    onDragStop: function(node) {
+                        logMsg("tree.onDragStop(%o)", node);
+                        console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
+                        
+                        dropClass(gDragLabel, event.shiftKey);
+                    }
+
+                },	
+
+
+                persist: true,
+            });
+                     
+            gOTree = new OntologyTree($("#treeDiv").dynatree("getTree")); 
+        
+        });   
   	}; 
   	
     // PEC LOGGING
@@ -882,30 +903,50 @@
 	
    	
    	var doTest = function () {
-        testServices();
+        alert(   gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, -1)  );
    	};
 
-    var testServices = function () {
-        require(['sparqlgraph/js/modaliidx'], 
-    	         function (ModalIidx) {
+    var checkServices = function () {
+        require(['sparqlgraph/js/microserviceinterface',
+                 'sparqlgraph/js/modaliidx'], 
+    	         function (MicroServiceInterface, ModalIidx) {
             
+            // build div with all service names and ...
             var div = document.createElement("div");
+            for (var key in g.service) {
+                if (g.service.hasOwnProperty(key)) {
+                    div.innerHTML += g.service[key].url + "...</br>";
+                }
+            }
+            
             var m = new ModalIidx();
             m.showOK("Services", div,  function(){});
             
-            addLine = function(div, message) {
-                div.innerHTML += "<br>message";
+            // callback replaces the line with the service url with a result
+            var callback = function(div, url, resultSet_or_html) {
+                
+                // failure callbacks use a string parameter
+                if (typeof(resultSet_or_html) == "string") {
+                //    ModalIidx.alert("Microservice Ping Failed", resultSet_or_html)
+                    div.innerHTML = div.innerHTML.replace(url + "...", url + ' is <font color="red">down</font>' );
+                    
+                } else {
+                    div.innerHTML = div.innerHTML.replace(url + "...", url + ' is <font color="green">up</font>' );
+                }
             }.bind(div);
             
-            $.ajax({
-                type: "POST",  
-                url: "http://vesuvius37:12050/sparqlQueryService",
-                success: addLine.bind("12050 is up"),
-                error:   addLine.bind("12050 error"),
-            });
+            for (var key in g.service) {
+                if (g.service.hasOwnProperty(key)) {
+                    var msi = new MicroServiceInterface(g.service[key].url);
+                    msi.ping(callback.bind(this, div, g.service[key].url),
+                             callback.bind(this, div, g.service[key].url) );
+                }
+            }
+            
         });
         
     };
+   
 
     var runGraphByQueryType = function (optRtConstraints) {
         // PEC HERE

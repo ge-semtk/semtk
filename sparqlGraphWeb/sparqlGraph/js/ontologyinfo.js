@@ -983,7 +983,54 @@ OntologyPath.prototype = {
 		}
 		
 		return ret;
-	}
+	},
+    
+    genPathString : function(anchorNode, singleLoopFlag) {
+        var str = anchorNode.getSparqlID() + ": ";
+
+        // handle diabolical case
+        if (singleLoopFlag) {
+            cl = new OntologyName(this.getClass0Name(0)).getLocalName();
+            var att = new OntologyName(this.getAttributeName(0)).getLocalName();
+            str += anchorNode.getSparqlID() + "-" + att + "->" + cl + "_NEW";
+        }
+        else {
+            var first = new OntologyName(this.getStartClassName()).getLocalName();
+            str += first;
+            if (first != anchorNode.getURI(true)) str += "_NEW";
+            var last = first;
+
+            for (var i=0; i < this.getLength(); i++) {
+                var class0 = new OntologyName(this.getClass0Name(i)).getLocalName();
+                var att = new OntologyName(this.getAttributeName(i)).getLocalName();
+                var class1 = new OntologyName(this.getClass1Name(i)).getLocalName();
+                var sub0 = "";
+                var sub1 = "";
+
+                // mark connecting node on last hop of this
+                if (i == this.getLength() - 1) {
+                    if (class0 == last) {
+                        sub0 = anchorNode.getSparqlID();
+                    } else {
+                        sub1 = anchorNode.getSparqlID();
+                    }
+                }
+
+                if ( class0 == last ) {
+                    str += "-" + att + "->";
+                    str += sub1 ? sub1 : class1;
+                    last = class1;
+                } else {
+                    str += "<-" + att + "-";
+                    str += sub0 ? sub0 : class0;
+                    last = class0;
+                }
+            }
+            if (last != anchorNode.getURI(true)) str += "_NEW";
+        }
+
+        return str;
+    },
 		
 };
 
@@ -1069,7 +1116,10 @@ OntologyClass.prototype = {
 		}
 		
 		return ret;
-	}
+	},
+    
+    
+    
 };
 
 /*

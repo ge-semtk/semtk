@@ -42,7 +42,6 @@ define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/sparqlgraphjson',
 
 			// shimmed
-        	'sparqlgraph/js/graphGlue',
 	        'sparqlgraph/js/sparqlconnection', 
 	        'sparqlgraph/js/sparqlserverinterface', 
 	        'sparqlgraph/js/ontologyinfo', 
@@ -730,13 +729,13 @@ define([	// properly require.config'ed   bootstrap-modal
 		  			var nlist = this.nodegroup.getNodesByURI(paths[p].getAnchorClassName());
 		  			for (var n=0; n < nlist.length; n++) {
 		  				
-		  				var pathStr = genPathString(paths[p], nlist[n], false);
+		  				var pathStr = paths[p].genPathString(nlist[n], false);
 		  				var pathTriples = paths[n].asList();
 		  				ret[pathStr] = [nlist[n].getSparqlID(), pathTriples];
 		  				
 		  				// push it again backwards if it is a special singleLoop
 		  				if ( paths[p].isSingleLoop()) {
-		  					var pathStr = genPathString(paths[p], nlist[n], true);
+		  					var pathStr = paths[p].genPathString(nlist[n], true);
 		  					var pathTriples = paths[n].asList();
 		  					ret[pathStr] = [nlist[n].getSparqlID(), pathTriples];
 		  				}
