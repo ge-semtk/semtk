@@ -208,15 +208,17 @@ define([	// properly require.config'ed
             window.navigator.msSaveOrOpenBlob(file, filename);
         else { // Others
             var url = URL.createObjectURL(file);
-            a.href = url;
-            IIDXHelper.downloadUrl(url);
+            IIDXHelper.downloadUrl(url, filename);
         }
     };
     
-    IIDXHelper.downloadUrl = function (url) {
+    IIDXHelper.downloadUrl = function (url, optFilename) {
 
         var a = document.createElement("a");
         a.href = url;
+        if (typeof optFilename != "undefined") {
+            a.download = optFilename;
+        }
         document.body.appendChild(a);
         a.click();
         setTimeout(function() {

@@ -1271,7 +1271,7 @@
 
     var buildQueryFailure = function (msgHtml, optNoValidSparqlMessage) {
         var sparql = "";
-        if (typeof optNoValidSparqlMessage != undefined) {
+        if (typeof optNoValidSparqlMessage != "undefined") {
             sparql = "#" + optNoValidSparqlMessage.replace(/\n/g, '#');
             
         } else {
