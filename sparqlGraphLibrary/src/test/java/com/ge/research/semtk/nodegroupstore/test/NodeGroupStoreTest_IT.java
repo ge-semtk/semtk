@@ -2,6 +2,7 @@ package com.ge.research.semtk.nodegroupstore.test;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
@@ -104,15 +106,22 @@ public class NodeGroupStoreTest_IT {
 	 * Ensure fails with null comments...and succeeds with empty comments
 	 */
 	@Test
-	public void testStoreNodegroup_NullOrEmptyComments() throws Exception{
-		// null comments
+	public void test_NullOrEmptyComments() throws Exception{
+		// null comments - should fail
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, null, CREATOR, NG_JSON);
 		assertFalse(result.getSuccess());
 		assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: comments are not provided");		
 
-		// empty comments
+		// empty comments - should succeed
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, "", CREATOR, NG_JSON);
 		assertTrue(result.getSuccess());	
+		Table res = nodeGroupStoreClient.executeGetNodeGroupById(ID).getTable();
+		assertEquals(res.getNumRows(), 1);
+		assertEquals(res.getCell(0,0), ID);
+		res = nodeGroupStoreClient.executeGetNodeGroupList().getTable();
+		assertTrue(Arrays.asList(res.getColumnUniqueValues("ID")).contains(ID));
+		
+		// clean up
 		nodeGroupStoreClient.deleteStoredNodeGroup(ID);
 	}
 	
