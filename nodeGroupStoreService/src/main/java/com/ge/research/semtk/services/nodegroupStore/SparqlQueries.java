@@ -48,7 +48,7 @@ public class SparqlQueries {
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"FILTER regex(?ID, \"" + id + "\") . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-		   				"?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+		   				"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 		   				"}";		
 		return retval;
 	}
@@ -59,7 +59,7 @@ public class SparqlQueries {
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-						"?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 						"?PrefabNodeGroup prefabNodeGroup:originalConnection ?SemTkConnection. " +
 						"?SemTkConnection prefabNodeGroup:connectionAlias  . " +
 						"FILTER regex(?connectionAlias, \"" + connectionAlias + "\") . " +
@@ -87,7 +87,7 @@ public class SparqlQueries {
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-						"?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 						"}";
 		return retval;
 	}
@@ -98,7 +98,7 @@ public class SparqlQueries {
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-						"?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
+						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 						"}";
 		return retval;
 	}
