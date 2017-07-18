@@ -150,6 +150,22 @@ define([	// properly require.config'ed
         return labelElem;
     };
     
+    IIDXHelper.createButton = function (text, callback, optClassList, optId) {
+        var butElem = document.createElement("a");
+        butElem.innerHTML = text;
+        butElem.onclick = callback;
+        butElem.classList.add("btn");
+        if (typeof optClassList != "undefined") {
+            for (var i=0; i < optClassList.length; i++) {
+                butElem.classList.add(optClassList[i]);
+            }
+        }
+        if (typeof optId != "undefined") {
+            butElem.id = optId;
+        }
+        return butElem;
+    };
+    
     /*
      * Create a button group.
      * optDataToggleAttribute can be set to "buttons-radio" (single-select) or "buttons-checkbox" (multi-select)

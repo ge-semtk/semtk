@@ -330,13 +330,12 @@ define([	// properly require.config'ed   bootstrap-modal
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a = document.createElement("a");
-                a.className = "btn btn-primary";
-                a.innerHTML = "OK";
-                a.onclick = function () {
-                    callback();
+                var callback1 = function (cb) {
+                    cb();
                     $(this.div).modal('hide');
-                }.bind(this);
+                }.bind(this, callback);
+                
+                var a = IIDXHelper.createButton("OK", callback1, ["btn-primary"]);
                 footer.appendChild(a);
 
                 return footer;
@@ -347,37 +346,31 @@ define([	// properly require.config'ed   bootstrap-modal
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a1 = document.createElement("a");
-                a1.className = "btn";
-                //a1.setAttribute("data-dismiss", "modal");
-                a1.innerHTML = "Clear";
-                a1.onclick = function () {
-                    clearCallback();
+                var callback1 = function (cb) {
+                    cb();
                     return false;
-                }
+                }.bind(this, clearCallback);
+                var a1 = IIDXHelper.createButton("Clear", callback1 );
                 footer.appendChild(a1);
 
-                var a2 = document.createElement("a");
-                a2.className = "btn btn-danger";
-                a2.innerHTML = "Cancel";
-                a2.onclick = function () {
+                var callback2 = function () {
                     $(this.div).modal('hide');
                 }.bind(this);
+                var a2 = IIDXHelper.createButton("Cancel", callback2, ["btn-danger"]);
                 footer.appendChild(a2);
 
-                var a3 = document.createElement("a");
-                a3.className = "btn btn-primary";
-                a3.innerHTML = "Submit";
-                a3.onclick = function () {
-                    var msg = validateCallback();
+                var callback3 = function (valCb, subCb) {
+                    var msg = valCb();
                     if (msg) {
                         alert(msg);
                     } else {
-                        submitCallback();
+                        subCb();
                         $(this.div).modal('hide');
                     }
-                }.bind(this);
+                }.bind(this, validateCallback, submitCallback);
+                var a3 = IIDXHelper.createButton("Submit", callback3, ["btn-primary"]);
                 footer.appendChild(a3);
+                
                 return footer;
             },
 
@@ -386,17 +379,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a1 = document.createElement("a");
-                a1.className = "btn";
+                var a1 = IIDXHelper.createButton(but1text, callback1);
                 a1.setAttribute("data-dismiss", "modal");
-                a1.innerHTML = but1text;
-                a1.onclick = callback1;
                 footer.appendChild(a1);
 
-                var a2 = document.createElement("a");
-                a2.className = "btn btn-primary";
-                a2.innerHTML = but2text;
-                a2.onclick = function () {
+                var callback1 = function () {
                     var msg = validate2();
                     if (msg) {
                         alert(msg);
@@ -405,6 +392,8 @@ define([	// properly require.config'ed   bootstrap-modal
                         $(this.div).modal('hide');
                     }
                 }.bind(this);
+                
+                var a2 = IIDXHelper.createButton(but2text, callback1, ["btn-primary"]);
                 footer.appendChild(a2);
 
                 return footer;
@@ -423,18 +412,14 @@ define([	// properly require.config'ed   bootstrap-modal
                 footer.className = "modal-footer";
 
                 for (var i=0; i < buttonNameList.length; i++) {
-                    var a1 = document.createElement("a");
-                    a1.classList.add("btn");
-                    if (classList[i].length > 0) {
-                        a1.classList.add(classList[i]);
-                    }
-                    a1.setAttribute("data-dismiss", "modal");
-                    a1.innerHTML = buttonNameList[i];
-                    
-                    a1.onclick = function (callback) {
+
+                    var click = function (callback) {
                         callback();
                         $(this.div).modal('hide');
                     }.bind(this, callbackList[i]);
+                    
+                    var a1 = IIDXHelper.createButton(buttonNameList[i], click, (classList.length > i ) ? classList[i] : undefined)
+                    a1.setAttribute("data-dismiss", "modal");
                     
                     footer.appendChild(a1);
                 }
