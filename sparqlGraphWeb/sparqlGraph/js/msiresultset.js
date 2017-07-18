@@ -228,8 +228,16 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				return (ret.length > 0) ? ret : null;
 			},
+            
+            getRecordProcessResultField : function (field) {
+                if (this.isRecordProcessResults() && this.xhr.recordProcessResults.hasOwnProperty(field)) {
+                    return this.xhr.recordProcessResults[field];
+                } else {
+					return null;
+				}
+            },
 			
-			getSimpleResultField : function (field, optFailCallback) {
+			getSimpleResultField : function (field) {
 				// return a field or null if it can't be found
 				
 				if (this.isSimpleResults()  && this.xhr.simpleresults.hasOwnProperty(field)) {

@@ -996,10 +996,13 @@ define([	// properly require.config'ed
 					if (csv) {
 						html += "<h3><b>CSV containing failed rows is being downloaded.</b>";
 						IIDXHelper.downloadFile(csv, "error_report.csv", "text/csv;charset=utf8");
-					}
+					} 
 					
 					// display to user
-					this.logAndAlert(title, html); 
+                    kdlLogEvent("Import Complete", 
+                                "recordsProcessed",    resultSet.getRecordProcessResultField(MsiClientIngestion.RECORDS_PROCESSED) || 0,
+                                "failuresEncountered", resultSet.getRecordProcessResultField(MsiClientIngestion.FAILURE_ROWS) || 0  );
+					ModalIidx.alert(title, html); 
 					IIDXHelper.progressBarRemove(this.progressDiv);
 					this.fillAll();
 				};
