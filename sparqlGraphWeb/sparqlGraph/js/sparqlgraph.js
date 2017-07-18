@@ -45,7 +45,8 @@
     var gQueryTypeIndex = 0;   // sel index of QueryType
     var gQuerySource = "SERVICES";
 
-    var RESULTS_MAX_ROWS = 5000;
+    var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
+    var SHORT_TIMEOUT = 5000;    // 5 sec
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -604,14 +605,14 @@
                 
             } else {
                 // Run nodegroup via Node Group Exec Svc
-                var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
+                var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
                                                                                  g.service.status.url,
                                                                                  g.service.results.url);
-                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
+                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
 
-                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, null, jobIdCallback, failureCallback);
+                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, null, jsonCallback, failureCallback);
 
             }
         }); 
@@ -938,9 +939,9 @@
     	         function (MsiClientNodeGroupExec) {
 			
             guiDisableAll();
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
     		
-            var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+            var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
                                                                                      queryFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
@@ -948,16 +949,16 @@
                                                                                      g.service.results.url);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
 			}
             
@@ -970,16 +971,16 @@
     	         'sparqlgraph/js/modaliidx'], 
     	         function (MsiClientNodeGroupExec, ModalIidx) {
 			
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, SHORT_TIMEOUT);
     		
-             var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,
                                                                                       queryFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
             
-            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, queryFailureCallback);
+            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, csvJsonCallback, queryFailureCallback);
 
     	});
     };
