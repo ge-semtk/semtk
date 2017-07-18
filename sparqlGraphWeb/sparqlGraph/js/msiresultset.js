@@ -418,9 +418,9 @@ define([	// properly require.config'ed   bootstrap-modal
 				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv", "text/csv;charset=utf8");
 			},
             
-			sort : function(colName) {
+			sort : function(optColName) {
 				
-				var col = this.getTable().col_names.indexOf(colName);
+				var col = (typeof optColName != "undefined") ? this.getTable().col_names.indexOf(colName) : 0;
 
 				this.xhr.table["@table"].rows = this.xhr.table["@table"].rows.sort(function(a,b) {
 					// a row with only an optional value that is "null" comes back from virtuoso as a totally empty row

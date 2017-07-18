@@ -318,7 +318,7 @@
     		
     		var dialog= new ModalItemDialog(propItem, 
                                             gNodeGroup, 
-                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, propItem), 
+                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, propItem), 
                                             propertyItemDialogCallback,
     				                        {"draculaLabel" : draculaLabel}
     		                                );
@@ -397,7 +397,7 @@
 
             var dialog= new ModalItemDialog(snodeItem, 
                                             gNodeGroup, 
-                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, snodeItem), 
+                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, snodeItem), 
                                             snodeItemDialogCallback,
                                             {"draculaLabel" : draculaLabel}
                                             );
@@ -567,11 +567,20 @@
     var getQueryClientOrInterface = function() {
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
-    
-    var runSuggestValuesQuery = function(g, conn, ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
+
+    var runSuggestValuesQuery = function(g, conn, ng, rtConstraints, itemOrId, msiOrQsResultCallback, failureCallback, statusCallback) {
         require(['sparqlgraph/js/msiclientnodegroupexec',
                  'sparqlgraph/js/msiclientnodegroupservice'], 
     	            function (MsiClientNodeGroupExec, MsiClientNodeGroupService) {
+            
+            
+            // translate itemOrId into item
+            var item;
+            if (typeof itemOrId == "string") {
+                item = ng.getItemBySparqlID(itemOrId);
+            } else {
+                item = itemOrId;
+            }
             
             // make sure there is a sparqlID
             var runNodegroup;
@@ -1333,8 +1342,7 @@
         if (resultSet.getRowCount() > 0) {
             require(['sparqlgraph/js/modalruntimeconstraintdialog',
                     ], function(ModalRuntimeConstraintDialog) {
-                
-                var dialog = new ModalRuntimeConstraintDialog();
+                var dialog = new ModalRuntimeConstraintDialog(this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup));
                 dialog.launchDialog(resultSet, runGraphByQueryType.bind(this));
                 
             });

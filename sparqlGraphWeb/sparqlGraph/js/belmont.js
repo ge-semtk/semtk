@@ -1451,6 +1451,22 @@ SemanticNode.prototype = {
 		}
 		return null;
 	},
+    
+    // look anywhere for something with sparqlID
+    getItemBySparqlID : function(sparqlID) {
+        // check self
+        if (this.getSparqlID() == sparqlID) {
+            return this;
+        }
+        // only property items have sparqlID's.
+		for (var i = 0; i < this.propList.length; i++) {
+			if (this.propList[i].getSparqlID() == sparqlID) {
+				return this.propList[i];
+			}
+		}
+		return null;
+    },
+    
 	getNodeItem : function(i) {
 		return this.nodeList[i];
 	},
@@ -2817,6 +2833,19 @@ SemanticNodeGroup.prototype = {
 		}
 		return null;
 	},
+    
+    getItemBySparqlID : function(id) {
+        var item = null;
+		// search every SemanticNode for the sparqlID
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			item = this.SNodeList[i].getItemBySparqlID(id);
+            if (item != null) {
+                return item;
+            }
+		}
+		return null;
+	},
+    
 	// unused ?
 	getArrayOfURINames : function() {
 		var retval = [];
