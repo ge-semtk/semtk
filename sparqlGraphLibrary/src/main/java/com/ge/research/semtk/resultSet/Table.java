@@ -297,28 +297,25 @@ public class Table {
 		return buf.toString();
 	}
 	
+	public JSONObject getHeaderJson() throws Exception{
+		return toJson(false);
+	}
+	
+	public JSONObject toJson() throws Exception{
+		return toJson(true);
+	}
+	
 	/**
 	 * Create a JSON object from a data table
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public JSONObject toJson() throws Exception {
+	public JSONObject toJson(Boolean includeDataRows) throws Exception {
 
 		JSONArray allRows = new JSONArray();
 		int rowCount = 0;	
 		
 		// collect data rows in a JSONArray
 		try {
-/*			for (ArrayList<String> row : this.getRows()) {
-				if(row != null){   // do not include null rows...
-					JSONArray currRow = new JSONArray();
-					for (String colName : this.columnNames) {
-						currRow.add(row.get(getColumnIndex(colName)));
-					}
-					allRows.add(currRow);
-					rowCount += 1;
-				}
-			}
-*/
 			// we can do this faster. 
 			int counter = 0;
 			Integer[] columnNumbersInOrderIwanted = new Integer[this.columnNames.length];
@@ -326,18 +323,21 @@ public class Table {
 				columnNumbersInOrderIwanted[counter] = getColumnIndex(colName);
 				counter++;
 			}
-			
-			for (ArrayList<String> row : this.getRows()) {
-				if(row != null){   // do not include null rows...
-					JSONArray currRow = new JSONArray();
-					for (Integer k : columnNumbersInOrderIwanted) {
-						currRow.add(row.get(k));
+			if(includeDataRows){
+				for (ArrayList<String> row : this.getRows()) {
+					if(row != null){   // do not include null rows...
+						JSONArray currRow = new JSONArray();
+						for (Integer k : columnNumbersInOrderIwanted) {
+							currRow.add(row.get(k));
+						}
+						allRows.add(currRow);
+						rowCount += 1;
 					}
-					allRows.add(currRow);
-					rowCount += 1;
 				}
 			}
-			
+			else{
+				rowCount = this.getRows().size();
+			}
 		} catch(Exception e){
 			throw new Exception("Unable to collect row data for JSON table result set: " + e.getMessage());
 		}
@@ -358,7 +358,9 @@ public class Table {
 		try{
 			// create the table	
 			JSONObject tbl = new JSONObject();
-			tbl.put(JSON_KEY_ROWS, allRows);			
+			if(includeDataRows){
+				tbl.put(JSON_KEY_ROWS, allRows);			
+			}
 			tbl.put(JSON_KEY_ROW_COUNT, rowCount);
 			tbl.put(JSON_KEY_COL_NAMES, colHeaders);
 			tbl.put(JSON_KEY_COL_TYPES, colTypes);

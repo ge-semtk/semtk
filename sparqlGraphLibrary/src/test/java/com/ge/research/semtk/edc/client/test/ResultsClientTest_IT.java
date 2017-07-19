@@ -74,20 +74,37 @@ public class ResultsClientTest_IT {
 			
 			client.execStoreTableResults(jobId, table);
 
-			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"three\",\"four\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}\n";		
-			String expectedCSVString = "col1,col2\none,two\nthree,four\n";
+			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"three\",\"four\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}";		
+			String expectedCSVString = "col1,col2\n\"one\",\"two\"\n\"three\",\"four\"\n";
 
 			URL[] urls = client.execGetResults(jobId);
 			// check the URLs from getResults
 			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200")); 
 			assertTrue(urls[1].toString().endsWith("/results/getTableResultsCsvForWebClient?jobId=" + jobId)); 			
 			// check the contents from getResults
-			assertEquals(Utility.getURLContentsAsString(urls[0]), expectedJsonString); 		// check the JSON results
+			
+			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
+			Table tbl = tblresset.getTable();
+			String resultJSONString = tbl.toJson().toJSONString();
+			
+			
+			assertEquals(resultJSONString, expectedJsonString); 		// check the JSON results
+			
+			CSVDataset data = client.execTableResultsCsv(jobId, null);
+			CSVDataset compare = new CSVDataset(expectedCSVString, true);
+			
+			
+			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
+			ArrayList<String> resultColumnNames  = data.getColumnNamesinOrder();
+					
+			assertEquals(compareColumnNames.get(0), resultColumnNames.get(0));
+			assertEquals(compareColumnNames.get(1), resultColumnNames.get(1));
+			
 			assertEquals(Utility.getURLContentsAsString(urls[1]), expectedCSVString);		// check the CSV result
 			
 			// check getting results as json
 			TableResultSet res = client.execTableResultsJson(jobId, null);
-			assertEquals(res.getTable().toJson().toString() + "\n", expectedJsonString);
+			assertEquals(res.getTable().toJson().toString(), expectedJsonString);
 			
 			// check getting results as csv
 			CSVDataset resCsvDataset = client.execTableResultsCsv(jobId, null);
@@ -128,14 +145,39 @@ public class ResultsClientTest_IT {
 			URL[] urls = client.execGetResults(jobId);
 			
 			// check the JSON results
-			String resultJSONString = Utility.getURLContentsAsString(urls[0]);
-			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}\n";  // validated json
-			assertEquals(expectedJSONString, resultJSONString);
+			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
+			Table tbl = tblresset.getTable();
+			String resultJSONString = tbl.toJson().toJSONString();
+			
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json
+			//assertEquals(expectedJSONString, resultJSONString);
+			
+			System.err.println(expectedJSONString);
+			System.err.println(resultJSONString);
+			
+			
+			assertEquals(expectedJSONString.length(), resultJSONString.length());
+			
+			for(int i = 0; i < expectedJSONString.length(); i += 1){
+				assertEquals(expectedJSONString.charAt(i), resultJSONString.charAt(i));
+			}
+			
 			
 			// check the CSV results
 			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
+			CSVDataset data = client.execTableResultsCsv(jobId, null);
+
 			String expectedCSVString = "colA,colB,colC,colD\n\"apple,ant\",bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";  // validated by opening in Excel
-			assertEquals(expectedCSVString, resultCSVString);
+			CSVDataset compare = new CSVDataset(expectedCSVString, true);
+			
+			
+			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
+			ArrayList<String> resultColumnNames  = data.getColumnNamesinOrder();
+					
+			assertEquals(compareColumnNames.get(0), resultColumnNames.get(0));
+			assertEquals(compareColumnNames.get(1), resultColumnNames.get(1));
+			assertEquals(compareColumnNames.get(2), resultColumnNames.get(2));
+			assertEquals(compareColumnNames.get(3), resultColumnNames.get(3));
 			
 		} finally {
 			cleanup(client, jobId);
@@ -166,14 +208,34 @@ public class ResultsClientTest_IT {
 			URL[] urls = client.execGetResults(jobId);
 			
 			// check the JSON results
-			String resultJSONString = Utility.getURLContentsAsString(urls[0]);
-			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}\n";  // validated json		
-			assertEquals(expectedJSONString, resultJSONString);
+			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
+			Table tbl = tblresset.getTable();
+			String resultJSONString = tbl.toJson().toJSONString();
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json		
+			System.err.println(expectedJSONString);
+			System.err.println(resultJSONString);
+			
+			assertEquals(expectedJSONString.length(), resultJSONString.length());
+			
+			for(int i = 0; i < expectedJSONString.length(); i += 1){
+				assertEquals(expectedJSONString.charAt(i), resultJSONString.charAt(i));
+			}
 			
 			// check the CSV results
-			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
+			CSVDataset data = client.execTableResultsCsv(jobId, null);
+
 			String expectedCSVString = "colA,colB,colC,colD\napple,bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi\"\"\"\n";  // validated by opening in Excel
-			assertEquals(expectedCSVString, resultCSVString);
+			CSVDataset compare = new CSVDataset(expectedCSVString, true);
+			
+			
+			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
+			ArrayList<String> resultColumnNames  = data.getColumnNamesinOrder();
+					
+			assertEquals(compareColumnNames.get(0), resultColumnNames.get(0));
+			assertEquals(compareColumnNames.get(1), resultColumnNames.get(1));
+			assertEquals(compareColumnNames.get(2), resultColumnNames.get(2));
+			assertEquals(compareColumnNames.get(3), resultColumnNames.get(3));
+			
 			
 		} finally {
 			//cleanup(client, jobId);
@@ -211,7 +273,8 @@ public class ResultsClientTest_IT {
 			// test that we got 200 (truncated by getResults()) rows of JSON
 			String resultJsonString = Utility.getURLContentsAsString(urls[0]);
 			JSONObject resultJsonObject = (JSONObject) ((new JSONParser()).parse(resultJsonString));
-			assertEquals(Table.fromJson(resultJsonObject).getNumRows(), 200);	
+			Table tbl = Table.fromJson(resultJsonObject);
+			assertEquals(tbl.getNumRows(), 200);	
 			
 			// test that we got full 9000 rows of CSV 
 			String resultCsvString = Utility.getURLContentsAsString(urls[1]);
@@ -236,8 +299,8 @@ public class ResultsClientTest_IT {
 		try {
 			
 			// construct a huge table
-			final int NUM_COLS = 100;
-			final int NUM_ROWS = 1000;
+			final int NUM_COLS = 1000;
+			final int NUM_ROWS = 75000;
 			String[] cols = new String[NUM_COLS];
 			String[] colTypes = new String[NUM_COLS];
 			ArrayList<String> row = new ArrayList<String>();

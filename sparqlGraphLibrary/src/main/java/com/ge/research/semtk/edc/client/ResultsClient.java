@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.lang.StringUtils;
+import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -33,7 +34,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClient extends RestClient implements Runnable {
 	
-	private int ROWS_TO_PROCESS = 1000;  // the default row allocation to send. this can be tuned if things may fail.
+	private int ROWS_TO_PROCESS = 5000;  // the default row allocation to send. this can be tuned if things may fail.
 
 	public ResultsClient (ResultsClientConfig config) {
 		this.conf = config;
@@ -75,8 +76,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		// write the start of the JSON
 		conf.setServiceEndpoint("results/storeTableResultsJsonInitialize"); 
 		this.parametersJSON.put("jobId", jobId);
-		this.parametersJSON.put("columnNames", Utility.getJsonArray(table.getColumnNames()));
-		this.parametersJSON.put("columnTypes", Utility.getJsonArray(table.getColumnTypes()));
+		this.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
 		thread = new Thread(this);
 		thread.start();
 		
@@ -113,14 +113,8 @@ public class ResultsClient extends RestClient implements Runnable {
 					tableRowsDone += 1;
 					
 					if(i < ROWS_TO_PROCESS - 1){
-						resultsSoFar.append(",");
+						resultsSoFar.append("\n");
 					}
-
-					// add to the existing results we want to send.
-					if(segment != finalSegmentNumber){
-						resultsSoFar.append(",");
-					}
-
 				}
 				catch(IndexOutOfBoundsException eek){
 					// we have run out of rows. the remaining rows were fewer than the block size. just note this and move on.
@@ -167,7 +161,6 @@ public class ResultsClient extends RestClient implements Runnable {
 		// write the end of the JSON
 		conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
 		this.parametersJSON.put("jobId", jobId);
-		this.parametersJSON.put("rowCount", table.getNumRows());
 		thread = new Thread(this);
 		thread.start();
 		// wait for the finalize run to finish
@@ -178,6 +171,10 @@ public class ResultsClient extends RestClient implements Runnable {
 		return;
 	}
 		
+	private JSONObject createNewHeaderMap(Table table) throws Exception {
+		return table.getHeaderJson();
+	}
+
 	/**
 	 * Get results (possibly truncated) in JSON format for a job
 	 * @return a TableResultSet object

@@ -17,6 +17,9 @@
 
 package com.ge.research.semtk.edc;
 
+import java.io.File;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -41,6 +44,8 @@ public class TableResultsStorage {
 	
 	private String fileLocation = null;
 	
+	private static final String DATARESULTSFILELOCATION = "ResultsDataLocation";
+	
 	public TableResultsStorage(String file_location) {
 		this.fileLocation = file_location;
 	}
@@ -59,31 +64,15 @@ public class TableResultsStorage {
 	 * @param columnTypes table column types
 	 * @throws Exception
 	 */
-	public void storeTableResultsJsonInitialize(String jobID, String[] columnNames, String[] columnTypes) throws Exception {	
-		StringBuffer buffer = new StringBuffer();
-		// open json
-		buffer.append("{");
-		// column names
-		buffer.append("\"").append(Table.JSON_KEY_COL_NAMES).append("\":[");
-		for(int i = 0; i < columnNames.length; i++){
-			buffer.append("\"").append(columnNames[i]).append("\"");
-			if(i < columnNames.length - 1){ buffer.append(","); }
-		}
-		buffer.append("],");
-		// column types
-		buffer.append("\"").append(Table.JSON_KEY_COL_TYPES).append("\":[");
-		for(int i = 0; i < columnTypes.length; i++){
-			buffer.append("\"").append(columnTypes[i]).append("\"");
-			if(i < columnTypes.length - 1){ buffer.append(","); }
-		}
-		buffer.append("],");
-		// column count
-		buffer.append("\"").append(Table.JSON_KEY_COL_COUNT).append("\":").append(columnNames.length).append(",");
-		// opener for rows
-		buffer.append("\"").append(Table.JSON_KEY_ROWS).append("\":[");
+	public void storeTableResultsJsonInitialize(String jobID, JSONObject resultsTableMetaData) throws Exception {	
+		// create the results data file
+		String dataFileName = writeToFile(jobID, null, true);
 		
 		// write it to file
-		writeToFile(jobID, buffer.toString());
+		resultsTableMetaData.put(DATARESULTSFILELOCATION, dataFileName);
+		
+		// create and write the results metadata file
+		writeToFile(jobID, resultsTableMetaData.toJSONString(), false);
 	}
 	
 	/**
@@ -100,7 +89,7 @@ public class TableResultsStorage {
 	 * @throws Exception
 	 */
 	public void storeTableResultsJsonAddIncremental(String jobID, String contents) throws Exception {				
-		writeToFile(jobID, contents);
+		writeToFile(jobID, contents, true);
 	}
 	
 	/**
@@ -113,17 +102,8 @@ public class TableResultsStorage {
 	 * @param jobID the job id
 	 * @param rowCount the number of rows written
 	 */
-	public URL storeTableResultsJsonFinalize(String jobID, int rowCount) throws Exception {				
-		StringBuffer buffer = new StringBuffer();
-		// closer for rows
-		buffer.append("],");
-		// row count
-		buffer.append("\"").append(Table.JSON_KEY_ROW_COUNT).append("\":").append(rowCount);
-		// close json
-		buffer.append("}");
-		
-		// write it to file
-		String fileName = writeToFile(jobID, buffer.toString());
+	public URL storeTableResultsJsonFinalize(String jobID) throws Exception {				
+		String fileName = writeToFile(jobID, null, false);
 		return getURL(fileName);
 	}
 	
@@ -133,7 +113,7 @@ public class TableResultsStorage {
 	 * @param url the url of the full json result
 	 * @return byte array containing json result
 	 */
-	public byte[] getJsonTable(URL url) throws Exception{
+	public TableResultsSerializer getJsonTable(URL url) throws Exception{
 		return getJsonTable(url, null);
 	}
 	
@@ -143,7 +123,7 @@ public class TableResultsStorage {
 	 * @param maxRows limit to this number of rows
 	 * @return byte array containing json result
 	 */
-	public byte[] getJsonTable(URL url, Integer maxRows) throws Exception{
+	public TableResultsSerializer getJsonTable(URL url, Integer maxRows) throws Exception{
 		return getTable(url, maxRows, TableResultsStorageTypes.JSON);
 	}
 	
@@ -152,7 +132,7 @@ public class TableResultsStorage {
 	 * @param url the url of the full json result
 	 * @return byte array containing csv result
 	 */
-	public byte[] getCsvTable(URL url) throws Exception{
+	public TableResultsSerializer getCsvTable(URL url) throws Exception{
 		return getCsvTable(url, null);
 	}
 	
@@ -162,7 +142,7 @@ public class TableResultsStorage {
 	 * @param maxRows limit to this number of rows
 	 * @return byte array containing csv result
 	 */
-	public byte[] getCsvTable(URL url, Integer maxRows) throws Exception{
+	public TableResultsSerializer getCsvTable(URL url, Integer maxRows) throws Exception{
 		return getTable(url, maxRows, TableResultsStorageTypes.CSV);
 	}
 	
@@ -174,36 +154,32 @@ public class TableResultsStorage {
 	 * @param maxRows limit to this number of rows
 	 * @return storageType indicates CSV or JSON
 	 */
-	private byte[] getTable(URL url, Integer maxRows, TableResultsStorageTypes storageType) throws Exception{
+	private TableResultsSerializer getTable(URL url, Integer maxRows, TableResultsStorageTypes storageType) throws Exception{
 				
 		System.out.println("** TableResultsStorage.getTable()");  // TODO DELETE THIS
 		
-		Table table;
 		try{
 			System.out.println("** Calling getJSONObjectFromFilePath()...");  // TODO DELETE THIS
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
 			System.out.println("** Calling Table.fromJson() ...");		// DELETE THIS
-			table = Table.fromJson(jsonObj);	
+		
+			
+			String dataFileLocation = (String) jsonObj.get(DATARESULTSFILELOCATION);
+			
+			if(storageType == TableResultsStorageTypes.CSV){
+				return new TableResultsSerializer(jsonObj, dataFileLocation, TableResultsStorageTypes.CSV, maxRows);
+				
+			}else if(storageType == TableResultsStorageTypes.JSON){
+				return new TableResultsSerializer(jsonObj, dataFileLocation, TableResultsStorageTypes.JSON, maxRows);
+			}else{
+				throw new Exception("Unrecognized TableResultsStorageTypes element: " + storageType);
+			}		
+			
 		}catch(Exception e){
 			e.printStackTrace();
 			throw new Exception("Could not read results from store for " + url + ": " + e.toString());
 		}
 		
-		System.out.println("** Truncate the table...");  // TODO DELETE THIS
-		// truncate the table 
-		if(maxRows != null){
-			table.truncate(maxRows.intValue());
-		}
-		
-		System.out.println("** Return as a JSON or CSV string...");  // TODO DELETE THIS
-		// return byte array in requested format
-		if(storageType == TableResultsStorageTypes.CSV){
-			return table.toCSVString().getBytes();
-		}else if(storageType == TableResultsStorageTypes.JSON){
-			return table.toJson().toString().getBytes();
-		}else{
-			throw new Exception("Unrecognized TableResultsStorageTypes element: " + storageType);
-		}		
 	}
 	
 		
@@ -211,19 +187,39 @@ public class TableResultsStorage {
 	 * Write line(s) of data to the results file for a given job id.
 	 * @param jobID the job id
 	 * @param contents the data to write
+	 * @param writeToResultsFile "true" if writing to the results data, "false" for writing to the metadata file
 	 * @return the file name
 	 */
-	private String writeToFile(String jobID, String contents) throws Exception {
+	private String writeToFile(String jobID, String contents, Boolean writeToResultsFile) throws Exception {
 		
-		String filename = "results_" + jobID + ".json";
+		if(contents == null){ contents = ""; }
+		else{ contents += "\n"; }
+		
+		String filename = "results_" + jobID;
+		
+		if(writeToResultsFile){ filename = filename + "_data.dat";}
+		else{ filename = filename + "_metadata.json"; }
+		
 		Path path = Paths.get(fileLocation, filename);
 		
 		try {
 			Files.write(path, contents.getBytes(), StandardOpenOption.APPEND);
 		} catch(NoSuchFileException nosuchfile){
-			Files.write(path, contents.getBytes(), StandardOpenOption.CREATE);
-		} 		
-		return filename;
+			
+			
+			if(contents == null ||  contents.isEmpty()){
+				
+				(path.toFile()).createNewFile();
+			}
+			else{
+				Files.write(path, contents.getBytes(), StandardOpenOption.CREATE);
+				
+			}
+			
+			
+		}
+		if(!writeToResultsFile){ return filename; }
+		else{ return path.toString(); }
 	}
 	
 	/**

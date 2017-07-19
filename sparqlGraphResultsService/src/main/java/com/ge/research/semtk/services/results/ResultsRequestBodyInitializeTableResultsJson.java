@@ -17,22 +17,23 @@
 
 package com.ge.research.semtk.services.results;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 public class ResultsRequestBodyInitializeTableResultsJson extends ResultsRequestBody {
 
-	private String[] columnNames;
-	private String[] columnTypes;
-	
-	public String[] getColumnNames() {
-		return columnNames;
+	private String jsonRenderedHeader;
+
+	public JSONObject getJsonRenderedHeader() throws ParseException {
+		
+		JSONParser jParse = new JSONParser();
+		
+		return (JSONObject) jParse.parse(jsonRenderedHeader);
 	}
-	public void setColumnNames(String[] columnNames) {
-		this.columnNames = columnNames;
-	}
-	public String[] getColumnTypes() {
-		return columnTypes;
-	}
-	public void setColumnTypes(String[] columnTypes) {
-		this.columnTypes = columnTypes;
+
+	public void setJsonRenderedHeader(String jsonRenderedHeader) {
+		this.jsonRenderedHeader = jsonRenderedHeader;
 	}
 	
 }

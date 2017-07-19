@@ -33,6 +33,7 @@ import org.json.simple.JSONValue;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**
@@ -106,7 +107,14 @@ public abstract class RestClient extends Client implements Runnable {
 			throw new Exception("Attempting to execute client with no endpoint specified.");
 		}
 		JSONObject resultJSON = (JSONObject) execute();	 
-		return new TableResultSet(resultJSON);
+		
+		TableResultSet retval = new TableResultSet(true);
+		
+		Table table = Table.fromJson(resultJSON);
+		
+		retval.addResults(table);
+		
+		return retval;
 	}
 	
 	/**

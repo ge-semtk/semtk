@@ -43,10 +43,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URL;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.TableResultsSerializer;
 import com.ge.research.semtk.edc.TableResultsStorage;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -84,7 +87,8 @@ public class ResultsServiceRestController {
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
-			getTableResultsStorage().storeTableResultsJsonInitialize(requestBody.jobId, requestBody.getColumnNames(), requestBody.getColumnTypes()); 	
+			getTableResultsStorage().storeTableResultsJsonInitialize(requestBody.jobId, requestBody.getJsonRenderedHeader());
+			
 		    res.setSuccess(true);
 		} catch(Exception e){
 	    	res.setSuccess(false);
@@ -145,7 +149,7 @@ public class ResultsServiceRestController {
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
-			URL url = getTableResultsStorage().storeTableResultsJsonFinalize(requestBody.jobId, requestBody.getRowCount()); 
+			URL url = getTableResultsStorage().storeTableResultsJsonFinalize(requestBody.jobId); 
 		    getJobTracker().setJobResultsURL(requestBody.jobId, url);  // store URL with the job		
 		    res.setSuccess(true);
 		} catch(Exception e){
@@ -162,57 +166,38 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
-	public ResponseEntity<Resource> getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody){
+	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp){
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			byte[] retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows); 			
-			ByteArrayResource resource = new ByteArrayResource(retval);
+			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows); 			
 			
 			if(requestBody.getAppendDownloadHeaders()){
-				HttpHeaders header = new HttpHeaders();
-				header.add("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
-				
-				return ResponseEntity.ok()
-			        .headers(header)
-		            .contentLength(retval.length)
-		            .contentType(MediaType.parseMediaType("text/csv"))
-		            .body(resource);
+			
+				resp.setHeader("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
+				retval.writeToStream(resp.getWriter());
 			}
 			else{
-				return ResponseEntity.ok()
-		        //    .headers(headers)
-		            .contentLength(retval.length)
-		            .contentType(MediaType.parseMediaType("text/csv"))
-		            .body(resource);		
+				retval.writeToStream(resp.getWriter());
 			}
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    e.printStackTrace();
 	    }
-		// if nothing, return nothing
-		return null;
+
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJsonForWebClient", method= RequestMethod.GET)
-	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp){
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
-			byte[] retval = getTableResultsStorage().getJsonTable(url, maxRows); 			
-			ByteArrayResource resource = new ByteArrayResource(retval);
-			
-			HttpHeaders header = new HttpHeaders();
-			header.add("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
-				
-			return ResponseEntity.ok()
-			       .headers(header)
-		           .contentLength(retval.length)
-		           .contentType(MediaType.parseMediaType("application/json"))
-		           .body(resource);
+			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, maxRows); 			
+			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
+			retval.writeToStream(resp.getWriter());
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
@@ -225,30 +210,21 @@ public class ResultsServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
-	public ResponseEntity<Resource> getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows){
+	public void getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp){
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
-			byte[] retval = getTableResultsStorage().getCsvTable(url, maxRows); 			
-			ByteArrayResource resource = new ByteArrayResource(retval);
-			
-			HttpHeaders header = new HttpHeaders();
-			header.add("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
-				
-			return ResponseEntity.ok()
-			       .headers(header)
-		           .contentLength(retval.length)
-		           .contentType(MediaType.parseMediaType("text/csv"))
-		           .body(resource);
+			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, maxRows); 			
+
+			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
+			retval.writeToStream(resp.getWriter());
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    e.printStackTrace();
 	    }
-		// if nothing, return nothing
-		return null;
 	}
 	
 	/**
@@ -256,22 +232,17 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
-	public JSONObject getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody){
+	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp){
 	
-		TableResultSet res = new TableResultSet();
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			byte[] retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
-			Table retTable =  Table.fromJson((JSONObject)new JSONParser().parse(new String(retval)));
-			res.setSuccess(true);
-			res.addResults(retTable);			
+			TableResultsSerializer retval = (TableResultsSerializer) getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
+			
+			retval.writeToStream(resp.getWriter());
 	    } catch (Exception e) {
-		    res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString()); 
-	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsJson exception", "message", e.toString());
 		    e.printStackTrace();
 	    }
-		return res.toJson();
+		
 	}
 	
 	/**
