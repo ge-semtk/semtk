@@ -169,7 +169,8 @@ define([	// properly require.config'ed
 				// return a list containing just the text field
 				this.callback(	this.item, 
 								(returnChecked || rtConstrainedChecked || constraintTxt != "") ? sparqlID : "",
-								(optionalCheckElem == null) ? null : optionalCheckElem.checked,
+								returnChecked,
+                                (optionalCheckElem == null) ? null : optionalCheckElem.checked,
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
@@ -235,8 +236,11 @@ define([	// properly require.config'ed
 								      	val: res.getRsData(i, 0, res.NAMESPACE_YES)
 								     };
 						
-						if (element[i].val == "" || element[i].name=="") {
-							alert("Error: Got a null value returned from SPARQL server");
+                        //PEC TODO: the following old code was true for val of 0
+                        //          I'm not sure why this is even here.
+						//if (element[i].val == "" || element[i].name == "") {
+                        if (element[i].name == null) {
+							this.setStatusAlert("Error: One of the values returned is NULL");
 							return;
 						};
 					}
