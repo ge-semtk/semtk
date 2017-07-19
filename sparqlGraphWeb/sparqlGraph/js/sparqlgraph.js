@@ -435,11 +435,12 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
-        propItem.setReturnName(sparqlID);
+        propItem.setAndReserveSparqlID(sparqlID);
+        propItem.setIsReturned(returnFlag);
         propItem.setIsOptional(optionalFlag);
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
         propItem.setConstraints(constraintStr);

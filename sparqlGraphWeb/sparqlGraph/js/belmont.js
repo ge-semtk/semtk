@@ -726,7 +726,7 @@ PropertyItem.prototype = {
 		return bitmap;
 	},
 	
-	setReturnName : function(retName) {
+	setAndReserveSparqlID : function(retName) {
 		// callback from setting the return name
 		// caller must check that retName is legal and work it out with the GUI if
 		// not.
@@ -735,12 +735,10 @@ PropertyItem.prototype = {
 
 		// if user entered an empty name, they don't want it returned anymore
 		if (retName == "") {
-			this.setIsReturned(false);
 			freeUnusedSparqlID(this);
 
 			// else user entered a real name
 		} else {
-			this.setIsReturned(true);
 			// if name changed: free old one and grab new one
 			if (retName != curName) {
 				gNodeGroup.freeSparqlID(curName);
