@@ -228,8 +228,16 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				return (ret.length > 0) ? ret : null;
 			},
+            
+            getRecordProcessResultField : function (field) {
+                if (this.isRecordProcessResults() && this.xhr.recordProcessResults.hasOwnProperty(field)) {
+                    return this.xhr.recordProcessResults[field];
+                } else {
+					return null;
+				}
+            },
 			
-			getSimpleResultField : function (field, optFailCallback) {
+			getSimpleResultField : function (field) {
 				// return a field or null if it can't be found
 				
 				if (this.isSimpleResults()  && this.xhr.simpleresults.hasOwnProperty(field)) {
@@ -410,9 +418,9 @@ define([	// properly require.config'ed   bootstrap-modal
 				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv", "text/csv;charset=utf8");
 			},
             
-			sort : function(colName) {
+			sort : function(optColName) {
 				
-				var col = this.getTable().col_names.indexOf(colName);
+				var col = (typeof optColName != "undefined") ? this.getTable().col_names.indexOf(colName) : 0;
 
 				this.xhr.table["@table"].rows = this.xhr.table["@table"].rows.sort(function(a,b) {
 					// a row with only an optional value that is "null" comes back from virtuoso as a totally empty row

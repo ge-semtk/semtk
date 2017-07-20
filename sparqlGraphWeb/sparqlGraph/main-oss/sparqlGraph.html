@@ -23,7 +23,9 @@
   <!--[if lt IE 9]>
     <link id="theme-ie" href="../../iidx-oss/css/ie.css" rel="stylesheet" type="text/css">
   <![endif]-->
-
+    <script>
+        var gVERSION = 2.0;
+    </script>
   	<script src="../../iidx-oss/components/modernizr/modernizr.js"></script>
   
     <!-- Include the required JavaScript libraries: -->
@@ -32,14 +34,6 @@
     
 	<script type="text/javascript" src='../jquery/jquery.cookie.js'></script>	
 	<script type="text/javascript" src='../jquery/jquery.jsonp-2.3.0.min.js'></script>
-	
-	<!-- includes for graph -->
-    <script type="text/javascript" src="../js/raphael-min.js"></script>
-    <script type="text/javascript" src="../js/dracula_graffle.js"></script>
-    <script type="text/javascript" src="../js/dracula_graph.js"></script>
-    <script type="text/javascript" src="../js/belmont.js"></script>
-    <script type="text/javascript" src="../js/graphGlue.js"></script>
-
     
     <link rel='stylesheet' type='text/css' href='../dynatree-1.2.5/skin/ui.dynatree.css'>
     <script src='../dynatree-1.2.5/jquery.dynatree.js' type="text/javascript"></script>
@@ -59,45 +53,22 @@
 	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-tooltip.js"></script>
 	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-transition.js"></script>
 	
-	<!-- These should be removed -->
-	<script type="text/javascript" src="../js/sparqlserverinterface.js"></script>
-	<script type="text/javascript" src='../js/ontologytree.js'></script>
-	<script type="text/javascript" src='../js/ontologyinfo.js'></script>	
-	<script type="text/javascript" src='../js/queryserverinterface.js'></script>	
-	<script type="text/javascript" src="../js/cookiemanager.js"></script>
-	<script type="text/javascript" src="../js/sparqlconnection.js"></script>
-	<script type="text/javascript" src="../js/modalloaddialog.js"></script>	
-	<script type="text/javascript" src="../js/modalconstraintdialog.js"></script>	
-	<script type="text/javascript" src="../js/modaldialog.js"></script>		
-
 	<!--  require.js -->
+    
 	<script src="../../iidx-oss/components/requirejs/require.js"></script>
 	<script src="../../iidx-oss/js/require.config.js"></script>
-		
-	<script type="text/javascript">
-
-		require.config({
-			baseUrl : '../../iidx-oss',
-	  		paths: {
-	    		"jsonp": "../sparqlGraph/jquery/jquery.jsonp-2.3.0.min",
-	    		"sparqlgraph": "../sparqlGraph",
-	    		"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
-	    		"local" :      "../sparqlGraph/main-oss"
-	      	},
-	  		
-	  		shim : {
-	  		}
-		});
-	    
-		requirejs.onError = function (err) {
-		    if (err.requireType === 'timeout') {
-		        alert("Require.js page loading time-out. (Try reloading the page)  \nError: "+err);
-		    } 
-		    else {
-		    	console.log(err.stack);
-		        throw err;
-		    }   
-		};
+    <script type="text/javascript" src="../js/requiresetup.js"></script>
+	
+	<script>
+	    requireConfigSparqlgraph( 
+			"../../sparqlGraph",                                
+			{                                               
+				baseUrl : '../../iidx-oss',                   
+				paths : {
+					"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
+                    "local" :      "../sparqlGraph/main-oss"  
+			    }
+	        });
 	</script>
 	
 	<script src="../js/sparqlgraph.js"></script>
@@ -118,14 +89,25 @@
 		//
 		// http://stackoverflow.com/questions/951791/javascript-global-error-handling
 		window.onerror = function(msg, url, line, col, error) {
-		   // Note that col & error are new to the HTML 5 spec and may not be supported
-		   var extra;
-		   extra += !col ?   '' : '\ncolumn: ' + col;
-		   extra += !error ? '' : '\nerror: '  + error;
-		
-		   alert("Error: " + msg + "\nurl: " + url + "\nline: " + line + "\n" + extra);
-		   console.log(error.stack);
-		   return false;
+		   // first check for CORS (e.g. security)
+            // msg should be empty by spec, but we often get "Script error."
+            // url == ""
+            // line == 0
+            if (url == null || url == "") {
+                alert("Network permission error (CORS).\n\nReloading page may be required.\n\nTry downloading nodegroup and then refreshing.");
+                kdlLogEvent("CORS Error");
+            } else {
+                // Note that col & error are new to the HTML 5 spec and may not be supported
+                var extra;
+                extra += !col ?   '' : '\ncolumn: ' + col;
+                extra += !error ? '' : '\nerror: '  + error;
+
+                var message = "Error: " + msg + "\nurl: " + url + "\nline: " + line + "\n" + extra;
+                alert(message);
+                console.log(error.stack);
+                kdlLogEvent("Js Error", "error.stack", error.stack);
+            }
+            return false;
 		};
 	</script>
 	
@@ -207,9 +189,11 @@
                   
 					<li class="dropdown"><a href="#" data-toggle="dropdown">Help<i class="icon-chevron-down"></i></a>
 						<ul class="dropdown-menu pull-right">
-							<li><a href="javascript:doHelpSparqlGraph();">Docs for SparqlGraph</a></li>
-							<li><a href="javascript:doHelp();">Docs for this Tab</a></li>
-							<li><a href="javascript:doHelpBlog();">Blog Bug or Feature</a></li>
+							<li><a href="javascript:checkServices();"  >Check services...</a></li>	
+							<li class="divider"></li>
+							<li><a href="javascript:doHelpSparqlGraph();">Docs for SPARQLGraph</a></li>
+							<li><a href="javascript:doHelp();">Docs for this tab</a></li>
+							<li><a href="javascript:doHelpBlog();">Blog bug or feature</a></li>
 							<li><a href="javascript:doTest();">Test</a></li>
 							<li><a href="javascript:doAbout();">About</a></li>
 						</ul>
@@ -436,13 +420,6 @@
 	<script type="text/javascript">
 	// Things that need to be done after HTML is all loaded
 	
-	// Paul's html5 voodoo:  to allow json files to be dropped
-	var dropbox = document.getElementById("treeCanvasWrapper")
-	dropbox.addEventListener("dragenter", noOpHandler, false);
-	dropbox.addEventListener("dragexit",  noOpHandler, false);
-	dropbox.addEventListener("dragover",  noOpHandler, false);
-	dropbox.addEventListener("drop",      fileDrop, false);
-	// End html5 voodoo
 	
     require(['modules'], function() {
     $('.module.collapsible').collapsible();

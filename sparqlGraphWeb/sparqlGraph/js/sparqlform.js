@@ -31,7 +31,6 @@ var EMPTY = "";
 //
 var g = null;
 var gConn = null;
-var gModalDialog = null;
 var gNodeGroup = null;
 var gExtNodeGroup = null;
 var gOInfo = null;
@@ -65,7 +64,6 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/js/belmont',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/js/modaldialog',
 			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
 		],
 
@@ -411,6 +409,7 @@ require([	'local/sparqlformconfig',
 
 			// Build a node group
 			gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
+            gNodeGroup.drawable = false;
 			gNodeGroup.setSparqlConnection(gConn)
 			return;
 
@@ -576,13 +575,14 @@ require([	'local/sparqlformconfig',
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 		
-		itemDialogCallback = function(item, sparqlID, optionalFlag, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
+		itemDialogCallback = function(item, sparqlID, returnFlag, optionalFlag, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
 			
 	    	// Note: ModalItemDialog validates that sparqlID is legal
 	    	
 	    	// snodes don't allow these
-	    	if (item.setReturnName) item.setReturnName(sparqlID);
+	    	if (item.setAndReserveSparqlID) item.setAndReserveSparqlID(sparqlID);
+            item.setIsReturned(returnFlag);
 	    	
 	    	// Optional
 	    	if (item.getItemType() == "PropertyItem") {

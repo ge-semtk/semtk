@@ -149,7 +149,7 @@ define([	// properly require.config'ed   bootstrap-modal
             /*===================================================*/
             execAsyncPercentUntilDone : function (jobSuccessCallback, statusBarCallback) {
                 
-                this.execGetPercentComplete(this.execAsyncPercentCallback.bind( this,
+                this.execGetPercentCompleteInt(this.execAsyncPercentCallback.bind( this,
                                                                                 0,
                                                                                 50,
                                                                                 jobSuccessCallback,

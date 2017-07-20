@@ -18,17 +18,15 @@
 
 
 define([	// properly require.config'ed
-    'sparqlgraph/js/msiclientnodegroupstore',
     'sparqlgraph/js/modaliidx',
     'sparqlgraph/js/iidxhelper',
-    'sparqlgraph/js/sparqlgraphjson',
     'sparqlgraph/js/runtimeconstraints',
 
     // shimmed
     'jquery'
     ],
 
-	function(MsiClientNodeGroupStore, ModalIidx, IIDXHelper, SparqlGraphJson, RuntimeConstraints, jquery) {
+	function(ModalIidx, IIDXHelper, RuntimeConstraints, jquery) {
 	
         //   Supported runtime-constrainable types (from com.ge.research.semtk.load.utility.ImportSpecHandler):
         //   from the XSD data types:
@@ -40,14 +38,9 @@ define([	// properly require.config'ed
         //   NODE_URI
     
         // dropdown operator choices for different types
-        var operatorChoicesForStrings = ["=", "=",
-                                   "regex", "regex"];
-        var operatorChoicesForUris = ["=", "="];
-        var operatorChoicesForNumerics = ["=", "=",
-                                    ">", ">",
-                                    ">=", ">=",
-                                    "<", "<",
-                                    "<=", "<="];
+        var operatorChoicesForStrings = ["=", "regex"];
+        var operatorChoicesForUris = ["="];
+        var operatorChoicesForNumerics = [  "=",">", ">=", "<", "<="];
         var operandChoicesForBoolean = ["true","false","unspecified"];
     
         var isNumericType = function(dataType){
@@ -72,11 +65,15 @@ define([	// properly require.config'ed
 		/**
 		 * A dialog allowing users to populate runtime constraints.
          * Callback provides json for runtime constraint object.  Sample: 
+         *
+         * suggestValuesFunc(rtConstraints, item, msiOrQsResultCallback, failureCallback, statusCallback)
 		 */
-		var ModalRuntimeConstraintDialog= function () {
+		var ModalRuntimeConstraintDialog= function (suggestValuesFunc) {
+            this.m = new ModalIidx();      
             this.div = null;
             this.sparqlIds = null;
             this.callback = function () {};
+            this.suggestValuesFunc = suggestValuesFunc;
 		};		
 		
 		ModalRuntimeConstraintDialog.prototype = {
@@ -145,11 +142,8 @@ define([	// properly require.config'ed
 			},
             
             
-            /**
-             * Build runtime constraint json and return it.
-             * Basic validation has already been done in the validateCallback.
-             */
-			okCallback : function() {
+            buildRuntimeConstraints : function (optSkipSparqlId) {
+                var skipSparqlId = typeof optSkipSparqlId != "undefined" ? optSkipSparqlId : "";
                 
                 var runtimeConstraints = new RuntimeConstraints();
                 
@@ -157,6 +151,11 @@ define([	// properly require.config'ed
                 for(j = 0; j < this.sparqlIds.length; j++){
                     
                     var sparqlId = this.sparqlIds[j];
+                    
+                    if (sparqlId == skipSparqlId) {
+                        continue;
+                    }
+                    
                     var valueType = this.valueTypes[j];
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
@@ -249,73 +248,166 @@ define([	// properly require.config'ed
                     }
 
                 }
+                return runtimeConstraints;
+            },
+            
+            /**
+             * Build runtime constraint json and return it.
+             * Basic validation has already been done in the validateCallback.
+             */
+			okCallback : function() {
                 
                 // call the callback with a RuntimeConstraints object                
-                this.callback(runtimeConstraints);
+                this.callback(this.buildRuntimeConstraints());
 			},    
             
             /**
               * Got runtime constrainable items for the node group.  Build and launch a dialog for user to populate them.
               * resultSet contains a table with runtime constrainable items.
               */
-              launchDialog : function (resultSet, callback) { 
-                  
+            launchDialog : function (resultSet, callback) { 
+
                 this.title = "Enter runtime constraints";
                 this.callback = callback;
 
                 this.div = document.createElement("div");
-                    
+
                 this.sparqlIds = resultSet.getColumnStringsByName("valueId");
                 //this.itemTypes = resultSet.getColumnStringsByName("itemType");   
                 this.valueTypes = resultSet.getColumnStringsByName("valueType");
-				//this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
+                //this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
                 //this.valueTypes = ["STRING","INT","DOUBLE"];          // TODO REMOVE - FOR TESTING ONLY                      
 
+                var isEquals = function(operatorId) {
+                    return document.getElementById(operatorId).value == "=";
+                };
                 // create UI components for all runtime-constrained items 
                 for(i = 0; i < this.sparqlIds.length; i++){
-                        
+
                     sparqlId = this.sparqlIds[i];                   // e.g. ?circumference
                     valueType = this.valueTypes[i];                 // e.g. STRING, INT, etc
-					operator1ElementId = "operator1" + sparqlId;	// e.g. "operator1?circumference"
-					operand1ElementId = "operand1" + sparqlId;		// e.g. "operand1?circumference"
-					operator2ElementId = "operator2" + sparqlId;	// e.g. "operator2?circumference"
-					operand2ElementId = "operand2" + sparqlId;		// e.g. "operand2?circumference"
-                        
+                    operator1ElementId = "operator1" + sparqlId;	// e.g. "operator1?circumference"
+                    operand1ElementId = "operand1" + sparqlId;		// e.g. "operand1?circumference"
+                    operator2ElementId = "operator2" + sparqlId;	// e.g. "operator2?circumference"
+                    operand2ElementId = "operand2" + sparqlId;		// e.g. "operand2?circumference"
+
                     this.div.appendChild(IIDXHelper.createLabel(sparqlId.substring(1) + ":", valueType));  // value type is a tooltip
                     // create UI components for operator/operand (varies per data type)
                     if(valueType == "STRING"){
-                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, "=", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, ["="], false,  "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                       
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
+
                     }else if(valueType == "NODE_URI"){
-                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, "=", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, ["="], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
+
                     }else if(valueType == "BOOLEAN"){
                         this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
+                        
                     }else if(isNumericType(valueType)){
-                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, ">", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, [">"], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
+                        
                         this.div.appendChild(IIDXHelper.createLabel("  ")); // forces a newline
-                        this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorChoicesForNumerics, "<", "input-mini"));
+                        
+                        this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorChoicesForNumerics, ["<"], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId, "input-xlarge"));
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand2ElementId, sparqlId, isEquals.bind(this, operator2ElementId))));
+                        
                     }else{
                         // TODO support all data types, and also handle in validateCallback and okCallback
                         this.div.appendChild(IIDXHelper.createLabel("...not supported yet..."));
                     }
-                } 
-                    
+
+                }
+                
+                // status
+				var elem = document.createElement("div");
+				elem.id = "mrtcstatus";
+				elem.style.textAlign = "left";
+				this.div.appendChild(elem);
+
                 // launch the modal
-                var m = new ModalIidx();                            
-                m.showClearCancelSubmit(
+                                      
+                this.m.showClearCancelSubmit(
                                 this.title,
                                 this.div, 
                                 this.validateCallback.bind(this),
                                 this.clearCallback, 
                                 this.okCallback.bind(this)
                                 );
-				
-			},            
+            },            
+
+            setStatus : function (msg) {
+				document.getElementById("mrtcstatus").innerHTML= "<font color='red'>" + msg + "</font>";
+			},
             
-		};
+            suggestValues : function (elemId, sparqlId, multiCallback) {
+
+                // successfully got a list of choices
+                var suggestValueSuccess = function (elemId, sparqlId, mCallback, res) {
+                    
+                    // chose one of the choices
+                    var choseCallback = function(elemId, valList) {
+                        var elem = document.getElementById(elemId);
+                        var valString = valList.join(',');   // PEC TODO: this won't work if there are commas in the values
+                                                             //           So we need a better way to store multiples
+                        elem.value = valString;
+                        
+                    }.bind(this, elemId);
+                    
+                    // get list of choices
+                    res.sort();
+                    var choiceList = res.getColumnStrings(0);
+                    
+                    this.m.disableButtons();
+                    
+                    // Launch a list of choices or an alert
+                    if (choiceList.length > 0) {
+                        ModalIidx.multiListDialog("Pick value of " + sparqlId, 
+                                                  "OK", 
+                                                  choiceList, 
+                                                  ["PEC TODO add current"], 
+                                                  choseCallback,
+                                                  multiCallback(),
+                                                  this.m.enableButtons.bind(this.m)
+                                                 );
+                    } else {
+                        ModalIidx.alert("Constraints too tight",
+                                        "No possible choices exist in the instance data.<br>Other constraints may be too tight.",
+                                        false,
+                                        this.m.enableButtons.bind(this.m)
+                                       )
+                    }
+                    this.setStatus("");
+                    
+                }.bind(this, elemId, sparqlId, multiCallback);
+
+                var failureCallback = function (msgHTML) {
+                    ModalIidx.alert("Failure getting values", msgHTML);
+                    this.setStatus("");
+                }.bind(this);
+
+                var statusCallback = function (percent) {
+                    if (percent == NaN || percent == "NaN") {
+                        console.log("not a number");
+                    }
+                    this.setStatus("Querying values " + percent.toString() + "%");
+                }.bind(this);
+
+                this.suggestValuesFunc(this.buildRuntimeConstraints(sparqlId),
+                                       sparqlId,
+                                       suggestValueSuccess,
+                                       failureCallback,
+                                       statusCallback,
+                                      );
+
+            },
+        };
 	
 		return ModalRuntimeConstraintDialog;
 	}

@@ -34,10 +34,12 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.optTimeout = optTimeout;
 		};
 		
+        MsiClientIngestion.RECORDS_PROCESSED = "recordsProcessed";
+        MsiClientIngestion.FAILURE_ROWS = "failuresEncountered"
 		
 		
 		MsiClientIngestion.prototype = {
-		
+		      
 
 			execFromCsvFilePrecheck : function (jsonFile, dataFile, successCallback) {
 				var formdata = new FormData();
@@ -61,7 +63,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			getFromCsvErrorTable: function (resultSet) {
 				// download the error table, or null
 				return resultSet.getRecordProcessResultErrorCsv()
-			}
+			},
+            
 		};
 	
 		return MsiClientIngestion;            // return the constructor

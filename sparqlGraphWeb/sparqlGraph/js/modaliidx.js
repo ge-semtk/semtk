@@ -35,6 +35,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			// optUniqueId is the html element id.  Only needed if there is a conflict or nested modals.
 			this.id = (typeof optUniqueId !== "undefined") ? optUniqueId : "myModal";
 			this.div = null;
+            
+            this.butCallbacks = [];
 		};
 		
 		ModalIidx.CONSTANT = "text";
@@ -42,7 +44,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		ModalIidx.HTML_SAFE = true;      // flag: disrespect anything that looks like html markup.  Show raw tag characters
 		ModalIidx.HTML_ALLOW = false;    //       respect html markup.
 		
-		ModalIidx.alert = function (titleTxt, msgHtml, cleanHtmlFlag) {
+		ModalIidx.alert = function (titleTxt, msgHtml, cleanHtmlFlag, optHideCallback) {
 			// clean up the html tags if flag is set
 			var msgHtml2 = (typeof cleanHtmlFlag === "undefined" || ! cleanHtmlFlag) ? msgHtml : IIDXHelper.htmlSafe(msgHtml);
 			
@@ -52,6 +54,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			var m = new ModalIidx("ModalIidxAlert");
 			var div = document.createElement("div");
 			div.innerHTML = msgHtml2;
+            m.onHide(optHideCallback);
 			m.showOK(titleTxt, div, function(){});
 		};
 		
@@ -140,8 +143,83 @@ define([	// properly require.config'ed   bootstrap-modal
             m.showChoices(headerText, div, buttonNameList, callbackList, optWidthPercent);
         };
 
+        /*
+         * slightly more modern listDialog supporting multi-select
+         *
+         * textValArray is an array of texts, or [text, val] pairs
+         * selTextsList are texts for options that should be selected by default
+         * valListCallback([val list]) where values will match text if no values were given
+         *
+         * optHideCallback will be called any time the dialog is hidden
+         */
+        ModalIidx.multiListDialog = function (headerText, buttonLabel, textValArray, selTextsList, valListCallback, optMultiFlag, optHideCallback, optSize, optWidthPercent) {
+            var multiFlag = (typeof optMultiFlag != "undefined") ? optMultiFlag          : true;
+            var size = (typeof optSize != "undefined") ? optSize                         : "6";
+        
+            var div = document.createElement("div");
+            div.align = "center";
+            
+            var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, selTextsList, multiFlag);
+            select.size = size;
+            select.style.width = "100%";
+            div.appendChild(select);
+
+            // callbacks
+            var listDialogSubmit = function (sel, cback) {	
+                cback(IIDXHelper.getSelectValues(sel));
+            }.bind(this, select, valListCallback);
+            
+            var listDialogValidate = function (sel) {
+                if (sel.selectedIndex == -1) {
+                    return "Nothing is selected";
+                } else {
+                    return null;
+                }
+            }.bind(this, select);
+            
+            var m = new ModalIidx("ModalIidx_multiListDialog");
+            m.onHide(optHideCallback);
+            m.showOKCancel(headerText, div, listDialogValidate, listDialogSubmit, function(){}, buttonLabel, optWidthPercent);
+
+        };
+    
+        // old ModalDialog.listDialog
+        ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent) {
+
+            var div = document.createElement("div");
+            div.align = "center";
+            
+            // create the select
+            var textValArray = [];
+            for (var i=0; i < nameArray.length; i++) {
+                textValArray.push([nameArray[i], i.toString()]);
+            }
+            
+            var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, [nameArray[defaultIndex]]);
+            select.size = "6";
+            select.style.width = "100%";
+            div.appendChild(select);
+
+            // callbacks
+            var listDialogSubmit = function (sel, vArr, cback) {		
+                cback(vArr[sel.selectedIndex]);
+            }.bind(this, select, valArray, callback);
+            
+            var listDialogValidate = function (sel) {
+                if (sel.selectedIndex == -1) {
+                    return "Nothing is selected";
+                } else {
+                    return null;
+                }
+            }.bind(this, select);
+            
+            var m = new ModalIidx("ModalIidx_listDialog");
+            m.showOKCancel(headerText, div, listDialogValidate, listDialogSubmit, function(){}, buttonLabel, optWidthPercent);
+
+        };
 		
 		ModalIidx.prototype = {
+                
             showOK : function (headerText, bodyDOM, callback, optWidthPercent) {
                 // show a modal with header, body and callback.
 
@@ -293,54 +371,73 @@ define([	// properly require.config'ed   bootstrap-modal
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a = document.createElement("a");
-                a.className = "btn btn-primary";
-                a.innerHTML = "OK";
-                a.onclick = function () {
-                    callback();
+                var callback1 = function (cb) {
+                    cb();
                     $(this.div).modal('hide');
-                }.bind(this);
+                }.bind(this, callback);
+                
+                var a = IIDXHelper.createButton("OK", callback1, ["btn-primary"]);
                 footer.appendChild(a);
 
                 return footer;
             },
 
+            createCancelSubmitFooter : function(validateCallback, submitCallback) {
+                //----- footer -----
+                var footer = document.createElement("div");
+                footer.className = "modal-footer";
+
+                var callback2 = function () {
+                    $(this.div).modal('hide');
+                }.bind(this);
+                var a2 = IIDXHelper.createButton("Cancel", callback2, ["btn-danger"]);
+                footer.appendChild(a2);
+
+                var callback3 = function (valCb, subCb) {
+                    var msg = valCb();
+                    if (msg) {
+                        alert(msg);
+                    } else {
+                        subCb();
+                        $(this.div).modal('hide');
+                    }
+                }.bind(this, validateCallback, submitCallback);
+                var a3 = IIDXHelper.createButton("Submit", callback3, ["btn-primary"]);
+                footer.appendChild(a3);
+                
+                return footer;
+            },
+            
             createClearCancelSubmitFooter : function(clearCallback, validateCallback, submitCallback) {
                 //----- footer -----
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a1 = document.createElement("a");
-                a1.className = "btn";
-                //a1.setAttribute("data-dismiss", "modal");
-                a1.innerHTML = "Clear";
-                a1.onclick = function () {
-                    clearCallback();
+                var callback1 = function (cb) {
+                    cb();
                     return false;
-                }
+                }.bind(this, clearCallback);
+                var a1 = IIDXHelper.createButton("Clear", callback1 );
                 footer.appendChild(a1);
 
-                var a2 = document.createElement("a");
-                a2.className = "btn btn-danger";
-                a2.innerHTML = "Cancel";
-                a2.onclick = function () {
+                var callback2 = function () {
                     $(this.div).modal('hide');
                 }.bind(this);
+                var a2 = IIDXHelper.createButton("Cancel", callback2, ["btn-danger"]);
                 footer.appendChild(a2);
 
-                var a3 = document.createElement("a");
-                a3.className = "btn btn-primary";
-                a3.innerHTML = "Submit";
-                a3.onclick = function () {
-                    var msg = validateCallback();
+                var callback3 = function (valCb, subCb) {
+                    var msg = valCb();
                     if (msg) {
                         alert(msg);
                     } else {
-                        submitCallback();
+                        subCb();
                         $(this.div).modal('hide');
                     }
-                }.bind(this);
+                }.bind(this, validateCallback, submitCallback);
+                var a3 = IIDXHelper.createButton("Submit", callback3, ["btn-primary"]);
                 footer.appendChild(a3);
+                
                 return footer;
             },
 
@@ -349,17 +446,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a1 = document.createElement("a");
-                a1.className = "btn";
+                var a1 = IIDXHelper.createButton(but1text, callback1, (but1text=="Cancel") ? ["btn-danger"] : undefined);
                 a1.setAttribute("data-dismiss", "modal");
-                a1.innerHTML = but1text;
-                a1.onclick = callback1;
                 footer.appendChild(a1);
 
-                var a2 = document.createElement("a");
-                a2.className = "btn btn-primary";
-                a2.innerHTML = but2text;
-                a2.onclick = function () {
+                var callback1 = function () {
                     var msg = validate2();
                     if (msg) {
                         alert(msg);
@@ -368,6 +459,8 @@ define([	// properly require.config'ed   bootstrap-modal
                         $(this.div).modal('hide');
                     }
                 }.bind(this);
+                
+                var a2 = IIDXHelper.createButton(but2text, callback1, ["btn-primary"]);
                 footer.appendChild(a2);
 
                 return footer;
@@ -386,24 +479,56 @@ define([	// properly require.config'ed   bootstrap-modal
                 footer.className = "modal-footer";
 
                 for (var i=0; i < buttonNameList.length; i++) {
-                    var a1 = document.createElement("a");
-                    a1.classList.add("btn");
-                    if (classList[i].length > 0) {
-                        a1.classList.add(classList[i]);
-                    }
-                    a1.setAttribute("data-dismiss", "modal");
-                    a1.innerHTML = buttonNameList[i];
-                    
-                    a1.onclick = function (callback) {
+
+                    var click = function (callback) {
                         callback();
                         $(this.div).modal('hide');
                     }.bind(this, callbackList[i]);
+                    
+                    var a1 = IIDXHelper.createButton(buttonNameList[i], click, (classList.length > i ) ? classList[i] : undefined)
+                    a1.setAttribute("data-dismiss", "modal");
                     
                     footer.appendChild(a1);
                 }
 
                 return footer;
             },
+            
+            /*
+             * Disable everything that looks like a button
+             * Since <a> can be class "btn" the only way to disable is to remove the callback
+             */
+            disableButtons : function () {
+                var butList = this.div.getElementsByClassName("btn");
+                for (var i=0; i < butList.length; i++) {
+                    butList[i].disabled = true;
+                    butList[i].classList.add("btn-disabled");
+                    this.butCallbacks[i] = butList[i].onclick
+                    butList[i].onclick = function(){};
+                }
+            },
+            
+            /*
+             * Undo disableButtons()
+             */
+            enableButtons : function () {
+                var butList = this.div.getElementsByClassName("btn");
+                for (var i=0; i < butList.length; i++) {
+                    butList[i].disabled = false;
+                    butList[i].classList.remove("btn-disabled");
+                    butList[i].onclick = this.butCallbacks[i]
+                }
+            },
+            
+            /*
+             * Call this callback when modal finishes, no matter what
+             */
+            onHide : function(optCallback) {
+                
+                if (typeof optCallback != "undefined" && optCallback) {
+                    $(document).on('hide', '#'+this.id, optCallback);
+                }
+            }
 		};
 	
 		return ModalIidx;            // return the constructor

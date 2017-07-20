@@ -86,22 +86,7 @@ define([	// properly require.config'ed
 				
 				var select = this.getFieldElement(ModalItemDialog.SELECT);
 				var opt;
-				var valList = [];
-                
-                /*  Very slow with large 10,000 element selects
-                    Code is still here in case there are browser compatibility issues 
-                
-				var len = select.length;
-				for (var i=0; i < len;i++) {
-					if (select[i].selected) {
-						valList.push(select[i].value);
-					}
-				}
-                */
-                // faster building valList
-                for (var i=0; i < select.selectedOptions.length; i++) {
-                    valList.push(select.selectedOptions[i].value);
-                }
+				var valList = IIDXHelper.getSelectValues(select);
 				
 				// swap in sparqlID
 				var savedID = this.item.getSparqlID();
@@ -169,7 +154,8 @@ define([	// properly require.config'ed
 				// return a list containing just the text field
 				this.callback(	this.item, 
 								(returnChecked || rtConstrainedChecked || constraintTxt != "") ? sparqlID : "",
-								(optionalCheckElem == null) ? null : optionalCheckElem.checked,
+								returnChecked,
+                                (optionalCheckElem == null) ? null : optionalCheckElem.checked,
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
@@ -235,8 +221,11 @@ define([	// properly require.config'ed
 								      	val: res.getRsData(i, 0, res.NAMESPACE_YES)
 								     };
 						
-						if (element[i].val == "" || element[i].name=="") {
-							alert("Error: Got a null value returned from SPARQL server");
+                        //PEC TODO: the following old code was true for val of 0
+                        //          I'm not sure why this is even here.
+						//if (element[i].val == "" || element[i].name == "") {
+                        if (element[i].name == null) {
+							this.setStatusAlert("Error: One of the values returned is NULL");
 							return;
 						};
 					}
@@ -649,12 +638,11 @@ define([	// properly require.config'ed
 					} else {
 						var options = [];
 						for (var key in NodeDeletionTypes) {
-							options.push(key);
-							options.push(NodeDeletionTypes[key]);
+							options.push([key, NodeDeletionTypes[key]]);
 						}
-						var deleteSelect = IIDXHelper.createSelect(this.getFieldID(ModalItemDialog.DELETE_SELECT),
-								  options,
-								  this.item.getDeletionMode());
+						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
+                                                                      options,
+                                                                      [this.item.getDeletionMode()]);
 						deleteSelect.classList.add("input-medium");
 						td.appendChild(deleteSelect);
 					}

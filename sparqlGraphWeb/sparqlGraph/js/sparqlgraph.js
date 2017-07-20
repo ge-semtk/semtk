@@ -24,14 +24,7 @@
     var gQueryClient = null;
     var gTimeseriesResults = null;
     var gQueryResults = null;
-    
-    // PEC TODO: suspicious: are these used?  why?
-    var gServerURL = null;
-    var gKSURL = null;
-    var gSource = null;
-    
-    var globalModalDialogue = null;
-    
+        
     // drag stuff
     var gDragLabel = "hi";
     var gLoadDialog;
@@ -52,7 +45,8 @@
     var gQueryTypeIndex = 0;   // sel index of QueryType
     var gQuerySource = "SERVICES";
 
-    var RESULTS_MAX_ROWS = 5000;
+    var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
+    var SHORT_TIMEOUT = 5000;    // 5 sec
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -63,21 +57,23 @@
     	// checkBrowser();
     	
     	initDynatree(); 
-    	initCanvas();
     	
 	    require([ 'sparqlgraph/js/mappingtab',
-	              'sparqlgraph/js/uploadtab',
+	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
+                  'sparqlgraph/js/uploadtab',
+
                  
                   // shim
                   'sparqlgraph/js/belmont',
-	              'local/sparqlgraphlocal'], function (MappingTab, UploadTab, ModalStoreDialog) {
+                 
+	              'local/sparqlgraphlocal'], 
+                function (MappingTab, ModalLoadDialog, ModalStoreDialog, UploadTab) {
 	    
 	    	console.log(".ready()");
 	    	
 	    	// create the modal dialogue 
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
-	    	globalModalDialogue = new ModalDialog(document, "globalModalDialogue");
 	    	
 	    	 // set up the node group
 	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
@@ -110,15 +106,20 @@
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType(); 
 			
-	    	// SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
+            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
+	   	    
+            var dropbox = document.getElementById("treeCanvasWrapper");
+            dropbox.addEventListener("dragenter", noOpHandler, false);
+            dropbox.addEventListener("dragexit",  noOpHandler, false);
+            dropbox.addEventListener("dragover",  noOpHandler, false);
+            dropbox.addEventListener("drop",      fileDrop, false);
+            
+            // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
 	    	// gReady is at the end of the ready function
 	    	//        and tells us everything is loaded.
 	   	    gReady = true;
 	   	    console.log("Ready");
 	   	    logEvent("SG Page Load");
-                    
-            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
-	   	    
 		});
     });
     
@@ -130,24 +131,6 @@
         }
     };
     
-    var initCanvas = function() {
-    	$("#canvas").droppable({
-    	    hoverClass: "drophover",
-    	    addClasses: true,
-    	    over: function(event, ui) {
-    	      logMsg("droppable.over, %o, %o", event, ui);
-    	    },
-    	    drop: function(event, ui) {
-    	    	// drop nodes onto graph
-    	    	
-    	    	var gSource = ui.helper.data("dtSourceNode") || ui.draggable;
-    			
-                dropClass(gDragLabel, event.shiftKey);
-    	    }
-      	});
-
-    };
-    
     /*
      * Dropped a class onto the canvas
      */
@@ -156,6 +139,7 @@
     };
 
     var dropClass1 = function (dragLabel, noPathFlag) {
+        
         // add the node to the canvas
         var tsk = gOInfo.containsClass(dragLabel);
 
@@ -183,21 +167,30 @@
                     var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
                     for (var n=0; n < nlist.length; n++) {
 
-                        pathStrList.push(genPathString(paths[p], nlist[n], false));
+                        pathStrList.push(paths[p].genPathString(nlist[n], false));
                         valList.push( [paths[p], nlist[n], false ] );
 
                         // push it again backwards if it is a special singleLoop
                         if ( paths[p].isSingleLoop()) {
-                            pathStrList.push(genPathString(paths[p], nlist[n], true));
+                            pathStrList.push(paths[p].genPathString(nlist[n], true));
                             valList.push( [paths[p], nlist[n], true ] );
                         }
                     }
                 }
+                
+                // if choices are more than "** Disconnected" plus one other path...
+                if (valList.length > 2) {
+                     require([ 'sparqlgraph/js/modaliidx',
+                             ], function (ModalIidx) {
+                         
+                        // offer a choice, defaulting to the shortest non-disconnected path
+                        ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
 
-                if (valList.length > 1) {
-                    globalModalDialogue.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, "90%");
+                     });
+                    
                 } else {
-                    dropClassCallback(valList[0]);
+                    // automatically add using the only path
+                    dropClassCallback(valList[1]);
                 }
             }
         }
@@ -206,6 +199,7 @@
             logAndAlert("Only classes can be dropped on the graph.");
 
         }
+        
     };
 
     /**
@@ -229,45 +223,52 @@
     
     var initDynatree = function() {
     	
-        // Attach the dynatree widget to an existing <div id="tree"> element
-        // and pass the tree options as an argument to the dynatree() function:
-        $("#treeDiv").dynatree({
-            onActivate: function(node) {
-                // A DynaTreeNode object is passed to the activation handler
-                // Note: we also get this event, if persistence is on, and the page is reloaded.
-                console.log("You activated " + node.data.title);
-            },
-            onDblClick: function(node) {
-                // A DynaTreeNode object is passed to the activation handler
-                // Note: we also get this event, if persistence is on, and the page is reloaded.
-                console.log("You double-clicked " + node.data.title);
-            },
-    		
-            dnd: {
-            	onDragStart: function(node) {
-                /** This function MUST be defined to enable dragging for the tree.
-                 *  Return false to cancel dragging of node.
-                 */
-                	logMsg("tree.onDragStart(%o)", node);
-                	console.log("dragging " + gOTree.nodeGetURI(node));
-                	gDragLabel = gOTree.nodeGetURI(node);
-                	return true;
-            	},
-            	onDragStop: function(node) {
-        			logMsg("tree.onDragStop(%o)", node);
-        			console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
-      			}
-            	
-        	},	
-        	
-            
-            persist: true,
-        });
-        require([ 'sparqlgraph/js/ontologytree',
+        require([ 'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
+                  'sparqlgraph/js/ontologytree',
 	            ], function () {
                      
-                     gOTree = new OntologyTree($("#treeDiv").dynatree("getTree"));
-                 });
+                     
+
+            // Attach the dynatree widget to an existing <div id="tree"> element
+            // and pass the tree options as an argument to the dynatree() function:
+            $("#treeDiv").dynatree({
+                onActivate: function(node) {
+                    // A DynaTreeNode object is passed to the activation handler
+                    // Note: we also get this event, if persistence is on, and the page is reloaded.
+                    console.log("You activated " + node.data.title);
+                },
+                onDblClick: function(node) {
+                    // A DynaTreeNode object is passed to the activation handler
+                    // Note: we also get this event, if persistence is on, and the page is reloaded.
+                    console.log("You double-clicked " + node.data.title);
+                },
+
+                dnd: {
+                    onDragStart: function(node) {
+                    /** This function MUST be defined to enable dragging for the tree.
+                     *  Return false to cancel dragging of node.
+                     */
+                        logMsg("tree.onDragStart(%o)", node);
+                        console.log("dragging " + gOTree.nodeGetURI(node));
+                        gDragLabel = gOTree.nodeGetURI(node);
+                        return true;
+                    },
+                    onDragStop: function(node) {
+                        logMsg("tree.onDragStop(%o)", node);
+                        console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
+                        
+                        dropClass(gDragLabel, event.shiftKey);
+                    }
+
+                },	
+
+
+                persist: true,
+            });
+                     
+            gOTree = new OntologyTree($("#treeDiv").dynatree("getTree")); 
+        
+        });   
   	}; 
   	
     // PEC LOGGING
@@ -320,7 +321,7 @@
     		
     		var dialog= new ModalItemDialog(propItem, 
                                             gNodeGroup, 
-                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, propItem), 
+                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, propItem), 
                                             propertyItemDialogCallback,
     				                        {"draculaLabel" : draculaLabel}
     		                                );
@@ -353,7 +354,12 @@
     	if (unlinkedTargetSNodes.length == 1) {
     		buildLink(snode, nItem, null);			
     	} else {
-  			globalModalDialogue.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), "75%");
+            require([ 'sparqlgraph/js/modaliidx',
+                             ], function (ModalIidx) {
+                         
+                       ModalIidx.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), 75);
+
+                     });
     	}
 	};
 	
@@ -394,7 +400,7 @@
 
             var dialog= new ModalItemDialog(snodeItem, 
                                             gNodeGroup, 
-                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, snodeItem), 
+                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, snodeItem), 
                                             snodeItemDialogCallback,
                                             {"draculaLabel" : draculaLabel}
                                             );
@@ -432,11 +438,12 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
-        propItem.setReturnName(sparqlID);
+        propItem.setAndReserveSparqlID(sparqlID);
+        propItem.setIsReturned(returnFlag);
         propItem.setIsOptional(optionalFlag);
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
         propItem.setConstraints(constraintStr);
@@ -448,16 +455,14 @@
         nodeGroupChanged(true);
     };
     
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// don't un-set an SNode's sparqlID
-    	if (sparqlID == "") {
-    		snodeItem.setIsReturned(false);
-    	} else {
+    	if (sparqlID != "") {
     		snodeItem.setSparqlID(sparqlID);
-        	snodeItem.setIsReturned(true);
     	}
+        snodeItem.setIsReturned(returnFlag);
     	
     	// ignore optionalFlag in sparqlGraph.  It is still used in sparqlForm
 		
@@ -564,11 +569,20 @@
     var getQueryClientOrInterface = function() {
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
-    
-    var runSuggestValuesQuery = function(g, conn, ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
+
+    var runSuggestValuesQuery = function(g, conn, ng, rtConstraints, itemOrId, msiOrQsResultCallback, failureCallback, statusCallback) {
         require(['sparqlgraph/js/msiclientnodegroupexec',
                  'sparqlgraph/js/msiclientnodegroupservice'], 
     	            function (MsiClientNodeGroupExec, MsiClientNodeGroupService) {
+            
+            
+            // translate itemOrId into item
+            var item;
+            if (typeof itemOrId == "string") {
+                item = ng.getItemBySparqlID(itemOrId);
+            } else {
+                item = itemOrId;
+            }
             
             // make sure there is a sparqlID
             var runNodegroup;
@@ -598,18 +612,20 @@
                 
                 // generate sparql and send to sparqlCallback
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+                
+                // PEC TODO:  Jira PESQS-281   no way to get query with runtime constraints
                 ngClient.execAsyncGenerateFilter(runNodegroup, runId, sparqlCallback, failureCallback);
                 
             } else {
                 // Run nodegroup via Node Group Exec Svc
-                var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
+                var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
                                                                                  g.service.status.url,
                                                                                  g.service.results.url);
-                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
+                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
 
-                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, null, jobIdCallback, failureCallback);
+                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, rtConstraints, jsonCallback, failureCallback);
 
             }
         }); 
@@ -882,30 +898,51 @@
 	
    	
    	var doTest = function () {
-        testServices();
+        alert(   gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, -1)  );
    	};
 
-    var testServices = function () {
-        require(['sparqlgraph/js/modaliidx'], 
-    	         function (ModalIidx) {
+    var checkServices = function () {
+        require(['sparqlgraph/js/microserviceinterface',
+                 'sparqlgraph/js/modaliidx'], 
+    	         function (MicroServiceInterface, ModalIidx) {
             
+            // build div with all service names and ...
             var div = document.createElement("div");
+            for (var key in g.service) {
+                if (g.service.hasOwnProperty(key)) {
+                    div.innerHTML += g.service[key].url + "...</br>";
+                }
+            }
+            
             var m = new ModalIidx();
             m.showOK("Services", div,  function(){});
             
-            addLine = function(div, message) {
-                div.innerHTML += "<br>message";
+            // callback replaces the line with the service url with a result
+            var callback = function(div, url, resultSet_or_html) {
+                
+                // failure callbacks use a string parameter
+                if (typeof(resultSet_or_html) == "string") {
+                //    ModalIidx.alert("Microservice Ping Failed", resultSet_or_html)
+                    div.innerHTML = div.innerHTML.replace(url + "...", url + ' is <font color="red">down</font>' );
+                    
+                } else {
+                    div.innerHTML = div.innerHTML.replace(url + "...", url + ' is <font color="green">up</font>' );
+                }
             }.bind(div);
             
-            $.ajax({
-                type: "POST",  
-                url: "http://vesuvius37:12050/sparqlQueryService",
-                success: addLine.bind("12050 is up"),
-                error:   addLine.bind("12050 error"),
-            });
+            // launch service for each
+            for (var key in g.service) {
+                if (g.service.hasOwnProperty(key)) {
+                    var msi = new MicroServiceInterface(g.service[key].url);
+                    msi.ping(callback.bind(this, div, g.service[key].url),
+                             callback.bind(this, div, g.service[key].url) );
+                }
+            }
+            
         });
         
     };
+   
 
     var runGraphByQueryType = function (optRtConstraints) {
         // PEC HERE
@@ -915,9 +952,9 @@
     	         function (MsiClientNodeGroupExec) {
 			
             guiDisableAll();
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, 5000);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
     		
-            var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+            var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
                                                                                      queryFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
@@ -925,16 +962,16 @@
                                                                                      g.service.results.url);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jobIdCallback, queryFailureCallback);
+                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
 			}
             
@@ -947,16 +984,16 @@
     	         'sparqlgraph/js/modaliidx'], 
     	         function (MsiClientNodeGroupExec, ModalIidx) {
 			
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, 5000);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, SHORT_TIMEOUT);
     		
-             var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,
                                                                                       queryFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
             
-            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, jobIdCallback, queryFailureCallback);
+            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, csvJsonCallback, queryFailureCallback);
 
     	});
     };
@@ -1202,7 +1239,6 @@
             guiQueryNonEmpty();
     };
 
-    // PEC TODO: build and use async functions and a fail callback
     var buildQuery = function() {
         
         if (gNodeGroup.getNodeCount() == 0) {
@@ -1249,7 +1285,7 @@
 
     var buildQueryFailure = function (msgHtml, optNoValidSparqlMessage) {
         var sparql = "";
-        if (typeof optNoValidSparqlMessage != undefined) {
+        if (typeof optNoValidSparqlMessage != "undefined") {
             sparql = "#" + optNoValidSparqlMessage.replace(/\n/g, '#');
             
         } else {
@@ -1310,8 +1346,7 @@
         if (resultSet.getRowCount() > 0) {
             require(['sparqlgraph/js/modalruntimeconstraintdialog',
                     ], function(ModalRuntimeConstraintDialog) {
-                
-                var dialog = new ModalRuntimeConstraintDialog();
+                var dialog = new ModalRuntimeConstraintDialog(this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup));
                 dialog.launchDialog(resultSet, runGraphByQueryType.bind(this));
                 
             });

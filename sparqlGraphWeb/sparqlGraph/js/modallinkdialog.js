@@ -88,10 +88,12 @@ define([	// properly require.config'ed
 
 				// optional checkbox
 				var select = IIDXHelper.createSelect("ModalLinkDialog.optionalSelect",
-													[ " ",                NodeItem.OPTIONAL_FALSE,
-													  "forward (normal)", NodeItem.OPTIONAL_TRUE,
-													  "reverse",          NodeItem.OPTIONAL_REVERSE 
-													]);
+													[[" ",                NodeItem.OPTIONAL_FALSE   ],
+													 ["forward (normal)", NodeItem.OPTIONAL_TRUE    ],
+													 ["reverse",          NodeItem.OPTIONAL_REVERSE ]
+													],
+                                                    []
+                                                    );
 				
 				select.style.width = "20ch";
 				
@@ -108,10 +110,10 @@ define([	// properly require.config'ed
 				
 				// delete query checkbox
 				select = IIDXHelper.createSelect("ModalLinkDialog.deleteSelect",
-												  [	" "              , "false", 
-													"mark for delete", "true"
+												  [[" "              , "false"], 
+												   ["mark for delete", "true" ]
 												  ],
-												  this.item.getSnodeDeletionMarker(this.targetSNode) ? "true":"false");
+												  [this.item.getSnodeDeletionMarker(this.targetSNode) ? "true":"false"]);
 				select.style.width = "20ch";
 				fieldset.appendChild(IIDXHelper.buildControlGroup("Delete query: ", select));
 				

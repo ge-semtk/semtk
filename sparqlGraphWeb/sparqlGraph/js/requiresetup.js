@@ -77,6 +77,13 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.shim['sparqlgraph/js/belmont'] =  {
 			deps : [ 'sparqlgraph/js/dracula_graph' ]
 		};
+    
+    // special logic to include sparql generation for legacy
+    // set gVERSION to 2 or more before requiresetup.js is included to stop this.
+    if (typeof gVERSION == "undefined" || gVERSION < 2) {
+        config.shim['sparqlgraph/js/belmont'].deps.push('sparqlgraph/js/belmont_v1');
+    };
+    
 	config.shim['sparqlgraph/js/dracula_graffle'] =  {
 			deps : [ 'sparqlgraph/js/raphael-min' ]
 		};
@@ -88,11 +95,11 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 		          'sparqlgraph/js/sparqlconnection', 
 		          'sparqlgraph/js/ontologyinfo', 
 		          'sparqlgraph/js/belmont', 
-		          'sparqlgraph/js/modaldialog',
 		      ]
 		};
 	config.shim['sparqlgraph/js/modalloaddialog'] =  {
 			deps : [ 'sparqlgraph/js/cookiemanager',
+                     'sparqlgraph/js/sparqlconnection',
 			         //
 			         'bootstrap/bootstrap-tooltip',
 			         'bootstrap/bootstrap-transition'],

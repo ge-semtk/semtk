@@ -42,7 +42,6 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/js/cookiemanager',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/js/modaldialog',
 			'sparqlgraph/js/modalloaddialog',
 
 		],
@@ -197,7 +196,6 @@ require([	'local/sparqlformconfig',
 			initAvoidQueryMicroservice();
 			
 			// globals
-			gModalDialog = new ModalDialog(document, "gModalDialog");
 			gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
 	
 			// load last connection
