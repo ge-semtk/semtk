@@ -20,8 +20,7 @@ package com.ge.research.semtk.services.results;
 public class ResultsRequestBodyMaxRows extends ResultsRequestBody {
 	
 	public Integer maxRows;
-
-	
+	public Integer startRow = 0;	
 
 	public Integer getMaxRows() {
 		return maxRows;
@@ -30,4 +29,19 @@ public class ResultsRequestBodyMaxRows extends ResultsRequestBody {
 	public void setMaxRows(Integer maxRows) {
 		this.maxRows = maxRows;
 	}	
+	
+	public void setStartRow(Integer startRow){
+		if(startRow == null || startRow < 0){ 
+			this.startRow = 0;
+			System.err.println("start value passed was either null or less than zero. Zero was used instead.");
+		}
+		else{
+			this.startRow = startRow;
+		}
+	}
+	
+	public Integer getStartRow(){
+		return this.startRow;
+	}
+	
 }

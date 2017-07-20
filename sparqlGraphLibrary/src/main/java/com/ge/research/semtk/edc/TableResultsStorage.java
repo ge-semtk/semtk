@@ -114,7 +114,7 @@ public class TableResultsStorage {
 	 * @return byte array containing json result
 	 */
 	public TableResultsSerializer getJsonTable(URL url) throws Exception{
-		return getJsonTable(url, null);
+		return getTable(url, null, 0, TableResultsStorageTypes.JSON);
 	}
 	
 	/**
@@ -123,8 +123,8 @@ public class TableResultsStorage {
 	 * @param maxRows limit to this number of rows
 	 * @return byte array containing json result
 	 */
-	public TableResultsSerializer getJsonTable(URL url, Integer maxRows) throws Exception{
-		return getTable(url, maxRows, TableResultsStorageTypes.JSON);
+	public TableResultsSerializer getJsonTable(URL url, Integer maxRows, Integer startRow) throws Exception{
+		return getTable(url, maxRows, startRow, TableResultsStorageTypes.JSON);
 	}
 	
 	/**
@@ -133,7 +133,7 @@ public class TableResultsStorage {
 	 * @return byte array containing csv result
 	 */
 	public TableResultsSerializer getCsvTable(URL url) throws Exception{
-		return getCsvTable(url, null);
+		return getTable(url, null, 0, TableResultsStorageTypes.CSV);
 	}
 	
 	/**
@@ -142,8 +142,8 @@ public class TableResultsStorage {
 	 * @param maxRows limit to this number of rows
 	 * @return byte array containing csv result
 	 */
-	public TableResultsSerializer getCsvTable(URL url, Integer maxRows) throws Exception{
-		return getTable(url, maxRows, TableResultsStorageTypes.CSV);
+	public TableResultsSerializer getCsvTable(URL url, Integer maxRows, Integer startRow) throws Exception{
+		return getTable(url, maxRows, startRow, TableResultsStorageTypes.CSV);
 	}
 	
 
@@ -154,7 +154,7 @@ public class TableResultsStorage {
 	 * @param maxRows limit to this number of rows
 	 * @return storageType indicates CSV or JSON
 	 */
-	private TableResultsSerializer getTable(URL url, Integer maxRows, TableResultsStorageTypes storageType) throws Exception{
+	private TableResultsSerializer getTable(URL url, Integer maxRows, Integer startRow, TableResultsStorageTypes storageType) throws Exception{
 				
 		System.out.println("** TableResultsStorage.getTable()");  // TODO DELETE THIS
 		
@@ -167,10 +167,10 @@ public class TableResultsStorage {
 			String dataFileLocation = (String) jsonObj.get(DATARESULTSFILELOCATION);
 			
 			if(storageType == TableResultsStorageTypes.CSV){
-				return new TableResultsSerializer(jsonObj, dataFileLocation, TableResultsStorageTypes.CSV, maxRows);
+				return new TableResultsSerializer(jsonObj, dataFileLocation, TableResultsStorageTypes.CSV, maxRows, startRow);
 				
 			}else if(storageType == TableResultsStorageTypes.JSON){
-				return new TableResultsSerializer(jsonObj, dataFileLocation, TableResultsStorageTypes.JSON, maxRows);
+				return new TableResultsSerializer(jsonObj, dataFileLocation, TableResultsStorageTypes.JSON, maxRows, startRow);
 			}else{
 				throw new Exception("Unrecognized TableResultsStorageTypes element: " + storageType);
 			}		
