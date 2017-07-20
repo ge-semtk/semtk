@@ -63,8 +63,6 @@ public class ResultsClient extends RestClient implements Runnable {
 		
 		int tableRowsDone = 0;
 		int totalRows     = table.getNumRows();
-		int segment       = 0;
-		int finalSegmentNumber = ((int) (Math.ceil((double)totalRows/ROWS_TO_PROCESS))) - 1;
 		
 		long startTime=0, endTime=0;
 		double prepSec = 0.0;
@@ -137,7 +135,6 @@ public class ResultsClient extends RestClient implements Runnable {
 
 			// wait for previous batch to finish
 			waitForThreadToFinish(thread);
-			segment += 1;
 			conf.setServiceEndpoint(null);			
 			
 			// send the current batch  
@@ -183,14 +180,49 @@ public class ResultsClient extends RestClient implements Runnable {
 	public TableResultSet execTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
 		conf.setServiceEndpoint("results/getTableResultsJson");
 		this.parametersJSON.put("jobId", jobId);
-		if(maxRows != null){
-			this.parametersJSON.put("maxRows", maxRows.intValue());
-		}
 
+		int BATCH_SIZE = 50000;
+		int startRow = 0;
+		int numRowsRetrieved = 0;
 		try {
-			TableResultSet res = this.executeWithTableResultReturn();
-			res.throwExceptionIfUnsuccessful();
-			return res;			
+			ArrayList<TableResultSet> resultSets = new ArrayList<TableResultSet>();
+			while(true){
+				
+				// set request parameters
+				this.parametersJSON.put("startRow", startRow);	
+				if(maxRows == null || BATCH_SIZE <= (maxRows - numRowsRetrieved)){
+					this.parametersJSON.put("maxRows", BATCH_SIZE);
+				}else{
+					// getting back a full batch would exceed maxRows, limit it 
+					this.parametersJSON.put("maxRows", maxRows - numRowsRetrieved);
+				}			
+				System.out.println("Start row: " + this.parametersJSON.get("startRow") + ", maxRows " + this.parametersJSON.get("maxRows"));
+				
+				// execute
+				TableResultSet resultSet = this.executeWithTableResultReturn();
+				System.out.println("Got batch num rows: " + resultSet.getTable().getNumRows());
+				resultSet.throwExceptionIfUnsuccessful();
+				if(resultSet.getTable().getNumRows() == 0){
+					System.out.println("...done");
+					break;	// got no results, break.
+				}
+				
+				// put the results in temporary storage
+				resultSets.add(resultSet);
+				
+				// prepare for the next iteration
+				startRow += BATCH_SIZE;		
+				numRowsRetrieved += resultSet.getTable().getNumRows();
+			}
+			
+			// merge batch results into a single TableResultSets...and then clean up
+			TableResultSet ret = TableResultSet.merge(resultSets);
+			System.out.println("Merged num rows: " + ret.getTable().getNumRows());			
+			for(TableResultSet trs : resultSets){
+				trs = null;
+			}
+			
+			return ret;			
 		} finally {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
