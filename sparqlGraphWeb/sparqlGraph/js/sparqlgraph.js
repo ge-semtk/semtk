@@ -177,17 +177,20 @@
                         }
                     }
                 }
-
-                if (valList.length > 1) {
+                
+                // if choices are more than "** Disconnected" plus one other path...
+                if (valList.length > 2) {
                      require([ 'sparqlgraph/js/modaliidx',
                              ], function (ModalIidx) {
                          
-                       ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
+                        // offer a choice, defaulting to the shortest non-disconnected path
+                        ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
 
                      });
                     
                 } else {
-                    dropClassCallback(valList[0]);
+                    // automatically add using the only path
+                    dropClassCallback(valList[1]);
                 }
             }
         }
@@ -452,16 +455,14 @@
         nodeGroupChanged(true);
     };
     
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
     	// don't un-set an SNode's sparqlID
-    	if (sparqlID == "") {
-    		snodeItem.setIsReturned(false);
-    	} else {
+    	if (sparqlID != "") {
     		snodeItem.setSparqlID(sparqlID);
-        	snodeItem.setIsReturned(true);
     	}
+        snodeItem.setIsReturned(returnFlag);
     	
     	// ignore optionalFlag in sparqlGraph.  It is still used in sparqlForm
 		
@@ -611,6 +612,8 @@
                 
                 // generate sparql and send to sparqlCallback
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+                
+                // PEC TODO:  Jira PESQS-281   no way to get query with runtime constraints
                 ngClient.execAsyncGenerateFilter(runNodegroup, runId, sparqlCallback, failureCallback);
                 
             } else {
@@ -622,7 +625,7 @@
                                                                                  g.service.results.url);
                 var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
 
-                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, null, jsonCallback, failureCallback);
+                execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, rtConstraints, jsonCallback, failureCallback);
 
             }
         }); 

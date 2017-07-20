@@ -116,29 +116,71 @@ define([	// properly require.config'ed
     /*
      * Create a dropdown element.
      * id is the element id
-     * textValArray is ["text1", "val1", "text2", "val2", ...]
-     * optValue is the default selected value
+     * textValArray is one of:
+     *      [ "textAndVal1",     "textAndVal2", ...]
+     *      [ ["textAndVal1"],   ["textAndVal2"], ...]
+     *      [ ["text1", "val1"], ["text2", "val2"], ...]
+     * selectedTexts is a list of selected items
      * optClassName can be used to control the width of the select box (e.g. input-mini for a narrow dropdown)
      */
-    IIDXHelper.createSelect = function (id, textValArray, optValue, optClassName) {
+    IIDXHelper.createSelect = function (id, textValArray, selectedTexts, optMultiFlag, optClassName) {
         var select =  document.createElement("select");
         select.id = id;
         if(typeof optClassName != "undefined"){
             select.className = optClassName;
         }
-        
+        select.multiple = ((typeof optMultiFlag) != "undefined" && optMultiFlag);
         var option;
-        for (var i=0; i < textValArray.length; i=i+2) {
+        var text;
+        var val;
+        for (var i=0; i < textValArray.length; i++) {
             option = document.createElement("option");
-            option.text = textValArray[i];
-            option.value = textValArray[i+1];
-            option.selected = (typeof optValue != "undefined" && optValue == option.value);
+            
+            if (typeof textValArray[i] == "string") {
+                text = textValArray[i];
+                val = textValArray[i];
+            } else if (textValArray[i].length == 1) {
+                text = textValArray[i][0];
+                val = textValArray[i][0];
+            } else {
+                text = textValArray[i][0];
+                val = textValArray[i][1];
+            }
+            option.text = text;
+            option.value = val;
+            option.selected = (selectedTexts.indexOf(text) > -1);
             select.options.add(option);
         }
 
         return select;
     };
 
+    /*
+     * Get list of values for each selected option
+     *
+     * Handle performance and compatibility. 
+     * Work for single or multi-select.
+     */
+    IIDXHelper.getSelectValues = function (select) {
+        var ret = [];
+        
+        // fast but not universally supported
+        if (select.selectedOptions != undefined) {
+            for (var i=0; i < select.selectedOptions.length; i++) {
+                ret.push(select.selectedOptions[i].value);
+            }
+
+        // compatible, but can be painfully slow
+        } else {
+            for (var i=0; i < select.options.length; i++) {
+                if (select.options[i].selected) {
+                    ret.push(select.options[i].value);
+                }
+            }
+        }
+        return ret;
+    };
+    
     /* Creates a label element with the given text.  Optionally provide a tooltip. */
     IIDXHelper.createLabel = function (labelText, optTooltip) {
         var labelElem = document.createElement("label");

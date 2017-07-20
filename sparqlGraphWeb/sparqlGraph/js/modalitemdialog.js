@@ -86,22 +86,7 @@ define([	// properly require.config'ed
 				
 				var select = this.getFieldElement(ModalItemDialog.SELECT);
 				var opt;
-				var valList = [];
-                
-                /*  Very slow with large 10,000 element selects
-                    Code is still here in case there are browser compatibility issues 
-                
-				var len = select.length;
-				for (var i=0; i < len;i++) {
-					if (select[i].selected) {
-						valList.push(select[i].value);
-					}
-				}
-                */
-                // faster building valList
-                for (var i=0; i < select.selectedOptions.length; i++) {
-                    valList.push(select.selectedOptions[i].value);
-                }
+				var valList = IIDXHelper.getSelectValues(select);
 				
 				// swap in sparqlID
 				var savedID = this.item.getSparqlID();
@@ -653,12 +638,11 @@ define([	// properly require.config'ed
 					} else {
 						var options = [];
 						for (var key in NodeDeletionTypes) {
-							options.push(key);
-							options.push(NodeDeletionTypes[key]);
+							options.push([key, NodeDeletionTypes[key]]);
 						}
-						var deleteSelect = IIDXHelper.createSelect(this.getFieldID(ModalItemDialog.DELETE_SELECT),
-								  options,
-								  this.item.getDeletionMode());
+						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
+                                                                      options,
+                                                                      [this.item.getDeletionMode()]);
 						deleteSelect.classList.add("input-medium");
 						td.appendChild(deleteSelect);
 					}

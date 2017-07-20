@@ -38,14 +38,9 @@ define([	// properly require.config'ed
         //   NODE_URI
     
         // dropdown operator choices for different types
-        var operatorChoicesForStrings = ["=", "=",
-                                   "regex", "regex"];
-        var operatorChoicesForUris = ["=", "="];
-        var operatorChoicesForNumerics = ["=", "=",
-                                    ">", ">",
-                                    ">=", ">=",
-                                    "<", "<",
-                                    "<=", "<="];
+        var operatorChoicesForStrings = ["=", "regex"];
+        var operatorChoicesForUris = ["="];
+        var operatorChoicesForNumerics = [  "=",">", ">=", "<", "<="];
         var operandChoicesForBoolean = ["true","false","unspecified"];
     
         var isNumericType = function(dataType){
@@ -74,6 +69,7 @@ define([	// properly require.config'ed
          * suggestValuesFunc(rtConstraints, item, msiOrQsResultCallback, failureCallback, statusCallback)
 		 */
 		var ModalRuntimeConstraintDialog= function (suggestValuesFunc) {
+            this.m = new ModalIidx();      
             this.div = null;
             this.sparqlIds = null;
             this.callback = function () {};
@@ -146,13 +142,20 @@ define([	// properly require.config'ed
 			},
             
             
-            buildRuntimeConstraints : function () {
+            buildRuntimeConstraints : function (optSkipSparqlId) {
+                var skipSparqlId = typeof optSkipSparqlId != "undefined" ? optSkipSparqlId : "";
+                
                 var runtimeConstraints = new RuntimeConstraints();
                 
                 // for each runtime constrainable item, add a runtime constraint
                 for(j = 0; j < this.sparqlIds.length; j++){
                     
                     var sparqlId = this.sparqlIds[j];
+                    
+                    if (sparqlId == skipSparqlId) {
+                        continue;
+                    }
+                    
                     var valueType = this.valueTypes[j];
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
@@ -275,6 +278,9 @@ define([	// properly require.config'ed
                 //this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
                 //this.valueTypes = ["STRING","INT","DOUBLE"];          // TODO REMOVE - FOR TESTING ONLY                      
 
+                var isEquals = function(operatorId) {
+                    return document.getElementById(operatorId).value == "=";
+                };
                 // create UI components for all runtime-constrained items 
                 for(i = 0; i < this.sparqlIds.length; i++){
 
@@ -288,28 +294,29 @@ define([	// properly require.config'ed
                     this.div.appendChild(IIDXHelper.createLabel(sparqlId.substring(1) + ":", valueType));  // value type is a tooltip
                     // create UI components for operator/operand (varies per data type)
                     if(valueType == "STRING"){
-                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, "=", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, ["="], false,  "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
-                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId)));
+                       
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
 
                     }else if(valueType == "NODE_URI"){
-                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, "=", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, ["="], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
-                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId)));
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
 
                     }else if(valueType == "BOOLEAN"){
                         this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
                         
                     }else if(isNumericType(valueType)){
-                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, ">", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, [">"], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
-                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId)));
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
                         
                         this.div.appendChild(IIDXHelper.createLabel("  ")); // forces a newline
                         
-                        this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorChoicesForNumerics, "<", "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator2ElementId, operatorChoicesForNumerics, ["<"], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand2ElementId, "input-xlarge"));
-                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand2ElementId, sparqlId)));
+                        this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand2ElementId, sparqlId, isEquals.bind(this, operator2ElementId))));
                         
                     }else{
                         // TODO support all data types, and also handle in validateCallback and okCallback
@@ -325,8 +332,8 @@ define([	// properly require.config'ed
 				this.div.appendChild(elem);
 
                 // launch the modal
-                var m = new ModalIidx();                            
-                m.showClearCancelSubmit(
+                                      
+                this.m.showClearCancelSubmit(
                                 this.title,
                                 this.div, 
                                 this.validateCallback.bind(this),
@@ -339,27 +346,49 @@ define([	// properly require.config'ed
 				document.getElementById("mrtcstatus").innerHTML= "<font color='red'>" + msg + "</font>";
 			},
             
-            suggestValues : function (elemId, sparqlId) {
+            suggestValues : function (elemId, sparqlId, multiCallback) {
 
                 // successfully got a list of choices
-                var suggestValueSuccess = function (elemId, sparqlId, res) {
+                var suggestValueSuccess = function (elemId, sparqlId, mCallback, res) {
                     
                     // chose one of the choices
-                    var choseCallback = function(elemId, valString) {
+                    var choseCallback = function(elemId, valList) {
                         var elem = document.getElementById(elemId);
+                        var valString = valList.join(',');   // PEC TODO: this won't work if there are commas in the values
+                                                             //           So we need a better way to store multiples
                         elem.value = valString;
                         
                     }.bind(this, elemId);
                     
+                    // get list of choices
                     res.sort();
                     var choiceList = res.getColumnStrings(0);
-                    ModalIidx.listDialog("Pick value of " + sparqlId, "OK", choiceList, choiceList, null, choseCallback);
+                    
+                    this.m.disableButtons();
+                    
+                    // Launch a list of choices or an alert
+                    if (choiceList.length > 0) {
+                        ModalIidx.multiListDialog("Pick value of " + sparqlId, 
+                                                  "OK", 
+                                                  choiceList, 
+                                                  ["PEC TODO add current"], 
+                                                  choseCallback,
+                                                  multiCallback(),
+                                                  this.m.enableButtons.bind(this.m)
+                                                 );
+                    } else {
+                        ModalIidx.alert("Constraints too tight",
+                                        "No possible choices exist in the instance data.<br>Other constraints may be too tight.",
+                                        false,
+                                        this.m.enableButtons.bind(this.m)
+                                       )
+                    }
                     this.setStatus("");
                     
-                }.bind(this, elemId, sparqlId);
+                }.bind(this, elemId, sparqlId, multiCallback);
 
                 var failureCallback = function (msgHTML) {
-                    ModalIidx.alert("Failure getting values", msg);
+                    ModalIidx.alert("Failure getting values", msgHTML);
                     this.setStatus("");
                 }.bind(this);
 
@@ -370,7 +399,7 @@ define([	// properly require.config'ed
                     this.setStatus("Querying values " + percent.toString() + "%");
                 }.bind(this);
 
-                this.suggestValuesFunc(this.buildRuntimeConstraints(),
+                this.suggestValuesFunc(this.buildRuntimeConstraints(sparqlId),
                                        sparqlId,
                                        suggestValueSuccess,
                                        failureCallback,
