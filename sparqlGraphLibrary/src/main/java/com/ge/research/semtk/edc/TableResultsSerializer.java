@@ -55,7 +55,8 @@ public class TableResultsSerializer {
 			this.cutoffValue = totalRowsExpected - this.startingRowNumber;
 		}
 		else if(this.cutoffValue == null){ this.cutoffValue = totalRowsExpected - this.startingRowNumber; }
-		
+		else if(this.cutoffValue >  totalRowsExpected - this.startingRowNumber)
+		{ this.cutoffValue = totalRowsExpected - this.startingRowNumber; }
 		
 		System.err.println("requested file record size = " + cutoffValue);
 		
