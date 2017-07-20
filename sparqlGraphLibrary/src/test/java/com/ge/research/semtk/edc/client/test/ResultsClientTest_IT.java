@@ -300,7 +300,7 @@ public class ResultsClientTest_IT {
 			
 			// construct a huge table
 			final int NUM_COLS = 1000;
-			final int NUM_ROWS = 75000;
+			final int NUM_ROWS = 125000;
 			String[] cols = new String[NUM_COLS];
 			String[] colTypes = new String[NUM_COLS];
 			ArrayList<String> row = new ArrayList<String>();

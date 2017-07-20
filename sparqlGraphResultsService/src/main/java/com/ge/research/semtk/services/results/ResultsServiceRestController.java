@@ -185,6 +185,7 @@ public class ResultsServiceRestController {
 		    e.printStackTrace();
 	    }
 
+		System.err.println("done writing output");
 	}
 
 	@CrossOrigin
@@ -196,7 +197,7 @@ public class ResultsServiceRestController {
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
 			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, maxRows); 			
-			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
+			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
 			retval.writeToStream(resp.getWriter());
 			
 	    } catch (Exception e) {
@@ -204,6 +205,7 @@ public class ResultsServiceRestController {
 		    e.printStackTrace();
 	    }
 		// if nothing, return nothing
+		System.err.println("done writing output");
 		return null;
 	}
 
@@ -225,6 +227,7 @@ public class ResultsServiceRestController {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    e.printStackTrace();
 	    }
+		System.err.println("done writing output");
 	}
 	
 	/**
@@ -236,13 +239,13 @@ public class ResultsServiceRestController {
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			TableResultsSerializer retval = (TableResultsSerializer) getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
+			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
 			
 			retval.writeToStream(resp.getWriter());
 	    } catch (Exception e) {
 		    e.printStackTrace();
 	    }
-		
+		System.err.println("done writing output");
 	}
 	
 	/**
