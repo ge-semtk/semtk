@@ -27,16 +27,19 @@ public class TableResultsSerializer {
 	private File dataFile = null;
 	private TableResultsStorageTypes frmt = null;
 	private Integer cutoffValue = null;
+	private Integer startingRowNumber = 0;	// all tables are based on row 0.
 	
 	public TableResultsSerializer(){
 		
 	}
-	public TableResultsSerializer(JSONObject headerInfo, String dataFileLocation, TableResultsStorageTypes serializationType, Integer cutoff){
+	public TableResultsSerializer(JSONObject headerInfo, String dataFileLocation, TableResultsStorageTypes serializationType, Integer cutoff, Integer startingRow){
 		 
 		this.headerInfo = headerInfo;
 		this.dataFile = new File(dataFileLocation);
 		this.frmt = serializationType;
 		this.cutoffValue = cutoff;
+		if(startingRow == null | startingRow < 0){ this.startingRowNumber = 0; }
+		else{ this.startingRowNumber = startingRow; }
 	}
 		
 	public void writeToStream(PrintWriter printWriter ) throws IOException, UnsupportedOperationException {
@@ -49,9 +52,9 @@ public class TableResultsSerializer {
 		Integer totalRowsExpected   = Integer.parseInt( (this.headerInfo.get(Table.JSON_KEY_ROW_COUNT)).toString() );
 		// determine how much to return
 		if(this.cutoffValue != null && totalRowsExpected != null && this.cutoffValue > totalRowsExpected){
-			this.cutoffValue = totalRowsExpected;
+			this.cutoffValue = totalRowsExpected - this.startingRowNumber;
 		}
-		else if(this.cutoffValue == null){ this.cutoffValue = totalRowsExpected; }
+		else if(this.cutoffValue == null){ this.cutoffValue = totalRowsExpected - this.startingRowNumber; }
 		
 		
 		System.err.println("requested file record size = " + cutoffValue);
@@ -73,6 +76,9 @@ public class TableResultsSerializer {
     }
 	
 	private void writeCSV( PrintWriter aOutputStream, Integer stopRowNumber ) throws UnsupportedOperationException, IOException{
+		
+		String quote = "\"";
+		
 		if(this.headerInfo == null){ throw new UnsupportedOperationException("cannot return info when metadata is empty or nonexistent"); }
 		// open the data file
 		if(!this.dataFile.exists()){ throw new UnsupportedOperationException("cannot return info when data file is nonexistent"); }
@@ -99,13 +105,18 @@ public class TableResultsSerializer {
 		
 		FileReader fr = new FileReader(dataFile);
 		BufferedReader bfr = new BufferedReader(fr);
+		
+		// fast foward
+		bfr = this.fastForwardResultsFile(bfr);
+		
+		
 		while(processedRows < stopRowNumber && !endOfInput){
 			// read the next row from the data set and write to the stream. 
-			
+
 			String currRow = bfr.readLine();
 			// conversion should not be required in this case as it was read as written.
 			aOutputStream.write(currRow.substring(1, currRow.length() - 1));
-		
+			
 			// add the comma, if needed.
 			if(processedRows < stopRowNumber -1){  aOutputStream.write("\n"); }
 			
@@ -122,9 +133,11 @@ public class TableResultsSerializer {
 		System.err.println("flushing after completion: " +  processedRows);
 	}
 	
-	private void writeJSON( PrintWriter aOutputStream, Integer stopRowNumber ) throws UnsupportedOperationException, IOException{
+	private void writeJSON( PrintWriter aOutputStream, Integer stopRowNumber) throws UnsupportedOperationException, IOException{
 		boolean done = false;
-	
+		
+		String quote = "\"";
+		
 		if(this.headerInfo == null){ throw new UnsupportedOperationException("cannot return info when metadata is empty or nonexistent"); }
 		// open the data file
 		if(!this.dataFile.exists()){ throw new UnsupportedOperationException("cannot return info when data file is nonexistent"); }
@@ -134,13 +147,13 @@ public class TableResultsSerializer {
 		
 		System.err.println("requested row count : " + stopRowNumber);
 		
-		aOutputStream.write("{\"" + Table.JSON_KEY_ROW_COUNT + "\" : "  + stopRowNumber + ",");
-		aOutputStream.write("\"" + Table.JSON_KEY_COL_COUNT + "\" : "  + columnCount + ",");
-		aOutputStream.write("\"" + Table.JSON_KEY_COL_NAMES + "\" : [");
+		aOutputStream.write("{" + quote + Table.JSON_KEY_ROW_COUNT + quote + " : "  + stopRowNumber + ",");
+		aOutputStream.write(quote + Table.JSON_KEY_COL_COUNT + quote + " : "  + columnCount + ",");
+		aOutputStream.write(quote + Table.JSON_KEY_COL_NAMES + "\" : [");
 		
 		JSONArray jArr = (JSONArray) this.headerInfo.get(Table.JSON_KEY_COL_NAMES);
 		for(int colCount= 0; colCount < columnCount; colCount++){
-			aOutputStream.write("\"" + jArr.get(colCount) + "\"");
+			aOutputStream.write(quote + jArr.get(colCount) + quote);
 			if(colCount != columnCount - 1){
 				// we need a comma
 				aOutputStream.write(",");
@@ -148,10 +161,10 @@ public class TableResultsSerializer {
 		}
 		aOutputStream.write("],");
 		
-		aOutputStream.write("\"" + Table.JSON_KEY_COL_TYPES + "\" : [");
+		aOutputStream.write(quote + Table.JSON_KEY_COL_TYPES + quote + " : [");
 		JSONArray jArrT = (JSONArray) this.headerInfo.get(Table.JSON_KEY_COL_TYPES);
 		for(int colCount= 0; colCount < columnCount; colCount++){
-			aOutputStream.write("\"" + jArrT.get(colCount) + "\"");
+			aOutputStream.write(quote + jArrT.get(colCount) + quote);
 			if(colCount != columnCount - 1){
 				// we need a comma
 				aOutputStream.write(",");
@@ -160,7 +173,7 @@ public class TableResultsSerializer {
 		aOutputStream.write("],");
 		
 		// write the row info
-		aOutputStream.write("\"" + Table.JSON_KEY_ROWS + "\" : [");
+		aOutputStream.write(quote + Table.JSON_KEY_ROWS + quote + " : [");
 				
 		// done with metadata. flush.
 		aOutputStream.flush();
@@ -170,13 +183,17 @@ public class TableResultsSerializer {
 		
 		FileReader fr = new FileReader(dataFile);
 		BufferedReader bfr = new BufferedReader(fr);
+		
+		// fast foward
+		bfr = this.fastForwardResultsFile(bfr);
+				
 		while(processedRows < stopRowNumber){
 			// read the next row from the data set and write to the stream. 
 			
 			String currRow = bfr.readLine();
 			// conversion should not be required in this case as it was read as written.
 			aOutputStream.write(currRow);
-		
+			
 			// add the comma, if needed.
 			if(processedRows < stopRowNumber -1){  aOutputStream.write(","); }
 			
@@ -193,5 +210,13 @@ public class TableResultsSerializer {
 		aOutputStream.flush();
 		System.err.println("flushing after completion: " +  processedRows);
 		
+	}
+	
+	private BufferedReader fastForwardResultsFile(BufferedReader bfr) throws IOException{
+		
+		for(int i = 0; i < this.startingRowNumber; i += 1){
+			bfr.readLine();
+		}
+		return bfr;
 	}
 }

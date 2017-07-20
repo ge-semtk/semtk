@@ -41,6 +41,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 
 import javax.servlet.http.HttpServletResponse;
@@ -170,7 +172,7 @@ public class ResultsServiceRestController {
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows); 			
+			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows, requestBody.getStartRow()); 			
 			
 			if(requestBody.getAppendDownloadHeaders()){
 			
@@ -196,7 +198,7 @@ public class ResultsServiceRestController {
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
-			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, maxRows); 			
+			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, maxRows, 0); 			
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
 			retval.writeToStream(resp.getWriter());
 			
@@ -218,7 +220,7 @@ public class ResultsServiceRestController {
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
-			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, maxRows); 			
+			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, maxRows, 0); 			
 
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
 			retval.writeToStream(resp.getWriter());
@@ -239,13 +241,29 @@ public class ResultsServiceRestController {
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows);	
+			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows, requestBody.getStartRow());	
 			
-			retval.writeToStream(resp.getWriter());
+			
+			wrapJsonInTableToSend(retval, resp);
 	    } catch (Exception e) {
 		    e.printStackTrace();
 	    }
 		System.err.println("done writing output");
+	}
+	
+	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception, Exception{
+		
+		PrintWriter outPrint = resp.getWriter();
+		
+		// write table result set preamble.
+		outPrint.write("{\"message\":\"operations succeeded.\",\"table\":{\"@table\":");
+		outPrint.flush();
+		trs.writeToStream(resp.getWriter());
+		// close table result set.
+		outPrint.write("},\"status\":\"success\"}");
+		outPrint.flush();
+		outPrint.close();
+		
 	}
 	
 	/**

@@ -153,7 +153,7 @@ public class TableResultsStorageTest {
 			assertEquals(rowsFromCsv.get(0).get(0), "apple");
 		
 			// check retrieving truncated result as JSON
-			TableResultsSerializer tss2 = rs.getJsonTable(fullJsonUrl, 2);
+			TableResultsSerializer tss2 = rs.getJsonTable(fullJsonUrl, 2, 0);
 			ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
 			PrintWriter pw2 = new PrintWriter(baos2);
 			tss2.writeToStream(pw2);
@@ -172,7 +172,7 @@ public class TableResultsStorageTest {
 			assertEquals(table.getCell(1, 2),"canteloupe");
 			
 			// check retrieving truncated result as CSV
-			TableResultsSerializer tss3 = rs.getCsvTable(fullJsonUrl, 2);
+			TableResultsSerializer tss3 = rs.getCsvTable(fullJsonUrl, 2, 0);
 			ByteArrayOutputStream baos3 = new ByteArrayOutputStream();
 			PrintWriter pw3 = new PrintWriter(baos3);
 			tss3.writeToStream(pw3);
