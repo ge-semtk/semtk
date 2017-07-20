@@ -95,7 +95,7 @@
             // line == 0
             if (url == null || url == "") {
                 alert("Network permission error (CORS).\n\nReloading page may be required.\n\nTry downloading nodegroup and then refreshing.");
-           
+                kdlLogEvent("CORS Error");
             } else {
                 // Note that col & error are new to the HTML 5 spec and may not be supported
                 var extra;
