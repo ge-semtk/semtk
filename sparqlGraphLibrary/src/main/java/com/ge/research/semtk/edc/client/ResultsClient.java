@@ -388,15 +388,15 @@ class TableFormatter extends Thread{
 				Boolean altered = false;
 				
 				if(rows.get(i).get(j).indexOf('\"') > -1){ 
-					curr = StringUtils.replace(rows.get(i).get(j), "\"", "\\\"");
+					curr = StringUtils.replace(curr, "\"", "\\\"");
 					altered = true;
 				} 
 				if(rows.get(i).get(j).indexOf('\n') > -1){ 
-					curr = StringUtils.replace(rows.get(i).get(j), "\n", "\\n");
+					curr = StringUtils.replace(curr, "\n", "\\n");
 					altered = true;	
 				} 
 				if(rows.get(i).get(j).indexOf('\t') > -1){ 
-					curr = StringUtils.replace(rows.get(i).get(j), "\t", "\\t");
+					curr = StringUtils.replace(curr, "\t", "\\t");
 					altered = true;
 				} 
 				
