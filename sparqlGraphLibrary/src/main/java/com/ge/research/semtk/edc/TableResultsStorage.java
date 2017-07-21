@@ -265,8 +265,12 @@ public class TableResultsStorage {
 		try{
 			System.out.println("** Calling getJSONObjectFromFilePath()...");  // TODO DELETE THIS
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
-			int retval = Integer.parseInt((String) jsonObj.get(Table.JSON_KEY_ROW_COUNT + ""));
+			int retval = Integer.parseInt((String) jsonObj.get(Table.JSON_KEY_ROW_COUNT));
 
+			System.err.println("RowCount being returned from tag: " + Table.JSON_KEY_ROW_COUNT);
+			System.err.println("values was : " + retval);
+			
+			
 			return retval;
 		}
 		catch(Exception eee){
