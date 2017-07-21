@@ -105,18 +105,21 @@ define([	'sparqlgraph/js/msiresultset',
 					for (var key in xhr) {
 						if (xhr.hasOwnProperty(key)) {
 							var s = JSON.stringify(xhr[key]);
+                            
 							// skip weird entries and functions
 							if (typeof s !== "undefined" && s.slice(0,8) !== "function") {
 								if (key == "responseJSON") {
 									// repeat loop for response JSON
 									for (var k2 in xhr.responseJSON) {
 										var s2 = JSON.stringify(xhr.responseJSON[k2]);
+                                        if (s2.length > 32) s2 = s2.slice(0,32) + "...";
 										ret += "<br><b>" + "response." + k2 + ": &nbsp</b>" + s2.replace(/[\n]/, "<br>");
 									}
 								} else if (key == "responseText" && xhr.hasOwnProperty("responseJSON")) {
 									// skip responseText when there is a responseJSON
 								} else {
 									// append a normal field
+                                    if (s.length > 32) s = s.slice(0,32) + "...";
 									ret += "<br><b>" + key + ": &nbsp</b>" + s.replace(/[\n]/, "<br>");
 								}
 							}
@@ -164,7 +167,7 @@ define([	'sparqlgraph/js/msiresultset',
                         if (res.isSuccess() && res.getSimpleResultField("available") == "yes") {
                             successCall0(res);
                         } else {
-                            this.userFailureCallback(res.buildFailureHtml());
+                            this.userFailureCallback(res.getFailureHtml());
                         }
                     }.bind(this, successCallback);
                     

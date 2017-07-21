@@ -215,7 +215,7 @@ define([	// properly require.config'ed   bootstrap-modal
             // or override it with another failure callback
             doFailureCallback : function (resultSet, optHeader) {
                 var html = (typeof optHeader == "undefined" || optHeader == null) ? "" : "<b>" + optHeader + "</b><hr>";
-                html += resultSet.getSimpleResultsHtml();
+                html += resultSet.getFailureHtml();
                 
                 if (typeof this.optFailureCallback == "undefined") {
                     ModalIidx.alert("Status Service Failure", html);
