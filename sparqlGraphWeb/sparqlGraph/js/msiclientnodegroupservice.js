@@ -91,10 +91,10 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (sparql) {
                         sparqlCallback(sparql);
                     } else {
-                        failureCallback(resultSet.buildFailureHtml("did not return a SparqlQuery"));
+                        failureCallback(resultSet.getFailureHtml("did not return a SparqlQuery"));
                     }
                 } else {
-                    failureCallback(resultSet.buildFailureHtml(), this.getNoValidSparqlMessage(resultSet));
+                    failureCallback(resultSet.getFailureHtml(), this.getNoValidSparqlMessage(resultSet));
                 }
             },
             
@@ -106,7 +106,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (resultSet.isTableResults()) {
                         tableResCallback(resultSet);
                     } else {
-                        failureCallback(resultSet.buildFailureHtml("did not return a table result."));
+                        failureCallback(resultSet.getFailureHtml("did not return a table result."));
                     }
                 } else {
                     if (resultSet.isTableResults()) {
@@ -114,7 +114,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         //   have justin change microservice behavior
                         tableResCallback(resultSet);
                     } else {
-                        failureCallback(resultSet.buildFailureHtml());
+                        failureCallback(resultSet.getFailureHtml());
                     }
                 }
             },

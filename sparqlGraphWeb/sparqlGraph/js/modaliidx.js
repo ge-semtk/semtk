@@ -266,13 +266,12 @@ define([	// properly require.config'ed   bootstrap-modal
                 $(this.div).modal('show');
             },
 
-            showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback, optOkButtonText, optWidthPercent) {
+            showClearCancelSubmit : function (headerText, bodyDOM, validateCallback, clearCallback, submitCallback, optSubmitButtonText, optWidthPercent) {
                 // show a modal with header, body and callback.
                 // validate must return one of:
                 //      error message : display an alert
                 //      null : call callbackSuccess
 
-                var okButText = (typeof optOkButtonText == "undefined") ? "OK" : optOkButtonText;
                 this.div = this.createModalDiv(optWidthPercent);
 
                 var header = this.createHeader(headerText);
@@ -284,7 +283,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 body.appendChild(bodyDOM);
                 this.div.appendChild(body);
 
-                var footer = this.createClearCancelSubmitFooter(clearCallback, validateCallback, submitCallback);
+                var footer = this.createClearCancelSubmitFooter(clearCallback, validateCallback, submitCallback, optSubmitButtonText);
                 this.div.appendChild(footer);
 
                 $(this.div).modal('show');
@@ -382,7 +381,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 return footer;
             },
 
-            createCancelSubmitFooter : function(validateCallback, submitCallback) {
+            createCancelSubmitFooter : function(validateCallback, submitCallback, optSubmitButText) {
                 //----- footer -----
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
@@ -402,13 +401,14 @@ define([	// properly require.config'ed   bootstrap-modal
                         $(this.div).modal('hide');
                     }
                 }.bind(this, validateCallback, submitCallback);
-                var a3 = IIDXHelper.createButton("Submit", callback3, ["btn-primary"]);
+                var submitButText = typeof optSubmitButText != "undefined" ? optSubmitButText : "Submit";
+                var a3 = IIDXHelper.createButton(submitButText, callback3, ["btn-primary"]);
                 footer.appendChild(a3);
                 
                 return footer;
             },
             
-            createClearCancelSubmitFooter : function(clearCallback, validateCallback, submitCallback) {
+            createClearCancelSubmitFooter : function(clearCallback, validateCallback, submitCallback, optSubmitButText) {
                 //----- footer -----
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
@@ -435,7 +435,9 @@ define([	// properly require.config'ed   bootstrap-modal
                         $(this.div).modal('hide');
                     }
                 }.bind(this, validateCallback, submitCallback);
-                var a3 = IIDXHelper.createButton("Submit", callback3, ["btn-primary"]);
+                
+                var submitButText = typeof optSubmitButText != "undefined" ? optSubmitButText : "Submit";
+                var a3 = IIDXHelper.createButton(submitButText, callback3, ["btn-primary"]);
                 footer.appendChild(a3);
                 
                 return footer;

@@ -40,7 +40,7 @@ define([	// properly require.config'ed   bootstrap-modal
             NAMESPACE_ONLY : 3,	
             
 			isSuccess : function () {
-				return JSON.stringify(this.xhr.status).indexOf("success") == 1;
+				return this.xhr && this.xhr.status && (JSON.stringify(this.xhr.status).indexOf("success") == 1);
 			},
 			
 			isRecordProcessResults : function () {
@@ -116,20 +116,54 @@ define([	// properly require.config'ed   bootstrap-modal
             },
             
             /*
-             *   If simple results, show those fields.  Otherwise just basic general fields.  No table.
+             *   Show custom summary of a bad xhr
              *   optTitle should be of the form: "did not return a table".  Default is "failed"
              */
-            buildFailureHtml : function (optTitle) {
+            getFailureHtml : function (optTitle) {
                 var title = (typeof optTitle == "undefined" || optTitle == null) ? "failed" :  optTitle;
                 
                 var urlParts = this.serviceURL.split('/');
                 var endpoint = urlParts.pop();
                 var service = urlParts.pop();
                 
-                var html = "<b>Service " + service + " " + title + "</b><br><hr>";
+                // service info
+                var html = "<b>Service &quot;" + service + "&quot; " + title + "</b><br>";
                 html += "<b>endpoint: </b>" + endpoint + " <br>";
                 html += "<b>full URL: </b>" + this.serviceURL + " <br>";
-                html += this.getSimpleResultsHtml();
+                html += "<hr>";
+                html += "<b>xhr contents: </b><br>";
+                
+                // loop through xhr keys
+                for (var key in this.xhr) {
+                    if (typeof this.xhr[key] == "function") continue;
+                    
+                    html += "<b>&nbsp;&nbsp;" + IIDXHelper.htmlSafe(key) + ": </b>";
+                
+                    var val = JSON.stringify(this.xhr[key]);
+                    if (val.length > 32) {
+                        val = val.slice(0,32)+"...";
+                    }
+                    html += IIDXHelper.htmlSafe( val ) + "<br>";
+                    
+                    // do one layer lower keys if it's an object (not an array)
+                    if (typeof this.xhr[key] == "object" && ! Array.isArray(this.xhr[key])) {
+                        for (var key1 in this.xhr[key]) {
+                            html += "<b>&nbsp;&nbsp;&nbsp;&nbsp; - " + IIDXHelper.htmlSafe(key + "." + key1) + ": </b>";
+                            var val = JSON.stringify(this.xhr[key][key1]);
+                            if (val.length > 32) {
+                                val = val.slice(0,32)+"...";
+                            }
+                            html += IIDXHelper.htmlSafe( val ) + "<br>";
+                        }
+                    }
+                    
+                    // stop if it's too big
+                    if (html.length > 2048) {
+                        html += "...<br>";
+                        break;
+                    }
+                }           
+                
                 return html;
             },
             

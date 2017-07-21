@@ -28,6 +28,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
+import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.Table;
@@ -253,6 +255,34 @@ public class TableResultsStorage {
 		
 		return Paths.get(this.fileLocation, fullURL);
 		
+	}
+	 /**
+	  * Get the size of the results table.
+	 * @throws Exception 
+	  */
+	public int getResultsRowCount(URL url) throws Exception{
+		
+		try{
+			System.out.println("** Calling getJSONObjectFromFilePath()... " + urlToPath(url).toString());  // TODO DELETE THIS
+
+			System.err.println("RowCount being returned from tag: " + Table.JSON_KEY_ROW_COUNT);
+			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
+		
+			System.err.println("got json");
+			
+			
+			System.err.println("values was : " + jsonObj.get(Table.JSON_KEY_ROW_COUNT));
+			
+			Long val = (Long) jsonObj.get(Table.JSON_KEY_ROW_COUNT);
+			int retval = val.intValue();
+
+			
+			return retval;
+		}
+		catch(Exception eee){
+			eee.printStackTrace();
+			throw new Exception("parse of row count size failed!");
+		}
 	}
 	
 }   

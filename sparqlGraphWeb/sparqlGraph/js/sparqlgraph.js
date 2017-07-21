@@ -107,12 +107,7 @@
 			onchangeQueryType(); 
 			
             gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
-	   	    
-            var dropbox = document.getElementById("treeCanvasWrapper");
-            dropbox.addEventListener("dragenter", noOpHandler, false);
-            dropbox.addEventListener("dragexit",  noOpHandler, false);
-            dropbox.addEventListener("dragover",  noOpHandler, false);
-            dropbox.addEventListener("drop",      fileDrop, false);
+
             
             // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
 	    	// gReady is at the end of the ready function
@@ -222,7 +217,23 @@
     };
     
     var initDynatree = function() {
-    	
+        
+        // set up dropping files
+    	var dropbox = document.getElementById("treeCanvasWrapper");
+        dropbox.addEventListener("drop",      fileDrop, false);
+
+        // set up dropping from dynatree
+        // "real" system drops get "drop" and 
+        // dynatree drops are "mouseup" while gDragLabel is set         
+        var canvas = document.getElementById("canvas");
+        canvas.addEventListener("mouseup", 
+                                function(e) {
+                                    if (gDragLabel != null) {
+                                        dropClass(gDragLabel, e.shiftKey);
+                                    }
+                                }.bind(this)
+                               );
+
         require([ 'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
                   'sparqlgraph/js/ontologytree',
 	            ], function () {
@@ -235,12 +246,12 @@
                 onActivate: function(node) {
                     // A DynaTreeNode object is passed to the activation handler
                     // Note: we also get this event, if persistence is on, and the page is reloaded.
-                    console.log("You activated " + node.data.title);
+                    // console.log("You activated " + node.data.title);
                 },
                 onDblClick: function(node) {
                     // A DynaTreeNode object is passed to the activation handler
                     // Note: we also get this event, if persistence is on, and the page is reloaded.
-                    console.log("You double-clicked " + node.data.title);
+                    // console.log("You double-clicked " + node.data.title);
                 },
 
                 dnd: {
@@ -248,18 +259,15 @@
                     /** This function MUST be defined to enable dragging for the tree.
                      *  Return false to cancel dragging of node.
                      */
-                        logMsg("tree.onDragStart(%o)", node);
-                        console.log("dragging " + gOTree.nodeGetURI(node));
+                       // console.log("dragging " + gOTree.nodeGetURI(node));
                         gDragLabel = gOTree.nodeGetURI(node);
                         return true;
                     },
-                    onDragStop: function(node) {
-                        logMsg("tree.onDragStop(%o)", node);
-                        console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
-                        
-                        dropClass(gDragLabel, event.shiftKey);
+                    
+                    onDragStop: function(node, x, y, z, aa) {
+                       // console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
+                        gDragLabel = null;
                     }
-
                 },	
 
 
