@@ -152,12 +152,12 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (resultSet.isSuccess()) {
                         var thisPercent = resultSet.getSimpleResultField("percent");
                         if (thisPercent == null) {
-                            fCallback(resultSet.buildFailureHtml("did not return a percent."));
+                            fCallback(resultSet.getFailureHtml("did not return a percent."));
                         } else {
                             percCallback(parseInt(thisPercent));
                         } 
                     } else {
-                        fCallback(resultSet.buildFailureHtml());
+                        fCallback(resultSet.getFailureHtml());
                     }
                 }.bind(this, percentCallback, failureCallback);
                 
@@ -174,14 +174,14 @@ define([	// properly require.config'ed   bootstrap-modal
                         var status = resultSet.getSimpleResultField("status");
 
                         if ( status == null) {
-                            failureCallback0(resultSet.buildFailureHtml("did not return a status."));
+                            failureCallback0(resultSet.getFailureHtml("did not return a status."));
                         } else if (status == "Success") {
                             successBoolCallback0(true);
                         } else {
                             successBoolCallback0(false);
                         }
                     } else {
-                        failureCallback0(resultSet.buildFailureHtml());
+                        failureCallback0(resultSet.getFailureHtml());
                     }
                 }.bind(this, successBoolCallback, failureCallback);
                 
@@ -197,12 +197,12 @@ define([	// properly require.config'ed   bootstrap-modal
                         var message = resultSet.getSimpleResultField("message");
 
                         if ( message == null) {
-                            failureCallback0(resultSet.buildFailureHtml("did not return a message."));
+                            failureCallback0(resultSet.getFailureHtml("did not return a message."));
                         } else {
                             messageCallback0(message);
                         }
                     } else {
-                        failureCallback0(resultSet.buildFailureHtml());
+                        failureCallback0(resultSet.getFailureHtml());
                     }
                 }.bind(this, messageCallback, failureCallback);
                 
@@ -322,10 +322,10 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (jobId) {
                         jobIdCallback(jobId);
                     } else {
-                        failureCallback(resultSet.buildFailureHtml("did not return a requestID."));
+                        failureCallback(resultSet.getFailureHtml("did not return a requestID."));
                     }
                 } else {
-                    failureCallback(tresultSet.buildFailureHtml());
+                    failureCallback(tresultSet.getFailureHtml());
                 }
             },
             
