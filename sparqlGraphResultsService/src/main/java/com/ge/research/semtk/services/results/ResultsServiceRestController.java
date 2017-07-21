@@ -232,6 +232,26 @@ public class ResultsServiceRestController {
 		System.err.println("done writing output");
 	}
 	
+	@CrossOrigin
+	@RequestMapping(value="/getTableResultsRowCount", method= RequestMethod.POST)
+	public JSONObject getTableResultsRowCount(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp){
+	
+		SimpleResultSet retTrue = null;
+		
+		try{
+	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
+			int retval = getTableResultsStorage().getResultsRowCount(url);	
+			
+			retTrue = new SimpleResultSet(true);
+			retTrue.addResult("rowCount", retval);
+	    } catch (Exception e) {
+		    retTrue = new SimpleResultSet(false, e.getMessage());
+	    }
+		
+		return retTrue.toJson(); 
+	}
+	
+	
 	/**
 	 * Return a JSON object containing results (possibly truncated) for job
 	 */
