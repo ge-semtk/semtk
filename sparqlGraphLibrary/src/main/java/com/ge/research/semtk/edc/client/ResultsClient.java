@@ -383,19 +383,24 @@ class TableFormatter extends Thread{
 
 	public void run(){  
 		for(int i = startIndex; i < endIndex; i++){
-			for(int j = 0; j < rows.get(i).size(); j++){				
-				if(rows.get(i).get(j).indexOf('\"') > -1){
-					
-					rows.get(i).set(j, 
-							
-						StringUtils.replace(	
-							(StringUtils.replace(
-									(StringUtils.replace(rows.get(i).get(j), "\"", "\\\"")), // core
-									"\t", "    ")), // tabs
-							"\n", "\\n")  // newlines
-								
-							); // escape internal double quotes
-				}
+			for(int j = 0; j < rows.get(i).size(); j++){	
+				String curr = rows.get(i).get(j);
+				Boolean altered = false;
+				
+				if(rows.get(i).get(j).indexOf('\"') > -1){ 
+					curr = StringUtils.replace(rows.get(i).get(j), "\"", "\\\"");
+					altered = true;
+				} 
+				if(rows.get(i).get(j).indexOf('\n') > -1){ 
+					curr = StringUtils.replace(rows.get(i).get(j), "\n", "\\n");
+					altered = true;	
+				} 
+				if(rows.get(i).get(j).indexOf('\t') > -1){ 
+					curr = StringUtils.replace(rows.get(i).get(j), "\t", "\\t");
+					altered = true;
+				} 
+				
+				if(altered){ rows.get(i).set(j, curr); }
 			}
 		}
 	} 
