@@ -391,7 +391,7 @@ class TableFormatter extends Thread{
 						StringUtils.replace(	
 							(StringUtils.replace(
 									(StringUtils.replace(rows.get(i).get(j), "\"", "\\\"")), // core
-									"\t", "\\t")), // tabs
+									"\t", "    ")), // tabs
 							"\n", "\\n")  // newlines
 								
 							); // escape internal double quotes
