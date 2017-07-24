@@ -34,8 +34,10 @@ import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClient extends RestClient implements Runnable {
 	
-	private int ROWS_TO_PROCESS = 5000;  // the default row allocation to send. this can be tuned if things may fail.
-
+	// batch sizes for sending and retrieving results.  These can be tuned.
+	private int BATCH_SIZE_SEND = 5000;
+	private int BATCH_SIZE_RETRIEVE = 50000;
+	
 	public ResultsClient (ResultsClientConfig config) {
 		this.conf = config;
 	}
@@ -89,7 +91,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			StringBuilder resultsSoFar = new StringBuilder();
 
 			// get the next allocation of rows. 
-			for(int i = 0; i < this.ROWS_TO_PROCESS; i++){
+			for(int i = 0; i < this.BATCH_SIZE_SEND; i++){
 				
 				if(!(tableRowsDone < table.getNumRows())){
 					break;	// processed all rows - we're done
@@ -110,13 +112,13 @@ public class ResultsClient extends RestClient implements Runnable {
 
 					tableRowsDone += 1;
 					
-					if(i < ROWS_TO_PROCESS - 1){
+					if(i < BATCH_SIZE_SEND - 1){
 						resultsSoFar.append("\n");
 					}
 				}
 				catch(IndexOutOfBoundsException eek){
 					// we have run out of rows. the remaining rows were fewer than the block size. just note this and move on.
-					i = this.ROWS_TO_PROCESS;
+					i = this.BATCH_SIZE_SEND;
 				}
 
 			}
@@ -171,55 +173,68 @@ public class ResultsClient extends RestClient implements Runnable {
 	private JSONObject createNewHeaderMap(Table table) throws Exception {
 		return table.getHeaderJson();
 	}
-
+	
+	
 	/**
 	 * Get results (possibly truncated) in JSON format for a job
 	 * @return a TableResultSet object
 	 */
 	@SuppressWarnings("unchecked")
 	public TableResultSet execTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
-		conf.setServiceEndpoint("results/getTableResultsJson");
-		this.parametersJSON.put("jobId", jobId);
 
-		int BATCH_SIZE = 50000;
-		int startRow = 0;
-		int numRowsRetrieved = 0;
+		ArrayList<Thread> threads = new ArrayList<Thread>();	
+		ArrayList<ResultsClient> clients = new ArrayList<ResultsClient>();
 		try {
+			int numRowsToRetrieve = getNumRows(jobId);
+			if(maxRows != null && maxRows < numRowsToRetrieve){
+				numRowsToRetrieve = maxRows.intValue();
+			}
+			int numBatches = (int)Math.ceil((double)numRowsToRetrieve / (double)BATCH_SIZE_RETRIEVE);  
 			ArrayList<TableResultSet> resultSets = new ArrayList<TableResultSet>();
-			while(true){
+			
+			// kick off all threads
+			for(int i = 0; i < numBatches; i++){
 				
 				// set request parameters
-				this.parametersJSON.put("startRow", startRow);	
-				if(maxRows == null || BATCH_SIZE <= (maxRows - numRowsRetrieved)){
-					this.parametersJSON.put("maxRows", BATCH_SIZE);
+				conf.setServiceEndpoint("results/getTableResultsJson");
+				this.parametersJSON.put("jobId", jobId);
+				this.parametersJSON.put("startRow", i * BATCH_SIZE_RETRIEVE);
+				if(i < numBatches - 1){
+					this.parametersJSON.put("maxRows", BATCH_SIZE_RETRIEVE); 
 				}else{
-					// getting back a full batch would exceed maxRows, limit it 
-					this.parametersJSON.put("maxRows", maxRows - numRowsRetrieved);
-				}			
-				System.out.println("Start row: " + this.parametersJSON.get("startRow") + ", maxRows " + this.parametersJSON.get("maxRows"));
+					this.parametersJSON.put("maxRows", numRowsToRetrieve - (i * BATCH_SIZE_RETRIEVE)); // last batch
+				}		
 				
-				// execute
-				TableResultSet resultSet = this.executeWithTableResultReturn();
-				System.out.println("Got batch num rows: " + resultSet.getTable().getNumRows());
-				resultSet.throwExceptionIfUnsuccessful();
-				if(resultSet.getTable().getNumRows() == 0){
-					System.out.println("...done");
-					break;	// got no results, break.
-				}
-				
-				// put the results in temporary storage
-				resultSets.add(resultSet);
-				
-				// prepare for the next iteration
-				startRow += BATCH_SIZE;		
-				numRowsRetrieved += resultSet.getTable().getNumRows();
+				// kick off a thread using a "copy" of the client (necessary to avoid overwrites)  TODO find a cleaner way
+				ResultsClient client = new ResultsClient((ResultsClientConfig) conf); 
+				client.parametersJSON = (JSONObject) this.parametersJSON.clone(); 
+				Thread thread = new Thread(client);
+				clients.add(client);
+				threads.add(thread);
+				thread.start();						// execute
+				this.parametersJSON.clear();  		// clear parameters for next time	
 			}
 			
-			// merge batch results into a single TableResultSets...and then clean up
-			TableResultSet ret = TableResultSet.merge(resultSets);
-			System.out.println("Merged num rows: " + ret.getTable().getNumRows());			
+			// wait for threads to finish
+			for(int i = 0; i < threads.size(); i++){
+				threads.get(i).join();
+				TableResultSet resultSet = clients.get(i).getRunResAsTableResultSet();
+				resultSet.throwExceptionIfUnsuccessful();
+				resultSets.add(resultSet);
+			}
+			
+			// merge batch results into a single TableResultSets
+			TableResultSet ret = TableResultSet.merge(resultSets);		
+			
+			// clean up
 			for(TableResultSet trs : resultSets){
 				trs = null;
+			}
+			for(ResultsClient client : clients){
+				client = null;
+			}
+			for(Thread thread : threads){
+				thread = null;
 			}
 			
 			return ret;			
@@ -229,7 +244,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			this.parametersJSON.clear();
 		}
 	}		
-	
+
 	/**
 	 * Get results (possibly truncated) in CSV format for a job
 	 * @return a CSVDataset object
@@ -332,7 +347,24 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.clear();  // clear parameters for next time
 	}
 	
+	/**
+	 * Execute a service call to get number of result rows for a given job.
+	 * @throws Exception 
+	 */
+	private int getNumRows(String jobId) throws Exception {
+		conf.setServiceEndpoint("results/getTableResultsRowCount");
+		this.parametersJSON.put("jobId", jobId);
+		this.run();
+		SimpleResultSet res = this.getRunResAsSimpleResultSet();
+		res.throwExceptionIfUnsuccessful();
+		if (this.getRunException() != null) {
+			throw this.getRunException();
+		}
+		this.parametersJSON.clear();  // clear parameters for next time
+		return res.getResultInt("rowCount");
+	}	
 }
+
 
 /**
  * Thread to format a subset of a table
@@ -351,19 +383,24 @@ class TableFormatter extends Thread{
 
 	public void run(){  
 		for(int i = startIndex; i < endIndex; i++){
-			for(int j = 0; j < rows.get(i).size(); j++){				
-				if(rows.get(i).get(j).indexOf('\"') > -1){
-					
-					rows.get(i).set(j, 
-							
-						StringUtils.replace(	
-							(StringUtils.replace(
-									(StringUtils.replace(rows.get(i).get(j), "\"", "\\\"")), // core
-									"\t", "\\t")), // tabs
-							"\n", "\\n")  // newlines
-								
-							); // escape internal double quotes
-				}
+			for(int j = 0; j < rows.get(i).size(); j++){	
+				String curr = rows.get(i).get(j);
+				Boolean altered = false;
+				
+				if(rows.get(i).get(j).indexOf('\"') > -1){ 
+					curr = StringUtils.replace(curr, "\"", "\\\"");
+					altered = true;
+				} 
+				if(rows.get(i).get(j).indexOf('\n') > -1){ 
+					curr = StringUtils.replace(curr, "\n", "\\n");
+					altered = true;	
+				} 
+				if(rows.get(i).get(j).indexOf('\t') > -1){ 
+					curr = StringUtils.replace(curr, "\t", "\\t");
+					altered = true;
+				} 
+				
+				if(altered){ rows.get(i).set(j, curr); }
 			}
 		}
 	} 

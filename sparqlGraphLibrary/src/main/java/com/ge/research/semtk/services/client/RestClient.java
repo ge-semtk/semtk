@@ -182,10 +182,23 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 	}
 	
+	/**
+	 * Get the last run result as a SimpleResultSet.
+	 */
 	protected SimpleResultSet getRunResAsSimpleResultSet() throws Exception{
 		SimpleResultSet retval = new SimpleResultSet();
 		if(this.runRes == null){ throw new Exception("last service communication resulted in null and cannot be converted");}
 		retval = SimpleResultSet.fromJson((JSONObject)this.runRes);
+		return retval;
+	}
+	
+	/**
+	 * Get the last run result as a TableResultSet.
+	 */
+	protected TableResultSet getRunResAsTableResultSet() throws Exception{
+		TableResultSet retval = new TableResultSet();
+		if(this.runRes == null){ throw new Exception("last service communication resulted in null and cannot be converted");}
+		retval = new TableResultSet((JSONObject)this.runRes);
 		return retval;
 	}
 
