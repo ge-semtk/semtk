@@ -68,7 +68,7 @@ public class SparqlAuthRulesServlet extends HttpServlet {
 		String sparqlServerUrl = request.getParameter("sparqlServerURL"); // auth
 																			// version,
 																			// e.g.
-																			// http://vesuvius37.crd.ge.com:2420/sparql-auth
+																			// http://localhost:2420/sparql-auth
 		String sparqlServerType = request.getParameter("sparqlServerType");
 		String sparqlDataset = request.getParameter("sparqlDataset");
 		String sparqlQuery = request.getParameter("sparqlQuery");

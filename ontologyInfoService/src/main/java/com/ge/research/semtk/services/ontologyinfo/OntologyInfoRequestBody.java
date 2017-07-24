@@ -22,7 +22,7 @@ package com.ge.research.semtk.services.ontologyinfo;
  * For service calls needing SPARQL connection and domain
  */
 public class OntologyInfoRequestBody {
-	public String serverAndPort;  	// e.g. http://vesuvius37.crd.ge.com:2420
+	public String serverAndPort;  	// e.g. http://localhost:2420
 	public String serverType;		// e.g. virtuoso
     public String dataset;			// e.g. http://research.ge.com/dataset
     public String domain;	        // e.g. http://research.ge.com/model
