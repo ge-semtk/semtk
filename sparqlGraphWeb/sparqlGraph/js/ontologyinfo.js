@@ -362,10 +362,10 @@ OntologyInfo.prototype = {
 			';
 	},
 	
-	loadSuperSubClasses : function(res) {
+	loadSuperSubClasses : function(subClassList, superClassList) {
 		// load queryResult
 		for (var i=0; i < res.getRowCount(); i++) {
-			var x = new OntologyClass(res.getRsData(i, 0), res.getRsData(i, 1));
+			var x = new OntologyClass(subClassList[i], subclassList[i]);
 			this.addClass(x);
 		}
 	},
@@ -389,10 +389,10 @@ OntologyInfo.prototype = {
 			';
 	},
 	
-	loadTopLevelClasses : function(res) {
+	loadTopLevelClasses : function(classList) {
 		// load from rows of [class]
 		for (var i=0; i < res.getRowCount(); i++) {
-			var x = new OntologyClass(res.getRsData(i, 0), "");
+			var x = new OntologyClass(classList[i], "");
 			this.addClass(x);
 		}
 	},
@@ -483,13 +483,11 @@ OntologyInfo.prototype = {
 		}';
 	},
 	
-	loadProperties : function(res) {
+	loadProperties : function(classList, propList, rangeList) {
 		// load from rows of [class, property, range]
 		for (var i=0; i < res.getRowCount(); i++) {
-			var name = res.getRsData(i, 1);
-			var range = res.getRsData(i, 2);
-			var prop = new OntologyProperty(name, range);
-			var c = this.classHash[res.getRsData(i, 0)];
+			var prop = new OntologyProperty(propList[i], rangeList[i]);
+			var c = this.classHash[classList[i]];
 			c.addProperty(prop);
 			this.propHash[name] = prop;
 		}
@@ -505,17 +503,17 @@ OntologyInfo.prototype = {
 				'}';
 	},
 	
-	loadEnums : function(res) {
+	loadEnums : function(classList, valList) {
 		// load from rows of [class, property, range]
 		for (var i=0; i < res.getRowCount(); i++) {
-			var className = res.getRsData(i, "Class");
-			var enumVal = res.getRsData(i, "EnumVal");
+			var className = classList[i];
+			var enumVal = valList[i];
 			
 			// add to enumHash list for this class, or start a new entry
 			if (className in this.enumHash) {
-				this.enumHash[className].push(enumVal);
+				this.enumHash[classList[i]].push(valList[i]);
 			} else {
-				this.enumHash[className] = [enumVal];
+				this.enumHash[classList[i]] = [ valList[i] ];
 			}
 		}
 	},
@@ -751,7 +749,8 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Super-subclass query returned no rows.\n\nCheck the load parameters (particularly domain) and triple-store contents.");
 			
     	} else {
-    		this.loadSuperSubClasses(qsResult);
+    		this.loadSuperSubClasses(qsResult.getStringResultsColumn("x"), 
+                                     qsResult.getStringResultsColumn("y"));
     		    	
     		var sparql = this.getTopLevelClassQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (2/4: top-level classes)");
@@ -770,7 +769,7 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Top-level class query returned no rows.\n\nDataset is empty.");
 
 		} else {
-			this.loadTopLevelClasses(qsResult);
+			this.loadTopLevelClasses(qsResult.getStringResultsColumn("Class"));
     		    	
     		var sparql = this.getLoadPropertiesQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (3/4: properties)");
@@ -788,7 +787,9 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Class properties query returned no rows.\n\nCheck the load parameters and triple-store contents.");
 			
 		} else {
-			this.loadProperties(qsResult);
+			this.loadProperties(qsResult.getStringResultsColumn("Class"),
+                                qsResult.getStringResultsColumn("Property"),
+                                qsResult.getStringResultsColumn("Range") );
 			
 			var sparql = this.getEnumQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (4/4: enums)");
@@ -802,7 +803,8 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Enums query:\n\n" + qsResult.getStatusMessage());
    
 		} else {
-			this.loadEnums(qsResult);
+			this.loadEnums(qsResult.getStringResultsColumn("Class"),
+                           qsResult.getStringResultsColumn("EnumVal"));
 			this.asyncStatusCallback("");
 			this.asyncSuccessCallback();
 		}	

@@ -331,12 +331,9 @@ define([	// properly require.config'ed
 
                 this.div = document.createElement("div");
 
-                this.sparqlIds = resultSet.getColumnStringsByName("valueId");
-                //this.itemTypes = resultSet.getColumnStringsByName("itemType");   
-                this.valueTypes = resultSet.getColumnStringsByName("valueType");
-                //this.sparqlIds = ["?flavor","?circumference", "?frosting"]; // TODO REMOVE - FOR TESTING ONLY
-                //this.valueTypes = ["STRING","INT","DOUBLE"];          // TODO REMOVE - FOR TESTING ONLY                      
-
+                this.sparqlIds = resultSet.getStringResultsColumn("valueId");
+                this.valueTypes = resultSet.getStringResultsColumn("valueType");
+               
                 var isEquals = function(operatorId) {
                     return document.getElementById(operatorId).value == "=";
                 };
