@@ -22,7 +22,7 @@
 //VERSION: 84
 var g = {
 	help : {
-		buildHtml : "SPARQLgraph build 752 on 2016-06-08",
+		buildHtml : "SPARQLgraph 2.0",
 		aboutHtml : "Knowledge Discovery Lab<br>\
 				     GE Research, Niskayuna<br>\
 				    ",
@@ -73,28 +73,25 @@ var g = {
 	
 	service : {
 		ingestion :{
-			url : "http://vesuvius37.crd.ge.com:12091/ingestion/",
-		},
-		sparqlQueryTEDS_AWS_VPC:{
-			url : "http://localhost:2450/sparqlQueryService/",
+			url : "http://localhost:12091/ingestion/",
 		},
 		sparqlQuery:{
-			url : "http://vesuvius37.crd.ge.com:12050/sparqlQueryService/",
+			url : "http://localhost:12050/sparqlQueryService/",
 		},
         status : {
-			"url" : "http://vesuvius37.crd.ge.com:12051/status/",    
+			"url" : "http://localhost:12051/status/",    
 		},
 		results : {
-			"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
+			"url" : "http://localhost:12052/results/",     
 		},
 		nodeGroupStore:{
-			url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStore/",
+			url : "http://localhost:12056/nodeGroupStore/",
 		},
 		nodeGroup:{
-			url : "http://vesuvius37.crd.ge.com:12059/nodeGroup/",
+			url : "http://localhost:12059/nodeGroup/",
 		},
         nodeGroupExec:{
-			url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/",
+			url : "http://localhost:12058/nodeGroupExecution/",
 		},
 	},
 	

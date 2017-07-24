@@ -24,28 +24,28 @@ define([], function() {
 	var Config = {
 		services : { 
 			"query" : {
-				"url" : "http://vesuvius37.crd.ge.com:12050/sparqlQueryService",  
+				"url" : "http://localhost:12050/sparqlQueryService",  
 			},
 			"status" : {
-				"url" : "http://vesuvius37.crd.ge.com:12051/status/",    
+				"url" : "http://localhost:12051/status/",    
 			},
 			"results" : {
-				"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
+				"url" : "http://localhost:12052/results/",     
 			},
             nodeGroup:{
-                url : "http://vesuvius37.crd.ge.com:12059/nodeGroup/",
+                url : "http://localhost:12059/nodeGroup/",
             },
             "nodeGroupExec" : {
-			     url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/",
+			     url : "http://localhost:12058/nodeGroupExecution/",
             },
 		},
 		help : {
-			"aboutHtml" : '<b>SparqlForm Opensource build 2016-06-23</b><br>\
+			"aboutHtml" : '<b>SparqlForm Opensource build 2.0</b><br>\
 				Knowledge Discovery Lab<br>\
 				Contact: Paul Cuddihy cuddihy@ge.com<br>\
 				GE Research, Niskayuna<br>',
 
-			"legalNoticeHtml" : ' Copyright © 2014-2016  General Electric Company.  <br>\
+			"legalNoticeHtml" : ' Copyright © 2014-2017  General Electric Company.  <br>\
 			    <b>Licensed under the Apache License, Version 2.0 (the "License") </b>  <br>\
 			    you may not use this file except in compliance with the License.  <br>\
 			    You may obtain a copy of the License at  <br>\
