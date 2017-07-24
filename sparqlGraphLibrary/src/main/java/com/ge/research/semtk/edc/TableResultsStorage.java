@@ -157,14 +157,9 @@ public class TableResultsStorage {
 	 * @return storageType indicates CSV or JSON
 	 */
 	private TableResultsSerializer getTable(URL url, Integer maxRows, Integer startRow, TableResultsStorageTypes storageType) throws Exception{
-				
-		System.out.println("** TableResultsStorage.getTable()");  // TODO DELETE THIS
 		
 		try{
-			System.out.println("** Calling getJSONObjectFromFilePath()...");  // TODO DELETE THIS
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
-			System.out.println("** Calling Table.fromJson() ...");		// DELETE THIS
-		
 			
 			String dataFileLocation = (String) jsonObj.get(DATARESULTSFILELOCATION);
 			
@@ -263,20 +258,9 @@ public class TableResultsStorage {
 	public int getResultsRowCount(URL url) throws Exception{
 		
 		try{
-			System.out.println("** Calling getJSONObjectFromFilePath()... " + urlToPath(url).toString());  // TODO DELETE THIS
-
-			System.err.println("RowCount being returned from tag: " + Table.JSON_KEY_ROW_COUNT);
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
-		
-			System.err.println("got json");
-			
-			
-			System.err.println("values was : " + jsonObj.get(Table.JSON_KEY_ROW_COUNT));
-			
 			Long val = (Long) jsonObj.get(Table.JSON_KEY_ROW_COUNT);
 			int retval = val.intValue();
-
-			
 			return retval;
 		}
 		catch(Exception eee){
