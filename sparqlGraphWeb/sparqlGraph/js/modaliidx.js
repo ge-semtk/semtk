@@ -487,7 +487,8 @@ define([	// properly require.config'ed   bootstrap-modal
                         $(this.div).modal('hide');
                     }.bind(this, callbackList[i]);
                     
-                    var a1 = IIDXHelper.createButton(buttonNameList[i], click, (classList.length > i ) ? classList[i] : undefined)
+                    var butClassList = (classList.length > i  && classList[i] != "") ? [classList[i]] : undefined;
+                    var a1 = IIDXHelper.createButton(buttonNameList[i], click, butClassList);
                     a1.setAttribute("data-dismiss", "modal");
                     
                     footer.appendChild(a1);
