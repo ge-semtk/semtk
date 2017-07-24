@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2017 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
  **
