@@ -26,7 +26,7 @@
     var gQueryResults = null;
         
     // drag stuff
-    var gDragLabel = "hi";
+    var gDragLabel = null;
     var gLoadDialog;
     var gStoreDialog = null;
     
@@ -120,10 +120,10 @@
     
     var checkBrowser = function() {
      	// Detect Browser
-    	var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-        if (! isFirefox) {
-        	logAndAlert("This application uses right-clicks, which may be blocked by this browser.<br>Firefox is recommended.")
-        }
+    	//var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+        //if (! isFirefox) {
+        //	logAndAlert("This application uses right-clicks, which may be blocked by this browser.<br>Firefox is recommended.")
+        //}
     };
     
     /*
@@ -134,6 +134,7 @@
     };
 
     var dropClass1 = function (dragLabel, noPathFlag) {
+        logEvent("SG Drop Class", "label", dragLabel);
         
         // add the node to the canvas
         var tsk = gOInfo.containsClass(dragLabel);
@@ -142,7 +143,6 @@
             // the class was found. let's use it.
             var nodelist = gNodeGroup.getArrayOfURINames();
             var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
-            logEvent("SG Drop Class", "label", dragLabel);
 
             // Handle no paths or shift key during drag: drop node with no connections
             if (noPathFlag || paths.length == 0) {
@@ -287,10 +287,10 @@
     
     var logAndAlert = function (msgHtml, optTitle) {
     	var title = typeof optTitle === "undefined" ? "Alert" : optTitle
-    	kdlLogEvent("SG: alert", "message", msgHtml);
-    	   
+    
     	require(['sparqlgraph/js/modaliidx'], 
     	         function (ModalIidx) {
+                    // note: ModalIidx.alert() logs with logger
 					ModalIidx.alert(title, msgHtml);
 				});
     };
@@ -670,14 +670,14 @@
                 
                 ModalIidx.choose("Save your work",
                                      "Changes to the nodegroup have not been saved<br><br>Do you want to download it first?",
-                                     ["Cancel", "Download", "Discard Changes"],
+                                     ["Cancel", "Discard", "Download"],
                                      [cancel, 
                                       function(){
-                                          doNodeGroupDownload();
                                           nodeGroupChanged(false);
                                           action();
                                       },
                                       function(){
+                                          doNodeGroupDownload();
                                           nodeGroupChanged(false);
                                           action();
                                       },
@@ -697,14 +697,14 @@
                 
                 ModalIidx.choose("Save custom query",
                                      "Edits to the SPARQL have not been saved<br><br>Do you want to download it first?",
-                                     ["Cancel", "Download", "Discard Changes"],
+                                     ["Cancel", "Discard", "Download"],
                                      [cancel, 
                                       function(){
-                                          downloadFile(document.getElementById('queryText').value, "sparql.txt");
                                           queryTextChanged(false);
                                           action();
                                       },
                                       function(){
+                                          downloadFile(document.getElementById('queryText').value, "sparql.txt");
                                           queryTextChanged(false);
                                           action();
                                       },
