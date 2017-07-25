@@ -69,8 +69,8 @@
     	};
     	
     	var configureServices = function() {
-			semtk.setSparqlQueryService("http://vesuvius37.crd.ge.com:12050/sparqlQueryService", failureCallback, 45000);
-			semtk.setOntologyService(   "http://vesuvius37.crd.ge.com:12057/ontologyinfo",       failureCallback, 45000);
+			semtk.setSparqlQueryService("http://localhost:12050/sparqlQueryService", failureCallback, 45000);
+			semtk.setOntologyService(   "http://localhost:12057/ontologyinfo",       failureCallback, 45000);
     	};
     	
     	var test1 = function() {
@@ -86,8 +86,8 @@
 			var name = "maples-conn";
 			var type = "virtuoso";
 			var domain = "http://";
-			var url = "http://vesuvius37.crd.ge.com:2420";
-			var dataset = "http://kdl.ge.com/GE/blueprintV5";
+			var url = "http://localhost:2420";
+			var dataset = "http://kdl.ge.com/GE/blueExampleV5";
 			
 			semtk.setConnectionInfo(name, domain);
 			semtk.addModelGraph(type, url, dataset);

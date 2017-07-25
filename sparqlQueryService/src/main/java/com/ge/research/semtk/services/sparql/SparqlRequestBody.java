@@ -23,7 +23,7 @@ package com.ge.research.semtk.services.sparql;
  */
 public class SparqlRequestBody {
 	
-	public String serverAndPort;  	// e.g. http://vesuvius37.crd.ge.com:2420
+	public String serverAndPort;  	// e.g. http://localhost:2420
 	public String serverType;		// e.g. virtuoso
     public String dataset;			// e.g. http://research.ge.com/dataset
     
