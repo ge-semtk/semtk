@@ -42,6 +42,7 @@ CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/r
 CONFIG_HIVE_SERVICE="$SEMTK"/hiveService/src/main/resources/hive.properties 
 CONFIG_DISPATCH_SERVICE="$SEMTK"/sparqlExtDispatchService/src/main/resources/dispatch.properties
 CONFIG_EXEC_SERVICE="$SEMTK"/nodeGroupExecutionService/src/main/resources/exec.properties
+CONFIG_INGESTION_SERVICE="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties
 
 # use different config files if given a config directory parameter
 if [ $# -eq 1 ]; then

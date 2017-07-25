@@ -70,8 +70,8 @@ do
         if [ ! -e $SAVED ]; then
                 echo WARNING: file needs to be modified for local configuration: $CURRENT
         else
-                CURRENT_VERSION=($(grep VERSION $CURRENT))
-                SAVED_VERSION=($(grep VERSION $SAVED))
+                CURRENT_VERSION="($(grep VERSION $CURRENT))"
+                SAVED_VERSION="($(grep VERSION $SAVED))"
 
                 if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then 
                         echo cp $SAVED $CURRENT
