@@ -19,7 +19,7 @@
 // SparqlForm config variables
 // GOAL: everything that changes with deployment is in here
 
-//VERSION: 84
+//VERSION: 85
 define([], function() {
 	var Config = {
 		services : { 
