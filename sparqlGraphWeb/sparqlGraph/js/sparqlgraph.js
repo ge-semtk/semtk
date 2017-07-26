@@ -943,7 +943,8 @@
                 if (g.service.hasOwnProperty(key)) {
                     var msi = new MicroServiceInterface(g.service[key].url);
                     msi.ping(callback.bind(this, div, g.service[key].url),
-                             callback.bind(this, div, g.service[key].url) );
+                             callback.bind(this, div, g.service[key].url), 
+                             10000);  // 10 seconds
                 }
             }
             

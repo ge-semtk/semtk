@@ -19,7 +19,7 @@
 // SparqlGraph config variables
 // GOAL: everything that changes with deployment is in here
 
-//VERSION: 85
+//VERSION: 85!
 var g = {
 	help : {
 		buildHtml : "SPARQLgraph 2.0",
@@ -84,14 +84,23 @@ var g = {
 		results : {
 			"url" : "http://localhost:12052/results/",     
 		},
+        dispatcher : {
+			"url" : "http://localhost:12053/dispatcher/",     
+		},
+        hive : {
+			"url" : "http://localhost:12055/hiveService/",     
+		},
 		nodeGroupStore:{
 			url : "http://localhost:12056/nodeGroupStore/",
 		},
-		nodeGroup:{
-			url : "http://localhost:12059/nodeGroup/",
+        ontologyInfo:{
+			url : "http://localhost:12057/ontologyinfo/",
 		},
         nodeGroupExec:{
 			url : "http://localhost:12058/nodeGroupExecution/",
+		}, 
+        nodeGroup:{
+			url : "http://localhost:12059/nodeGroup/",
 		},
 	},
 	
