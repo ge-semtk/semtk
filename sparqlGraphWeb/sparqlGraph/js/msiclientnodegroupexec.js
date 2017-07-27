@@ -325,7 +325,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         failureCallback(resultSet.getFailureHtml("did not return a requestID."));
                     }
                 } else {
-                    failureCallback(tresultSet.getFailureHtml());
+                    failureCallback(resultSet.getFailureHtml());
                 }
             },
             
