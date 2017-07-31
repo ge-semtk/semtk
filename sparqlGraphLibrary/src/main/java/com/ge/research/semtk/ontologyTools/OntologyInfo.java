@@ -1485,7 +1485,14 @@ public class OntologyInfo {
 					sadl.append(String.format("\n%s is a type of %s.\n", oClass.getNameString(true), parentName));
 				}
 			}
-    		
+			
+			// properties
+			for (OntologyProperty oProp : oProps) {
+				
+				String t = oProp.getRangeStr(true);
+				sadl.append(String.format("\t%s is described by %s with values of type %s.\n", oClass.getNameString(true), oProp.getNameStr(true), t));
+			}
+			
 			// enums
 			if (enumVals != null) {
 				sadl.append(String.format("%s must be one of {", oClass.getNameString(true)));
@@ -1497,13 +1504,6 @@ public class OntologyInfo {
 					sadl.append(e.getLocalName());
 				}
 				sadl.append("}.\n");
-			}
-			
-			// properties
-			for (OntologyProperty oProp : oProps) {
-				
-				String t = oProp.getRangeStr(true);
-				sadl.append(String.format("\tdescribed by %s with values of type %s.\n", oProp.getNameStr(true), t));
 			}
 		}
     	return sadl.toString();
