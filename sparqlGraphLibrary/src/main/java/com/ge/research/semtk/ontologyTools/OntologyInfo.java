@@ -43,6 +43,8 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.utility.Utility;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 /**
  * OntologyInfo is a class that contains the bulk of the understanding of the actual model.
@@ -63,7 +65,7 @@ public class OntologyInfo {
 	private HashMap<String, ArrayList<OntologyClass>> subclassHash = new HashMap<String, ArrayList<OntologyClass>>();
 	// a list of all the enumerations available for a given class. these are handled as full uris for convenience sake. 
 	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
-	
+		
 	private ArrayList<String> pathWarnings = new ArrayList<String>();  // problems incurred searching for a path.	
 
 	private final static int MAXPATHLENGTH = 50;	// how many hops, max, allowed in a returned path between arbitrary nodes
@@ -98,6 +100,10 @@ public class OntologyInfo {
 		this.loadSparqlConnection(clientConfig, conn);
 		this.modelConnection = conn;
 	
+	}
+	
+	public OntologyInfo(JSONObject json) throws Exception {
+		this.addJson(json);
 	}
 	
 	public void loadSparqlConnection(SparqlConnection conn) throws Exception {
@@ -179,8 +185,8 @@ public class OntologyInfo {
 		return retval;
 	}
 	
-	public ArrayList<String> getSuperclassNames(String superClassName) {
-		return this.getSuperclassNames(superClassName, null);
+	public ArrayList<String> getSuperclassNames(String subClassName) {
+		return this.getSuperclassNames(subClassName, null);
 	}
 	/**
 	 * return a list of the superclasses for a given class.
@@ -973,6 +979,7 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlQueryClient client, String domain) throws Exception {
+		
 		// execute each sub-query in order
 		TableResultSet tableRes;
 		
@@ -993,6 +1000,7 @@ public class OntologyInfo {
 	 * Build a VisJs representation of OntologyInfo
 	 * @return  JSONObject
 	 */
+	@SuppressWarnings("unchecked")
 	public JSONObject toVisJs() {
 		// Questions
 		//    Javascript ontologyTree has a namespace node at the root.   Do we want that?
@@ -1068,8 +1076,8 @@ public class OntologyInfo {
 		return ret;
 	}
 	
-	public JSONObject toJSON(SparqlConnection sc) throws Exception {
-		
+	@SuppressWarnings("unchecked")
+	public JSONObject toDetailedJSON(SparqlConnection sc) throws Exception {
 		
 		// build the entire connnection hash
 		for(String ocKey : this.classHash.keySet()){
@@ -1125,6 +1133,7 @@ public class OntologyInfo {
 		return retval;
 	}
 
+	@SuppressWarnings("unchecked")
 	private JSONArray generateJSONEnumerationArray() {
 		JSONArray retval = new JSONArray();
 
@@ -1146,6 +1155,7 @@ public class OntologyInfo {
 		return retval;
 	}
 
+	@SuppressWarnings("unchecked")
 	private JSONArray generateJSONPropArray() {
 		JSONArray retval = new JSONArray();
 
@@ -1192,6 +1202,7 @@ public class OntologyInfo {
 		return retval;
 	}
 
+	@SuppressWarnings("unchecked")
 	private JSONArray generateJSONClassArray() {
 		// throughout most of our other json generation routines, the objects themselves generate the json for themselves.
 		// this instance is different in that oInfo decentralizes a lof the information required for our export.
@@ -1265,6 +1276,238 @@ public class OntologyInfo {
 		// ship it out.
 		return retval;
 	}
+	
+	/*
+     * Build a json that mimics the returns from the load queries
+     */
+    @SuppressWarnings("unchecked")
+	public JSONObject toJson () { 
+    	JSONObject json = new JSONObject();
+    	
+    	JSONArray topLevelClassList =  new JSONArray();
+    	JSONArray subClassSuperClassList =  new JSONArray();
+    	JSONArray classPropertyRangeList =  new JSONArray();
+    	JSONArray classEnumValList =  new JSONArray();
+    	JSONObject prefixes =  new JSONObject();
+        
+        HashMap<String,String> prefixToIntHash = new HashMap<String, String>();
+
+        // topLevelClassList and subClassSuperClassList
+        for (String c : this.classHash.keySet()) {
+            ArrayList<String> parents = this.classHash.get(c).getParentNameStrings(false);   // PEC TODO add support for multiple parents
+            String name = this.classHash.get(c).getNameString(false);
+            if (parents.size() == 0) {
+            	topLevelClassList.add(Utility.prefixURI(name, prefixToIntHash));
+            } else {
+            	JSONArray a = new JSONArray();
+            	a.add(Utility.prefixURI(name, prefixToIntHash));
+            	a.add(Utility.prefixURI(parents.get(0), prefixToIntHash));
+            	subClassSuperClassList.add(a);
+            }
+        }
+        
+        // classPropertyRangeList
+        for (String c : this.classHash.keySet()) {
+            ArrayList<OntologyProperty> propList = this.classHash.get(c).getProperties();
+            for (int i=0; i < propList.size(); i++) {
+                OntologyProperty oProp = propList.get(i);
+                JSONArray a = new JSONArray();
+            	a.add(Utility.prefixURI(c, prefixToIntHash));
+            	a.add(Utility.prefixURI(oProp.getNameStr(), prefixToIntHash));
+            	a.add(Utility.prefixURI(oProp.getRangeStr(), prefixToIntHash));
+                classPropertyRangeList.add(a);
+            }
+        }
+        
+        // classEnumValList
+        for (String c : this.enumerationHash.keySet()) {
+            ArrayList<String> valList = this.enumerationHash.get(c);
+            for (int i=0; i < valList.size(); i++) {
+                String v = valList.get(i);
+                JSONArray a = new JSONArray();
+                a.add(Utility.prefixURI(c, prefixToIntHash));
+                a.add(Utility.prefixURI(v, prefixToIntHash));
+                classEnumValList.add(a);
+            }
+        }
+
+        // prefixes: reverse the hash so its intToPrefix
+        for (String p : prefixToIntHash.keySet()) {
+            prefixes.put(prefixToIntHash.get(p), p);
+        }
+        
+        json.put("topLevelClassList", topLevelClassList);
+    	json.put("subClassSuperClassList", subClassSuperClassList);
+    	json.put("classPropertyRangeList",classPropertyRangeList);
+    	json.put("classEnumValList", classEnumValList);
+    	json.put("prefixes", prefixes);
+    	
+        return json;
+    }
+    
+    public void addJson(JSONObject json) throws Exception {
+        
+    	// unlike javascript: need to unpack intToPrefixHash
+    	HashMap<String,String> intToPrefixHash = new HashMap<String,String>();
+    	JSONObject prefixes = (JSONObject) (json.get("prefixes"));
+    	
+    	for (Object key : prefixes.keySet()) {
+    		intToPrefixHash.put((String)key, (String) prefixes.get(key));
+    	}
+    	
+        // unhash topLevelClasses
+    	JSONArray jTopLevArr = (JSONArray) json.get("topLevelClassList");
+        String [] topLevelClassList = new String[jTopLevArr.size()];
+        for (int i=0; i < jTopLevArr.size(); i++) {
+            topLevelClassList[i] = Utility.unPrefixURI((String) jTopLevArr.get(i), intToPrefixHash);
+        }
+        
+        this.loadTopLevelClasses(topLevelClassList);
+        this.loadSuperSubClasses(Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 0, intToPrefixHash),
+        						 Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 1, intToPrefixHash)     
+                                );
+        this.loadProperties(Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 0, intToPrefixHash),
+        					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 1, intToPrefixHash),
+        					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 2, intToPrefixHash)
+                            );
+        this.loadEnums(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 0, intToPrefixHash),
+        				Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 1, intToPrefixHash)
+                      );
+    }
+    
+    public String generateRdfOWL(String base) {
+    	StringBuilder owl = new StringBuilder();
+    	
+    	owl.append(String.format(
+    			"<rdf:RDF\n" + 
+    			"	xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" + 
+    			"	xmlns:owl=\"http://www.w3.org/2002/07/owl#\"\n" + 
+    			"	xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n" + 
+    			"	xmlns=\"%s#\"\n" + 
+    			"	xml:base=\"%s\">\n" + 
+    			"	<owl:Ontology rdf:about=\"%s\">\n" + 
+    			"		<rdfs:comment xml:lang=\"en\">Created by com.ge.research.semtk.ontologyTools.OntologyInfo</rdfs:comment>\n" + 
+    			"	</owl:Ontology>\n",
+    			base, base, base)
+    		);
+    	
+    			
+    	// Classes
+    	this.appendComment(owl, "****** Classes ******");
+    	for (String c : this.classHash.keySet()) {
+    		owl.append(String.format("\t<owl:Class rdf:about=\"%s\">\n", c));
+    		
+    		// superclasses
+    		ArrayList<String> superClasses = this.getSuperclassNames(c);
+    		for (int i=0; i < superClasses.size(); i++) {
+    			owl.append(String.format("\t\t<rdfs:subClassOf rdf:resource=\"%s\"/>\n", superClasses.get(i)));
+    		}
+    		
+    		// enums
+    		if (this.enumerationHash.containsKey(c)) {
+    			owl.append(
+    					"\t\t<owl:equivalentClass>\n" +
+    					"\t\t\t<owl:Class>\n" +
+    					"\t\t\t\t<owl:oneOf rdf:parseType=\"Collection\">\n");
+    			
+    			ArrayList<String> enums = this.enumerationHash.get(c);
+    			for (int i=0; i < enums.size(); i++) {
+    				owl.append(String.format(
+    						"\t\t\t\t\t<rdf:Description rdf:about=\"%s\"/>\n",
+    						enums.get(i)));
+    			}
+    			owl.append(
+    					"\t\t\t\t</owl:oneOf>\r\n" + 
+    					"\t\t\t</owl:Class>\r\n" + 
+    					"\t\t</owl:equivalentClass>\n");
+    		}
+    		owl.append("\t</owl:Class>\n\n");
+    	}
+    	
+    	// Properties
+    	this.appendComment(owl, "****** Properties ******");
+    	for (String p : this.propertyHash.keySet()) {
+    		OntologyProperty oProp = this.propertyHash.get(p);
+
+    		// PEC TODO: this can't be the correct way to determin DatatypeProperty vs ObjectProperty
+    		if (oProp.getRangeStr().contains("XMLSchema#")) {
+    			owl.append(String.format("\t<owl:DatatypeProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
+    		} else {
+    			owl.append(String.format("\t<owl:ObjectProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
+    		}
+    		
+    		for (String c : this.classHash.keySet()) {
+    			if (this.classHash.get(c).getProperty(p) != null) {
+    				owl.append(String.format("\t\t<rdfs:domain rdf:resource=\"%s\"/>\n", c));
+    			}
+    		}
+    		
+    		owl.append(String.format("\t\t<rdfs:range rdf:resource=\"%s\"/>\n", oProp.getRangeStr()));
+    		
+    		if (oProp.getRangeStr().contains("XMLSchema#")) {
+    			owl.append("\t</owl:DatatypeProperty>\n\n");
+    		} else {
+    			owl.append("\t</owl:ObjectProperty>\n\n");
+    		}
+    	}
+    	
+    	owl.append("</rdf:RDF>");
+    	
+    	return owl.toString();
+    }
+    
+    private void appendComment(StringBuilder sb, String comment) {
+    	sb.append("\n\n<!-- " + comment + " -->\n\n");
+    }
+    
+    public String generateSADL(String base) {
+    	String [] baseTokens = base.split("/");
+    	String alias = baseTokens[baseTokens.length - 1];
+    	StringBuilder sadl = new StringBuilder();
+    	
+		sadl.append(String.format("uri \"%s\" alias %s.\n\n", base, alias));
+		
+		for (String c : this.classHash.keySet()) {
+			OntologyClass oClass = this.classHash.get(c);
+			ArrayList<OntologyClass> superClasses = this.getClassParents(oClass);
+			ArrayList<String> enumVals = this.enumerationHash.get(c);
+			ArrayList<OntologyProperty> oProps = oClass.getProperties();
+			
+			// type
+			if (superClasses.size() == 0) {
+				sadl.append(String.format("\n%s is a class.\n", oClass.getNameString(true)));
+			} else {
+				
+				for (int i=0; i < superClasses.size(); i++) {
+					OntologyClass parent = superClasses.get(i);
+					// parent name is full if it isn't in oInfo, abbreviated if it is
+					String parentName = parent.getNameString(this.containsClass(parent.getNameString(false)));
+					sadl.append(String.format("\n%s is a type of %s.\n", oClass.getNameString(true), parentName));
+				}
+			}
+    		
+			// enums
+			if (enumVals != null) {
+				sadl.append(String.format("%s must be one of {", oClass.getNameString(true)));
+				for (int i=0; i < enumVals.size(); i++) {
+					if (i > 0) {
+						sadl.append(",");
+					}
+					OntologyName e = new OntologyName(enumVals.get(i));
+					sadl.append(e.getLocalName());
+				}
+				sadl.append("}.\n");
+			}
+			
+			// properties
+			for (OntologyProperty oProp : oProps) {
+				
+				String t = oProp.getRangeStr(true);
+				sadl.append(String.format("\tdescribed by %s with values of type %s.\n", oProp.getNameStr(true), t));
+			}
+		}
+    	return sadl.toString();
+    }
 }
 
 

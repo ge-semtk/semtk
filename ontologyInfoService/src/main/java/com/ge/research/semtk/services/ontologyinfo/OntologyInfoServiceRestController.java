@@ -94,7 +94,7 @@ public class OntologyInfoServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/getDetailedOntologyInfo", method= RequestMethod.POST)
-	public JSONObject getVisJs(@RequestBody DetailedOntologyInfoRequestBody requestBody){
+	public JSONObject getDetailedOntologyInfo(@RequestBody DetailedOntologyInfoRequestBody requestBody){
 		
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
 	    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs start");
@@ -122,7 +122,7 @@ public class OntologyInfoServiceRestController {
 	    	conn.addModelInterface(serverType, serverUrl, requestBody.getDataset());
 	    	OntologyInfo oInfo = new OntologyInfo(conn);
 	    	
-	    	res.addResultsJSON( oInfo.toJSON(null) );
+	    	res.addResultsJSON( oInfo.toDetailedJSON(null) );
 	    	res.setSuccess(true);
 	    	
 	    } catch (Exception e) {

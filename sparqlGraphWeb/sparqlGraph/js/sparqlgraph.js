@@ -903,10 +903,16 @@
     	
    		
    	};
-	
-   	
+
    	var doTest = function () {
-        alert(   gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, -1)  );
+        var json = gOInfo.toJson();
+        
+        gOInfo = new OntologyInfo(json);
+
+        console.log(JSON.stringify(json));
+        
+        clearTree();
+        doLoadOInfoSuccess();
    	};
 
     var checkServices = function () {
