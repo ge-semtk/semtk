@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.services.ontologyinfo;
 
-import java.net.URL;
-
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -33,7 +31,6 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @CrossOrigin
 @RestController
@@ -133,6 +130,44 @@ public class OntologyInfoServiceRestController {
 	    }
 	    
 	    return res.toJson();
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/getRdfOWL", method=RequestMethod.POST)
+	public JSONObject getRdfOWL(@RequestBody OntologyInfoJsonRequest requestBody){
+		SimpleResultSet retval = null;
+		
+		try{
+			OntologyInfo oInfo = requestBody.getOInfo();
+			retval = new SimpleResultSet(); 
+			retval.addResult("rdfOWL", oInfo.generateRdfOWL(requestBody.getBase()));
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(eee.getMessage());
+			eee.printStackTrace();
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/getSADL", method=RequestMethod.POST)
+	public JSONObject getSADL(@RequestBody OntologyInfoJsonRequest requestBody){
+		SimpleResultSet retval = null;
+		
+		try{
+			OntologyInfo oInfo = requestBody.getOInfo();
+			retval = new SimpleResultSet(); 
+			retval.addResult("SADL", oInfo.generateSADL(requestBody.getBase()));
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(eee.getMessage());
+			eee.printStackTrace();
+		}
+		
+		return retval.toJson();		
 	}
 	
 	private void logToStdout (String message) {

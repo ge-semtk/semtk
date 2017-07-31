@@ -142,7 +142,7 @@ public class OntologyInfo {
 	 **/
 	public void addClass(OntologyClass oClass){
 		String classnameStr = oClass.getNameString(false);	// get the full name of the class and do not strip URI info.
-		this.connHash.clear(); // TODO: ask Paul why this is cleared whenever a class is added. 
+		this.connHash.clear(); 
 		
 		this.classHash.put(classnameStr, oClass);	// silently overwrites if the class is already present.
 		// store info on the related subclasses
@@ -1495,7 +1495,7 @@ public class OntologyInfo {
 			
 			// enums
 			if (enumVals != null) {
-				sadl.append(String.format("%s must be one of {", oClass.getNameString(true)));
+				sadl.append(String.format("\t%s must be one of {", oClass.getNameString(true)));
 				for (int i=0; i < enumVals.size(); i++) {
 					if (i > 0) {
 						sadl.append(",");
