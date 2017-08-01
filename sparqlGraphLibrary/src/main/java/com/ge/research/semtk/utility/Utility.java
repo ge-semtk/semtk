@@ -39,6 +39,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -422,4 +423,43 @@ public abstract class Utility {
 		return new String(decompressedBytes, CHAR_ENCODING);
 	}  
 
+	/**
+	 *    Prefix a "http://normal/looking#uri" into "1:uri", using and/or updating prefixToIntHash
+	 */
+	public static String prefixURI(String uri, HashMap<String, String> prefixToIntHash) {
+        String [] tok = uri.split("#");
+        // if there is a #
+        if (tok.length == 2) {
+            // add to prefixToIntHash if missing
+        	if (! prefixToIntHash.containsKey(tok[0])) {
+                prefixToIntHash.put(tok[0], String.valueOf(prefixToIntHash.size()));
+            }
+            
+            return prefixToIntHash.get(tok[0]) + ":" + tok[1];
+        } else {
+            return uri;
+        }
+    }
+    
+	/**
+	 * Unprefix a "1:uri" to "http://actual/prefix#uri" using intToPrefixHash
+	 */
+	public static String unPrefixURI(String uri, HashMap<String, String> intToPrefixHash) {
+        String [] tok = uri.split(":");
+        if (tok.length == 2 && intToPrefixHash.containsKey(tok[0])) {
+            return intToPrefixHash.get(tok[0]) + "#" + tok[1];
+        } else {
+            return uri;
+        }
+    }
+	
+	public static String [] unPrefixJsonTableColumn(JSONArray jArr, int col, HashMap<String, String> intToPrefixHash) {
+		String [] ret = new String[jArr.size()];
+		
+		for (int i=0; i < jArr.size(); i++) {
+			ret[i] = Utility.unPrefixURI( (String) ( ((JSONArray)jArr.get(i)) .get(col) ),
+					                      intToPrefixHash);
+		}
+		return ret;
+	}
 }

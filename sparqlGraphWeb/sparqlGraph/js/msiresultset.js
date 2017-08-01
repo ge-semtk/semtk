@@ -510,7 +510,8 @@ define([	// properly require.config'ed   bootstrap-modal
 								                      optFinishedCallback);
 			},
 			
-			getColumnStringsByName : function(name) {
+            // get named column's values as the raw strings
+			getStringResultsColumn : function(name) {
 				return this.getColumnStrings(this.getColumnNumber(name));
 			},
 			

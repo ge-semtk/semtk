@@ -28,14 +28,15 @@
 /*
  * OntologyInfo
  */
-var OntologyInfo = function() {
+var OntologyInfo = function(optJson) {
     this.classHash = {};        // classHash[classURI] = oClass object
-    this.propHash = {};         //  propHash[propURI] = oProp object
-    this.maxPathLen = 50;
-    this.pathWarnings = [];
-    this.connHash = {};         // for each class, an array of all legal single-hop paths to or from other classes
+    this.propHash = {};         // propHash[propURI] = oProp object
     this.subclassHash = {};     // for each class list of sub-classes   (NOTE: super-classes are stored in the class itsself)
     this.enumHash = {};         // this.enumHash[className] = [ full-uri-of-enum-val, full-uri-of-enum_val2... ]
+    
+    this.maxPathLen = 50;
+    this.pathWarnings = [];
+    this.connHash = {};         // calculated as needed. connHash[class] = [all single-hop paths to or from other classes]
     
     this.getFlag = false;
    
@@ -44,6 +45,10 @@ var OntologyInfo = function() {
     this.asyncStatusCallback = null;
     this.asyncSuccessCallback = null;
     this.asyncFailureCallback = null;
+    
+    if (typeof optJson != "undefined") {
+        this.addJson(optJson);
+    }
 };
 
 OntologyInfo.prototype = {
@@ -362,10 +367,10 @@ OntologyInfo.prototype = {
 			';
 	},
 	
-	loadSuperSubClasses : function(res) {
+	loadSuperSubClasses : function(subClassList, superClassList) {
 		// load queryResult
-		for (var i=0; i < res.getRowCount(); i++) {
-			var x = new OntologyClass(res.getRsData(i, 0), res.getRsData(i, 1));
+		for (var i=0; i < subClassList.length; i++) {
+			var x = new OntologyClass(subClassList[i], superClassList[i]);
 			this.addClass(x);
 		}
 	},
@@ -389,10 +394,10 @@ OntologyInfo.prototype = {
 			';
 	},
 	
-	loadTopLevelClasses : function(res) {
+	loadTopLevelClasses : function(classList) {
 		// load from rows of [class]
-		for (var i=0; i < res.getRowCount(); i++) {
-			var x = new OntologyClass(res.getRsData(i, 0), "");
+		for (var i=0; i < classList.length; i++) {
+			var x = new OntologyClass(classList[i], "");
 			this.addClass(x);
 		}
 	},
@@ -483,13 +488,11 @@ OntologyInfo.prototype = {
 		}';
 	},
 	
-	loadProperties : function(res) {
+	loadProperties : function(classList, propList, rangeList) {
 		// load from rows of [class, property, range]
-		for (var i=0; i < res.getRowCount(); i++) {
-			var name = res.getRsData(i, 1);
-			var range = res.getRsData(i, 2);
-			var prop = new OntologyProperty(name, range);
-			var c = this.classHash[res.getRsData(i, 0)];
+		for (var i=0; i < classList.length; i++) {
+			var prop = new OntologyProperty(propList[i], rangeList[i]);
+			var c = this.classHash[classList[i]];
 			c.addProperty(prop);
 			this.propHash[name] = prop;
 		}
@@ -505,17 +508,17 @@ OntologyInfo.prototype = {
 				'}';
 	},
 	
-	loadEnums : function(res) {
+	loadEnums : function(classList, valList) {
 		// load from rows of [class, property, range]
-		for (var i=0; i < res.getRowCount(); i++) {
-			var className = res.getRsData(i, "Class");
-			var enumVal = res.getRsData(i, "EnumVal");
+		for (var i=0; i < classList.length; i++) {
+			var className = classList[i];
+			var enumVal = valList[i];
 			
 			// add to enumHash list for this class, or start a new entry
 			if (className in this.enumHash) {
-				this.enumHash[className].push(enumVal);
+				this.enumHash[classList[i]].push(valList[i]);
 			} else {
-				this.enumHash[className] = [enumVal];
+				this.enumHash[classList[i]] = [ valList[i] ];
 			}
 		}
 	},
@@ -727,7 +730,7 @@ OntologyInfo.prototype = {
     
     load : function (domain, interfaceOrClient, statusCallback, successCallback, failureCallback) {
     	// interfaceOrClient: sparqlServerInterface or MsiClientQuery
-    	//
+    	// 
     	this.asyncDomain = domain;
 		this.asyncSei = interfaceOrClient;
 		this.asyncStatusCallback = statusCallback;
@@ -751,7 +754,8 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Super-subclass query returned no rows.\n\nCheck the load parameters (particularly domain) and triple-store contents.");
 			
     	} else {
-    		this.loadSuperSubClasses(qsResult);
+    		this.loadSuperSubClasses(qsResult.getStringResultsColumn("x"), 
+                                     qsResult.getStringResultsColumn("y"));
     		    	
     		var sparql = this.getTopLevelClassQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (2/4: top-level classes)");
@@ -770,7 +774,7 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Top-level class query returned no rows.\n\nDataset is empty.");
 
 		} else {
-			this.loadTopLevelClasses(qsResult);
+			this.loadTopLevelClasses(qsResult.getStringResultsColumn("Class"));
     		    	
     		var sparql = this.getLoadPropertiesQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (3/4: properties)");
@@ -788,7 +792,9 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Class properties query returned no rows.\n\nCheck the load parameters and triple-store contents.");
 			
 		} else {
-			this.loadProperties(qsResult);
+			this.loadProperties(qsResult.getStringResultsColumn("Class"),
+                                qsResult.getStringResultsColumn("Property"),
+                                qsResult.getStringResultsColumn("Range") );
 			
 			var sparql = this.getEnumQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (4/4: enums)");
@@ -802,7 +808,8 @@ OntologyInfo.prototype = {
     		this.asyncFailureCallback("Enums query:\n\n" + qsResult.getStatusMessage());
    
 		} else {
-			this.loadEnums(qsResult);
+			this.loadEnums(qsResult.getStringResultsColumn("Class"),
+                           qsResult.getStringResultsColumn("EnumVal"));
 			this.asyncStatusCallback("");
 			this.asyncSuccessCallback();
 		}	
@@ -816,7 +823,121 @@ OntologyInfo.prototype = {
 		} else {
 			this.asyncSei.executeAndParse(sparql, callback);
 		}
-    }
+    },
+    
+    prefixURI : function (uri, prefixToIntHash) {
+        var tok = uri.split("#");
+        // if there is a #
+        if (tok.length == 2) {
+            // add to prefixToIntHash if missing
+            if (! (tok[0] in prefixToIntHash)) {
+                prefixToIntHash[tok[0]] = Object.keys(prefixToIntHash).length;
+            }
+            
+            return prefixToIntHash[tok[0]] + ":" + tok[1];
+        } else {
+            return uri;
+        }
+    },
+    
+    unPrefixURI : function (uri, intToPrefixHash) {
+        var tok = uri.split(":");
+        if (tok.length == 2 && tok[0] in intToPrefixHash) {
+            return intToPrefixHash[tok[0]] + "#" + tok[1];
+        } else {
+            return uri;
+        }
+    },
+    
+    /*
+     * Build a json that mimics the returns from the load queries
+     */
+    toJson : function () { 
+        var json = {
+            "topLevelClassList" : [],
+            "subClassSuperClassList" : [],
+            "classPropertyRangeList" : [],
+            "classEnumValList" : [],
+            "prefixes" : {}
+        };
+        
+        var prefixToIntHash = {};
+
+        // topLevelClassList and subClassSuperClassList
+        for (var c in this.classHash) {
+            var parent = this.classHash[c].getParentNameStr();
+            var name = this.classHash[c].getNameStr();
+            if (parent == "") {
+                json.topLevelClassList.push(this.prefixURI(name, prefixToIntHash));
+            } else {
+                json.subClassSuperClassList.push([this.prefixURI(name, prefixToIntHash), 
+                                                  this.prefixURI(parent, prefixToIntHash) ]);
+            }
+        }
+        
+        // classPropertyRangeList
+        for (var c in this.classHash) {
+            var propList = this.classHash[c].getProperties();
+            for (var i=0; i < propList.length; i++) {
+                var oProp = propList[i];
+                json.classPropertyRangeList.push([this.prefixURI(c, prefixToIntHash), 
+                                                  this.prefixURI(oProp.getNameStr(), prefixToIntHash),
+                                                  this.prefixURI(oProp.getRangeStr(), prefixToIntHash) ]);
+            }
+        }
+        
+        // classEnumValList
+        for (var c in this.enumHash) {
+            var valList = this.enumHash[c];
+            for (var i=0; i < valList.length; i++) {
+                var v = valList[i];
+                json.classEnumValList.push([this.prefixURI(c, prefixToIntHash), 
+                                            this.prefixURI(v, prefixToIntHash)]);
+            }
+        }
+
+        // prefixes: reverse the hash so its intToPrefix
+        for (var p in prefixToIntHash) {
+            json.prefixes[prefixToIntHash[p]] = p;
+        }
+        
+        return json;
+    },
+    
+    /*
+     * adds json to OntologyInfo
+     *
+     * Normally, use new OntologyInfo(json)
+     */
+    addJson : function (json) {
+        
+        /* 
+         * return one columns of data as a list
+         * unPrefix all values
+         */ 
+        var getColumn = function(hash, data, colNum) {
+            return data.map( function(h, c, row) { return this.unPrefixURI(row[c], h); }.bind(this, hash, colNum) );
+        }.bind(this, json.prefixes);
+                
+        // unhash topLevelClasses
+        var topLevelClassList = [];
+        for (var i=0; i < json.topLevelClassList.length; i++) {
+            topLevelClassList.push(this.unPrefixURI(json.topLevelClassList[i], json.prefixes));
+        }
+        
+        this.loadTopLevelClasses(topLevelClassList);
+        this.loadSuperSubClasses(getColumn(json.subClassSuperClassList, 0),
+                                 getColumn(json.subClassSuperClassList, 1)     
+                                );
+        this.loadProperties(getColumn(json.classPropertyRangeList, 0),
+                            getColumn(json.classPropertyRangeList, 1),
+                            getColumn(json.classPropertyRangeList, 2)
+                            );
+        this.loadEnums(getColumn(json.classEnumValList, 0),
+                       getColumn(json.classEnumValList, 1)
+                      );
+        
+    },
 };
 
 /*
