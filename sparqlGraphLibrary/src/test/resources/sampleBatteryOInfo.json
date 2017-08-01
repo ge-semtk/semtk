@@ -1,0 +1,30 @@
+{
+	"topLevelClassList":[
+		"0:Battery",
+		"0:Cell",
+		"0:Color"
+	],
+	"subClassSuperClassList":[
+		["0:DuraBattery","0:Battery"]
+	],
+	"classPropertyRangeList":[
+		["0:Battery","0:batteryDesc","1:string"],
+		["0:Battery","0:assemblyDate","1:dateTime"],
+		["0:Battery","0:batteryId","1:string"],
+		["0:Cell","0:cellId","1:string"],
+		["0:Cell","0:color","0:Color"],
+		["0:DuraBattery","0:cell1","0:Cell"],
+		["0:DuraBattery","0:cell2","0:Cell"],
+		["0:DuraBattery","0:cell3","0:Cell"],
+		["0:DuraBattery","0:cell4","0:Cell"]
+	],
+	"classEnumValList":[
+		["0:Color","0:blue"],
+		["0:Color","0:white"],
+		["0:Color","0:red"]
+	],
+	"prefixes":{
+		"0":"http://kdl.ge.com/durabattery",
+		"1":"http://www.w3.org/2001/XMLSchema"
+	}
+}
