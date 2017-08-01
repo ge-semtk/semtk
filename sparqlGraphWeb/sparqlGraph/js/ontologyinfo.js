@@ -399,6 +399,7 @@ OntologyInfo.prototype = {
 		for (var i=0; i < classList.length; i++) {
 			var x = new OntologyClass(classList[i], "");
 			this.addClass(x);
+			this.addClass(x);
 		}
 	},
 	
@@ -494,7 +495,7 @@ OntologyInfo.prototype = {
 			var prop = new OntologyProperty(propList[i], rangeList[i]);
 			var c = this.classHash[classList[i]];
 			c.addProperty(prop);
-			this.propHash[name] = prop;
+			this.propHash[propList[i]] = prop;
 		}
 	},
 	
