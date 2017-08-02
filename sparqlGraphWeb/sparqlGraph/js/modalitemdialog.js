@@ -637,13 +637,24 @@ define([	// properly require.config'ed
 						td.appendChild(document.createTextNode(" mark for delete"));
 					} else {
 						var options = [];
+                        var selectedText = [];
 						for (var key in NodeDeletionTypes) {
 							options.push([key, NodeDeletionTypes[key]]);
+                            
+                            if (NodeDeletionTypes[key] == this.item.getDeletionMode()) {
+                                selectedText.push(key);
+                            }
 						}
 						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
                                                                       options,
-                                                                      [this.item.getDeletionMode()]);
+                                                                      selectedText);
 						deleteSelect.classList.add("input-medium");
+                        
+                        // TODO: last two aren't implemented on the other end
+                        //       They probably shouldn't be in belmont.js
+                        deleteSelect.options[3].disabled = true;
+                        deleteSelect.options[4].disabled = true;
+                        
 						td.appendChild(deleteSelect);
 					}
 					

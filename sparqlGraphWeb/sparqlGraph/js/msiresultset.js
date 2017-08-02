@@ -140,8 +140,8 @@ define([	// properly require.config'ed   bootstrap-modal
                     html += "<b>&nbsp;&nbsp;" + IIDXHelper.htmlSafe(key) + ": </b>";
                 
                     var val = JSON.stringify(this.xhr[key]);
-                    if (val.length > 32) {
-                        val = val.slice(0,32)+"...";
+                    if (key != "rationale" && val.length > 64) {
+                        val = val.slice(0,64)+"...";
                     }
                     html += IIDXHelper.htmlSafe( val ) + "<br>";
                     
@@ -150,8 +150,8 @@ define([	// properly require.config'ed   bootstrap-modal
                         for (var key1 in this.xhr[key]) {
                             html += "<b>&nbsp;&nbsp;&nbsp;&nbsp; - " + IIDXHelper.htmlSafe(key + "." + key1) + ": </b>";
                             var val = JSON.stringify(this.xhr[key][key1]);
-                            if (val.length > 32) {
-                                val = val.slice(0,32)+"...";
+                            if (val.length > 64) {
+                                val = val.slice(0,64)+"...";
                             }
                             html += IIDXHelper.htmlSafe( val ) + "<br>";
                         }
@@ -510,7 +510,8 @@ define([	// properly require.config'ed   bootstrap-modal
 								                      optFinishedCallback);
 			},
 			
-			getColumnStringsByName : function(name) {
+            // get named column's values as the raw strings
+			getStringResultsColumn : function(name) {
 				return this.getColumnStrings(this.getColumnNumber(name));
 			},
 			

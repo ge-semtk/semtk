@@ -439,7 +439,7 @@ SparqlServerResult.prototype = {
 		}
 	},
 	
-	getColumnByName : function(colName) {
+    getColumnByName : function(colName) {
 		// get column number given a name
 		if (this.hasOwnProperty('jsonObj') && this.jsonObj.hasOwnProperty('head') && this.jsonObj.head.hasOwnProperty('vars')) {
 			for (var i=0; i < this.jsonObj.head.vars.length; i++) {
@@ -449,6 +449,21 @@ SparqlServerResult.prototype = {
 			}
 		}
 		return -1;
+	},
+	
+    // get named column's values as the raw strings
+    getStringResultsColumn : function(colName) {
+		// get all the values in a named column as a list
+		var c = this.getColumnByName(colName);
+		var rowCount = this.getRowCount();
+		var ret = [];
+		
+        var raw = this.jsonObj.results.bindings;
+        
+		for (var i=0; i < rowCount; i++) {
+			ret.push( raw[i][c] ? raw[i][c] : "" );
+		}
+		return ret;
 	},
 	
 	getColumnAsList : function(colName) {

@@ -487,25 +487,7 @@
         
         nodeGroupChanged(true);
     };
-    
-    var downloadFile = function (data, filename) {
-    	// build an anchor and click on it
-		$('<a>invisible</a>')
-			.attr('id','downloadFile')
-			.attr('href','data:text/csv;charset=utf8,' + encodeURIComponent(data))
-			.attr('download', filename)
-			.appendTo('body');
-		$('#downloadFile').ready(function() {
-			$('#downloadFile').get(0).click();
-		});
-		
-		// remove the evidence
-		var parent = document.getElementsByTagName("body")[0];
-		var child = document.getElementById("downloadFile");
-		parent.removeChild(child);
-    };
-    
-    
+      
     var doLoad = function() {
     	logEvent("SG Menu: File->Load");
     	gLoadDialog.loadDialog(gConn, doLoadConnection);
@@ -692,8 +674,9 @@
     var checkQueryTextUnsavedThen = function(action, optCancel) {
         var cancel = (typeof optCancel == "undefined") ? function(){} : optCancel;
         if (gQueryTextChangedFlag ) {
-            require(['sparqlgraph/js/modaliidx'], 
-                function(ModalIidx) {
+            require(['sparqlgraph/js/modaliidx', 
+                     'sparqlgraph/js/iidxhelper'], 
+                function(ModalIidx, IIDXHelper) {
                 
                 ModalIidx.choose("Save custom query",
                                      "Edits to the SPARQL have not been saved<br><br>Do you want to download it first?",
@@ -704,7 +687,7 @@
                                           action();
                                       },
                                       function(){
-                                          downloadFile(document.getElementById('queryText').value, "sparql.txt");
+                                          IIDXHelper.downloadFile(document.getElementById('queryText').value, "sparql.txt", "text/csv;charset=utf8");
                                           queryTextChanged(false);
                                           action();
                                       },
@@ -817,20 +800,13 @@
         
 		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
     };
-    
-    var doNodeGroupUploadCallback = function (evt) {
-    	// fileInput callback
-    	doQueryLoadFile(evt.target.files[0]);
-    };
-    
+
     var doNodeGroupUpload = function () {
     	// menu pick callback
     	logEvent("SG menu: File->Upload");
-		
-        var fileInput = document.getElementById("fileInput");
-        fileInput.addEventListener('change', doNodeGroupUploadCallback, false);
-        fileInput.click();
-
+		require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
+            IIDXHelper.fileDialog(doQueryLoadFile);
+        });
     };
     
     var doNodeGroupDownload = function () {
@@ -839,13 +815,15 @@
     		logAndAlert("Query canvas is empty.  Nothing to download.");
     		
     	} else {
-    		require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
+    		require(['sparqlgraph/js/sparqlgraphjson',
+                     'sparqlgraph/js/iidxhelper'], 
+                    function(SparqlGraphJson, IIDXHelper) {
     			// make sure importSpec is in sync
     			gMappingTab.updateNodegroup(gNodeGroup);
     			
 				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
 	    		
-	    		downloadFile(sgJson.stringify(), "sparql_graph.json");
+	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
     		});
     	}
@@ -903,10 +881,16 @@
     	
    		
    	};
-	
-   	
+
    	var doTest = function () {
-        alert(   gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, -1)  );
+        var json = gOInfo.toJson();
+        
+        gOInfo = new OntologyInfo(json);
+
+        console.log(JSON.stringify(json));
+        
+        clearTree();
+        doLoadOInfoSuccess();
    	};
 
     var checkServices = function () {
@@ -1204,7 +1188,11 @@
      
     var doQueryDownload = function() {
         var query = document.getElementById('queryText').value;
-        downloadFile(query, "query.txt");
+        
+        require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
+            IIDXHelper.downloadFile(query, "query.txt", "text/csv;charset=utf8");
+        });
+        
         queryTextChanged(false);
     };
 

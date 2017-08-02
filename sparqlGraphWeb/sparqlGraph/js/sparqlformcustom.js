@@ -28,6 +28,7 @@ require([	'sparqlgraph/js/sparqlform',
          	'sparqlgraph/js/modaliidx',
          	'sparqlgraph/js/htmlformgroup',  
          	'sparqlgraph/js/msiclientquery',
+            'sparqlgraph/js/iidxhelper'
          	
          	'local/sparqlformconfig',
          	
@@ -38,7 +39,7 @@ require([	'sparqlgraph/js/sparqlform',
          	
 		],
 
-	function(SparqlForm, ModalIidx, HtmlFormGroup, MsiClientQuery, Config, $) {
+	function(SparqlForm, ModalIidx, HtmlFormGroup, MsiClientQuery, IIDXHelper, Config, $) {
 
 		var g = null;
 		
@@ -137,15 +138,13 @@ require([	'sparqlgraph/js/sparqlform',
 		
 		downloadValues = function() {
 			var j = gHtmlFormGroup.getValueHash();
-			downloadFile(JSON.stringify(j), gCustom + ".json");
+			IIDXHelper.downloadFile(JSON.stringify(j), gCustom + ".json", "text/csv;charset=utf8");
 			kdlLogEvent("Download values");
 		};
 		
 		uploadValues = function() {
 			// get a file and upload values from it
-			var fileInput = document.getElementById("fileInput");
-			fileInput.addEventListener('change', uploadValuesLoadEvt, false);
-			fileInput.click();
+            IIDXHelper.fileDialog(uploadValuesFile);
 		};
 		
 		uploadValuesFile = function(file) {
@@ -166,11 +165,6 @@ require([	'sparqlgraph/js/sparqlform',
 			};
 			r.readAsText(file);
 
-		};
-
-		uploadValuesLoadEvt = function(evt) {
-			// fileInput callback to load values
-			uploadValuesFile(evt.target.files[0]);
 		};
 		
 		uploadValuesDropEvt = function(evt) {

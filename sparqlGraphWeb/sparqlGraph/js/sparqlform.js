@@ -435,25 +435,20 @@ require([	'local/sparqlformconfig',
 
 		};
 
-		doQueryUploadCallback = function(evt) {
-			// fileInput callback
-			doQueryLoadFile(evt.target.files[0]);
-		};
+		
 
 		doQueryUpload = function() {
 			// menu pick callback
 			if (gNodeGroup.getNodeCount() == 0
 					|| confirm("Clearing current form\nbefore loading a new one.\n\n")) {
 
-				var fileInput = document.getElementById("fileInput");
-				fileInput.addEventListener('change', doQueryUploadCallback, false);
-				fileInput.click();
+                IIDXHelper.fileDialog(doQueryLoadFile);
 			}
 		};
 
 		doQueryDownload = function() {
 			var j = getQueryJson();
-			downloadFile(JSON.stringify(j), "sparqlForm.json");
+			IIDXHelper.downloadFile(JSON.stringify(j), "sparqlForm.json", "text/csv;charset=utf8");
 			kdlLogEvent("SF: Save Query");
 		};
 
@@ -946,23 +941,6 @@ require([	'local/sparqlformconfig',
 
 		disableButton = function(id) {
 			document.getElementById(id).disabled = true;
-		};
-
-		downloadFile = function(data, filename) {
-			// build an anchor and click on it
-			$('<a>invisible</a>').attr('id', 'downloadFile').attr(
-					'href',
-					'data:text/csv;charset=utf8,'
-							+ encodeURIComponent(data)).attr(
-					'download', filename).appendTo('body');
-			$('#downloadFile').ready(function() {
-				$('#downloadFile').get(0).click();
-			});
-
-			// remove the evidence
-			var parent = document.getElementsByTagName("body")[0];
-			var child = document.getElementById("downloadFile");
-			parent.removeChild(child);
 		};
 
 		html_decode = function(text) {
