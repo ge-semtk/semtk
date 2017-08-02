@@ -304,6 +304,22 @@ define([	// properly require.config'ed
         parent.removeChild(child);
     };
 
+    IIDXHelper.fileDialog = function (callback) {
+        
+        var input = document.createElement("input");
+        input.type = "file";
+        input.style = "display:none";
+        document.body.appendChild(input);
+        
+        var cb = function(elem, userCallback, e) {
+            userCallback(e.target.files[0]);
+            input.parentElement.removeChild(input);
+        }.bind(this, input, callback);
+        
+        input.addEventListener('change', cb, false);
+        input.click();
+    };
+    
     IIDXHelper.setControlGroupState = function (group, state) {
         // state can be "error" "warning" "success" or ""
 

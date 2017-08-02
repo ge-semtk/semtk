@@ -78,8 +78,7 @@ toggleCheckbox = function(id) {
 <script src="./sparqlformlocal.js"></script>
 
 </head>
-<body onload="onLoad()">
-
+<body onload="onLoad()" >
 
 	<!--
     The navbar is where you place your primary page navigation.
@@ -125,7 +124,7 @@ toggleCheckbox = function(id) {
 			</div>
 		</div>
 	</div>
-
+    
 	<!-- This container will hold our primary page content. -->
 	<div id="pageContainer" class="container">
 
@@ -163,9 +162,9 @@ toggleCheckbox = function(id) {
 										onclick="javascript:doTreeExpand(); return false;" disabled>Expand</button>
 									<button class="btn btn-disabled" id="btnTreeCollapse"
 										onclick="javascript:doTreeCollapse(); return false;" disabled>Collapse</button>
-									<input type="checkbox" class='checkbox' id="chkShowAll"
-									onclick="javascript:doTreeShowAllButton();" unchecked>
-									Show All </input>
+									<input type="checkbox" class='checkbox' id="chkShowAll" onclick="javascript:doTreeShowAllButton();" unchecked >
+									Show All 
+                                    </input>
 								</td>
 
 							</tr>
@@ -336,6 +335,6 @@ div.canvas {
 
 		<!------------  Invisible stuff ------------>
 		<div id="modaldialog"></div>
-		<input type="file" id="fileInput" style="display: none">
+
 </body>
 </html>
