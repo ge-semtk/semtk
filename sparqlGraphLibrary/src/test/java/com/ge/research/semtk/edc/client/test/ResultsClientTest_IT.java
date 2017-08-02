@@ -142,8 +142,6 @@ public class ResultsClientTest_IT {
 			table.addRow(row);
 			client.execStoreTableResults(jobId, table);	
 			
-			URL[] urls = client.execGetResults(jobId);
-			
 			// check the JSON results
 			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
 			Table tbl = tblresset.getTable();
@@ -151,29 +149,18 @@ public class ResultsClientTest_IT {
 			
 			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json
 			//assertEquals(expectedJSONString, resultJSONString);
-			
-			System.err.println(expectedJSONString);
-			System.err.println(resultJSONString);
-			
-			
 			assertEquals(expectedJSONString.length(), resultJSONString.length());
 			
 			for(int i = 0; i < expectedJSONString.length(); i += 1){
 				assertEquals(expectedJSONString.charAt(i), resultJSONString.charAt(i));
-			}
-			
+			}		
 			
 			// check the CSV results
-			String resultCSVString = Utility.getURLContentsAsString(urls[1]);
 			CSVDataset data = client.execTableResultsCsv(jobId, null);
-
 			String expectedCSVString = "colA,colB,colC,colD\n\"apple,ant\",bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";  // validated by opening in Excel
-			CSVDataset compare = new CSVDataset(expectedCSVString, true);
-			
-			
+			CSVDataset compare = new CSVDataset(expectedCSVString, true);			
 			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
 			ArrayList<String> resultColumnNames  = data.getColumnNamesinOrder();
-					
 			assertEquals(compareColumnNames.get(0), resultColumnNames.get(0));
 			assertEquals(compareColumnNames.get(1), resultColumnNames.get(1));
 			assertEquals(compareColumnNames.get(2), resultColumnNames.get(2));
@@ -204,8 +191,6 @@ public class ResultsClientTest_IT {
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
 			client.execStoreTableResults(jobId, table);	
-			
-			URL[] urls = client.execGetResults(jobId);
 			
 			// check the JSON results
 			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
@@ -239,6 +224,48 @@ public class ResultsClientTest_IT {
 			
 		} finally {
 			//cleanup(client, jobId);
+		}
+	}
+	
+	
+	/**
+	 * Test that SOH is stripped when writing results.
+	 * If SOH is not stripped, the ResultsClient would succeed - but the browser would choke 
+	 * (org.simple.JSONParser is less strict than Chrome/Firefox which uses the JSON standard)
+	 */
+	@Test
+	public void testStoreTable_WithSOH() throws Exception {
+		
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"colA", "colB"};
+		String [] types = {"String", "String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("apple\u0001ant");
+		row.add("bench");
+
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);	
+			client.execStoreTableResults(jobId, table);	
+			
+			// check the JSON results
+			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
+			String resultJSONString = tblresset.getTable().toJson().toJSONString();
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\"],\"rows\":[[\"apple ant\",\"bench\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":1}";  // validated json
+			assertEquals(expectedJSONString, resultJSONString);
+	
+			// check the CSV results
+			CSVDataset data = client.execTableResultsCsv(jobId, null);
+			String expectedCSVString = "colA,colB\napple ant,bench\n";  
+			CSVDataset compare = new CSVDataset(expectedCSVString, true);
+			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
+			ArrayList<String> resultColumnNames  = data.getColumnNamesinOrder();					
+			assertEquals(compareColumnNames.get(0), resultColumnNames.get(0));
+			assertEquals(compareColumnNames.get(1), resultColumnNames.get(1));
+						
+		} finally {
+			cleanup(client, jobId);
 		}
 	}
 	
@@ -299,8 +326,8 @@ public class ResultsClientTest_IT {
 		try {
 			
 			// construct a huge table
-			final int NUM_COLS = 1000;
-			final int NUM_ROWS = 125000;
+			final int NUM_COLS = 100;
+			final int NUM_ROWS = 1000;
 			String[] cols = new String[NUM_COLS];
 			String[] colTypes = new String[NUM_COLS];
 			ArrayList<String> row = new ArrayList<String>();
