@@ -35,6 +35,7 @@
 
     var gCurrentTab = g.tab.query ;
     
+    var gEditTab = null;
     var gMappingTab = null;
     var gUploadTab = null;
     var gReady = false;
@@ -58,17 +59,18 @@
     	
     	initDynatree(); 
     	
-	    require([ 'sparqlgraph/js/mappingtab',
+	    require([ 'sparqlgraph/js/edittab',
+                  'sparqlgraph/js/mappingtab',
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/uploadtab',
 
-                 
                   // shim
                   'sparqlgraph/js/belmont',
                  
-	              'local/sparqlgraphlocal'], 
-                function (MappingTab, ModalLoadDialog, ModalStoreDialog, UploadTab) {
+	              'local/sparqlgraphlocal'
+                ], 
+                function (EditTab, MappingTab, ModalLoadDialog, ModalStoreDialog, UploadTab) {
 	    
 	    	console.log(".ready()");
 	    	
@@ -82,6 +84,13 @@
             gNodeGroup.setAsyncSNodeRemover(snodeRemover);
 	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
 	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
+            
+            // edit tab
+            gEditTab = new EditTab(document.getElementById("editTreeDiv"),
+                                   document.getElementById("editCanvasDiv"),
+                                   document.getElementById("editSearch")
+                                  );
+            document.getElementById("edit-tab-but").disabled = false;
 	        
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"), 
@@ -499,6 +508,9 @@
 		gOTree.addOntInfo(gOInfo);
     	gOTree.showAll(); 
 	    gOInfoLoadTime = new Date();
+        
+        gEditTab.updateOInfo(gOInfo);
+        
 		setStatus("");
 		guiTreeNonEmpty();
 		//gNodeGroup.setCanvasOInfo(gOInfo);
@@ -518,6 +530,7 @@
 	    	gOInfo = new OntologyInfo();
 		    gOInfoLoadTime = new Date();
 	    	
+            gEditTab.updateOInfo(gOInfo);
 	    	gMappingTab.updateNodegroup(gNodeGroup);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
 		
@@ -883,14 +896,8 @@
    	};
 
    	var doTest = function () {
-        var json = gOInfo.toJson();
-        
-        gOInfo = new OntologyInfo(json);
-
-        console.log(JSON.stringify(json));
-        
-        clearTree();
-        doLoadOInfoSuccess();
+        document.getElementById("edit-tab-but").style="";
+        document.getElementById("edit-tab-but").disabled=false;
    	};
 
     var checkServices = function () {
@@ -1174,7 +1181,7 @@
     };
     
     var doSearch = function() {
-    	gOTree.find($("#search").val());
+    	gOTree.find(document.getElementById("search").value);
     };
     
     var doCollapse = function() {
@@ -1555,6 +1562,7 @@
     var clearEverything = function () {
     	clearTree();
     	gOInfo = new OntologyInfo();
+        gEditTab.updateOInfo(gOInfo);
     	gConn = null;
 	    gOInfoLoadTime = new Date();
     };
@@ -1567,7 +1575,10 @@
 		        if (event.currentTarget.id == "anchorTab1") {
 		        	tabSparqlGraphActivated();
 		        	
-		        } else if (event.currentTarget.id == "anchorTab2") {
+		        } else if (event.currentTarget.id == "anchorTabE") {
+		        	tabEditActivated();
+		     
+			    } else if (event.currentTarget.id == "anchorTab2") {
 		        	tabMappingActivated();
 		     
 			    } else if (event.currentTarget.id == "anchorTab3") {
@@ -1580,15 +1591,27 @@
 	var tabSparqlGraphActivated = function() {
 		 gCurrentTab = g.tab.query;
 		 this.document.getElementById("query-tab-but").disabled = true;
+		 this.document.getElementById("edit-tab-but").disabled = false;
 		 this.document.getElementById("mapping-tab-but").disabled = false;
 		 this.document.getElementById("upload-tab-but").disabled = false;
 
 	};
 	
-	var tabMappingActivated = function() {
+	var tabEditActivated = function() {
 		gCurrentTab = g.tab.mapping;
 		
 		this.document.getElementById("query-tab-but").disabled = false;
+        this.document.getElementById("edit-tab-but").disabled = true;
+		this.document.getElementById("mapping-tab-but").disabled = false;
+		this.document.getElementById("upload-tab-but").disabled = false;
+		
+	};
+	
+    var tabMappingActivated = function() {
+		gCurrentTab = g.tab.mapping;
+		
+		this.document.getElementById("query-tab-but").disabled = false;
+        this.document.getElementById("edit-tab-but").disabled = false;
 		this.document.getElementById("mapping-tab-but").disabled = true;
 		this.document.getElementById("upload-tab-but").disabled = false;
 		
@@ -1600,6 +1623,7 @@
 		 gCurrentTab = g.tab.upload;
 		 
 		 this.document.getElementById("query-tab-but").disabled = false;
+		 this.document.getElementById("edit-tab-but").disabled = false;
 		 this.document.getElementById("mapping-tab-but").disabled = false;
 		 this.document.getElementById("upload-tab-but").disabled = true;
 		 

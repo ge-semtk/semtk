@@ -91,8 +91,12 @@ define([	'sparqlgraph/js/msiresultset',
                         ret = "<h3>" + this.getServiceName() + " service failed</h3>";
                     }
 					ret += "<br><b>url: &nbsp</b>" + this.lastUrl;
-					ret += "<br><b>status: &nbsp</b>" + status;
-					ret += "<br><b>error: &nbsp</b>" + err;
+                    if (status) {
+					   ret += "<br><b>status: &nbsp</b>" + status;
+                    }
+                    if (err) {
+					   ret += "<br><b>error: &nbsp</b>" + err;
+                    }
 					ret += this.generateXhrHtml(xhr);
 					
 					return ret;
