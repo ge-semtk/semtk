@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -39,7 +40,7 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 public class LoggerRestClient {
 
 	// short hand to identify the logs written by this tool. 
-	private static final String VERSION_IDENTIFIER = "000001.EXPERIMENTAL";
+	private static final String VERSION_IDENTIFIER = "000002.EXPERIMENTAL";   		// bumped for debug later
 	private static final String VERSION_MAKE_AND_MODEL = "JAVA EASY LOG CLIENT";
 	private static final String URL_PLACEHOLDER = "FROM APPLICATION API CALL";
 	
@@ -86,32 +87,48 @@ public class LoggerRestClient {
 	}
 
 	public void logEvent(String action, Details details, String highLevelTask) {
-		logEvent(action, details == null ? null : details.asList(), highLevelTask);
+		logEvent(action, details == null ? null : details.asList(), null, highLevelTask);
 	}
 
+	public void logEvent(String action, Details details, ArrayList<String> tenants, String highLevelTask) {
+		logEvent(action, details == null ? null : details.asList(), tenants, highLevelTask);
+	}
+	
 	// log event
-	public void logEvent(String action, ArrayList<DetailsTuple> details, String highLevelTask){
+	public void logEvent(String action, ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask){
 		// log an event without a known/labeled parent.
 		try {
 			UUID eventID = this.generateActionID();	
-			this.logEvent(action, details, highLevelTask, eventID, false);
+			this.logEvent(action, details, tenants, highLevelTask, eventID, false);
 		} catch (Exception e) {
 			// Exceptions are swallowed as a log attempt generates no feedback
 			System.err.println("logging failed due to: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
-
-	public void logEventUseParent(String action, Details details, String highLevelTask) {
-		logEvent(action, details == null ? null : details.asList(), highLevelTask);
+	
+	public void logEvent(String action, ArrayList<DetailsTuple> details, String highLevelTask){
+		logEvent(action, details, null, highLevelTask);
 	}
 
+	public void logEventUseParent(String action, Details details, String highLevelTask) {
+		logEvent(action, details == null ? null : details.asList(), null, highLevelTask);
+	}
+
+	public void logEventUseParent(String action, Details details, ArrayList<String> tenants, String highLevelTask) {
+		logEvent(action, details == null ? null : details.asList(), tenants, highLevelTask);
+	}
+	
 	public void logEventUseParent(String action, ArrayList<DetailsTuple> details, String highLevelTask, Boolean pushParent){
+		logEventUseParent(action, details, null, highLevelTask, pushParent);
+	}
+	
+	public void logEventUseParent(String action, ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, Boolean pushParent){
 		// log an event which includes a parent event from the stack
 		try {
 			UUID eventID = this.generateActionID();
 			if(pushParent){ this.parentEventStack.push(eventID); }
-			this.logEvent(action, details, highLevelTask, eventID, true);
+			this.logEvent(action, details, tenants, highLevelTask, eventID, true);
 			
 		} catch (Exception e) {
 			// Exceptions are swallowed as a log attempt generates no feedback
@@ -120,11 +137,13 @@ public class LoggerRestClient {
 		}
 	}
 	
-	private void logEvent(String action,  ArrayList<DetailsTuple> details, String highLevelTask, UUID eventID, Boolean useParent) throws Exception{
+	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, Boolean useParent) throws Exception{
 		// the method actually perform the log message sent
 	
 		// used to serialize and send the details. 
 		String bigDetailsString = this.serializeDetails(details);
+		String bigTenantString = this.serializeTenants(tenants);
+		
 		
 		/*
 		 *  @RequestParam("AppID") String applicationID, 
@@ -133,6 +152,7 @@ public class LoggerRestClient {
 		 *  @RequestParam("URL") String visitURL,
 		 *	@RequestParam("Main") String mainAction, 
 		 *	@RequestParam("Details") String detailActions, 
+		 *	@RequestParam("Tenants") String tenantInfo, 
 		 *	@RequestParam("Parent") String parentAction, 
 		 *	@RequestParam("Session") String session,
 		 *	@RequestParam("EventID") String eventId, 
@@ -153,6 +173,7 @@ public class LoggerRestClient {
 		paramsJson.put("URL", this.URL_PLACEHOLDER);
 		paramsJson.put("Main", action);
 		paramsJson.put("Details", bigDetailsString);
+		paramsJson.put("Tenants", bigTenantString);
 		paramsJson.put("Session", this.sessionID);
 		paramsJson.put("EventID", eventID.toString());
 		paramsJson.put("Task", highLevelTask);
@@ -177,6 +198,15 @@ public class LoggerRestClient {
 		System.err.println("\n\n\n\n\nLogging response was : " + httpresponse.getStatusLine() );
 	
 		}
+
+	private String serializeTenants(ArrayList<String> tenants) {
+		String retval = null;
+		
+		if(tenants != null && tenants.size() > 0){
+			retval = StringUtils.join(tenants, "::");
+		}
+		return retval;
+	}
 
 	private String serializeDetails(ArrayList<DetailsTuple> details) throws UnsupportedEncodingException {
 		String retval = "";
@@ -261,7 +291,7 @@ public class LoggerRestClient {
 	 */
 	public static void easyLog(LoggerRestClient logger, String action, String highLevelTask) {
 		if (logger != null) {
-			logger.logEvent(action, (ArrayList) null, highLevelTask);
+			logger.logEvent(action, (ArrayList) null, null, highLevelTask);
 		}
 	}
 	
@@ -272,7 +302,7 @@ public class LoggerRestClient {
 		if (logger != null) {
 			ArrayList<DetailsTuple> deets = new ArrayList<DetailsTuple>();	 
 			deets.add(new DetailsTuple(detailName1, detailVal1));
-			logger.logEvent(action, deets, highLevelTask);
+			logger.logEvent(action, deets, null, highLevelTask);
 		}
 	}
 	
@@ -284,7 +314,7 @@ public class LoggerRestClient {
 			ArrayList<DetailsTuple> deets = new ArrayList<DetailsTuple>();	 
 			deets.add(new DetailsTuple(detailName1, detailVal1));
 			deets.add(new DetailsTuple(detailName2, detailVal2));
-			logger.logEvent(action, deets, highLevelTask);
+			logger.logEvent(action, deets, null, highLevelTask);
 		}
 	}
 	/**
