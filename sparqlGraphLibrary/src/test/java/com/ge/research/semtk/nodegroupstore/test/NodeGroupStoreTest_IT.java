@@ -186,21 +186,21 @@ public class NodeGroupStoreTest_IT {
 	 */
 	@Test
 	public void test_NodegroupIdExactMatch() throws Exception{
-		
 		String ID2 = ID + "2";
-		
-		// store two nodegroups.  The 1st nodegroup id is a subset of the 2nd nodegroup id.
-		nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, NG_JSON);
-		nodeGroupStoreClient.executeStoreNodeGroup(ID2, COMMENTS, CREATOR, NG_JSON); 
-		
-		Table res = nodeGroupStoreClient.executeGetNodeGroupById(ID).getTable();
-		assertEquals(res.getNumRows(), 1);  	// ensure 1 nodegroup returned (we're getting an exact match, not a regex match)
-		Table res2 = nodeGroupStoreClient.executeGetNodeGroupById(ID2).getTable();
-		assertEquals(res2.getNumRows(), 1);  	// ensure 1 nodegroup returned
-		
-		// clean up
-		nodeGroupStoreClient.deleteStoredNodeGroup(ID);
-		nodeGroupStoreClient.deleteStoredNodeGroup(ID2);
+		try{
+			// store two nodegroups.  The 1st nodegroup id is a subset of the 2nd nodegroup id.
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, NG_JSON);
+			nodeGroupStoreClient.executeStoreNodeGroup(ID2, COMMENTS, CREATOR, NG_JSON); 
+			
+			Table res = nodeGroupStoreClient.executeGetNodeGroupById(ID).getTable();
+			assertEquals(res.getNumRows(), 1);  	// ensure 1 nodegroup returned (we're getting an exact match, not a regex match)
+			Table res2 = nodeGroupStoreClient.executeGetNodeGroupById(ID2).getTable();
+			assertEquals(res2.getNumRows(), 1);  	// ensure 1 nodegroup returned
+		}finally{
+			// clean up
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID2);
+		}
 	}
 
 }
