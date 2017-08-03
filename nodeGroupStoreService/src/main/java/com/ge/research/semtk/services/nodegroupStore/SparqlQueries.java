@@ -46,7 +46,7 @@ public class SparqlQueries {
 						"select distinct ?ID ?NodeGroup ?comments where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
-						"VALUES ?ID {\"" + id + "\"} . " +
+						"VALUES ?ID {\"" + id + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
 		   				"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 		   				"}";		
@@ -62,7 +62,7 @@ public class SparqlQueries {
 						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 						"?PrefabNodeGroup prefabNodeGroup:originalConnection ?SemTkConnection. " +
 						"?SemTkConnection prefabNodeGroup:connectionAlias  . " +
-						"VALUES ?connectionAlias {\"" + connectionAlias + "\"} . " +
+						"VALUES ?connectionAlias {\"" + connectionAlias + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . " +
 						"}";
 		return retval;
 	}
