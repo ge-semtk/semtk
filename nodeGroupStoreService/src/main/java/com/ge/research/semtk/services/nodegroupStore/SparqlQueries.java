@@ -46,7 +46,7 @@ public class SparqlQueries {
 						"select distinct ?ID ?NodeGroup ?comments where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
-						"FILTER regex(?ID, \"" + id + "\") . " +
+						"VALUES ?ID {" + id + "} . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
 		   				"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 		   				"}";		
@@ -62,7 +62,7 @@ public class SparqlQueries {
 						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
 						"?PrefabNodeGroup prefabNodeGroup:originalConnection ?SemTkConnection. " +
 						"?SemTkConnection prefabNodeGroup:connectionAlias  . " +
-						"FILTER regex(?connectionAlias, \"" + connectionAlias + "\") . " +
+						"VALUES ?connectionAlias {" + connectionAlias + "} . " +
 						"}";
 		return retval;
 	}
