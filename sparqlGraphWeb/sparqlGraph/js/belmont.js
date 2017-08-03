@@ -954,7 +954,7 @@ SemanticNode.prototype = {
 		// get oInfo's version of the property list
 		var ontClass = oInfo.getClass(this.fullURIName);
 		if (ontClass == null) {
-			throw "Class no longer exists in the model: " + this.fullURIName;
+			throw "Class does not exist in the model: " + this.fullURIName;
 		}
 		var ontProps = oInfo.getInheritedProperties(ontClass);
 		
@@ -1046,10 +1046,10 @@ SemanticNode.prototype = {
 		}	
 		
 		if (Object.keys(propItemHash).length > 0) {
-			throw this.getSparqlID() + " Property no longer exists in model: " + Object.keys(propItemHash);
+			throw this.getSparqlID() + " Property does not exist in the model: " + Object.keys(propItemHash);
 		}
 		if (Object.keys(nodeItemHash).length > 0) {
-			throw this.getSparqlID() + " Node property no longer exists in model: " + Object.keys(nodeItemHash);
+			throw this.getSparqlID() + " Node property does not exist in the model: " + Object.keys(nodeItemHash);
 		}
 		
 		this.propList = newProps;

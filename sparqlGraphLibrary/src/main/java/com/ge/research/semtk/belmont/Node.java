@@ -216,7 +216,7 @@ public class Node extends Returnable {
 		// get oInfo's version of the property list
 		OntologyClass ontClass = oInfo.getClass(this.getFullUriName());
 		if (ontClass == null) {
-			throw new Exception("Class no longer exists in the model: " + this.getFullUriName());
+			throw new Exception("Class does not exist in the model: " + this.getFullUriName());
 		}
 		ArrayList<OntologyProperty> ontProps = oInfo.getInheritedProperties(ontClass);
 		
@@ -308,10 +308,10 @@ public class Node extends Returnable {
 		}
 		
 		if (!propItemHash.isEmpty()) {
-			throw new Exception("Property no longer exists in the model: " + propItemHash.keySet().toString());
+			throw new Exception("Property does not exist in the model: " + propItemHash.keySet().toString());
 		}
 		if (!nodeItemHash.isEmpty()) {
-			throw new Exception("Node property no longer exists in the model: " + nodeItemHash.keySet().toString());
+			throw new Exception("Node property does not exist in the model: " + nodeItemHash.keySet().toString());
 		}
 		
 		this.props = newProps;
@@ -327,7 +327,7 @@ public class Node extends Returnable {
 		OntologyClass oClass = oInfo.getClass(this.fullURIname);
 		
 		if (oClass == null) {
-			throw new Exception("Class URI no longer exists in model: " + this.fullURIname);
+			throw new Exception("Class URI does not exist in the model: " + this.fullURIname);
 		}
 		
 		// build hash of ontology properties for this class
@@ -340,7 +340,7 @@ public class Node extends Returnable {
 		for (PropertyItem myPropItem : this.props) {
 			// domain
 			if (! oPropHash.containsKey(myPropItem.getUriRelationship())) {
-				throw new Exception(String.format("Node %s contains property %s which no longer exists in model",
+				throw new Exception(String.format("Node %s contains property %s which does not exist in the model",
 									this.getSparqlID(), myPropItem.getUriRelationship()));
 			}
 			
@@ -357,7 +357,7 @@ public class Node extends Returnable {
 			if (myNodeItem.getConnected()) {
 				// domain
 				if (! oPropHash.containsKey(myNodeItem.getUriConnectBy())) {
-					throw new Exception(String.format("Node %s contains node connection %s which no longer exists in model",
+					throw new Exception(String.format("Node %s contains node connection %s which does not exist in the model",
 										this.getSparqlID(), myNodeItem.getUriConnectBy()));
 				}
 				

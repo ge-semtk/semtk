@@ -386,7 +386,12 @@ class TableFormatter extends Thread{
 			for(int j = 0; j < rows.get(i).size(); j++){	
 				String curr = rows.get(i).get(j);
 				Boolean altered = false;
-				
+
+				// remove characters not supported by JSON
+				if(rows.get(i).get(j).indexOf("\u0001") > -1){ 
+					curr = StringUtils.replace(curr, "\u0001", " "); // remove SOH character 
+					altered = true;
+				} 
 				if(rows.get(i).get(j).indexOf('\"') > -1){ 
 					curr = StringUtils.replace(curr, "\"", "\\\"");
 					altered = true;
