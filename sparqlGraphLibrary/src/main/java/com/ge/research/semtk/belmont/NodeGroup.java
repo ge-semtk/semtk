@@ -2238,6 +2238,16 @@ public class NodeGroup {
 		return retval;
 	}
 	
+	public void inflateAndValidate(OntologyInfo oInfo) throws Exception  {
+		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
+			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
+		}
+		
+		for (Node n : this.getNodeList()) {
+			n.inflateAndValidate(oInfo);
+		}
+	}
+	
 	public void validateAgainstModel(OntologyInfo oInfo) throws Exception  {
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
 			throw new Exception("Model contains no classes. Nodegroup can't be validated.");

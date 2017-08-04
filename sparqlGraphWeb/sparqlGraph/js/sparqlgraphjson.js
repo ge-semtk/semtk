@@ -28,22 +28,29 @@ define([	// properly require.config'ed
 		],
 
 	function() {
-		var SparqlGraphJson = function(conn, nodegroup, mappingTab, optDeflateFlag) {
-			var deflateFlag = (typeof optDeflateFlag == "undefined") ? false : optDeflateFlag;
-			
-			// intended that either all or none of the parameters are given
+    
+        /*
+         * Each param may be missing or null
+         */
+		var SparqlGraphJson = function(conn, nodegroup, mappingTab, DEPRECATED_deflateFlag) {
+			var deflateFlag = (typeof DEPRECATED_deflateFlag == "undefined") ? false : DEPRECATED_deflateFlag;
+            
+            // new for version 2, trying it out for a while
+            deflateFlag = true;
+            //------------------
 			
 			this.jObj = {
+                    version: 2,
 					sparqlConn: null,
 					sNodeGroup: null,
 					importSpec: null,
 			};
 			
-			if (typeof conn      != "undefined") { 
+			if (typeof conn      != "undefined" && conn != null) { 
 				this.setSparqlConn(conn); 
 			}
 			
-			if (typeof nodegroup != "undefined") { 
+			if (typeof nodegroup != "undefined" && nodegroup != null) { 
 				if (deflateFlag) {
 					var mappedPropItems = (typeof mappingTab != "undefined" && mappingTab != null) ? mappingTab.getMappedPropItems() : [];
 					this.jObj.sNodeGroup = nodegroup.toJson(true, mappedPropItems); 
@@ -52,7 +59,7 @@ define([	// properly require.config'ed
 				}
 			}
 			
-			if (typeof mappingTab != "undefined") { 
+			if (typeof mappingTab != "undefined" && mappingTab != null) { 
 				this.jObj.importSpec = mappingTab.toJson();
 			}
 
@@ -60,12 +67,48 @@ define([	// properly require.config'ed
 	
 		SparqlGraphJson.prototype = {
 			
+            setExtra : function(name, json) {
+                this.jObj[name] = json;
+            },
+            
+            /*
+             * return extra field   or null
+             */
+            getExtra : function(name) {
+                if (this.jObj.hasOwnProperty(name)) {
+                    return this.jObj[name];
+                } else {
+                    return null;
+                }
+            },
+            
+            /*
+             * get version integer
+             */
+            getVersion : function() {
+                if (this.jObj.hasOwnProperty("version")) {
+                    return this.jObj.version;
+                } else {
+                    return 0;
+                }
+            },
+            
+            /*
+             * return the connection    or null if this is an old SparqlForm file
+             */
 			getSparqlConn : function() {
-				var ret = new SparqlConnection();
-				ret.fromJson(this.jObj.sparqlConn);
-				return ret;
+                if (this.jObj.hasOwnProperty("sparqlConn")) {
+                    var ret = new SparqlConnection();
+                    ret.fromJson(this.jObj.sparqlConn);
+                    return ret;
+                } else {
+                    return null;
+                }
 			},
 			
+            /*
+             * return the nodegroup    never null
+             */
 			getNodeGroup : function(ng, optInflateOInfo) {
 				// different from Java due to canvas stuff: takes ng param.
 				
@@ -80,7 +123,14 @@ define([	// properly require.config'ed
 			},
 			
 			getSNodeGroupJson : function() {
-				return this.jObj.sNodeGroup;
+                if (this.jObj.hasOwnProperty("sNodeGroup")) {
+                    return this.jObj.sNodeGroup;
+                } else if (this.jObj.hasOwnProperty("nodeGroup")) {
+                    return this.jObj.nodeGroup;
+                } else {
+                    throw new Error("JSON has no nodegroup");
+                }
+				
 			},
 			
 			getMappingTabJson : function() {
@@ -90,6 +140,7 @@ define([	// properly require.config'ed
 					return null;
 				}
 			},
+            
 			setSparqlConn : function(conn) {
 				this.jObj.sparqlConn = conn.toJson();
 			},

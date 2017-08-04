@@ -38,6 +38,9 @@ define([], function() {
             "nodeGroupExec" : {
 			     url : "http://localhost:12058/nodeGroupExecution/",
             },
+            nodeGroupStore:{
+                url : "http://localhost:12056/nodeGroupStore/",
+            },
 		},
 		help : {
 			"aboutHtml" : '<b>SparqlForm Opensource build 2.0</b><br>\

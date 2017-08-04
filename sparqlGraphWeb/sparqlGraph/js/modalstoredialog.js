@@ -33,10 +33,11 @@ define([	// properly require.config'ed
 		/**
 		 *
 		 */
-		var ModalStoreDialog= function (optUserName) {
+		var ModalStoreDialog= function (user, serviceUrl) {
             this.div = null;
             this.selTable = null;
-            this.user = (typeof optUserName == "undefined" || optUserName == null) ? "" : optUserName;
+            this.user = user; 
+            this.serviceUrl = serviceUrl;
             this.callback = function () {};
 		};
 		
@@ -122,7 +123,7 @@ define([	// properly require.config'ed
                 this.title = title;
                 this.callback = callback;
                 
-                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
     		    mq.getNodeGroupMetadata(this.launchNodeGroupDialogCallback.bind(this, multiFlag));
             },
             
@@ -147,7 +148,7 @@ define([	// properly require.config'ed
               * load the id
               */
             retrieveNodeGroupOK : function (retrieveCallback, idList) {   
-                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
                 mq.getNodeGroupById(idList[0], this.retrieveNodeGroupCallback.bind(this, retrieveCallback));
             },
             
@@ -196,7 +197,7 @@ define([	// properly require.config'ed
               * delete the nodegroup
               */
             deleteNodeGroupOK : function (idList) {   
-                var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
                
                 // delete idList[0] and queue up idList[1..end]
                 mq.deleteStoredNodeGroup(idList[0], this.deleteNodeGroupCallback.bind(this, idList[0], idList.slice(1)));
@@ -217,7 +218,7 @@ define([	// properly require.config'ed
               * so I'm slamming it into this file
               * -Paul
               */
-            launchStoreDialog : function (conn, nodegroup, maptab, doneCallback) {
+            launchStoreDialog : function (sgJson, doneCallback) {
                 
                 var successCallback = function (id, resultSet) { 
                     if (! resultSet.isSuccess()) {
@@ -253,18 +254,18 @@ define([	// properly require.config'ed
 
                 };
 
-                var submitCallback = function () { 
+                var submitCallback = function (json) { 
                     var name = document.getElementById("sngIdText").value;
                     var comments = document.getElementById("sngCommentsText").value;
                     var creator = document.getElementById("sngCreatorText").value;
-                    var sgJson = new SparqlGraphJson(conn, nodegroup, maptab, true);
-                    var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                    
+                    var mq = new MsiClientNodeGroupStore(this.serviceUrl);
                     
                     // save user/creator
                     this.user = creator;
                     
-                    mq.storeNodeGroup(sgJson, creator, name, comments, successCallback.bind(this, name));
-                };
+                    mq.storeNodeGroup(json, creator, name, comments, successCallback.bind(this, name));
+                }.bind(this, sgJson);
 
                 var div = document.createElement("div");
                 var form = IIDXHelper.buildHorizontalForm();
@@ -280,7 +281,7 @@ define([	// properly require.config'ed
                                         div, 
                                         validateCallback,
                                         clearCallback, 
-                                        submitCallback.bind(this)
+                                        submitCallback
                                         );
                 
                 document.getElementById("sngCreatorText").value=this.user;
