@@ -143,7 +143,8 @@ require([	'local/sparqlformconfig',
 	    	// Callback from the load dialog
 	    	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
 	    		
-	    	// Clean out existing GUI    		
+	    	// Clean out existing GUI    
+            initServices();
     		initForm(); 
 			clearResults();
 			enableButton('btnFormExecute'); // browser sometimes caches this disabled if user reloaded while a query is running.  wow.

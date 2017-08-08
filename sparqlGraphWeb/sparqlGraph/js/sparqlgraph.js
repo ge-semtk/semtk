@@ -115,7 +115,8 @@
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType(); 
 			
-            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"));
+            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user") || "",
+                                                     g.service.nodeGroupStore.url); 
 
             
             // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
@@ -728,21 +729,36 @@
 			
 			try {
 				var conn = sgJson.getSparqlConn();
+                
 			} catch (e) {
 				logAndAlert("Error reading connection from JSON file.\n" + e);
 				console.log(e.stack);
 				clearGraph();
 			}	
             
-            // is this conn different from the one already loaded
-            if (gConn && ! conn.equals(gConn, true)) {
+            // no conn provided in json
+            if (conn == null) {
+                if (!gConn) {
+                    ModalIidx.alert("No connection", "This JSON has no connection information.<br>Load a connection first.");
+                    clearGraph();
+                } else {
+                    ModalIidx.alert("No connection", "This JSON has no connection information.<br>Attempting to load against existing connection.");
+                    doQueryLoadFile2(sgJson);
+                }
+            
+            // have to choose between old and new connection
+            } else if (gConn && ! conn.equals(gConn, true)) {
                 ModalIidx.choose("New Connection",
                                  "Nodegroup is from a different SPARQL connection<br><br>Which one do you want to use?",
                                  ["Cancel",     "Keep Current",                     "Load New"],
                                  [function(){}, doQueryLoadFile2.bind(this, sgJson), doQueryLoadConn.bind(this, sgJson, conn)]
                                  );
+            
+            // use the new connection
             } else if (!gConn) {
                 doQueryLoadConn(sgJson, conn);
+              
+            // keep the old connection
             } else {
                 doQueryLoadFile2(sgJson);
             }
@@ -1041,14 +1057,21 @@
     };
    	
   	var doStoreNodeGroup = function () {
-  		gMappingTab.updateNodegroup(gNodeGroup);
         
-        // save user when done
-        var doneCallback = function () {
-            localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
-        }
+        require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
+            
+            gMappingTab.updateNodegroup(gNodeGroup);
         
-		gModalStoreDialog.launchStoreDialog(gConn, gNodeGroup, gMappingTab, doneCallback); 		
+            // save user when done
+            var doneCallback = function () {
+                localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
+            }
+
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
+            gModalStoreDialog.launchStoreDialog(sgJson, doneCallback); 
+            
+        });
+        		
   	};
   	
   	var doLayout = function() {

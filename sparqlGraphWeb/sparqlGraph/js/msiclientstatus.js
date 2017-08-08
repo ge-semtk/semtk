@@ -136,7 +136,7 @@ define([	// properly require.config'ed   bootstrap-modal
                                                    "Status service getStatusMessage did not return a statusMessage.",
                                                    );
                         } else {
-                            messageCallback0(message);
+                            messageCallback0("Job Status: " + message);
                         }
                     } else {
                         this.doFailureCallback(resultSet);

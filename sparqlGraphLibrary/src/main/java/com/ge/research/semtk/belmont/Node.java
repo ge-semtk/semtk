@@ -195,7 +195,7 @@ public class Node extends Returnable {
 	 * @return
 	 * @throws Exception
 	 */
-	private void inflateAndValidate(OntologyInfo oInfo) throws Exception {
+	public void inflateAndValidate(OntologyInfo oInfo) throws Exception {
 		if (oInfo == null) { return; }
 		
 		ArrayList<PropertyItem> newProps = new ArrayList<PropertyItem>();
