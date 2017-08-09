@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.services.results;
 
+import java.io.File;
+
 import org.mortbay.jetty.security.ClientCertAuthenticator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -51,11 +53,29 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  System.out.println("results.cleanUpThreadFrequency: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
 	  System.out.println("-----------------------");
 	  
+	  initializeResultsLocation(event);
 	  cleanUpFileLocation(event);
 	  
 	  return;
   }
  
+  private void initializeResultsLocation(final ApplicationReadyEvent event) {
+	  
+	  String resultsTempStoreLocation = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
+	  // try to create the output location, if possible. warn if failed...
+	  
+	  System.err.println("attempting to create results location");
+	  
+	  File dirToCreate = new File(resultsTempStoreLocation);
+	  if( dirToCreate.mkdirs() ){ System.err.println("requested temp storage directory (" + resultsTempStoreLocation + ") successfully created."); }
+	  else if( dirToCreate.isDirectory() ){ System.out.println("requested temp storage directory (" + resultsTempStoreLocation + ") already exists."); }
+	  else{ 
+		  System.out.println("temp storage directory (" + resultsTempStoreLocation + ") could not be created. Exiting..."); 
+		  System.exit(-1);
+	   }	  
+	  
+  }
+  
   private void cleanUpFileLocation(final ApplicationReadyEvent event){
 	  
 	  this.createResultsEdcConfigProperties(event);
