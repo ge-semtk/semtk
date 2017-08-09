@@ -1970,10 +1970,10 @@ public class NodeGroup {
 		}
 		else if(delMode == NodeDeletionTypes.FULL_DELETE){
 			retval += indent + n.sparqlID + " rdf:type  " + n.sparqlID + "_type_info . \n";
-			if(inWhereClause){
-				retval += indent + n.sparqlID + " " + n.sparqlID + "_related_predicate_outgoing " + n.sparqlID + "_related_object_target . \n";
-				retval += indent + n.sparqlID + "_related_subject " + n.sparqlID + "_related_predicate_incoming " + n.sparqlID + " . \n";
-			}
+			if(inWhereClause){ retval += " optional {"; } 
+			retval += indent + n.sparqlID + " " + n.sparqlID + "_related_predicate_outgoing " + n.sparqlID + "_related_object_target . \n";
+			retval += indent + n.sparqlID + "_related_subject " + n.sparqlID + "_related_predicate_incoming " + n.sparqlID + " . \n";
+			if(inWhereClause){ retval += " } "; } 
 		}
 		else if(delMode == NodeDeletionTypes.LIMITED_TO_NODEGROUP){
 			retval += indent + n.sparqlID + " rdf:type  " + n.sparqlID + "_type_info . \n";
