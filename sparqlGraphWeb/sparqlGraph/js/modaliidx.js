@@ -58,7 +58,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			m.showOK(titleTxt, div, function(){});
 		};
 		
-		ModalIidx.okCancel = function (titleTxt, msgHtml, okCallback, optOkButtonText) {
+		ModalIidx.okCancel = function (titleTxt, msgHtml, okCallback, optOkButtonText, optCancelCallback) {
 			// ok cancel
 		    kdlLogEvent("OkCancel", "title", titleTxt, "message", msgHtml);
 
@@ -69,7 +69,7 @@ define([	// properly require.config'ed   bootstrap-modal
 							div, 
 							function() {return null;}, // always validate
 							okCallback, 
-							function () {},    // no cancel callback
+							optCancelCallback,
 							optOkButtonText
 							);
 		};

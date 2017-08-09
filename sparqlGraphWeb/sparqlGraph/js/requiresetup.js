@@ -97,15 +97,6 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 		          'sparqlgraph/js/belmont', 
 		      ]
 		};
-	config.shim['sparqlgraph/js/modalloaddialog'] =  {
-			deps : [ 'sparqlgraph/js/cookiemanager',
-                     'sparqlgraph/js/sparqlconnection',
-			         //
-			         'bootstrap/bootstrap-tooltip',
-			         'bootstrap/bootstrap-transition'],
-			         //'ge-bootstrap'],
-			exports: 'ModalLoadDialog',
-		};
 	config.shim['sparqlgraph/js/sparqlconnection'] =  {
 			deps : [ 'sparqlgraph/js/sparqlserverinterface' ],
 			exports: 'SparqlConnection',

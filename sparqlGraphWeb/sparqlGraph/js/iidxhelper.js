@@ -67,11 +67,29 @@ define([	// properly require.config'ed
         horizForm.appendChild(fieldset);
         return fieldset;
     };
+    
+    IIDXHelper.fsAddTextInput = function (fieldSet, label, optId, optClassName, optInitValue, optDisabled) {
+        var id = (typeof optId != "undefined" && optId != null) ? optId : null;
+        var className = (typeof optClassName != "undefined" && optClassName != null) ? optClassName : undefined;
+        var input = IIDXHelper.createTextInput(id, className);
+        
+        if (typeof optInitValue != undefined && optInitValue != null) {
+            input.value = optInitValue;
+        }
+        
+        if (typeof optDisabled != undefined && optDisabled != null) {
+            input.disabled = optDisabled;
+        }
+
+        fieldSet.appendChild(IIDXHelper.buildControlGroup(label, input));
+    }
 
     IIDXHelper.createTextInput = function (id, optClassName) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("input");
-        elem.id = id;
+        if (typeof id != "undefined" && id != null) { 
+            elem.id = id;
+        }
         elem.type = "text";
         elem.classList.add(className);
         return elem;
@@ -80,7 +98,9 @@ define([	// properly require.config'ed
     IIDXHelper.createTextArea = function (id, rows, optClassName) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("textarea");
-        elem.id = id;
+        if (typeof id != "undefined" && id != null) { 
+            elem.id = id;
+        }
         elem.rows = rows;
         elem.classList.add(className);
         return elem;
@@ -117,9 +137,9 @@ define([	// properly require.config'ed
      * Create a dropdown element.
      * id is the element id
      * textValArray is one of:
-     *      [ "textAndVal1",     "textAndVal2", ...]
-     *      [ ["textAndVal1"],   ["textAndVal2"], ...]
-     *      [ ["text1", "val1"], ["text2", "val2"], ...]
+     *     just values:    [ "textAndVal1",     "textAndVal2", ...]
+     *     just values:    [ ["textAndVal1"],   ["textAndVal2"], ...]
+     *     text val pairs: [ ["text1", "val1"], ["text2", "val2"], ...]
      * selectedTexts is a list of selected items
      * optClassName can be used to control the width of the select box (e.g. input-mini for a narrow dropdown)
      */
@@ -179,6 +199,34 @@ define([	// properly require.config'ed
             }
         }
         return ret;
+    };
+    
+    /*
+     * Set a select's selectedIndex to the first option with given text
+     * If none, de-select all
+     * @returns {void}
+     */
+    IIDXHelper.selectFirstMatchingText = function (select, text) {
+        select.selectedIndex = -1;
+        for (var i=0; i < select.options.length; i++) {
+            if (select.options[i].text == text) {
+                select.selectedIndex = i;
+                return;
+            }
+        }
+    };
+    
+    /*
+     * does a select contain an option with given text
+     * @returns {boolean}
+     */
+    IIDXHelper.selectContainsText = function (select, text) {
+        for (var i=0; i < select.options.length; i++) {
+            if (select.options[i].text == text) {
+                return true;
+            }
+        }
+        return false;
     };
     
     /* Creates a label element with the given text.  Optionally provide a tooltip. */
