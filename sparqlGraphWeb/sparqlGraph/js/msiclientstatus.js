@@ -91,7 +91,7 @@ define([	// properly require.config'ed   bootstrap-modal
                             percCallback(parseInt(thisPercent));
                         } 
                     } else {
-                        this.doFailureCallback(resultSet, null, fCallback);
+                        this.doFailureCallback(resultSet, null);
                     }
                 }.bind(this, percentCallback);
                 
