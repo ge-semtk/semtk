@@ -77,6 +77,11 @@ define([	// properly require.config'ed
 		ModalItemDialog.RT_CONSTRAINED_CHECK = 7;
 		ModalItemDialog.DELETE_CHECK = 8;
 		ModalItemDialog.DELETE_SELECT = 9;
+    
+        // Virtuoso has performance and maybe downright crash troubles
+        // if a values clause has too many params.
+        // Actual limit is in the 2,000 - 10,000 range
+        ModalItemDialog.MAX_VALUES_LENGTH = 1000;
 
 		
 		ModalItemDialog.prototype = {
@@ -88,13 +93,34 @@ define([	// properly require.config'ed
 				var opt;
 				var valList = IIDXHelper.getSelectValues(select);
 				
-				// swap in sparqlID
-				var savedID = this.item.getSparqlID();
-				this.item.setSparqlID(this.getSparqlIDText());
+				
 				
 				// build new constraints
+                if (valList.length > ModalItemDialog.MAX_VALUES_LENGTH) {
+                    if (this.sparqlformFlag) {
+                        ModalIidx.alert("Too many items selected",
+                                        "Selecting more than " +  ModalItemDialog.MAX_VALUES_LENGTH + " values<br>" +
+                                        "is not yet supported.<br>" +
+                                        "Consider using REGEX.");
+                        // SparqlForm: disallow large VALUES clause.
+                        this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");
+                        return;
+                        
+                    } else {
+                        ModalIidx.alert("Large values clause",
+                                        "Warning: Large number of values selected: " + valList.length + "<br>" +
+                                        "Query engine may error or misbehave.<br>" +
+                                        "Consider using REGEX.");
+                        // SparqlGraph: allow large VALUES clause, at user's peril.
+                    }
+                } 
+                
+                // swap in sparqlID
+				var savedID = this.item.getSparqlID();
+                
+				this.item.setSparqlID(this.getSparqlIDText());
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, this.item.buildValueConstraint(valList));
-				
+                
 				// swap sparqlID back out
 				this.item.setSparqlID(savedID);
 			},
