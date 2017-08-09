@@ -703,7 +703,7 @@ define([	// properly require.config'ed
                 }
                 if (sei.getDataset() == "") {
                     errHTML += "Ontology endpoint " + i + " dataset is empty. <br>";
-                } else if (sei.getDataset().indexOf(":") == -1 ) {
+                } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER ) {
                     errHTML += "Ontology endpoint " + i + " dataset does not contain ':'<br>";
                 }
             }
@@ -715,7 +715,7 @@ define([	// properly require.config'ed
                 
                 if (sei.getDataset() == "") {
                     errHTML += "Data endpoint " + i + " dataset is empty. <br>";
-                } else if (sei.getDataset().indexOf(":") == -1 ) {
+                } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER  ) {
                     errHTML += "Data endpoint " + i + " dataset does not contain ':'<br>";
                 }
             }
