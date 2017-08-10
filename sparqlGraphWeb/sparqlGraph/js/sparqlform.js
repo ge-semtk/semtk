@@ -190,7 +190,7 @@ require([	'local/sparqlformconfig',
 					
 			gOTree.addSpecialClasses(getOntTriggerClassNames(gOInfo));  
 			                            
-			gOTree.addOntInfo(gOInfo); // add ontology but don't display yet
+			gOTree.setOInfo(gOInfo); // add ontology but don't display yet
 			
 			document.getElementById("chkShowAll").checked = true;
 			doTreeShowAllButton(); // decide what to display based on the checkbox
