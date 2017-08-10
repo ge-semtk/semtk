@@ -1858,8 +1858,11 @@ SemanticNodeGroup.prototype = {
 		ret.addJson(this.toJson());
 		
 		// connection
-		var conn = new SparqlConnection();
-		conn.fromJson(this.conn.toJson());
+        var conn = null;
+        if (this.conn != null) {
+		  var conn = new SparqlConnection();
+		  conn.fromJson(this.conn.toJson());
+        }
 		ret.setSparqlConnection(conn);
 		
 		ret.drawable = false;     // TODO: automatically make it illegal to draw a copy to get around raphael draw bugs.

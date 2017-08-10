@@ -506,11 +506,12 @@
     //**** Start new load code *****//
     var doLoadOInfoSuccess = function() {
     	// now load gOInfo into gOTree
-		gOTree.addOntInfo(gOInfo);
+		gOTree.setOInfo(gOInfo);
     	gOTree.showAll(); 
 	    gOInfoLoadTime = new Date();
         
-        gEditTab.updateOInfo(gOInfo);
+        gEditTab.setOInfo(gOInfo);
+        gEditTab.draw();
         
 		setStatus("");
 		guiTreeNonEmpty();
@@ -531,7 +532,8 @@
 	    	gOInfo = new OntologyInfo();
 		    gOInfoLoadTime = new Date();
 	    	
-            gEditTab.updateOInfo(gOInfo);
+            gEditTab.setOInfo(gOInfo);
+            gEditTab.draw();
 	    	gMappingTab.updateNodegroup(gNodeGroup);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
 		
@@ -819,8 +821,10 @@
     	// and the gNodeGroup is empty.
     	clearGraph();
     	logEvent("SG Loaded Nodegroup");
+        
     	sgJson.getNodeGroup(gNodeGroup, gOInfo);
-	
+	    gNodeGroup.setSparqlConnection(gConn);
+        
         drawNodeGroup();
 		guiGraphNonEmpty();
         nodeGroupChanged(false);
@@ -1335,6 +1339,7 @@
 		if (qsresult.isSuccess()) {
 			// try drawing the result to the graph
 			this.gNodeGroup.clear();
+            this.gNodeGroup.setSparqlConn(gConn);
             
 			this.gNodeGroup.fromConstructJson(qsresult.getAtGraph(), gOInfo);
 			nodeGroupChanged(true);
@@ -1564,6 +1569,7 @@
 	
 	var clearGraph = function () {
     	gNodeGroup.clear();
+        gNodeGroup.setSparqlConnection(gConn);
         gNodeGroup.drawNodes();
         nodeGroupChanged(false);
     	clearQuery();
@@ -1585,7 +1591,8 @@
     var clearEverything = function () {
     	clearTree();
     	gOInfo = new OntologyInfo();
-        gEditTab.updateOInfo(gOInfo);
+        gEditTab.setOInfo(gOInfo);
+        gEditTab.draw();
     	gConn = null;
 	    gOInfoLoadTime = new Date();
     };
