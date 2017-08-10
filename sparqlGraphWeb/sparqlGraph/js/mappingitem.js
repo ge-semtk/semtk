@@ -157,7 +157,7 @@ define([	// properly require.config'ed
 					
 				} else {
 					ret.colId = this.helpGetKeyFromHash(idHash, this.iObj);
-					ret.colName = this.iObj.getColName();
+					//ret.colName = this.iObj.getColName();
 					
 					// add transform if it isn't empty
 					if (this.transformList != null && this.transformList.length > 0) {
