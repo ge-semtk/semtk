@@ -68,7 +68,7 @@ OntologyTree.prototype = {
 		return (this.specialClasses.indexOf(fullName) > -1);
 	},
 	
-	addOntInfo : function (ontInfo) {
+	setOInfo : function (ontInfo) {
 		// associate an OntologyInfo		
 		this.oInfo = ontInfo;
 	},

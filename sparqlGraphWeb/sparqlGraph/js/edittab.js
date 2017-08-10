@@ -49,6 +49,22 @@ define([	// properly require.config'ed
             this.oInfo = null;
             this.oTree = null;
             
+            var form = document.createElement("form");
+            form.classList.add("form-horizontal");
+            form.style.marginTop = "1ch";
+            form.style.marginLeft = "1ch";
+            this.canvasdiv.appendChild(form);
+            
+            // this.legend
+            var center = document.createElement("center");
+            this.legend = document.createElement("legend");
+            center.appendChild(this.legend);
+            form.appendChild(center);
+            
+            // this.fieldset
+            this.fieldset = document.createElement("fieldset");
+            form.appendChild(this.fieldset);
+            
             this.initDynaTree();
         }
 		
@@ -68,12 +84,7 @@ define([	// properly require.config'ed
                     onActivate: function(node) {
                         // A DynaTreeNode object is passed to the activation handler
                         // Note: we also get this event, if persistence is on, and the page is reloaded.
-                        this.canvasdiv.innerHTML = "editing " + node.data.title;
-                        this.canvasdiv.innerHTML += "<br><br>a<br>b<br>c<br>d<br>";
-                        this.canvasdiv.innerHTML += "<br><br>a<br>b<br>c<br>d<br>";
-                        this.canvasdiv.innerHTML += "<br><br>a<br>b<br>c<br>d<br>";
-                        this.canvasdiv.innerHTML += "<br><br>a<br>b<br>c<br>d<br>";
-                        this.canvasdiv.innerHTML += "<br><br>a<br>b<br>c<br>d<br>";
+                        this.selectedNodeCallback(node);
 
                     }.bind(this),
                     onDblClick: function(node) {
@@ -121,10 +132,68 @@ define([	// properly require.config'ed
                 this.oTree.showAll();
             },
             
-            updateOInfo : function (oInfo) {
+            setOInfo : function (oInfo) {
                 this.oInfo = new OntologyInfo(oInfo.toJson());  // deepCopy
-                this.oTree.addOntInfo(this.oInfo);
-                this.draw();
+                this.oTree.setOInfo(this.oInfo);
+            },
+            
+            selectedNodeCallback : function (node) {
+                var name = node.data.value;
+                if (name.indexOf("#") == -1) {
+                    this.editNamespace(node);
+                    
+                } else if (this.oInfo.containsClass(name)) {
+                    this.editClass(node);
+                    
+                } else if (this.oInfo.containsProperty(name)) {
+                    this.editProperty(node);
+                    
+                } else {
+                    throw new Error("Can't find selected node in oInfo.");
+                }
+            },
+            
+            editNamespace : function (node) {
+                var name = node.data.value;
+                this.legend.innerHTML = "Namespace<br>" + name;
+                this.fieldset.innerHTML = "";
+            },
+            
+            editClass : function (node) {
+                var oClass = this.oInfo.getClass(node.data.value);
+                var namespace = oClass.getNamespaceStr();
+                var name = oClass.getNameStr(true);
+                
+                this.legend.innerHTML = "Class " + name;
+                
+                this.fieldset.innerHTML = "";
+                IIDXHelper.fsAddTextInput(this.fieldset, "Namespace:", null, "input-xlarge", namespace, true);
+                IIDXHelper.fsAddTextInput(this.fieldset, "Superclass:", null, "input-xlarge", oClass.getParentNameStr(), true);
+
+                var subtitle = null;
+                subtitle = document.createElement("legend");
+                subtitle.innerHTML = "Inherited Properties";
+                this.fieldset.appendChild(subtitle);
+                
+                subtitle = document.createElement("legend");
+                subtitle.innerHTML = "Properties";
+                this.fieldset.appendChild(subtitle);
+                
+                var propList = oClass.getProperties();
+                for (var i=0; i < propList.length; i++) {
+                    IIDXHelper.fsAddTextInput(this.fieldset, propList[i].getName().getFullName(), null, "input-xlarge", propList[i].getRange().getFullName(), true);
+
+                }
+                
+                subtitle = document.createElement("legend");
+                subtitle.innerHTML = "OneOf Restrictions";
+                this.fieldset.appendChild(subtitle);
+            },
+            
+            editProperty : function (node) {
+                var name = node.data.value;
+                this.legend.innerHTML = "Property<br>" + name;
+                this.fieldset.innerHTML = "";
             },
             
         };
