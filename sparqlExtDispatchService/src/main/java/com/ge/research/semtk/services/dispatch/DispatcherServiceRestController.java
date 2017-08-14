@@ -343,10 +343,10 @@ public class DispatcherServiceRestController {
 			
 		}
 		catch(Exception failedToFindClass){
-			System.err.println("retrieval of external dispatcher class failed. message from exception as follows:");
+			System.err.println("retrieval of external dispatcher class failed:");
 			System.err.println( failedToFindClass.getMessage() );
 			failedToFindClass.printStackTrace();
-			throw new Exception("getDispatcher :: unable to get requested dispatcher type " + props.getDispatcherClassName() + " from semtk or given additional classes loaded. please check dispatch.externalDispatchJar in the dispatcher configuration file.");
+			throw new Exception("getDispatcher :: unable to instantiate dispatcher of type " + props.getDispatcherClassName() + ".  Please check dispatch.externalDispatchJar property, additional jars directory, or dispatcher error log");
 		}
 		
 		
