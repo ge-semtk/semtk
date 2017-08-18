@@ -232,15 +232,13 @@ define([	// properly require.config'ed
 
         callbackSubmit : function () {
             // save all the saved profiles and return whatever is showing
-            this.storeDisplayedProfile();
-
             var success = function () {
                 this.hide();
                 this.writeProfiles();
                 this.callback(this.conn); 
             }.bind(this);
 
-
+            this.storeDisplayedProfile();
             this.validateThisConnAsync(success);
 
             return false;
@@ -257,7 +255,6 @@ define([	// properly require.config'ed
 
         callbackSelectionChange : function () {
             // selection changes, including to -1
-            this.storeDisplayedProfile();
             
             var success = function () {
                 this.displaySelectedProfile();
@@ -268,7 +265,12 @@ define([	// properly require.config'ed
                 IIDXHelper.selectFirstMatchingText(select, this.conn.getName());
             }.bind(this);
             
-            this.validateThisConnAsync(success, cancel);
+            this.storeDisplayedProfile();
+            
+            // nothing to do unless there is a connection in the select
+            if (this.conn != null) {
+                this.validateThisConnAsync(success, cancel);
+            }
             return false;
         },
 
@@ -446,13 +448,13 @@ define([	// properly require.config'ed
         },
 
         callbackExportProfiles : function () {
-            this.storeDisplayedProfile();
 
             var success = function() {
                 var result = this.getAllProfilesString();
                 this.downloadFile(result, "profiles.txt");
             }.bind(this);
 
+            this.storeDisplayedProfile();
             this.validateThisConnAsync(success);
             return false;
         },
@@ -471,7 +473,6 @@ define([	// properly require.config'ed
         },
 
         appendAndSelectProfile : function (conn) {
-            this.storeDisplayedProfile();
 
             var success = function() {
                 this.conn = conn;
@@ -485,6 +486,7 @@ define([	// properly require.config'ed
                 this.changed(true);
             }.bind(this);
 
+            this.storeDisplayedProfile();
             this.validateThisConnAsync(success);
         },
 
@@ -690,41 +692,55 @@ define([	// properly require.config'ed
          */
         validateThisConnAsync : function (successCallback, optCancelCallback) {
             var errHTML = "";
-            if (this.conn.getName() == "") {
-                errHTML += "Name is empty. <br>";
-            }
-            if (this.conn.getDomain() == "") {
-                errHTML += "Domain is empty. <br>";
-            }
-            for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
-                var sei = this.conn.getModelInterface(i);
-                if (sei.getServerURL() == "") {
-                    errHTML += "Ontology endpoint " + i + " server URL is empty. <br>";
+            var header = "<b>Connection error:</b><br>";
+            
+            if (this.conn == null) {
+                errHTML = "No connections have been built.<br>";
+            } else {
+                // look for errors
+                if (this.conn.getName() == "") {
+                    errHTML += "Name is empty. <br>";
+                } else {
+                    header = "<b>Connection '" + this.conn.getName() + "' has the following errors:</b><br>";
                 }
-                if (sei.getDataset() == "") {
-                    errHTML += "Ontology endpoint " + i + " dataset is empty. <br>";
-                } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER ) {
-                    errHTML += "Ontology endpoint " + i + " dataset does not contain ':'<br>";
+
+                if (this.conn.getDomain() == "") {
+                    errHTML += "Domain is empty. <br>";
+                }
+
+                for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
+                    var sei = this.conn.getModelInterface(i);
+                    if (sei.getServerURL() == "") {
+                        errHTML += "Ontology endpoint " + i + " server URL is empty. <br>";
+                    }
+                    if (sei.getDataset() == "") {
+                        errHTML += "Ontology endpoint " + i + " dataset is empty. <br>";
+                    } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER ) {
+                        errHTML += "Ontology endpoint " + i + " dataset does not contain ':'<br>";
+                    }
+                }
+
+                for (var i=0; i < this.conn.getDataInterfaceCount(); i++) {
+                    var sei = this.conn.getDataInterface(i);
+                    if (sei.getServerURL() == "") {
+                        errHTML += "Data endpoint " + i + " server URL is empty. <br>";
+                    }
+
+                    if (sei.getDataset() == "") {
+                        errHTML += "Data endpoint " + i + " dataset is empty. <br>";
+                    } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER  ) {
+                        errHTML += "Data endpoint " + i + " dataset does not contain ':'<br>";
+                    }
                 }
             }
-            for (var i=0; i < this.conn.getDataInterfaceCount(); i++) {
-                var sei = this.conn.getDataInterface(i);
-                if (sei.getServerURL() == "") {
-                    errHTML += "Data endpoint " + i + " server URL is empty. <br>";
-                }
-                
-                if (sei.getDataset() == "") {
-                    errHTML += "Data endpoint " + i + " dataset is empty. <br>";
-                } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER  ) {
-                    errHTML += "Data endpoint " + i + " dataset does not contain ':'<br>";
-                }
-            }
+            
+            // call one of the callbacks
             if (errHTML == "") {
                 successCallback();
             } else {
 
                 ModalIidx.okCancel("Connection error",
-                                   "<b>Connection '" + this.conn.getName() + "' has the following errors:</b><br>" + errHTML,
+                                   header + errHTML,
                                    successCallback,
                                    "Continue",
                                    optCancelCallback);
@@ -928,13 +944,13 @@ define([	// properly require.config'ed
 
         // GUI call to save all the profiles
         callbackSaveAll: function () {
-            this.storeDisplayedProfile();
 
             var success = function () {
                 this.writeProfiles();
                 this.changed(false);
             }.bind(this);
-
+            
+            this.storeDisplayedProfile();
             this.validateThisConnAsync(success);
         },
 
