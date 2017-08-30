@@ -20,9 +20,12 @@ package com.ge.research.semtk.resultSet;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -175,6 +178,25 @@ public class Table {
 		this.rows.add(newRow);
 	}
 	
+	public void addRow(String [] newRow)  throws Exception {
+		this.addRow(new ArrayList<String>(Arrays.asList(newRow)));
+	}
+	
+	public void addRow(Object [] newRow) throws Exception {
+		ArrayList<String> row = new ArrayList<String>();
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		
+		for (int i=0; i < newRow.length; i++) {
+			
+			if (newRow[i] instanceof Date) {
+				row.add(formatter.format(newRow[i]));
+			} else {
+				row.add(newRow[i].toString());
+			}
+		}
+		this.addRow(row);
+	}
+	
 	/**
 	 * Get the index for a given column name, or -1 if does not exist
 	 */
@@ -210,6 +232,17 @@ public class Table {
 	
 	public String getCell(int row, int col) {
 		return this.rows.get(row).get(col);
+	}
+	
+	public String getCellAsString(int row, int col) {
+		return getCell(row, col);
+	}
+	
+	public int getCellAsInt(int row, int col) {
+		return Integer.parseInt(getCell(row, col));
+	}
+	public float getCellAsFloat(int row, int col) {
+		return Float.parseFloat(getCell(row, col));
 	}
 	
 	/**
@@ -508,6 +541,33 @@ public class Table {
 		}
 			
 		return ret;		
+	}
+	
+	/**
+	 * Check that all columns in other are in this table, with the same types
+	 * @param other
+	 * @return {String} error messages or ""
+	 */
+	public String getMissingColMessages(Table other) {
+		List<String> otherNames = Arrays.asList(other.getColumnNames());
+		List<String> otherTypes = Arrays.asList(other.getColumnTypes());
+		List<String> myNames =    Arrays.asList(this.getColumnNames());
+		List<String> myTypes =    Arrays.asList(this.getColumnTypes());
+		
+		String ret = new String();
+		
+		for (int i=0; i < otherNames.size(); i++) {
+			int pos = myNames.indexOf(otherNames.get(i));
+			if (pos == -1) {
+				ret += "Table does not contain column " + otherNames.get(i) + "\n";
+			} else {
+				if (!otherTypes.get(i).equals(myTypes.get(pos))) {
+					ret += String.format("Column %s expected type: %s, found: %s.\n", otherNames.get(i), otherTypes.get(i), myTypes.get(pos));
+				}
+			}
+		}
+		
+		return ret;
 	}
 	
 }
