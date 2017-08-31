@@ -230,6 +230,14 @@ public class Table {
 		return Utility.getCSVString(row);
 	}
 	
+	public String getHeaderAsCSVString() throws IOException {
+		
+		ArrayList<String> headers = new ArrayList<String>( Arrays.asList( this.getColumnNames() ) ); // gets col names in order
+		return (Utility.getCSVString(headers));
+		
+		
+	}
+	
 	public String getCell(int row, int col) {
 		return this.rows.get(row).get(col);
 	}
