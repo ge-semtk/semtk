@@ -570,4 +570,20 @@ public class Table {
 		return ret;
 	}
 	
+	// some sorting samples.
+	// we'll need multi columns and descending, etc.
+	public void sortByColumnStr(String colName) {
+		int col = this.getColumnIndex(colName);
+		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
+								rowA.get(col).compareTo(rowB.get(col))
+						);
+	}
+	
+	public void sortByColumnInt(String colName) {
+		int col = this.getColumnIndex(colName);
+		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
+								Integer.parseInt(rowA.get(col)) - Integer.parseInt(rowB.get(col))
+						);	
+	}
+	
 }
