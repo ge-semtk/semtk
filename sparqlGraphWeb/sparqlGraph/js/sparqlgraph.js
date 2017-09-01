@@ -505,6 +505,14 @@
     
     //**** Start new load code *****//
     var doLoadOInfoSuccess = function() {
+        
+        // Connection is empty: spin off a warning but continue
+        if (gOInfo.getClassNames().length < 1) {
+            require(['sparqlgraph/js/modaliidx'], function(ModalIidx) {
+                ModalIidx.alert("No Ontology Found", "Warning: connection doesn't contain any classes.");
+            });
+        }
+        
     	// now load gOInfo into gOTree
 		gOTree.setOInfo(gOInfo);
     	gOTree.showAll(); 
