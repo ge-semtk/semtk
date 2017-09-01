@@ -1158,7 +1158,7 @@
             function(el, l) {
                 // get legal new value
                 var newLimit = parseInt(document.getElementById("SGQueryLimit").value.replace(/\D/g,''), 10);
-                gNodeGroup.setLimit(newLimit);
+                gNodeGroup.setLimit(isNaN(newLimit) ? 0 : newLimit);
                 nodeGroupChanged(true);
             },
             
