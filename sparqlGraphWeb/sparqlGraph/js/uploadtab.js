@@ -670,8 +670,13 @@ define([	// properly require.config'ed
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-success progress-striped active");
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
 				
-				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
-	    		mq.execUploadOwl(this.owlFile, successCallback.bind(this, mq));
+                if (this.getSelectedSei() == null) {
+                    ModalIidx.alert("No endpoint", "No endpoint/graph specified.<br>Don't know where to upload the owl.");
+                } else {
+                    var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
+                    mq.execUploadOwl(this.owlFile, successCallback.bind(this, mq));
+                }
+				
 			},
 			
 			/**
@@ -735,9 +740,9 @@ define([	// properly require.config'ed
 			/**
 			 * Generic callback for microservice call failures
 			 */
-			msiFailureCallback : function (msg, optAllowHtml) {
-				// optAllowHtml default is false.  If you know msg is html: make it true.
-				var htmlFlag = (typeof optAllowHtml === "undefined" || !optAllowHtml) ? ModalIidx.HTML_SAFE : ModalIidx.HTML_ALLOW;
+			msiFailureCallback : function (msg, optAllowHTML) {
+				// optAllowHtml default is true.
+				var htmlFlag = (typeof optAllowHtml === "undefined" || optAllowHtml) ? ModalIidx.HTML_ALLOW : ModalIidx.HTML_SAFE;
 				ModalIidx.alert("Microservice Failure", msg, htmlFlag);
 				kdlLogEvent("SG Microservice Failure", "message", msg);
 				IIDXHelper.progressBarRemove(this.progressDiv);
