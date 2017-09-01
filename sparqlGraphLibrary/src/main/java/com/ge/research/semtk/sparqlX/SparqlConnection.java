@@ -272,6 +272,28 @@ public class SparqlConnection {
 		}
 	}
 	
+	// Is number of endpoint serverURLs == 1
+	public boolean isSingleDataServerURL() {
+		String url = "";
+		
+		// check data interfaces
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			String e =  this.dataInterfaces.get(i).getServerAndPort();
+			if (url.equals("")) {
+				url = e;
+			} else if (! e.equals(url)) {
+				return false;
+			}
+		}
+		
+		// if there are no serverURLs then false
+		if (url.equals("")) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
 	// get list of datasets for a given serverURL
 	public ArrayList<String> getDatasetsForServer(String serverURL) {
 		ArrayList<String> ret = new ArrayList<String>();

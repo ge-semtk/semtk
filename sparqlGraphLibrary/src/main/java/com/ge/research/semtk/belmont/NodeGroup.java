@@ -808,8 +808,8 @@ public class NodeGroup {
 		if (this.conn == null) return "";
 		
 		// multiple ServerURLs is not implemented
-		if (! this.conn.isSingleServerURL() ) {
-			throw new Error("SPARQL generation across multiple servers is not yet supported.");
+		if (! this.conn.isSingleDataServerURL() ) {
+			throw new Error("SPARQL generation across multiple data servers is not yet supported.");
 		}
 		
 		// get datasets for first model server.  All others must be equal
