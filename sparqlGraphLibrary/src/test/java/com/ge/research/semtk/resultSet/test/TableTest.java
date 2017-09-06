@@ -53,7 +53,68 @@ public class TableTest {
 		
 		String result = table.toCSVString();
 		String expected = "colA,colB,colC\napple,banana,\"coconut,comma\"\nadam,barbara,chester\n";	
-		assertEquals(result,expected);
+		assertEquals(expected, result);
+	}
+	
+	@Test
+	public void testSortStr() throws Exception {
+		
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("coconut");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("chester");
+		rows.add(rowNames);
+		Table table = new Table(cols, colTypes, rows);
+		
+		// sort colA
+		table.sortByColumnStr("colA");
+		String result = table.toCSVString();
+		String expected = "colA,colB,colC\nadam,barbara,chester\napple,banana,coconut\n";	
+		assertEquals(expected, result);
+		
+		// sort colB
+		table.sortByColumnStr("colB");
+		result = table.toCSVString();
+		expected = "colA,colB,colC\napple,banana,coconut\nadam,barbara,chester\n";	
+		assertEquals(expected, result);
+	}
+	
+	@Test
+	public void testSortInt() throws Exception {
+		
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"String","String","Integer"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("30");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("5");
+		rows.add(rowNames);
+		Table table = new Table(cols, colTypes, rows);
+		
+		// no sort
+		String result = table.toCSVString();
+		String expected = "colA,colB,colC\napple,banana,30\nadam,barbara,5\n";	
+		assertEquals(expected, result);
+		
+		// sort colB
+		table.sortByColumnInt("colC");
+		result = table.toCSVString();
+		expected = "colA,colB,colC\nadam,barbara,5\napple,banana,30\n";	
+		assertEquals(expected, result);
 	}
 	
 	

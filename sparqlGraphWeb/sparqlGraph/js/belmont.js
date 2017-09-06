@@ -221,17 +221,19 @@ SparqlFormatter.prototype = {
 			if (!op) op = "=";
 
 			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + Math.floor(v) + ")";
-		}
-		else if (itemType == "float") {
+            
+		} else if (itemType == "float") {
 			if (!v) v = 1.5;
 			if (!op) op = "=";
 
 			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + Number(v) + ")";
-		}
-		else if (itemType == "uri") {
-			alert("Internal error in modalconstraintdialog.filter(): " + item.getSparqlID() + " is a URI.\nUse Value constraint instead of filter constraint.");
-			return;
-			
+            
+		} else if (itemType == "uri") {
+            if (!v) v = "?other";
+			if (!op) op = "!=";
+            
+            ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + v + ")";			
+            
 		} else if (itemType == "date") {
 			if (!v) v = '1/21/2003';
 			if (!op) op = "=";
@@ -244,7 +246,7 @@ SparqlFormatter.prototype = {
 
 			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "dateTime)";
 			
-		} else{
+		} else {
 			if (!v) v = 'something';
 			if (!op) op = "=";
 
@@ -2064,6 +2066,9 @@ SemanticNodeGroup.prototype = {
 	},
     
     setLimit : function (l) {
+        if (typeof l !== "number" || isNaN(l)) {
+            this.limit = 0;
+        }
         this.limit = l;
     },
     

@@ -104,6 +104,8 @@ define([	'sparqlgraph/js/msiresultset',
 				
 				
 				generateXhrHtml : function (xhr) {
+                    var MAX_LEN = 128;
+                    
 					// pull anything we can find out of xhr and make it html
 					ret = "";
 					for (var key in xhr) {
@@ -116,14 +118,14 @@ define([	'sparqlgraph/js/msiresultset',
 									// repeat loop for response JSON
 									for (var k2 in xhr.responseJSON) {
 										var s2 = JSON.stringify(xhr.responseJSON[k2]);
-                                        if (s2.length > 32) s2 = s2.slice(0,32) + "...";
+                                        if (s2.length > MAX_LEN) s2 = s2.slice(0,MAX_LEN) + "...";
 										ret += "<br><b>" + "response." + k2 + ": &nbsp</b>" + s2.replace(/[\n]/, "<br>");
 									}
 								} else if (key == "responseText" && xhr.hasOwnProperty("responseJSON")) {
 									// skip responseText when there is a responseJSON
 								} else {
 									// append a normal field
-                                    if (s.length > 32) s = s.slice(0,32) + "...";
+                                    if (s.length > MAX_LEN) s = s.slice(0,MAX_LEN) + "...";
 									ret += "<br><b>" + key + ": &nbsp</b>" + s.replace(/[\n]/, "<br>");
 								}
 							}

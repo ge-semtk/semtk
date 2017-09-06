@@ -83,6 +83,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		return ret.getResult("status");
 	}
 	
+	public boolean executeGetJobStatusIsSuccess(String jobId) throws Exception {
+		return this.executeGetJobStatusWithSimpleReturn(jobId).equalsIgnoreCase("success");
+	}
+	
 	public SimpleResultSet executeGetJobStatus(String jobId) throws Exception{
 		SimpleResultSet retval = null;
 		
@@ -169,19 +173,30 @@ public class NodeGroupExecutionClient extends RestClient {
 		return retval;
 	}
 	
-	public Table executeGetResultsTable(String jobID) throws Exception {
+	/**
+	 * Get results table throwing exceptions if anything goes wrong
+	 * @param jobId
+	 * @return
+	 * @throws Exception
+	 */
+	public Table executeGetResultsTable(String jobId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
 		conf.setServiceEndpoint(this.mappingPrefix + this.getResultsTable);
-		this.parametersJSON.put("jobID", jobID);
+		this.parametersJSON.put("jobID", jobId);
 		
 		try{
 			retval = this.executeWithTableResultReturn();
 		}
+	
 		finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("jobID");
+		}
+		
+		if (! retval.getSuccess()) {
+			throw new Exception(String.format("Job failed.  JobId='%s' Message='%s'", jobId, retval.getRationaleAsString("\n")));
 		}
 		
 		return retval.getTable();
@@ -233,6 +248,64 @@ public class NodeGroupExecutionClient extends RestClient {
 		return ret.getResult("JobId");
 	}
 	
+	/**
+	 * Execute SELECT on nodegroup id, returning a jobId
+	 * @param nodegroupID
+	 * @param sparqlConnectionJson
+	 * @param edcConstraintsJson
+	 * @param runtimeConstraintsJson
+	 * @return {String} jobId
+	 * @throws Exception
+	 */
+	public String executeDispatchSelectByIdToJobId(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+		return this.ExecuteDispatchSelectByIdWithSimpleReturn(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+	}
+	
+	/**
+	 * Execute SELECT all the way through to table
+	 * @param nodegroupID
+	 * @param sparqlConnectionJson
+	 * @param edcConstraintsJson
+	 * @param runtimeConstraintsJson
+	 * @return
+	 * @throws Exception
+	 */
+	public Table executeDispatchSelectByIdToTable(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception {
+		
+		// dispatch the job
+		String jobId = this.executeDispatchSelectByIdToJobId(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+		
+		try {
+			return this.waitForJobAndGetTable(jobId);
+			
+		} catch (Exception e) {
+			// Add nodegroupID and "SELECT" to the error message
+			throw new Exception(String.format("Error executing SELECT on nodegroup id='%s'", nodegroupID), e);
+		}
+		
+	}
+	
+	/**
+	 * Given jobId, check til job is done, check for success, get table
+	 * @param jobId
+	 * @return
+	 * @throws Exception - if anything other than a valid table is returned
+	 */
+	private Table waitForJobAndGetTable(String jobId) throws Exception {
+		// wait for completion
+		while(! this.executeGetJobCompletionCheckWithSimpleReturn(jobId)) {
+			// wait a while
+			Thread.sleep(100);
+		}
+		
+		// check for success
+		if (this.executeGetJobStatusIsSuccess(jobId)) {
+			return this.executeGetResultsTable(jobId);
+		} else {
+			throw new Exception(this.executeGetJobStatusMessageWithSimpleReturn(jobId));
+		}
+	}
+	
 	public SimpleResultSet executeDispatchSelectById(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet retval = null;
 		
@@ -255,7 +328,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		try{
 			System.err.println("sending ExecuteDispatchByIdWithSimpleReturn request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
-			retval.throwExceptionIfUnsuccessful();
+			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
 		finally{
 			conf.setServiceEndpoint(null);
@@ -276,7 +349,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		 * @param runtimeConstraintsJson -- the runtime constraints rendered as JSON. this is an array of JSON objects of the format 
 		 * 									{"SparqlID" : "<value>", "Operator" : "<operator>", "Operands" : [<operands>] }
 		 * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
-		 * @return
+		 * @return {String}              jobId
 		 */
 	public String ExecuteDispatchCountByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 			SimpleResultSet ret =  this.executeDispatchCountById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);

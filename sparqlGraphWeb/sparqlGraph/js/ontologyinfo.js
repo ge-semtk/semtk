@@ -749,12 +749,9 @@ OntologyInfo.prototype = {
     	
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("First connection to sparql endpoint failed.\nSuper-subclass query:\n\n" + qsResult.getStatusMessage());
-    		
-    	// this is not an error: everything might be flat, so I added "false &&""
-    	} else if (false && qsResult.getRowCount() == 0) {
-    		this.asyncFailureCallback("Super-subclass query returned no rows.\n\nCheck the load parameters (particularly domain) and triple-store contents.");
 			
     	} else {
+            // Note: can load nothing if ontology is flat
     		this.loadSuperSubClasses(qsResult.getStringResultsColumn("x"), 
                                      qsResult.getStringResultsColumn("y"));
     		    	
@@ -770,9 +767,6 @@ OntologyInfo.prototype = {
     	
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Top-level class query:\n\n " + qsResult.getStatusMessage());
-    		
-    	} else if (qsResult.getRowCount() == 0) {
-    		this.asyncFailureCallback("Top-level class query returned no rows.\n\nDataset is empty.");
 
 		} else {
 			this.loadTopLevelClasses(qsResult.getStringResultsColumn("Class"));
@@ -787,10 +781,6 @@ OntologyInfo.prototype = {
     	// last in callback chain.  
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Class properties query:\n\n" + qsResult.getStatusMessage());
-   
-    	// technically this is not an error, so I added "false &&""
-    	} else if (false && qsResult.getRowCount() == 0) {
-    		this.asyncFailureCallback("Class properties query returned no rows.\n\nCheck the load parameters and triple-store contents.");
 			
 		} else {
 			this.loadProperties(qsResult.getStringResultsColumn("Class"),
