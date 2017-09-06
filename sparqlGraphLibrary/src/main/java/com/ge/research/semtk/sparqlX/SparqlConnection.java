@@ -295,19 +295,36 @@ public class SparqlConnection {
 	}
 	
 	// get list of datasets for a given serverURL
-	public ArrayList<String> getDatasetsForServer(String serverURL) {
+	public ArrayList<String> getAllDatasetsForServer(String serverURL) {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		ret.addAll(this.getDataDatasetsForServer(serverURL));
+		ret.addAll(this.getModelDatasetsForServer(serverURL));
+		
+		return ret;
+	}
+	
+	// get list of DATA datasets for a given serverURL
+	public ArrayList<String> getDataDatasetsForServer(String serverURL) {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (int i=0; i < this.dataInterfaces.size(); i++) {
+			SparqlEndpointInterface e =  this.dataInterfaces.get(i);
+			if (e.getServerAndPort().equals(serverURL)  &&  ret.indexOf(e.getDataset()) == -1) {
+				ret.add(e.getDataset());
+			}
+		}
+		
+		return ret;
+	}
+	
+	// get list of MODEL datasets for a given serverURL
+	public ArrayList<String> getModelDatasetsForServer(String serverURL) {
 		ArrayList<String> ret = new ArrayList<String>();
 		
 		for (int i=0; i < this.modelInterfaces.size(); i++) {
 			SparqlEndpointInterface e =  this.modelInterfaces.get(i);
 			if (e.getServerAndPort().equals(serverURL) &&  ret.indexOf(e.getDataset()) == -1) {
-				ret.add(e.getDataset());
-			}
-		}
-		
-		for (int i=0; i < this.dataInterfaces.size(); i++) {
-			SparqlEndpointInterface e =  this.dataInterfaces.get(i);
-			if (e.getServerAndPort().equals(serverURL)  &&  ret.indexOf(e.getDataset()) == -1) {
 				ret.add(e.getDataset());
 			}
 		}
