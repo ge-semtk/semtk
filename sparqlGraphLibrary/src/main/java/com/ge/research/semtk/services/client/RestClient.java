@@ -130,7 +130,7 @@ public abstract class RestClient extends Client implements Runnable {
 		// TODO can we do this before calling execute()?
 		buildParametersJSON();  // set all parameters available upon instantiation
 		
-		System.out.println("EXECUTE ON " + this.conf.getServiceURL());
+		//System.out.println("EXECUTE ON " + this.conf.getServiceURL());
 
 		if(parametersJSON == null){
 			throw new Exception("Service parameters not set");
