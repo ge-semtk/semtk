@@ -90,6 +90,13 @@ public abstract class GeneralResultSet {
 			throw new Exception(this.getRationaleAsString("\n"));
 		}
 	}
+	
+	public void throwExceptionIfUnsuccessful (String msg) throws Exception {
+		if (success != true) {
+			throw new Exception(msg + "\n" + this.getRationaleAsString("\n"));
+		}
+	}
+	
 	/**
 	 * Add result content as JSON
 	 */
