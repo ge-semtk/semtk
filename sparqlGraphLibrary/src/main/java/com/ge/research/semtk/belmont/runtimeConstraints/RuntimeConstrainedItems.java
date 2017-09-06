@@ -66,9 +66,36 @@ public class RuntimeConstrainedItems {
 		}
 		return retval;
 	}
+	public JSONArray toJson(){
+		JSONArray retval = new JSONArray();
+		
+		for(RuntimeConstrainedObject rco : this.members.values()){
+			// create a new JSONObject
+			JSONObject curr = new JSONObject();
+			
+			// add the basics:
+			curr.put("SparqlID", rco.getObjectName());
+			curr.put("Operator", rco.getOperationName());
+			
+			// get the operands.
+			JSONArray operandArr = new JSONArray();
+			
+			for(String op : rco.getOperands()){
+				operandArr.add(op);
+			}
+			
+			curr.put("Operands", operandArr);
+
+			// add the last "current" entry to the outgoing array.
+			retval.add(curr);
+		}
+
+		
+		// ship it out
+		return retval;
+	}
 	
-	// acccept a json describing the runtime constraints and apply them.
-	
+	// acccept a json describing the runtime constraints and apply them.	
 	public void applyConstraintJson(JSONArray runtimeConstraints) throws Exception {
 		// read out and apply the various RT constraints from the JSON. 
 		// Throw an exception if anything seems amiss.
@@ -128,197 +155,33 @@ public class RuntimeConstrainedItems {
 				throw new Exception("RuntimConstrainedItems.applyConstraintJson :: for " + sparqlId + " one of the input values could not be cast to " + operandType);
 			}
 			
-			// create the appropriate constraint and apply it. 
-			this.selectAndSetConstraint(sparqlId, operator, this.members.get(sparqlId).getValueType(), operands);
+			SupportedOperations operationValue = null;
+			
+			// check the value of the operator for sanity
+			try{
+				operationValue = SupportedOperations.valueOf(operator);
+					// do nothing. we just needed this check to make it all work
+					
+				
+			}
+			catch(Exception eee){
+				// we were passed a bad value that could not be cast to the suggested type.
+				throw new Exception("RuntimConstrainedItems.applyConstraintJson :: for " + sparqlId + " the operator " + operator + " was not found in the ");
+			}
+			
+			// create the appropriate constraint and apply it.
+			this.members.get(sparqlId).setConstraint(operationValue, operands);
 			
 		}
 		
 	}
-	// find and create the appropriate constraint
+	
 	public void selectAndSetConstraint(String sparqlId, String operationID, String xsdTypeName, ArrayList<String> operands) throws Exception{
-		// a big switch statement to figure out which operation, if any we want. 
 		
-		// check that operator is sane.
-		try{
-			SupportedOperations.valueOf(operationID.toUpperCase());
-		}
-		catch(Exception e){
-			String supported = "";
-			int supportCount = 0;
-			for (SupportedOperations c :  SupportedOperations.values()){
-				if(supportCount != 0){ supported += " or "; }
-				supported += c.name();
-				supportCount++;
-			}	
-			throw new Exception("RuntimConstrainedItems.selectAndSetConstraint :: Operation " + operationID + " not recognized. Recognized operations are: " + supported);
-		}
+		// find the appropriate constrained object and then pass along the work
+		this.members.get(sparqlId).selectAndSetConstraint(sparqlId, operationID, xsdTypeName, operands);
 		
-		// inputs are sane (sparqlId and operands checked earlier)
-		// a large switch statement of our options with a catch all for misunderstood options at the bottom. 
-		
-		if(operationID.toUpperCase().equals(SupportedOperations.GREATERTHAN.name()) && XSDSupportUtil.numericOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-			
-			this.setNumberGreaterThan(sparqlId, val, false);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.GREATERTHAN.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-			
-			this.setDateAfter(sparqlId, val, false);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.GREATERTHANOREQUALS.name()) && XSDSupportUtil.numericOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-						
-			this.setNumberGreaterThan(sparqlId, val, true);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.GREATERTHANOREQUALS.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-						
-			this.setDateAfter(sparqlId, val, true);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.LESSTHAN.name()) && XSDSupportUtil.numericOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-						
-			this.setNumberLessThan(sparqlId, val, false);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.LESSTHAN.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-						
-			this.setDateBefore(sparqlId, val, false);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.LESSTHANOREQUALS.name()) && XSDSupportUtil.numericOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-						
-			this.setNumberLessThan(sparqlId, val, true);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.LESSTHANOREQUALS.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-						
-			this.setDateBefore(sparqlId, val, true);
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.MATCHES.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// create a constraint to match the provided
-			this.setDateMatchesConstraint(sparqlId, operands);
-		
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.MATCHES.name())){
-			// create a constraint to match the provided
-			this.setMatchesConstraint(sparqlId, operands);
-		
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.REGEX.name())){
-			// create a regex entry
-			this.setRegexConstraint(sparqlId, operands.get(0));
-		
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.VALUEBETWEEN.name()) && XSDSupportUtil.numericOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			Double valLow  = Double.parseDouble(operands.get(0));
-			Double valHigh = Double.parseDouble(operands.get(1));
-			
-			this.setNumberInInterval(sparqlId, valLow, valHigh, true, true);
-		
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.VALUEBETWEEN.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			String valLow  = operands.get(0);
-			String valHigh = operands.get(1);
-			
-			this.setDateInInterval(sparqlId, valLow, valHigh, true, true);
-		
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.VALUEBETWEENUNINCLUSIVE.name()) && XSDSupportUtil.numericOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			Double valLow  = Double.parseDouble(operands.get(0));
-			Double valHigh = Double.parseDouble(operands.get(1));
-						
-			this.setNumberInInterval(sparqlId, valLow, valHigh, false, false);			
-		}
-		else if(operationID.toUpperCase().equals(SupportedOperations.VALUEBETWEENUNINCLUSIVE.name()) && XSDSupportUtil.dateOperationAvailable(xsdTypeName)){
-			// this only handles numeric types right now. dates will likely break.
-			String valLow  = operands.get(0);
-			String valHigh = operands.get(1);
-						
-			this.setDateInInterval(sparqlId, valLow, valHigh, false, false);			
-		}
-		else{
-			throw new Exception("RuntimConstrainedItems.selectAndSetConstraint :: Operation " + operationID + " has no mapped operations. this is likely an oversite.");
-		}
-		
-	
 	}
-	//_____________________end runtime constraint applications.
-	
-	// methods that are most likely in the first rev to be used to fill in constraints. 
-	// matching constraints.
-	public void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
-		// create the constraint string. 
-		String constraintStr = ConstraintUtil.getMatchesOneOfConstraint(sparqlId, inputs, getTypeName(sparqlId));
-		System.out.println("======= setMatchesConstraint for " + sparqlId + " to " + constraintStr);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-
-	public void setDateMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
-		// create the constraint string. 
-		String constraintStr = ConstraintUtil.getDateMatchesOneOfConstraint(sparqlId, inputs, getTypeName(sparqlId));
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	// regex
-	public void setRegexConstraint(String sparqlId, String regexFragment) throws Exception{
-		String constraintStr = ConstraintUtil.getRegexConstraint(sparqlId, regexFragment, getTypeName(sparqlId));
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	// intervals.
-	public void setNumberInInterval(String sparqlId, Double lowerBound, Double upperBound, Boolean greaterThanOrEqualToLower, Boolean lessThanOrEqualToUpper) throws Exception{
-		String constraintStr = ConstraintUtil.getNumberBetweenConstraint(sparqlId, lowerBound.toString(), upperBound.toString(), getTypeName(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	public void setDateInInterval(String sparqlId, String lowerBound, String upperBound, Boolean greaterThanOrEqualToLower, Boolean lessThanOrEqualToUpper) throws Exception{
-		String constraintStr = ConstraintUtil.getTimePeriodBetweenConstraint(sparqlId, lowerBound, upperBound, getTypeName(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	
-	// greater or less than.
-	public void setNumberLessThan(String sparqlId, Double upperBound, Boolean lessThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getLessThanConstraint(sparqlId, upperBound.toString(), getTypeName(sparqlId), lessThanOrEqualTo);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	public void setDateBefore(String sparqlId, String upperBound, Boolean lessThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getTimePeriodBeforeConstraint(sparqlId, upperBound, getTypeName(sparqlId), lessThanOrEqualTo);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	public void setNumberGreaterThan(String sparqlId, Double lowerBound, Boolean greaterThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getGreaterThanConstraint(sparqlId, lowerBound.toString(), getTypeName(sparqlId), greaterThanOrEqualTo);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	public void setDateAfter(String sparqlId, String lowerBound, Boolean greaterThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getTimePeriodAfterConstraint(sparqlId, lowerBound, getTypeName(sparqlId), greaterThanOrEqualTo);
-		this.setValueContraint(sparqlId, constraintStr);
-	}
-	
-	
-	
-	// get the value type of the constraint based on the sparqlId
-	private String getTypeName(String sparqlId) throws Exception{
-		RuntimeConstrainedObject rco = this.members.get(sparqlId);
-		return rco.getValueType();
-	}
-	
 	
 	public ValueConstraint getValueConstraint(String itemSparqlId){
 		ValueConstraint retval = null;
@@ -344,19 +207,7 @@ public class RuntimeConstrainedItems {
 		
 		return retval;
 	}
-	
-	public void setValueContraint(String itemSparqlId, String constraint) throws Exception{
 		
-		// check to see if this item is in our list.
-		if(members.containsKey(itemSparqlId)){
-			members.get(itemSparqlId).setConstraint(constraint);
-		}
-		else{
-			throw new Exception("Constraint setting failed for SparqlId (" + itemSparqlId +
-					") because it does not exist in the available runtime constrained items.");
-		}
-	}
-	
 	public String getItemType(String itemSparqlId) throws Exception{
 		String retval = "";
 		
