@@ -115,6 +115,19 @@ public class Table {
 	}
 	
 	/**
+	 * Get slice of table from row offset to offset + limit - 1
+	 * @param offset
+	 * @param limit - if 0, then go til the end
+	 * @return
+	 * @throws Exception
+	 */
+	public Table slice(int offset, int limit) throws Exception {
+		int l = (limit == 0) ? this.getNumRows() : limit;
+		Table ret = new Table(this.columnNames, this.columnTypes, new ArrayList<ArrayList<String>> ( this.rows.subList(offset, offset + l)) );
+		return ret;
+	}
+	
+	/**
 	 * Returns true if the column exists in this table, else false
 	 */
 	public boolean hasColumn(String colName) {
@@ -249,6 +262,11 @@ public class Table {
 	public int getCellAsInt(int row, int col) {
 		return Integer.parseInt(getCell(row, col));
 	}
+	
+	public long getCellAsLong(int row, int col) {
+		return Long.parseLong(getCell(row, col));
+	}
+	
 	public float getCellAsFloat(int row, int col) {
 		return Float.parseFloat(getCell(row, col));
 	}
