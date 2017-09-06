@@ -187,6 +187,8 @@ public class RuntimeConstraintsTest {
 			// set matches
 			rtci.selectAndSetConstraint("?durationInSeconds", SupportedOperations.MATCHES.name(), ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueType(), names);
 
+			
+			
 			// check matches
 			if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("VALUES ?durationInSeconds { '23'^^<http://www.w3.org/2001/XMLSchema#int> '37'^^<http://www.w3.org/2001/XMLSchema#int>  }")){
 				System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with Matches clause") ;
