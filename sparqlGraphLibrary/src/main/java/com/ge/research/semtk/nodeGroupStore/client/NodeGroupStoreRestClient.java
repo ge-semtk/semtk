@@ -18,7 +18,9 @@
 package com.ge.research.semtk.nodeGroupStore.client;
 
 import org.json.simple.JSONObject;
+import org.mortbay.util.ajax.JSON;
 
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -42,6 +44,12 @@ public class NodeGroupStoreRestClient extends RestClient {
 		this.conf = config;
 	}
 	
+	/**
+	 * Get TableResultSet with status "success"
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
 	public TableResultSet executeGetNodeGroupById(String id) throws Exception{
 		TableResultSet retval = new TableResultSet();
 		
@@ -67,6 +75,23 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		return retval;
 	}
+	
+	/**
+	 * Get SparqlGraphJson or throw exception
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public SparqlGraphJson executeGetNodeGroupByIdToSGJson(String id) throws Exception {
+		Table table = this.executeGetNodeGroupById(id).getTable();
+		
+		if (table.getNumRows() != 1) {
+			throw new Exception(String.format("Retrieving '%s': expecting 1 nodegroup row, got %d", id, table.getNumRows()));
+		}
+		
+		return new SparqlGraphJson(table.getCellAsString(0, 1));
+	}
+
 	
 	public TableResultSet executeGetNodeGroupList() throws Exception {
 		TableResultSet retval = new TableResultSet();
