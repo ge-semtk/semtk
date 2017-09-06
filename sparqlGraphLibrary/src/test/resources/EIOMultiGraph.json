@@ -1,0 +1,159 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "project Analytics",
+		"domain": "http://com.ge.company",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://project/analytics"
+			},
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://project"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://project/analytics/data"
+			},
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://project/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 6,
+		"limit": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "code",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.company/project/valuesetcode#code",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?code",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Concept",
+				"fullURIName": "http://com.ge.company/project/valuesetcode#Concept",
+				"subClassNames": [],
+				"SparqlID": "?Concept",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "hdid",
+						"ValueType": "integer",
+						"relationship": "http://www.w3.org/2001/XMLSchema#integer",
+						"UriRelationship": "http://com.ge.company/project/obscode#hdid",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?hdid",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "ObsCode",
+				"fullURIName": "http://com.ge.company/project/obscode#ObsCode",
+				"subClassNames": [],
+				"SparqlID": "?ObsCode",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "score",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://com.ge.company/project/eiomatch#score",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?score",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?ObsCode"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "obscode",
+						"ValueType": "ObsCode",
+						"UriValueType": "http://com.ge.company/project/obscode#ObsCode",
+						"ConnectBy": "obscode",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.company/project/eiomatch#obscode"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Concept"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "vsConcept",
+						"ValueType": "Concept",
+						"UriValueType": "http://com.ge.company/project/valuesetcode#Concept",
+						"ConnectBy": "vsConcept",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.company/project/eiomatch#vsConcept"
+					}
+				],
+				"NodeName": "eioMatch",
+				"fullURIName": "http://com.ge.company/project/eiomatch#eioMatch",
+				"subClassNames": [],
+				"SparqlID": "?eioMatch",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		]
+	},
+	"importSpec": {
+		
+	}
+}
