@@ -32,6 +32,7 @@ import com.ge.research.semtk.belmont.NoValidSparqlException;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest;
@@ -233,15 +234,15 @@ public class NodeGroupServiceRestController {
 	// helper method to figure out if we are looking at a nodegroup alone or a sparqlgraphJSON
 	// and return a nodegroup from it.
 	private NodeGroup getNodeGroupFromJson(JSONObject jobj) throws Exception{
-		NodeGroup retval = new NodeGroup();
+		NodeGroup retval = null;
 		
 		if(jobj.containsKey("sNodeGroup")){
-			// this was a sparqlGraphJson. unwrap before using.
-			JSONObject innerObj = (JSONObject) jobj.get("sNodeGroup");
-			retval.addJsonEncodedNodeGroup(innerObj);
+			SparqlGraphJson sgj = new SparqlGraphJson(jobj);
+			retval = sgj.getNodeGroup();
 		}
 		else if(jobj.containsKey("sNodeList")){
 			// this was just a node group
+			retval = new NodeGroup();
 			retval.addJsonEncodedNodeGroup(jobj);
 		}
 		else{
