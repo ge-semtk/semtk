@@ -813,7 +813,7 @@ public class NodeGroup {
 		}
 		
 		// get datasets for first model server.  All others must be equal
-		ArrayList<String> datasets = this.conn.getDatasetsForServer(this.conn.getModelInterface(0).getServerAndPort());
+		ArrayList<String> datasets = this.conn.getDataDatasetsForServer(this.conn.getDataInterface(0).getServerAndPort());
 		
 		if (datasets.size() < 2) return "";
 		

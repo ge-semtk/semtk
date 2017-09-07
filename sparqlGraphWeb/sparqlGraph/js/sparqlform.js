@@ -378,7 +378,7 @@ require([	'local/sparqlformconfig',
                 
                 // generate sparql and send to sparqlCallback
                 var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
-                ngClient.execAsyncGenerateFilter(runNodegroup, runId, sparqlCallback, failureCallback);
+                ngClient.execAsyncGenerateFilter(runNodegroup, gConn, runId, sparqlCallback, failureCallback);
                 
             } else {
                 // Run nodegroup via Node Group Exec Svc
@@ -808,7 +808,7 @@ require([	'local/sparqlformconfig',
                 // generate sparql and send to sparqlCallback
                 setStatusProgressBar("Running direct query", 5);
                 var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
-                ngClient.execAsyncGenerateSelect(gNodeGroup, sparqlCallback, guiEndQuery);
+                ngClient.execAsyncGenerateSelect(gNodeGroup, gConn, sparqlCallback, guiEndQuery);
              
             // Microservices
             } else {

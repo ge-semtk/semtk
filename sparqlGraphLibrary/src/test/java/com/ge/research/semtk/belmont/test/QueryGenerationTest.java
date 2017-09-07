@@ -265,8 +265,6 @@ public class QueryGenerationTest {
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>\r\n" + 
 				"prefix valuesetcode:<http://com.ge.company/project/valuesetcode#>\r\n" + 
 				"select distinct ?score ?hdid ?code\r\n" + 
-				"		FROM <http://project/analytics>\r\n" + 
-				"		FROM <http://project>\r\n" + 
 				"		FROM <http://project/analytics/data>\r\n" + 
 				"		FROM <http://project/data>\r\n" + 
 				" where {\r\n" + 

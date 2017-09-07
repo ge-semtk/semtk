@@ -628,7 +628,7 @@
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
                 
                 // PEC TODO:  Jira PESQS-281   no way to get query with runtime constraints
-                ngClient.execAsyncGenerateFilter(runNodegroup, runId, sparqlCallback, failureCallback);
+                ngClient.execAsyncGenerateFilter(runNodegroup, conn, runId, sparqlCallback, failureCallback);
                 
             } else {
                 // Run nodegroup via Node Group Exec Svc
@@ -1294,16 +1294,16 @@
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
             switch (getQueryType()) {
             case "SELECT":
-                client.execAsyncGenerateSelect(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateSelect(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case "COUNT":
-                client.execAsyncGenerateCountAll(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateCountAll(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case "CONSTRUCT":
-                client.execAsyncGenerateConstruct(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateConstruct(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case "DELETE":
-                client.execAsyncGenerateDelete(gNodeGroup, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateDelete(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             default:
                 throw new Error("Unknown query type.");	
@@ -1377,7 +1377,7 @@
                 clearResults();
 
                 var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, queryFailureCallback);
-                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, runGraphWithConstraints, queryFailureCallback);
+                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, gConn, runGraphWithConstraints, queryFailureCallback);
             });
     	}
     };
