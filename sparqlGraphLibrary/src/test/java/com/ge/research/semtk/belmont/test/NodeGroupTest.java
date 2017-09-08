@@ -51,6 +51,28 @@ public class NodeGroupTest {
 	}
 	
 	@Test
+	public void nodeGroupFromJsonOrderBy() throws Exception {		
+
+        SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json"));
+		NodeGroup ng = sgJson.getNodeGroup();
+		ng.appendOrderBy("?CellId", "DESC");
+		ng.appendOrderBy("?Color");
+		
+		ng.setLimit(100);
+		ng.setOffset(20);
+		
+		JSONObject jObj = ng.toJson();
+		String jStr = jObj.toJSONString();
+		
+		NodeGroup ng2 = NodeGroup.getInstanceFromJson(jObj);
+		JSONObject jObj2 = ng2.toJson();
+		String jStr2 = jObj2.toJSONString();
+		
+		assertEquals(jStr, jStr2);
+		System.out.println(jStr);
+	}
+	
+	@Test
 	public void nodeGroupFromJsonBadDeleteMode() throws Exception {		
 
         SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery_ErrDeleteMode.json"));

@@ -117,13 +117,20 @@ public class Table {
 	/**
 	 * Get slice of table from row offset to offset + limit - 1
 	 * @param offset
-	 * @param limit - if 0, then go til the end
+	 * @param size - if 0, then go til the end
 	 * @return
 	 * @throws Exception
 	 */
-	public Table slice(int offset, int limit) throws Exception {
-		int l = (limit == 0) ? this.getNumRows() : limit;
-		Table ret = new Table(this.columnNames, this.columnTypes, new ArrayList<ArrayList<String>> ( this.rows.subList(offset, offset + l)) );
+	public Table slice(int offset, int size) throws Exception {
+		int upper;
+		// make sure upper limit is in bounds
+		if (size == 0 || offset + size > this.getNumRows()) {
+			upper = this.getNumRows();
+		} else {
+			upper = offset + size;
+		}
+		
+		Table ret = new Table(this.columnNames, this.columnTypes, new ArrayList<ArrayList<String>> ( this.rows.subList(offset, upper)) );
 		return ret;
 	}
 	
@@ -284,7 +291,7 @@ public class Table {
 	
 	/**
 	 * Get a table instance from a JSON object
-	 * Json object looks like this: {"col_names":["colA","colB","colC"],"col_types":["String","String","String"],"rows":[["apple","banana","coconut"],["adam","barbara","chester"]],"col_count":3\"row_count":2}
+	 * Json object looks like this: {"col_names":["colA","colB","colC"],"col_type":["String","String","String"],"rows":[["apple","banana","coconut"],["adam","barbara","chester"]],"col_count":3\"row_count":2}
 	 * @return
 	 * @throws Exception 
 	 */

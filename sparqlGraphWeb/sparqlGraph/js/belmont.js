@@ -1612,12 +1612,72 @@ var getNodeDeletionTypeByName = function(delVal){
 	throw new Error("No Deletion Type exists for " + delVal);
 };
 
+var OrderElement = function(sparqlID, func) {
+    this.sparqlID = sparqlID;
+    this.func = (typeof func != "undefined") ? func : "";
+    this.fixID();
+};
+
+OrderElement.prototype = {
+    fromJson : function (jObj) {
+        this.sparqlID = jObj.sparqlID;
+        if (jObj.hasOwnProperty("func")){
+            this.func = jObj.func;
+        } else {
+            this.func = "";
+        }
+        this.fixID();
+    },
+    
+    fixID : function () {
+        if (this.sparqlID != "" && this.sparqlID[0] != "?") {
+            this.sparqlID = "?" + this.sparqlID;
+        }
+    },
+    
+    getSparqlID : function() {
+        return this.sparqlID;
+    },
+    
+    setSparqlID : function(id) {
+        this.sparqlID = id;
+        this.fixID();
+    },
+    
+    getFunc : function() {
+        return this.func;
+    },
+    
+    setFunc : function(f) {
+        this.func = f;
+    },
+    
+    toJson : function() {
+        var jObj = {};
+        jObj.sparqlID = this.sparqlID;
+        if (this.func != "") {
+            jObj.func = this.func;
+        }
+        return jObj;
+    },
+    
+    toSparql : function() {
+        if (this.func != "") {
+            return this.func + "(" + this.sparqlID + ")";
+        } else {
+            return this.sparqlID;
+        }
+    },
+};
+
 /* the semantic node group */
 var SemanticNodeGroup = function(width, height, divName) {
     var drawFlag = (typeof width !== "undefined");
     
 	this.SNodeList = [];
     this.limit = 0;
+    this.offset = 0;
+    this.orderBy = [];
     if (drawFlag) {
         this.graph = new Graph();
         this.layouter = new Graph.Layout.Spring(this.graph, width, height);
@@ -1671,7 +1731,8 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 6;
+SemanticNodeGroup.JSON_VERSION = 7;
+// version 7 - offset, order by
 // version 6 - limit
 // version 5 - top-secret undocumented version 
 // version 4 - multiple connections
@@ -1697,12 +1758,21 @@ SemanticNodeGroup.prototype = {
 		var ret = {
 			version : SemanticNodeGroup.JSON_VERSION,
             limit : this.limit,
+            offset : this.offset,
 			sNodeList : [],
+            orderBy : []
 		};
+        
 		// add json snodes to sNodeList
 		for (var i = 0; i < snList.length; i++) {
 			ret.sNodeList.push(snList[i].toJson(deflateFlag, mappedPropItems));
 		}
+        
+        // orderBy
+        for (var i = 0; i < this.orderBy.length; i++) {
+            ret.orderBy.push(this.orderBy[i].toJson());
+        }
+        
 		return ret;
 	},
 	
@@ -1716,6 +1786,11 @@ SemanticNodeGroup.prototype = {
         if (jObj.hasOwnProperty("limit")) {
             this.limit = jObj.limit;
         }
+        
+        if (jObj.hasOwnProperty("offset")) {
+            this.offset = jObj.offset;
+        }
+        
 		// clean up name collisions while still json
 		this.resolveSparqlIdCollisionsJson(jObj);
 
@@ -1728,7 +1803,16 @@ SemanticNodeGroup.prototype = {
 			// already there.
 			this.addOneNode(newNode, null, null, null);
 		}
+        
+        if (jObj.hasOwnProperty("orderBy")) {
+            for (var i=0; i < jObj.orderBy.length; i++) {
+                var j = jObj.orderBy[i];
+                this.appendOrderBy(j.sparqlID, j.hasOwnProperty("func") ? j.func : "");
+            }
+        }
+        this.validateOrderBy();
 	},
+    
 	fromConstructJson : function(jsonGraph, oInfo){
 		// create a hash of the nodes to be manipulated
 		var semanticNodeHash = {};
@@ -2074,6 +2158,74 @@ SemanticNodeGroup.prototype = {
     
     getLimit : function () {
         return this.limit;
+    },
+    
+    setOffset : function (l) {
+        if (typeof l !== "number" || isNaN(l)) {
+            this.offset = 0;
+        }
+        this.offset = l;
+    },
+    
+    getOffset : function () {
+        return this.offset;
+    },
+    
+    clearOrderBy : function () {
+        this.orderBy = [];
+    },
+    
+    appendOrderBy : function (sparqlID, func) {
+        if (this.getItemBySparqlID(sparqlID) == null) {
+            throw new Error("SparqlID can't be found in nodegroup: " + sparqlID);
+            
+        } else if (this.orderBy.indexOf(sparqlID) > -1) {
+            throw new Error("SparqlID can't be added to ORDER BY twice: " + sparqlID);
+            
+        } else {
+            this.orderBy.push(new OrderElement(sparqlID, func));
+        }
+    },
+    
+    removeInvalidOrderBy : function() {
+        var keep = [];
+        
+        for (var i=0; i < this.orderBy.length; i++) {
+            var e = this.orderBy[i];
+            if (this.getItemBySparqlID(e.getSparqlID()) != null) {
+                keep.push(e);
+            }
+        }
+        
+        this.orderBy = keep;
+    },
+    
+    validateOrderBy: function() {        
+
+        for (var i=0; i < this.orderBy.length; i++) {
+            var e = this.orderBy[i];
+            if (this.getItemBySparqlID(e.getSparqlID()) == null) {
+                throw new Error("Invalid SparqlID in ORDER BY : " + e.getSparqlID());
+            }
+        }
+    },
+
+    /**
+     * Set orderBy to every returned item.
+     * (To ensure a deterministic return order for OFFSET)
+     * @throws Exception
+     */
+    orderByAll : function() {
+        this.clearOrderBy();
+        var rList = this.getReturnedItems();
+        for (var i=0; i < rList.length; i++) {
+            r = rList[i];
+            this.appendOrderBy(r.getSparqlID());
+        }
+    },
+
+    setOffset : function(offset) {
+        this.offset = offset;
     },
     
 	// DEPRECATED
@@ -2840,6 +2992,23 @@ SemanticNodeGroup.prototype = {
 		return null;
 	},
     
+    getReturnedItems : function () {
+        var ret = [];
+        
+        var nList = this.getOrderedNodeList();
+        for(var i=0; i < nList.length; i++) {
+            var n = nList[i];
+            // check if node URI is returned
+            if (n.getIsReturned()) {
+                ret.push(n);
+            }
+            
+            ret = ret.concat(n.getReturnedPropertyItems());
+        }
+        return ret;
+
+    },
+        
     getItemBySparqlID : function(id) {
         var item = null;
 		// search every SemanticNode for the sparqlID
