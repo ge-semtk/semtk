@@ -2108,8 +2108,14 @@ public class NodeGroup {
 		}
 		else if(delMode == NodeDeletionTypes.FULL_DELETE){
 			retval += indent + n.sparqlID + " rdf:type  " + n.sparqlID + "_type_info . \n";
+			
+			// outgoing links
 			if(inWhereClause){ retval += " optional {"; } 
 			retval += indent + n.sparqlID + " " + n.sparqlID + "_related_predicate_outgoing " + n.sparqlID + "_related_object_target . \n";
+			if(inWhereClause){ retval += " } "; } 
+			
+			// incoming links
+			if(inWhereClause){ retval += " optional {"; } 
 			retval += indent + n.sparqlID + "_related_subject " + n.sparqlID + "_related_predicate_incoming " + n.sparqlID + " . \n";
 			if(inWhereClause){ retval += " } "; } 
 		}
