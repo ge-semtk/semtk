@@ -50,7 +50,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		// get a name for the job.
 		System.err.println("About to request job");
-		String jobId = snec.ExecuteDispatchSelectByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
+		String jobId = snec.executeDispatchSelectByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 		System.err.println("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
@@ -91,7 +91,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		// get a name for the job.
 		System.err.println("About to request job");
-		String jobId = snec.ExecuteDispatchDeleteByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
+		String jobId = snec.executeDispatchDeleteByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 		System.err.println("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
@@ -132,7 +132,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		// get a name for the job.
 		System.err.println("About to request job");
-		String jobId = snec.ExecuteDispatchCountByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
+		String jobId = snec.executeDispatchCountByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 		System.err.println("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
@@ -173,7 +173,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		// get a name for the job.
 		System.err.println("About to request job");
-		String jobId = snec.ExecuteDispatchFilterByIdWithSimpleReturn(id, targetObjectSparqlId, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
+		String jobId = snec.executeDispatchFilterByIdWithSimpleReturn(id, targetObjectSparqlId, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 		System.err.println("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
