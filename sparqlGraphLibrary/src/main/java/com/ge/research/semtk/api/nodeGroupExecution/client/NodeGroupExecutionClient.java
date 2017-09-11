@@ -243,7 +243,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
 	 * @return
 	 */
-	public String ExecuteDispatchSelectByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+	public String executeDispatchSelectByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet ret =  this.executeDispatchSelectById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 		return ret.getResult("JobId");
 	}
@@ -258,7 +258,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * @throws Exception
 	 */
 	public String executeDispatchSelectByIdToJobId(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
-		return this.ExecuteDispatchSelectByIdWithSimpleReturn(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+		return this.executeDispatchSelectByIdWithSimpleReturn(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 	}
 	
 	/**
@@ -316,7 +316,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
-			System.err.println("sending ExecuteDispatchByIdWithSimpleReturn request");
+			System.err.println("sending executeDispatchSelectById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
@@ -327,7 +327,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("ExecuteDispatchByIdWithSimpleReturn request finished without exception");
+		System.err.println("executeDispatchSelectById request finished without exception");
 		return retval;
 	}
 
@@ -341,7 +341,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		 * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
 		 * @return {String}              jobId
 		 */
-	public String ExecuteDispatchCountByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+	public String executeDispatchCountByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 			SimpleResultSet ret =  this.executeDispatchCountById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 			return ret.getResult("JobId");
 		}
@@ -357,7 +357,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		
 		try{
-			System.err.println("sending ExecuteDispatchByIdWithSimpleReturn request");
+			System.err.println("sending executeDispatchCountById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		}
@@ -368,7 +368,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("ExecuteDispatchByIdWithSimpleReturn request finished without exception");
+		System.err.println("executeDispatchCountById request finished without exception");
 		return retval;
 	}
 	
@@ -399,7 +399,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * @param targetObjectSparqlId -- the ID of the object to filter for valid values of. these are the sparql IDs used in the nodegroup.
 	 * @return
 	 */
-	public String ExecuteDispatchFilterByIdWithSimpleReturn(String nodegroupID, String targetObjectSparqlId, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+	public String executeDispatchFilterByIdWithSimpleReturn(String nodegroupID, String targetObjectSparqlId, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 			SimpleResultSet ret =  this.executeDispatchFilterById(nodegroupID, targetObjectSparqlId, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 			return ret.getResult("JobId");
 		}
@@ -416,7 +416,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			
 			
 			try{
-				System.err.println("sending ExecuteDispatchByIdWithSimpleReturn request");
+				System.err.println("sending executeDispatchFilterById request");
 				retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 				retval.throwExceptionIfUnsuccessful();
 			}
@@ -428,7 +428,7 @@ public class NodeGroupExecutionClient extends RestClient {
 				this.parametersJSON.remove("runtimeConstraints");
 				this.parametersJSON.remove("targetObjectSparqlId");
 			}
-			System.err.println("ExecuteDispatchByIdWithSimpleReturn request finished without exception");
+			System.err.println("executeDispatchFilterById request finished without exception");
 			return retval;
 		}
 		
@@ -441,7 +441,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
 	 * @return
 	 */
-	public String ExecuteDispatchDeleteByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+	public String executeDispatchDeleteByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 			SimpleResultSet ret =  this.executeDispatchCountById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 			return ret.getResult("JobId");
 		}
@@ -456,7 +456,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 			
 			try{
-				System.err.println("sending ExecuteDispatchByIdWithSimpleReturn request");
+				System.err.println("sending executeDispatchDeleteById request");
 				retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 				retval.throwExceptionIfUnsuccessful();
 			}
@@ -467,7 +467,7 @@ public class NodeGroupExecutionClient extends RestClient {
 				this.parametersJSON.remove("externalDataConnectionConstraints");
 				this.parametersJSON.remove("runtimeConstraints");
 			}
-			System.err.println("ExecuteDispatchByIdWithSimpleReturn request finished without exception");
+			System.err.println("executeDispatchDeleteById request finished without exception");
 			return retval;
 		}
 
@@ -654,7 +654,7 @@ public class NodeGroupExecutionClient extends RestClient {
  * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
  * @return
  */
-	public String ExecuteDispatchByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+	public String executeDispatchByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet ret =  this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 		return ret.getResult("JobId");
 	}
@@ -670,7 +670,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		
 		try{
-			System.err.println("sending ExecuteDispatchByIdWithSimpleReturn request");
+			System.err.println("sending executeDispatchById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		}
@@ -681,7 +681,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("ExecuteDispatchByIdWithSimpleReturn request finished without exception");
+		System.err.println("executeDispatchById request finished without exception");
 		return retval;
 	}
 	
