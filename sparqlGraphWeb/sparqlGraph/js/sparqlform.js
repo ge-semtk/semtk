@@ -388,7 +388,7 @@ require([	'local/sparqlformconfig',
                                                                                  Config.services.status.url,
                                                                                  Config.services.results.url);
                 var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 5000);
-
+                statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, gConn, runId, null, null, jobIdCallback, failureCallback);
 
             }
@@ -822,7 +822,7 @@ require([	'local/sparqlformconfig',
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
-                
+               setStuatusProgressBar("Running Query", 1);
                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, 
                                                            gConn, 
                                                            gFormConstraint ? gFormConstraint.getConstraintSet() : null, 

@@ -639,6 +639,7 @@
                                                                                  g.service.results.url);
                 var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
 
+                statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, rtConstraints, jsonCallback, failureCallback);
 
             }
@@ -976,8 +977,9 @@
         // PEC HERE
         var rtConstraints = (typeof optRtConstraints == "undefined") ? null : optRtConstraints;
         
-    	require(['sparqlgraph/js/msiclientnodegroupexec'], 
-    	         function (MsiClientNodeGroupExec) {
+    	require(['sparqlgraph/js/msiclientnodegroupexec',
+                 'sparqlgraph/js/modaliidx'], 
+    	         function (MsiClientNodeGroupExec, ModalIidx) {
 			
             guiDisableAll();
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
@@ -988,6 +990,7 @@
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
+            setStatusProgressBar("Running Query", 1);
             switch (getQueryType()) {
 			case "SELECT":
                 client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
@@ -999,7 +1002,22 @@
                 alert("not implemented");
                 break;
 			case "DELETE":
-                client.execAsyncDispatchDeleteFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                var cancelCallback = function () {
+                    guiUnDisableAll();
+                    setStatus("");
+                };
+                
+                var annoyCallback = function (okCall, cancelCall) {
+                    var user = localStorage.getItem("SPARQLgraph_user");
+                    if (user == "200005868" || user.indexOf("Jenny") > -1) {
+                        ModalIidx.okCancel("Really-really sureifier", "Are you really sure you meant to hit the 'Run Delete' button?", okCall, "I'm sure", cancelCall);
+                    } else {
+                        okCall();
+                    }
+                }.bind(this, okCallback, cancelCallback);
+                    
+                ModalIidx.okCancel("Delete query", "Confirm SPARQL DELETE operation.", annoyCallback, "Run Delete", cancelCallback);
                 break;
 			}
             
@@ -1020,7 +1038,7 @@
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
-            
+            setStatusProgressBar("Running Query", 1);
             client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, csvJsonCallback, queryFailureCallback);
 
     	});

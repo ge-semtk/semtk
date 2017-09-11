@@ -95,9 +95,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, sProgress);
                 
             }.bind(this, maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, statusUrl, resultUrl);
-            
-            progressCallback(1);   // just starting
-            
+                        
             return ngExecJobIdCallback;
         };
     
@@ -137,7 +135,6 @@ define([	// properly require.config'ed   bootstrap-modal
                 
             }.bind(this, tableResCallback, failureCallback, progressCallback, statusUrl, resultUrl);
             
-            progressCallback(1);  // just starting
             return ngExecJobIdCallback;
         };
     
