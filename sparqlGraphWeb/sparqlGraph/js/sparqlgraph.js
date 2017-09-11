@@ -1038,8 +1038,22 @@
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
+            guiDisableAll();
             setStatusProgressBar("Running Query", 1);
-            client.execAsyncDispatchRawSparql(document.getElementById('queryText').value, gConn, csvJsonCallback, queryFailureCallback);
+            var sparql = document.getElementById('queryText').value;
+            
+            if (sparql.toLowerCase().indexOf("delete") > -1) {
+                var okCallback = client.execAsyncDispatchRawSparql.bind(client, sparql, gConn, csvJsonCallback, queryFailureCallback);
+            
+                var cancelCallback = function () {
+                    guiUnDisableAll();
+                    setStatus("");
+                };
+                
+                ModalIidx.okCancel("Delete query", "Query may write / delete triples.<br>Confirm you want to run this query.", okCallback, "Run Query", cancelCallback);
+            } else {
+                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, queryFailureCallback);
+            }
 
     	});
     };
