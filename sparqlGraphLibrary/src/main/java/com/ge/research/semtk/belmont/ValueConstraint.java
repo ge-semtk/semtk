@@ -42,4 +42,34 @@ public class ValueConstraint {
 		return this.constraint == null ? "" : this.constraint;
 	}
 	
+	public static String buildFilterConstraint(Returnable item, String oper, String pred)  throws Exception {
+		String ret;
+		
+		if (!(	oper.equals("=") || 
+				oper.equals("!=") ||
+				oper.equals(">") ||
+				oper.equals(">=") ||
+				oper.equals("<") ||
+				oper.equals("<=")) ) {
+			throw new Exception("Unknown operator for constraint: " + oper);
+		}
+		
+		String t = item.getValueType();
+		
+		if (!XSDSupportUtil.supportedType(t)) {
+			throw new Exception("Unknown type for constraint: " + t);
+		}
+		
+		if (XSDSupportUtil.dateOperationAvailable(t)) {
+			ret = String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, pred, XSDSupportUtil.getXsdSparqlTrailer(t));
+		} else if (XSDSupportUtil.regexIsAvailable(t)) {
+			ret = String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, pred, XSDSupportUtil.getXsdSparqlTrailer(t));
+		} else if (XSDSupportedTypes.getMatchingName(t).equals("NODE_URI")) {
+			ret = String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, pred);
+		} else 	{
+			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, pred, XSDSupportUtil.getXsdSparqlTrailer(t));
+		} 
+		return ret;
+	}
+	
 }

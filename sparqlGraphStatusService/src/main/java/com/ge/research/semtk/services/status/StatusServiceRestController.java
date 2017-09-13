@@ -42,7 +42,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 @RestController
 @RequestMapping("/status")
 public class StatusServiceRestController {
- 	
+ 	static final String SERVICE_NAME = "StatusService";
 	@Autowired
 	StatusProperties prop;
 	@Autowired
@@ -70,7 +70,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "getPercentComplete", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "getPercentComplete exception", "message", e.toString());
 		    logToStdout("Status Service getPercentComplete exception message=" + e.toString());
 
@@ -105,7 +105,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "getStatus", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "getStatus exception", "message", e.toString());
 		    logToStdout("Status Service getStatus exception message=" + e.toString());
 
@@ -137,7 +137,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "getStatusMessage", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "statusMessage exception", "message", e.toString());
 		    logToStdout("Status Service statusMessage exception message=" + e.toString());
 	    }
@@ -165,7 +165,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "waitForPercentComplete", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete exception", "message", e.toString());
 		    logToStdout("Status Service waitForPercentComplete exception message=" + e.toString());
 	    }
@@ -193,7 +193,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "setPercentComplete", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "setPercentComplete exception", "message", e.toString());
 		    logToStdout("Status Service setPercentComplete exception message=" + e.toString());
 	    }
@@ -222,7 +222,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "setSuccess", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "setSuccess exception", "message", e.toString());
 		    logToStdout("Status Service setSuccess exception message=" + e.toString());
 	    }
@@ -252,7 +252,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "setFailure", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "setFailure exception", "message", e.toString());
 		    logToStdout("Status Service setFailure exception message=" + e.toString());
 	    }
@@ -280,7 +280,7 @@ public class StatusServiceRestController {
 		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "deleteJob", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "deleteJob exception", "message", e.toString());
 		    logToStdout("Status Service deleteJob exception message="+ e.toString());
 	    }

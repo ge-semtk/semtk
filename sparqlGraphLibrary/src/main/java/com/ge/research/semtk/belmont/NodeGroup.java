@@ -757,7 +757,7 @@ public class NodeGroup {
 	 * Get all returnable items in query "order"
 	 * @return
 	 */
-	private ArrayList<Returnable> getReturnedItems() {
+	public ArrayList<Returnable> getReturnedItems() {
 		ArrayList<Returnable> ret = new ArrayList<Returnable>();
 		
 		for(Node n : this.getOrderedNodeList()) {
@@ -776,7 +776,7 @@ public class NodeGroup {
 	 * @param id
 	 * @return
 	 */
-	private Returnable getItemBySparqlID(String id) {
+	public Returnable getItemBySparqlID(String id) {
         for (Node n : this.nodes) {
             if (n.getSparqlID().equals(id)) {
                 return n;

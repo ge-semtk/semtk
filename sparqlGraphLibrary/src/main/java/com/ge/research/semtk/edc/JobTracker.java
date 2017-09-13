@@ -54,7 +54,7 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?percentComplete where {  \n" +
+	    	"	select distinct ?Job ?percentComplete where {  \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 	    	"	   ?Job job:percentComplete ?percentComplete .  \n" +
@@ -66,9 +66,10 @@ public class JobTracker {
 	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
 	    
 	    if (trList.length > 1) {
+	    	System.err.println("getJobPercentComplete found multiple percentComplete entries:\n%s" + endpoint.getResponse());
 	    	throw new Exception(String.format("Job %s has %d percentComplete entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
-	    	if (! jobExists(jobId) ) {
+	    	if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
 	    		throw new Exception(String.format("Can't find percent complete for Job %s",  jobId));
@@ -97,8 +98,8 @@ public class JobTracker {
 	
 	public void setJobPercentComplete(String jobId, int percentComplete, String message) throws Exception {	    
 	   
-	    if (! jobExists(jobId)) {
-	    	createJob(jobId);
+	    if (! this.jobExists(jobId)) {
+	    	this.createJob(jobId);
 	    }
 	    
 	    if (percentComplete < 0) { 
@@ -146,8 +147,8 @@ public class JobTracker {
 	 */
 	public void setJobFailure(String jobId, String statusMessage) throws Exception {
 		
-		if (! jobExists(jobId)) {
-	    	createJob(jobId);
+		if (! this.jobExists(jobId)) {
+	    	this.createJob(jobId);
 	    }
 	  
 	    String query = String.format("  \n" +
@@ -206,7 +207,7 @@ public class JobTracker {
 		if (trList.length > 1) {
 			throw new Exception(String.format("Job %s has %d status entries.  Expecting 1.", jobId, trList.length));
 		} else if (trList.length == 0) {
-			if (! jobExists(jobId) ) {
+			if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
 	    		throw new Exception(String.format("Can't find status for Job %s",  jobId));
@@ -241,7 +242,7 @@ public class JobTracker {
 		if (trList.length > 1) {
 			throw new Exception(String.format("Job %s has %d statusMessage entries.  Expecting 1.", jobId, trList.length));
 		} else if (trList.length == 0) {
-			if (! jobExists(jobId) ) {
+			if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
 	    		throw new Exception(String.format("Can't find status message for Job %s",  jobId));
@@ -257,14 +258,14 @@ public class JobTracker {
 	 * @param jobId
 	 * @throws Exception
 	 */
-public void setJobSuccess(String jobId) throws Exception {
-	setJobSuccess(jobId, "");
-}
-	
-public void setJobSuccess(String jobId, String statusMessage) throws Exception {
+	public void setJobSuccess(String jobId) throws Exception {
+		setJobSuccess(jobId, "");
+	}
 		
-		if (! jobExists(jobId)) {
-	    	createJob(jobId);
+	public void setJobSuccess(String jobId, String statusMessage) throws Exception {
+		
+		if (! this.jobExists(jobId)) {
+	    	this.createJob(jobId);
 	    }
 	    
 	    String query = String.format("  \n" +
@@ -308,8 +309,8 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	 */
 	public void setJobResultsURL(String jobId, URL fullResultsURL) throws Exception {
 		
-		if (! jobExists(jobId)) {
-	    	createJob(jobId);
+		if (! this.jobExists(jobId)) {
+	    	this.createJob(jobId);
 	    }
 		
 		URL sampleResultsURL = null;	// temporary measure to disable sample while not changing SPARQL query.  Matching functionality of removed utility method. 
@@ -381,7 +382,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full restults URL entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
-	    	if (! jobExists(jobId) ) {
+	    	if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
 	    		throw new Exception(String.format("Can't find full URL for Job %s",  jobId));
@@ -419,7 +420,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full restults URL entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
-	    	if (! jobExists(jobId) ) {
+	    	if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
 	    		throw new Exception(String.format("Can't find sample URL for Job %s",  jobId));
@@ -446,15 +447,21 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 		
 		// Caller must first ensure that job doesn't exist
 		
-		String uri = String.format("<Job_%s>", UUID.randomUUID().toString());
+		//Changed while debugging double percentComplete problem
+		//PEC 9/13;2017
+		//String uri = String.format("<Job_%s>", UUID.randomUUID().toString());
+		String uri = String.format("<Job_%s>", jobId);
+		
 	    String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "INSERT  {%s a job:Job.  %s job:id '%s'^^XMLSchema:string. "
-	        + "%s job:percentComplete '0'^^XMLSchema:integer. "
-	        + "%s job:creationTime '%s'^^XMLSchema:dateTime."
-	        + "} \n",
+	        "INSERT  {\n" +
+	        "%s a job:Job. \n" + 
+	        "%s job:id '%s'^^XMLSchema:string. \n" +
+	        "%s job:percentComplete '0'^^XMLSchema:integer. \n" +
+	        "%s job:creationTime '%s'^^XMLSchema:dateTime. \n" +
+	        "}",
 	    	uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri, uri, xsdFormat.format(initialDate));
 	    System.err.println(query);
 	    try {
@@ -580,7 +587,7 @@ public void setJobSuccess(String jobId, String statusMessage) throws Exception {
 		
 		// wait maximum of this.prop.jobMaxWatiMsec
 		while (totalMsec < maxWaitMsec) {
-			if (getJobPercentComplete(jobId) >= percentComplete) {
+			if (this.getJobPercentComplete(jobId) >= percentComplete) {
 				return;
 			}
 			// wait 1/4 seconds longer each time until 3 seconds

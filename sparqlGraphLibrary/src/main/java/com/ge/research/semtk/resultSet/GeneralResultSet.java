@@ -57,8 +57,19 @@ public abstract class GeneralResultSet {
 		return success;		
 	}
 	
+	// deprecate please -Paul 9/13/2017
 	public void addRationaleMessage(String message){
 		this.rationale.add(message);
+	}
+	
+	// for NON-exceptions
+	public void addRationaleMessage(String serviceName, String endpoint, String message) {
+		this.rationale.add(String.format("%s/%s error: %s", serviceName, endpoint, message));
+	}
+	
+	// for exceptions
+	public void addRationaleMessage(String serviceName, String endpoint, Exception e) {
+		this.rationale.add(String.format("%s/%s threw exception.  Message: %s", serviceName, endpoint, e.getMessage()));
 	}
 	
 	public String getRationaleAsString(String delimiter){

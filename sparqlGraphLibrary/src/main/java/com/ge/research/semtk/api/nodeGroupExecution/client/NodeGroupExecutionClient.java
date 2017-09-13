@@ -302,7 +302,8 @@ public class NodeGroupExecutionClient extends RestClient {
 		if (this.executeGetJobStatusIsSuccess(jobId)) {
 			return this.executeGetResultsTable(jobId);
 		} else {
-			throw new Exception(this.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			String msg = this.executeGetJobStatusMessageWithSimpleReturn(jobId);
+			throw new Exception(String.format("Job %s failed with message='%s'", jobId, msg));
 		}
 	}
 	
@@ -383,6 +384,13 @@ public class NodeGroupExecutionClient extends RestClient {
 	 */
 	public Long executeDispatchCountByIdToLong(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet ret =  this.executeDispatchCountById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+		
+		Table tab = this.waitForJobAndGetTable(ret.getResult("JobId"));
+		return tab.getCellAsLong(0, 0);
+	}
+	
+	public Long executeDispatchCountByNodegroupToLong(NodeGroup nodegroup, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+		SimpleResultSet ret =  this.executeDispatchCountFromNodeGroup(nodegroup, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 		
 		Table tab = this.waitForJobAndGetTable(ret.getResult("JobId"));
 		return tab.getCellAsLong(0, 0);
@@ -500,7 +508,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
-			retval.throwExceptionIfUnsuccessful();
+			retval.throwExceptionIfUnsuccessful("Error at " + mappingPrefix + dispatchSelectFromNodegroupEndpoint);
 		}
 		finally{
 			conf.setServiceEndpoint(null);
