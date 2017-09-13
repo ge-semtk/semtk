@@ -822,7 +822,7 @@ require([	'local/sparqlformconfig',
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
-               setStuatusProgressBar("Running Query", 1);
+               setStatusProgressBar("Running Query", 1);
                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, 
                                                            gConn, 
                                                            gFormConstraint ? gFormConstraint.getConstraintSet() : null, 

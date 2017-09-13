@@ -232,19 +232,19 @@ SparqlFormatter.prototype = {
             if (!v) v = "?other";
 			if (!op) op = "!=";
             
-            ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + v + ")";			
+            ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " <" + v + ">)";			
             
 		} else if (itemType == "date") {
 			if (!v) v = '1/21/2003';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "date)";
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + "date)";
 			
 		} else if (itemType == "dateTime") {
 			if (!v) v = '2011-12-03T10:15:30';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "dateTime)";
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^"+ SemanticNodeGroup.XMLSCHEMA_PREFIX + "dateTime)";
 			
 		} else {
 			if (!v) v = 'something';
