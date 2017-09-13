@@ -52,6 +52,15 @@ public class CSVDataset extends Dataset {
 	 * NOTE: if want to only specify a path without headers, then use constructor below with isFileContent=FALSE
 	 */
 	public CSVDataset(String path, String[] headers) throws Exception{
+		
+		// strip the potential Byte Order Marker from the first header before moving on... 
+		if(headers[0].charAt(0) == 65279){
+			// log this specific alteration:
+			System.err.println("first header is led by a Byte Order Marker. it has been removed to prevent issues in parsing.");
+			String newFirstHeader = headers[0].substring(1);
+			headers[0] = newFirstHeader;
+		}
+		
 		initialize(path, headers);
 	}
 	
@@ -64,9 +73,19 @@ public class CSVDataset extends Dataset {
 	public CSVDataset(String filePathOrContent, boolean isFileContent) throws Exception {
 		
 		if(isFileContent){
+			// check for a BOM at the start. if it is there, remove it.
+			if(filePathOrContent.charAt(0) == 65279){ 
+				System.err.println("first header is led by a Byte Order Marker. it has been removed to prevent issues in parsing.");
+				filePathOrContent = filePathOrContent.substring(1); 
+			}
+			
 			this.csvString = filePathOrContent;	
 		}else{
 			this.csvString = FileUtils.readFileToString(new File(filePathOrContent));
+			if(this.csvString.charAt(0) == 65279){
+				System.err.println("first header is led by a Byte Order Marker. it has been removed to prevent issues in parsing.");
+				this.csvString = this.csvString.substring(1);
+			}
 		}
 		CSVParser parser = getParser(new StringReader(this.csvString));
 		this.recordIterator = parser.iterator();
