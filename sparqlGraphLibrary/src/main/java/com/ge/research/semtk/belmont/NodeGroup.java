@@ -2062,7 +2062,9 @@ public class NodeGroup {
 		if(whereBody.length() != 0){	// there might be no where clause... 
 			retval.append("\nWHERE {\n" + whereBody + "}\n");
 		}
-			
+		
+		retval.append(this.generateLimitClause(-1));
+
 		return retval.toString();
 	}
 
