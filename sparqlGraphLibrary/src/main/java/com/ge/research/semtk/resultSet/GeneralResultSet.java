@@ -57,9 +57,13 @@ public abstract class GeneralResultSet {
 		return success;		
 	}
 	
-	// deprecate please -Paul 9/13/2017
-	public void addRationaleMessage(String message){
-		this.rationale.add(message);
+	// -Paul 9/13/2017
+	// From functions that aren't in a rest client, try to throw exceptions
+	// instead of building a ResultSet with an ambiguous source.
+	// Inside the rest client, catch the exception and
+	// use one of the addRationaleMessage(serviceName, endpoint, ...) methods 
+	public void addRationaleMessage(String avoid_where_possible_msg){
+		this.rationale.add(avoid_where_possible_msg);
 	}
 	
 	// for NON-exceptions

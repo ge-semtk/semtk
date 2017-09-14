@@ -42,7 +42,8 @@ import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlI
 @RequestMapping("/nodeGroup")
 @CrossOrigin
 public class NodeGroupServiceRestController {
-	
+ 	static final String SERVICE_NAME = "nodeGroupService";
+
 	public static final String QUERYFIELDLABEL = "SparqlQuery";
 	public static final String QUERYTYPELABEL = "QueryType";
 	public static final String INVALID_SPARQL_RATIONALE_LABEL = "InvalidSparqlRationale";
@@ -81,10 +82,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput(ise.getMessage());
+			retval = this.generateNoValidSparqlOutput("generateSelect", ise.getMessage());
 		}
 		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateSelect", eee);
 			eee.printStackTrace();
 		}
 		
@@ -104,10 +106,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput(ise.getMessage());
+			retval = this.generateNoValidSparqlOutput("generateCountAll", ise.getMessage());
 		}
 		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateCountAll", eee);
 			eee.printStackTrace();
 		}
 		
@@ -127,10 +130,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput(ise.getMessage());
+			retval = this.generateNoValidSparqlOutput("generateDelete", ise.getMessage());
 		}
 		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateDelete", eee);
 			eee.printStackTrace();
 		}
 		
@@ -154,10 +158,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput(ise.getMessage());
+			retval = this.generateNoValidSparqlOutput("generateFilter", ise.getMessage());
 		}
 		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateFilter", eee);
 			eee.printStackTrace();
 		}
 		
@@ -177,10 +182,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput(ise.getMessage());
+			retval = this.generateNoValidSparqlOutput("generateAsk", ise.getMessage());
 		}
 		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateAsk", eee);
 			eee.printStackTrace();
 		}
 		
@@ -200,10 +206,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput(ise.getMessage());
+			retval = this.generateNoValidSparqlOutput("generateConstruct", ise.getMessage());
 		}
 		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "generateConstruct", eee);
 			eee.printStackTrace();
 		}
 		
@@ -223,7 +230,7 @@ public class NodeGroupServiceRestController {
 		}
 		catch(Exception eee){
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(eee.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraints", eee);
 			eee.printStackTrace();
 		}
 		
@@ -257,10 +264,11 @@ public class NodeGroupServiceRestController {
 	 * SPARQL can't be generated. 
 	 * e.g. SELECT DISTINCT but nothing isReturned in the nodegroup
 	 */
-	private SimpleResultSet generateNoValidSparqlOutput(String message) {
+	private SimpleResultSet generateNoValidSparqlOutput(String endpoint, String message) {
 		// Failure SimpleResultSet
-		SimpleResultSet retval = new SimpleResultSet(false, "SPARQL query can't be generated from this nodegroup");
-		
+		SimpleResultSet retval = new SimpleResultSet(false);
+		retval.addRationaleMessage(SERVICE_NAME, endpoint, "SPARQL query can't be generated from this nodegroup");
+
 		// InvalidSparqlRationale
 		retval.addResult(INVALID_SPARQL_RATIONALE_LABEL, message);
 		

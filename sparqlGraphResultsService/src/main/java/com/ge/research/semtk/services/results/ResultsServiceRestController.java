@@ -66,7 +66,8 @@ import com.ge.research.semtk.utility.Utility;
 @RestController
 @RequestMapping("/results")
 public class ResultsServiceRestController {
-	
+ 	static final String SERVICE_NAME = "ResultsService";
+
 	@Autowired
 	ResultsProperties prop;
 	@Autowired
@@ -94,7 +95,7 @@ public class ResultsServiceRestController {
 		    res.setSuccess(true);
 		} catch(Exception e){
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonInitialize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize exception", "message", e.toString());
 		    e.printStackTrace();
 		}    	
@@ -129,7 +130,7 @@ public class ResultsServiceRestController {
 		}
 		catch(Exception e){
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonAddIncremental", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
 		    e.printStackTrace();
 		}    	
@@ -156,7 +157,7 @@ public class ResultsServiceRestController {
 		    res.setSuccess(true);
 		} catch(Exception e){
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonFinalize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize exception", "message", e.toString());
 		    e.printStackTrace();
 		}    	
@@ -245,7 +246,8 @@ public class ResultsServiceRestController {
 			retTrue = new SimpleResultSet(true);
 			retTrue.addResult("rowCount", retval);
 	    } catch (Exception e) {
-		    retTrue = new SimpleResultSet(false, e.getMessage());
+		    retTrue = new SimpleResultSet(false);
+		    retTrue.addRationaleMessage(SERVICE_NAME, "getTableResultsRowCount", e);
 	    }
 		
 		return retTrue.toJson(); 
@@ -317,7 +319,7 @@ public class ResultsServiceRestController {
 		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "getResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults exception", "message", e.toString());
 		    e.printStackTrace();
 	    }	    
@@ -346,7 +348,7 @@ public class ResultsServiceRestController {
 		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "deleteStorage", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage exception", "message", e.toString());
 	    }	    
 	    return res.toJson();
