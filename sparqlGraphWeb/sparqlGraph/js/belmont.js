@@ -983,7 +983,9 @@ SemanticNode.prototype = {
 			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
 		    // Inflate (create) it.
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
-				
+				if (oPropKeyname in nodeItemHash) {
+                    throw "Node property " + oPropURI + " has range " + oProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
+                }
 				var propItem = new PropertyItem(oProp.getNameStr(true), 
 												oProp.getRangeStr(true),
 												oProp.getRangeStr(false),
