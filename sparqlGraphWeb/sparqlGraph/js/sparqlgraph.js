@@ -828,19 +828,34 @@
     var doQueryLoadFile2 = function(sgJson) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
-    	clearGraph();
-    	logEvent("SG Loaded Nodegroup");
-        
-    	sgJson.getNodeGroup(gNodeGroup, gOInfo);
-	    gNodeGroup.setSparqlConnection(gConn);
-        
-        drawNodeGroup();
-		guiGraphNonEmpty();
-        nodeGroupChanged(false);
-		
-        buildQuery();
-        
-		gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
+    	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper'], 
+                function(ModalIidx, IIDXHelper) {
+            
+            clearGraph();
+            logEvent("SG Loaded Nodegroup");
+            
+            try {
+                sgJson.getNodeGroup(gNodeGroup, gOInfo);
+                gNodeGroup.setSparqlConnection(gConn);
+            } catch (e) {
+                ModalIidx.choose("Error loading nodegroup",
+                                 (e.hasOwnProperty("message") ? e.message : e) + "<br><hr>Would you like to save a copy of the nodegroup?",
+                                 ["Yes", "No"],
+                                 [IIDXHelper.downloadFile.bind(this, sgJson.stringify(), "nodegroup_err.json", "text/csv;charset=utf8"), function(){}]
+                                 );
+                                 
+                return;
+            }
+
+            drawNodeGroup();
+            guiGraphNonEmpty();
+            nodeGroupChanged(false);
+
+            buildQuery();
+
+            gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
+            
+        });
     };
 
     var doNodeGroupUpload = function () {

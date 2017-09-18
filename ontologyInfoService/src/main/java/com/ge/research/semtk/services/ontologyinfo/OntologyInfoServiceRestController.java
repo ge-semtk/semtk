@@ -36,6 +36,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 @RestController
 @RequestMapping("/ontologyinfo")
 public class OntologyInfoServiceRestController {
+ 	static final String SERVICE_NAME = "sparqlQueryService";
 
 	@Autowired
 	OntologyInfoLoggingProperties log_prop;
@@ -81,7 +82,7 @@ public class OntologyInfoServiceRestController {
 	    	
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "getVisJs", e);
 		    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs exception", "message", e.toString());
 		    e.printStackTrace();
 	    }
@@ -124,7 +125,7 @@ public class OntologyInfoServiceRestController {
 	    	
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
-	    	res.addRationaleMessage(e.toString());
+	    	res.addRationaleMessage(SERVICE_NAME, "getDetailedOntologyInfo", e);
 		    LoggerRestClient.easyLog(logger, "OntologyInfoService", "toJSON exception", "message", e.toString());
 		    e.printStackTrace();
 	    }
@@ -144,7 +145,7 @@ public class OntologyInfoServiceRestController {
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(eee.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getRdfOWL", eee);
 			eee.printStackTrace();
 		}
 		
@@ -163,7 +164,7 @@ public class OntologyInfoServiceRestController {
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(eee.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getSADL", eee);
 			eee.printStackTrace();
 		}
 		

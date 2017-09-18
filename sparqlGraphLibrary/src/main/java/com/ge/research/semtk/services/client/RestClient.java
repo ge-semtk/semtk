@@ -150,7 +150,13 @@ public abstract class RestClient extends Client implements Runnable {
 
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
-		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);
+		
+		HttpResponse httpresponse = null;
+		try {
+			httpresponse = httpclient.execute(targetHost, httppost);
+		} catch (Exception e) {
+			throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);
+		}
 		
 		// handle the output			
 		String responseTxt = EntityUtils.toString(httpresponse.getEntity(), "UTF-8");

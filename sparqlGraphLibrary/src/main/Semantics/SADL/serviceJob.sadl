@@ -13,4 +13,5 @@ Job is a class,
 	described by statusMessage with a single value of type string,
 	described by percentComplete with a single value of type int,
 	described by fullResultsURL with a single value of type URL,
+	described by creationTime with a single value of type dateTime,
 	described by sampleResultsURL with a single value of type URL.

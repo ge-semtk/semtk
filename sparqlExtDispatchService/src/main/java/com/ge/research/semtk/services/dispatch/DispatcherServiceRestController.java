@@ -57,7 +57,8 @@ import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryT
 @RestController
 @RequestMapping("/dispatcher")
 public class DispatcherServiceRestController {
-
+ 	static final String SERVICE_NAME = "dispatcher";
+ 	
 	@Autowired
 	DispatchProperties props;
 	
@@ -133,7 +134,7 @@ public class DispatcherServiceRestController {
 			e.printStackTrace();
 
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "../queryFromSparql()", e);
 			
 			// claim a failure?
 			StatusClient sClient = null;
@@ -187,7 +188,7 @@ public class DispatcherServiceRestController {
 			e.printStackTrace();
 
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "../queryFromNodegroup()", e);
 			
 			// claim a failure?
 			StatusClient sClient = null;
@@ -233,7 +234,7 @@ public class DispatcherServiceRestController {
 			e.printStackTrace();
 
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.toString());
+			retval.addRationaleMessage(SERVICE_NAME, "getConstraintInfo", e);
 			
 		}
 		// send back the request ID.

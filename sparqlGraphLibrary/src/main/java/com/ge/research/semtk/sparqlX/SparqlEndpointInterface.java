@@ -284,35 +284,24 @@ public abstract class SparqlEndpointInterface {
 	 * 	  NodeGroupResultSet for a construct query (success or failure)
 	 *    SimpleResultSet for an auth query (success or failure)
 	 */
-	public GeneralResultSet executeQueryAndBuildResultSet(String query, SparqlResultTypes resultType) {
+	public GeneralResultSet executeQueryAndBuildResultSet(String query, SparqlResultTypes resultType) throws Exception {
 		
 		// construct an empty result object to store the results
 		GeneralResultSet resultSet = null;
-		try{			
-			if(resultType == SparqlResultTypes.GRAPH_JSONLD){ 
-				resultSet = new NodeGroupResultSet();  // construct queries produce graphs
-			}else if(resultType == SparqlResultTypes.CONFIRM){
-				resultSet = new SimpleResultSet();		// auth queries produce messages
-			}else if(resultType == SparqlResultTypes.TABLE){	
-				resultSet = new TableResultSet(); // non-construct queries produce tables
-			}
-		}catch(Exception e){
-			// should never get here, but if it does it will return a SimpleResultSet with an error
-			e.printStackTrace();	
-			resultSet = new SimpleResultSet(false, e.getMessage());  
+				
+		if(resultType == SparqlResultTypes.GRAPH_JSONLD){ 
+			resultSet = new NodeGroupResultSet();  // construct queries produce graphs
+		}else if(resultType == SparqlResultTypes.CONFIRM){
+			resultSet = new SimpleResultSet();		// auth queries produce messages
+		}else if(resultType == SparqlResultTypes.TABLE){	
+			resultSet = new TableResultSet(); // non-construct queries produce tables
 		}
 		
-		try{
-			// execute the query
-			JSONObject result = executeQuery(query, resultType); 			
-			resultSet.setSuccess(true);
-			resultSet.addResultsJSON(result);
-		}catch(Exception e){
-			// error executing query - return the appropriate ResultSet subtype with failure and message
-			e.printStackTrace();	
-			resultSet.setSuccess(false);
-			resultSet.addRationaleMessage(e.getMessage());
-		}
+		// execute the query
+		JSONObject result = executeQuery(query, resultType); 			
+		resultSet.setSuccess(true);
+		resultSet.addResultsJSON(result);
+		
 		return resultSet;
 	}	
 	

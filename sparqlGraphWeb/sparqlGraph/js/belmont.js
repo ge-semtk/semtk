@@ -232,19 +232,19 @@ SparqlFormatter.prototype = {
             if (!v) v = "?other";
 			if (!op) op = "!=";
             
-            ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + v + ")";			
+            ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " <" + v + ">)";			
             
 		} else if (itemType == "date") {
 			if (!v) v = '1/21/2003';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "date)";
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + "date)";
 			
 		} else if (itemType == "dateTime") {
 			if (!v) v = '2011-12-03T10:15:30';
 			if (!op) op = "=";
 
-			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + SemanticNodeGroup.XMLSCHEMA_PREFIX + "dateTime)";
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " '" + v + "'^^"+ SemanticNodeGroup.XMLSCHEMA_PREFIX + "dateTime)";
 			
 		} else {
 			if (!v) v = 'something';
@@ -983,7 +983,9 @@ SemanticNode.prototype = {
 			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
 		    // Inflate (create) it.
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
-				
+				if (oPropKeyname in nodeItemHash) {
+                    throw "Node property " + oPropURI + " has range " + oProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
+                }
 				var propItem = new PropertyItem(oProp.getNameStr(true), 
 												oProp.getRangeStr(true),
 												oProp.getRangeStr(false),

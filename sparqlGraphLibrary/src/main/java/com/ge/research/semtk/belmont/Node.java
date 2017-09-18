@@ -242,9 +242,14 @@ public class Node extends Returnable {
 				
 				propItemHash.remove(oPropURI);
 				
-			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)  
-		    // Uncompress (create) it.
+			// else ontology property is not in this Node.  AND its range is outside the model (it's a Property)  
+		    // Inflate (create) it.
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
+				
+				if (nodeItemHash.containsKey(oPropKeyname)) {
+					throw new Exception(String.format("Node property %s has range %s in the nodegroup, which can't be found in model.", oPropURI, oProp.getRangeStr()));
+				}
+				
 				PropertyItem propItem = new PropertyItem(	oProp.getNameStr(true), 
 															oProp.getRangeStr(true), 
 															oProp.getRangeStr(false),

@@ -59,7 +59,7 @@ import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 @RestController
 @RequestMapping("/sparqlQueryService")
 public class SparqlQueryServiceRestController {			
-	
+ 	static final String SERVICE_NAME = "sparqlQueryService";
 	
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
@@ -94,23 +94,29 @@ public class SparqlQueryServiceRestController {
 			
 			// disallow running drop graph query here (keep this check first, before the subsequent check)
 			if(SparqlResultTypes.isDropGraphQuery(requestBody.query)){ 
-				return (new SimpleResultSet(false, "This query must be run using the /dropGraph endpoint")).toJson();
+				SimpleResultSet res = new SimpleResultSet(false);
+				res.addRationaleMessage(SERVICE_NAME, "query", "This query must be run using the /dropGraph endpoint");
+				return res.toJson();
 			}
 			// disallow running auth queries here (they'll get rejected later anyway)
 			if(SparqlResultTypes.valueOf(requestBody.resultType) == SparqlResultTypes.CONFIRM){ 
-				return (new SimpleResultSet(false, "A query expecting resultType " + requestBody.resultType + " must be run using the /queryAuth endpoint")).toJson();
+				SimpleResultSet res = new SimpleResultSet(false);
+				res.addRationaleMessage(SERVICE_NAME, "query", "A query expecting resultType " + requestBody.resultType + " must be run using the /queryAuth endpoint");
+				return res.toJson();
 			}
 		
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 			
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset);
-		
+			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
+			
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "query", e);
 		}
 			
-		resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 		return resultSet.toJson();
 		
 	}		
@@ -142,12 +148,15 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
-		
+			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
+			
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "queryAuth", e);
+			return resultSet.toJson();
 		}		
-		resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 		System.out.println("Result code:" + resultSet.getResultCodeString());
 		return resultSet.toJson();
 	}	
@@ -173,12 +182,16 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			String dropGraphQuery = "drop graph <" + requestBody.dataset + ">";  // drop query
+			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
+			
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "dropGraph", e);
 		}		
-		String dropGraphQuery = "drop graph <" + requestBody.dataset + ">";  // drop query
-		resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
+		
 		return resultSet.toJson();
 	}	
 	
@@ -206,10 +219,16 @@ public class SparqlQueryServiceRestController {
 			return tableResultSetJSON;			
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			GeneralResultSet resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", e);
+			return resultSet.toJson();
 		} catch (Throwable e) {
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			GeneralResultSet resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", "Throwable: " + e.getMessage());
+			return resultSet.toJson();
 		}
 	}	
 
@@ -268,12 +287,16 @@ public class SparqlQueryServiceRestController {
 					"}", 
 					requestBody.prefix, requestBody.prefix, requestBody.prefix);
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+			
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "clearPrefix", e);
+			return resultSet.toJson();
 		}	
 		
-		resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		return resultSet.toJson();
 	}	
 	/**
@@ -298,12 +321,16 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			String query = "clear all";  // drop query
+			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "clearAll", e);
+			return resultSet.toJson();
 		}		
-		String query = "clear all";  // drop query
-		resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+		
 		return resultSet.toJson();
 	}	
 	
@@ -347,7 +374,10 @@ public class SparqlQueryServiceRestController {
 			 
 		} catch (Exception e) {			
 			e.printStackTrace();	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "uploadOwl", e);
+			return resultSet.toJson();
 		}		
 		
 		return simpleResultSetJson;	

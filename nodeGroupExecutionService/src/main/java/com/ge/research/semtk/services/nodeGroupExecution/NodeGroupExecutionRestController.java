@@ -70,7 +70,8 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 @RestController
 @RequestMapping("/nodeGroupExecution")
 public class NodeGroupExecutionRestController {
-
+ 	static final String SERVICE_NAME = "nodeGroupExecutionService";
+ 	
 	@Autowired
 	NodegroupExecutionProperties prop;
 	
@@ -91,7 +92,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
 		}
 	
 		return retval.toJson();
@@ -114,7 +115,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "jobStatusMessage", e);
 		}
 	
 		return retval.toJson();
@@ -142,7 +143,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionCheck", e);
 		}
 	
 		return retval.toJson();
@@ -166,7 +167,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionPercentage", e);
 		}
 	
 		return retval.toJson();
@@ -187,7 +188,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new TableResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
 		}
 		return retval.toJson();
 	}
@@ -238,7 +239,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new TableResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getResultsLocation", e);
 		}
 	
 		return retval.toJson();
@@ -285,7 +286,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "dispatchAnyJobById", e);
 		}
 	
 		return retval.toJson();
@@ -352,7 +353,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "../dispatchAnyJobById()", e);
 		}
 	
 		return retval.toJson();
@@ -451,7 +452,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
 		}
 	
 		return retval.toJson();
@@ -485,9 +486,9 @@ public class NodeGroupExecutionRestController {
 			NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
 			retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
 		}
-		catch(Exception eee){
+		catch(Exception e){
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(eee.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroupID", e);
 		}
 		
 		return retval.toJson();
@@ -506,9 +507,9 @@ public class NodeGroupExecutionRestController {
 			retval.addResults( rtci.getConstrainedItemsDescription() );
 		
 		}
-		catch(Exception eee){
+		catch(Exception e){
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(eee.getMessage());
+			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroup", e);
 		}
 		
 		return retval.toJson();
