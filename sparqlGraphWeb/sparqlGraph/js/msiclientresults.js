@@ -94,7 +94,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                         if ( table == null) {
                             this.doFailureCallback(resultSet, 
-                                                   "Results service getTableResultsJson did not return a table.",
+                                                   "Results service getTableResultsJson did not return a table."
                                                    );
                         } else {
                             tableCallback0(resultSet);
