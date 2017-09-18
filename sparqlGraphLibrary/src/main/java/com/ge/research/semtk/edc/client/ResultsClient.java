@@ -190,6 +190,12 @@ public class ResultsClient extends RestClient implements Runnable {
 				numRowsToRetrieve = maxRows.intValue();
 			}
 			int numBatches = (int)Math.ceil((double)numRowsToRetrieve / (double)BATCH_SIZE_RETRIEVE);  
+			
+			if(numBatches == 0){
+				// fixes an issue where the results cannot be returned when the result set had no rows. 
+				numBatches = 1;
+			}
+			
 			ArrayList<TableResultSet> resultSets = new ArrayList<TableResultSet>();
 			
 			// kick off all threads
