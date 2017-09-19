@@ -549,7 +549,7 @@ require([	'local/sparqlformconfig',
 					return;
 				}
 				var nodeItem = testSNode[0].getNodeItemByKeyname(itemKeyName);
-				if (nodeItem != null && nodeItem.getSNodes().length > 0) {
+				if (nodeItem != null && nodeItem.getSNodes().length > 0 && nodeItem.getSNodes()[0].getIsReturned()) {
 					alertUser("Item is already on the form: " + itemKeyName);
 					return;
 				}
@@ -990,7 +990,7 @@ require([	'local/sparqlformconfig',
 			kdlLogEvent("SF: Upload Query");
         };
     
-        addMissingFormRows = function(id) {
+        addMissingFormRows = function() {
             var sNodeList = gNodeGroup.getSNodeList();
             for (var i=0; i < sNodeList.length; i++) {
                 
