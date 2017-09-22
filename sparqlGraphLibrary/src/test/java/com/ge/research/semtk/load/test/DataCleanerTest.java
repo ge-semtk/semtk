@@ -38,8 +38,6 @@ import com.ge.research.semtk.utility.Utility;
 
 public class DataCleanerTest {
 
-	
-	@SuppressWarnings("unchecked")
 	@Test 
 	public void test_WithJSONSpecs() throws IOException {
 
@@ -101,7 +99,6 @@ public class DataCleanerTest {
 	}	
 	
 	
-	@SuppressWarnings("unchecked")
 	@Test 
 	public void test_RemoveNulls() throws IOException {
 
@@ -143,7 +140,6 @@ public class DataCleanerTest {
 	}	
 	
 	
-	@SuppressWarnings("unchecked")
 	@Test 
 	public void test_RemoveNA() throws IOException {
 
@@ -247,7 +243,6 @@ public class DataCleanerTest {
 	}		
 	
 
-	@SuppressWarnings("unchecked")
 	@Test 
 	public void test_NoLowerCase() throws IOException {
 
@@ -370,7 +365,6 @@ public class DataCleanerTest {
 		}
 	}	
 	
-	@SuppressWarnings("unchecked")
 	@Test 
 	public void test_SOHDelimiter() throws IOException {
 
@@ -407,5 +401,6 @@ public class DataCleanerTest {
 			if(reader != null){	reader.close(); }
 		}
 	}	
+
 	
 }

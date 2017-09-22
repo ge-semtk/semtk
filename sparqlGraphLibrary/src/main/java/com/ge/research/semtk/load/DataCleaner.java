@@ -95,6 +95,7 @@ public class DataCleaner {
 	/**
 	 * Parse a JSON object containing the cleaning specs
 	 */
+	@SuppressWarnings("unchecked")
 	private void parseCleanSpecJson(JSONObject cleanSpecJson) throws Exception{
 
 		if(cleanSpecJson == null){
@@ -102,6 +103,7 @@ public class DataCleaner {
 		}
 
 		// add lower case specs
+		// e.g. "LOWERCASE":["child_names","has_pool"]
 		JSONArray lowercaseObj = (JSONArray) cleanSpecJson.get(JSON_KEY_LOWERCASE);
 		if(lowercaseObj != null){
 			for(Object jObj : (JSONArray) cleanSpecJson.get(JSON_KEY_LOWERCASE)){
@@ -110,6 +112,7 @@ public class DataCleaner {
 		}
 
 		// add split specs
+		// e.g. "SPLIT":{"pet_names":"##","child_names":"~"}
 		JSONObject splitObj = (JSONObject) cleanSpecJson.get(JSON_KEY_SPLIT);
 		if(splitObj != null){
 			for(String s : (Set<String>)splitObj.keySet()){
@@ -118,6 +121,7 @@ public class DataCleaner {
 		}
 		
 		// add remove nulls specs
+		// e.g. "REMOVE_NULLS":"true"
 		String removeNullsVal = (String) cleanSpecJson.get(JSON_KEY_REMOVE_NULLS);
 		if(removeNullsVal != null){
 			if(removeNullsVal.toString().toLowerCase().equals("true")){
@@ -126,6 +130,7 @@ public class DataCleaner {
 		}
 		
 		// add remove N/A specs
+		// e.g. "REMOVE_NA":"true"
 		String removeNAVal = (String) cleanSpecJson.get(JSON_KEY_REMOVE_NA);
 		if(removeNAVal != null){
 			if(removeNAVal.toString().toLowerCase().equals("true")){
@@ -204,32 +209,38 @@ public class DataCleaner {
 	 */
 	public int cleanData() throws Exception{
 
-		numRowsProcessed = 0;
-		numRowsProduced = 0;
+		try{
 
-		// iterate through the dataset
-		ArrayList<ArrayList<String>> rows;
-		while(true){					
+			numRowsProcessed = 0;
+			numRowsProduced = 0;
 
-			// get more data to clean
-			rows = dataset.getNextRecords(BATCH_SIZE);
-			if(rows.size() == 0){
-				break;  // no more data, done
+			// iterate through the dataset
+			ArrayList<ArrayList<String>> rows;
+			while(true){					
+
+				// get more data to clean
+				rows = dataset.getNextRecords(BATCH_SIZE);
+				if(rows.size() == 0){
+					break;  // no more data, done
+				}
+
+				// clean each row
+				for(ArrayList<String> row : rows){
+					cleanRow(row, headers);
+					numRowsProcessed++;
+				}
 			}
 
-			// clean each row
-			for(ArrayList<String> row : rows){
-				cleanRow(row, headers);
-				numRowsProcessed++;
-			}
-
+			// clean up
+			csvPrinter.flush();
+			System.out.println("Processed " + numRowsProcessed + " records, produced " + numRowsProduced + " clean records. (DONE)");		
+		
+		}catch(Exception e){
+			throw new Exception("Exception cleaning data: " + e);
+		}finally{
+			writer.close();
+			dataset.close();	
 		}
-
-		// clean up
-		csvPrinter.flush();
-		writer.close();
-		dataset.close();	// TODO should these be elsewhere to guarantee closure?
-		System.out.println("Processed " + numRowsProcessed + " records, produced " + numRowsProduced + " clean records. (DONE)");
 
 		return numRowsProduced;  
 	}
@@ -328,6 +339,7 @@ public class DataCleaner {
 	 * @param row the input row of data
 	 * @return rows of data containing split fields
 	 */
+	@SuppressWarnings("unchecked")
 	private ArrayList<ArrayList<String>> performSplits(ArrayList<String> row){
 
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
