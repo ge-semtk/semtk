@@ -40,7 +40,8 @@ import com.ge.research.semtk.load.dataset.Dataset;
 public class DataCleaner {
 
 	// keys for json cleaning spec
-	public final static String JSON_KEY_SPLIT = "SPLIT";
+	public final static String JSON_KEY_SPLIT = "SPLIT";	// plain splits can now be achieved using the paired split spec, but keeping this for backward compatibility
+	public final static String JSON_KEY_PAIRED_SPLIT = "PAIRED_SPLIT";
 	public final static String JSON_KEY_LOWERCASE = "LOWERCASE";
 	public final static String JSON_KEY_REMOVE_NULLS = "REMOVE_NULLS";
 	public final static String JSON_KEY_REMOVE_NA = "REMOVE_NA";
@@ -54,7 +55,8 @@ public class DataCleaner {
 	private final int BATCH_SIZE = 2;	// TODO make this configurable?
 
 	// store setup info about how to clean
-	private HashMap<String,String> columnsToSplit = new HashMap<String,String>(); // key is column header, value is split delimiter (e.g. ~)	
+	private HashMap<String,String> columnsToSplit = new HashMap<String,String>(); // key is column header, value is split delimiter (e.g. ~)
+	private HashSet<HashMap<String,String>> columnsToPairedSplit = new HashSet<HashMap<String,String>>(); // a set of column-delimiter mappings to split together
 	private HashSet<String> columnsToLowerCase = new HashSet<String>(); // key is column header	
 	private boolean removeNulls = false;  // if true, replace all occurrences of "null" string (as a whole entry) with ""
 	private boolean removeNA = false;  // if true, replace all occurrences of "N/A" or "n/a" string (as a whole entry) with ""
@@ -106,7 +108,7 @@ public class DataCleaner {
 		// e.g. "LOWERCASE":["child_names","has_pool"]
 		JSONArray lowercaseObj = (JSONArray) cleanSpecJson.get(JSON_KEY_LOWERCASE);
 		if(lowercaseObj != null){
-			for(Object jObj : (JSONArray) cleanSpecJson.get(JSON_KEY_LOWERCASE)){
+			for(Object jObj : lowercaseObj){
 				addToLowerCase((String)jObj);
 			}
 		}
@@ -117,6 +119,18 @@ public class DataCleaner {
 		if(splitObj != null){
 			for(String s : (Set<String>)splitObj.keySet()){
 				addSplit(s, (String)splitObj.get(s));
+			}
+		}
+		
+		// add paired split specs
+		// support 2+ columns per paired split, and support an arbitrary number of paired splits
+		// e.g. "PAIRED_SPLIT":[{"first_name":"##","middle_name":"~","last_name":"~"}]
+		// e.g. "PAIRED_SPLIT":[{"first_name":"##","middle_name":"~","last_name":"~"},{"pet_name":"##","pet_color":"~"}]
+		JSONArray pairedSplitArray = (JSONArray) cleanSpecJson.get(JSON_KEY_PAIRED_SPLIT);
+		if(pairedSplitArray != null){
+			for(Object jObj : pairedSplitArray){  // e.g. {"first_name":"##","middle_name":"~","last_name":"~"}
+				HashMap<String, String> columnsAndDelimiters = (HashMap<String,String>)jObj;	
+				addPairedSplit(columnsAndDelimiters);
 			}
 		}
 		
@@ -148,23 +162,30 @@ public class DataCleaner {
 	 * @throws Exception 
 	 */
 	public void addSplit(String columnHeader, String delimiter) throws Exception{
-
-		// error if column does not exist
-		if(headers.indexOf(columnHeader) == -1){
-			throw new Exception("Cannot clean nonexistent column " + columnHeader);
-		}
-
-		// error if delimiter is unsupported
-		if(ArrayUtils.indexOf(UNSUPPORTED_SPLIT_DELIMITERS, delimiter) > -1){			
-			throw new Exception("Cannot yet support splitting on delimiter " + delimiter);
-		}
-		// error if there is already a split on this column
-		if(columnsToSplit.get(columnHeader) != null){
-			throw new Exception("Already splitting column using " + columnsToSplit.get(columnHeader) + ", cannot add another split");
-		}
+		
+		validateColumnHeader(columnHeader);
+		validateDelimiter(delimiter);
+		validateNotSplitYet(columnHeader);
 
 		// add the split
 		columnsToSplit.put(columnHeader, delimiter);
+	}
+	
+	/**
+	 * Specify a paired split. 
+	 * @param columnsAndDelimiters a HashMap of column headers to delimiters (e.g first_name->"##", middle_name->"~", last_name->"~")
+	 * @throws Exception 
+	 */
+	public void addPairedSplit(HashMap<String,String> columnsAndDelimiters) throws Exception{
+
+		for(String columnHeader : columnsAndDelimiters.keySet()){
+			validateColumnHeader(columnHeader);
+			validateDelimiter(columnsAndDelimiters.get(columnHeader));
+			validateNotSplitYet(columnHeader);
+		}
+		
+		// add the paired split
+		columnsToPairedSplit.add(columnsAndDelimiters);
 	}
 
 	/**
@@ -174,15 +195,11 @@ public class DataCleaner {
 	 */
 	public void addToLowerCase(String columnHeader) throws Exception{
 
-		// error if column does not exist
-		if(headers.indexOf(columnHeader) == -1){
-			throw new Exception("Cannot clean nonexistent column " + columnHeader);
-		}
+		validateColumnHeader(columnHeader);
 
 		// add the column
 		columnsToLowerCase.add(columnHeader);
 	}
-
 	
 	/**
 	 * Specify removing nulls or not
@@ -250,8 +267,9 @@ public class DataCleaner {
 	 * Clean a single row of data, producing 1+ rows of cleaned data.
 	 * @param row the row of data to clean
 	 */
+	@SuppressWarnings("unchecked")
 	private void cleanRow(ArrayList<String> row, ArrayList<String> headers) throws Exception{
-
+		
 		// check inputs
 		if(row.size() != headers.size()){
 			throw new Exception("Row does not have the same number of fields as the header list");
@@ -271,10 +289,21 @@ public class DataCleaner {
 		}		
 		
 		// perform splits
-		ArrayList<ArrayList<String>> rowsToWrite = performSplits(row);
+		ArrayList<ArrayList<String>> rows = performSplits(row);
+		
+		// perform paired splits
+		if(columnsToPairedSplit.size() > 0){
+			ArrayList<ArrayList<String>> rowsTmp = new ArrayList<ArrayList<String>>();
+			for(ArrayList<String> r : rows){
+				for(ArrayList<String> tmpRow : performPairedSplits(r)){  // perform paired splits
+					rowsTmp.add((ArrayList<String>) tmpRow.clone());
+				}
+			}
+			rows = rowsTmp;
+		}
 		
 		// write to CSV
-		for(ArrayList<String> rowToWrite : rowsToWrite){
+		for(ArrayList<String> rowToWrite : rows){
 			this.csvPrinter.printRecord(rowToWrite);
 			numRowsProduced++;  // num clean records produced
 		}
@@ -371,5 +400,95 @@ public class DataCleaner {
 		}
 		return rows;
 	}
+	
+	/**
+	 * Perform all paired splits on a single row of data.
+	 */
+	private ArrayList<ArrayList<String>> performPairedSplits(ArrayList<String> row) throws Exception{
 
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		rows.add(row);  // start with the original incoming row	
+		
+		// for each paired split in the spec, build rowsTmp as a replacement for rows, and then replace it
+		for(HashMap<String,String> pairedSplit : columnsToPairedSplit){
+			ArrayList<ArrayList<String>> rowsTmp = new ArrayList<ArrayList<String>>();
+			for(ArrayList<String> r : rows){
+				rowsTmp.addAll(performPairedSplit(r, pairedSplit));  
+			}
+			rows = rowsTmp; // replace it
+		}	
+		return rows;
+	}
+	
+	
+	/**
+	 * Perform a single paired split on a single row of data.
+	 */
+	@SuppressWarnings("unchecked")
+	private ArrayList<ArrayList<String>> performPairedSplit(ArrayList<String> row, HashMap<String,String> pairedSplit) throws Exception{
+		
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		int numReturnRows = -1;
+		
+		// for each column in the paired split
+		for(String columnHeader : pairedSplit.keySet()){
+
+			String delimiter = pairedSplit.get(columnHeader);	// the delimiter
+			int index = headers.indexOf(columnHeader);			// the index of the column to split
+			String value = row.get(index);						// the content to split
+
+			if(numReturnRows == -1){
+				// we're on the first column to split
+				numReturnRows = value.split(delimiter).length; // determine how many elements will result from the split
+				for(int i = 0; i < numReturnRows; i++){
+					// for each element that will result from the split, add a row
+					rows.add((ArrayList<String>) row.clone());	// the new row is a clone of the original for now...values will get replaced
+				}
+			}else{
+				// we're past the first column to split. If the current column does not split into the right number of elements, then error.
+				if(numReturnRows != value.split(delimiter).length){
+					throw new Exception("Mismatched number of split items across columns: cannot split '" + value + "' into " + numReturnRows + " elements");
+				}
+			}
+
+			// replace the unsplit row values with the split row values
+			for(int i = 0; i < numReturnRows; i++){
+				rows.get(i).set(index, value.split(delimiter)[i].trim());
+			}
+		}
+		
+		return rows;
+	}
+	
+
+	// confirm that the column header exists
+	private void validateColumnHeader(String columnHeader) throws Exception{
+		if(headers.indexOf(columnHeader) == -1){
+			throw new Exception("Cannot clean nonexistent column " + columnHeader);
+		}
+	}
+	
+	// confirm that the delimiter is supported
+	private void validateDelimiter(String delimiter) throws Exception{
+		if(ArrayUtils.indexOf(UNSUPPORTED_SPLIT_DELIMITERS, delimiter) > -1){			
+			throw new Exception("Cannot yet support splitting on delimiter '" + delimiter + "'");
+		}
+	}
+	
+	// confirm that there is no split (or paired split) on this column yet
+	private void validateNotSplitYet(String columnHeader) throws Exception{
+		
+		// confirm not in split list
+		if(columnsToSplit.get(columnHeader) != null){
+			throw new Exception("Already splitting column " + columnHeader + ", cannot add another split");
+		}
+		
+		// confirm not in paired split list
+		for(HashMap<String,String> map: columnsToPairedSplit){
+			if(map.containsKey(columnHeader)){
+				throw new Exception("Already splitting column " + columnHeader + ", cannot add another split");
+			}
+		}
+	}
+	
 }

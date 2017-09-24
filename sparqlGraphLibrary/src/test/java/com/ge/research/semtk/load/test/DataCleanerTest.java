@@ -277,96 +277,7 @@ public class DataCleanerTest {
 	
 	
 	@Test 
-	public void test_disallowMultipleSplitsOnSameColumn() throws IOException {
-
-		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
-		
-		boolean thrown = false;
-		try {				
-			Dataset dataset = new CSVDataset(originalFilePathStr, false);
-			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
-			cleaner.addSplit("child_names","~");
-			cleaner.addSplit("child_names","*");
-			
-			(new File(cleanedFilePathStr)).delete();
-						
-		} catch (Exception e) {
-			e.printStackTrace();
-			assertTrue(e.getMessage().contains("Already splitting"));
-			thrown = true;
-		} 
-		if(!thrown){
-			fail();
-		}
-		
-	}	
-	
-	
-	@Test 
-	public void test_badColumnName() throws Exception {
-		
-		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
-		Dataset dataset = new CSVDataset(originalFilePathStr, false);
-		DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
-		
-		// try using bad column name for split 
-		boolean thrown = false;
-		try {				
-			cleaner.addSplit("bad_column_name","\n");			
-			(new File(cleanedFilePathStr)).delete();						
-		} catch (Exception e) {
-			e.printStackTrace();
-			assertTrue(e.getMessage().contains("nonexistent column"));
-			thrown = true;
-		} 
-		if(!thrown){
-			fail();
-		}
-		
-		// try using bad column name for toLowerCase 
-		thrown = false;
-		try {				
-			cleaner.addToLowerCase("bad_column_name");			
-			(new File(cleanedFilePathStr)).delete();						
-		} catch (Exception e) {
-			e.printStackTrace();
-			assertTrue(e.getMessage().contains("nonexistent column"));
-			thrown = true;
-		} 
-		if(!thrown){
-			fail();
-		}
-	}	
-	
-	@Test 
-	public void test_disallowUnsupportedSplitDelimiter() throws IOException {
-
-		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
-		
-		boolean thrown = false;
-		try {				
-			Dataset dataset = new CSVDataset(originalFilePathStr, false);
-			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
-			cleaner.addSplit("child_names","\n");
-			cleaner.addSplit("child_names","*");
-			
-			(new File(cleanedFilePathStr)).delete();
-						
-		} catch (Exception e) {
-			e.printStackTrace();
-			assertTrue(e.getMessage().contains("delimiter"));
-			thrown = true;
-		} 
-		if(!thrown){
-			fail();
-		}
-	}	
-	
-	@Test 
-	public void test_SOHDelimiter() throws IOException {
+	public void test_split_SOHDelimiter() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-SOH.csv";
 		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
@@ -391,7 +302,17 @@ public class DataCleanerTest {
 			assertEquals(s,"Cobert,40,cobbie,Rockington St,yes,Ruff,");
 			s = reader.readLine();
 			assertEquals(s,"Cobert,40,cobbie,Rockington St,yes,Rocky,");
-			
+			s = reader.readLine();
+			assertEquals(s,"Cobert,40,connie,Rockington St,yes,Ruff,");
+			s = reader.readLine();
+			assertEquals(s,"Cobert,40,connie,Rockington St,yes,Rocky,");
+			s = reader.readLine();
+			assertEquals(s,"Cobert,40,conda,Rockington St,yes,Ruff,");
+			s = reader.readLine();
+			assertEquals(s,"Cobert,40,conda,Rockington St,yes,Rocky,");
+			s = reader.readLine();
+			assertEquals(s,"Barbara,35,billy,Barbington Ave,no,Bambam,");
+
 			(new File(cleanedFilePathStr)).delete();
 			
 		} catch (Exception e) {
@@ -402,5 +323,158 @@ public class DataCleanerTest {
 		}
 	}	
 
+
+	/**
+	 * Tests paired split, including: 
+	 * 		applying an arbitrary number of paired splits
+	 * 		applying a paired split across an arbitrary number of columns 
+	 * 		applying a paired split to columns that don't contain the delimiter (proceed with no split)
+	 * For paired splits that fail validation, see other test.
+	 */
+	@Test 
+	public void test_PairedSplits() throws IOException{
+		
+		String originalFilePathStr = "src/test/resources/datacleanertest-input-pairedsplit.csv";
+		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		BufferedReader reader = null;
+		
+		try {	
+			
+			JSONObject cleaningSpecJson = Utility.getJSONObjectFromFilePath("src/test/resources/datacleanertest-spec-pairedsplit.json");
+			
+			Dataset dataset = new CSVDataset(originalFilePathStr, false);
+			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			
+			// do the cleaning
+			int cleanedRows = cleaner.cleanData();
+			
+			assertEquals(cleanedRows, 9);
+			reader = new BufferedReader(new FileReader(cleanedFilePathStr));
+			String s = reader.readLine();
+			assertEquals(s,"city,first_name,middle_name,last_name,pet_name,pet_color");
+			s = reader.readLine();
+			assertEquals(s,"Flagstaff,Alan,A.,Arlington,Gnasher,brown");
+			s = reader.readLine();
+			assertEquals(s,"Los Angeles,Bob,B.,Barbington,Sandy,sandy brown");
+			s = reader.readLine();
+			assertEquals(s,"Los Angeles,Bob,B.,Barbington,Snowy,snowy white");
+			s = reader.readLine();
+			assertEquals(s,"Los Angeles,Cathy,C.,Carvington,Sandy,sandy brown");
+			s = reader.readLine();
+			assertEquals(s,"Los Angeles,Cathy,C.,Carvington,Snowy,snowy white");
+			s = reader.readLine();
+			assertEquals(s,"Reno,Dave,D.,Downington,Rusty,rusty red");
+			s = reader.readLine();
+			assertEquals(s,"Reno,Dave,D.,Downington,Tiger,orange");
+			s = reader.readLine();
+			assertEquals(s,"Reno,Dave,D.,Downington,Banana,yellow");
+			s = reader.readLine();
+			assertEquals(s,"Reno,Edith,E.,Edmundton,Egret,white");
+			
+			(new File(cleanedFilePathStr)).delete();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail();
+		} finally {
+			if(reader != null){	reader.close(); }
+		}
+	
+	}
+	
+	/**
+	 * Test that we get errors for illegal cleaning specs.
+	 */
+	@Test 
+	public void test_FailsValidation() throws Exception{
+		
+		String originalFilePathStr = "src/test/resources/datacleanertest-input-pairedsplit.csv";
+		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		Dataset dataset = new CSVDataset(originalFilePathStr, false);
+
+		// ================= validation for LOWERCASE ===========================================
+		
+		// expect error: column does not exist for lowercase
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"LOWERCASE\":[\"bad_column_name\"]}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("nonexistent column"));
+		}
+		
+		// ================= validation for SPLIT ===========================================
+		
+		// expect error: column does not exist for a split
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"SPLIT\":{\"bad_column_name\":\"##\"}}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("nonexistent column"));
+		}
+		
+		// expect error: bad delimiter for a split
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"SPLIT\":{\"first_name\":\"\n\"}}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("delimiter"));
+		}
+		
+		// expect error: bad delimiter for a split
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"SPLIT\":{\"first_name\":\" \"}}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("delimiter"));
+		}
+		
+		// expect error: cannot apply more than one split to a column
+		// (can't do this via json like this {"SPLIT":{"pet_color":"##","pet_color":"~"}} because JSONParser does not support duplicate keys - testing via Java API instead)
+		try{
+			DataCleaner cleaner = new DataCleaner(dataset, cleanedFilePathStr);
+			cleaner.addSplit("first_name","~");
+			cleaner.addSplit("first_name","*");
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("Already splitting"));
+		}
+		
+		// ================= validation for PAIRED_SPLIT ===========================================
+		
+		// expect error: column does not exist for paired split
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"PAIRED_SPLIT\":[{\"bad_column_name\":\"##\",\"middle_name\":\"~\",\"last_name\":\"~\"}]}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("nonexistent column"));
+		}
+		
+		// expect error: cannot apply paired splits to the same column
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"PAIRED_SPLIT\":[{\"first_name\":\"##\",\"middle_name\":\"~\",\"last_name\":\"~\"},{\"first_name\":\"~\",\"pet_color\":\"~\"}]}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail();
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("Already splitting"));
+		}
+		
+		// ================= validation for combination of SPLIT and PAIRED_SPLIT ===========================================
+		
+		// expect error: cannot apply a split and a paired split to the same column
+		try{
+			JSONObject cleaningSpecJson = Utility.getJsonObjectFromString("{\"SPLIT\":{\"first_name\":\"##\"},\"PAIRED_SPLIT\":[{\"first_name\":\"~\",\"middle_name\":\"~\",\"last_name\":\"~\"}]}");
+			new DataCleaner(dataset, cleanedFilePathStr, cleaningSpecJson);
+			fail(); 
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("Already splitting"));
+		}
+		
+		(new File(cleanedFilePathStr)).delete();
+	}
 	
 }
