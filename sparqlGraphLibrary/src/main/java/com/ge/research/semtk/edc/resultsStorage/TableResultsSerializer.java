@@ -145,6 +145,7 @@ public class TableResultsSerializer {
 				aOutputStream.flush();
 			}
 		}
+		bfr.close();
 		
 		// done with rows. flush.
 		aOutputStream.flush();
@@ -222,6 +223,7 @@ public class TableResultsSerializer {
 				System.err.println("flushing after row: " +  processedRows);
 			}
 		}
+		bfr.close();
 		
 		aOutputStream.write("]}");
 		// done with rows. flush.

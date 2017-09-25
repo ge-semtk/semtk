@@ -279,7 +279,9 @@ public abstract class Utility {
 	 */
 	public static JSONObject getJSONObjectFromFile(File f) throws Exception{
 		InputStreamReader reader = new InputStreamReader(new FileInputStream(f.getAbsolutePath()));
-		return (JSONObject) (new JSONParser()).parse(reader);
+		JSONObject ret = (JSONObject) (new JSONParser()).parse(reader);
+		reader.close();
+		return ret;
 	}	
 
 	/**
@@ -289,7 +291,9 @@ public abstract class Utility {
 	 */
 	public static JSONArray getJSONArrayFromFile(File f) throws Exception{
 		InputStreamReader reader = new InputStreamReader(new FileInputStream(f.getAbsolutePath()));
-		return (JSONArray) (new JSONParser()).parse(reader);	
+		JSONArray ret = (JSONArray) (new JSONParser()).parse(reader);
+		reader.close();
+		return ret;	
 	}
 	
 	/**
