@@ -32,8 +32,8 @@ import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.edc.TableResultsSerializer;
-import com.ge.research.semtk.edc.TableResultsStorage;
+import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
+import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.Table;
 

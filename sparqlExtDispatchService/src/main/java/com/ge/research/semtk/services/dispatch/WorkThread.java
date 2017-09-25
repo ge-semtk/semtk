@@ -63,7 +63,7 @@ public class WorkThread extends Thread {
 		try {
 			if(this.rawSparqlQuery != null){
 				// a query was passed. use it.
-				TableResultSet trs = this.dsp.executePlainSparqlQuery(rawSparqlQuery);
+				TableResultSet trs = this.dsp.executePlainSparqlQuery(rawSparqlQuery, myQT);
 			}
 			
 			else{

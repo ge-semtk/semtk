@@ -195,6 +195,19 @@ public class NodeGroupExecutor {
 		
 	}
 	
+	// this method only works if the results are a JSON-LD result...
+	public JSONObject getJsonLdResults() throws Exception{
+		JSONObject retval = null;
+		
+		if(this.currentJobId == null){
+			throw new Exception("StoredQueryExecutor::getTableResults -- the current job ID is null. unable to get info on nonexistent job.");
+		}
+		else{
+			retval = this.rc.execGetGraphResult(this.currentJobId);
+		}
+		return retval;
+	}
+	
 	// Dispatch actions
 	public void dispatchRawSparql(SparqlConnection sc, String sparqlQuery) throws Exception {
 	
@@ -242,6 +255,10 @@ public class NodeGroupExecutor {
 		else if(qt.equals(DispatcherSupportedQueryTypes.DELETE)){
 			simpleRes = this.drc.executeDeleteQueryFromNodeGroup(sendable, externalConstraints);			
 		}	
+		
+		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT)){
+			simpleRes = this.drc.executeConstructQueryFromNodeGroup(sendable, externalConstraints);
+		}
 		
 		else{
 			throw new Exception("NodeGroupExecutor:dispatchJob :: DispatcherSupportedQueryTypes type " + qt.name() + " is not currently supported.");

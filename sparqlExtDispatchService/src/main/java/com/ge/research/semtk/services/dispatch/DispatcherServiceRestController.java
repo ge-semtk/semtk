@@ -99,6 +99,12 @@ public class DispatcherServiceRestController {
 		return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL);
 	}
 	
+	@CrossOrigin
+	@RequestMapping(value="/queryConstructFromNodeGroup", method=RequestMethod.POST)
+	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, false);
+	}
+	
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 		String requestId = this.getRequestId();
 		SimpleResultSet retval = new SimpleResultSet(true);

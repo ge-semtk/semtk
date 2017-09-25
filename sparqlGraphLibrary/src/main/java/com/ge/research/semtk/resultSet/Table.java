@@ -45,6 +45,7 @@ public class Table {
 	public final static String JSON_KEY_ROWS = "rows";
 	public final static String JSON_KEY_ROW_COUNT = "row_count";
 	public final static String JSON_KEY_COL_COUNT = "col_count";
+	public final static String JSON_TYPE = "type";
 
 	private String[] columnNames;
 	private String[] columnTypes;
@@ -427,6 +428,7 @@ public class Table {
 			if(includeDataRows){
 				tbl.put(JSON_KEY_ROWS, allRows);			
 			}
+			tbl.put(JSON_TYPE, "TABLE");
 			tbl.put(JSON_KEY_ROW_COUNT, rowCount);
 			tbl.put(JSON_KEY_COL_NAMES, colHeaders);
 			tbl.put(JSON_KEY_COL_TYPES, colTypes);

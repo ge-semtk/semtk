@@ -74,7 +74,7 @@ public class ResultsClientTest_IT {
 			
 			client.execStoreTableResults(jobId, table);
 
-			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"three\",\"four\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}";		
+			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"three\",\"four\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}";		
 			String expectedCSVString = "col1,col2\n\"one\",\"two\"\n\"three\",\"four\"\n";
 
 			URL[] urls = client.execGetResults(jobId);
@@ -147,7 +147,7 @@ public class ResultsClientTest_IT {
 			Table tbl = tblresset.getTable();
 			String resultJSONString = tbl.toJson().toJSONString();
 			
-			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json
 			//assertEquals(expectedJSONString, resultJSONString);
 			assertEquals(expectedJSONString.length(), resultJSONString.length());
 			
@@ -196,7 +196,7 @@ public class ResultsClientTest_IT {
 			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
 			Table tbl = tblresset.getTable();
 			String resultJSONString = tbl.toJson().toJSONString();
-			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi\\\"\"]],\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json		
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi\\\"\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json		
 			System.err.println(expectedJSONString);
 			System.err.println(resultJSONString);
 			
@@ -252,7 +252,7 @@ public class ResultsClientTest_IT {
 			// check the JSON results
 			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
 			String resultJSONString = tblresset.getTable().toJson().toJSONString();
-			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\"],\"rows\":[[\"apple ant\",\"bench\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":1}";  // validated json
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\"],\"rows\":[[\"apple ant\",\"bench\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":1}";  // validated json
 			assertEquals(expectedJSONString, resultJSONString);
 	
 			// check the CSV results

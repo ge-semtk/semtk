@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.edc;
+package com.ge.research.semtk.edc.resultsStorage;
 
 import java.io.File;
 import java.io.ObjectOutputStream;
@@ -40,16 +40,12 @@ import com.ge.research.semtk.utility.Utility;
  * 1) store a table result set as a JSON file 
  * 2) retrieve results as CSV or JSON (possibly truncated)
  */
-public class TableResultsStorage {
+public class TableResultsStorage extends GeneralResultsStorage{
 
 	public static enum TableResultsStorageTypes { JSON, CSV };
-	
-	private String fileLocation = null;
-	
-	private static final String DATARESULTSFILELOCATION = "ResultsDataLocation";
-	
+	 
 	public TableResultsStorage(String file_location) {
-		this.fileLocation = file_location;
+		super(file_location);
 	}
 
 	/**
@@ -159,7 +155,8 @@ public class TableResultsStorage {
 	private TableResultsSerializer getTable(URL url, Integer maxRows, Integer startRow, TableResultsStorageTypes storageType) throws Exception{
 		
 		try{
-			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(url).toString());	// read json from url
+			String searchPath = urlToPath(url).toString();
+			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(searchPath);	// read json from url
 			
 			String dataFileLocation = (String) jsonObj.get(DATARESULTSFILELOCATION);
 			
@@ -178,80 +175,8 @@ public class TableResultsStorage {
 		}
 		
 	}
-	
-		
+
 	/**
-	 * Write line(s) of data to the results file for a given job id.
-	 * @param jobID the job id
-	 * @param contents the data to write
-	 * @param writeToResultsFile "true" if writing to the results data, "false" for writing to the metadata file
-	 * @return the file name
-	 */
-	private String writeToFile(String jobID, String contents, Boolean writeToResultsFile) throws Exception {
-		
-		if(contents == null){ contents = ""; }
-		else{ contents += "\n"; }
-		
-		String filename = "results_" + jobID;
-		
-		if(writeToResultsFile){ filename = filename + "_data.dat";}
-		else{ filename = filename + "_metadata.json"; }
-		
-		Path path = Paths.get(fileLocation, filename);
-		
-		try {
-			Files.write(path, contents.getBytes(), StandardOpenOption.APPEND);
-		} catch(NoSuchFileException nosuchfile){
-			
-			
-			if(contents == null ||  contents.isEmpty()){
-				
-				(path.toFile()).createNewFile();
-			}
-			else{
-				Files.write(path, contents.getBytes(), StandardOpenOption.CREATE);
-				
-			}
-			
-			
-		}
-		if(!writeToResultsFile){ return filename; }
-		else{ return path.toString(); }
-	}
-	
-	/**
-	 * Get a URL for a given file name
-	 */
-	private URL getURL(String filename) throws MalformedURLException {
-		return new URL("file:////" +  filename);
-	}
-	
-	/**
-	 * Delete a file if it exists
-	 */
-	public void deleteStoredFile(URL url) throws Exception {
-	    Files.deleteIfExists(urlToPath(url));
-	}
-		
-	/**
-	 * Gets a file path for a given URL
-	 * @throws Exception if the url didn't come from this ResultsStorage
-	 */
-	private Path urlToPath(URL url) throws Exception {
-	//	if (! url.toString().startsWith("file:////" + this.fileLocation.toString())) {
-	//		throw new Exception (String.format("Invalid URL wasn't created by this ResultsStorage: %s", url.toString()));
-	//	}
-		String fullURL = url.toString();
-	//	return Paths.get(this.fileLocation, fullURL.substring( this.baseURL.toString().length() + 1, fullURL.length()));
-		
-		if(fullURL.contains("file:")){
-			fullURL = fullURL.substring(5, fullURL.length());
-		}
-		
-		return Paths.get(this.fileLocation, fullURL);
-		
-	}
-	 /**
 	  * Get the size of the results table.
 	 * @throws Exception 
 	  */

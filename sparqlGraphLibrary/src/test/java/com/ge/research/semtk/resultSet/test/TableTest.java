@@ -327,7 +327,8 @@ public class TableTest {
 		
 		assertEquals(tableMerged.getNumRows(),5);		
 		assertEquals(tableMerged.getNumColumns(),3);
-		String res = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"],[\"apple pie\",\"bonbons\",\"cheesewhiz\"],[\"apple juice\",\"bourbon\",\"cider\"],[\"Anderson\",\"Bobberson\",\"Chisholm\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":5}";
+	
+		String res = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"],[\"apple pie\",\"bonbons\",\"cheesewhiz\"],[\"apple juice\",\"bourbon\",\"cider\"],[\"Anderson\",\"Bobberson\",\"Chisholm\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":5}";
 		assertEquals(tableMerged.toJson().toString(),res);
 	}
 	

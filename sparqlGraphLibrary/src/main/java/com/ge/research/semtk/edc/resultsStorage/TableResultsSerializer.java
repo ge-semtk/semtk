@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.edc;
+package com.ge.research.semtk.edc.resultsStorage;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,7 +34,7 @@ import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.edc.TableResultsStorage.TableResultsStorageTypes;
+import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage.TableResultsStorageTypes;
 import com.ge.research.semtk.resultSet.Table;
 
 public class TableResultsSerializer {

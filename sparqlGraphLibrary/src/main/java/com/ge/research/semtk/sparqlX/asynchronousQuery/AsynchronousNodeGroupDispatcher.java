@@ -86,7 +86,7 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 		
 		try{
 			String sparqlQuery = this.getSparqlQuery(qt, targetSparqlID);
-			retval = this.executePlainSparqlQuery(sparqlQuery);
+			retval = this.executePlainSparqlQuery(sparqlQuery, qt);
 		}
 		catch(Exception e){
 			// something went awry. set the job to failure. 

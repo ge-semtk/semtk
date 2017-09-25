@@ -68,7 +68,7 @@ public class BelmontConstructQueryTest_IT {
 		
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		NodeGroup responseNodeGroup = NodeGroup.fromConstructJSON(responseJson);
-		assertEquals(responseNodeGroup.getNodeCount(),9);
+		assertEquals(responseNodeGroup.getNodeCount(),3);
 		// TODO test the PlusConstraints part
 	}
 }

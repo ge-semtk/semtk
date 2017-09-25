@@ -24,8 +24,10 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -51,6 +53,38 @@ public class ResultsClient extends RestClient implements Runnable {
 	public void handleEmptyResponse() throws Exception {
 		throw new Exception("Received empty response");
 	}	
+	
+	public void execStoreGraphResults(String jobID, JSONObject resJSON) throws Exception {
+		// store the graph results. this is currently done as a single operation because the JSON-LD is less intuitive to split than the table results.
+		// this strategy will have to be revisited in the event that writes are slow.
+		
+		conf.setServiceEndpoint("results/storeJsonLdResults"); 
+		this.parametersJSON.put("jobId", jobID);
+		this.parametersJSON.put("jsonRenderedGraph", resJSON.toJSONString());
+		this.parametersJSON.put("jsonRenderedHeader", NodeGroupResultSet.getJsonLdResultsMetaData(resJSON).toJSONString());
+		this.run();
+	}	
+	
+	public JSONObject execGetGraphResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("results/getJsonLdResults");
+		this.parametersJSON.put("jobId", jobId);
+		
+		this.parametersJSON.put("appendDownloadHeaders", false);
+
+		try {
+			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			
+			JSONParser jParse = new JSONParser();
+			JSONObject retval = (JSONObject) jParse.parse(s);
+			
+			return retval;
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.clear();
+		}
+	}	
+	
 	
 	/**
 	 * Store a table (as json).  
@@ -368,7 +402,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		}
 		this.parametersJSON.clear();  // clear parameters for next time
 		return res.getResultInt("rowCount");
-	}	
+	}
+
 }
 
 

@@ -33,6 +33,8 @@ import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
+import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -183,6 +185,22 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			throw new Exception("Unable to write results");
 		}
 	}
+	
+	
+	private void sendResultsToService(NodeGroupResultSet preRet)  throws ConnectException, EndpointNotFoundException, Exception{
+		try{
+			// NodeGroup resGroup = preRet.getResults();	// probably won't go this way for practical reasons.
+			JSONObject resJSON = preRet.getResultsJSON();
+			this.resultsClient.execStoreGraphResults(this.jobID, resJSON);
+		}
+		catch(Exception eee){
+			this.statusClient.execSetFailure("Failed to write results: " + eee.getMessage());
+			eee.printStackTrace();
+			throw new Exception("Unable to write results");
+		}
+	}
+
+	
 	/**
 	 * send updates to the status service. 
 	 * @param statusPercentNumber
@@ -237,7 +255,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public abstract String[] getConstraintVariableNames() throws Exception;
 	
-	public TableResultSet executePlainSparqlQuery(String sparqlQuery) throws Exception{
+	public TableResultSet executePlainSparqlQuery(String sparqlQuery, DispatcherSupportedQueryTypes supportedQueryType) throws Exception{
 		TableResultSet retval = null;
 		SparqlQueryClient nodegroupQueryClient = this.retrievalClient;
 		
@@ -250,14 +268,32 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			System.err.println(sparqlQuery);
 			
 			// run the actual query and get a result. 
-			retval = (TableResultSet) nodegroupQueryClient.execute(sparqlQuery, SparqlResultTypes.TABLE);	
+			GeneralResultSet preRet = null;
+			
+			if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT){
+				// constructs require particular support for a different result set.
+				preRet = nodegroupQueryClient.execute(sparqlQuery, SparqlResultTypes.GRAPH_JSONLD);
+				retval = new TableResultSet(true);
+			}
+			else{
+				// all other types
+				preRet = nodegroupQueryClient.execute(sparqlQuery, SparqlResultTypes.TABLE);
+				retval = (TableResultSet) preRet;
+			}
+
 			
 			if (retval.getSuccess()) {
 				System.err.println("Query returned " + retval.getTable().getNumRows() + " results.");
 				
 				System.err.println("about to write results for " + this.jobID);
-				this.sendResultsToService(retval);
-				
+				if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT){
+					// constructs require particular support in the results client and the results service. this support would start here.
+					this.sendResultsToService((NodeGroupResultSet) preRet);
+				}
+				else {
+					// all other types
+					this.sendResultsToService(retval);
+				}
 				this.updateStatus(100);		// work's done
 			}
 			else {
@@ -277,7 +313,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		
 		return retval;
 	}
-	
+
 	protected String getSparqlQuery(DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception{
 		String retval = null;
 		

@@ -53,6 +53,7 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -189,6 +190,27 @@ public class NodeGroupExecutionRestController {
 			retval = new TableResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
+		}
+		return retval.toJson();
+	}
+	
+	
+	@CrossOrigin
+	@RequestMapping(value="/getResultsJsonLd", method=RequestMethod.POST)
+	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody ){
+		NodeGroupResultSet retval = new NodeGroupResultSet();
+		
+		try{
+			NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
+			JSONObject retLd = nge.getJsonLdResults();
+			retval.setSuccess(true);
+			retval.addResultsJSON(retLd);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			retval = new NodeGroupResultSet();
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
 		}
 		return retval.toJson();
 	}
@@ -385,6 +407,19 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchConstructById", method=RequestMethod.POST)
+	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchConstructFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
 
 	}
 	
