@@ -41,12 +41,14 @@ public class JsonLdResultsStorage extends GeneralResultsStorage {
 		jsonLdMetaData.put(DATARESULTSFILELOCATION, dataFileName);
 		
 		// create and write the results metadata file
-		writeToFile(jobID, jsonLdMetaData.toJSONString(), false);
+		String metadatafile = writeToFile(jobID, jsonLdMetaData.toJSONString(), false);
 		// create and write the results data file
 		String fileName = writeToFile(jobID, jsonLdData, true);
 		
+		System.err.println("Graph metadata file was: " + metadatafile);
+		System.err.println("Graph data file was: " + fileName);
 		
-		return getURL(fileName);
+		return getURL(metadatafile);
 	}
 	
 	public JsonLdResultsSerializer getJsonLd(URL url) throws Exception{
