@@ -89,7 +89,8 @@ public class ResultsServiceRestController {
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
-			
+			URL url = getJsonLdResultsStorage().storeResults(requestBody.jobId, requestBody.getJsonRenderedHeader(), requestBody.getJsonRenderedGraph());
+			getJobTracker().setJobResultsURL(requestBody.jobId, url);  // store URL with the job
 		    res.setSuccess(true);
 		} catch(Exception e){
 	    	res.setSuccess(false);

@@ -189,7 +189,6 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	private void sendResultsToService(NodeGroupResultSet preRet)  throws ConnectException, EndpointNotFoundException, Exception{
 		try{
-			// NodeGroup resGroup = preRet.getResults();	// probably won't go this way for practical reasons.
 			JSONObject resJSON = preRet.getResultsJSON();
 			this.resultsClient.execStoreGraphResults(this.jobID, resJSON);
 		}
@@ -283,7 +282,6 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 
 			
 			if (retval.getSuccess()) {
-				System.err.println("Query returned " + retval.getTable().getNumRows() + " results.");
 				
 				System.err.println("about to write results for " + this.jobID);
 				if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT){
@@ -292,6 +290,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				}
 				else {
 					// all other types
+					System.err.println("Query returned " + retval.getTable().getNumRows() + " results.");
 					this.sendResultsToService(retval);
 				}
 				this.updateStatus(100);		// work's done
