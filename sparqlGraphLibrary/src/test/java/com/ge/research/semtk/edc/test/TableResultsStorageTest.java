@@ -22,15 +22,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
@@ -39,22 +45,19 @@ import com.ge.research.semtk.resultSet.Table;
 
 public class TableResultsStorageTest {
 
-	private static String FILE_LOC;
-	
-	@BeforeClass
-	public static void setup() throws IOException {
-		FILE_LOC = (new java.io.File( "." ).getCanonicalPath());  // write test files to current directory (they will be deleted)
-	}
-	
+	// This doesn't work.  Files are still stranded in the temp folder and not deleted.
+	// At least it's a temp location. 
+	@Rule
+	public TemporaryFolder folder= new TemporaryFolder();
 	
 	@Test
 	public void test() {
 
 		TableResultsStorage rs = null;
 		URL fullJsonUrl = null;
-		
+	
 		try {
-			rs = new TableResultsStorage(FILE_LOC);
+			rs = new TableResultsStorage(folder.getRoot().getPath());
 			
 			// write a result set
 			String jobId = "12451345"; 
@@ -96,7 +99,8 @@ public class TableResultsStorageTest {
 			Table tblForHeader = new Table(colNames, colTypes, fakeRows);
 			JSONObject headerInfo = tblForHeader.getHeaderJson();
 			
-			rs.storeTableResultsJsonInitialize(jobId, headerInfo);			
+			rs.storeTableResultsJsonInitialize(jobId, headerInfo);	
+
 			String row1 = "[\"apple\",\"banana\",\"coconut\"]";
 			String row2 = "[\"avocado\",\"bread\",\"canteloupe\"]";
 			String row3 = "[\"apricot\",\"bran\",\"chives\"]";
@@ -105,7 +109,7 @@ public class TableResultsStorageTest {
 			String row5 = "[\"arugula\",\"baklava\",\"capers\"]";
 			rs.storeTableResultsJsonAddIncremental(jobId, row4 + "\n" + row5);			
 			fullJsonUrl = rs.storeTableResultsJsonFinalize(jobId);
-			
+
 			// now do various checks
 			
 			// check that the file was stored properly		
@@ -118,8 +122,7 @@ public class TableResultsStorageTest {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			PrintWriter pw = new PrintWriter(baos);
 			tss.writeToStream(pw);
-			
-			
+
 			s = baos.toString(); // convert from byte array
 			jsonObj = (JSONObject) (new JSONParser().parse(s));
 			table = Table.fromJson(jsonObj);			
@@ -133,7 +136,6 @@ public class TableResultsStorageTest {
 			assertEquals(table.getColumnTypes()[2],"String");
 			assertEquals(table.getCell(0, 2),"coconut");
 			assertEquals(table.getCell(4, 2),"capers");
-			
 			// check retrieving full result as CSV
 			TableResultsSerializer tss1 = rs.getCsvTable(fullJsonUrl);
 			ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
@@ -177,7 +179,6 @@ public class TableResultsStorageTest {
 			PrintWriter pw3 = new PrintWriter(baos3);
 			tss3.writeToStream(pw3);
 			
-			
 			s = baos3.toString();
 
 			CSVDataset testCSV2 = new CSVDataset(s, true);
@@ -192,18 +193,7 @@ public class TableResultsStorageTest {
 		} catch(Exception e){
 			e.printStackTrace();
 			fail();			
-		} finally {
-			cleanup(rs, fullJsonUrl);
 		}
 	}
 	
-	
-	private void cleanup(TableResultsStorage rs, URL url) {
-		try {
-			if (rs != null && url != null) {
-				rs.deleteStoredFile(url);
-			}
-		} catch (Exception e) {
-		}
-	}
 }

@@ -108,7 +108,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                         if ( status == null) {
                             this.doFailureCallback(resultSet, 
-                                                   "Status service getStatus did not return a status.",
+                                                   "Status service getStatus did not return a status."
                                                    );
                         } else if (status == "Success") {
                             successBoolCallback0(true);
@@ -133,7 +133,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                         if ( message == null) {
                             this.doFailureCallback(resultSet, 
-                                                   "Status service getStatusMessage did not return a statusMessage.",
+                                                   "Status service getStatusMessage did not return a statusMessage."
                                                    );
                         } else {
                             messageCallback0("Job Status: " + message);
