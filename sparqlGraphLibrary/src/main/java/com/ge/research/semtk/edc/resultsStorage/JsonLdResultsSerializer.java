@@ -65,7 +65,7 @@ public class JsonLdResultsSerializer {
 			if(currRow == null){ break; }
 			
 			// conversion should not be required in this case as it was read as written.
-			aOutputStream.write(currRow.substring(1, currRow.length() - 1));
+			aOutputStream.write(currRow);
 			
 			processedRows += 1;
 			
