@@ -21,6 +21,7 @@ package com.ge.research.semtk.edc.client;
 import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
@@ -427,8 +428,6 @@ class TableFormatter extends Thread{
 		//
 		// http://json.org/   (see the "string" section)
 		//
-		// Plus remove the annoying \u0001 which is totally legal, but annoying
-		//
 		
 		/**
 		 * https://stackoverflow.com/questions/4901133/json-and-escaping-characters
@@ -441,15 +440,73 @@ class TableFormatter extends Thread{
 
 			Any character may be escaped.
 		 */
+		
+		
 		for(int i = startIndex; i < endIndex; i++){
 			for(int j = 0; j < rows.get(i).size(); j++){	
 				String curr = rows.get(i).get(j);
-				// from Javadoc: Escape quotes, \, /, \r, \n, \b, \f, \t and other control characters (U+0000 through U+001F).
-				String escaped = JSONObject.escape(curr);
-				rows.get(i).set(j, escaped);
+					
+				if (! this.quickCheck(curr)) {
+					// from Javadoc: Escape quotes, \, /, \r, \n, \b, \f, \t and other control characters (U+0000 through U+001F).
+					String escaped = JSONObject.escape(curr);
+					rows.get(i).set(j, escaped);
+				}
 				
 			}
 		}
+
+// old code for performance testing
+		
+//		for(int i = startIndex; i < endIndex; i++){
+//			for(int j = 0; j < rows.get(i).size(); j++){	
+//				Boolean altered = false;
+//				String curr = rows.get(i).get(j);
+//				
+//				// remove characters not supported by JSON
+//				if(rows.get(i).get(j).indexOf("\u0001") > -1){ 
+//					curr = StringUtils.replace(curr, "\u0001", " "); // remove SOH character 
+//					altered = true;
+//				} 
+//				if(rows.get(i).get(j).indexOf('\"') > -1){ 
+//					curr = StringUtils.replace(curr, "\"", "\\\"");
+//					altered = true;
+//				} 
+//				if(rows.get(i).get(j).indexOf('\n') > -1){ 
+//					curr = StringUtils.replace(curr, "\n", "\\n");
+//					altered = true; 
+//				} 
+//				if(rows.get(i).get(j).indexOf('\t') > -1){ 
+//					curr = StringUtils.replace(curr, "\t", "\\t");
+//					altered = true;
+//				} 
+//		
+//				if(altered){ 
+//					rows.get(i).set(j, curr); 
+//				}
+//			}
+//		}
+		
+		
 	} 
+	
+	/**
+	 * Quickly check whether all characters in the string are JSON safe
+	 *      true - absolutely safe
+	 *      false - might need to be jsonified
+	 * @param s
+	 * @return boolean
+	 */
+	public boolean quickCheck(String s) {
+		final int len = s.length();
+		for(int i=0;i<len;i++){
+			char ch=s.charAt(i);
+			
+			// everything from space to } is safe, except \ and "
+			if (ch < ' ' || ch > '}' || ch == '\\' || ch == '"') {
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
