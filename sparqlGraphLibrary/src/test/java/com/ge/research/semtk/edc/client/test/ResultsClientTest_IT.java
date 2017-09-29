@@ -171,51 +171,6 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
-	@Test
-	public void testStoreTable_WithBackslash() throws Exception {
-		// try backslash and quotes
-		//
-		// PEC 9/28/17  I don't understand why 
-		// 		this works in Java but not in the browser or python, which both choke on the backslash
-		// 		this works in Java when the RestClient TableFormatter is fixing double quotes but not backslashes
-		// 		we're allowed to put TableFormatter in ResultsClient.java
-		
-		String jobId = "test_jobid_" + UUID.randomUUID();
-		
-		String [] cols = {"colA"};
-		String [] types = {"String"};
-		ArrayList<String> row = new ArrayList<String>();
-		row.add("\"Tor\" likes blue\\purple jello");  	
-		
-		try {
-			Table table = new Table(cols, types, null);
-			table.addRow(row);
-			client.execStoreTableResults(jobId, table);	
-			
-			// check the JSON results
-			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
-			Table tbl = tblresset.getTable();
-			
-			System.out.println("jobId: " + jobId);
-			System.out.println("tbl.toJson(): " + tbl.toJson().toJSONString());
-			System.out.println("cell: " + tbl.getCell(0, 0));
-			assert(tbl.toJson().toJSONString().equals(table.toJson().toJSONString()));
-			assert(tbl.toCSVString().equals(table.toCSVString()));
-			
-			System.out.println("Notice how JSON simple parser treats these the same");
-			String s1 = "{\"str\": \"Tor likes blue\\purple jello\"}";    // illegal
-			String s2 = "{\"str\": \"Tor likes blue\\\\purple jello\"}";
-			JSONParser parser = new JSONParser();
-			JSONObject j1 = (JSONObject) parser.parse(s1);
-			JSONObject j2 = (JSONObject) parser.parse(s2);
-			System.out.println(j1.toJSONString());
-			System.out.println(j2.toJSONString());
-
-			
-		} finally {
-			cleanup(client, jobId);
-		}
-	}
 	/**
 	 * Test a row with quotes but no commas (in the past this triggered different logic in the ResultsClient)
 	 */

@@ -423,40 +423,24 @@ class TableFormatter extends Thread{
 	}
 
 	public void run(){  
-		// Make regular strings into legal json strings
-		//
-		// https://stackoverflow.com/questions/19176024/how-to-escape-special-characters-in-building-a-json-string
-		//
-		// Plus remove the annoying \u0001 which is totally legal, but annoying
-		//
 		for(int i = startIndex; i < endIndex; i++){
 			for(int j = 0; j < rows.get(i).size(); j++){	
 				String curr = rows.get(i).get(j);
 				Boolean altered = false;
 
-				// remove characters we don't like
+				// remove characters not supported by JSON
 				if(rows.get(i).get(j).indexOf("\u0001") > -1){ 
 					curr = StringUtils.replace(curr, "\u0001", " "); // remove SOH character 
 					altered = true;
 				} 
-				
-				// escape characters as required by JSON
 				if(rows.get(i).get(j).indexOf('\"') > -1){ 
 					curr = StringUtils.replace(curr, "\"", "\\\"");
 					altered = true;
-				}
-				if(rows.get(i).get(j).indexOf('\\') > -1){ 
-					curr = StringUtils.replace(curr, "\\", "\\\\");
-					altered = true;
 				} 
-				
-				// escape character that screws up our csv rows
 				if(rows.get(i).get(j).indexOf('\n') > -1){ 
 					curr = StringUtils.replace(curr, "\n", "\\n");
 					altered = true;	
 				} 
-				
-				// escape character for some reason
 				if(rows.get(i).get(j).indexOf('\t') > -1){ 
 					curr = StringUtils.replace(curr, "\t", "\\t");
 					altered = true;
