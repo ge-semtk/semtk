@@ -171,6 +171,59 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
+	@Test
+	public void testStoreTable_WithBackslash() throws Exception {
+		// try backslash and quotes
+		//
+		// PEC 9/28/17  I don't understand why 
+		// 		this works in Java but not in the browser or python, which both choke on the backslash
+		// 		this works in Java when the RestClient TableFormatter is fixing double quotes but not backslashes
+		// 		we're allowed to put TableFormatter in ResultsClient.java
+		
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"colA"};
+		String [] types = {"String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("\"Tor\" likes blue\\purple jello");  	
+		
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			String tableJsonStrOrig = table.toJson().toJSONString();
+			client.execStoreTableResults(jobId, table);	
+			String tableJsonStrPostStore = table.toJson().toJSONString();
+			
+			// check the JSON results
+			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
+			Table tbl = tblresset.getTable();
+			String tableJsonStrRetrieved = tbl.toJson().toJSONString();
+
+			System.out.println("jobId: " + jobId);
+			System.out.println("json orig:      " + tableJsonStrOrig);
+			System.out.println("json post_send: " + tableJsonStrPostStore);
+			System.out.println("json retrieved: " + tableJsonStrRetrieved);
+			
+			assert(tableJsonStrRetrieved.equals(tableJsonStrOrig));
+
+			
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
+	@Test
+	public void delete_me() throws Exception {
+		// --- private experiment ---
+		System.out.println("Notice how JSON simple parser treats these the same");
+		String s1 = "{\"str\": \"Tor likes blue\\purple jello	\n\u0001\"}";    // illegal
+		String s2 = "{\"str\": \"Tor likes blue\\\\purple jello	\n\u0001\"}";
+		JSONParser parser = new JSONParser();
+		JSONObject j1 = (JSONObject) parser.parse(s1);
+		JSONObject j2 = (JSONObject) parser.parse(s2);
+		System.out.println(j1.toJSONString());
+		System.out.println(j2.toJSONString());
+	}
 	/**
 	 * Test a row with quotes but no commas (in the past this triggered different logic in the ResultsClient)
 	 */
@@ -229,6 +282,7 @@ public class ResultsClientTest_IT {
 	
 	
 	/**
+	 * TODO: fix this comment.  SOH passes through 
 	 * Test that SOH is stripped when writing results.
 	 * If SOH is not stripped, the ResultsClient would succeed - but the browser would choke 
 	 * (org.simple.JSONParser is less strict than Chrome/Firefox which uses the JSON standard)
@@ -249,15 +303,15 @@ public class ResultsClientTest_IT {
 			table.addRow(row);	
 			client.execStoreTableResults(jobId, table);	
 			
-			// check the JSON results
+			// check the JSON results:   SOH comes back as an escape sequence
 			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
 			String resultJSONString = tblresset.getTable().toJson().toJSONString();
-			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\"],\"rows\":[[\"apple ant\",\"bench\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":1}";  // validated json
+			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\"],\"rows\":[[\"apple\\u0001ant\",\"bench\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":1}";  // validated json
 			assertEquals(expectedJSONString, resultJSONString);
 	
-			// check the CSV results
+			// check the CSV results:   SOH is in the string
 			CSVDataset data = client.execTableResultsCsv(jobId, null);
-			String expectedCSVString = "colA,colB\napple ant,bench\n";  
+			String expectedCSVString = "colA,colB\napple\u0001ant,bench\n";  
 			CSVDataset compare = new CSVDataset(expectedCSVString, true);
 			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
 			ArrayList<String> resultColumnNames  = data.getColumnNamesinOrder();					
