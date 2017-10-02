@@ -466,4 +466,36 @@ public abstract class Utility {
 		}
 		return ret;
 	}
+	
+	
+
+	/**
+	 * Make a string json compatible, while minding performance.
+	 * @param s the original string
+	 * @return a json-safe string
+	 * 
+	 * http://json.org/   (see the "string" section)
+	 *
+	 * https://stackoverflow.com/questions/4901133/json-and-escaping-characters
+	 * 2.5. Strings
+		The representation of strings is similar to conventions used in the C family of programming languages. 	
+		A string begins and ends with quotation marks. All Unicode characters may be placed within the quotation 
+		marks except for the characters that must be escaped: quotation mark, reverse solidus, 
+		and the control characters (U+0000 through U+001F).
+		Any character may be escaped.
+	 */
+	public static String escapeJsonString(String s) {
+		for(int i=0; i < s.length(); i++){
+			char ch=s.charAt(i);
+			
+			// for performance reasons, only call JSONObject.escape() if the string *might* not be json compatible
+			// everything from space to } is json safe, except \ and "
+			if (ch < ' ' || ch > '}' || ch == '\\' || ch == '"') {
+				// string may not be json safe, escape it
+				return JSONObject.escape(s);  // from Javadoc: Escape quotes, \, /, \r, \n, \b, \f, \t and other control characters (U+0000 through U+001F).
+			}
+		}
+		// string confirmed json safe, return it as-is
+		return s;
+	}
 }
