@@ -1336,7 +1336,7 @@ public class OntologyInfo {
             }
         }
 
-        // annotationList: classes
+        // annotation Lists: classes
         for (String c : this.classHash.keySet()) {
         	ArrayList<String> commentList = this.classHash.get(c).getAnnotationComments();
         	for (int i=0; i < commentList.size(); i++) {
@@ -1355,20 +1355,20 @@ public class OntologyInfo {
         	}
         }
         
-        // annotationList: properties
-        for (String c : this.propertyHash.keySet()) {
-        	ArrayList<String> commentList = this.propertyHash.get(c).getAnnotationComments();
+        // annotation Lists: properties
+        for (String p : this.propertyHash.keySet()) {
+        	ArrayList<String> commentList = this.propertyHash.get(p).getAnnotationComments();
         	for (int i=0; i < commentList.size(); i++) {
         		 JSONArray a = new JSONArray();
-                 a.add(Utility.prefixURI(c, prefixToIntHash));
+                 a.add(Utility.prefixURI(p, prefixToIntHash));
                  a.add(commentList.get(i));
                  annotationCommentList.add(a);
         	}
         	
-        	ArrayList<String> labelList = this.propertyHash.get(c).getAnnotationLabels();
+        	ArrayList<String> labelList = this.propertyHash.get(p).getAnnotationLabels();
         	for (int i=0; i < labelList.size(); i++) {
         		JSONArray a = new JSONArray();
-                a.add(Utility.prefixURI(c, prefixToIntHash));
+                a.add(Utility.prefixURI(p, prefixToIntHash));
                 a.add(labelList.get(i));
                 annotationLabelList.add(a);
         	}

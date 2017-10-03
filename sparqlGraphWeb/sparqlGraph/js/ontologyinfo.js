@@ -30,7 +30,7 @@
  */
 var OntologyInfo = function(optJson) {
     this.classHash = {};        // classHash[classURI] = oClass object
-    this.propHash = {};         // propHash[propURI] = oProp object
+    this.propertyHash = {};         // propertyHash[propURI] = oProp object
     this.subclassHash = {};     // for each class list of sub-classes   (NOTE: super-classes are stored in the class itsself)
     this.enumHash = {};         // this.enumHash[className] = [ full-uri-of-enum-val, full-uri-of-enum_val2... ]
     
@@ -158,7 +158,7 @@ OntologyInfo.prototype = {
 	
 	getPropNames : function() {
 		// returns an array of all known properties
-		return Object.keys(this.propHash);
+		return Object.keys(this.propertyHash);
 	},
 	
 	getConnList : function(classNameStr) {
@@ -265,7 +265,7 @@ OntologyInfo.prototype = {
 	
 	containsProperty : function(propNameStr) {
 		// does this contain given property
-		return (propNameStr in this.propHash);
+		return (propNameStr in this.propertyHash);
 	},
 	
 	getInheritedProperties : function(ontClass) {
@@ -492,10 +492,27 @@ OntologyInfo.prototype = {
 	loadProperties : function(classList, propList, rangeList) {
 		// load from rows of [class, property, range]
 		for (var i=0; i < classList.length; i++) {
-			var prop = new OntologyProperty(propList[i], rangeList[i]);
+            var prop = null;
+            
+            // does property already exist
+			if (propList[i] in this.propertyHash) {
+				prop = this.propertyHash[propList[i]];
+				
+				// if property exists, make sure range is the same
+				if (prop.getRangeStr() != rangeList[i]) {
+					throw new Error("SemTk doesn't handle complex ranges.\nClass" + classList[i] +
+                                    "property domain " + propList[i] +
+                                    "\nrange 1: " + prop.getRangeStr() +
+                                    "\nrange 2: " + rangeList[i]
+								    );
+				}
+			} else {
+				// if property doesn't exist, create it
+				prop = new OntologyProperty(propList[i], rangeList[i]);
+			}
 			var c = this.classHash[classList[i]];
 			c.addProperty(prop);
-			this.propHash[propList[i]] = prop;
+			this.propertyHash[propList[i]] = prop;
 		}
 	},
 	
@@ -524,6 +541,75 @@ OntologyInfo.prototype = {
 		}
 	},
 	
+    getAnnotationLabelsQuery : function(domain) {
+		// This query will be sub-optimal if there are multiple labels and comments for many elements
+		// because every combination will be returned
+		//
+		// But in the ususal case where each element has zero or 1 labels and comments
+		// It is more efficient to get them in a single query with each element URI only transmitted once.
+		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
+				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
+				"\n" + 
+				"select distinct ?Elem ?Label where {\n" + 
+				" ?Elem a ?p.\r\n" + 
+				" filter regex(str(?Elem),'^" + domain + "'). " + 
+				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
+				"    optional { ?Elem rdfs:label ?Label. }\n" + 
+				"}";
+	},
+	
+	loadAnnotationLabels : function(elemList, labelList) {
+        
+		for (var i=0; i < elemList.length; i++) {
+			
+			// find the element: class or property
+			var e = this.classHash[elemList[i]];
+			if (e == null) {
+				e = this.propertyHash[elemList[i]];
+			} 
+			if (e == null)  {
+				throw new Error("Cannot find element " + elemList[i] + " in the ontology");
+			}
+			
+			// add the annotations (empties and duplicates are handled downstream)
+			e.addAnnotationLabel(labelList[i]);
+		}
+	},
+    
+	getAnnotationCommentsQuery : function(domain) {
+		// This query will be sub-optimal if there are multiple labels and comments for many elements
+		// because every combination will be returned
+		//
+		// But in the ususal case where each element has zero or 1 labels and comments
+		// It is more efficient to get them in a single query with each element URI only transmitted once.
+		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
+				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
+				"\n" + 
+				"select distinct ?Elem ?Comment where {\n" + 
+				" ?Elem a ?p.\r\n" + 
+				" filter regex(str(?Elem),'^" + domain + "'). " + 
+				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
+				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
+				"}";
+	},
+	
+	loadAnnotationComments : function(elemList, commentList) {
+		for (var i=0; i < elemList.length; i++) {
+			
+			// find the element: class or property
+			var e = this.classHash[elemList[i]];
+			if (e == null) {
+				e = this.propertyHash[elemList[i]];
+			} 
+			if (e == null)  {
+				throw new Error("Cannot find element " + elemList[i] + " in the ontology");
+			}
+			
+			// add the annotations (empties and duplicates are handled downstream)
+			e.addAnnotationComment(commentList[i]);
+		}
+	},
+    
 	classIsEnum : function (classURI) {
 		return classURI in this.enumHash;
 	},
@@ -787,13 +873,43 @@ OntologyInfo.prototype = {
                                 qsResult.getStringResultsColumn("Property"),
                                 qsResult.getStringResultsColumn("Range") );
 			
-			var sparql = this.getEnumQuery(this.asyncDomain);
-    		this.asyncStatusCallback("Loading ontology (4/4: enums)");
+			var sparql = this.getAnnotationCommentsQuery(this.asyncDomain);
+    		this.asyncStatusCallback("Loading ontology (4/6: comments)");
     		this.executeQuery(sparql, this.doLoad4.bind(this));
 		}	
     },
     
     doLoad4 : function  (qsResult) {
+    	// last in callback chain.  
+    	if (!qsResult.isSuccess()) {
+    		this.asyncFailureCallback("Annotation comments query:\n\n" + qsResult.getStatusMessage());
+			
+		} else {
+			this.loadAnnotationComments(qsResult.getStringResultsColumn("Elem"),
+                                        qsResult.getStringResultsColumn("Comment"));
+			
+			var sparql = this.getAnnotationLabelsQuery(this.asyncDomain);
+    		this.asyncStatusCallback("Loading ontology (5/6: labels)");
+    		this.executeQuery(sparql, this.doLoad5.bind(this));
+		}	
+    },
+    
+    doLoad5 : function  (qsResult) {
+    	// last in callback chain.  
+    	if (!qsResult.isSuccess()) {
+    		this.asyncFailureCallback("Annotation labels query:\n\n" + qsResult.getStatusMessage());
+			
+		} else {
+			this.loadAnnotationLabels(qsResult.getStringResultsColumn("Elem"),
+                                      qsResult.getStringResultsColumn("Label") );
+			
+			var sparql = this.getEnumQuery(this.asyncDomain);
+    		this.asyncStatusCallback("Loading ontology (6/6: enums)");
+    		this.executeQuery(sparql, this.doLoad6.bind(this));
+		}	
+    },
+    
+    doLoad6 : function  (qsResult) {
     	// last in callback chain.  
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Enums query:\n\n" + qsResult.getStatusMessage());
@@ -849,6 +965,8 @@ OntologyInfo.prototype = {
             "subClassSuperClassList" : [],
             "classPropertyRangeList" : [],
             "classEnumValList" : [],
+            "annotationLabelList" : [],
+            "annotationCommentList" : [],
             "prefixes" : {}
         };
         
@@ -887,6 +1005,32 @@ OntologyInfo.prototype = {
             }
         }
 
+        // annotation Lists: classes
+        for (var c in this.classHash) {
+            var commentList = this.classHash[c].getAnnotationComments();
+        	for (var i=0; i < commentList.length; i++) {
+                json.annotationCommentList.push([this.prefixURI(c, prefixToIntHash), commentList[i]]);
+        	}
+        	
+        	labelList = this.classHash[c].getAnnotationLabels();
+        	for (var i=0; i < labelList.length; i++) {
+                json.annotationLabelList.push([this.prefixURI(c, prefixToIntHash), labelList[i]]);
+        	}
+        }
+
+        // annotation Lists: properties
+        for (var p in this.propertyHash) {
+            var commentList = this.propertyHash[p].getAnnotationComments();
+        	for (var i=0; i < commentList.length; i++) {
+                json.annotationCommentList.push([this.prefixURI(p, prefixToIntHash), commentList[i]]);
+        	}
+        	
+        	labelList = this.propertyHash[p].getAnnotationLabels();
+        	for (var i=0; i < labelList.length; i++) {
+                json.annotationLabelList.push([this.prefixURI(p, prefixToIntHash), labelList[i]]);
+        	}
+        }
+        
         // prefixes: reverse the hash so its intToPrefix
         for (var p in prefixToIntHash) {
             json.prefixes[prefixToIntHash[p]] = p;
@@ -928,6 +1072,15 @@ OntologyInfo.prototype = {
                        getColumn(json.classEnumValList, 1)
                       );
         
+        if (json.hasOwnProperty("annotationLabelList")) {
+            this.loadAnnotationLabels(getColumn(json.annotationLabelList, 0),
+                                      getColumn(json.annotationLabelList, 1));
+        }
+        
+        if (json.hasOwnProperty("annotationCommentList")) {
+            this.loadAnnotationComments(getColumn(json.annotationCommentList, 0),
+                                      getColumn(json.annotationCommentList, 1));
+        }
     },
 };
 
@@ -1147,15 +1300,115 @@ OntologyPath.prototype = {
 };
 
 /*
+ * OntologyAnnotation
+ * In Java, this is a superclass of OntologyClass and OntologyProperty
+ * but in js it a property
+ */
+var OntologyAnnotation = function() {
+    this.comments = [];
+    this.labels = [];
+};
+
+OntologyAnnotation.prototype = {
+    /**
+	 * Add comment, silently ignoring duplicates, nulls, isEmpty
+	 * @param label
+	 */
+	addAnnotationComment : function(comment) {
+		if (comment != null && comment != "" && this.comments.indexOf(comment) == -1) {
+			this.comments.push(comment);
+		}
+	},
+	
+	/**
+	 * Add label, silently ignoring duplicates, nulls, isEmpty
+	 * @param label
+	 */
+	addAnnotationLabel : function(label) {
+		if (label != null && label != "" && this.labels.indexOf(label) == -1) {
+			this.labels.push(label);
+		}
+	},
+	
+	getAnnotationComments : function() {
+		return this.comments;
+	},
+
+	getAnnotationLabels : function() {
+		return this.labels;
+	},
+
+	/**
+	 * Return ; separated list of comments, or ""
+	 * @return
+	 */
+	getAnnotationCommentsString : function() {
+		return this.comments.join(" ; ");
+	},
+	
+	/**
+	 * Return ; separated list of comments, or ""
+	 * @return
+	 */
+	getAnnotationLabelsString : function() {
+		return this.labels.join(" ; ");
+	},
+	
+	/**
+     * Generate <rdfs:label> and <rdfs:comment> lines for an element
+     * @param elem
+     * @return
+     */
+    generateAnnotationRdf : function(tab) {
+    	var ret = "";
+    	
+    	for (var i=0; i < this.comments.length; i++) {
+            ret += tab + "<rdfs:comment>" + this.comments[i] + "</rdfs:comment>\n";
+    	}
+    	
+    	for (var i=0; i < this.labels.length; i++) {
+            ret += tab + "<rdfs:label>" + this.labels[i] + "</rdfs:label>\n";
+    	}
+    	
+    	return ret;
+    },
+    
+    generateAnnotationsSADL : function() {
+    	var ret = "";
+    	
+    	for (var i=0; i < this.comments.length; i++) {
+            ret += '(note "' + this.comments[i] + '\")';
+    	}
+    	
+    	for (var i=0; i < this.labels.length; i++) {
+            ret += '(alias "' + this.labels[i] + '\")';
+    	}
+    	
+    	return ret;
+    },
+};
+
+/*
  * OntologyClass
  */
 var OntologyClass = function(name, parentName) {
     this.name = new OntologyName(name);
     this.parentName = new OntologyName(parentName);
     this.properties = [];
+    this.annotation = new OntologyAnnotation();
 };
 
 OntologyClass.prototype = {
+    // In java, sub-classing takes care of this
+    addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
+    addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
+    getAnnotationComments :       function() { return this.annotation.getAnnotationComments(); },
+    getAnnotationLabels :         function() { return this.annotation.getAnnotationLabels(); },
+    getAnnotationCommentsString : function() { return this.annotation.getAnnotationCommentsString(); },
+    getAnnotationLabelsString :   function() { return this.annotation.getAnnotationLabelsString(); },
+    generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
+    generateAnnotationsSADL :     function() { return this.annotation.generateAnnotationsSADL(); },
+    
 	getNameStr : function(stripNsFlag) {
 		if (stripNsFlag) 
 			return this.name.getLocalName();
@@ -1184,7 +1437,7 @@ OntologyClass.prototype = {
 				return this.properties[i];
 			}
 		}
-		return 
+		return ;
 	},
 	
 	getPropertyByKeyname : function(keyName) {
@@ -1194,7 +1447,7 @@ OntologyClass.prototype = {
 				return this.properties[i];
 			}
 		}
-		return null
+		return null;
 	},
 	
 	addProperty : function(ontProperty) {
@@ -1240,10 +1493,20 @@ OntologyClass.prototype = {
 var OntologyProperty = function(name, range) {
     this.name = new OntologyName(name);
     this.range = new OntologyRange(range);
-
+    this.annotation = new OntologyAnnotation();
 };
 
 OntologyProperty.prototype = {
+    // In java, sub-classing takes care of this
+    addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
+    addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
+    getAnnotationComments :       function() { return this.annotation.getAnnotationComments(); },
+    getAnnotationLabels :         function() { return this.annotation.getAnnotationLabels(); },
+    getAnnotationCommentsString : function() { return this.annotation.getAnnotationCommentsString(); },
+    getAnnotationLabelsString :   function() { return this.annotation.getAnnotationLabelsString(); },
+    generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
+    generateAnnotationsSADL :     function() { return this.annotation.generateAnnotationsSADL(); },
+    
 	getName : function() {
 		return this.name;
 	},
