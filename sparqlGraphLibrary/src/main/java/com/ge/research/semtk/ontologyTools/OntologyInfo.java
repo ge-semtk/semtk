@@ -1028,6 +1028,24 @@ public class OntologyInfo {
 	}
 	
 	/**
+	 * Return all OntologyClasses with prop
+	 * @param prop
+	 * @return
+	 */
+	public ArrayList<OntologyClass> getPropertyDomain(OntologyProperty prop) {
+		ArrayList<OntologyClass> ret = new ArrayList<OntologyClass>();
+		
+		for (String key : this.classHash.keySet()) {
+			OntologyClass oClass = this.classHash.get(key);
+			ArrayList<OntologyProperty> oProps = oClass.getProperties();
+			if (oProps.contains(prop)) {
+				ret.add(oClass);
+			}
+		}
+		return ret;
+	}
+	
+	/**
 	 * loads all of the data for the ontology into the OntologyInfo object
 	 * @param endpoint
 	 * @param domain
