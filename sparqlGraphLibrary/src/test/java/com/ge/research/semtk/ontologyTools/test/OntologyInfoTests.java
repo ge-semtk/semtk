@@ -47,6 +47,7 @@ public class OntologyInfoTests {
         assertEquals(oInfo.getPropertyNames().size(), oInfo2.getPropertyNames().size());
         assertEquals(oInfo.getClassNames().size(), oInfo2.getClassNames().size());
         
+        // test simple: battery has a label and no comments
         OntologyClass battery = oInfo2.getClass("http://kdl.ge.com/batterydemo#Battery");
         assertTrue(battery.getAnnotationLabels().get(0).equals("duracell"));
         assertTrue(battery.getAnnotationComments().size() == 0);
@@ -56,6 +57,16 @@ public class OntologyInfoTests {
         System.out.println(id.getAnnotationLabelsString());
         assertTrue(id.getAnnotationLabels().size() == 2);
         assertTrue(id.getAnnotationComments().size() == 0);
+        
+        // test "cell" has no annotations
+        OntologyClass cell = oInfo2.getClass("http://kdl.ge.com/batterydemo#Cell");
+        assertTrue(cell.getAnnotationLabels().size() == 0);
+        assertTrue(cell.getAnnotationComments().size() == 0);
+        
+        // test "cell"->"color" annotations
+        OntologyProperty color = cell.getProperty("http://kdl.ge.com/batterydemo#color");
+        assertTrue(color.getAnnotationLabels().size() == 0);
+        assertTrue(color.getAnnotationComments().get(0).equals("you know,like red"));
         
 	}
 	

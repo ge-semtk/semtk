@@ -10,14 +10,17 @@
 		["0:Cell","0:id","1:string"],
 		["0:BatteryChild","0:tantrumsPerDay","1:int"]
 	],
-	"annotationList":[
-		["0:Battery","duracell",""],
-		["0:name","I got nothing","no note neither"],
-		["0:name","","second non-note"],
-		["0:cellId","cell identifier",""],
-		["0:id","alias added by Battery",""],
-		["0:id","alias added by Cell",""],
-		["0:color","","you know,like red"]
+	"annotationLabelList":[
+		["0:Battery","duracell"],
+		["0:name","I got nothing"],
+		["0:cellId","cell identifier"],
+		["0:id","alias added by Battery"],
+		["0:id","alias added by Cell"]
+	],
+	"annotationCommentList":[
+		["0:name","no note neither"],
+		["0:name","second non-note"],
+		["0:color","you know,like red"]
 	],
 	"prefixes":{
 		"0":"http:\/\/kdl.ge.com\/batterydemo",

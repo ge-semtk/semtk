@@ -122,6 +122,7 @@ public class OntologyInfoTests_IT {
 		String comments2 = oInfo2.getClass("http://kdl.ge.com/batterydemo#Battery").getProperty("http://kdl.ge.com/batterydemo#id").getAnnotationCommentsString();
 		assertEquals(comments1, comments2);
 
+		System.out.println("oInfo1.toJson()\n" + oInfo1.toJson());
 	}
 	
 	@Test
