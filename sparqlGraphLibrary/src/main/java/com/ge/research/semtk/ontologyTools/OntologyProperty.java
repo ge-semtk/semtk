@@ -21,7 +21,12 @@ package com.ge.research.semtk.ontologyTools;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
 
-public class OntologyProperty {
+/** 
+ * Represents Datatype or Object Property
+ * @author 200001934
+ *
+ */
+public class OntologyProperty extends AnnotatableElement{
 
 	private OntologyName  name = null;
 	private OntologyRange range = null;

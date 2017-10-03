@@ -168,7 +168,7 @@ public class TestGraph {
 	}
 	
 	/**
-	 * 
+	 * Upload owl file to the test graph
 	 * @param owlFilename  "src/test/resources/file.owl"
 	 * @throws Exception
 	 */
@@ -180,6 +180,21 @@ public class TestGraph {
 		Path path = Paths.get(owlFilename);
 		byte[] owl = Files.readAllBytes(path);
 		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl));
+		if (!resultSet.getSuccess()) {
+			throw new Exception(resultSet.getRationaleAsString(" "));
+		}
+	}
+	
+	/**
+	 * Upload an owl string to the test graph
+	 * @param owl
+	 * @throws Exception
+	 */
+	public static void uploadOwlString(String owl) throws Exception {
+		
+		SparqlEndpointInterface sei = getSei();
+		
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl.getBytes()));
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}

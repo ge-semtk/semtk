@@ -30,6 +30,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,6 +47,7 @@ import java.util.zip.Inflater;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -212,6 +214,10 @@ public abstract class Utility {
 	    Arrays.sort(arr1Clone);
 	    Arrays.sort(arr2Clone);
 	    return Arrays.equals(arr1Clone, arr2Clone);
+	}
+	
+	public static String readFile(String path) throws IOException {
+		  return FileUtils.readFileToString(new File(path));
 	}
 	
 	/**
@@ -467,7 +473,14 @@ public abstract class Utility {
 		return ret;
 	}
 	
-	
+	public static String [] getJsonTableColumn(JSONArray jArr, int col) {
+		String [] ret = new String[jArr.size()];
+		
+		for (int i=0; i < jArr.size(); i++) {
+			ret[i] =  (String) ( ((JSONArray)jArr.get(i)) .get(col) ) ;
+		}
+		return ret;
+	}
 
 	/**
 	 * Make a string json compatible, while minding performance.

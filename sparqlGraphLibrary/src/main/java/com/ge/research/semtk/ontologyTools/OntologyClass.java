@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 
-public class OntologyClass {
+public class OntologyClass extends AnnotatableElement {
 
 	private OntologyName name = null;
 	// a given class could have more than one parent. 

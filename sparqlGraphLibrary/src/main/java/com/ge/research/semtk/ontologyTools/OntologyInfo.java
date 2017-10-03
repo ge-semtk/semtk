@@ -55,22 +55,23 @@ import com.sun.org.apache.bcel.internal.generic.NEW;
  **/
 public class OntologyInfo {
 
+	// --- "permanent" hashes of info about the Ontology ---- //
 	// indexed list of all the classes in the ontology of interst
 	private HashMap<String, OntologyClass> classHash = new HashMap<String, OntologyClass>();
 	// indexed list of all of the properties in the ontoogy of interest
 	private HashMap<String, OntologyProperty> propertyHash = new HashMap<String, OntologyProperty>();
-	// for each class, the collection of valid, single-hop paths to and from other classes. 
-	private HashMap<String, ArrayList<OntologyPath>> connHash = new HashMap<String, ArrayList<OntologyPath>>();
 	// for each class, list its subclasses. the superclasses are stored in the class object itself. 
 	private HashMap<String, ArrayList<OntologyClass>> subclassHash = new HashMap<String, ArrayList<OntologyClass>>();
 	// a list of all the enumerations available for a given class. these are handled as full uris for convenience sake. 
 	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
 		
+	// --- temporary hashes during path-finding ---
+	// for each class, the collection of valid, single-hop paths to and from other classes. 
+	private HashMap<String, ArrayList<OntologyPath>> connHash = new HashMap<String, ArrayList<OntologyPath>>();
 	private ArrayList<String> pathWarnings = new ArrayList<String>();  // problems incurred searching for a path.	
 
 	private final static int MAXPATHLENGTH = 50;	// how many hops, max, allowed in a returned path between arbitrary nodes
-	
-	private static int restCount = 0;
+	private static int restCount = 0;               // a list counter
 	
 	// used in the serialization and have to be held internally in the event that an oInfo is generated 
 	// be de-serializing a json blob.
@@ -630,6 +631,43 @@ public class OntologyInfo {
 		
 	}
 	
+	public static String getAnnotationQuery(String domain) {
+		// This query will be sub-optimal if there are multiple labels and comments for many elements
+		// because every combination will be returned
+		//
+		// But in the ususal case where each element has zero or 1 labels and comments
+		// It is more efficient to get them in a single query with each element URI only transmitted once.
+		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
+				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
+				"\n" + 
+				"select distinct ?Elem ?Label ?Comment where {\n" + 
+				" ?Elem a ?p.\r\n" + 
+				" filter regex(str(?Elem),'^" + domain + "'). " + 
+				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
+				"    optional { ?Elem rdfs:label ?Label. }\n" + 
+				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
+				"}";
+		return retval;
+	}
+	
+	public void loadAnnotations(String elemList[], String labelList[], String commentList[]) throws Exception {
+		for (int i=0; i < elemList.length; i++) {
+			
+			// find the element: class or property
+			AnnotatableElement e = this.classHash.get(elemList[i]);
+			if (e == null) {
+				e = this.propertyHash.get(elemList[i]);
+			} 
+			if (e == null)  {
+				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			}
+			
+			// add the annotations (empties and duplicates are handled downstream)
+			e.addAnnotationLabel(labelList[i]);
+			e.addAnnotationComment(commentList[i]);
+		}
+	}
+	
 	/**
 	 * returns the sparql query used to get all of the properties in scope.
 	 */
@@ -716,23 +754,30 @@ public class OntologyInfo {
 		 
 		// loop through and make the property, pull class...
 		for(int i = 0; i < classList.length; i += 1){
-			OntologyProperty prop = new OntologyProperty(propertyList[i], rangeList[i]);
+			OntologyProperty prop = null;
+			
+			// does property already exist
+			if (this.propertyHash.containsKey(propertyList[i])) {
+				prop = this.propertyHash.get(propertyList[i]);
+				
+				// if property exists, make sure range is the same
+				if (! prop.getRangeStr().equals(rangeList[i])) {
+					throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
+										  classList[i], 
+										  propertyList[i], 
+										  this.propertyHash.get(propertyList[i]).getRangeStr(),
+										  rangeList[i]));
+				}
+			} else {
+				// if property doesn't exist, create it
+				prop = new OntologyProperty(propertyList[i], rangeList[i]);
+			}
+
 			OntologyClass c = this.classHash.get(classList[i]);
 			if(c == null){
 				throw new Exception("Cannot find class " + classList[i] + " in the ontology");
 			}			
 			c.addProperty(prop);
-			
-			// SemTk doesn't handle multiple ranges properly
-			// Do a little bit of error handling / warning
-			if (this.propertyHash.containsKey(propertyList[i]) && 
-					! this.propertyHash.get(propertyList[i]).getRangeStr().equals(rangeList[i])) {
-				throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
-												  classList[i], 
-												  propertyList[i], 
-												  this.propertyHash.get(propertyList[i]).getRangeStr(),
-												  rangeList[i]));
-			}
 			
 			this.propertyHash.put(propertyList[i], prop);
 		}
@@ -970,6 +1015,9 @@ public class OntologyInfo {
 		endpoint.executeQuery(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
 		this.loadEnums(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("EnumVal"));
 		
+		endpoint.executeQuery(OntologyInfo.getAnnotationQuery(domain), SparqlResultTypes.TABLE);
+		this.loadAnnotations(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Label"), endpoint.getStringResultsColumn("Comment"));
+		
 	}
 	
 	/**
@@ -994,86 +1042,6 @@ public class OntologyInfo {
 		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
-	}
-	
-	/**
-	 * Build a VisJs representation of OntologyInfo
-	 * @return  JSONObject
-	 */
-	@SuppressWarnings("unchecked")
-	public JSONObject toVisJs() {
-		// Questions
-		//    Javascript ontologyTree has a namespace node at the root.   Do we want that?
-		//    This function gives inherited properties.  Is that ok.
-		//    Do we want namespace on the model or not.  This one does.  If we don't, where does it come from?
-		//
-		JSONObject ret = new JSONObject();
-		
-		int id = 1;
-		HashMap<Integer, String> indexToClass = new HashMap<Integer, String>();
-		HashMap<String, Integer> classToIndex = new HashMap<String, Integer>();
-
-		
-		// give each class a number
-		for (String className : this.classHash.keySet()) {
-			classToIndex.put(className, id);
-			indexToClass.put(id, className);
-			id++;
-		}
-		
-		// create model
-		JSONArray model = new JSONArray();
-		for (int i=1; i < id; i++) {
-			OntologyName classOntName = new OntologyName(indexToClass.get(i));
-			JSONObject m = new JSONObject();
-			m.put("id", i);
-			// use local name of class
-			m.put("label", classOntName.getLocalName());
-			// use full name of class
-			//m.put("label", classOntName.getFullName());
-			model.add(m);
-		}
-		
-		// create edges
-		JSONArray edges = new JSONArray();
-		for (String className : this.subclassHash.keySet()) {
-			ArrayList<OntologyClass> subClasses = this.subclassHash.get(className);
-			for (int i=0; i < subClasses.size(); i++) {
-				JSONObject e = new JSONObject();
-				e.put("from", classToIndex.get(className));
-				e.put("to", classToIndex.get(subClasses.get(i).getNameString(false)));
-				edges.add(e);
-			}
-		}
-		
-		// create properties
-		JSONObject properties = new JSONObject();
-		for (String className : this.classHash.keySet()) {
-			
-			// create array of properties
-			JSONArray propArray = new JSONArray();
-			
-			// get inherited properties
-			ArrayList<OntologyProperty> ontProps = this.getInheritedProperties(this.classHash.get(className)); 
-			// get only properties of this class
-			//ArrayList<OntologyProperty> ontProps = this.classHash.get(className).getProperties();
-			
-			for (int i=0; i < ontProps.size(); i++) {
-				JSONObject p = new JSONObject();
-				OntologyProperty ontProp = ontProps.get(i);
-				p.put("type", ontProp.getRangeStr(true));     // true strips name string
-				p.put("name",  ontProp.getNameStr(true));      // true strips name string
-				propArray.add(p);
-			}
-			
-			properties.put(classToIndex.get(className).toString(), propArray);
-		}
-		JSONObject data = new JSONObject();
-		data.put("model", model);
-		data.put("edges", edges);
-		data.put("properties", properties);
-		ret.put("data", data);
-		return ret;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -1288,6 +1256,7 @@ public class OntologyInfo {
     	JSONArray subClassSuperClassList =  new JSONArray();
     	JSONArray classPropertyRangeList =  new JSONArray();
     	JSONArray classEnumValList =  new JSONArray();
+    	JSONArray annotationList = new JSONArray();
     	JSONObject prefixes =  new JSONObject();
         
         HashMap<String,String> prefixToIntHash = new HashMap<String, String>();
@@ -1331,6 +1300,35 @@ public class OntologyInfo {
             }
         }
 
+        // annotationList: classes
+        for (String c : this.classHash.keySet()) {
+        	ArrayList<String> commentList = this.classHash.get(c).getAnnotationComments();
+        	ArrayList<String> labelList = this.classHash.get(c).getAnnotationLabels();
+        	int size = Math.max(commentList.size(), labelList.size());
+        	for (int i=0; i < size; i++) {
+        		JSONArray a = new JSONArray();
+                a.add(Utility.prefixURI(c, prefixToIntHash));
+                a.add(i >= labelList.size()   ? "" : labelList.get(i));
+                a.add(i >= commentList.size() ? "" : commentList.get(i));
+                annotationList.add(a);
+        	}
+        }
+        
+        // annotationList: properties
+        for (String c : this.propertyHash.keySet()) {
+        	ArrayList<String> commentList = this.propertyHash.get(c).getAnnotationComments();
+        	ArrayList<String> labelList = this.propertyHash.get(c).getAnnotationLabels();
+        	int size = Math.max(commentList.size(), labelList.size());
+        	for (int i=0; i < size; i++) {
+        		JSONArray a = new JSONArray();
+                a.add(Utility.prefixURI(c, prefixToIntHash));
+                a.add(i >= labelList.size()   ? "" : labelList.get(i));
+                a.add(i >= commentList.size() ? "" : commentList.get(i));
+                annotationList.add(a);
+        	}
+        }
+        
+        
         // prefixes: reverse the hash so its intToPrefix
         for (String p : prefixToIntHash.keySet()) {
             prefixes.put(prefixToIntHash.get(p), p);
@@ -1340,6 +1338,7 @@ public class OntologyInfo {
     	json.put("subClassSuperClassList", subClassSuperClassList);
     	json.put("classPropertyRangeList",classPropertyRangeList);
     	json.put("classEnumValList", classEnumValList);
+    	json.put("annotationList", annotationList);
     	json.put("prefixes", prefixes);
     	
         return json;
@@ -1366,13 +1365,24 @@ public class OntologyInfo {
         this.loadSuperSubClasses(Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 0, intToPrefixHash),
         						 Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 1, intToPrefixHash)     
                                 );
+        
         this.loadProperties(Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 0, intToPrefixHash),
         					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 1, intToPrefixHash),
         					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 2, intToPrefixHash)
                             );
+        
         this.loadEnums(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 0, intToPrefixHash),
         				Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 1, intToPrefixHash)
                       );
+        
+        // annotationList is optional for backwards compatibility
+        JSONArray annotationList = (JSONArray)json.get("annotationList");
+        if (annotationList != null) {
+	        this.loadAnnotations(Utility.unPrefixJsonTableColumn(annotationList, 0, intToPrefixHash),
+	        					 Utility.getJsonTableColumn(     annotationList, 1),
+	        					 Utility.getJsonTableColumn(     annotationList, 2)
+	                            );
+        }
     }
     
     public String generateRdfOWL(String base) {
@@ -1393,7 +1403,8 @@ public class OntologyInfo {
     	
     			
     	// Classes
-    	this.appendComment(owl, "****** Classes ******");
+    	owl.append(this.generateXMLComment("****** Classes ******"));
+
     	for (String c : this.classHash.keySet()) {
     		owl.append(String.format("\t<owl:Class rdf:about=\"%s\">\n", c));
     		
@@ -1421,11 +1432,15 @@ public class OntologyInfo {
     					"\t\t\t</owl:Class>\r\n" + 
     					"\t\t</owl:equivalentClass>\n");
     		}
+    		
+    		// annotations
+    		owl.append(this.classHash.get(c).generateAnnotationRdf("\t\t"));
+    		
     		owl.append("\t</owl:Class>\n\n");
     	}
     	
     	// Properties
-    	this.appendComment(owl, "****** Properties ******");
+    	owl.append(this.generateXMLComment("****** Properties ******"));
     	for (String p : this.propertyHash.keySet()) {
     		OntologyProperty oProp = this.propertyHash.get(p);
 
@@ -1444,6 +1459,9 @@ public class OntologyInfo {
     		
     		owl.append(String.format("\t\t<rdfs:range rdf:resource=\"%s\"/>\n", oProp.getRangeStr()));
     		
+    		// annotations
+    		owl.append(oProp.generateAnnotationRdf("\t\t"));
+    		
     		if (oProp.getRangeStr().contains("XMLSchema#")) {
     			owl.append("\t</owl:DatatypeProperty>\n\n");
     		} else {
@@ -1456,8 +1474,8 @@ public class OntologyInfo {
     	return owl.toString();
     }
     
-    private void appendComment(StringBuilder sb, String comment) {
-    	sb.append("\n\n<!-- " + comment + " -->\n\n");
+    private String generateXMLComment(String comment) {
+    	return "\n\n<!-- " + comment + " -->\n\n";
     }
     
     public String generateSADL(String base) {
@@ -1475,14 +1493,14 @@ public class OntologyInfo {
 			
 			// type
 			if (superClasses.size() == 0) {
-				sadl.append(String.format("\n%s is a class.\n", oClass.getNameString(true)));
+				sadl.append(String.format("\n%s %s is a class.\n", oClass.getNameString(true), oClass.generateAnnotationsSADL()));
 			} else {
 				
 				for (int i=0; i < superClasses.size(); i++) {
 					OntologyClass parent = superClasses.get(i);
 					// parent name is full if it isn't in oInfo, abbreviated if it is
 					String parentName = parent.getNameString(this.containsClass(parent.getNameString(false)));
-					sadl.append(String.format("\n%s is a type of %s.\n", oClass.getNameString(true), parentName));
+					sadl.append(String.format("\n%s %s is a type of %s.\n", oClass.getNameString(true), oClass.generateAnnotationsSADL(), parentName));
 				}
 			}
 			
@@ -1490,7 +1508,7 @@ public class OntologyInfo {
 			for (OntologyProperty oProp : oProps) {
 				
 				String t = oProp.getRangeStr(true);
-				sadl.append(String.format("\t%s is described by %s with values of type %s.\n", oClass.getNameString(true), oProp.getNameStr(true), t));
+				sadl.append(String.format("\t%s is described by %s %s with values of type %s.\n", oClass.getNameString(true), oProp.getNameStr(true), oProp.generateAnnotationsSADL(), t));
 			}
 			
 			// enums

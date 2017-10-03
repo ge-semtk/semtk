@@ -1,0 +1,19 @@
+uri "http://kdl.ge.com/batterydemo" alias annotBattery version "$Revision:$ Last modified on   $Date:$". 
+
+
+Color is a class, must be one of {red, white, blue}.
+
+Cell is a class, 
+	described by id (alias "alias added by Cell") with a single value of type string,
+	described by cellId (alias "cell identifier") with a single value of type string,
+	described by color (note "you know,like red") with a single value of type Color.
+	
+Battery (alias "duracell") is a class,
+	described by id (alias "alias added by Battery") with a single value of type string,
+	described by name (alias "I got nothing") (note "no note neither") (note "second non-note") with a single value of type string,
+	described by cell with values of type Cell.
+	
+BatteryChild is a type of Battery,
+	described by tantrumsPerDay with a single value of type int.
+	 
+	 

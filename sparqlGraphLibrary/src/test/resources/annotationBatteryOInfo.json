@@ -1,0 +1,27 @@
+{
+	"topLevelClassList":["0:Battery","0:Cell","0:Color"],
+	"subClassSuperClassList":[["0:BatteryChild","0:Battery"]],
+	"classPropertyRangeList":[
+		["0:Battery","0:name","1:string"],
+		["0:Battery","0:cell","0:Cell"],
+		["0:Battery","0:id","1:string"],
+		["0:Cell","0:cellId","1:string"],
+		["0:Cell","0:color","0:Color"],
+		["0:Cell","0:id","1:string"],
+		["0:BatteryChild","0:tantrumsPerDay","1:int"]
+	],
+	"annotationList":[
+		["0:Battery","duracell",""],
+		["0:name","I got nothing","no note neither"],
+		["0:name","","second non-note"],
+		["0:cellId","cell identifier",""],
+		["0:id","alias added by Battery",""],
+		["0:id","alias added by Cell",""],
+		["0:color","","you know,like red"]
+	],
+	"prefixes":{
+		"0":"http:\/\/kdl.ge.com\/batterydemo",
+		"1":"http:\/\/www.w3.org\/2001\/XMLSchema"
+	},
+	"classEnumValList":[["0:Color","0:blue"],["0:Color","0:white"],["0:Color","0:red"]]
+}
