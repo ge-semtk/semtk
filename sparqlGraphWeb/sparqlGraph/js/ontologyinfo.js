@@ -51,6 +51,8 @@ var OntologyInfo = function(optJson) {
     }
 };
 
+OntologyInfo.JSON_VERSION = 2;
+
 OntologyInfo.prototype = {
 	
 	addClass : function(ontClass) {
@@ -961,6 +963,7 @@ OntologyInfo.prototype = {
      */
     toJson : function () { 
         var json = {
+            "version" : OntologyInfo.JSON_VERSION,
             "topLevelClassList" : [],
             "subClassSuperClassList" : [],
             "classPropertyRangeList" : [],
@@ -1045,7 +1048,13 @@ OntologyInfo.prototype = {
      * Normally, use new OntologyInfo(json)
      */
     addJson : function (json) {
-        
+        var version = 0;
+        if (json.hasOwnProperty("version")) {
+            version = json.version;
+        }
+        if (version > OntologyInfo.JSON_VERSION) {
+            throw new Error("Can't decode OntologyInfo JSON with newer version > " + OntologyInfo.JSON_VERSION + " found: " + version);
+        }
         /* 
          * return one columns of data as a list
          * unPrefix all values

@@ -1,4 +1,5 @@
 {
+	"version":2,
 	"topLevelClassList":["0:Battery","0:Cell","0:Color"],
 	"subClassSuperClassList":[["0:BatteryChild","0:Battery"]],
 	"classPropertyRangeList":[

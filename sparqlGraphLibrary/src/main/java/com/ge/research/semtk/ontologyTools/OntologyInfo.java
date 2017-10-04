@@ -72,7 +72,7 @@ public class OntologyInfo {
 
 	private final static int MAXPATHLENGTH = 50;	// how many hops, max, allowed in a returned path between arbitrary nodes
 	private static int restCount = 0;               // a list counter
-	
+	private final static long JSON_VERSION = 2;
 	// used in the serialization and have to be held internally in the event that an oInfo is generated 
 	// be de-serializing a json blob.
 	private SparqlConnection modelConnection;
@@ -1398,6 +1398,7 @@ public class OntologyInfo {
             prefixes.put(prefixToIntHash.get(p), p);
         }
         
+        json.put("version", OntologyInfo.JSON_VERSION);
         json.put("topLevelClassList", topLevelClassList);
     	json.put("subClassSuperClassList", subClassSuperClassList);
     	json.put("classPropertyRangeList",classPropertyRangeList);
@@ -1411,6 +1412,13 @@ public class OntologyInfo {
     
     public void addJson(JSONObject json) throws Exception {
         
+    	long version = 0;
+    	if (json.containsKey("version")) {
+    		version = (long)json.get("version");
+    	}
+    	if (version > OntologyInfo.JSON_VERSION) {
+    		throw new Exception(String.format("Can't decode OntologyInfo JSON with newer version > %d: found %d", OntologyInfo.JSON_VERSION, version));
+    	}
     	// unlike javascript: need to unpack intToPrefixHash
     	HashMap<String,String> intToPrefixHash = new HashMap<String,String>();
     	JSONObject prefixes = (JSONObject) (json.get("prefixes"));
