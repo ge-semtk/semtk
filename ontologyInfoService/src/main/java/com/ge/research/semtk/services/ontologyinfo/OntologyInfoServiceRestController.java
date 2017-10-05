@@ -44,52 +44,6 @@ public class OntologyInfoServiceRestController {
 	@Autowired
 	private OntologyServiceProperties service_prop;
 
-	
-	@CrossOrigin
-	@RequestMapping(value="/getVisJs", method= RequestMethod.POST)
-	public JSONObject getVisJs(@RequestBody OntologyInfoRequestBody requestBody){
-		
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-	    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs start");
-    	logToStdout("OntologyInfo Service getVisJs start");
-    	
-    	SimpleResultSet res = new SimpleResultSet();
-        
-    	String serverType = "";
-    	String serverUrl = ""; 
-    	
-	    try {
-	    	
-	    	if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-	    		serverType = service_prop.getServerType(); 
-	    	} else {
-	    		serverType = requestBody.serverType;
-	    	}
-	    	
-	    	if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-	    		serverUrl = service_prop.getServerURL(); 
-	    	} else {
-	    		serverUrl = requestBody.serverAndPort; 
-	    	}
-	    	
-	    	SparqlConnection conn = new SparqlConnection();
-	    	conn.setDomain(requestBody.domain);
-	    	conn.addModelInterface(serverType, serverUrl, requestBody.dataset);
-	    	OntologyInfo oInfo = new OntologyInfo(conn);
-	    	
-	    	res.addResultsJSON(oInfo.toVisJs());
-	    	res.setSuccess(true);
-	    	
-	    } catch (Exception e) {
-	    	res.setSuccess(false);
-	    	res.addRationaleMessage(SERVICE_NAME, "getVisJs", e);
-		    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs exception", "message", e.toString());
-		    e.printStackTrace();
-	    }
-	    
-	    return res.toJson();
-	}
-
 	@CrossOrigin
 	@RequestMapping(value="/getDetailedOntologyInfo", method= RequestMethod.POST)
 	public JSONObject getDetailedOntologyInfo(@RequestBody DetailedOntologyInfoRequestBody requestBody){
