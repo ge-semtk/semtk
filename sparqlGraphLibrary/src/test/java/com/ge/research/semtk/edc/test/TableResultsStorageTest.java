@@ -45,8 +45,6 @@ import com.ge.research.semtk.resultSet.Table;
 
 public class TableResultsStorageTest {
 
-	// This doesn't work.  Files are still stranded in the temp folder and not deleted.
-	// At least it's a temp location. 
 	@Rule
 	public TemporaryFolder folder= new TemporaryFolder();
 	
