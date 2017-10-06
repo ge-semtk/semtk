@@ -825,6 +825,20 @@ public class OntologyInfo {
 		if(this.enumerationHash.containsKey(classURI)){ retval = true; }
 		return retval;
 	}
+	
+	
+	/**
+	 * Returns enumeration strings for the given class, if it is an enumeration.  Else returns null.
+	 * @param classURI
+	 * @return
+	 */
+	public ArrayList<String> getEnumerationStrings(String classURI){
+		if(!classIsEnumeration(classURI).booleanValue()){
+			return null;
+		}
+		return this.enumerationHash.get(classURI);
+	}
+	
 	/**
 	 * given the URI of a class one belives the Enumeration string is an instance of, the fully-qualified 
 	 * name is returned. if there is no match, null is returned.

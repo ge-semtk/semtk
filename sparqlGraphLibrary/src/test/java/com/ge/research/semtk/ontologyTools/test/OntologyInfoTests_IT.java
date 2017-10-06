@@ -16,23 +16,15 @@
  */
 package com.ge.research.semtk.ontologyTools.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.net.URL;
-
-import org.json.simple.JSONObject;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
 public class OntologyInfoTests_IT {
@@ -81,6 +73,26 @@ public class OntologyInfoTests_IT {
 		// look for a random annotation
 		assertTrue(oInfo.getClass("http://kdl.ge.com/batterydemo#Battery").getAnnotationLabels().get(0).equals("duracell"));
 
+	}
+	
+	@Test
+	public void testEnumerations() throws Exception {
+
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/annotationBattery.owl");		
+		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn("http://kdl.ge.com/"));
+		
+		assertEquals(oInfo.getNumberOfEnum(), 1);
+		assertTrue(oInfo.classIsEnumeration("http://kdl.ge.com/batterydemo#Color"));
+		assertEquals(oInfo.getEnumerationStrings("http://kdl.ge.com/batterydemo#Color").size(),3);
+		assertTrue(oInfo.getEnumerationStrings("http://kdl.ge.com/batterydemo#Color").contains("http://kdl.ge.com/batterydemo#blue"));
+		assertFalse(oInfo.getEnumerationStrings("http://kdl.ge.com/batterydemo#Color").contains("http://kdl.ge.com/batterydemo#ochre"));
+
+		// invalid enumerations
+		assertFalse(oInfo.classIsEnumeration("http://kdl.ge.com/batterydemo#Colorful"));
+		assertNull(oInfo.getEnumerationStrings("http://kdl.ge.com/batterydemo#Colorful"));
+	
 	}
 	
 	@Test
