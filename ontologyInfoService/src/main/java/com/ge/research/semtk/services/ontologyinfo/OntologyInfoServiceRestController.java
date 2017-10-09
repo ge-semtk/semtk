@@ -27,8 +27,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
+import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
@@ -36,7 +39,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 @RestController
 @RequestMapping("/ontologyinfo")
 public class OntologyInfoServiceRestController {
- 	static final String SERVICE_NAME = "sparqlQueryService";
+ 	static final String SERVICE_NAME = "ontologyInfoService";
 
 	@Autowired
 	OntologyInfoLoggingProperties log_prop;
@@ -87,6 +90,29 @@ public class OntologyInfoServiceRestController {
 	    return res.toJson();
 	}
 	
+	
+	/**
+	 * Get a tabular data dictionary report.
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/getDataDictionary", method=RequestMethod.POST)
+	public JSONObject getDataDictionary(@RequestBody SparqlConnectionRequestBody requestBody) {
+	
+    	TableResultSet res = new TableResultSet();	
+	    try {
+	    	OntologyInfo oInfo = new OntologyInfo(requestBody.getSparqlConnection());
+	    	Table dataDictionaryTable = DataDictionaryGenerator.generate(oInfo, true);
+	    	res.addResults(dataDictionaryTable);
+	    	res.setSuccess(true);
+	    } catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, "getDataDictionary", e);
+	    	e.printStackTrace();
+	    }
+	    return res.toJson();
+	}
+	
+	
 	@CrossOrigin
 	@RequestMapping(value="/getRdfOWL", method=RequestMethod.POST)
 	public JSONObject getRdfOWL(@RequestBody OntologyInfoJsonRequest requestBody){
@@ -124,6 +150,7 @@ public class OntologyInfoServiceRestController {
 		
 		return retval.toJson();		
 	}
+
 	
 	private void logToStdout (String message) {
 		System.out.println(message);
