@@ -19,7 +19,6 @@
 package com.ge.research.semtk.resultSet;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,8 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -51,7 +48,17 @@ public class Table {
 	private String[] columnTypes;
 	private ArrayList<ArrayList<String>> rows;   
 	private HashMap<String, Integer> columnPositionInfo = new HashMap<String, Integer>();
+
+	/**
+	 * Create an empty table with the given column names and column types.
+	 */
+	public Table(String[] cols, String[] colTypes) throws Exception{
+		this(cols, colTypes, new ArrayList<ArrayList<String>>());
+	}
 	
+	/**
+	 * Create a table with the given column names, column types, and rows.
+	 */
 	public Table(String[] cols, String[] colTypes, ArrayList<ArrayList<String>> rows) throws Exception{
 		
 		// validate
@@ -499,6 +506,18 @@ public class Table {
 		return new Table(mergedTableCols, mergedTableColTypes, mergedTableRows);
 	}
 
+	/**
+	 * Retrieve a subset of the table, where a given column name has a given value.
+	 * @param matchColName the name of the column to match
+	 * @param matchColValue the value of the column to match
+	 * @return
+	 * @throws Exception 
+	 */
+	public Table getSubsetWhereMatches(String matchColName, String matchColValue) throws Exception {
+		return getSubsetWhereMatches(matchColName, matchColValue, this.getColumnNames());
+	}
+	
+	
 	/**
 	 * Retrieve a subset of the table, where a given column name has a given value.
 	 * @param matchColName the name of the column to match

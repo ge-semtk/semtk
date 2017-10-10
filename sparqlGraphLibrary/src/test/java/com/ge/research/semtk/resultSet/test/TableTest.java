@@ -33,6 +33,7 @@ import com.ge.research.semtk.resultSet.Table;
 
 public class TableTest {
 
+	
 	@Test
 	public void testTableToCSV() throws Exception {
 		
@@ -198,6 +199,20 @@ public class TableTest {
 		assertEquals(table.getRowAsCSVString(0),"apple,banana,coconut");
 		assertEquals(table.getRowAsCSVString(1),"\"adam,adamson\",\"barbara,barbrason\",\"chester,chesterton\"");
 	}
+
+	@Test
+	public void testTable_addRowToEmptyTable() throws Exception{
+		String[] cols = {"colA"};
+		String[] colTypes = {"String"};
+		Table table = new Table(cols, colTypes); // tests the no-row constructor
+		
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		table.addRow(rowFruit);
+		
+		assertEquals(table.getNumRows(),1);
+		assertEquals(table.getCell(0, 0),"apple");
+	}
 	
 	@Test
 	public void testTableToCSV_1Row1Col() throws Exception {
@@ -293,7 +308,7 @@ public class TableTest {
 		Table table = new Table(cols, colTypes, rows);
 		assertEquals(table.toJson().get(Table.JSON_KEY_COL_COUNT), 1);
 		assertEquals(table.toJson().get(Table.JSON_KEY_ROW_COUNT), 1);
-	}	
+	}		
 	
 	@Test
 	public void testTableFromJson() throws Exception{
@@ -332,15 +347,22 @@ public class TableTest {
 		assertEquals(tableMerged.toJson().toString(),res);
 	}
 	
-	
 	@Test
 	public void testTableGetSubsetWhereMatches() throws Exception {
 		String jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
 		JSONObject jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
 		Table table = Table.fromJson(jsonObj);
 		
-		String[] retColNames = {"colC"};
-		Table tableSubset = table.getSubsetWhereMatches("colB", "banana", retColNames);
+		// test retrieving all columns
+		Table tableSubset = table.getSubsetWhereMatches("colB", "banana");  // 2 arguments
+		assertEquals(tableSubset.getNumColumns(),3);
+		assertEquals(tableSubset.getNumRows(), 1);
+		assertEquals(tableSubset.getRows().get(0).get(0), "apple");
+		assertEquals(tableSubset.getRows().get(0).get(1), "banana");
+		assertEquals(tableSubset.getRows().get(0).get(2), "coconut");
+		
+		// test retrieving column C only
+		tableSubset = table.getSubsetWhereMatches("colB", "banana", new String[]{"colC"}); // 3 arguments
 		assertEquals(tableSubset.getNumColumns(),1);
 		assertEquals(tableSubset.getNumRows(), 1);
 		assertEquals(tableSubset.getRows().get(0).get(0), "coconut");
