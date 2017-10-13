@@ -918,8 +918,15 @@ require([	'local/sparqlformconfig',
          */
         restoreQueryFromJson2 = function(sgJson) {
             
-            // fill up gNodeGroup w/o inflating
-            sgJson.getNodeGroup(gNodeGroup, gOInfo);
+            try {
+                sgJson.getNodeGroup(gNodeGroup, gOInfo);
+            } catch (e) {
+                ModalIidx.alert("Error loading nodegroup",
+                                 e.hasOwnProperty("message") ? e.message : e
+                                 );
+                doClearFormBut();               
+                return;
+            }
             
             var formRows = sgJson.getExtra("formRows");
             if (formRows == null) formRows = [];
