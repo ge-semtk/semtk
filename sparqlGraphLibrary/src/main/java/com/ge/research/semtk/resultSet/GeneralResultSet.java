@@ -73,7 +73,18 @@ public abstract class GeneralResultSet {
 	
 	// for exceptions
 	public void addRationaleMessage(String serviceName, String endpoint, Exception e) {
-		this.rationale.add(String.format("%s/%s threw exception.  Message: %s", serviceName, endpoint, e.getMessage()));
+		// build a message
+		StackTraceElement [] trace = e.getStackTrace();
+		String msg = "";
+		
+		// if stack trace is small, use e.toString().  Otherwise get first few lines.
+		if (trace.length < 2) {
+			msg = e.toString();
+		} else {
+			msg = e.getMessage() + "\n" + trace[0].toString() + "\n" + trace[1].toString() + "\n" + "...";
+		}
+		
+		this.rationale.add(String.format("%s/%s threw %s %s", serviceName, endpoint, e.getClass().getName(), msg));
 	}
 	
 	public String getRationaleAsString(String delimiter){

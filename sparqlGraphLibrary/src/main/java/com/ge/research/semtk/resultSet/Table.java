@@ -510,6 +510,18 @@ public class Table {
 	 * Retrieve a subset of the table, where a given column name has a given value.
 	 * @param matchColName the name of the column to match
 	 * @param matchColValue the value of the column to match
+	 * @return
+	 * @throws Exception 
+	 */
+	public Table getSubsetWhereMatches(String matchColName, String matchColValue) throws Exception {
+		return getSubsetWhereMatches(matchColName, matchColValue, this.getColumnNames());
+	}
+	
+	
+	/**
+	 * Retrieve a subset of the table, where a given column name has a given value.
+	 * @param matchColName the name of the column to match
+	 * @param matchColValue the value of the column to match
 	 * @param returnColNames the names of the columns to return
 	 * @return
 	 * @throws Exception 
