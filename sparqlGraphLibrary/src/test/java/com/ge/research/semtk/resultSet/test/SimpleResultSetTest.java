@@ -75,4 +75,20 @@ public class SimpleResultSetTest {
 		}
 	}	
 	
+	@Test
+	public void addRationale() throws Exception {
+		SimpleResultSet resultSet = new SimpleResultSet(false);
+			
+		try {
+			int[] myIntArray = {1,2,3};
+			myIntArray[3] = 4;
+			fail();
+			
+		} catch (Exception e) {
+			resultSet.addRationaleMessage("testService", "testEndpoint", e);
+			assertTrue(resultSet.getRationaleAsString(" ").contains("ArrayIndexOutOfBoundsException"));
+			assertTrue(resultSet.getRationaleAsString(" ").contains("SimpleResultSetTest.java"));
+		}
+	}	
+	
 }

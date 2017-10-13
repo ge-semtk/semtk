@@ -939,10 +939,15 @@
    		
    	};
 
-   	var doTest = function () {
+   	var activateOntologyEditor = function () {
         document.getElementById("edit-tab-but").style="";
         document.getElementById("edit-tab-but").disabled=false;
    	};
+
+    var doTest = function () {
+        activateOntologyEditor();
+   	};
+
 
     var checkServices = function () {
         require(['sparqlgraph/js/microserviceinterface',

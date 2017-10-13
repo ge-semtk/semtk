@@ -48,6 +48,14 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				this.msi.postToEndpoint("getDetailedOntologyInfo", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
+            
+            execGetDataDictionary : function (conn, successCallback) {
+                var myData = JSON.stringify ({
+					"sparqlConnectionJson" : JSON.stringify(conn.toJson())
+				});				
+				
+				this.msi.postToEndpoint("getDataDictionary", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
 			
 			getRetrieveDetailedOntologyInfoSucceeded : function (resultSet) {
 				// may return null

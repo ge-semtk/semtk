@@ -24,6 +24,8 @@ define([	// properly require.config'ed
          	'sparqlgraph/js/sparqlgraphjson',
          	'sparqlgraph/js/msiclientingestion',
          	'sparqlgraph/js/msiclientquery',
+            'sparqlgraph/js/msiclientontologyinfo',
+            'sparqlgraph/js/msiresultset',
          	'sparqlgraph/js/sparqlgraphjson',
          	'jquery',
 
@@ -32,7 +34,7 @@ define([	// properly require.config'ed
          	//'logconfig',
 		],
 
-	function(ModalIidx, IIDXHelper, SparqlGraphJson, MsiClientIngestion, MsiClientQuery, SparqlGraphJson, $) {
+	function(ModalIidx, IIDXHelper, SparqlGraphJson, MsiClientIngestion, MsiClientQuery, MsiClientOntologyInfo, MsiResultSet, SparqlGraphJson, $) {
 	
 		/*
 		 *    A column name or text or some item used to build a triple value
@@ -243,8 +245,24 @@ define([	// properly require.config'ed
 				col.style.width = "50%";
 				table.appendChild(col);
 				
-				
-				// ===== clear model row =====
+                // ===== data dictionary button row =====
+                tr = document.createElement("tr");	
+                td1 = document.createElement("td");
+				td1.id = "tdDataDict1";
+                td1.innerHTML = "Generate data dictionary"
+				tr.appendChild(td1);
+                
+                td2 = document.createElement("td");
+				button = document.createElement("button");
+				button.id = "butDataDict";
+				button.classList.add("btn");
+				button.innerHTML = "Download";
+				button.onclick = this.generateDataDictionary.bind(this);
+				td2.appendChild(button);
+				tr.appendChild(td2);
+				table.appendChild(tr);
+                
+				// ===== choose dataset model row =====
 				tr = document.createElement("tr");
 				
 				td1 = document.createElement("td");
@@ -524,6 +542,20 @@ define([	// properly require.config'ed
 				}
 			},
 			
+            generateDataDictionary : function() {
+                var successCallback = function(res) {
+                    if (! res.isSuccess()) {
+                        ModalIidx.alert("OInfo service failure", res.getFailureHtml());
+                    } else {
+                        res.tableDownloadCsv();
+                        ModalIidx.alert("Success", "Data dictionary CSV has been downloaded.");
+                    }
+                }
+
+                var client = new MsiClientOntologyInfo(g.service.ontologyInfo.url);
+                client.execGetDataDictionary(this.conn, successCallback);
+            },
+            
 			// get SparqlEndpointInterface or null
 			getSelectedSei : function () {
 				var val = document.getElementById("selectChooseDataset").value;
