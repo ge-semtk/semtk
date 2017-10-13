@@ -104,7 +104,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
+			this.parametersJSON.remove("jobID");
 		}
 		
 		return retval;
@@ -130,7 +130,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
+			this.parametersJSON.remove("jobID");
 		}
 		
 		return retval;		

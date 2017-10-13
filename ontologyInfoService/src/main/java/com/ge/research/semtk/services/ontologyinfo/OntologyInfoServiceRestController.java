@@ -47,49 +47,6 @@ public class OntologyInfoServiceRestController {
 	@Autowired
 	private OntologyServiceProperties service_prop;
 
-	@CrossOrigin
-	@RequestMapping(value="/getDetailedOntologyInfo", method= RequestMethod.POST)
-	public JSONObject getDetailedOntologyInfo(@RequestBody DetailedOntologyInfoRequestBody requestBody){
-		
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-	    LoggerRestClient.easyLog(logger, "OntologyInfoService", "getVisJs start");
-    	logToStdout("OntologyInfo Service getVisJs start");
-    	
-    	SimpleResultSet res = new SimpleResultSet();	
-	    
-    	String serverType = "";
-    	String serverUrl = ""; 
-	    try {
-	    	if(requestBody.getServerType() == null || requestBody.getServerType().isEmpty()) {
-	    		serverType = service_prop.getServerType(); 
-	    	} else {
-	    		serverType = requestBody.getServerType();
-	    	}
-	    	
-	    	if(requestBody.getUrl() == null || requestBody.getUrl().isEmpty()) {
-	    		serverUrl = service_prop.getServerURL(); 
-	    	} else {
-	    		serverUrl = requestBody.getUrl(); 
-	    	}
-	    	
-	    	SparqlConnection conn = new SparqlConnection();
-	    	conn.setDomain(requestBody.getDomain());
-	    	conn.addModelInterface(serverType, serverUrl, requestBody.getDataset());
-	    	OntologyInfo oInfo = new OntologyInfo(conn);
-	    	
-	    	res.addResultsJSON( oInfo.toDetailedJSON(null) );
-	    	res.setSuccess(true);
-	    	
-	    } catch (Exception e) {
-	    	res.setSuccess(false);
-	    	res.addRationaleMessage(SERVICE_NAME, "getDetailedOntologyInfo", e);
-		    LoggerRestClient.easyLog(logger, "OntologyInfoService", "toJSON exception", "message", e.toString());
-		    e.printStackTrace();
-	    }
-	    
-	    return res.toJson();
-	}
-	
 	
 	/**
 	 * Get a tabular data dictionary report.
