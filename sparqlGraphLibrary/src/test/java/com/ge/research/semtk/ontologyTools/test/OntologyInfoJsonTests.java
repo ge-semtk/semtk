@@ -153,8 +153,8 @@ public class OntologyInfoJsonTests {
         assertTrue(color_neo.getAnnotationLabels().size() == 0);
         assertTrue(color_neo.getAnnotationComments().get(0).equals("you know,like red"));
         
-        // check the newer serialization rehydration
-        
-        
+        // just also show the new json
+        System.err.println("serialized version of oInfo used for tests:");
+        System.err.println(newSerializationFormat);
 	}
 }

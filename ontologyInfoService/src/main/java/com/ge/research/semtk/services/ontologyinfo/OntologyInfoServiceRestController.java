@@ -109,6 +109,29 @@ public class OntologyInfoServiceRestController {
 	}
 
 	
+	@CrossOrigin
+	@RequestMapping(value="/getOntologyInfo", method=RequestMethod.POST)
+	public JSONObject getOntologyInfo(@RequestBody OntologyInfoRequestBody requestBody){
+		SimpleResultSet retval = null;
+		
+		try{
+			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			OntologyInfo oInfo = new OntologyInfo(conn);
+			JSONObject oInfoDetails = oInfo.toAdvancedClientJson();
+			
+			retval = new SimpleResultSet();
+			retval.addResult("ontologyInfo", oInfoDetails);
+			retval.setSuccess(true);
+		}
+		catch(Exception eee){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "getOntologyInfo", eee);
+			eee.printStackTrace();
+		}
+		// send it out.
+		return retval.toJson();
+	}
+	
 	private void logToStdout (String message) {
 		System.out.println(message);
 	}

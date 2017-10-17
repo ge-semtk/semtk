@@ -18,38 +18,33 @@
 
 package com.ge.research.semtk.services.ontologyinfo;
 
+import org.json.simple.parser.JSONParser;
+
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+
 /**
  * For service calls needing SPARQL connection and domain
  */
 public class OntologyInfoRequestBody {
-	public String serverAndPort;  	// e.g. http://localhost:2420
-	public String serverType;		// e.g. virtuoso
-    public String dataset;			// e.g. http://research.ge.com/dataset
-    public String domain;	        // e.g. http://research.ge.com/model
+	private String jsonRenderedSparqlConnection = "";
+	
+	public void setJsonRenderedSparqlConnection(String jsonRenderedSparqlConnection) {
+		this.jsonRenderedSparqlConnection = jsonRenderedSparqlConnection;
+	}
+	
+	public SparqlConnection getJsonRenderedSparqlConnection() throws Exception{
+		return (new SparqlConnection(jsonRenderedSparqlConnection));
+	}
     
     /**
      * Validate request contents.  Throws an exception if validation fails.
      */
     public void validate() throws Exception{
-		if(serverAndPort == null || serverAndPort.trim().isEmpty()){
-			throw new Exception("No server/port specified");
-		}
-		if(serverType == null || serverType.trim().isEmpty()){
-			throw new Exception("No server type specified");
-		}		
-		if(dataset == null || dataset.trim().isEmpty()){
-			throw new Exception("No dataset specified");
-		}	
-		if(domain == null || domain.trim().isEmpty()){
-			throw new Exception("No domain specified");
-		}	
+    	try{
+    	SparqlConnection conn = new SparqlConnection(this.jsonRenderedSparqlConnection); 
+    	}
+    	catch(Exception e){
+    		throw new Exception("unable to create ontology info: " + e.getMessage(), e);
+    	}
     }
-    
-    /**
-     * Print request info to console
-     */
-    public void printInfo(){
-		System.out.println(String.format("Connection: %s (%s) dataset='%s' domain='%s'", serverAndPort ,serverType, dataset, domain));
-    }
-    
 }
