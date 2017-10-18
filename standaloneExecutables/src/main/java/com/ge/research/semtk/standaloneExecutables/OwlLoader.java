@@ -21,8 +21,8 @@ package com.ge.research.semtk.standaloneExecutables;
 import java.io.File;
 import java.nio.file.Files;
 
-import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -33,7 +33,6 @@ public class OwlLoader {
 	/**
 	 * Main method
 	 */
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws Exception{
 		
 		try{
@@ -58,8 +57,8 @@ public class OwlLoader {
 			// get the SPARQL endpoint interface
 			SparqlEndpointInterface sei;
 			try{
-				SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(connectionJSONFilePath));
-				sei = sgJson.getSparqlConn().getModelInterface(0);
+				SparqlConnection conn = new SparqlConnection(Utility.getJSONObjectFromFilePath(connectionJSONFilePath).toJSONString());
+				sei = conn.getModelInterface(0);
 				sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
 				
 				System.out.println("Ontology Dataset: " + sei.getDataset());

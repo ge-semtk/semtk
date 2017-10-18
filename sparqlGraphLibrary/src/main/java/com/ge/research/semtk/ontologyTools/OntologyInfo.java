@@ -44,6 +44,7 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.utility.Utility;
+import com.sun.jersey.core.spi.scanning.uri.UriSchemeScanner;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
 /**
@@ -1108,208 +1109,7 @@ public class OntologyInfo {
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
 	}
-	
-	@SuppressWarnings("unchecked")
-	public JSONObject toDetailedJSON(SparqlConnection sc) throws Exception {
 		
-		// build the entire connnection hash
-		for(String ocKey : this.classHash.keySet()){
-			this.getConnList(ocKey);			
-		}
-
-		
-		JSONObject retval = new JSONObject();
-		JSONObject sparqlConnJSONObject = null;
-		
-		if(sc != null){
-			// use the incoming connection
-			sparqlConnJSONObject =sc.toJson();
-		}
-		
-		else if(sc == null && this.modelConnection != null){
-			// create a sparql connection to describe where this model came from
-			sparqlConnJSONObject = this.modelConnection.toJson();
-		}
-		else{
-			throw new Exception("Error creating JSON Serialization of Ontology Info object. no connection included or embedded.");
-		}
-		
-		
-		// get all the classes
-		JSONArray classList = this.generateJSONClassArray();
-			
-		// get all the properties
-		JSONArray propertyList = this.generateJSONPropArray();
-		
-		// get all enumerations
-		JSONArray enumList = this.generateJSONEnumerationArray();
-		
-		// get the date and time of creation.
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Calendar cal = Calendar.getInstance();
-		Date logDate = cal.getTime();
-		String creationTime = dateFormat.format(logDate);
-		
-		// add everything.
-		// create the oInfo object
-		JSONObject ontologyInfoJSONObject = new JSONObject();
-		ontologyInfoJSONObject.put("version", 1);
-		ontologyInfoJSONObject.put("created", creationTime);
-		ontologyInfoJSONObject.put("classList", classList);
-		ontologyInfoJSONObject.put("propertyList", propertyList);
-		ontologyInfoJSONObject.put("enumerationList", enumList);
-		
-		retval.put("sparqlConn", sparqlConnJSONObject);
-		retval.put("ontologyInfo", ontologyInfoJSONObject);
-		
-		// ship it out
-		return retval;
-	}
-
-	@SuppressWarnings("unchecked")
-	private JSONArray generateJSONEnumerationArray() {
-		JSONArray retval = new JSONArray();
-
-		// get all the enums and what class they descend directly from
-		for(String k : this.enumerationHash.keySet()){
-			JSONObject currEnum = new JSONObject();
-			JSONArray enumList = new JSONArray();
-			
-			for(String currVal : this.enumerationHash.get(k)){
-				enumList.add(currVal);
-			}
-			
-			currEnum.put("fullUri", k);
-			currEnum.put("enumeration", enumList);
-			retval.add(currEnum);
-		}
-		
-		// ship it out
-		return retval;
-	}
-
-	@SuppressWarnings("unchecked")
-	private JSONArray generateJSONPropArray() {
-		JSONArray retval = new JSONArray();
-
-		for(String k : this.propertyHash.keySet()){
-			OntologyProperty currProp = this.propertyHash.get(k);
-			
-			JSONObject propJSONObject = new JSONObject();
-			propJSONObject.put("fullUri", currProp.getNameStr(false));
-			
-			// find the domain. 
-			JSONArray domain = new JSONArray();
-			
-			for(String classUri : this.classHash.keySet()){
-				OntologyClass oClass = this.classHash.get(classUri);
-				// check to see if this class is in the domain.
-				
-				ArrayList<OntologyProperty> nowProps = this.getInheritedProperties(oClass);
-				if(nowProps  != null){
-					for(OntologyProperty p : nowProps){
-						if(p.getNameStr(false).equals(currProp.getNameStr(false))){
-							domain.add(oClass.getNameString(false));
-						}
-					}
-					
-				}
-				else{
-					// not in the domain.
-				}
-				
-			}
-			
-			propJSONObject.put("domain", domain);
-
-			// find the range. 
-			JSONArray range = new JSONArray();			
-			
-			range.add( currProp.getRange().getFullName() ); 			// currently, semtk only supports one range item. this might have to change so an array was used.
-			
-			propJSONObject.put("range", range);
-			// add the prop to the return
-			retval.add(propJSONObject);
-		}
-		// ship it out
-		return retval;
-	}
-
-	@SuppressWarnings("unchecked")
-	private JSONArray generateJSONClassArray() {
-		// throughout most of our other json generation routines, the objects themselves generate the json for themselves.
-		// this instance is different in that oInfo decentralizes a lof the information required for our export.
-		// as a result, i am centralizing this to make update/bug fixes less sprawling.
-		JSONArray retval = new JSONArray();
-		
-		// step through the class list and get what we need.
-		for(String oCurrUri : this.classHash.keySet()){
-			OntologyClass oCurr = this.classHash.get(oCurrUri);
-			
-			JSONObject currClass = new JSONObject();
-			currClass.put("fullUri", oCurrUri); 					// add the full uri for the class
-
-			// get & add the super classes
-			JSONArray superClasses = new JSONArray();
-			
-			for(String parentName : oCurr.getParentNameStrings(false)){
-				superClasses.add(parentName);
-			}
-			currClass.put("superClasses", superClasses);
-			
-			// get & add the sub classes
-			JSONArray subClasses = new JSONArray();
-			
-			if( this.subclassHash.get(oCurrUri) != null){
-				for(OntologyClass sCurr :this.subclassHash.get(oCurrUri) ){
-					subClasses.add(sCurr.getNameString(false));
-				}
-			}
-			currClass.put("subClasses", subClasses);
-			
-			// get & add the properties
-			JSONArray propArray = new JSONArray();
-			
-			ArrayList<OntologyProperty> allProps = this.getInheritedProperties(oCurr);
-			
-			if(allProps != null){
-				for( OntologyProperty oProp : allProps ){
-					propArray.add(oProp.getNameStr(false));
-				}
-			}
-			currClass.put("properties", propArray);
-			
-			// get & add the one-hop connections
-			JSONArray oneHop = new JSONArray();
-			
-			ArrayList<OntologyPath> paths = this.connHash.get(oCurrUri);
-			if(paths != null){
-				for(OntologyPath oPath : paths){
-					JSONObject pCurr = new JSONObject();
-					if(oPath.getStartClassName().equals(oCurrUri)) {
-						// add the destination.
-						pCurr.put("direction", "TO");
-						pCurr.put("class", oPath.getEndClassName());
-					}
-					else{
-						// this was the destination
-						pCurr.put("direction", "FROM");
-						pCurr.put("class", oPath.getStartClassName());
-					}
-					oneHop.add(pCurr);
-				}
-			}
-			currClass.put("directConnections", oneHop);
-	
-			// add the current class to the return array
-			retval.add(currClass);
-			
-		}
-		
-		// ship it out.
-		return retval;
-	}
-	
 	/*
      * Build a json that mimics the returns from the load queries
      */
@@ -1619,6 +1419,345 @@ public class OntologyInfo {
 		}
     	return sadl.toString();
     }
+    
+    
+    // --------------------------------------------------------- Advanced Client Json ---------------------------------------------
+    public JSONObject toAdvancedClientJson() throws ClassException, PathException{
+    	// return the advanced client Json format
+    	JSONObject retval = new JSONObject();
+    	
+    	// create the prefix information.
+    	HashMap<String, String> prefixes = new HashMap<String, String>();
+    	    	
+    	// create the enumeration information
+    	JSONArray enumerations = new JSONArray();
+    	
+    	for(String key : this.enumerationHash.keySet()){
+    		String uri = Utility.prefixURI(key, prefixes);
+    		
+    		JSONObject currEnumeration = new JSONObject();
+    		JSONArray values = new JSONArray();				// get all the values.
+    		
+    		for(String k : this.enumerationHash.get(key)){	// get each of the enumerations we care about
+    			String kUri = Utility.prefixURI(k, prefixes);
+    			values.add(kUri);
+    		}
+    		currEnumeration.put("fullUri", uri);			// put the uri in for this enumeration.
+    		currEnumeration.put("enumeration", values);
+    		
+    		enumerations.add(currEnumeration);
+    	}
+    	
+    	// create propertyList information
+    	JSONArray propertyList = new JSONArray();
+    	
+    	for(String key : this.propertyHash.keySet()){
+    		String uri = Utility.prefixURI(key, prefixes);
+    		
+    		JSONObject currProperty = new JSONObject();
+    		JSONArray domain = new JSONArray();
+    		JSONArray range = new JSONArray();
+    		JSONArray labels = new JSONArray();
+    		JSONArray comments = new JSONArray();
+    		
+    		OntologyProperty currProp = this.propertyHash.get(key);
+    		
+    		// get the domain.
+    		for(String oClassKey : this.classHash.keySet()){
+    			// get the classes which are in the domain.
+    			OntologyClass oClass = this.classHash.get(oClassKey);
+    			
+    			if(oClass.getProperty(key) != null){
+    				// we found one. as a result, this will be prefixed and added.
+    				OntologyProperty currPropInstance = oClass.getProperty(key);
+    				String classId = Utility.prefixURI(oClassKey, prefixes);
+    				domain.add(classId);
+    			}
+    			
+    		}
+    		
+    		// get the range. Okay, this seems silly because we only support one range but it is an array because it 
+    		// may change... a lot.
+    		String rangeId = Utility.prefixURI(currProp.getRange().getFullName(), prefixes);
+    		range.add(rangeId);
+    		
+    		// add the labels.
+    		for(String label : currProp.labels){
+    			labels.add(label);
+    		}
+    		
+    		// add the comments
+    		for(String comment : currProp.comments){
+    			comments.add(comment);
+    		}
+    		// add all the sub-components to the current property
+    		currProperty.put("fullUri", uri);
+    		currProperty.put("domain", domain);
+    		currProperty.put("range", range);
+    		currProperty.put("labels", labels);
+    		currProperty.put("comments", comments);    		
+    		
+    		// add it to the list
+    		propertyList.add(currProperty);
+    	}
+    	
+    	// create classList information
+    	JSONArray classList = new JSONArray();
+    	for(String key : this.classHash.keySet()){
+    		String uri = Utility.prefixURI(key, prefixes);
+    		
+    		JSONObject currClass = new JSONObject();
+    		OntologyClass oClass = this.classHash.get(key);
+    		JSONArray labels = new JSONArray();
+    		JSONArray comments = new JSONArray();
+    		JSONArray superClasses = new JSONArray();
+    		JSONArray subClasses = new JSONArray();
+    		JSONArray directConnections = new JSONArray();
+ 	
+    		// labels
+    		for(String label : oClass.labels){
+    			labels.add(label);
+    		}
+    		
+    		// comments
+    		for(String comment : oClass.comments){
+    			comments.add(comment);
+    		}
+    		// superclasses
+    		for(String parent : oClass.getParentNameStrings(false)){
+    			String parentPrefixed = Utility.prefixURI(parent, prefixes);
+    			superClasses.add(parentPrefixed);
+    		}
+    		
+    		// subclasses
+    		ArrayList<OntologyClass> myChildren = this.subclassHash.get(key);
+    		if(myChildren != null){
+    			for(OntologyClass currChild : myChildren){
+    				String childId = Utility.prefixURI(currChild.getNameString(false), prefixes);
+    				subClasses.add(childId);
+    			}
+    		}
+
+    		// directConnections. -- generate the connections. 
+    		for(OntologyPath currPath : this.getConnList(key)){
+    			JSONObject pathJsonObject = new JSONObject();
+    			
+    			pathJsonObject.put("startClass", Utility.prefixURI(currPath.getTriple(0).getSubject(), prefixes));
+    			pathJsonObject.put("predicate", Utility.prefixURI(currPath.getTriple(0).getPredicate(), prefixes));
+    			pathJsonObject.put("destinationClass", Utility.prefixURI(currPath.getTriple(0).getObject(), prefixes));
+    			
+    			directConnections.add(pathJsonObject);
+    		}
+    		
+    		// full Uri
+    		currClass.put("fullUri", uri);
+    		currClass.put("superClasses", superClasses);
+    		currClass.put("subClasses", subClasses);
+    		currClass.put("comments", comments);
+    		currClass.put("labels", labels);
+    		currClass.put("directConnections", directConnections);
+    		
+    		classList.add(currClass);
+    	}
+    	
+    	// create the prefix array
+    	JSONArray prefixList = new JSONArray();
+    	
+    	for(String k : prefixes.keySet()){
+    		JSONObject pref = new JSONObject();
+    		pref.put("prefixId", prefixes.get(k));
+    		pref.put("prefix", k);
+    		
+    		prefixList.add(pref);
+    	}
+    	
+    	String creationTime = ( new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime()) );
+    	
+    	retval.put("version", this.JSON_VERSION);
+    	retval.put("generated", creationTime);
+    	
+    	if(this.modelConnection != null){
+    		retval.put("sparqlConn", this.modelConnection.toJson());
+    	}
+    	
+    	JSONObject jsonOInfo = new JSONObject();
+    	jsonOInfo.put("prefixes", prefixList);
+    	jsonOInfo.put("enumerations", enumerations);
+    	jsonOInfo.put("propertyList", propertyList);
+    	jsonOInfo.put("classList", classList);
+    	
+    	retval.put("ontologyInfo", jsonOInfo);
+    	
+    	// ship it out.
+    	return retval;
+    }
+
+    public void addAdvancedClientJson(JSONObject encodedOInfo) throws Exception{
+    	    	
+    	// check the version
+    	long version = 0;
+    	if (encodedOInfo.containsKey("version")) {
+    		version = (long)encodedOInfo.get("version");
+    	}
+    	if (version > OntologyInfo.JSON_VERSION) {
+    		throw new Exception(String.format("Can't decode OntologyInfo JSON with newer version > %d: found %d", OntologyInfo.JSON_VERSION, version));
+    	}
+    	
+    	// get the oInfo block:
+    	JSONObject oInfoBlock = (JSONObject) encodedOInfo.get("ontologyInfo");
+    	
+    	// unpack the prefixes.
+    	HashMap<String,String> prefixHash = new HashMap<String,String>();
+    	JSONArray prefixes = (JSONArray) (oInfoBlock.get("prefixes"));
+    	
+    	for(int i = 0; i < prefixes.size(); i++){
+    		JSONObject currPrefix = (JSONObject) prefixes.get(i);
+    		
+    		prefixHash.put((String)currPrefix.get("prefixId"), (String)currPrefix.get("prefix"));
+    	}
+    	
+    	// unpack everything in a way that the table processing code (using parallel arrays) can be called.
+    	
+    	// classes have to be first.
+    	JSONArray classes = (JSONArray) (oInfoBlock.get("classList"));
+    	
+    	// load all the "top-level" classes...
+    	ArrayList<String> uris = new ArrayList<String>();
+    	
+    	for(int a = 0; a < classes.size(); a++){
+    		JSONObject currObject = (JSONObject) classes.get(a);
+    		JSONArray superClassArr = (JSONArray) currObject.get("superClasses");
+    		
+    		if(superClassArr == null || superClassArr.size() == 0){
+    			String fullUri = (String)currObject.get("fullUri");
+    			uris.add(Utility.unPrefixURI(fullUri, prefixHash));
+    		}
+    	}
+    	if(uris.size() != 0){this.loadTopLevelClasses(uris.toArray(new String[uris.size()]));}
+    	
+    	// load class-subclass info.
+    	ArrayList<String> uriSuper = new ArrayList<String>();
+     	ArrayList<String> uriSub   = new ArrayList<String>();
+    	 
+     	for(int a = 0; a < classes.size(); a++){
+     		JSONObject currObject = (JSONObject) classes.get(a);
+     		JSONArray subClassArr = (JSONArray) currObject.get("subClasses");
+     		
+     		if(subClassArr != null && subClassArr.size() > 0){
+     			String fullUri = (String)currObject.get("fullUri");
+     			
+     			fullUri = Utility.unPrefixURI(fullUri, prefixHash);
+     			
+     			for(int b = 0; b < subClassArr.size(); b++){
+     				uriSuper.add(fullUri);
+     				uriSub.add( Utility.unPrefixURI((String)subClassArr.get(b), prefixHash));
+     			}
+     			
+     		}
+     	}
+     	if(uriSub.size() != 0){
+     		
+     		
+     		if(uriSub.size() == uriSuper.size()){
+     			System.err.println("about to load super/sub class relationships... " + uriSub.size() + " units") ;
+     			
+     			//this.loadSuperSubClasses((String[])uriSuper.toArray(), (String[]) uriSub.toArray());
+     			this.loadSuperSubClasses(uriSub.toArray(new String[uriSub.size()]), uriSuper.toArray(new String[uriSuper.size()]));
+     		}
+     	}
+     	     	
+    	// load all comments and labels.
+     	for(int a = 0; a < classes.size(); a++){
+     		JSONObject currObject = (JSONObject) classes.get(a);
+     		
+     		String fullUri = Utility.unPrefixURI((String)currObject.get("fullUri"), prefixHash);
+     		
+     		ArrayList<String> commentList = new ArrayList<String>();
+         	ArrayList<String> labelList = new ArrayList<String>();
+     		ArrayList<String> uri = new ArrayList<String>();
+     		
+     		if(currObject.containsKey("comments")){
+     			JSONArray commentsArr = (JSONArray) currObject.get("comments");
+     			
+     			for(int h = 0; h < commentsArr.size(); h++){
+     				uri.add(fullUri);
+     				commentList.add((String)commentsArr.get(h));
+     			}
+     		}
+     		
+     		if(uri.size() > 0){ this.loadAnnotationComments(uri.toArray(new String[uri.size()]), commentList.toArray(new String[commentList.size()])); }
+     		
+     		uri.clear();
+     		
+     		if(currObject.containsKey("labels")){
+         		JSONArray labelsArr = (JSONArray) currObject.get("labels");
+     			
+         		for(int h = 0; h < labelsArr.size(); h++){
+         			uri.add(fullUri);
+         			labelList.add((String)labelsArr.get(h));
+         		}
+     		}
+     		
+     		if(uri.size() > 0){ this.loadAnnotationLabels(uri.toArray(new String[uri.size()]), labelList.toArray(new String[labelList.size()])); }
+     	}
+		
+    	// unpack the properties second.
+    	
+    	JSONArray properties = (JSONArray) (oInfoBlock.get("propertyList"));
+    	
+    	for(int i = 0; i < properties.size(); i++){
+    		JSONObject currObject = (JSONObject) properties.get(i);
+    		
+    		String fullUri = Utility.unPrefixURI((String) currObject.get("fullUri"), prefixHash);
+    		JSONArray domain = (JSONArray)currObject.get("domain");
+    		JSONArray range = (JSONArray)currObject.get("range");
+    		
+    		String rangeUri = (String) range.get(0);
+    		
+    		// create the parallel arrays needed. note that the "domain" is currently the longest possible value for this part.
+    		String[] domainVals = new String[domain.size()];
+    		String[] uri        = new String[domain.size()];
+    		String[] rangeVals	= new String[domain.size()];
+    		
+    		for(int j = 0; j < domain.size(); j++){
+    			uri[j] 			= fullUri;
+    			domainVals[j]	= Utility.unPrefixURI((String)domain.get(j), prefixHash);
+    			rangeVals[j]	= Utility.unPrefixURI(rangeUri, prefixHash);
+    		}
+    		// call the property add...
+    		this.loadProperties(domainVals, uri, rangeVals);
+    		
+    		if(currObject.containsKey("labels")){		// checking for backward compat reasons.
+	    		JSONArray labels = (JSONArray)currObject.get("labels");
+	    		// add the labels for this property
+	    		String[] labelVals = new String[labels.size()];
+	    		uri = new String[labels.size()];
+	    		
+	    		for(int k = 0; k < labels.size(); k++){
+	    			uri[k] = fullUri;
+	    			labelVals[k] = Utility.unPrefixURI((String)labels.get(k), prefixHash);
+	    		}
+	    		// call the load
+	    		this.loadAnnotationLabels(uri, labelVals);
+    		}
+    		
+    		if(currObject.containsKey("comments")){		// also checked for BC reasons.
+    			JSONArray comments = (JSONArray)currObject.get("comments");
+        		// add the comments for this property
+    			String[] commentVals = new String[comments.size()];
+    			uri = new String[comments.size()];
+    			
+    			for(int l = 0; l < comments.size(); l++){
+    				uri[l] = fullUri;
+    				commentVals[l] = (String)comments.get(l);
+    			}
+    			// call the load
+    			this.loadAnnotationComments(uri, commentVals);
+    		}
+    	}
+    	    	
+    }
+    
 }
 
 
