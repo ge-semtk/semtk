@@ -1009,23 +1009,21 @@ public class OntologyInfo {
 	 * @return
 	 */
 	public Boolean classIsA(OntologyClass classCompared, OntologyClass classComparedTo){
-		Boolean retval = false;
-		// is classCompared a classComparedTo? recursive check.
-		if(classCompared == null || classComparedTo == null) { retval = false; }
-		else{
-			// get all of the parents of classCompared
-			ArrayList<OntologyClass> allParents = this.getClassParents(classCompared);
-			allParents.add(classCompared);
-			
-			for(OntologyClass currentAncestor : allParents){
-				// check the current entry, break if we find it. 
-				if(currentAncestor.getNameString(false).equalsIgnoreCase(classComparedTo.getNameString(false))){
-					retval = true;
-					break;
-				}
-			}			
-		}
-		return retval;
+		
+		if(classCompared == null || classComparedTo == null) { return false; }
+
+		if (classCompared.equals(classComparedTo)) { return true; }
+		
+		ArrayList<OntologyClass> allParents = this.getClassParents(classCompared);
+		
+		// recursively classCompared parents
+		for (OntologyClass parent : allParents){
+			if (this.classIsA(parent, classComparedTo) ) {
+				return true;
+			}
+		}			
+		
+		return false;
 	}
 	
 	/**
@@ -1336,10 +1334,12 @@ public class OntologyInfo {
             if (parents.size() == 0) {
             	topLevelClassList.add(Utility.prefixURI(name, prefixToIntHash));
             } else {
-            	JSONArray a = new JSONArray();
-            	a.add(Utility.prefixURI(name, prefixToIntHash));
-            	a.add(Utility.prefixURI(parents.get(0), prefixToIntHash));
-            	subClassSuperClassList.add(a);
+            	for (int i=0; i < parents.size(); i++) {
+	            	JSONArray a = new JSONArray();
+	            	a.add(Utility.prefixURI(name, prefixToIntHash));
+	            	a.add(Utility.prefixURI(parents.get(i), prefixToIntHash));
+	            	subClassSuperClassList.add(a);
+            	}
             }
         }
         
