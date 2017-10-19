@@ -79,6 +79,7 @@ public class OntologyInfoServiceRestController {
 			OntologyInfo oInfo = requestBody.getOInfo();
 			retval = new SimpleResultSet(); 
 			retval.addResult("rdfOWL", oInfo.generateRdfOWL(requestBody.getBase()));
+			retval.setSuccess(true);
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
@@ -98,6 +99,7 @@ public class OntologyInfoServiceRestController {
 			OntologyInfo oInfo = requestBody.getOInfo();
 			retval = new SimpleResultSet(); 
 			retval.addResult("SADL", oInfo.generateSADL(requestBody.getBase()));
+			retval.setSuccess(true);
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
