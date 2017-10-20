@@ -84,6 +84,9 @@ define([	// properly require.config'ed
         fieldSet.appendChild(IIDXHelper.buildControlGroup(label, input));
     }
 
+    /*
+     * classes - input-mini, input-small, input-medium, input-large, input-xlarge
+     */
     IIDXHelper.createTextInput = function (id, optClassName) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("input");
@@ -175,6 +178,53 @@ define([	// properly require.config'ed
         return select;
     };
 
+    /* create a collapsible div
+     * with a button and title
+     * and innerDom inside it.
+     */
+    IIDXHelper.createCollapsibleDiv = function (title, innerDom, openFlag) {
+        var outerDiv = document.createElement("div");
+        var innerDiv = document.createElement("div");
+        var but = document.createElement("a");
+        var icon = document.createElement("icon");
+        
+        innerDiv.appendChild(innerDom);
+        innerDiv.appendChild(document.createElement("hr"));
+        
+        but.onclick = function(div, ic) {
+            if (ic.className.endsWith("right")) {
+                div.style.display = "inline";
+                ic.className = "icon-chevron-down";
+            } else {
+                div.style.display = "none";
+                ic.className = "icon-chevron-right";
+            }
+        }.bind(this, innerDiv, icon);
+        
+        but.classList.add("btn");
+        but.appendChild(icon);
+        but.onclick(innerDiv, icon);
+        if (openFlag) {
+            but.onclick(innerDiv, icon);
+        }
+
+        outerDiv.appendChild(but);
+        outerDiv.appendChild(document.createTextNode(" " + title));
+        outerDiv.appendChild(document.createElement("br"));
+        outerDiv.appendChild(innerDiv);
+        
+        return outerDiv;
+    };
+    
+    IIDXHelper.createIconButton = function(iconClass) {
+        var ret = document.createElement("a");
+        ret.classList.add("btn");
+        var icon = document.createElement("icon");
+        icon.className = iconClass;
+        ret.appendChild(icon);
+        return ret;
+    };
+    
     /*
      * Get list of values for each selected option
      *

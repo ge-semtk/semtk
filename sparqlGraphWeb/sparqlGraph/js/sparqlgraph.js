@@ -88,6 +88,7 @@
             // edit tab
             gEditTab = new EditTab(document.getElementById("editTreeDiv"),
                                    document.getElementById("editCanvasDiv"),
+                                   document.getElementById("editButtonDiv"),
                                    document.getElementById("editSearch")
                                   );
             document.getElementById("edit-tab-but").disabled = false;
@@ -945,7 +946,8 @@
    	};
 
     var doTest = function () {
-        activateOntologyEditor();
+        activateOntologyEditor();   
+       
    	};
 
 

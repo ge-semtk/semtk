@@ -31,7 +31,7 @@
 var OntologyInfo = function(optJson) {
     this.classHash = {};        // classHash[classURI] = oClass object
     this.propertyHash = {};         // propertyHash[propURI] = oProp object
-    this.subclassHash = {};     // for each class list of sub-classes   (NOTE: super-classes are stored in the class itsself)
+    this.subclassHash = {};     // for each class list of sub-classes names  (NOTE: super-classes are stored in the class itsself)
     this.enumHash = {};         // this.enumHash[className] = [ full-uri-of-enum-val, full-uri-of-enum_val2... ]
     
     this.maxPathLen = 50;
@@ -63,12 +63,15 @@ OntologyInfo.prototype = {
 		this.classHash[classNameStr] = ontClass;
 		
 		// store subClasses
-		var supClassName = ontClass.getParentNameStr();
-		if (!(supClassName in this.subclassHash)) {
-			this.subclassHash[supClassName] = [classNameStr];
-		} else {
-			this.subclassHash[supClassName].push(classNameStr);
-		}
+		var supClassNames = ontClass.getParentNameStrs();
+        for (var i=0; i < supClassNames.length; i++) {
+            
+            if (!(supClassNames[i] in this.subclassHash)) {
+                this.subclassHash[supClassNames[i]] = [];
+            } 
+            
+            this.subclassHash[supClassNames[i]].push(classNameStr);
+        }
 		
 	},
 	setGetFlag : function() {
@@ -90,7 +93,7 @@ OntologyInfo.prototype = {
 				var prop = props[i];
 				// find range and all subclasses
 				var rangeClasses = [prop.getRangeStr()];
-				rangeClasses.concat(this.getSubclassNames(rangeClasses[0]));
+				rangeClasses = rangeClasses.concat(this.getSubclassNames(rangeClasses[0]));
 				
 				// remove range and its subclasses from ret
 				for (var j=0; j < rangeClasses.length; j++) {
@@ -122,9 +125,13 @@ OntologyInfo.prototype = {
 		return Object.keys(this.classHash);
 	},
 	
-	getClassParent : function (ontClass) {
-		// returns parent as class object, or undefined
-		return this.getClass(ontClass.getParentNameStr());
+	getClassParents : function (ontClass) {
+        var ret = [];
+		var names = ontClass.getParentNameStrs();
+        for (var i=0; i < names.length; i++) {
+            ret.push(this.getClass(names[i]));
+        }
+		return ret;
 	},
 	
 	getSubclassNames : function (classNameStr) {
@@ -144,17 +151,22 @@ OntologyInfo.prototype = {
 		return ret;
 	},
 	
-	getSuperclassNames : function (classNameStr) {
+	getSuperclassNames : function (subclassName) {
 		// walk up list of all superclasses
 		var ret = [];
-		var cname = classNameStr;
-		
-		// PEC TODO: could eventually walk right out of the domain.
-		// but there is currently no mechanism to store domain(s).
-		// Hope that parents don't actually point out of the domain.
-		while ((cname = this.classHash[cname].getParentNameStr()) != "" ) {
-			ret.push(cname);
-		}
+		var superclasses = [];
+        
+        var parentNames = this.classHash[subclassName].getParentNameStrs(false);
+        for (var i=0; i < parentNames.length; i++) {
+            var currParentName = parentNames[i];
+            ret.push(currParentName);
+            superclasses.push(this.classHash[currParentName]);
+        }
+        
+        for (var i=0; i < superclasses.length; i++) {
+            var currParentClass = superclasses[i];
+            ret = ret.concat(this.getSuperclassNames(currParentClass.getNameStr(false)));
+        }
 		return ret;
 	},
 	
@@ -162,6 +174,27 @@ OntologyInfo.prototype = {
 		// returns an array of all known properties
 		return Object.keys(this.propertyHash);
 	},
+    
+    getEnumNames : function() {
+        // returns an array of all known enumeration values
+        
+        var retHash = {};
+        
+        for (var k in this.enumHash) {
+            var eList = this.enumHash[k];
+            for (var i=0; i < eList.length; i++) {
+                retHash[eList[i]] = 1;
+            }
+        }
+        return Object.keys(retHash);
+    },
+    
+    uriIsKnown : function(uri) {
+        return (    this.getPropNames().indexOf(uri) > -1   ||
+                    this.getClassNames().indexOf(uri) > -1  ||
+                    this.getEnumNames().indexOf(uri) > -1   
+               );
+    },
 	
 	getConnList : function(classNameStr) {
 		// return or calculate all legal one-hop path connections to and from a class
@@ -277,27 +310,19 @@ OntologyInfo.prototype = {
 		var ret = [];
 		var dup = {};
 			
-		var cName = ontClass.getNameStr();
-		var oClass = ontClass;
-		while (cName != "") {
+        // get full list of classes
+		var cNames = [ontClass.getNameStr()].concat(this.getSuperclassNames(ontClass.getNameStr()));
+        
+        // for each class
+		for (var i=0; i < cNames.length; i++) {
 			
-			var p = oClass.getProperties();
+			var p = this.classHash[cNames[i]].getProperties();
 		
-			for (var i=0; i < p.length; i++) {
-				// push class if it isn't already on the list
-				var key = p[i].getNameStr() + ":" + p[i].getRangeStr();
-				if (!(key in dup)) {
-					ret.push(p[i]);
-					dup[key] = 1;
-				}
-			}
-			
-			// get name of parent and look up object
-			cName = oClass.getParentNameStr();
-			if (cName != "") {
-				var oClass = this.getClass(cName);
-				if (oClass == null)
-					alert("ERROR: OntologyInfo.getInheritedProperties(): bad class name:" + cName);
+            // save each prop if it's new
+			for (var j=0; j < p.length; j++) {
+				if (ret.indexOf(p[j]) == -1) {
+					ret.push(p[j]);
+                }
 			}
 		}
 		
@@ -370,10 +395,22 @@ OntologyInfo.prototype = {
 	},
 	
 	loadSuperSubClasses : function(subClassList, superClassList) {
-		// load queryResult
-		for (var i=0; i < subClassList.length; i++) {
-			var x = new OntologyClass(subClassList[i], superClassList[i]);
-			this.addClass(x);
+        var tempClasses = {};
+        for (var i=0; i < subClassList.length; i++) {
+            // check for the existence of the current class. 
+			if( ! (subClassList[i] in tempClasses)) {
+				var c = new OntologyClass(subClassList[i], null);
+				tempClasses[subClassList[i]] = c;
+			}
+			// get the current class and add the parent.
+			var c = tempClasses[subClassList[i]];
+			c.addParentName(superClassList[i]);
+        }
+        
+		// call addClass() on the temp list.
+		for(keyName in tempClasses) {
+			var oClass = tempClasses[keyName];
+			this.addClass(oClass);
 		}
 	},
 	
@@ -762,15 +799,19 @@ OntologyInfo.prototype = {
 	
 	
 	classIsA : function (class1, class2) {
-		// is class1 a class2 ?    Recursive check.
-		var c = class1;
+		
 		
 		if (!class1 || !class2) return false;
 		
-		do {
-			if (c.equals(class2)) return true;
-			c = this.getClassParent(c);
-		} while (c);
+        if (class1.equals(class2)) return true;
+        
+        var allParents = this.getClassParents(class1);
+		// recursively check class1 parents
+		for (var i=0; i < allParents.length; i++) {
+			if (this.classIsA(allParents[i], class2)) {
+                return true;
+            }
+		} 
 		
 		return false;
 	},
@@ -977,13 +1018,15 @@ OntologyInfo.prototype = {
 
         // topLevelClassList and subClassSuperClassList
         for (var c in this.classHash) {
-            var parent = this.classHash[c].getParentNameStr();
+            var parents = this.classHash[c].getParentNameStrs();
             var name = this.classHash[c].getNameStr();
-            if (parent == "") {
+            if (parents.length == 0) {
                 json.topLevelClassList.push(this.prefixURI(name, prefixToIntHash));
             } else {
-                json.subClassSuperClassList.push([this.prefixURI(name, prefixToIntHash), 
-                                                  this.prefixURI(parent, prefixToIntHash) ]);
+                for (var i=0; i < parents.length; i++) {
+                    json.subClassSuperClassList.push([this.prefixURI(name, prefixToIntHash), 
+                                                      this.prefixURI(parents[i], prefixToIntHash) ]);
+                }
             }
         }
         
@@ -1091,6 +1134,68 @@ OntologyInfo.prototype = {
                                       getColumn(json.annotationCommentList, 1));
         }
     },
+    
+    /*
+     * Change name of a class
+     * @param oClass {OntologyClass} - a class from this oInfo
+     * @param newName {String} - new name already checked to be legalURI and !uriIsKnown()
+     */
+    editClassName : function(oClass, newURI) {
+        var oldURI = oClass.getNameStr(false);
+        
+        if (! SparqlUtil.isValidURI(newURI)) {
+            throw new Error("Invalid URL: " + newURI);
+        
+        } else if (this.uriIsKnown(newURI)) {
+            throw new Error("URI is already in use: " + newURI);
+        
+        } else if (newURI != oldURI) {
+            
+            oClass.setName(newURI);
+            
+            // update classHash
+            this.classHash[newURI] = oClass;
+            delete this.classHash[oldURI];
+            
+            // update subclassHash keys
+            if (oldURI in this.subclassHash) {
+                this.subclassHash[newURI] = this.subclassHash[oldURI];
+                delete this.subclassHash[oldURI];
+            }
+            
+            // update subclassHash contents
+            for (var key in this.subclassHash) {
+                var i = this.subclassHash[key].indexOf(oldURI);
+                if (i > -1) {
+                    this.subclassHash[key][i] = newURI;
+                }
+            }
+            
+            // update enumHash
+            if (oldURI in this.enumHash) {
+                this.enumHash[newURI] = this.enumHash[oldURI];
+                delete this.enumHash[oldURI];
+            }
+            
+            // update enumHash contents
+            for (key in this.enumHash) {
+                var i = this.enumHash[key].indexOf(oldURI);
+                if (i > -1) {
+                    this.enumHash[key][i] = newURI;
+                }
+            }
+            
+            // upadate superclasses
+            for (var key in this.classHash) {
+                this.classHash[key].renameParent(oldURI, newURI);
+            }
+   
+            // clear connHash
+            this.connHash = {};   
+            
+            return oClass;
+        } 
+    }
 };
 
 /*
@@ -1321,24 +1426,38 @@ var OntologyAnnotation = function() {
 OntologyAnnotation.prototype = {
     /**
 	 * Add comment, silently ignoring duplicates, nulls, isEmpty
-	 * @param label
+	 * @param comment - may be undefined, null, empty
 	 */
 	addAnnotationComment : function(comment) {
-		if (comment != null && comment != "" && this.comments.indexOf(comment) == -1) {
-			this.comments.push(comment);
-		}
+        if (comment) {
+            var trimmed = comment.trim();
+            if (trimmed.length) {
+                this.comments.push(trimmed);
+            }
+        }
 	},
+    
+    clearAnnotationComments : function() {
+        this.comments = [];
+    },
 	
 	/**
 	 * Add label, silently ignoring duplicates, nulls, isEmpty
 	 * @param label
 	 */
 	addAnnotationLabel : function(label) {
-		if (label != null && label != "" && this.labels.indexOf(label) == -1) {
-			this.labels.push(label);
-		}
+		if (label) {
+            var trimmed = label.trim();
+            if (trimmed.length) {
+                this.labels.push(trimmed);
+            }
+        }
 	},
 	
+    clearAnnotationLabels : function() {
+        this.labels = [];
+    },
+    
 	getAnnotationComments : function() {
 		return this.comments;
 	},
@@ -1401,22 +1520,33 @@ OntologyAnnotation.prototype = {
  * OntologyClass
  */
 var OntologyClass = function(name, parentName) {
+    // parentName can be ""
     this.name = new OntologyName(name);
-    this.parentName = new OntologyName(parentName);
+    this.parentNames = [];
     this.properties = [];
     this.annotation = new OntologyAnnotation();
+    
+    if (parentName) {
+        this.parentNames.push(new OntologyName(parentName));
+    }
 };
 
 OntologyClass.prototype = {
     // In java, sub-classing takes care of this
     addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
+    clearAnnotationComments:      function()  { return this.annotation.clearAnnotationComments(); },
     addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
-    getAnnotationComments :       function() { return this.annotation.getAnnotationComments(); },
-    getAnnotationLabels :         function() { return this.annotation.getAnnotationLabels(); },
-    getAnnotationCommentsString : function() { return this.annotation.getAnnotationCommentsString(); },
-    getAnnotationLabelsString :   function() { return this.annotation.getAnnotationLabelsString(); },
+    clearAnnotationLabels:        function()  { return this.annotation.clearAnnotationLabels(); },
+    getAnnotationComments :       function()  { return this.annotation.getAnnotationComments(); },
+    getAnnotationLabels :         function()  { return this.annotation.getAnnotationLabels(); },
+    getAnnotationCommentsString : function()  { return this.annotation.getAnnotationCommentsString(); },
+    getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
     generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
-    generateAnnotationsSADL :     function() { return this.annotation.generateAnnotationsSADL(); },
+    generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
+    
+    setName : function (nameStr) {
+        this.name = new OntologyName(nameStr);
+    },
     
 	getNameStr : function(stripNsFlag) {
 		if (stripNsFlag) 
@@ -1425,11 +1555,16 @@ OntologyClass.prototype = {
 			return this.name.getFullName();
 	},
 	
-	getParentNameStr : function(stripNsFlag) {
-		if (stripNsFlag) 
-			return this.parentName.getLocalName();
-		else
-			return this.parentName.getFullName();
+	getParentNameStrs : function(stripNsFlag) {
+        var ret = [];
+        for (var i=0; i < this.parentNames.length; i++) {
+            if (stripNsFlag) {
+                ret.push( this.parentNames[i].getLocalName() );
+            } else {
+                ret.push( this.parentNames[i].getFullName() );
+            }
+        }
+		return ret;
 	},
 	
 	getNamespaceStr : function() {
@@ -1459,6 +1594,10 @@ OntologyClass.prototype = {
 		return null;
 	},
 	
+    addParentName : function(name) {
+        this.parentNames.push(new OntologyName(name));
+    },
+    
 	addProperty : function(ontProperty) {
 	    	this.properties.push(ontProperty);
 	},
@@ -1492,7 +1631,14 @@ OntologyClass.prototype = {
 		return ret;
 	},
     
-    
+    renameParent : function(oldURI, newURI) {
+        for (var i=0; i < this.parentNames.length; i++) {
+            var oName = this.parentNames[i];
+            if (oName.getFullName() == oldURI) {
+                this.parentNames[i] = new OntologyName(newURI);
+            }
+        }
+    }
     
 };
 
@@ -1508,13 +1654,15 @@ var OntologyProperty = function(name, range) {
 OntologyProperty.prototype = {
     // In java, sub-classing takes care of this
     addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
+    clearAnnotationComments:      function()  { return this.annotation.clearAnnotationComments(); },
     addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
-    getAnnotationComments :       function() { return this.annotation.getAnnotationComments(); },
-    getAnnotationLabels :         function() { return this.annotation.getAnnotationLabels(); },
-    getAnnotationCommentsString : function() { return this.annotation.getAnnotationCommentsString(); },
-    getAnnotationLabelsString :   function() { return this.annotation.getAnnotationLabelsString(); },
+    clearAnnotationLabels:        function()  { return this.annotation.clearAnnotationLabels(); },
+    getAnnotationComments :       function()  { return this.annotation.getAnnotationComments(); },
+    getAnnotationLabels :         function()  { return this.annotation.getAnnotationLabels(); },
+    getAnnotationCommentsString : function()  { return this.annotation.getAnnotationCommentsString(); },
+    getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
     generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
-    generateAnnotationsSADL :     function() { return this.annotation.generateAnnotationsSADL(); },
+    generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
     
 	getName : function() {
 		return this.name;
