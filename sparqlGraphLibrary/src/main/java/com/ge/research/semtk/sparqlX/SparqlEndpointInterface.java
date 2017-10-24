@@ -583,7 +583,7 @@ public abstract class SparqlEndpointInterface {
 			ret.setSuccess(true);
 		} else {
 			ret.setSuccess(false);
-			ret.addRationaleMessage(responseTxt);
+			ret.addRationaleMessage("SparqlEndpointInterface.executeAuthUploadOwl", responseTxt);
 		}
 		resp_entity.getContent().close();
 		return ret.toJson();

@@ -58,21 +58,30 @@ public abstract class GeneralResultSet {
 	}
 	
 	// -Paul 9/13/2017
-	// From functions that aren't in a rest client, try to throw exceptions
-	// instead of building a ResultSet with an ambiguous source.
-	// Inside the rest client, catch the exception and
-	// use one of the addRationaleMessage(serviceName, endpoint, ...) methods 
+	// Use this only for cases where it makes to sense to indicate the calling method or rest service
+	//
+	// If at all possible USE ONE OF THE OTHER VARIANTS
 	public void addRationaleMessage(String avoid_where_possible_msg){
 		this.rationale.add(avoid_where_possible_msg);
 	}
 	
-	// for NON-exceptions
+	// for NON-exceptions from services
 	public void addRationaleMessage(String serviceName, String endpoint, String message) {
 		this.rationale.add(String.format("%s/%s error: %s", serviceName, endpoint, message));
 	}
 	
-	// for exceptions
+	// for NON-exceptions from some useful source
+	public void addRationaleMessage(String source, String message) {
+		this.rationale.add(source + ": " + message);
+	}
+	
+	// for EXCEPTIONS from Rest Clients
 	public void addRationaleMessage(String serviceName, String endpoint, Exception e) {
+		this.addRationaleMessage(serviceName + "/" + endpoint,  e);
+	}
+		
+	// for EXCEPTIONS with generic source (e.g. "Object.method()" )
+	public void addRationaleMessage(String source, Exception e) {
 		// build a message
 		StackTraceElement [] trace = e.getStackTrace();
 		String msg = "";
@@ -84,8 +93,9 @@ public abstract class GeneralResultSet {
 			msg = e.getMessage() + "\n" + trace[0].toString() + "\n" + trace[1].toString() + "\n" + "...";
 		}
 		
-		this.rationale.add(String.format("%s/%s threw %s %s", serviceName, endpoint, e.getClass().getName(), msg));
+		this.rationale.add(String.format("%s threw %s %s", source, e.getClass().getName(), msg));
 	}
+	
 	
 	public String getRationaleAsString(String delimiter){
 		String retval = "";
