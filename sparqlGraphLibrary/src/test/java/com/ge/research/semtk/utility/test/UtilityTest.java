@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.junit.Test;
@@ -72,10 +73,16 @@ public class UtilityTest {
 	public void testValidatePropertiesAndExitOnFailure() throws Exception{
 		HashMap<String,String> properties = new HashMap<String,String>();
 		properties.put("color1","red");
-		properties.put("color1","yellow");
+		properties.put("color2","yellow");
 		Utility.validatePropertiesAndExitOnFailure(properties);
 		// just making sure it didn't exit!
 		// not committing the test for exit on failure because that will kill the test
+		
+		properties.put("color3",""); // empty property
+		HashSet<String> propertiesSkipValidation = new HashSet<String>();
+		propertiesSkipValidation.add("color3");
+		Utility.validatePropertiesAndExitOnFailure(properties, propertiesSkipValidation);
+		// just making sure it didn't exit!
 	}
 	
 	@Test
