@@ -5,6 +5,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.HashSet;
+
 import com.ge.research.semtk.utility.Utility;
 
 @Component
@@ -25,7 +27,9 @@ public class HiveServiceStartup implements ApplicationListener<ApplicationReadyE
 	  for(String propertyName : propertyNames){
 		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
 	  }
-	  Utility.validatePropertiesAndExitOnFailure(properties); 
+	  HashSet<String> propertiesSkipValidation = new HashSet<String>();
+	  propertiesSkipValidation.add("hive.executionEngine"); 	// this property can be unspecified
+	  Utility.validatePropertiesAndExitOnFailure(properties, propertiesSkipValidation); 
 	    
 	  return;
   }

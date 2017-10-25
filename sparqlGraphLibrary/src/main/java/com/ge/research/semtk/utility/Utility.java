@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -401,17 +402,28 @@ public abstract class Utility {
 	 * @param properties keys are property names, values are property values
 	 */
 	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties){
+		validatePropertiesAndExitOnFailure(properties, new HashSet<String>());
+	}
+	
+	/**
+	 * Print all properties.  Validate all properties and exit if any are invalid.
+	 * @param properties keys are property names, values are property values
+	 * @param properties that should not be validated (e.g. they can be blank/missing/null)
+	 */
+	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
 		System.out.println("----- PROPERTIES: --------------------");
 		for(String propertyName : properties.keySet()){
 			String propertyValue = properties.get(propertyName);
 			System.out.println(propertyName + ": " + propertyValue);	// print to console
-			try {
-				Utility.validateProperty(propertyValue, propertyName);	// validate
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("============" + e.getMessage() + "...EXITING ============");	
-				System.exit(1);					// kill the process
-			} 
+			if(!propertiesSkipValidation.contains(propertyName)){		// skip validation for some properties
+				try {
+					Utility.validateProperty(propertyValue, propertyName);	// validate
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("============" + e.getMessage() + "...EXITING ============");	
+					System.exit(1);					// kill the process
+				} 
+			}
 		}
 		System.out.println("--------------------------------------");
 	}
