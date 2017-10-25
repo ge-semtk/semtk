@@ -19,12 +19,10 @@ package com.ge.research.semtk.utility.test;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.math.BigInteger;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Random;
-import java.util.UUID;
 
 import org.junit.Test;
 
@@ -67,6 +65,53 @@ public class UtilityTest {
 			assertTrue(e.getMessage().contains("Cannot read property"));
 		}
 		assertTrue(exceptionThrown);
+	}
+	
+	
+	@Test
+	public void testValidatePropertiesAndExitOnFailure() throws Exception{
+		HashMap<String,String> properties = new HashMap<String,String>();
+		properties.put("color1","red");
+		properties.put("color1","yellow");
+		Utility.validatePropertiesAndExitOnFailure(properties);
+		// just making sure it didn't exit!
+		// not committing the test for exit on failure because that will kill the test
+	}
+	
+	@Test
+	public void testValidateProperty() throws Exception{
+		// validate succeeds - these should not throw an exception
+		try{
+			Utility.validateProperty("red", "color");
+			Utility.validateProperty("yellow", "color");
+		}catch(Exception e){
+			fail();
+		}
+		// validate fails - these SHOULD throw an exception
+		try{			
+			Utility.validateProperty(null, "color");
+			fail();
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("missing, empty, or null"));
+		}
+		try{			
+			Utility.validateProperty("", "color");
+			fail();
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("missing, empty, or null"));
+		}
+		try{			
+			Utility.validateProperty(" ", "color");
+			fail();
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("missing, empty, or null"));
+		}
+		try{			
+			Utility.validateProperty("null", "color");
+			fail();
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("missing, empty, or null"));
+		}
 	}
 	
 	@Test
