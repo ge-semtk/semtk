@@ -45,6 +45,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.dispatch.DispatchProperties;
 import com.ge.research.semtk.services.dispatch.NodegroupRequestBody;
 import com.ge.research.semtk.services.dispatch.WorkThread;
+import com.ge.research.semtk.sparqlX.BadQueryException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
@@ -235,7 +236,12 @@ public class DispatcherServiceRestController {
 			retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
 		
 			 
-		} catch (Exception e) {
+		} catch (BadQueryException bqe) {
+			// handle this exception by showing the user the simplified message.
+			retval.setSuccess(false);
+			retval.addRationaleMessage(bqe.getMessage());
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 
