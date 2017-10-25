@@ -34,14 +34,21 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
   @Override
   public void onApplicationEvent(final ApplicationReadyEvent event) {
 	  
-	  String[] propertyNames = {
-			  "store.templateLocation","store.ingestorLocation","store.ingestorProtocol","store.ingestorPort",
-			  "store.sparqlServiceServer","store.sparqlServicePort","store.sparqlServiceProtocol","store.sparqlServiceEndpoint",
-			  "store.sparqlServerAndPort","store.sparqlServerDataSet","store.sparqlServerType",
-			  "store.sparqlServiceUser"
-			  };
-	  
 	  // print and validate properties - and exit if invalid
+	  String[] propertyNames = {
+			  "store.templateLocation",
+			  "store.ingestorLocation",
+			  "store.ingestorProtocol",
+			  "store.ingestorPort",
+			  "store.sparqlServiceServer",
+			  "store.sparqlServicePort",
+			  "store.sparqlServiceProtocol",
+			  "store.sparqlServiceEndpoint",
+			  "store.sparqlServerAndPort",
+			  "store.sparqlServerDataSet",
+			  "store.sparqlServerType",
+			  "store.sparqlServiceUser"
+	  };
 	  HashMap<String,String> properties = new HashMap<String,String>();
 	  for(String propertyName : propertyNames){
 		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
