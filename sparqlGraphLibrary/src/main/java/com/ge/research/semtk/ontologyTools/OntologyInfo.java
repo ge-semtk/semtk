@@ -1108,6 +1108,12 @@ public class OntologyInfo {
 		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
+		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(domain), SparqlResultTypes.TABLE);
+		this.loadAnnotationLabels(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Label"));
+		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(domain), SparqlResultTypes.TABLE);
+		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
 	}
 		
 	/*
