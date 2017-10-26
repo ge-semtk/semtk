@@ -219,6 +219,16 @@ public class NodeGroupExecutor {
 		this.setJobID(simpleRes.getResult("requestID"));
 	}
 	
+	/**
+	 * 
+	 * @param qt
+	 * @param sc
+	 * @param ng
+	 * @param externalConstraints
+	 * @param runtimeConstraints
+	 * @param targetObjectSparqlID
+	 * @throws Exception
+	 */
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception{
 		// externalConstraints as used by executeQueryFromNodeGroup
 
@@ -268,6 +278,16 @@ public class NodeGroupExecutor {
 		this.setJobID(simpleRes.getResult("requestID"));
 	}
 	
+	/**
+	 * 
+	 * @param qt
+	 * @param sc - if null, fill from the stored nodegroup
+	 * @param storedNodeGroupId
+	 * @param externalConstraints
+	 * @param runtimeConstraints
+	 * @param targetObjectSparqlID
+	 * @throws Exception
+	 */
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception{
 		
 		// get the node group from the remote store
@@ -300,6 +320,16 @@ public class NodeGroupExecutor {
 		else{
 			// no idea what this is...
 			throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+		}
+		
+		// retrieve the connection from the nodegroup if needed
+		if (sc == null) {
+			if(encodedNodeGroup.containsKey("sparqlConn")) {
+				sc = new SparqlConnection();
+				sc.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
+			} else {
+				throw new Exception("No sparql connection is specified");
+			}
 		}
 		
 		// dispatch the job itself

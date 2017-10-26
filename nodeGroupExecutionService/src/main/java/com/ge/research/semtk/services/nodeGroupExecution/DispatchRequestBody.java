@@ -19,28 +19,36 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class IngestByIdCsvStrRequestBody {
-
-	private String templateId = "";
-	private String sparqlConnection = "";
-	private String csvContent = "";
+public class DispatchRequestBody {
+	private String sparqlConnection;
+	private String externalDataConnectionConstraints;
+	private String runtimeConstraints;
 	
-	public String getTemplateId() {
-		return templateId;
-	}
-	public void setTemplateId(String templateId) {
-		this.templateId = templateId;
-	}
+	/*
+	 * Returns the SparqlConnection or null if none was specified
+	 */
 	public SparqlConnection getSparqlConnection() throws Exception {
-		return new SparqlConnection(sparqlConnection);
+		if (this.sparqlConnection == null) {
+			return null;
+		} else {
+			return new SparqlConnection(this.sparqlConnection);
+		}
 	}
 	public void setSparqlConnection(String sparqlConnection) {
 		this.sparqlConnection = sparqlConnection;
 	}
-	public String getCsvContent() {
-		return csvContent;
+	public String getExternalDataConnectionConstraints() {
+		return externalDataConnectionConstraints;
 	}
-	public void setCsvContent(String csvContent) {
-		this.csvContent = csvContent;
+	public void setExternalDataConnectionConstraints(String externalDataConnectionConstraints) {
+		this.externalDataConnectionConstraints = externalDataConnectionConstraints;
 	}
+	public String getRuntimeConstraints(){
+		return(this.runtimeConstraints);
+	}
+	public void setRuntimeConstraints(String runtimeConstraints){
+		this.runtimeConstraints = runtimeConstraints;
+	}
+	
 }
+

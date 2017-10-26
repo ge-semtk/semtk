@@ -21,11 +21,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-public class DispatchFromNodegroupRequestBody {
+public class DispatchFromNodegroupRequestBody extends DispatchRequestBody {
 	private String jsonRenderedNodeGroup;
-	private String sparqlConnection;
-	private String externalDataConnectionConstraints;
-	private String runtimeConstraints;
 	
 	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
 		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
@@ -43,23 +40,4 @@ public class DispatchFromNodegroupRequestBody {
 		return retval;
 	}
 
-	public String getSparqlConnection() {
-		return sparqlConnection;
-	}
-	public void setSparqlConnection(String sparqlConnection) {
-		this.sparqlConnection = sparqlConnection;
-	}
-	public String getExternalDataConnectionConstraints() {
-		return externalDataConnectionConstraints;
-	}
-	public void setExternalDataConnectionConstraints(String externalDataConnectionConstraints) {
-		this.externalDataConnectionConstraints = externalDataConnectionConstraints;
-	}
-	public String getRuntimeConstraints(){
-		return(this.runtimeConstraints);
-	}
-	public void setRuntimeConstraints(String runtimeConstraints){
-		this.runtimeConstraints = runtimeConstraints;
-	}
-	
 }

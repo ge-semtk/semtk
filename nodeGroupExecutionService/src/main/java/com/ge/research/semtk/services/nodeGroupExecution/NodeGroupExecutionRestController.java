@@ -276,7 +276,8 @@ public class NodeGroupExecutionRestController {
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor sqe = this.getExecutor(prop, null );
 			// try to create a sparql connection
-			SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
+
+			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
 			JSONObject edcConstraints = null;
@@ -308,7 +309,7 @@ public class NodeGroupExecutionRestController {
 			e.printStackTrace();
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "dispatchAnyJobById", e);
+			retval.addRationaleMessage("service: " + SERVICE_NAME + " method: dispatchAnyJobById()", e);
 		}
 	
 		return retval.toJson();
@@ -323,7 +324,7 @@ public class NodeGroupExecutionRestController {
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor sqe = this.getExecutor(prop, null );
 			// try to create a sparql connection
-			SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
+			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
 			JSONObject edcConstraints = null;
@@ -353,6 +354,16 @@ public class NodeGroupExecutionRestController {
 				throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
 			}
 		
+			// retrieve the connection from the nodegroup if needed
+			if (connection == null) {
+				if(encodedNodeGroup.containsKey("sparqlConn")) {
+					connection = new SparqlConnection();
+					connection.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
+				} else {
+					throw new Exception("No sparql connection is specified");
+				}
+			}
+			
 			// try to get the runtime constraints
 			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
 			
@@ -473,7 +484,7 @@ public class NodeGroupExecutionRestController {
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor sqe = this.getExecutor(prop, null );
 			// try to create a sparql connection
-			SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
+			SparqlConnection connection = requestBody.getSparqlConnection();			
 
 			// dispatch the job. 
 			sqe.dispatchRawSparql(connection, requestBody.getSparql());
@@ -501,7 +512,7 @@ public class NodeGroupExecutionRestController {
 		
 		NodeGroupExecutor sqe = this.getExecutor(prop, null );
 		// try to create a sparql connection
-		SparqlConnection connection = new SparqlConnection(requestBody.getSparqlConnection());			
+		SparqlConnection connection = requestBody.getSparqlConnection();			
 	
 		// call for the ingestion.
 		retval = sqe.ingestFromTemplateIdAndCsvString(connection, requestBody.getTemplateId(), requestBody.getCsvContent());

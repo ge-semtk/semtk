@@ -21,12 +21,14 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+
 public class DispatchRawSparqlRequestBody {
 	private String sparqlConnection;
 	private String sparql;
 	
-	public String getSparqlConnection() {
-		return sparqlConnection;
+	public SparqlConnection getSparqlConnection() throws Exception {
+		return new SparqlConnection(sparqlConnection);
 	}
 	public void setSparqlConnection(String sparqlConnection) {
 		this.sparqlConnection = sparqlConnection;
