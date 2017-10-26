@@ -23,13 +23,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import com.ge.research.semtk.load.DataCleaner;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -37,12 +38,15 @@ import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.utility.Utility;
 
 public class DataCleanerTest {
-
+	
+	@Rule
+	public TemporaryFolder tempFolder = new TemporaryFolder();
+	
 	@Test 
 	public void test_WithJSONSpecs() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -88,8 +92,6 @@ public class DataCleanerTest {
 			s = reader.readLine();
 			assertEquals(s,"Michael,39,mikey,Marlington Dr,no,,");
 			
-			(new File(cleanedFilePathStr)).delete();
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -103,7 +105,7 @@ public class DataCleanerTest {
 	public void test_RemoveNulls() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-nulls.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -129,8 +131,6 @@ public class DataCleanerTest {
 			assertEquals(s, "michael,39,NO,Snulls");
 			s = reader.readLine();
 			
-			(new File(cleanedFilePathStr)).delete();
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -144,7 +144,7 @@ public class DataCleanerTest {
 	public void test_RemoveNA() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-na.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -170,8 +170,6 @@ public class DataCleanerTest {
 			assertEquals(s, "\"\",39,NO,Snulls");
 			s = reader.readLine();
 			
-			(new File(cleanedFilePathStr)).delete();
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -185,7 +183,7 @@ public class DataCleanerTest {
 	public void test_WithoutJSONSpecs() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {				
@@ -232,8 +230,6 @@ public class DataCleanerTest {
 			s = reader.readLine();
 			assertEquals(s,"Michael,39,mikey,Marlington Dr,no,,");
 			
-			(new File(cleanedFilePathStr)).delete();
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -247,7 +243,7 @@ public class DataCleanerTest {
 	public void test_NoLowerCase() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -271,8 +267,6 @@ public class DataCleanerTest {
 			if(reader != null){	reader.close(); }
 		}
 		
-		(new File(cleanedFilePathStr)).delete();
-		
 	}	
 	
 	
@@ -280,7 +274,7 @@ public class DataCleanerTest {
 	public void test_split_SOHDelimiter() throws IOException {
 
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-SOH.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -312,8 +306,6 @@ public class DataCleanerTest {
 			assertEquals(s,"Cobert,40,conda,Rockington St,yes,Rocky,");
 			s = reader.readLine();
 			assertEquals(s,"Barbara,35,billy,Barbington Ave,no,Bambam,");
-
-			(new File(cleanedFilePathStr)).delete();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -335,7 +327,7 @@ public class DataCleanerTest {
 	public void test_PairedSplits() throws IOException{
 		
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-pairedsplit.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		BufferedReader reader = null;
 		
 		try {	
@@ -371,8 +363,6 @@ public class DataCleanerTest {
 			s = reader.readLine();
 			assertEquals(s,"Reno,Edith,E.,Edmundton,Egret,white");
 			
-			(new File(cleanedFilePathStr)).delete();
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
@@ -389,7 +379,7 @@ public class DataCleanerTest {
 	public void test_FailsValidation() throws Exception{
 		
 		String originalFilePathStr = "src/test/resources/datacleanertest-input-pairedsplit.csv";
-		String cleanedFilePathStr = "src/test/resources/datacleanertest-output.csv";
+		String cleanedFilePathStr = tempFolder.getRoot().getPath() + "/output.csv";
 		Dataset dataset = new CSVDataset(originalFilePathStr, false);
 
 		// ================= validation for LOWERCASE ===========================================
@@ -474,7 +464,6 @@ public class DataCleanerTest {
 			assertTrue(e.getMessage().contains("Already splitting"));
 		}
 		
-		(new File(cleanedFilePathStr)).delete();
 	}
 	
 }
