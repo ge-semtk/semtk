@@ -22,18 +22,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -46,7 +40,7 @@ import com.ge.research.semtk.resultSet.Table;
 public class TableResultsStorageTest {
 
 	@Rule
-	public TemporaryFolder folder= new TemporaryFolder();
+	public TemporaryFolder tempFolder = new TemporaryFolder();
 	
 	@Test
 	public void test() {
@@ -55,7 +49,7 @@ public class TableResultsStorageTest {
 		URL fullJsonUrl = null;
 	
 		try {
-			rs = new TableResultsStorage(folder.getRoot().getPath());
+			rs = new TableResultsStorage(tempFolder.getRoot().getPath());
 			
 			// write a result set
 			String jobId = "12451345"; 
