@@ -28,7 +28,7 @@ public class DispatchRequestBody {
 	 * Returns the SparqlConnection or null if none was specified
 	 */
 	public SparqlConnection getSparqlConnection() throws Exception {
-		if (this.sparqlConnection == null) {
+		if (this.sparqlConnection == null || this.sparqlConnection.trim().isEmpty()) {
 			return null;
 		} else {
 			return new SparqlConnection(this.sparqlConnection);
