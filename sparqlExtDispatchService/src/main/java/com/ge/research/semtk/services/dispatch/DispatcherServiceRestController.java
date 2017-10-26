@@ -123,7 +123,7 @@ public class DispatcherServiceRestController {
 			NodegroupRequestBody ngrb = new NodegroupRequestBody();
 			ngrb.setjsonRenderedNodeGroup(sgjson.getJson().toJSONString());
 			
-			dsp = getDispatcher(props, requestId, ngrb, true);
+			dsp = getDispatcher(props, requestId, ngrb, true, true);
 			
 			WorkThread doIt = new WorkThread(dsp, null, qt);
 
@@ -177,7 +177,7 @@ public class DispatcherServiceRestController {
 		
 		// get the things we need for the dispatcher
 		try {
-			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth);
+			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
 			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), qt);
 			
@@ -230,7 +230,7 @@ public class DispatcherServiceRestController {
 		// get the things we need for the dispatcher
 		try {
 			
-			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, false);
+			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, false, false);
 			
 			retval.addResult("constraintType", dsp.getConstraintType());
 			retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
@@ -258,7 +258,7 @@ public class DispatcherServiceRestController {
 		return "req_" + UUID.randomUUID();
 	}
 	
-	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody, Boolean useAuth ) throws Exception{
+	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody, Boolean useAuth, Boolean heedRestrictions) throws Exception{
 		
 		// get the sgJson...
 		SparqlGraphJson sgJson = null;
@@ -352,7 +352,7 @@ public class DispatcherServiceRestController {
 				else{
 				}
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions);
 			
 		}
 		catch(Exception failedToFindClass){

@@ -54,8 +54,8 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 	 * @param encodedNodeGroup
 	 * @throws Exception
 	 */
-	public AsynchronousNodeGroupDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, StatusClient sClient, SparqlQueryClient queryClient) throws Exception{
-		super(jobId, sgJson, rClient, sClient, queryClient);
+	public AsynchronousNodeGroupDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, StatusClient sClient, SparqlQueryClient queryClient, boolean unusedFlag) throws Exception{
+		super(jobId, sgJson, rClient, sClient, queryClient, unusedFlag);
 		
 	}
 	

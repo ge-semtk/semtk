@@ -268,7 +268,7 @@ require([	'local/sparqlformconfig',
 			
 			// constrain button
 			if (constrainableFlag) {
-				cellStr =  "<button class='btn btn-info" + (constrainableFlag ? "" : " disabled") + "' " +
+				cellStr =  "<button id='b_" + IIDXHelper.getNextId() + "' class='btn btn-info" + (constrainableFlag ? "" : " disabled") + "' " +
 					"onclick='javascript:filterCallback(\"" + gRowId + '","' + iconID + "\"); return false;'" +
 					(constrainableFlag ? "" : " disabled") + ">Filter</button>";   // <i class='icon-filter icon-white'></i>
 			} else {
@@ -279,7 +279,7 @@ require([	'local/sparqlformconfig',
 			// delete button
 			// PEC TODO: the constraints table does this a different and much cooler way.  share.
 			row.insertCell(-1).innerHTML = 
-					"<button class='btn btn-danger' onclick='javascript:delFormRow(\"" + gRowId + "\"); return false;'><i class='icon-trash icon-white'></i></button>";
+					"<button id='b_" + IIDXHelper.getNextId() + "' class='btn btn-danger' onclick='javascript:delFormRow(\"" + gRowId + "\"); return false;'><i class='icon-trash icon-white'></i></button>";
 
 			gRowId += 1;
 			
@@ -760,7 +760,7 @@ require([	'local/sparqlformconfig',
 		};
 		
 		guiStartQuery = function () {
-			disableButton('btnFormExecute');
+            guiDisableAll();
 		};
 		
 		guiEndQuery = function (errorMsg) {
@@ -768,9 +768,43 @@ require([	'local/sparqlformconfig',
 			if (errorMsg) {
 				alertUser(errorMsg);
 			}
-			enableButton('btnFormExecute');
+            guiUnDisableAll();
 			setStatus("");
 		};
+    
+        disableHash = {};
+    
+        /*
+         * For all buttons with an id:
+         *     disable
+         *     save state
+         */
+        guiDisableAll = function () {
+            disableHash = {};
+
+            var buttons = document.getElementsByTagName("button");
+            for (var i = 0; i < buttons.length; i++) {
+                if (buttons[i].id && buttons[i].id.length > 0) {
+                    disableHash[buttons[i].id] = buttons[i].disabled;
+
+                    buttons[i].disabled = true;
+                }
+            }
+        };
+
+        /*
+         * For all buttons with an id:
+         *     restore state from last call to guiDisableAll()
+         */
+        guiUnDisableAll = function () {
+            var buttons = document.getElementsByTagName("button");
+            for (var i = 0; i < buttons.length; i++) {
+                // if button has an id, and its state has been hashed
+                if (buttons[i].id && buttons[i].id.length > 0 && disableHash[buttons[i].id] != undefined) {
+                    buttons[i].disabled =  disableHash[buttons[i].id];
+                }
+            }
+        };
 		
 		doRunQueryBut = function() {
 			// callback for the "Get Data" button
