@@ -22,7 +22,7 @@
 //VERSION: 85
 define([], function() {
 	var Config = {
-		services : { 
+		"services" : { 
 			"query" : {
 				"url" : "http://localhost:12050/sparqlQueryService",  
 			},
@@ -42,7 +42,7 @@ define([], function() {
                 url : "http://localhost:12056/nodeGroupStore/",
             },
 		},
-		help : {
+		"help" : {
 			"aboutHtml" : '<b>SparqlForm Opensource build 2.0</b><br>\
 				Knowledge Discovery Lab<br>\
 				Contact: Paul Cuddihy cuddihy@ge.com<br>\
@@ -80,6 +80,14 @@ define([], function() {
 			    - Copyright (c) 2008 Ariel Flesler - aflesler(at)gmail(dot)com | http://flesler.blogspot.com<br>\
 			    ',
 		},
+        "itemDialog" : {
+            "limit"    : 10000,   // max number of choices shown
+            "maxValues": 100      // max size of VALUES clause
+        },
+        "timeout" : {
+            "short" : 5000,
+            "long"  : 30000  
+        }
 	};
 	
 	return Config;

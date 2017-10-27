@@ -344,6 +344,9 @@ require([	'local/sparqlformconfig',
                                             itemDialogCallback,
     				                        {"textId": textId}
     		                                );
+            dialog.setLimit(Config.itemDialog.limit);
+            dialog.setMaxValues(Config.itemDialog.maxValues);
+            
             var sparqlFormFlag = true;
     		dialog.show(sparqlFormFlag);
 		};
@@ -387,7 +390,7 @@ require([	'local/sparqlformconfig',
                                                                                  statusCallback,
                                                                                  Config.services.status.url,
                                                                                  Config.services.results.url);
-                var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 5000);
+                var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
                 statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, gConn, runId, null, null, jobIdCallback, failureCallback);
 
@@ -849,7 +852,7 @@ require([	'local/sparqlformconfig',
                 kdlLogEvent("SF: Query vi Dispatcher");
                 
                 setStatusProgressBar.bind(this, "Running Query", 0);
-                var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 15000);
+                var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
                 var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
                                                                                      doQueryTableResCallback,
                                                                                      guiEndQuery,
