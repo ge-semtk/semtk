@@ -87,6 +87,9 @@ define([], function() {
         "timeout" : {
             "short" : 5000,
             "long"  : 30000  
+        },
+        "resultsTable" : {
+            "sampleSize" : 200
         }
 	};
 	

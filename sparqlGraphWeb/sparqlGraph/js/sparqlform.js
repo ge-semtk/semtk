@@ -853,7 +853,7 @@ require([	'local/sparqlformconfig',
                 
                 setStatusProgressBar.bind(this, "Running Query", 0);
                 var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
-                var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+                var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(Config.resultsTable.sampleSize,
                                                                                      doQueryTableResCallback,
                                                                                      guiEndQuery,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
@@ -891,9 +891,14 @@ require([	'local/sparqlformconfig',
             hdiv.innerHTML = "<b>Full Results:</b><br>";
             hdiv.innerHTML += anchor;
             hdiv.innerHTML += "<br>";  
-                    
+                
             results.setLocalUriFlag(true);
-			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), "<b>Sample of results:</b>");
+            
+            var headerHTML = "";
+            if (results.getRowCount() == Config.resultsTable.sampleSize) {
+                headerHTML += " <span class='label label-warning'>Showing first " + String(Config.resultsTable.sampleSize) + " rows. </span> "
+            }
+			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), headerHTML);
 											
 			guiEndQuery();
         };
