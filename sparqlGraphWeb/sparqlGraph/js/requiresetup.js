@@ -75,7 +75,7 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 			deps : [ 'jquery' ]
 		};
 	config.shim['sparqlgraph/js/belmont'] =  {
-			deps : [ 'sparqlgraph/js/dracula_graph' ]
+			deps : [ 'sparqlgraph/js/dracula_graph']
 		};
     
     // special logic to include sparql generation for legacy

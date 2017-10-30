@@ -36,7 +36,9 @@ var OntologyInfo = function(optJson) {
     
     this.maxPathLen = 50;
     this.pathWarnings = [];
-    this.connHash = {};         // calculated as needed. connHash[class] = [all single-hop paths to or from other classes]
+    
+    this.connHash = {};           // calculated as needed. connHash[class] = [all single-hop paths to or from other classes]
+    this.prefixHash = null;       // calculated as needed: prefixHash[longName]=shortName
     
     this.getFlag = false;
    
@@ -54,7 +56,70 @@ var OntologyInfo = function(optJson) {
 OntologyInfo.JSON_VERSION = 2;
 
 OntologyInfo.prototype = {
-	
+    
+    /*
+     * create a hash of human-readable uri prefixes
+     *
+     */
+	calcPrefixHash : function() {
+        
+        this.prefixHash = {};
+        
+        // preload standard prefixes
+        // http://eo.dbpedia.org/sparql?nsdecl
+        this.prefixHash["http://www.w3.org/1999/02/22-rdf-syntax-ns"] = "rdf";
+        this.prefixHash["http://www.w3.org/2000/01/rdf-schema"]       = "rdfs";
+        this.prefixHash["http://www.w3.org/2001/XMLSchema"]           = "xsd";
+
+        // get every URI in the OntologyInfo
+        uriList = [];
+        uriList = uriList.concat(Object.keys(this.classHash));
+        uriList = uriList.concat(Object.keys(this.propertyHash));
+        uriList = uriList.concat(Object.keys(this.enumHash));
+        for (var p in this.propertyHash) {
+            uriList.push(this.propertyHash[p].getRangeStr());
+        }
+        
+        for (var i=0; i < uriList.length; i++) {
+            var tok = uriList[i].split("#");
+            // if there is a #
+            if (tok.length == 2) {
+                // if prefix isn't known yet
+                var longName = tok[0];
+                var shortName = longName.substring(longName.lastIndexOf('/')+1);
+                
+                if (! (longName in this.prefixHash)) {
+                   
+                    // append a number until the shortname is unique
+                    // while Object.values(this.prefixHash) contains shortName
+                    // (browser compatibility issue creates unreadable code)
+                    var origName = shortName;
+                    var suffix = 0;
+                    while (Object.keys(this.prefixHash).map(function(k){return this.prefixHash[k];}.bind(this)).indexOf(shortName) > -1) {
+                        suffix += 1;
+                        shortName = origName + str(suffix);
+                    }
+
+                    this.prefixHash[longName] = shortName;
+                }
+            } 
+        }
+    },
+    
+    getPrefix : function(namespace) {
+        if (! this.prefixHash) this.calcPrefixHash();
+        
+        return this.prefixHash[namespace];
+    },
+       
+    /*
+     * split an OntologyName into [shortPrefix, localName]
+     */
+    splitName : function(oName) {
+        return [this.getPrefix(oName.getNamespace()),
+                oName.getLocalName()];
+    },
+    
 	addClass : function(ontClass) {
 		var classNameStr = ontClass.getNameStr();
 		this.connHash = {};
@@ -189,6 +254,22 @@ OntologyInfo.prototype = {
         return Object.keys(retHash);
     },
     
+    /*
+     * Return list of URIs
+     */
+    getClassEnumList : function (oClass) {
+        var ret = [];
+        
+        if (oClass.getNameStr() in this.enumHash) {
+            var eList = this.enumHash[oClass.getNameStr()];
+            for (var i=0; i < eList.length; i++) {
+                ret.push(eList[i]);
+            }
+        }
+        
+        return ret;
+    },
+    
     uriIsKnown : function(uri) {
         return (    this.getPropNames().indexOf(uri) > -1   ||
                     this.getClassNames().indexOf(uri) > -1  ||
@@ -303,7 +384,7 @@ OntologyInfo.prototype = {
 		return (propNameStr in this.propertyHash);
 	},
 	
-	getInheritedProperties : function(ontClass) {
+	getInheritedProperties : function(ontClass, skipSelfFlag) {
 		// return an array of OntologyProperties representing all inherited properties
 		// error if any class names do not exist
 		
@@ -311,7 +392,8 @@ OntologyInfo.prototype = {
 		var dup = {};
 			
         // get full list of classes
-		var cNames = [ontClass.getNameStr()].concat(this.getSuperclassNames(ontClass.getNameStr()));
+        var cNames = skipSelfFlag ? [] : [ontClass.getNameStr()];
+		cNames = cNames.concat(this.getSuperclassNames(ontClass.getNameStr()));
         
         // for each class
 		for (var i=0; i < cNames.length; i++) {
@@ -327,8 +409,13 @@ OntologyInfo.prototype = {
 		}
 		
 		// properties are sorted by subclass as we walked up the tree
-		// the following code makes them alphabetical...just to show off maybe
-		ret.sort( function(a,b) {if (a.getNameStr() < b.getNameStr())  return -1; else if (a.getNameStr() > b.getNameStr())  return 1; else return 0;} );
+		ret.sort( function(a,b) {
+                                    var aa = a.getNameStr(true);
+                                    var bb = b.getNameStr(true);
+                                    if (aa < bb)  return -1; 
+                                    else if (aa > bb)  return 1; 
+                                    else return 0;
+                                } );
 		
 		return ret;
 	},
@@ -975,6 +1062,7 @@ OntologyInfo.prototype = {
 		}
     },
     
+    // numeric prefix for efficient JSON
     prefixURI : function (uri, prefixToIntHash) {
         var tok = uri.split("#");
         // if there is a #
@@ -1548,11 +1636,23 @@ OntologyClass.prototype = {
         this.name = new OntologyName(nameStr);
     },
     
+    getName : function () {
+        return this.name;
+    },
+    
 	getNameStr : function(stripNsFlag) {
 		if (stripNsFlag) 
 			return this.name.getLocalName();
 		else
 			return this.name.getFullName();
+	},
+	
+    getLocalName : function() {
+		return this.name.getLocalName();
+	},
+    
+    getNamespaceStr : function() {
+		return this.name.getNamespace();
 	},
 	
 	getParentNameStrs : function(stripNsFlag) {
@@ -1565,10 +1665,6 @@ OntologyClass.prototype = {
             }
         }
 		return ret;
-	},
-	
-	getNamespaceStr : function() {
-		return this.name.getNamespace();
 	},
 	
 	getProperties : function() {
@@ -1599,7 +1695,16 @@ OntologyClass.prototype = {
     },
     
 	addProperty : function(ontProperty) {
-	    	this.properties.push(ontProperty);
+        // insert property alphabetically
+        var name = ontProperty.getNameStr(true);
+        for (var i=0; i < this.properties.length; i++) {
+            if (this.properties[i].getNameStr(true) > name) {
+                this.properties.splice(i,0,ontProperty);
+                return;
+            }
+        }
+        // else put it on the end
+        this.properties.push(ontProperty);
 	},
 	
 	equals : function(other) {
@@ -1672,6 +1777,13 @@ OntologyProperty.prototype = {
 		return this.range;
 	},
 	
+    getLocalName : function() {
+		return this.name.getLocalName();
+	},
+	getNamespace : function() {
+		return this.name.getNamespace();
+	},
+    
 	getNameStr : function(stripNsFlag) {
 		if (stripNsFlag) 
 			return this.name.getLocalName();
@@ -1724,7 +1836,7 @@ OntologyName.prototype = {
 		
 		var m = this.name.match("^"+domain);
 		return (m != null);
-	}
+	},
 };
 
 /*
@@ -1736,6 +1848,9 @@ var OntologyRange = function(fullname) {
 };
 OntologyRange.prototype = {
 		
+    getName : function() {
+        return new OntologyName(this.name);
+    },
 	getLocalName : function() {
 		return this.name.split('#')[1];
 	},

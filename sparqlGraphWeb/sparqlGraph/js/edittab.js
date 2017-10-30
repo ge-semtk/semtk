@@ -45,7 +45,11 @@ define([	// properly require.config'ed
 		//============ local object  EditTab =============
 		var EditTab = function(treediv, canvasdiv, buttondiv, searchtxt) {
 		    this.treediv = treediv;
-            this.canvasdiv = canvasdiv;
+            
+            this.canvasdiv = document.createElement("div");
+            this.canvasdiv.style.margin="1ch";
+            canvasdiv.appendChild(this.canvasdiv);
+            
             this.buttondiv = buttondiv;
             this.searchtxt = searchtxt;
             this.oInfo = null;
@@ -71,6 +75,10 @@ define([	// properly require.config'ed
                     onActivate: function(node) {
                         // A DynaTreeNode object is passed to the activation handler
                         // Note: we also get this event, if persistence is on, and the page is reloaded.
+                        
+                        //first click is select, second opens or closes
+                        //node.expand(!node.isExpanded());
+                        
                         this.selectedNodeCallback(node);
 
                     }.bind(this),
@@ -167,45 +175,127 @@ define([	// properly require.config'ed
                 }
             },
             
-            editNamespace : function (node) {
+            
+             editClassNEW : function (node) {
                 var name = node.data.value;
-                this.canvasdiv.innerHTML = "Namespace<br>" + name;
+                this.canvasdiv.innerHTML = "";
+                this.canvasdiv.appendChild(document.createTextNode("Namespace" + name));
+                
+                var nameList = ["one", "two", "three"];
+                var divList = [ document.createElement("div"),
+                                document.createElement("div"),
+                                document.createElement("div")
+                              ];
+                divList[0].innerHTML = "<h1>first</h1>stuff";
+                divList[1].innerHTML = "<h1>second</h1>stuff";
+                divList[2].innerHTML = "<h1>third</h1>stuff";
+                
+                this.canvasdiv.appendChild(IIDXHelper.buildTabs(nameList, divList));
+
             },
             
-            editClass : function (node) {
-                var oClass = this.oInfo.getClass(node.data.value);
-                var namespace = oClass.getNamespaceStr();
-                var name = oClass.getNameStr(true);
+            editNamespace : function (node) {
+                var name = node.data.value;
+                //this.canvasdiv.innerHTML = "Namespace<br>" + name;
                 
                 this.canvasdiv.innerHTML = "";
-                this.canvasdiv.style.margin="1ch";
-                this.canvasdiv.innerHTML = "<legend>Class:</legend>";
+                this.canvasdiv.appendChild(document.createTextNode("Namespace " + name));
+            },
+            
+            /*
+             * top-level function for editing a class
+             */
+            editClass : function (node) {
+                var oClass = this.oInfo.getClass(node.data.value);
+                var splitName = this.oInfo.splitName(oClass.getName());
                 
-                var nameForm = IIDXHelper.buildHorizontalForm();
-                this.canvasdiv.appendChild(nameForm);
-                nameForm.innerHTML = namespace + "# ";
+                // ---- definition ----
+                var defineDiv = document.createElement("div");
+                var nameForm = IIDXHelper.buildHorizontalForm(true);
+                defineDiv.appendChild(nameForm);
+                nameForm.appendChild(document.createTextNode(splitName[0] + ":"));
                 var nameInput = IIDXHelper.createTextInput("et_nameInput");
-                nameInput.value = name;
+                nameInput.value = splitName[1];
                 nameInput.onchange = this.onchangeClassName.bind(this, oClass, nameInput);
                 nameForm.appendChild(nameInput);
                 
-                var annot = this.buildAnnotatorHTML(oClass);
-                this.canvasdiv.appendChild(annot);
+                var superList = this.oInfo.getSuperclassNames(oClass.getNameStr());
+                var h3 = document.createElement("h3");
+                defineDiv.appendChild(h3);
+                h3.innerHTML = "Superclasses:";
+                var ul = document.createElement("ul");
+                defineDiv.appendChild(ul);
+                for (var i=0; i < superList.length; i++) {
+                    var li = document.createElement("li");
+                    li.innerHTML = superList[i];
+                    ul.appendChild(li);
+                }
                 
-                this.canvasdiv.innerHTML += "<legend>Properties:</legend>";
+                var annot = this.buildAnnotatorDom(oClass);
+                defineDiv.appendChild(annot);
+                
+                
+                // ---- properties ----
+                var propsDiv = document.createElement("div");
                 var propList = oClass.getProperties();
                 for (var i=0; i < propList.length; i++) {
-                    var oProp = propList[i];
-                    
-                    // PEC TODO: make this editable and non-garbage
-                    this.canvasdiv.innerHTML += oProp.getNameStr() + " " + oProp.getRangeStr() + "<br>";
-                    
-                    var propAnnot = this.buildAnnotatorHTML(oProp);
-                    this.canvasdiv.appendChild(propAnnot);
+                    propsDiv.appendChild(this.buildPropertyEditDom(propList[i]));
                 }
+                
+                // ---- inherited ----
+                var inheritDiv = document.createElement("div");                
+                var propList = this.oInfo.getInheritedProperties(oClass, true);
+                for (var i=0; i < propList.length; i++) {
+                    inheritDiv.appendChild(this.buildPropertyDisplayDom(propList[i]));
+                }
+                
+                // ---- one of ----
+                var enumDiv = document.createElement("div");
+                var enumNames = this.oInfo.getClassEnumList(oClass);
+                for (var i=0; i < enumNames.length; i++) {
+                    enumDiv.appendChild(document.createTextNode(enumNames[i]));
+                    enumDiv.appendChild(document.createElement("br"));
+                }
+                
+                // ---- tabs ----
+                var nameList = ["Definition", "Properties", "Inherited Props", "One of"];
+                var divList = [defineDiv, propsDiv, inheritDiv, enumDiv];
+                this.canvasdiv.innerHTML = "";
+                this.canvasdiv.appendChild(IIDXHelper.buildTabs(nameList, divList));
             },
             
-            buildAnnotatorHTML : function (oItem) {
+            buildPropertyEditDom : function (oProp) {
+                var ret = document.createElement("span");
+                var splitName = this.oInfo.splitName(oProp.getName());
+                var splitRange = this.oInfo.splitName(oProp.getRange().getName());
+
+                // PEC TODO: make this editable and non-garbage
+                var pStr = splitName.join(":") + " " + splitRange.join(":");
+                ret.appendChild(document.createTextNode(pStr));
+                ret.appendChild(document.createElement("br"));
+
+                var propAnnot = this.buildAnnotatorDom(oProp);
+                ret.appendChild(propAnnot);
+                
+                return ret;
+            },
+            
+            buildPropertyDisplayDom : function (oProp) {
+                var ret = document.createElement("span");
+                var splitName = this.oInfo.splitName(oProp.getName());
+                var splitRange = this.oInfo.splitName(oProp.getRange().getName());
+
+                var pStr = splitName.join(":") + " " + splitRange.join(":");
+                ret.appendChild(document.createTextNode(pStr));
+                ret.appendChild(document.createElement("br"));
+
+                var propAnnot = this.buildAnnotatorDom(oProp);
+                ret.appendChild(propAnnot);
+                
+                return ret;
+            },
+            
+            buildAnnotatorDom : function (oItem) {
                 
                 // create the dom and table
                 var dom = document.createElement("div");
@@ -228,7 +318,7 @@ define([	// properly require.config'ed
                 var labelsId = IIDXHelper.getNextId("annotate");
                 labelsTd.id = labelsId;
                 tr.appendChild(labelsTd);
-                var labelsForm = IIDXHelper.buildHorizontalForm();
+                var labelsForm = IIDXHelper.buildHorizontalForm(true);
                 labelsTd.appendChild(labelsForm);
                 
                 tr = document.createElement("tr");
@@ -288,8 +378,9 @@ define([	// properly require.config'ed
                 for (var i=0; i < comments.length; i++) {
                     addComment(oItem, comments[i], commentsTd, but2);
                 }
-                 
-                return IIDXHelper.createCollapsibleDiv("Annotations", dom);
+                
+                var openFlag = (oItem.getAnnotationComments().length + oItem.getAnnotationLabels().length) > 0;
+                return IIDXHelper.createCollapsibleDiv("Annotations", dom, openFlag);
             },
             
             /* 

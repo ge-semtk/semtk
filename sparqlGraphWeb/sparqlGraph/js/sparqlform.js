@@ -41,6 +41,7 @@ var gSparqlEdc = null;
 var gFormConstraint = null;
 var gStoreDialog = null;
 
+var gCancelled = false;
 
 //
 //  Require.js tutorial:
@@ -350,7 +351,20 @@ require([	'local/sparqlformconfig',
             var sparqlFormFlag = true;
     		dialog.show(sparqlFormFlag);
 		};
-
+    
+        doCancel = function() {
+            gCancelled = true;
+        };
+    
+        checkForCancel = function() {
+            if (gCancelled) {
+                gCancelled = false;
+                return true;
+            } else {
+                return false;
+            }
+        };
+    
         runSfSuggestValuesQuery = function (ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
         
             // make sure there is a sparqlID
@@ -388,6 +402,7 @@ require([	'local/sparqlformconfig',
                 var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
+                                                                                 this.checkForCancel.bind(this),
                                                                                  Config.services.status.url,
                                                                                  Config.services.results.url);
                 var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
@@ -494,7 +509,7 @@ require([	'local/sparqlformconfig',
 				gOTree.showSubset(g.simpleClassURIs);
 			}
 		};
-
+    
 		//***********  drag and drop *************//
 		allowDrop = function(ev) {
 			alertUser("allowDrop5");
@@ -784,13 +799,19 @@ require([	'local/sparqlformconfig',
          */
         guiDisableAll = function () {
             disableHash = {};
-
+            var opposite = [];
+            
+            // Cancel button works backwards as long as we're not avoiding microservices
+            if (typeof gAvoidQueryMicroserviceFlag == "undefined" || !gAvoidQueryMicroserviceFlag) {
+                opposite.push("btnFormCancel");
+            }
+            
             var buttons = document.getElementsByTagName("button");
             for (var i = 0; i < buttons.length; i++) {
                 if (buttons[i].id && buttons[i].id.length > 0) {
                     disableHash[buttons[i].id] = buttons[i].disabled;
 
-                    buttons[i].disabled = true;
+                    buttons[i].disabled = (opposite.indexOf(buttons[i].id) == -1);
                 }
             }
         };
@@ -857,6 +878,7 @@ require([	'local/sparqlformconfig',
                                                                                      doQueryTableResCallback,
                                                                                      guiEndQuery,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
+                                                                                     this.checkForCancel.bind(this),
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
                setStatusProgressBar("Running Query", 1);

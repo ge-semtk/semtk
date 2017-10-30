@@ -32,7 +32,7 @@ require([	'local/sparqlformconfig',
          	'sparqlgraph/js/msiresultset',
          	'sparqlgraph/js/modaliidx',
          	'sparqlgraph/js/modalitemdialog',
-         	
+         	'sparqlgraph/js/modalloaddialog',
          	
          	'jquery',
 		
@@ -42,11 +42,10 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/js/cookiemanager',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/js/modalloaddialog',
 
 		],
 
-	function(Config, BackwardCompatibleUtil, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, $) {
+	function(Config, BackwardCompatibleUtil, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, ModalLoadDialog, $) {
 	
 
 		//----- e d c ------/

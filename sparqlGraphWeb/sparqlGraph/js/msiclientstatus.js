@@ -147,13 +147,14 @@ define([	// properly require.config'ed   bootstrap-modal
             },
             
             /*===================================================*/
-            execAsyncPercentUntilDone : function (jobSuccessCallback, statusBarCallback) {
+            execAsyncPercentUntilDone : function (jobSuccessCallback, checkForCancelCallback, statusBarCallback) {
                 
                 this.execGetPercentCompleteInt(this.execAsyncPercentCallback.bind( this,
                                                                                 0,
                                                                                 50,
                                                                                 jobSuccessCallback,
-                                                                                statusBarCallback
+                                                                                statusBarCallback,
+                                                                                checkForCancelCallback
                                                                                 ) );
             },
             
@@ -161,8 +162,11 @@ define([	// properly require.config'ed   bootstrap-modal
              * execAsync chain's percent complete loop
              * @private
              */
-            execAsyncPercentCallback : function (lastPercent, timeout, jobSuccessCallback, statusBarCallback, thisPercent) {
-                if (thisPercent > 99) {
+            execAsyncPercentCallback : function (lastPercent, timeout, jobSuccessCallback, statusBarCallback, checkForCancelCallback, thisPercent) {
+                if (checkForCancelCallback()) {
+                    this.doFailureCallbackHtml("Operation cancelled.");
+                    
+                } else if (thisPercent > 99) {
                     
                     statusBarCallback(100);
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
@@ -181,7 +185,8 @@ define([	// properly require.config'ed   bootstrap-modal
                                                                                                         thisPercent, 
                                                                                                         nextTimeout,
                                                                                                         jobSuccessCallback,
-                                                                                                        statusBarCallback)
+                                                                                                        statusBarCallback,
+                                                                                                        checkForCancelCallback)
                                                                  ),
                                 thisTimeout
                               );
@@ -217,6 +222,10 @@ define([	// properly require.config'ed   bootstrap-modal
                 var html = (typeof optHeader == "undefined" || optHeader == null) ? "" : "<b>" + optHeader + "</b><hr>";
                 html += resultSet.getFailureHtml();
                 
+                this.doFailureCallbackHtml(html);
+            },
+            
+            doFailureCallbackHtml : function (html) {
                 if (typeof this.optFailureCallback == "undefined") {
                     ModalIidx.alert("Status Service Failure", html);
                 } else {

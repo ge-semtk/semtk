@@ -62,13 +62,13 @@ define([	// properly require.config'ed   bootstrap-modal
          *
          *      resultUrl - url of results service
          */
-		MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback = function(maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, statusUrl, resultUrl) {
+		MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback = function(maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl) {
             
             // callback for the nodegroup execution service to send jobId
-            var ngExecJobIdCallback = function(maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, statusUrl, resultUrl, jobId) {
+            var ngExecJobIdCallback = function(maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, checkForCancelCallback0, statusUrl, resultUrl, jobId) {
             
                 // callback for status service after job successfully finishes
-                var ngStatusSuccessCallback = function(jobId, maxRows, csvUrlSampleJsonCallback1, failureCallback1, progressCallback1, resultUrl) {
+                var ngStatusSuccessCallback = function(jobId, maxRows, csvUrlSampleJsonCallback1, failureCallback1, progressCallback1, checkForCancelCallback1, resultUrl) {
                     
                     // callback for results service
                     var ngResultsSuccessCallback = function (csvUrlSampleJsonCallback2, progressCallback2, csvFilename, fullURL, results) {
@@ -85,16 +85,16 @@ define([	// properly require.config'ed   bootstrap-modal
                     resultsClient.execGetTableResultsJsonTableRes(maxRows, 
                                                                   ngResultsSuccessCallback.bind(this, csvUrlSampleJsonCallback1, progressCallback1, csvFilename, fullURL));
 
-                }.bind(this, jobId, maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, resultUrl);
+                }.bind(this, jobId, maxRows, csvUrlSampleJsonCallback0, failureCallback0, progressCallback0, checkForCancelCallback0, resultUrl);
                 
                 progressCallback0(5); // got jobId
                 var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, progressCallback0, 10, 90);
                 
                 // call status service loop
                 var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
-                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, sProgress);
+                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
                 
-            }.bind(this, maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, statusUrl, resultUrl);
+            }.bind(this, maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl);
                         
             return ngExecJobIdCallback;
         };
@@ -105,13 +105,13 @@ define([	// properly require.config'ed   bootstrap-modal
          *    no max rows or csv URL
          *    tableResCallback(tableRes)
          */
-        MsiClientNodeGroupExec.buildFullJsonCallback = function(tableResCallback, failureCallback, progressCallback, statusUrl, resultUrl) {
+        MsiClientNodeGroupExec.buildFullJsonCallback = function(tableResCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl) {
             
             // callback for the nodegroup execution service to send jobId
-            var ngExecJobIdCallback = function(tableResCallback0, failureCallback0, progressCallback0, statusUrl, resultUrl, jobId) {
+            var ngExecJobIdCallback = function(tableResCallback0, failureCallback0, progressCallback0, checkForCancelCallback0, statusUrl, resultUrl, jobId) {
                 
                 // callback for status service after job successfully finishes
-                var ngStatusSuccessCallback = function(jobId, tableResCallback1, failureCallback1, progressCallback1, resultUrl) {
+                var ngStatusSuccessCallback = function(jobId, tableResCallback1, failureCallback1, progressCallback1, checkForCancelCallback1, resultUrl) {
                     
                     // callback for results service
                     var ngResultsSuccessCallback = function (tableResCallback2, progressCallback2, results) {
@@ -124,16 +124,16 @@ define([	// properly require.config'ed   bootstrap-modal
                     resultsClient.execGetTableResultsJsonTableRes(null, 
                                                                   ngResultsSuccessCallback.bind(this, tableResCallback1, progressCallback1));
 
-                }.bind(this, jobId, tableResCallback0, failureCallback0, progressCallback0, resultUrl);
+                }.bind(this, jobId, tableResCallback0, failureCallback0, progressCallback0, checkForCancelCallback0, resultUrl);
                 
                 progressCallback0(5); // got jobId
                 var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, progressCallback0, 10, 90);
                 
                 // call status service loop
                 var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
-                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, sProgress);
+                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
                 
-            }.bind(this, tableResCallback, failureCallback, progressCallback, statusUrl, resultUrl);
+            }.bind(this, tableResCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl);
             
             return ngExecJobIdCallback;
         };

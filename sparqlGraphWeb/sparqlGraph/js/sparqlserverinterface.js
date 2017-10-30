@@ -452,7 +452,12 @@ SparqlServerResult.prototype = {
 	},
 	
     // get named column's values as the raw strings
-    getStringResultsColumn : function(colName) {
+    
+    
+    // 10/30/2017 Paul
+    // This function isn't close to working.
+    // What changed?  Does fixing this break backwards compatibility somewhere?
+    getStringResultsColumnPREV : function(colName) {
 		// get all the values in a named column as a list
 		var c = this.getColumnByName(colName);
 		var rowCount = this.getRowCount();
@@ -462,6 +467,20 @@ SparqlServerResult.prototype = {
         
 		for (var i=0; i < rowCount; i++) {
 			ret.push( raw[i][c] ? raw[i][c] : "" );
+		}
+		return ret;
+	},
+    
+    // get named column's values as the raw strings
+    getStringResultsColumn : function(colName) {
+		// get all the values in a named column as a list
+		var rowCount = this.getRowCount();
+		var ret = [];
+		
+        var raw = this.jsonObj.results.bindings;
+        
+		for (var i=0; i < rowCount; i++) {
+			ret.push( raw[i][colName] ? raw[i][colName].value : "" );
 		}
 		return ret;
 	},
