@@ -98,16 +98,17 @@ public class LoadNodeGroupFromConstructQueryResultsTest {
 	@Test 
 	public void testNoGraphKey() throws Exception {
 		
+		NodeGroup ngTest = null;
 		boolean thrown = false;
 		try {
 			// note that this JSON has "@NOT-GRAPH" instead of "@graph"
 			String constructQueryResultJSON = "{ \"@NOT-GRAPH\": [ { \"@id\": \"http://research.ge.com/soft/data#Cell_EEEE298\",  \"@type\" : [ { \"@id\": \"http://research.ge.com/soft/testconfig#Cell\"} ] , \"http://research.ge.com/soft/testconfig#cellId\" : [ { \"@value\" : \"EEEE298\" , \"@type\" : \"http://www.w3.org/2001/XMLSchema#string\" } ] , \"http://research.ge.com/soft/testconfig#TShirtPrinting\" : [ { \"@id\": \"http://research.ge.com/soft/data#SoftShue_EEEE298_Freedom_2015-06-12\"} ] ,  \"http://research.ge.com/soft/testconfig#sizeInches\" : [ {\"@value\":\"2\",\"@type\":\"http://www.w3.org/2001/XMLSchema#int\"} ] } , { \"@id\": \"http://research.ge.com/soft/data#SoftShue_EEEE298_Freedom_2015-06-12\", \"@type\" : [ { \"@id\": \"http://research.ge.com/soft/testconfig#TShirtPrinting\"} ] , \"http://research.ge.com/soft/testconfig#mouseLot\" : [ { \"@value\" : \"50416-1\" , \"@type\" : \"http://www.w3.org/2001/XMLSchema#string\" } ] ,  \"http://research.ge.com/soft/testconfig#mouseMaterial\" : [ { \"@value\" : \"Toothmouse\" , \"@type\" : \"http://www.w3.org/2001/XMLSchema#string\" } ] , \"http://research.ge.com/soft/testconfig#mouseVendor\" : [ { \"@value\" : \"Target\" , \"@type\" : \"http://www.w3.org/2001/XMLSchema#string\" } ] } ] }";
 			JSONObject json = (JSONObject) (new JSONParser()).parse(constructQueryResultJSON);
-			NodeGroup.fromConstructJSON(json);
+			ngTest = NodeGroup.fromConstructJSON(json);
 		} catch (Exception e) {
 			thrown = true;
 		}
-		assertTrue(thrown);	
+		assertEquals(0, ngTest.getNodeCount());	
 	}	
 	
 }
