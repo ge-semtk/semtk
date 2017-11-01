@@ -104,6 +104,11 @@ public class NodeGroup {
 			throw new Exception("Cannot create NodeGroup from null JSON object");
 		}		
 		
+		if(!jobj.containsKey("@graph")){
+			System.err.println("there was not @graph key in the JSON-LD. assuming this is intentional, nothing was added.");
+			return new NodeGroup();
+		}
+		
 		// get the contents of @graph
 		JSONArray nodeArr = (JSONArray) jobj.get("@graph");  
 		if(nodeArr == null){
