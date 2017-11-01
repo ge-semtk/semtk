@@ -21,6 +21,10 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.utility.Utility;
+
+import java.util.HashMap;
+
 @Component
 public class IngestionServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
@@ -30,11 +34,18 @@ public class IngestionServiceStartup implements ApplicationListener<ApplicationR
   @Override
   public void onApplicationEvent(final ApplicationReadyEvent event) {
 	  
-	  System.out.println("----- PROPERTIES: -----");
-	  System.out.println("ingestion.sparqlUserName: " + event.getApplicationContext().getEnvironment().getProperty("ingestion.sparqlUserName"));
-	  System.out.println("ingestion.batchSize: " + event.getApplicationContext().getEnvironment().getProperty("ingestion.batchSize"));
-	  System.out.println("-----------------------");
 	  
+	  // print and validate properties - and exit if invalid
+	  String[] propertyNames = {
+			  "ingestion.sparqlUserName",
+			  "ingestion.batchSize"
+	  };
+	  HashMap<String,String> properties = new HashMap<String,String>();
+	  for(String propertyName : propertyNames){
+		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+	  }
+	  Utility.validatePropertiesAndExitOnFailure(properties); 
+	   
 	  return;
   }
  

@@ -59,7 +59,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected OntologyInfo oInfo;
 	protected String domain;
 	
-	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, StatusClient sClient, SparqlQueryClient queryClient) throws Exception{
+	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, StatusClient sClient, SparqlQueryClient queryClient, Boolean unusedFlag) throws Exception{
 		this.jobID = jobId;
 		
 		this.resultsClient = rClient;

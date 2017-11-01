@@ -17,9 +17,13 @@
 
 package com.ge.research.semtk.services.status;
 
+import java.util.HashMap;
+
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
+
+import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class StatusServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
@@ -30,15 +34,22 @@ public class StatusServiceStartup implements ApplicationListener<ApplicationRead
   @Override
   public void onApplicationEvent(final ApplicationReadyEvent event) {
 	  
-	  System.out.println("----- PROPERTIES: -----");
-	  System.out.println("status.edc.services.jobEndpointType: " + event.getApplicationContext().getEnvironment().getProperty("status.edc.services.jobEndpointType"));
-	  System.out.println("status.edc.services.jobEndpointDomain: " + event.getApplicationContext().getEnvironment().getProperty("status.edc.services.jobEndpointDomain"));
-	  System.out.println("status.edc.services.jobEndpointServerUrl: " + event.getApplicationContext().getEnvironment().getProperty("status.edc.services.jobEndpointServerUrl"));
-	  System.out.println("status.edc.services.jobEndpointDataset: " + event.getApplicationContext().getEnvironment().getProperty("status.edc.services.jobEndpointDataset"));
-	  System.out.println("status.edc.services.jobEndpointUsername: " + event.getApplicationContext().getEnvironment().getProperty("status.edc.services.jobEndpointUsername"));
-	  System.out.println("status.edc.services.jobEndpointPassword: " + event.getApplicationContext().getEnvironment().getProperty("status.edc.services.jobEndpointPassword"));	  
-	  System.out.println("-----------------------");
 	  
+	  // print and validate properties - and exit if invalid
+	  String[] propertyNames = {
+			  "status.edc.services.jobEndpointType",
+			  "status.edc.services.jobEndpointDomain",
+			  "status.edc.services.jobEndpointServerUrl",
+			  "status.edc.services.jobEndpointDataset",
+			  "status.edc.services.jobEndpointUsername",
+			  "status.edc.services.jobEndpointPassword"
+	  };
+	  HashMap<String,String> properties = new HashMap<String,String>();
+	  for(String propertyName : propertyNames){
+		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+	  }
+	  Utility.validatePropertiesAndExitOnFailure(properties); 
+	  	  
 	  return;
   }
  

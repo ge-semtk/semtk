@@ -45,6 +45,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.dispatch.DispatchProperties;
 import com.ge.research.semtk.services.dispatch.NodegroupRequestBody;
 import com.ge.research.semtk.services.dispatch.WorkThread;
+import com.ge.research.semtk.sparqlX.BadQueryException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
@@ -122,7 +123,7 @@ public class DispatcherServiceRestController {
 			NodegroupRequestBody ngrb = new NodegroupRequestBody();
 			ngrb.setjsonRenderedNodeGroup(sgjson.getJson().toJSONString());
 			
-			dsp = getDispatcher(props, requestId, ngrb, true);
+			dsp = getDispatcher(props, requestId, ngrb, true, true);
 			
 			WorkThread doIt = new WorkThread(dsp, null, qt);
 
@@ -176,7 +177,7 @@ public class DispatcherServiceRestController {
 		
 		// get the things we need for the dispatcher
 		try {
-			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth);
+			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
 			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), qt);
 			
@@ -229,13 +230,18 @@ public class DispatcherServiceRestController {
 		// get the things we need for the dispatcher
 		try {
 			
-			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, false);
+			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, false, false);
 			
 			retval.addResult("constraintType", dsp.getConstraintType());
 			retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
 		
 			 
-		} catch (Exception e) {
+		} catch (BadQueryException bqe) {
+			// handle this exception by showing the user the simplified message.
+			retval.setSuccess(false);
+			retval.addRationaleMessage(bqe.getMessage());
+		}
+		catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 
@@ -252,7 +258,7 @@ public class DispatcherServiceRestController {
 		return "req_" + UUID.randomUUID();
 	}
 	
-	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody, Boolean useAuth ) throws Exception{
+	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody, Boolean useAuth, Boolean heedRestrictions) throws Exception{
 		
 		// get the sgJson...
 		SparqlGraphJson sgJson = null;
@@ -346,7 +352,7 @@ public class DispatcherServiceRestController {
 				else{
 				}
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions);
 			
 		}
 		catch(Exception failedToFindClass){

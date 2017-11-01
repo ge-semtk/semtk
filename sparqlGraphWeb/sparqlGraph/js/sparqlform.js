@@ -41,6 +41,7 @@ var gSparqlEdc = null;
 var gFormConstraint = null;
 var gStoreDialog = null;
 
+var gCancelled = false;
 
 //
 //  Require.js tutorial:
@@ -268,7 +269,7 @@ require([	'local/sparqlformconfig',
 			
 			// constrain button
 			if (constrainableFlag) {
-				cellStr =  "<button class='btn btn-info" + (constrainableFlag ? "" : " disabled") + "' " +
+				cellStr =  "<button id='b_" + IIDXHelper.getNextId() + "' class='btn btn-info" + (constrainableFlag ? "" : " disabled") + "' " +
 					"onclick='javascript:filterCallback(\"" + gRowId + '","' + iconID + "\"); return false;'" +
 					(constrainableFlag ? "" : " disabled") + ">Filter</button>";   // <i class='icon-filter icon-white'></i>
 			} else {
@@ -279,7 +280,7 @@ require([	'local/sparqlformconfig',
 			// delete button
 			// PEC TODO: the constraints table does this a different and much cooler way.  share.
 			row.insertCell(-1).innerHTML = 
-					"<button class='btn btn-danger' onclick='javascript:delFormRow(\"" + gRowId + "\"); return false;'><i class='icon-trash icon-white'></i></button>";
+					"<button id='b_" + IIDXHelper.getNextId() + "' class='btn btn-danger' onclick='javascript:delFormRow(\"" + gRowId + "\"); return false;'><i class='icon-trash icon-white'></i></button>";
 
 			gRowId += 1;
 			
@@ -344,10 +345,26 @@ require([	'local/sparqlformconfig',
                                             itemDialogCallback,
     				                        {"textId": textId}
     		                                );
+            dialog.setLimit(Config.itemDialog.limit);
+            dialog.setMaxValues(Config.itemDialog.maxValues);
+            
             var sparqlFormFlag = true;
     		dialog.show(sparqlFormFlag);
 		};
-
+    
+        doCancel = function() {
+            gCancelled = true;
+        };
+    
+        checkForCancel = function() {
+            if (gCancelled) {
+                gCancelled = false;
+                return true;
+            } else {
+                return false;
+            }
+        };
+    
         runSfSuggestValuesQuery = function (ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
         
             // make sure there is a sparqlID
@@ -385,9 +402,10 @@ require([	'local/sparqlformconfig',
                 var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
+                                                                                 this.checkForCancel.bind(this),
                                                                                  Config.services.status.url,
                                                                                  Config.services.results.url);
-                var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 5000);
+                var execClient = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
                 statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, gConn, runId, null, null, jobIdCallback, failureCallback);
 
@@ -491,7 +509,7 @@ require([	'local/sparqlformconfig',
 				gOTree.showSubset(g.simpleClassURIs);
 			}
 		};
-
+    
 		//***********  drag and drop *************//
 		allowDrop = function(ev) {
 			alertUser("allowDrop5");
@@ -760,7 +778,7 @@ require([	'local/sparqlformconfig',
 		};
 		
 		guiStartQuery = function () {
-			disableButton('btnFormExecute');
+            guiDisableAll();
 		};
 		
 		guiEndQuery = function (errorMsg) {
@@ -768,9 +786,49 @@ require([	'local/sparqlformconfig',
 			if (errorMsg) {
 				alertUser(errorMsg);
 			}
-			enableButton('btnFormExecute');
+            guiUnDisableAll();
 			setStatus("");
 		};
+    
+        disableHash = {};
+    
+        /*
+         * For all buttons with an id:
+         *     disable
+         *     save state
+         */
+        guiDisableAll = function () {
+            disableHash = {};
+            var opposite = [];
+            
+            // Cancel button works backwards as long as we're not avoiding microservices
+            if (typeof gAvoidQueryMicroserviceFlag == "undefined" || !gAvoidQueryMicroserviceFlag) {
+                opposite.push("btnFormCancel");
+            }
+            
+            var buttons = document.getElementsByTagName("button");
+            for (var i = 0; i < buttons.length; i++) {
+                if (buttons[i].id && buttons[i].id.length > 0) {
+                    disableHash[buttons[i].id] = buttons[i].disabled;
+
+                    buttons[i].disabled = (opposite.indexOf(buttons[i].id) == -1);
+                }
+            }
+        };
+
+        /*
+         * For all buttons with an id:
+         *     restore state from last call to guiDisableAll()
+         */
+        guiUnDisableAll = function () {
+            var buttons = document.getElementsByTagName("button");
+            for (var i = 0; i < buttons.length; i++) {
+                // if button has an id, and its state has been hashed
+                if (buttons[i].id && buttons[i].id.length > 0 && disableHash[buttons[i].id] != undefined) {
+                    buttons[i].disabled =  disableHash[buttons[i].id];
+                }
+            }
+        };
 		
 		doRunQueryBut = function() {
 			// callback for the "Get Data" button
@@ -815,11 +873,12 @@ require([	'local/sparqlformconfig',
                 kdlLogEvent("SF: Query vi Dispatcher");
                 
                 setStatusProgressBar.bind(this, "Running Query", 0);
-                var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, 15000);
-                var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(200,
+                var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
+                var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(Config.resultsTable.sampleSize,
                                                                                      doQueryTableResCallback,
                                                                                      guiEndQuery,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
+                                                                                     this.checkForCancel.bind(this),
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
                setStatusProgressBar("Running Query", 1);
@@ -854,9 +913,14 @@ require([	'local/sparqlformconfig',
             hdiv.innerHTML = "<b>Full Results:</b><br>";
             hdiv.innerHTML += anchor;
             hdiv.innerHTML += "<br>";  
-                    
+                
             results.setLocalUriFlag(true);
-			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), "<b>Sample of results:</b>");
+            
+            var headerHTML = "";
+            if (results.getRowCount() == Config.resultsTable.sampleSize) {
+                headerHTML += " <span class='label label-warning'>Showing first " + String(Config.resultsTable.sampleSize) + " rows. </span> "
+            }
+			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), headerHTML);
 											
 			guiEndQuery();
         };
@@ -918,8 +982,15 @@ require([	'local/sparqlformconfig',
          */
         restoreQueryFromJson2 = function(sgJson) {
             
-            // fill up gNodeGroup w/o inflating
-            sgJson.getNodeGroup(gNodeGroup, gOInfo);
+            try {
+                sgJson.getNodeGroup(gNodeGroup, gOInfo);
+            } catch (e) {
+                ModalIidx.alert("Error loading nodegroup",
+                                 e.hasOwnProperty("message") ? e.message : e
+                                 );
+                doClearFormBut();               
+                return;
+            }
             
             var formRows = sgJson.getExtra("formRows");
             if (formRows == null) formRows = [];

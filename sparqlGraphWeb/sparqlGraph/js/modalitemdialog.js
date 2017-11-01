@@ -62,7 +62,12 @@ define([	// properly require.config'ed
 			
 			this.limit = 10000;
 			this.lastSparqlID = "";
-					
+			
+            // Virtuoso has performance and maybe downright crash troubles
+            // if a values clause has too many params.
+            // Actual limit is in the 2,000 - 10,000 range
+            this.maxValues = 1000;
+
 			this.sparqlformFlag = false;
 		};
 		
@@ -78,14 +83,23 @@ define([	// properly require.config'ed
 		ModalItemDialog.DELETE_CHECK = 8;
 		ModalItemDialog.DELETE_SELECT = 9;
     
-        // Virtuoso has performance and maybe downright crash troubles
-        // if a values clause has too many params.
-        // Actual limit is in the 2,000 - 10,000 range
-        ModalItemDialog.MAX_VALUES_LENGTH = 1000;
-
+        
 		
 		ModalItemDialog.prototype = {
-				
+            /*
+             * maximum number of suggested values that will be shown
+             */
+            setLimit : function(l) {
+                this.limit = l;
+            },
+            
+            /*
+             * maximum number of values in a values clause
+             */
+            setMaxValues : function(mv) {
+                this.maxValues = mv;
+            },
+            
 			selectChanged : function () {
 				// build the text field using the selected fields in the <select> 
 				
@@ -96,11 +110,11 @@ define([	// properly require.config'ed
 				
 				
 				// build new constraints
-                if (valList.length > ModalItemDialog.MAX_VALUES_LENGTH) {
+                if (valList.length > this.maxValues) {
                     if (this.sparqlformFlag) {
                         ModalIidx.alert("Too many items selected",
-                                        "Selecting more than " +  ModalItemDialog.MAX_VALUES_LENGTH + " values<br>" +
-                                        "is not yet supported.<br>" +
+                                        "Selecting more than " +  this.maxValues + " values is not supported<br>" +
+                                        "due to performance impact.<br>" +
                                         "Consider using REGEX.");
                         // SparqlForm: disallow large VALUES clause.
                         this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");

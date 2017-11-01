@@ -68,6 +68,37 @@ OntologyTree.prototype = {
 		return (this.specialClasses.indexOf(fullName) > -1);
 	},
 	
+    update : function (newOInfo, optRenameFrom, optRenameTo) {
+        var renameFrom = optRenameFrom ? optRenameFrom : [];
+        var renameTo   = optRenameTo   ? optRenameTo   : [];
+        var expandList = [];
+        var selectList = [];
+
+        // save expanded and selected nodes
+        this.tree.getRoot().visit(function(elist, slist, node){
+			if (node.bExpanded) {
+                var i = renameFrom.indexOf(node.data.tooltip);
+                var val = (i > -1) ? renameTo[i] : node.data.tooltip;
+                elist.push(val);
+			}
+            if (node.bSelected) {
+                var i = renameFrom.indexOf(node.data.tooltip);
+                var val = (i > -1) ? renameTo[i] : node.data.tooltip;
+                slist.push(val);
+			}
+		}.bind(this,expandList,selectList));
+        
+        // reset oInfo
+        this.setOInfo(newOInfo);
+        this.showAll();
+        
+        // restore expanded and selected nodes
+        this.tree.getRoot().visit(function(elist, slist, node){
+            node.expand(elist.indexOf(node.data.tooltip) > -1);
+            node.select(slist.indexOf(node.data.tooltip) > -1);
+		}.bind(this,expandList,selectList));
+    },
+    
 	setOInfo : function (ontInfo) {
 		// associate an OntologyInfo		
 		this.oInfo = ontInfo;
@@ -131,9 +162,20 @@ OntologyTree.prototype = {
     	}
     	
     	// get class parent.  Keep walking up until null, or until namespace is not in this.collpaseList
-    	var ontParent = this.oInfo.getClassParent(ontClass);
+    	var ontParents = this.oInfo.getClassParents(ontClass);
+        
+        // PEC TODO: ontologyTree needs to handle multiple inheritence
+        var ontParent = ontParents.length > 0 ? ontParents[0] : null;
+        
+        if (ontParents.length > 1) {
+            throw new Error("OntologyTree does not yet support classes with multiple parents: " + ontClass.getNameStr());
+        }
+        
     	while (ontParent && this.collapseList.indexOf(ontParent.getNamespaceStr()) > -1) {
-    		ontParent = this.oInfo.getClassParent(ontParent);
+    		ontParents = this.oInfo.getClassParents(ontParent);
+            
+            // PEC TODO: ontologyTree needs to handle multiple inheritence
+            ontParent = ontParents.length > 0 ? ontParents[0] : null;
     	}
     	
     	if (ontParent) {

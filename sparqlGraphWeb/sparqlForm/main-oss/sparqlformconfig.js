@@ -22,27 +22,30 @@
 //VERSION: 85
 define([], function() {
 	var Config = {
-		services : { 
+		"services" : { 
 			"query" : {
-				"url" : "http://localhost:12050/sparqlQueryService",  
+				"url" : "http://vesuvius37.crd.ge.com:12050/sparqlQueryService",  
 			},
 			"status" : {
-				"url" : "http://localhost:12051/status/",    
+				"url" : "http://vesuvius37.crd.ge.com:12051/status/",    
 			},
 			"results" : {
-				"url" : "http://localhost:12052/results/",     
+				"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
+			},
+			"dispatcher" : {
+				"url" : "http://vesuvius37.crd.ge.com:12053/dispatcher/",  
 			},
             nodeGroup:{
-                url : "http://localhost:12059/nodeGroup/",
+                url : "http://vesuvius37.crd.ge.com:12059/nodeGroup/",
             },
             "nodeGroupExec" : {
-			     url : "http://localhost:12058/nodeGroupExecution/",
+			     url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/",
             },
             nodeGroupStore:{
-                url : "http://localhost:12056/nodeGroupStore/",
+                url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStore/",
             },
 		},
-		help : {
+		"help" : {
 			"aboutHtml" : '<b>SparqlForm Opensource build 2.0</b><br>\
 				Knowledge Discovery Lab<br>\
 				Contact: Paul Cuddihy cuddihy@ge.com<br>\
@@ -80,6 +83,17 @@ define([], function() {
 			    - Copyright (c) 2008 Ariel Flesler - aflesler(at)gmail(dot)com | http://flesler.blogspot.com<br>\
 			    ',
 		},
+        "itemDialog" : {
+            "limit"    : 10000,   // max number of choices shown
+            "maxValues": 100      // max size of VALUES clause
+        },
+        "timeout" : {
+            "short" : 5000,
+            "long"  : 30000  
+        },
+        "resultsTable" : {
+            "sampleSize" : 200
+        }
 	};
 	
 	return Config;

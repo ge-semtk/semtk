@@ -55,10 +55,12 @@ define([	// properly require.config'ed
      *    fieldset.appendChild(IIDXHelper.buildControlGroup("label: ", IIDXHelper.createTextInput("myId")));
      *    myDom.appendChild(form);
      */
-    IIDXHelper.buildHorizontalForm = function () {
+    IIDXHelper.buildHorizontalForm = function (tightFlag) {
+        // tightFlag overrides IIDX giant bottom margin
         var form = document.createElement("form");
         form.className = "form-horizontal";
         form.onsubmit = function(){return false;};    // NOTE: forms shouldn't submit automatically on ENTER
+        if (tightFlag) form.style.marginBottom = "1ch";
         return form;
     };
 
@@ -84,6 +86,9 @@ define([	// properly require.config'ed
         fieldSet.appendChild(IIDXHelper.buildControlGroup(label, input));
     }
 
+    /*
+     * classes - input-mini, input-small, input-medium, input-large, input-xlarge
+     */
     IIDXHelper.createTextInput = function (id, optClassName) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("input");
@@ -175,6 +180,53 @@ define([	// properly require.config'ed
         return select;
     };
 
+    /* create a collapsible div
+     * with a button and title
+     * and innerDom inside it.
+     */
+    IIDXHelper.createCollapsibleDiv = function (title, innerDom, openFlag) {
+        var outerDiv = document.createElement("div");
+        var innerDiv = document.createElement("div");
+        var but = document.createElement("a");
+        var icon = document.createElement("icon");
+        
+        innerDiv.appendChild(innerDom);
+        innerDiv.appendChild(document.createElement("hr"));
+        
+        but.onclick = function(div, ic) {
+            if (ic.className.endsWith("right")) {
+                div.style.display = "inline";
+                ic.className = "icon-chevron-down";
+            } else {
+                div.style.display = "none";
+                ic.className = "icon-chevron-right";
+            }
+        }.bind(this, innerDiv, icon);
+        
+        but.classList.add("btn");
+        but.appendChild(icon);
+        but.onclick(innerDiv, icon);
+        if (openFlag) {
+            but.onclick(innerDiv, icon);
+        }
+
+        outerDiv.appendChild(but);
+        outerDiv.appendChild(document.createTextNode(" " + title));
+        outerDiv.appendChild(document.createElement("br"));
+        outerDiv.appendChild(innerDiv);
+        
+        return outerDiv;
+    };
+    
+    IIDXHelper.createIconButton = function(iconClass) {
+        var ret = document.createElement("a");
+        ret.classList.add("btn");
+        var icon = document.createElement("icon");
+        icon.className = iconClass;
+        ret.appendChild(icon);
+        return ret;
+    };
+    
     /*
      * Get list of values for each selected option
      *
@@ -715,6 +767,63 @@ define([	// properly require.config'ed
 
     };
 
+    IIDXHelper.buildTabs = function(nameList, divList) {
+        var panel = IIDXHelper.getNextId("panel");
+        var ret = document.createElement("span");
+        
+        var ul = document.createElement("ul");
+        ul.classList.add("nav");
+        ul.classList.add("nav-tabs");
+        ul.classList.add("nav-justified");
+        ret.appendChild(ul);
+        
+        for (var i=0; i < nameList.length; i++) {
+            var li = document.createElement("li");
+            li.classList.add("nav-item");
+            if (i==0) li.classList.add("active");
+            ul.appendChild(li);
+            
+            var a = document.createElement("a");
+            a.classList.add("nav-link");
+            if (i==0) a.classList.add("active");
+            a.dataToggle = "tab";
+            a.href = "#" + panel + String(i);
+            a.role = "tab";
+            a.innerHTML = nameList[i];
+            a.onclick = function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            };
+            li.appendChild(a);
+        }
+        
+        var div = document.createElement("div");
+        div.classList.add("tab-content");
+        div.classList.add("card");
+        ret.appendChild(div);
+        
+        for (var i=0; i < divList.length; i++) {
+            var pdiv = document.createElement("div");
+            pdiv.classList.add("tab-pane");
+            pdiv.classList.add("fade");
+            
+            if (i==0) {
+                pdiv.classList.add("in");
+                pdiv.classList.add("show");
+                pdiv.classList.add("active");
+            }
+            
+            pdiv.id = panel + String(i);
+            pdiv.role = "tabpanel";
+            pdiv.appendChild(document.createElement("br"));
+            pdiv.appendChild(divList[i]);
+            div.appendChild(pdiv);
+        }
+        
+        
+        return ret;
+    };
+    
     IIDXHelper.buildSelectDatagridInDiv = function (div, colsCallback, dataCallback, optFinishedCallback) {
         //
         // PARAMS:

@@ -54,7 +54,7 @@ public class OntologyName {
 	
 	public Boolean equals(OntologyName oName){
 		// if both have the same full name, they are the same. 
-		return(this.name == oName.name);
+		return(this.name.equals(oName.name));
 	}
 	
 	public Boolean isInDomain(String domain){

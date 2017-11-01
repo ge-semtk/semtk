@@ -30,7 +30,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -321,7 +321,7 @@ public abstract class Utility {
 		// Try it first
 		// If it succeeds then return as-is, since it is also valid SPARQL
 		try{
-			ZonedDateTime zonedObj = ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+			ZonedDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 			return s;
 		} catch (Exception e) {
         	// move on
@@ -396,6 +396,53 @@ public abstract class Utility {
 		return ret.trim();
 	}	
 
+	
+	/**
+	 * Print all properties.  Validate all properties and exit if any are invalid.
+	 * @param properties keys are property names, values are property values
+	 */
+	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties){
+		validatePropertiesAndExitOnFailure(properties, new HashSet<String>());
+	}
+	
+	/**
+	 * Print all properties.  Validate all properties and exit if any are invalid.
+	 * @param properties keys are property names, values are property values
+	 * @param properties that should not be validated (e.g. they can be blank/missing/null)
+	 */
+	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
+		System.out.println("----- PROPERTIES: --------------------");
+		for(String propertyName : properties.keySet()){
+			String propertyValue = properties.get(propertyName);
+			System.out.println(propertyName + ": " + propertyValue);	// print to console
+			if(!propertiesSkipValidation.contains(propertyName)){		// skip validation for some properties
+				try {
+					Utility.validateProperty(propertyValue, propertyName);	// validate
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("============" + e.getMessage() + "...EXITING ============");	
+					System.exit(1);					// kill the process
+				} 
+			}
+		}
+		System.out.println("--------------------------------------");
+	}
+	
+	/**
+	 * Validate a property.
+	 * Confirm that it is not null, "null", or empty...and then return it. 
+	 * 
+	 * @param propertyValue the property value
+	 * @param propertyName the property name
+	 * @throw Exception if validation fails
+	 */
+	public static void validateProperty(String propertyValue, String propertyName) throws Exception{
+		if(propertyValue == null || propertyValue.trim().equals("null") || propertyValue.trim().isEmpty()){
+			throw new Exception("Property " + propertyName + " is missing, empty, or null");	// throw an Exception
+		}
+	}
+	
+	
 	/**
 	 * Compress a string.
 	 */

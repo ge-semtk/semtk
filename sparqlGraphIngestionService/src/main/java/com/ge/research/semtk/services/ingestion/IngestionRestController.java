@@ -247,7 +247,7 @@ public class IngestionRestController {
 			e.printStackTrace();
 			
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage("ingestion", "fromCsv*", e);
 		}
 		if(logger != null){ // always checking if we are actually logging. 
 			// what are we returning
@@ -304,7 +304,7 @@ public class IngestionRestController {
 			e.printStackTrace();
 			
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage("ingestion", "fromOracleODBC", e);
 		}
 		
 		return retval.toJson();
@@ -350,7 +350,8 @@ public class IngestionRestController {
 			e.printStackTrace();
 			
 			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
+
 		}
 		
 		return retval.toJson();

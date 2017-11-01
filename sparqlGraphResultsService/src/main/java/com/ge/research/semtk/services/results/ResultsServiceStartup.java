@@ -18,14 +18,14 @@
 package com.ge.research.semtk.services.results;
 
 import java.io.File;
+import java.util.HashMap;
 
-import org.mortbay.jetty.security.ClientCertAuthenticator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.ge.research.semtk.services.results.cleanUp.DeleteThread;
+import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class ResultsServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
@@ -40,22 +40,29 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
   @Override
   public void onApplicationEvent(final ApplicationReadyEvent event) {
 	  
-	  System.out.println("----- PROPERTIES: -----");
-	  System.out.println("results.baseURL: " + event.getApplicationContext().getEnvironment().getProperty("results.baseURL"));
-	  System.out.println("results.fileLocation: " + event.getApplicationContext().getEnvironment().getProperty("results.fileLocation"));	  
-	  System.out.println("results.edc.services.jobEndpointType: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointType"));
-	  System.out.println("results.edc.services.jobEndpointDomain: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDomain"));
-	  System.out.println("results.edc.services.jobEndpointServerUrl: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointServerUrl"));
-	  System.out.println("results.edc.services.jobEndpointDataset: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDataset"));
-	  System.out.println("results.edc.services.jobEndpointUsername: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointUsername"));
-	  System.out.println("results.edc.services.jobEndpointPassword: " + event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword"));	
-	  System.out.println("results.cleanUpThreadEnabled: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadEnabled"));
-	  System.out.println("results.cleanUpThreadFrequency: " + event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
-	  System.out.println("-----------------------");
-	  
+	  // print and validate properties - and exit if invalid
+	  String[] propertyNames = {
+			  "results.baseURL",
+			  "results.fileLocation",
+			  "results.edc.services.jobEndpointType",
+			  "results.edc.services.jobEndpointDomain",
+			  "results.edc.services.jobEndpointServerUrl",
+			  "results.edc.services.jobEndpointDataset",
+			  "results.edc.services.jobEndpointUsername",
+			  "results.edc.services.jobEndpointPassword",
+			  "results.cleanUpThreadEnabled",
+			  "results.cleanUpThreadFrequency"
+	  };
+	  HashMap<String,String> properties = new HashMap<String,String>();
+	  for(String propertyName : propertyNames){
+		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+	  }
+	  Utility.validatePropertiesAndExitOnFailure(properties); 
+
+	  // initialize and clean up results location
 	  initializeResultsLocation(event);
 	  cleanUpFileLocation(event);
-	  
+
 	  return;
   }
  
@@ -99,13 +106,13 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 			  
 			                                                                                               
 			  if(cleanUpFreq == null){ 
-				  cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY; 
+				  cleanUpFreq = DEFAULT_CLEANUP_FREQUENCY; 
 				  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
 			  }
 		  }
 		  catch(Exception eee){
 			  System.err.println( eee.getMessage() );
-			  cleanUpFreq = this.DEFAULT_CLEANUP_FREQUENCY;
+			  cleanUpFreq = DEFAULT_CLEANUP_FREQUENCY;
 			  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
 		  }
 		  

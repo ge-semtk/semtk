@@ -75,7 +75,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchSelectJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -116,7 +116,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchDeleteJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -157,7 +157,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchCountJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -198,7 +198,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchFilterJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -241,7 +241,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchSelectJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -283,7 +283,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchCountJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -325,7 +325,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchDeleteJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;
@@ -367,7 +367,7 @@ public class StoredNodeGroupExecutionLauncher {
 			// report failure.
 			System.err.println("requested job failed");
 			retval = new TableResultSet(false);
-			retval.addRationaleMessage(snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
+			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchFilterJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
 		
 		return retval;

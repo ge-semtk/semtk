@@ -43,6 +43,8 @@
     var gNodeGroupChangedFlag = false;
     var gQueryTextChangedFlag = false;
 
+    var gCancelled = false;
+
     var gQueryTypeIndex = 0;   // sel index of QueryType
     var gQuerySource = "SERVICES";
 
@@ -88,6 +90,7 @@
             // edit tab
             gEditTab = new EditTab(document.getElementById("editTreeDiv"),
                                    document.getElementById("editCanvasDiv"),
+                                   document.getElementById("editButtonDiv"),
                                    document.getElementById("editSearch")
                                   );
             document.getElementById("edit-tab-but").disabled = false;
@@ -631,10 +634,12 @@
                 ngClient.execAsyncGenerateFilter(runNodegroup, conn, runId, sparqlCallback, failureCallback);
                 
             } else {
+                var checkForCancel = function() { return false; };
                 // Run nodegroup via Node Group Exec Svc
                 var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
+                                                                                 checkForCancel,
                                                                                  g.service.status.url,
                                                                                  g.service.results.url);
                 var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
@@ -945,7 +950,8 @@
    	};
 
     var doTest = function () {
-        activateOntologyEditor();
+        activateOntologyEditor();   
+       
    	};
 
 
@@ -992,6 +998,18 @@
         
     };
    
+    var doCancel = function() {
+        gCancelled = true;
+    };
+    
+    var checkForCancel = function() {
+        if (gCancelled) {
+            gCancelled = false;
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     var runGraphByQueryType = function (optRtConstraints) {
         // PEC HERE
@@ -1001,13 +1019,15 @@
                  'sparqlgraph/js/modaliidx'], 
     	         function (MsiClientNodeGroupExec, ModalIidx) {
 			
-            guiDisableAll();
+            var runViaServices = true;
+            guiDisableAll(runViaServices);
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
     		
             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
                                                                                      queryFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
+                                                                                     this.checkForCancel.bind(this),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
             setStatusProgressBar("Running Query", 1);
@@ -1056,6 +1076,7 @@
                                                                                       queryTableResCallback,
                                                                                       queryFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
+                                                                                      this.checkForCancel.bind(this),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
             guiDisableAll();
@@ -1580,15 +1601,21 @@
      *     disable
      *     save state
      */
-    var guiDisableAll = function () {
+    var guiDisableAll = function (runViaServiceFlag) {
         disableHash = {};
-        
-    	var buttons = document.getElementsByTagName("button");
+        var opposite = [];
+
+        // Cancel button works backwards if we're running via services
+        if (runViaServiceFlag) {
+            opposite.push("btnFormCancel");
+        }
+
+        var buttons = document.getElementsByTagName("button");
         for (var i = 0; i < buttons.length; i++) {
-        	if (buttons[i].id && buttons[i].id.length > 0) {
+            if (buttons[i].id && buttons[i].id.length > 0) {
                 disableHash[buttons[i].id] = buttons[i].disabled;
 
-                buttons[i].disabled = true;
+                buttons[i].disabled = (opposite.indexOf(buttons[i].id) == -1);
             }
         }
     };

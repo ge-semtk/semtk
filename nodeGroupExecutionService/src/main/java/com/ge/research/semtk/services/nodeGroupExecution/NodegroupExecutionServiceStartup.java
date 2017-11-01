@@ -17,9 +17,13 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution;
 
+import java.util.HashMap;
+
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
+
+import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class NodegroupExecutionServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
@@ -30,25 +34,26 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
   @Override
   public void onApplicationEvent(final ApplicationReadyEvent event) {
 	  
-	  System.out.println("----- PROPERTIES: -----");
-	  
-	  System.out.println("nodeGroupExecution.ngStoreProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.ngStoreProtocol"));
-	  System.out.println("nodeGroupExecution.ngStoreServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.ngStoreServer"));
-	  System.out.println("nodeGroupExecution.ngStorePort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.ngStorePort"));
-
-	  System.out.println("nodeGroupExecution.dispatchProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.dispatchProtocol"));
-	  System.out.println("nodeGroupExecution.dispatchServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.dispatchServer"));
-	  System.out.println("nodeGroupExecution.dispatchPort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.dispatchPort"));
-
-	  System.out.println("nodeGroupExecution.resultsProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.resultsProtocol"));
-	  System.out.println("nodeGroupExecution.resultsServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.resultsServer"));
-	  System.out.println("nodeGroupExecution.resultsPort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.resultsPort"));
-
-	  System.out.println("nodeGroupExecution.statusProtocol: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.statusProtocol"));
-	  System.out.println("nodeGroupExecution.statusServer: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.statusServer"));
-	  System.out.println("nodeGroupExecution.statusPort: " + event.getApplicationContext().getEnvironment().getProperty("nodeGroupExecution.statusPort"));
-	  
-	  System.out.println("-----------------------");
+	  // print and validate properties - and exit if invalid
+	  String[] propertyNames = {
+			  "nodeGroupExecution.ngStoreProtocol",
+			  "nodeGroupExecution.ngStoreServer",
+			  "nodeGroupExecution.ngStorePort",
+			  "nodeGroupExecution.dispatchProtocol",
+			  "nodeGroupExecution.dispatchServer",
+			  "nodeGroupExecution.dispatchPort",
+			  "nodeGroupExecution.resultsProtocol",
+			  "nodeGroupExecution.resultsServer",
+			  "nodeGroupExecution.resultsPort",
+			  "nodeGroupExecution.statusProtocol",
+			  "nodeGroupExecution.statusServer",
+			  "nodeGroupExecution.statusPort",
+	  };
+	  HashMap<String,String> properties = new HashMap<String,String>();
+	  for(String propertyName : propertyNames){
+		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+	  }
+	  Utility.validatePropertiesAndExitOnFailure(properties); 
 	  
 	  return;
   }
