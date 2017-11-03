@@ -77,7 +77,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar --spring.config.location="$CONFIG_HIVE_SERVICE" --server.port=$PORT_HIVE_SERVICE > "$LOGS"/hiveService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS",${HOME}/app/lib -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar --spring.config.location="$CONFIG_EXEC_SERVICE" --server.port=$PORT_NODEGROUPEXECUTION_SERVICE > "$LOGS"/nodeGroupExecutionService.log 2>&1 &
 
