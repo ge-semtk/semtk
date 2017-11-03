@@ -55,6 +55,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		throw new Exception("Received empty response");
 	}	
 	
+	
+	// graph result support
 	public void execStoreGraphResults(String jobID, JSONObject resJSON) throws Exception {
 		// store the graph results. this is currently done as a single operation because the JSON-LD is less intuitive to split than the table results.
 		// this strategy will have to be revisited in the event that writes are slow.
@@ -86,6 +88,37 @@ public class ResultsClient extends RestClient implements Runnable {
 		}
 	}	
 	
+	// generic json blob support
+	public void execStoreBlobResults(String jobID, JSONObject resJson){
+
+		conf.setServiceEndpoint("results/storeJsonBlobResults"); 
+		this.parametersJSON.put("jobId", jobID);
+		this.parametersJSON.put("jsonBlobString", resJson.toJSONString());
+		this.run();
+		
+	}
+	
+	public JSONObject execGetBlobResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("results/getJsonBlobResults");
+		this.parametersJSON.put("jobId", jobId);
+		
+		this.parametersJSON.put("appendDownloadHeaders", false);
+
+		try {
+			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			
+			JSONParser jParse = new JSONParser();
+			JSONObject retval = (JSONObject) jParse.parse(s);
+			
+			return retval;
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.clear();
+		}
+	}	
+		
+	// table support
 	
 	/**
 	 * Store a table (as json).  

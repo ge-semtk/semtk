@@ -69,21 +69,28 @@ public class NodeGroupResultSet extends GeneralResultSet{
 		JSONObject retval = new JSONObject();
 		
 		try{
-		String JSON_TYPE = "type";
-		String JSON_NODE_COUNT = "node_count";
-		
-		
-		// convert the jsonLD to a nodegroup.
-		// note: this assumes that the results of the construct json can be transformed into a nodegroup.
-		// this will break in the event that type info is omited, for instance. because this is intended to be
-		// used with the dispatcher, it is a reasonable assumption for now.
-		NodeGroup ngTemp = new NodeGroup();
-		ngTemp.fromConstructJSON(jsonLD);
-		
-		
-		retval.put(JSON_TYPE, "JSON-LD");
-		retval.put(JSON_NODE_COUNT, ngTemp.getNodeCount());
-		
+			System.err.println("incoming nodegroup json was:");
+			System.err.println(jsonLD.toJSONString());
+			
+			String JSON_TYPE = "type";
+			String JSON_NODE_COUNT = "node_count";
+			
+			
+			// convert the jsonLD to a nodegroup.
+			// note: this assumes that the results of the construct json can be transformed into a nodegroup.
+			// this will break in the event that type info is omited, for instance. because this is intended to be
+			// used with the dispatcher, it is a reasonable assumption for now.
+			NodeGroup ngTemp = new NodeGroup();
+			int nodeGroupNodeCount = 0;
+			
+			if(jsonLD.containsKey("@graph")){
+				ngTemp.fromConstructJSON(jsonLD);
+				nodeGroupNodeCount = ngTemp.getNodeCount();
+			}
+						
+			retval.put(JSON_TYPE, "JSON-LD");
+			retval.put(JSON_NODE_COUNT, nodeGroupNodeCount);
+			
 		return retval;
 		}
 		catch(Exception e){
