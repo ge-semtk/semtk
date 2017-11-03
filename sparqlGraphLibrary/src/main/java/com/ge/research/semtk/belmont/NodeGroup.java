@@ -835,7 +835,15 @@ public class NodeGroup {
 		if (targetObj != null) {
 			// QUERY_CONSTRAINT or QUERY_COUNT or anything that set targetObj:  simple
 			// only the targetObj is returned
-			sparql.append(" ").append(targetObj.getSparqlID());
+			
+			// Virtuoso bug or hard-to-understand equality of floating point.
+			// Solution is from: https://stackoverflow.com/questions/38371049/sparql-distinct-gives-duplicates-in-virtuoso
+			// -Paul 11/3/2017
+			if (targetObj.getValueType().endsWith("float")) {
+				sparql.append(" ").append(" xsd:float(str(" + targetObj.getSparqlID() + "))");
+			} else {
+				sparql.append(" ").append(targetObj.getSparqlID());
+			}
 		}
 		else {
 			ArrayList<Returnable> returns = this.getReturnedItems();
