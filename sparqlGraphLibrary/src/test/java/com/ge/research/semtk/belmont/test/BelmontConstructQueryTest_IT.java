@@ -47,7 +47,7 @@ public class BelmontConstructQueryTest_IT {
 		NodeGroup ng = sgJson.getNodeGroup();
 		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 
-		String query = ng.generateSparqlConstruct();
+		String query = ng.generateSparqlConstruct(false);
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 			
 		// pass if there's a @graph and the first element contains anything about a (b)attery
@@ -64,7 +64,7 @@ public class BelmontConstructQueryTest_IT {
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/sampleBattery_PlusConstraints.json");		
 		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 		
-		String query = ng.generateSparqlConstruct();
+		String query = ng.generateSparqlConstruct(false);
 		
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		NodeGroup responseNodeGroup = NodeGroup.fromConstructJSON(responseJson);
