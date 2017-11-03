@@ -694,7 +694,7 @@ OntologyInfo.prototype = {
 				e = this.propertyHash[elemList[i]];
 			} 
 			if (e == null)  {
-				throw new Error("Cannot find element " + elemList[i] + " in the ontology");
+				throw new Error("Error in ontology: cannot find element to attach annotation: " + elemList[i]);
 			}
 			
 			// add the annotations (empties and duplicates are handled downstream)
@@ -728,7 +728,7 @@ OntologyInfo.prototype = {
 				e = this.propertyHash[elemList[i]];
 			} 
 			if (e == null)  {
-				throw new Error("Cannot find element " + elemList[i] + " in the ontology");
+				throw new Error("Error in ontology: cannot find element " + elemList[i] + " in the ontology");
 			}
 			
 			// add the annotations (empties and duplicates are handled downstream)
