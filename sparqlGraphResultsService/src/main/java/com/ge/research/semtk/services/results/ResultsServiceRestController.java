@@ -51,6 +51,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsSerializer;
+import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsStorage;
 import com.ge.research.semtk.edc.resultsStorage.JsonLdResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.JsonLdResultsStorage;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
@@ -119,6 +121,46 @@ public class ResultsServiceRestController {
 		System.err.println("done writing output");
 	}
 
+	@CrossOrigin
+	@RequestMapping(value="/storeJsonBlobResults", method=RequestMethod.POST)
+	public JSONObject storeJsonBlobResults(@RequestBody JsonBlobRequestBody requestBody){
+		
+		// logging
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
+    	logToStdout("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
+
+		SimpleResultSet res = new SimpleResultSet();
+		try{
+			URL url = getJsonBlobResultsStorage().storeResults(requestBody.jobId, requestBody.getJsonBlobString());
+			getJobTracker().setJobResultsURL(requestBody.jobId, url);  // store URL with the job
+		    res.setSuccess(true);
+		} catch(Exception e){
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonBlobResults", e);
+		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
+		    e.printStackTrace();
+		}    	
+		return res.toJson();	
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/getJsonBlobResults", method=RequestMethod.POST)
+	public void getJsonBlobResults(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp){
+		try{
+	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
+			GenericJsonBlobResultsSerializer retval = getJsonBlobResultsStorage().getJsonBlob(url);
+			
+			retval.writeToStream(resp.getWriter());
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    e.printStackTrace();
+	    }
+
+		System.err.println("done writing output");
+	}
+	
 	
 	/**
 	 * Call 1 of 3 for storing JSON results.
@@ -405,6 +447,10 @@ public class ResultsServiceRestController {
 
 	private JsonLdResultsStorage getJsonLdResultsStorage() throws Exception {
 		return new JsonLdResultsStorage(prop.getFileLocation());
+	}
+	
+	private GenericJsonBlobResultsStorage getJsonBlobResultsStorage() throws Exception {
+		return new GenericJsonBlobResultsStorage(prop.getFileLocation());
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
