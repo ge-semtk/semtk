@@ -271,7 +271,7 @@ public class NodeGroupExecutor {
 		}
 
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION)){
-			simpleRes = this.drc.executeConstructQueryFromNodeGroup(sendable, externalConstraints);
+			simpleRes = this.drc.executeConstructQueryForInstanceManipulationFromNodeGroup(sendable, externalConstraints);
 		
 		}
 		
