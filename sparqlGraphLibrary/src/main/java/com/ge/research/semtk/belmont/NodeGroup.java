@@ -204,7 +204,7 @@ public class NodeGroup {
 		    			    	
 		        String key = keysItr.next();
 		        Object value = nodeJson.get(key);		        		        
-		        if(key.equals("@id") || key.equals("@type")){
+		        if(key.equals("@id") || key.equals("@type") || key.equals("@Original-SparqlId")){
 		        	continue;  // already got node id and type above, so skip
 		        }		        
 
