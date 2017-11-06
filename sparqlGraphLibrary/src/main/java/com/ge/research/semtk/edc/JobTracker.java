@@ -494,7 +494,10 @@ public class JobTracker {
 			        	"   ?Job job:creationTime ?time. \n" +
 			        	"    FILTER (?time < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime) \n" +
 			        	"   ?Job ?y ?z." +
-			        	"   optional { ?z ?zo ?zp. }  \n" +
+			        	"   optional { " +
+			        	"?z ?zo ?zp. " +
+			        	"MINUS {<http://research.ge.com/semtk/services/job#Job> ?zo ?zp }" +
+			        	"}  \n" +
 			        	"}";
 		    try {
 		    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);

@@ -435,6 +435,19 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	@CrossOrigin
+	@RequestMapping(value="/dispatchConstructForInstanceManipulationById", method=RequestMethod.POST)
+	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody){
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/dispatchConstructForInstanceManipulationFromNodegroup", method=RequestMethod.POST)
+	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+
+	}
+	
+	@CrossOrigin
 	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody){
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
