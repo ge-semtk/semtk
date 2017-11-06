@@ -106,6 +106,12 @@ public class DispatcherServiceRestController {
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, false);
 	}
 	
+	@CrossOrigin
+	@RequestMapping(value="/queryConstructFromNodeGroupForInstanceManipulation", method=RequestMethod.POST)
+	public JSONObject queryConstructFromNodeGroupForInstanceManipulation(@RequestBody QueryRequestBody requestBody){
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, false);
+	}
+		
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 		String requestId = this.getRequestId();
 		SimpleResultSet retval = new SimpleResultSet(true);
