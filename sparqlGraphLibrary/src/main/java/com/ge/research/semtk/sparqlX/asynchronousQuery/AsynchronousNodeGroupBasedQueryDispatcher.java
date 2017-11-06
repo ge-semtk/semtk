@@ -339,7 +339,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			retval = this.queryNodeGroup.generateSparqlConstruct(false);
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION)){
-			retval = this.queryNodeGroup.generateSparqlConstruct(false);
+			retval = this.queryNodeGroup.generateSparqlConstruct(true);
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.DELETE)) {
 			retval = this.queryNodeGroup.generateSparqlDelete(null);
