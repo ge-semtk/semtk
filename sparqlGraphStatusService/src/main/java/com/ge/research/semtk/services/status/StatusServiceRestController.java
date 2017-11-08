@@ -25,13 +25,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
-
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 
 
 /**
@@ -59,7 +58,7 @@ public class StatusServiceRestController {
 		    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-    	logToStdout("Status Service getPercentComplete start JobId=" + jobId);
+	    LocalLogger.logToStdOut("Status Service getPercentComplete start JobId=" + jobId);
 
 
 	    try {
@@ -72,8 +71,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "getPercentComplete", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "getPercentComplete exception", "message", e.toString());
-		    logToStdout("Status Service getPercentComplete exception message=" + e.toString());
-
+		    LocalLogger.logToStdOut("Status Service getPercentComplete exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -93,7 +91,7 @@ public class StatusServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "getStatus start", "JobId", jobId);
-    	logToStdout("Status Service getStatus start JobId=" + jobId);
+    	LocalLogger.logToStdOut("Status Service getStatus start JobId=" + jobId);
 
     	
 	    try {
@@ -107,8 +105,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "getStatus", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "getStatus exception", "message", e.toString());
-		    logToStdout("Status Service getStatus exception message=" + e.toString());
-
+		    LocalLogger.logToStdOut("Status Service getStatus exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -126,7 +123,7 @@ public class StatusServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "getStatusMessage start", "JobId", jobId);
-    	logToStdout("Status Service getStatusMessage start JobId=" + jobId);
+    	LocalLogger.logToStdOut("Status Service getStatusMessage start JobId=" + jobId);
 
     	
 	    try {
@@ -139,7 +136,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "getStatusMessage", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "statusMessage exception", "message", e.toString());
-		    logToStdout("Status Service statusMessage exception message=" + e.toString());
+		    LocalLogger.logToStdOut("Status Service statusMessage exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -155,7 +152,7 @@ public class StatusServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete start", "JobId", jobId);
-    	logToStdout("Status Service waitForPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
+    	LocalLogger.logToStdOut("Status Service waitForPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
     	
     	
 	    try {
@@ -167,7 +164,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "waitForPercentComplete", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete exception", "message", e.toString());
-		    logToStdout("Status Service waitForPercentComplete exception message=" + e.toString());
+		    LocalLogger.logToStdOut("Status Service waitForPercentComplete exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -184,7 +181,7 @@ public class StatusServiceRestController {
 	    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-    	logToStdout("Status Service setPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
+	    LocalLogger.logToStdOut("Status Service setPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
 
 	    try {
 	    	JobTracker tracker = new JobTracker(edc_prop);
@@ -195,7 +192,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "setPercentComplete", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "setPercentComplete exception", "message", e.toString());
-		    logToStdout("Status Service setPercentComplete exception message=" + e.toString());
+		    LocalLogger.logToStdOut("Status Service setPercentComplete exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -213,7 +210,7 @@ public class StatusServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "setSuccess start", "JobId", jobId);
-    	logToStdout("Status Service setSuccess start JobId=" + jobId);
+    	LocalLogger.logToStdOut("Status Service setSuccess start JobId=" + jobId);
     	try {
 	    	
 	    	JobTracker tracker = new JobTracker(edc_prop);
@@ -224,7 +221,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "setSuccess", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "setSuccess exception", "message", e.toString());
-		    logToStdout("Status Service setSuccess exception message=" + e.toString());
+		    LocalLogger.logToStdOut("Status Service setSuccess exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -242,7 +239,7 @@ public class StatusServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "setFailure start", "JobId", jobId, "Message", requestBody.message);
-    	logToStdout("Status Service setFailure start JobId=" + jobId + " Message=" + requestBody.message);
+    	LocalLogger.logToStdOut("Status Service setFailure start JobId=" + jobId + " Message=" + requestBody.message);
     	
 	    try {
 	    	
@@ -254,7 +251,7 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "setFailure", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "setFailure exception", "message", e.toString());
-		    logToStdout("Status Service setFailure exception message=" + e.toString());
+		    LocalLogger.logToStdOut("Status Service setFailure exception message=" + e.toString());
 	    }
 	    
 	    return res.toJson();
@@ -272,7 +269,7 @@ public class StatusServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "deleteJob start", "JobId", jobId);
-    	logToStdout("Status Service deleteJob start JobId=" + jobId);
+    	LocalLogger.logToStdOut("Status Service deleteJob start JobId=" + jobId);
 	    try {
 	    	JobTracker tracker = new JobTracker(edc_prop);
 	    	tracker.deleteJob(jobId);
@@ -282,13 +279,10 @@ public class StatusServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "deleteJob", e);
 		    LoggerRestClient.easyLog(logger, "Status Service", "deleteJob exception", "message", e.toString());
-		    logToStdout("Status Service deleteJob exception message="+ e.toString());
+		    LocalLogger.logToStdOut("Status Service deleteJob exception message="+ e.toString());
 	    }
 	    
 	    return res.toJson();
 	}
 	
-	private void logToStdout (String message) {
-		System.out.println(message);
-	}
 }

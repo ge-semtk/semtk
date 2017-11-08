@@ -36,6 +36,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.logging.Details;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class LoggerRestClient {
 
@@ -102,8 +103,8 @@ public class LoggerRestClient {
 			this.logEvent(action, details, tenants, highLevelTask, eventID, false);
 		} catch (Exception e) {
 			// Exceptions are swallowed as a log attempt generates no feedback
-			System.err.println("logging failed due to: " + e.getMessage());
-			e.printStackTrace();
+			LocalLogger.logToStdErr("logging failed due to: " + e.getMessage());
+			LocalLogger.logMessageAndTrace(e);
 		}
 	}
 	
@@ -132,7 +133,7 @@ public class LoggerRestClient {
 			
 		} catch (Exception e) {
 			// Exceptions are swallowed as a log attempt generates no feedback
-			System.err.println("logging failed due to: " + e.getMessage());
+			LocalLogger.logToStdErr("logging failed due to: " + e.getMessage());
 
 		}
 	}
@@ -163,7 +164,7 @@ public class LoggerRestClient {
 		
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		HttpPost httppost = new HttpPost(this.conf.getLoggingURLInfo());
-		System.err.println("logging url was : " + this.conf.getLoggingURLInfo() );
+		//LocalLogger.logToStdErr("Logging to: " + this.conf.getLoggingURLInfo() );
 
 		// create a JSON params object. 
 		JSONObject paramsJson = new JSONObject();
@@ -193,9 +194,6 @@ public class LoggerRestClient {
 		// attempt the logging
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);
-		
-		// some diagnostic output
-		System.err.println("\n\n\n\n\nLogging response was : " + httpresponse.getStatusLine() );
 	
 		}
 
@@ -238,7 +236,7 @@ public class LoggerRestClient {
 	                .replaceAll("%20", " ");
 			 */
 			if(key.equalsIgnoreCase("template")){
-				System.err.println(val);
+				LocalLogger.logToStdErr(val);
 			}
 			
 			retval += key + "," + val;
@@ -337,8 +335,8 @@ public class LoggerRestClient {
 		}
 		catch(Exception eee){
 			// do nothing. 
-			System.err.println("logging failed. No other details available.");
-			eee.printStackTrace();
+			LocalLogger.logToStdErr("logging failed. No other details available.");
+			LocalLogger.logMessageAndTrace(eee);
 		}
 		return logger;
 	}

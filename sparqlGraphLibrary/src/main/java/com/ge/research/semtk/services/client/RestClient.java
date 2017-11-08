@@ -34,6 +34,7 @@ import org.json.simple.JSONValue;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * An abstract class containing code for a REST client.
@@ -129,8 +130,6 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// TODO can we do this before calling execute()?
 		buildParametersJSON();  // set all parameters available upon instantiation
-		
-		//System.out.println("EXECUTE ON " + this.conf.getServiceURL());
 
 		if(parametersJSON == null){
 			throw new Exception("Service parameters not set");
@@ -169,9 +168,9 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 
 		if(responseTxt.length() < 500){
-			System.err.println("RestClient received: " + responseTxt);
+			LocalLogger.logToStdErr("RestClient received from " + this.conf.getServiceEndpoint() + ": " + responseTxt);
 		}else{
-			System.err.println("RestClient received: " + responseTxt.substring(0,200) + "... (" + responseTxt.length() + " chars)");
+			LocalLogger.logToStdErr("RestClient received from " + this.conf.getServiceEndpoint() + ": " + responseTxt.substring(0,200) + "... (" + responseTxt.length() + " chars)");
 		}
 		
 		if(returnRawResponse){
@@ -179,7 +178,7 @@ public abstract class RestClient extends Client implements Runnable {
 		}else{
 			JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
 			if (responseParsed == null) {
-				System.err.println("The response could not be transformed into json");
+				LocalLogger.logToStdErr("The response could not be transformed into json for request to " + this.conf.getServiceEndpoint());
 				if(responseTxt.contains("Error")){
 					throw new Exception(responseTxt); 
 				}
