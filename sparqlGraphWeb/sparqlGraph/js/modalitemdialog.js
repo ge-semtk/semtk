@@ -238,9 +238,9 @@ define([	// properly require.config'ed
                                        function(){});
 			},
 			
-            getValuesFailure : function (msg) {
+            getValuesFailure : function (htmlMsg) {
                 this.setRunningQuery(false);
-                alert("Error retrieving values\n\n" + IIDXHelper.removeHtml(msg));
+                ModalIidx.alert("Error retrieving values", htmlMsg);
                 this.setStatusAlert("Error retrieving values");
             },
             

@@ -64,6 +64,7 @@ public abstract class RestClient extends Client implements Runnable {
 	 */
 	public void run() {
 		try {
+			this.runException = null;
 			this.runRes = this.execute();
 		} catch (Exception e) {
 			this.runException = e;
