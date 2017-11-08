@@ -28,6 +28,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -60,12 +61,17 @@ public class ResultsClient extends RestClient implements Runnable {
 	public void execStoreGraphResults(String jobID, JSONObject resJSON) throws Exception {
 		// store the graph results. this is currently done as a single operation because the JSON-LD is less intuitive to split than the table results.
 		// this strategy will have to be revisited in the event that writes are slow.
+		this.parametersJSON.clear();
 		
 		conf.setServiceEndpoint("results/storeJsonLdResults"); 
 		this.parametersJSON.put("jobId", jobID);
 		this.parametersJSON.put("jsonRenderedGraph", resJSON.toJSONString());
 		this.parametersJSON.put("jsonRenderedHeader", NodeGroupResultSet.getJsonLdResultsMetaData(resJSON).toJSONString());
-		this.run();
+
+		JSONObject res = (JSONObject)execute(false);
+		SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+		simpleRes.throwExceptionIfUnsuccessful();
+		
 	}	
 	
 	public JSONObject execGetGraphResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
@@ -89,16 +95,25 @@ public class ResultsClient extends RestClient implements Runnable {
 	}	
 	
 	// generic json blob support
-	public void execStoreBlobResults(String jobID, JSONObject resJson){
+	public void execStoreBlobResults(String jobID, JSONObject resJson) throws Exception{
 
+		this.parametersJSON.clear();
+		
 		conf.setServiceEndpoint("results/storeJsonBlobResults"); 
 		this.parametersJSON.put("jobId", jobID);
 		this.parametersJSON.put("jsonBlobString", resJson.toJSONString());
-		this.run();
+
+		JSONObject res = (JSONObject)execute(false);
+		SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+		simpleRes.throwExceptionIfUnsuccessful();
+		
+		this.parametersJSON.clear();
 		
 	}
 	
 	public JSONObject execGetBlobResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.clear();
+				
 		conf.setServiceEndpoint("results/getJsonBlobResults");
 		this.parametersJSON.put("jobId", jobId);
 		
