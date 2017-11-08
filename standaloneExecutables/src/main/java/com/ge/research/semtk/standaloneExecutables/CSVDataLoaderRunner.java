@@ -30,6 +30,7 @@ import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
@@ -92,23 +93,22 @@ public class CSVDataLoaderRunner {
 				throw new Exception("Error: Invalid batch size: " + batchSize);
 			}
 					
-			System.out.println("--------- Load data from CSV... ---------------------------------------");
-			System.out.println("Template:   " + templateJSONFilePath);
-			System.out.println("CSV file:   " + dataCSVFilePath);
-			System.out.println("Batch size: " + batchSize);	
-			System.out.println("Connection override: " + connectionOverrideFilePath);	// may be null if no override connection provided
+			LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
+			LocalLogger.logToStdOut("Template:   " + templateJSONFilePath);
+			LocalLogger.logToStdOut("CSV file:   " + dataCSVFilePath);
+			LocalLogger.logToStdOut("Batch size: " + batchSize);	
+			LocalLogger.logToStdOut("Connection override: " + connectionOverrideFilePath);	// may be null if no override connection provided
 			
 			try{
 				new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize), connectionOverrideFilePath);
 			}catch(Exception e){
-				e.printStackTrace();
+				LocalLogger.logMessageAndTrace(e);
 				System.exit(1); // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
 			}
 			System.exit(0);  // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
 		
 		}catch(Exception e){
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			LocalLogger.logMessageAndTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
 	}
@@ -144,7 +144,7 @@ public class CSVDataLoaderRunner {
 			}
 		}
 		catch(Exception eee){
-			System.err.println("logger initialization failed.");
+			LocalLogger.logMessageAndTrace(eee);
 		}
 	}
 	
@@ -175,7 +175,7 @@ public class CSVDataLoaderRunner {
 					
 		// get needed column names from the JSON template ("colName" properties)
 		String[] colNamesToIngest = sgJson.getImportSpec().getColNamesUsed();		
-		System.out.println("Num columns to ingest: " + colNamesToIngest.length);
+		LocalLogger.logToStdOut("Num columns to ingest: " + colNamesToIngest.length);
 		
 		// open the dataset, using the needed column names
 		Dataset dataset = null;
@@ -189,8 +189,8 @@ public class CSVDataLoaderRunner {
 		try{
 			DataLoader loader = new DataLoader(sgJson.getJson(), batchSize, dataset, sparqlEndpointUser, sparqlEndpointPassword);
 			int recordsAdded = loader.importData(true);
-			System.out.println("Inserted " + recordsAdded + " records");
-			System.out.println("Error report:\n " + loader.getLoadingErrorReportBrief());
+			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
+			LocalLogger.logToStdOut("Error report:\n " + loader.getLoadingErrorReportBrief());
 			
 			// if the logger fully qualified name was not null (assuming the port and the logging service location are included), log this attempt:
 			if(lg != null ){
@@ -209,7 +209,7 @@ public class CSVDataLoaderRunner {
 			}
 			
 		}catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.logMessageAndTrace(e);
 			throw new Exception("Could not load data: " + e.getMessage());
 		}						
 	}

@@ -21,6 +21,7 @@ package com.ge.research.semtk.standaloneExecutables;
 import java.io.File;
 import java.nio.file.Files;
 
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -61,7 +62,7 @@ public class OwlLoader {
 				sei = conn.getModelInterface(0);
 				sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
 				
-				System.out.println("Ontology Dataset: " + sei.getDataset());
+				LocalLogger.logToStdOut("Ontology Dataset: " + sei.getDataset());
 			}catch(Exception e){
 				throw new Exception("Cannot get SPARQL connection: " + e.getMessage());
 			}
@@ -71,14 +72,13 @@ public class OwlLoader {
 				File owlFile = new File(owlFilePath);
 				byte[] owlFileBytes = Files.readAllBytes(owlFile.toPath());
 				sei.executeAuthUploadOwl(owlFileBytes);			
-				System.out.println("Loaded OWL: " + owlFilePath);			
+				LocalLogger.logToStdOut("Loaded OWL: " + owlFilePath);			
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 		
 		}catch(Exception e){
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			LocalLogger.logMessageAndTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
 	}
