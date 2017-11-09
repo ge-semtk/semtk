@@ -82,7 +82,7 @@ public class SparqlQueryServiceRestController {
 		
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
-		LocalLogger.logToStdOut("\n================== Sparql Query Service start query ========================");
+		LocalLogger.logToStdOut("Sparql Query Service start query");
 
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
