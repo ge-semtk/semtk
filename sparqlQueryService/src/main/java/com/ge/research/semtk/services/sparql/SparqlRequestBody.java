@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.services.sparql;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 /**
  * For service calls needing SPARQL connection information.
  */
@@ -46,7 +48,7 @@ public class SparqlRequestBody {
      * Print request info to console
      */
     public void printInfo(){
-		System.out.println("Connect to " + serverAndPort + " (" + serverType + "), dataset " + dataset);
+		LocalLogger.logToStdOut("Connect to " + serverAndPort + " (" + serverType + "), dataset " + dataset);
     }
     
 }

@@ -36,6 +36,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Service to execute SPARQL queries
@@ -81,7 +82,7 @@ public class SparqlQueryServiceRestController {
 		
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
-		logToStdout("\n================== Sparql Query Service start query ========================");
+		LocalLogger.logToStdOut("\n================== Sparql Query Service start query ========================");
 
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
@@ -111,7 +112,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);	
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "query", e);
@@ -132,7 +133,7 @@ public class SparqlQueryServiceRestController {
 		
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
-		logToStdout("Sparql Query Service start queryAuth");
+		LocalLogger.logToStdOut("Sparql Query Service start queryAuth");
 
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
@@ -151,13 +152,13 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "queryAuth", e);
 			return resultSet.toJson();
 		}		
-		System.out.println("Result code:" + resultSet.getResultCodeString());
+		LocalLogger.logToStdOut("Result code:" + resultSet.getResultCodeString());
 		return resultSet.toJson();
 	}	
 	
@@ -170,7 +171,7 @@ public class SparqlQueryServiceRestController {
 	public JSONObject dropGraph(@RequestBody SparqlAuthRequestBody requestBody){
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
-		logToStdout("Sparql Query Service start dropGraph");
+		LocalLogger.logToStdOut("Sparql Query Service start dropGraph");
 
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
@@ -186,7 +187,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);	
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "dropGraph", e);
@@ -210,7 +211,7 @@ public class SparqlQueryServiceRestController {
 	@RequestMapping(value="/parallelQuery", method= RequestMethod.POST)
 	public JSONObject parallelQuery(@RequestBody SparqlParallelQueryRequestBody requestBody) {	
 
-		logToStdout("Sparql Query Service start parallelQuery");
+		LocalLogger.logToStdOut("Sparql Query Service start parallelQuery");
 
 		try{
 			SparqlParallelQueries spq = new SparqlParallelQueries (requestBody.subqueriesJson, requestBody.subqueryType, requestBody.isSubqueryOptional, requestBody.columnsToFuseOn, requestBody.columnsToReturn);
@@ -218,13 +219,13 @@ public class SparqlQueryServiceRestController {
 			JSONObject tableResultSetJSON = spq.returnFusedResults();
 			return tableResultSetJSON;			
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);	
 			GeneralResultSet resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", e);
 			return resultSet.toJson();
 		} catch (Throwable e) {
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);	
 			GeneralResultSet resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", "Throwable: " + e.getMessage());
@@ -236,9 +237,9 @@ public class SparqlQueryServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/parallelQueryX", method= RequestMethod.POST, consumes= "application/x-www-form-urlencoded")
 	public JSONObject parallelQueryX(String subqueriesJson, String subqueryType, Boolean isSubqueryOptional, String columnsToFuseOn, String columnsToReturn) {	
-//System.out.println ("In Parallel Query X!");
+//LocalLogger.logToStdOut("In Parallel Query X!");
 
-//System.out.println ("Queries:\n" + subqueriesJson);
+//LocalLogger.logToStdOut("Queries:\n" + subqueriesJson);
 		try{
 			SparqlParallelQueries spq = new SparqlParallelQueries (subqueriesJson, subqueryType, isSubqueryOptional, columnsToFuseOn, columnsToReturn);
 			spq.runQueries ();
@@ -246,7 +247,7 @@ public class SparqlQueryServiceRestController {
 //return (new SimpleResultSet(false, "Returning here")).toJson();
 			return tableResultSetJSON;			
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);	
 			return (new SimpleResultSet(false, e.getMessage())).toJson();
 		} catch (Throwable e) {
 			e.printStackTrace();	
@@ -265,7 +266,7 @@ public class SparqlQueryServiceRestController {
 		
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
-		logToStdout("Sparql Query Service start clearPrefix");
+		LocalLogger.logToStdOut("Sparql Query Service start clearPrefix");
 		
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
@@ -290,7 +291,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearPrefix", e);
@@ -307,7 +308,7 @@ public class SparqlQueryServiceRestController {
 	public JSONObject clearAll(@RequestBody SparqlAuthRequestBody requestBody){
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
-    	logToStdout("Sparql Query Service start clearAll");
+		LocalLogger.logToStdOut("Sparql Query Service start clearAll");
 
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
@@ -324,7 +325,7 @@ public class SparqlQueryServiceRestController {
 			String query = "clear all";  // drop query
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearAll", e);
@@ -360,7 +361,7 @@ public class SparqlQueryServiceRestController {
 		SimpleResultSet resultSet = null;
 		JSONObject simpleResultSetJson = null;
 		SparqlEndpointInterface sei = null;
-    	logToStdout("Sparql Query Service start uploadOwl");
+		LocalLogger.logToStdOut("Sparql Query Service start uploadOwl");
 
 		try {	
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
@@ -373,7 +374,7 @@ public class SparqlQueryServiceRestController {
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
 			 
 		} catch (Exception e) {			
-			e.printStackTrace();	
+			LocalLogger.logMessageAndTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "uploadOwl", e);
@@ -383,7 +384,4 @@ public class SparqlQueryServiceRestController {
 		return simpleResultSetJson;	
 	}	
 	
-	private void logToStdout (String message) {
-		System.out.println(message);
-	}
 }

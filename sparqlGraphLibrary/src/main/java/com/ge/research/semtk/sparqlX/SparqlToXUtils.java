@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class SparqlToXUtils {
 	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");
@@ -54,13 +55,10 @@ public class SparqlToXUtils {
    * @throws Exception 
    */
   public static boolean checkURIType(String uri, String type, String sparqlServerUrl, String sparqlDataset, String serverTypeString, String user, String pass) throws Exception{
- 
-    System.out.println("Check if URI " + uri + " is of type " + type);
     String checkTypeQuery = "select * where { " +  
         "VALUES ?x {<" + uri + ">} . " +
         "?x rdf:type <" + type + ">" +
         "}";
-    System.out.println(checkTypeQuery);
     // execute query
     SparqlEndpointInterface endpoint = SparqlEndpointInterface.executeQuery(sparqlServerUrl, sparqlDataset, serverTypeString, checkTypeQuery, user, pass, SparqlResultTypes.TABLE);
     String[] results = endpoint.getStringResultsColumn("x");
@@ -80,13 +78,12 @@ public class SparqlToXUtils {
 
     // check that URI does not start with ?   
     if(uri.startsWith("?")){
-      System.out.println("URI to delete may not start with '?'...not deleting");
+      LocalLogger.logToStdOut("URI to delete may not start with '?'...not deleting");
       throw new IOException("URI to delete may not start with '?'");
     }
     
     // delete anywhere where the URI is a subject or object
     String query = generateDeleteURISubjectQuery(uri) + generateDeleteURIObjectQuery(uri);
-    System.out.println("QUERY: " + query);
     return query;
 
   }	
@@ -108,16 +105,16 @@ public class SparqlToXUtils {
    
     // avoid catastrophic delete by checking that URI does not start with ?  
     if(uri.startsWith("?")){
-      System.out.println("URI to delete may not start with '?'...not deleting");
+      LocalLogger.logToStdOut("URI to delete may not start with '?'...not deleting");
       throw new IOException("URI to delete may not start with '?'");
     }else if(uri.trim().equals("")){
-      System.out.println("URI to delete may not be empty...not deleting");
+      LocalLogger.logToStdOut("URI to delete may not be empty...not deleting");
       throw new IOException("URI to delete may not be empty");
     }
     
     // predicate must be null or a valid string - if it's empty then something is wrong
     if(predicate != null && predicate.trim().equals("")){
-      System.out.println("Predicate to delete may not be empty...not deleting");
+      LocalLogger.logToStdOut("Predicate to delete may not be empty...not deleting");
       throw new IOException("Predicate to delete may not be empty");
     }
     
@@ -128,7 +125,6 @@ public class SparqlToXUtils {
     }
     
     String query = "DELETE where { <" +  uri + "> " + predicate + " ?z1 . } ";  // uri is subject
-    System.out.println("QUERY: " + query);
     return query;
   }   
   
@@ -140,15 +136,14 @@ public class SparqlToXUtils {
 
     // avoid catastrophic delete by checking that URI does not start with ?   
     if(uri.startsWith("?")){
-      System.out.println("URI to delete may not start with '?'...not deleting");
+      LocalLogger.logToStdOut("URI to delete may not start with '?'...not deleting");
       throw new IOException("URI to delete may not start with '?'");
     }else if(uri.trim().equals("")){
-      System.out.println("URI to delete may not be empty...not deleting");
+      LocalLogger.logToStdOut("URI to delete may not be empty...not deleting");
       throw new IOException("URI to delete may not be empty");
     }
     
     String query = "DELETE where { ?x2 ?y2 <" + uri + "> . } ";  // uri is object
-    System.out.println("QUERY: " + query);
     return query;
 
   }  

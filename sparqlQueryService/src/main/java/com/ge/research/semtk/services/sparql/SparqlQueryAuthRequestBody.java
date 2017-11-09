@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.services.sparql;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 
 /**
  * For service calls needing SPARQL connection information, a query, and authentication.
@@ -48,7 +50,7 @@ public class SparqlQueryAuthRequestBody extends SparqlAuthRequestBody {
      */
     public void printInfo(){
     	super.printInfo();
-		System.out.println("Query:\n" + query);
-		System.out.println("Result Type: " + resultType);
+    	LocalLogger.logToStdOut("Query:\n" + query);
+    	LocalLogger.logToStdOut("Result Type: " + resultType);
     }
 }
