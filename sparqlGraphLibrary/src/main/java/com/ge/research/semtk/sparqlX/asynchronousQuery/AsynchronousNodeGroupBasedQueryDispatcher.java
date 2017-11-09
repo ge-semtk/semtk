@@ -262,7 +262,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		try{
 
 			Calendar cal = Calendar.getInstance();
-			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor start @ " + DATE_FORMAT.format(cal.getTime()));
+			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor start");
 
 			LocalLogger.logToStdErr("Sparql Query to execute: ");
 			LocalLogger.logToStdErr(sparqlQuery);
