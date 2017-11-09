@@ -29,10 +29,7 @@ package com.ge.research.semtk.services.results;
  */
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,14 +38,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsSerializer;
@@ -59,8 +54,7 @@ import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -87,7 +81,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
+    	LocalLogger.logToStdOut("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -98,7 +92,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonLdResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -115,10 +109,10 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }
 
-		System.err.println("done writing output");
+		LocalLogger.logToStdErr("done writing output");
 	}
 
 	@CrossOrigin
@@ -128,7 +122,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
+		LocalLogger.logToStdOut("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -139,7 +133,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonBlobResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 		}    	
 		return res.toJson();	
 	}
@@ -155,10 +149,10 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }
 
-		System.err.println("done writing output");
+		LocalLogger.logToStdErr("done writing output");
 	}
 	
 	
@@ -173,7 +167,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeTableResultsJsonInitialize start JobId=" + requestBody.jobId);
+		LocalLogger.logToStdOut("Results Service storeTableResultsJsonInitialize start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -184,7 +178,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonInitialize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -208,7 +202,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeTableResultsJsonAddIncremental start JobId=" + requestBody.jobId);
+		LocalLogger.logToStdOut("Results Service storeTableResultsJsonAddIncremental start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -219,7 +213,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonAddIncremental", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -235,7 +229,7 @@ public class ResultsServiceRestController {
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
 		LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize start", "jobId", requestBody.jobId);
-    	logToStdout("Results Service storeTableResultsJsonFinalize start JobId=" + requestBody.jobId);
+		LocalLogger.logToStdOut("Results Service storeTableResultsJsonFinalize start JobId=" + requestBody.jobId);
 
 		SimpleResultSet res = new SimpleResultSet();
 		try{
@@ -246,7 +240,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonFinalize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -272,10 +266,10 @@ public class ResultsServiceRestController {
 			}
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }
 
-		System.err.println("done writing output");
+		LocalLogger.logToStdErr("done writing output");
 	}
 
 	@CrossOrigin
@@ -292,10 +286,10 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }
 		// if nothing, return nothing
-		System.err.println("done writing output");
+		LocalLogger.logToStdErr("done writing output");
 		return null;
 	}
 
@@ -315,9 +309,9 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }
-		System.err.println("done writing output");
+		LocalLogger.logToStdErr("done writing output");
 	}
 	
 	@CrossOrigin
@@ -355,9 +349,9 @@ public class ResultsServiceRestController {
 			
 			wrapJsonInTableToSend(retval, resp);
 	    } catch (Exception e) {
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }
-		System.err.println("done writing output");
+		LocalLogger.logToStdErr("done writing output");
 	}
 	
 	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception, Exception{
@@ -388,7 +382,7 @@ public class ResultsServiceRestController {
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", requestBody.jobId);    	
-    	logToStdout("Results Service getResults start JobId=" + requestBody.jobId);
+    	LocalLogger.logToStdOut("Results Service getResults start JobId=" + requestBody.jobId);
     	
 	    try {
 	    	
@@ -408,7 +402,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "getResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults exception", "message", e.toString());
-		    e.printStackTrace();
+		    LocalLogger.logMessageAndTrace(e);
 	    }	    
 	    return res.toJson();
 	}
@@ -419,7 +413,7 @@ public class ResultsServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/deleteStorage", method= RequestMethod.POST)
 	public JSONObject deleteStorage(@RequestBody ResultsRequestBody requestBody){
-    	logToStdout("Results Service deleteStorage start JobId=" + requestBody.jobId);
+		LocalLogger.logToStdOut("Results Service deleteStorage start JobId=" + requestBody.jobId);
 
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
@@ -457,7 +451,4 @@ public class ResultsServiceRestController {
 		return new JobTracker(edc_prop);
 	}
 	
-	private void logToStdout (String message) {
-		System.out.println(message);
-	}
 }
