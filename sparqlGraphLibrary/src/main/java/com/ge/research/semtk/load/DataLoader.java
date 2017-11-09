@@ -30,9 +30,9 @@ import com.ge.research.semtk.load.utility.DataToModelTransformer;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Imports a dataset into a triple store.
@@ -65,7 +65,7 @@ public class DataLoader {
 		
 		this.endpoint = sgJson.getSparqlConn().getInsertInterface();
 		
-		System.out.println("Dataset graph name: " + endpoint.getDataset());
+		LocalLogger.logToStdOut("Dataset graph name: " + endpoint.getDataset());
 		
 		this.oInfo = sgJson.getOntologyInfo();				
 		this.master = sgJson.getNodeGroup(this.oInfo);
@@ -219,7 +219,7 @@ public class DataLoader {
 												// even though we are done
 			}
 		}
-		System.out.println("..." + this.totalRecordsProcessed + "(DONE)");
+		LocalLogger.logToStdOut("..." + this.totalRecordsProcessed + "(DONE)");
 		this.dttmf.closeDataSet();			// close all connections and clean up
 		return this.totalRecordsProcessed;  // report.
 	}

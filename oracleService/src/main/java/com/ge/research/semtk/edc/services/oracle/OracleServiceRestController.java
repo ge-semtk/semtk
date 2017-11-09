@@ -28,6 +28,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.query.rdb.OracleConnector;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 
 
 /**
@@ -48,14 +49,14 @@ public class OracleServiceRestController {
 		
 		try {			
 			
-			System.out.println("Connect to " + OracleConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
+			LocalLogger.logToStdOut("Connect to " + OracleConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
 			OracleConnector oc = new OracleConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, requestBody.username, requestBody.password);
 			Table table = oc.query(requestBody.query);				
 			tableResultSet.addResults(table);							
 			tableResultSet.setSuccess(true);
 			
 		} catch (Exception e) {			
-			e.printStackTrace();			
+			LocalLogger.printStackTrace(e);			
 			tableResultSet.setSuccess(false);
 			tableResultSet.addRationaleMessage(e.getMessage());
 		}

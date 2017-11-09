@@ -39,6 +39,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroupExecutor {
 
@@ -409,10 +410,10 @@ public class NodeGroupExecutor {
 		this.irc.execIngestionFromCsv(sgj.getJson().toJSONString(), csvContents, sc.toJson().toJSONString());
 		retval = this.irc.getLastResult();
 
-		System.out.println("___________________________________________");
-		System.out.println("ingestion results:");
-		System.out.println(retval.toJson().toJSONString());
-		System.out.println("___________________________________________");
+		LocalLogger.logToStdOut("___________________________________________");
+		LocalLogger.logToStdOut("ingestion results:");
+		LocalLogger.logToStdOut(retval.toJson().toJSONString());
+		LocalLogger.logToStdOut("___________________________________________");
 		
 		return retval;
 	}

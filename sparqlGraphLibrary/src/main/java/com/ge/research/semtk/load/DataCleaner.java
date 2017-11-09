@@ -32,6 +32,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.dataset.Dataset;
+import com.ge.research.semtk.utility.LocalLogger;
 
 
 /**
@@ -250,7 +251,7 @@ public class DataCleaner {
 
 			// clean up
 			csvPrinter.flush();
-			System.out.println("Processed " + numRowsProcessed + " records, produced " + numRowsProduced + " clean records. (DONE)");		
+			LocalLogger.logToStdOut("Processed " + numRowsProcessed + " records, produced " + numRowsProduced + " clean records. (DONE)");		
 		
 		}catch(Exception e){
 			throw new Exception("Exception cleaning data: " + e);

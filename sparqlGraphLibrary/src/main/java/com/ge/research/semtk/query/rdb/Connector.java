@@ -140,7 +140,7 @@ public abstract class Connector {
 				tmp = new ArrayList<String>();
 				for(int i = 0; i < rsmeta.getColumnCount(); i++){ 
 					tmp.add(rs.getString(i+1));   // use lower case for column headers
-					//System.out.println("put " + rsmeta.getColumnLabel(i+1).toLowerCase() + ", " + rs.getString(i+1));
+					//LocalLogger.logToStdOut("put " + rsmeta.getColumnLabel(i+1).toLowerCase() + ", " + rs.getString(i+1));
 				}
 				recs.add(tmp);				
 			}

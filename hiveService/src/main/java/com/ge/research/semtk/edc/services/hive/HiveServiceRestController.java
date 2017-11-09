@@ -29,6 +29,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.edc.services.hive.HiveProperties;
 
 /**
@@ -257,16 +258,16 @@ public class HiveServiceRestController {
 		String password = props.getPassword();
 
 		try {
-			System.out.println("Connecting to: " + HiveConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
+			LocalLogger.logToStdOut("Connecting to: " + HiveConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
 			HiveConnector oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password);
-			System.out.println("Hive query: " + query);
+			LocalLogger.logToStdOut("Hive query: " + query);
 			Table table = oc.query(query);
-			System.out.println("Returning num rows: " + (table != null ? String.valueOf(table.getNumRows()) : "<null>"));
+			LocalLogger.logToStdOut("Returning num rows: " + (table != null ? String.valueOf(table.getNumRows()) : "<null>"));
 			tableResultSet.addResults(table);
 			tableResultSet.setSuccess(true);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			tableResultSet.setSuccess(false);
 			tableResultSet.addRationaleMessage(e.getMessage());
 		}

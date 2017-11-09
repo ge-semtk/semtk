@@ -411,21 +411,21 @@ public abstract class Utility {
 	 * @param properties that should not be validated (e.g. they can be blank/missing/null)
 	 */
 	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
-		System.out.println("----- PROPERTIES: --------------------");
+		LocalLogger.logToStdOut("----- PROPERTIES: --------------------");
 		for(String propertyName : properties.keySet()){
 			String propertyValue = properties.get(propertyName);
-			System.out.println(propertyName + ": " + propertyValue);	// print to console
+			LocalLogger.logToStdOut(propertyName + ": " + propertyValue);	// print to console
 			if(!propertiesSkipValidation.contains(propertyName)){		// skip validation for some properties
 				try {
 					Utility.validateProperty(propertyValue, propertyName);	// validate
 				} catch (Exception e) {
 					e.printStackTrace();
-					System.out.println("============" + e.getMessage() + "...EXITING ============");	
+					LocalLogger.logToStdOut("============" + e.getMessage() + "...EXITING ============");	
 					System.exit(1);					// kill the process
 				} 
 			}
 		}
-		System.out.println("--------------------------------------");
+		LocalLogger.logToStdOut("--------------------------------------");
 	}
 	
 	/**

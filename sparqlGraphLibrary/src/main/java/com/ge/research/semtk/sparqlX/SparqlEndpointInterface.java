@@ -65,6 +65,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Interface to SPARQL endpoint.
@@ -341,7 +342,7 @@ public abstract class SparqlEndpointInterface {
 				if (tryCount >= MAX_QUERY_TRIES) {
 					throw e;
 				} else {	// else unnecessary, but makes code easier to read
-					System.out.println ("SPARQL query failed.  Sleeping 2 seconds and trying again...");
+					LocalLogger.logToStdOut ("SPARQL query failed.  Sleeping 2 seconds and trying again...");
 					TimeUnit.SECONDS.sleep (2); // sleep 2 seconds and try again
 				}
 			}
@@ -605,7 +606,7 @@ public abstract class SparqlEndpointInterface {
 		URLCodec encoder = new URLCodec();
 		String cleanURL = getGetURL() + encoder.encode(query);
 		URL url = new URL(null, cleanURL, handler);
-System.out.println ("URL: " + url);
+LocalLogger.logToStdOut ("URL: " + url);
 
 		// create an http GET connection and make the request
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -693,7 +694,7 @@ System.out.println ("URL: " + url);
 		String resultsFormat = this.getContentType(resultType);
 		httpget.addHeader("Accept", resultsFormat);
 		
-		System.out.println("executing request" + httpget.getRequestLine());
+		LocalLogger.logToStdOut("executing request" + httpget.getRequestLine());
 
 		//        String responseTxt = httpclient.execute(httpget, responseHandler);
 		HttpResponse response_http = httpclient.execute(targetHost, httpget, localcontext);

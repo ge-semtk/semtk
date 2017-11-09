@@ -85,12 +85,12 @@ public class CSVDataCleanerRunner {
 				int numCleanRecordsProduced = cleaner.cleanData();
 				LocalLogger.logToStdOut("Wrote " + numCleanRecordsProduced + " cleaned records to " + outputCsvFilePath);				
 			}catch(Exception e){
-				LocalLogger.logMessageAndTrace(e);
+				LocalLogger.printStackTrace(e);
 				throw new Exception("Could not clean data: " + e.getMessage());
 			}			
 		
 		}catch(Exception e){
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
 		

@@ -112,7 +112,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);	
+			LocalLogger.printStackTrace(e);	
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "query", e);
@@ -152,7 +152,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "queryAuth", e);
@@ -187,7 +187,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);	
+			LocalLogger.printStackTrace(e);	
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "dropGraph", e);
@@ -219,13 +219,13 @@ public class SparqlQueryServiceRestController {
 			JSONObject tableResultSetJSON = spq.returnFusedResults();
 			return tableResultSetJSON;			
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);	
+			LocalLogger.printStackTrace(e);	
 			GeneralResultSet resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", e);
 			return resultSet.toJson();
 		} catch (Throwable e) {
-			LocalLogger.logMessageAndTrace(e);	
+			LocalLogger.printStackTrace(e);	
 			GeneralResultSet resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", "Throwable: " + e.getMessage());
@@ -291,7 +291,7 @@ public class SparqlQueryServiceRestController {
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearPrefix", e);
@@ -325,7 +325,7 @@ public class SparqlQueryServiceRestController {
 			String query = "clear all";  // drop query
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearAll", e);
@@ -374,7 +374,7 @@ public class SparqlQueryServiceRestController {
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
 			 
 		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "uploadOwl", e);

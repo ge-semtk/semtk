@@ -27,6 +27,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Stores all parameters passed to an individual sparql subquery and its eventual response.
@@ -59,7 +60,7 @@ public class SparqlSubquery extends RecursiveTask<Void> {
     	}
     	// there was no way to promise that we have unique names for outgoing columns. this could pose a problem. warn user/system to logs.
     	if (isMissingAny(resultsColumnNameSuffix)) {
-    		System.out.println("no suffix given for subquery. column names will be returned without modification.");
+    		LocalLogger.logToStdOut("no suffix given for subquery. column names will be returned without modification.");
     	}
     }
 
@@ -143,7 +144,7 @@ public class SparqlSubquery extends RecursiveTask<Void> {
     @Override
     protected Void compute(){
         try {
-//System.out.println ("About to runSparqlQuery");
+//LocalLogger.logToStdOut ("About to runSparqlQuery");
             runSparqlQuery();
         } catch (Exception e) {
             throw new RuntimeException(e.toString(), e);
@@ -154,13 +155,13 @@ public class SparqlSubquery extends RecursiveTask<Void> {
     // Run the semantic query and save the response
     public void runSparqlQuery() throws Exception {
         columnNamesInResponse = null;      
-//System.out.println ("Parallel query:\n" + sparqlQuery);
+//LocalLogger.logToStdOut ("Parallel query:\n" + sparqlQuery);
     	SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(sparqlServerType, sparqlServerUrl, sparqlDataset);
 //        response = sei.executeQuery(sparqlQuery);
         TableResultSet resultSet = (TableResultSet) sei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
         responseTable = resultSet.getTable();
-//System.out.println ("Parallel query response:\n" + responseTable.toCSVString());
-//System.out.println ("Parallel query response size = " + responseTable.getRows().size());
+//LocalLogger.logToStdOut ("Parallel query response:\n" + responseTable.toCSVString());
+//LocalLogger.logToStdOut ("Parallel query response size = " + responseTable.getRows().size());
     }
 
 } /* end of file */

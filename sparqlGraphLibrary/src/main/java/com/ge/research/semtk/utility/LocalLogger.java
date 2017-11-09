@@ -36,7 +36,7 @@ public class LocalLogger {
 	/**
 	 * Log to standard error, and print stack trace.
 	 */
-	public static void logMessageAndTrace(Throwable e){
+	public static void printStackTrace(Throwable e){
 		logToStdErr(e.getMessage());  
 		e.printStackTrace();		
 	}

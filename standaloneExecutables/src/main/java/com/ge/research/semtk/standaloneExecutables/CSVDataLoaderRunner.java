@@ -102,13 +102,13 @@ public class CSVDataLoaderRunner {
 			try{
 				new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize), connectionOverrideFilePath);
 			}catch(Exception e){
-				LocalLogger.logMessageAndTrace(e);
+				LocalLogger.printStackTrace(e);
 				System.exit(1); // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
 			}
 			System.exit(0);  // explicitly exit to avoid maven exec:java error ("thead was interrupted but is still alive")
 		
 		}catch(Exception e){
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
 	}
@@ -144,7 +144,7 @@ public class CSVDataLoaderRunner {
 			}
 		}
 		catch(Exception eee){
-			LocalLogger.logMessageAndTrace(eee);
+			LocalLogger.printStackTrace(eee);
 		}
 	}
 	
@@ -209,7 +209,7 @@ public class CSVDataLoaderRunner {
 			}
 			
 		}catch(Exception e){
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Could not load data: " + e.getMessage());
 		}						
 	}

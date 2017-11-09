@@ -35,6 +35,7 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Sets;
 
@@ -185,7 +186,7 @@ public class SparqlParallelQueries extends RecursiveTask<Void> {
 			String suffix = subquery.getResultsColumnNameSuffix();
 			Table resultsTable = subquery.getResponseTable();
 			if ((resultsTable != null) && (resultsTable.getNumRows() != 0)) {
-				System.out.println("Query " + suffix + " has " + resultsTable.getNumRows() + " rows");
+				LocalLogger.logToStdOut("Query " + suffix + " has " + resultsTable.getNumRows() + " rows");
 				ArrayList<String> columnsInResponse = subquery.getColumnNamesInResponse();
 				for (ArrayList<String> row : resultsTable.getRows()) {
 					// Compose the lookup key from the columns to fuse on
@@ -213,10 +214,10 @@ public class SparqlParallelQueries extends RecursiveTask<Void> {
 					distinctBindings.add(new Pair<>(subquery, row));
 				}
 			} else {
-				System.out.println("Query " + suffix + " has 0 rows");
+				LocalLogger.logToStdOut("Query " + suffix + " has 0 rows");
 			}
 		}
-//System.out.println ("XXXXXXXXXXXXXXXXXXXXXXXXXXX  GOT HERE  XXXXXXXXXXXXXXXXXXXXX");
+//LocalLogger.logToStdOut ("XXXXXXXXXXXXXXXXXXXXXXXXXXX  GOT HERE  XXXXXXXXXXXXXXXXXXXXX");
 
 		// Build the array of output bindings with unique var names
 		int numOutputBindings = 0;
@@ -286,10 +287,10 @@ public class SparqlParallelQueries extends RecursiveTask<Void> {
 
 		Table outputTable = new Table (outputColumnNamesArray, outputColumnTypes, outputRows);
 
-		System.out.println("Fused response has " + numOutputBindings + " results");
+		LocalLogger.logToStdOut("Fused response has " + numOutputBindings + " results");
 
 		gResultTable = new TableResultSet(true);
-//		System.out.println(outputTable.toCSVString());
+//		LocalLogger.logToStdOut(outputTable.toCSVString());
 		gResultTable.addResults(outputTable);
 		return gResultTable.toJson();
 	}

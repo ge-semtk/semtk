@@ -18,16 +18,11 @@
 
 package com.ge.research.semtk.ontologyTools;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.ExecutorCompletionService;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -43,9 +38,8 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
-import com.sun.jersey.core.spi.scanning.uri.UriSchemeScanner;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 /**
  * OntologyInfo is a class that contains the bulk of the understanding of the actual model.
@@ -975,7 +969,7 @@ public class OntologyInfo {
 					// if path leads to a target, push onto the ret list
 					if (targetHash.containsKey(newClass)) {
 						ret.add(newPath);
-						if (CONSOLE_LOG) { System.out.println(">>>found path " + newPath.debugString()); }
+						if (CONSOLE_LOG) { LocalLogger.logToStdOut(">>>found path " + newPath.debugString()); }
 						
 					// PEC CONFUSED: this used to happen every time without any "else" or "else if"
 					
@@ -984,7 +978,7 @@ public class OntologyInfo {
 					}  else if (loopFlag == false){
 					    // try extending already-found paths
 						waitingList.add(newPath);
-						if (CONSOLE_LOG) { System.out.println("searching " + newPath.debugString()); }
+						if (CONSOLE_LOG) { LocalLogger.logToStdOut("searching " + newPath.debugString()); }
 					}
 					
 				}
@@ -993,13 +987,13 @@ public class OntologyInfo {
 		}
 		
 		if (CONSOLE_LOG) {
-			System.out.println("These are the paths I found:");
+			LocalLogger.logToStdOut("These are the paths I found:");
 			for (int i=0; i < ret.size(); i++) {
-				System.out.println(ret.get(i).debugString());
+				LocalLogger.logToStdOut(ret.get(i).debugString());
 			}
 			
 			long t1 = System.currentTimeMillis();
-			System.out.println("findAllPaths time is: " + (t1-t0) + " msec");
+			LocalLogger.logToStdOut("findAllPaths time is: " + (t1-t0) + " msec");
 		}
 		return ret;	
 	}
@@ -1665,7 +1659,7 @@ public class OntologyInfo {
      		
      		
      		if(uriSub.size() == uriSuper.size()){
-     			System.err.println("about to load super/sub class relationships... " + uriSub.size() + " units") ;
+     			LocalLogger.logToStdErr("about to load super/sub class relationships... " + uriSub.size() + " units") ;
      			
      			//this.loadSuperSubClasses((String[])uriSuper.toArray(), (String[]) uriSub.toArray());
      			this.loadSuperSubClasses(uriSub.toArray(new String[uriSub.size()]), uriSuper.toArray(new String[uriSuper.size()]));

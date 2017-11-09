@@ -23,6 +23,7 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportUtil;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems.SupportedTypes;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class RuntimeConstrainedObject{
 	// this is used to store Nodes, PropertyItems which might be runtime constrained. 
@@ -203,7 +204,7 @@ public class RuntimeConstrainedObject{
 	public void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
 		String constraintStr = ConstraintUtil.getMatchesOneOfConstraint(sparqlId, inputs, getTypeName(sparqlId));
-		System.out.println("======= setMatchesConstraint for " + sparqlId + " to " + constraintStr);
+		LocalLogger.logToStdOut("======= setMatchesConstraint for " + sparqlId + " to " + constraintStr);
 		this.setValueConstraint(constraintStr);
 	}
 

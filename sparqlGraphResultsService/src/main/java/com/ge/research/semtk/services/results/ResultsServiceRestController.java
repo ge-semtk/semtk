@@ -92,7 +92,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonLdResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -109,7 +109,7 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }
 
 		LocalLogger.logToStdErr("done writing output");
@@ -133,7 +133,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonBlobResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 		}    	
 		return res.toJson();	
 	}
@@ -149,7 +149,7 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }
 
 		LocalLogger.logToStdErr("done writing output");
@@ -178,7 +178,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonInitialize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -213,7 +213,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonAddIncremental", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -240,7 +240,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonFinalize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 		}    	
 		return res.toJson();
 	}
@@ -266,7 +266,7 @@ public class ResultsServiceRestController {
 			}
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }
 
 		LocalLogger.logToStdErr("done writing output");
@@ -286,7 +286,7 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }
 		// if nothing, return nothing
 		LocalLogger.logToStdErr("done writing output");
@@ -309,7 +309,7 @@ public class ResultsServiceRestController {
 			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }
 		LocalLogger.logToStdErr("done writing output");
 	}
@@ -349,7 +349,7 @@ public class ResultsServiceRestController {
 			
 			wrapJsonInTableToSend(retval, resp);
 	    } catch (Exception e) {
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }
 		LocalLogger.logToStdErr("done writing output");
 	}
@@ -402,7 +402,7 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "getResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults exception", "message", e.toString());
-		    LocalLogger.logMessageAndTrace(e);
+		    LocalLogger.printStackTrace(e);
 	    }	    
 	    return res.toJson();
 	}

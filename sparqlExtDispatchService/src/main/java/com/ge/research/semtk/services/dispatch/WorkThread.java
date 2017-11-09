@@ -74,7 +74,6 @@ public class WorkThread extends Thread {
 			e.printStackTrace();		
 		}
 	
-    	System.out.println("Setting dispatcher to null in WorkThread");
     	this.dsp = null;
     }
 

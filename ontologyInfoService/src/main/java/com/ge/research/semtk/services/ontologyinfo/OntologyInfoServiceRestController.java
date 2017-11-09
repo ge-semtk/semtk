@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -134,7 +133,4 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
-	private void logToStdout (String message) {
-		System.out.println(message);
-	}
 }

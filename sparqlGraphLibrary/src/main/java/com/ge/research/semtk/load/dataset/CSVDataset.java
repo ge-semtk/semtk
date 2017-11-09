@@ -35,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.dataset.Dataset;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /*
  * Load and read a CSV data file.
@@ -174,7 +175,7 @@ public class CSVDataset extends Dataset {
 				ArrayList<String> currRow = new ArrayList<String>();
 				record = this.recordIterator.next();
                 if(record.size() == 1 && record.get(0).trim().isEmpty()) {
-                	System.out.println("Empty CSV row, continuing...");
+                	LocalLogger.logToStdOut("Empty CSV row, continuing...");
                 	continue;  // this is an empty line, skip it
                 }
 				
@@ -184,18 +185,18 @@ public class CSVDataset extends Dataset {
 					currRow.add(record.get(headers[j]) );
 					}
 					catch( Exception eee){
-						System.out.println("exception getting data for header");
+						LocalLogger.logToStdOut("exception getting data for header");
 					}
 				}
 				rows.add(currRow);
 			}catch(NoSuchElementException e){
-//				System.out.println("ran into an exception for a missing element when getting records.... out of rows.");
+//				LocalLogger.logToStdOut("ran into an exception for a missing element when getting records.... out of rows.");
 				break; // got to the end of the file
 			}
 		}	
 		
 		// what is the count of Rows we want to return?
-//		System.out.println("number of CSV rows returned this run: " + rows.size());
+//		LocalLogger.logToStdOut("number of CSV rows returned this run: " + rows.size());
 		
 		return rows;
 	}

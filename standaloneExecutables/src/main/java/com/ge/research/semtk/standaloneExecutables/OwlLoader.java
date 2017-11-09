@@ -78,7 +78,7 @@ public class OwlLoader {
 			}
 		
 		}catch(Exception e){
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
 	}

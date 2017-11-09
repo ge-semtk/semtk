@@ -104,7 +104,7 @@ public class LoggerRestClient {
 		} catch (Exception e) {
 			// Exceptions are swallowed as a log attempt generates no feedback
 			LocalLogger.logToStdErr("logging failed due to: " + e.getMessage());
-			LocalLogger.logMessageAndTrace(e);
+			LocalLogger.printStackTrace(e);
 		}
 	}
 	
@@ -336,7 +336,7 @@ public class LoggerRestClient {
 		catch(Exception eee){
 			// do nothing. 
 			LocalLogger.logToStdErr("logging failed. No other details available.");
-			LocalLogger.logMessageAndTrace(eee);
+			LocalLogger.printStackTrace(eee);
 		}
 		return logger;
 	}

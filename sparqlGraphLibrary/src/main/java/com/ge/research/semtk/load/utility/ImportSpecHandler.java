@@ -182,7 +182,6 @@ public class ImportSpecHandler {
 						
 			// get the related node from the NodeGroup
 			String sparqlID = currnode.get("sparqlID").toString();
-			//System.out.println("sparqlID: " + sparqlID);
 			Node curr = ng.getNodeBySparqlID(sparqlID);
 			
 			// generate the uri value. all of this can be simplified later into a structure that actually remembers the format 

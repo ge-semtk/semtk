@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.dataset.Dataset;
+import com.ge.research.semtk.utility.LocalLogger;
 
 
 /*
@@ -52,8 +53,8 @@ public class ODBCDataset extends Dataset{
 	 * @throws Exception
 	 */
 	public ODBCDataset(String driver, String url, String username, String password, String query) throws Exception{
-		System.out.println("Database: " + url);
-		System.out.println("Query: " + query);
+		LocalLogger.logToStdOut("Database: " + url);
+		LocalLogger.logToStdOut("Query: " + query);
 		initialize(driver, url, username, password, query);
 	}
 
@@ -135,7 +136,7 @@ public class ODBCDataset extends Dataset{
 
 		for(int i = 0; i < numRecords; i++){
 			if(rs.next()){
-				//System.out.println(rs.getString(1) + "..." + rs.getString(2)+ "..." + rs.getString(3)+ "..." + rs.getString(4));
+				//LocalLogger.logToStdOut(rs.getString(1) + "..." + rs.getString(2)+ "..." + rs.getString(3)+ "..." + rs.getString(4));
 				tmp = new ArrayList<String>();
 				for(int j = 1; j <= rs.getMetaData().getColumnCount(); j++){ 
 					tmp.add(rs.getString(j));
@@ -177,7 +178,7 @@ public class ODBCDataset extends Dataset{
 	public void close() throws Exception {
 		if(rs != null){ rs.close(); }
 		if(stmt != null){ stmt.close(); }
-		if(conn != null){ conn.close(); System.out.println("CLOSING ODBC CONNECTION"); }	 
+		if(conn != null){ conn.close(); LocalLogger.logToStdOut("CLOSING ODBC CONNECTION"); }	 
 	}
 
 	/**
@@ -206,10 +207,10 @@ public class ODBCDataset extends Dataset{
 				columnNamesInOrder.add(rsMetadata.getColumnName(i).toLowerCase());
 			}
 		}catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			if(rs2 != null){ rs2.close(); }
 			if(stmt2 != null){ stmt2.close(); }		
-			if(conn != null){ conn.close(); System.out.println("CLOSING ODBC CONNECTION"); }		
+			if(conn != null){ conn.close(); LocalLogger.logToStdOut("CLOSING ODBC CONNECTION"); }		
 			throw new Exception("Cannot retrieve column names: " + e.getMessage());
 		}finally{
 			if(rs2 != null){ rs2.close(); }
