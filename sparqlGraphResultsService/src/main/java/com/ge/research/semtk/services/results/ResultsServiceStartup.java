@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.ge.research.semtk.services.results.cleanUp.DeleteThread;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
@@ -71,13 +72,13 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  String resultsTempStoreLocation = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
 	  // try to create the output location, if possible. warn if failed...
 	  
-	  System.err.println("attempting to create results location");
+	  LocalLogger.logToStdErr("attempting to create results location");
 	  
 	  File dirToCreate = new File(resultsTempStoreLocation);
-	  if( dirToCreate.mkdirs() ){ System.err.println("requested temp storage directory (" + resultsTempStoreLocation + ") successfully created."); }
-	  else if( dirToCreate.isDirectory() ){ System.out.println("requested temp storage directory (" + resultsTempStoreLocation + ") already exists."); }
+	  if( dirToCreate.mkdirs() ){ LocalLogger.logToStdErr("requested temp storage directory (" + resultsTempStoreLocation + ") successfully created."); }
+	  else if( dirToCreate.isDirectory() ){ LocalLogger.logToStdOut("requested temp storage directory (" + resultsTempStoreLocation + ") already exists."); }
 	  else{ 
-		  System.out.println("temp storage directory (" + resultsTempStoreLocation + ") could not be created. Exiting..."); 
+		  LocalLogger.logToStdErr("temp storage directory (" + resultsTempStoreLocation + ") could not be created. Exiting..."); 
 		  System.exit(-1);
 	   }	  
 	  
@@ -88,32 +89,32 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	  this.createResultsEdcConfigProperties(event);
 	  
 	  // check for the presence of the "cleanUpThreadEnabled" property and 
-	  System.err.println("set up for cleanup job");
+	  LocalLogger.logToStdErr("set up for cleanup job");
 	  
 	  String runCleanUp = null;
 	  try{
 		  runCleanUp = event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadEnabled");
 	  }
 	  catch(Exception eee){
-		  System.err.println("Unable to convert results.cleanUpThreadEnabled to a boolean value. no cleanup will be performed.");
+		  LocalLogger.logToStdErr("Unable to convert results.cleanUpThreadEnabled to a boolean value. no cleanup will be performed.");
 		  return;
 	  }
 	  Integer cleanUpFreq = null;
 	  if(runCleanUp.equalsIgnoreCase("yes")){
 		  try{
 			  cleanUpFreq = Integer.parseInt(event.getApplicationContext().getEnvironment().getProperty("results.cleanUpThreadFrequency"));
-			  System.err.println("Declared cleanup frequency is " + cleanUpFreq + " minutes.");
+			  LocalLogger.logToStdErr("Declared cleanup frequency is " + cleanUpFreq + " minutes.");
 			  
 			                                                                                               
 			  if(cleanUpFreq == null){ 
 				  cleanUpFreq = DEFAULT_CLEANUP_FREQUENCY; 
-				  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
+				  LocalLogger.logToStdErr("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
 			  }
 		  }
 		  catch(Exception eee){
-			  System.err.println( eee.getMessage() );
+			  LocalLogger.logToStdErr( eee.getMessage() );
 			  cleanUpFreq = DEFAULT_CLEANUP_FREQUENCY;
-			  System.err.println("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
+			  LocalLogger.logToStdErr("Declared cleanup frequency is null. Overriding to " + cleanUpFreq + " minutes.");
 		  }
 		  
 		  // get the file storage location:
@@ -124,7 +125,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 		  ripper.start();
 	  }
 	  else{
-		  System.err.println("cleanup disabled. no cleanup will be performed.");
+		  LocalLogger.logToStdErr("cleanup disabled. no cleanup will be performed.");
 		  return;		  
 	  }
 	  
