@@ -30,6 +30,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 public class StoreNodeGroup {
@@ -44,14 +45,14 @@ public class StoreNodeGroup {
 		// get everything we need to send. 
 		String data = SparqlQueries.getHeaderRow() + getInsertRow(ng, connectionInfo, id, comments, creator, creationDateString);  
 
-//		System.err.println(":: csv data output ::");	
-//		System.err.println(data);
+//		LocalLogger.logToStdErr(":: csv data output ::");	
+//		LocalLogger.logToStdErr(data);
 		
 		// should add better error handling here. 
 		try{
 			
 			// some diagnostic output 
-			System.err.println("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
+			LocalLogger.logToStdErr("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
 			
 			// create the rest client
 			IngestorClientConfig icc = new IngestorClientConfig(ingestorProtocol, ingestorLocation, Integer.parseInt(ingestorPort));
@@ -59,12 +60,12 @@ public class StoreNodeGroup {
 			
 			irc.execIngestionFromCsv(insertTemplate, data);
 			RecordProcessResults tbl = irc.getLastResult();			
-			System.err.println("does the return believes the run was a succes?" + tbl.getSuccess() );
+			LocalLogger.logToStdErr("does the return believes the run was a succes?" + tbl.getSuccess() );
 			tbl.throwExceptionIfUnsuccessful();
 			
 		}
 		catch(Exception eee){
-			System.err.println(eee.getMessage());
+			LocalLogger.logToStdErr(eee.getMessage());
 			retval = false;		// set this to false. hopefully this functions as a response. 
 		}
 		

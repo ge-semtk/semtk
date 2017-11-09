@@ -41,6 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -99,7 +100,7 @@ public class IngestionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/fromCsv", method= RequestMethod.POST)
 	public JSONObject fromCsv(@RequestBody String requestBody) throws JsonParseException, JsonMappingException, IOException{
-		// System.err.println("the request: " + requestBody);
+		// LocalLogger.logToStdErr("the request: " + requestBody);
 		IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
 		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
 	}
@@ -107,7 +108,7 @@ public class IngestionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnection", method= RequestMethod.POST)
 	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody) throws JsonParseException, JsonMappingException, IOException{
-		// System.err.println("the request: " + requestBody);
+		// LocalLogger.logToStdErr("the request: " + requestBody);
 		IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
 		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
 	}
@@ -164,10 +165,10 @@ public class IngestionRestController {
 			JSONObject json = null;
 			
 			if(templateContent != null){
-				System.err.println("template size :"  + templateContent.length());
+				LocalLogger.logToStdErr("template size :"  + templateContent.length());
 			}
 			else{
-				System.err.println("template content was null");
+				LocalLogger.logToStdErr("template content was null");
 			}
 			
 			json = (JSONObject) parser.parse(templateContent);
@@ -181,11 +182,11 @@ public class IngestionRestController {
 			}
 			
 			if(dataFileContent != null){
-				System.err.println("data size :"  + dataFileContent.length());
-				System.err.println(dataFileContent);
+				LocalLogger.logToStdErr("data size :"  + dataFileContent.length());
+				LocalLogger.logToStdErr(dataFileContent);
 			}
 			else{
-				System.err.println("data content was null");
+				LocalLogger.logToStdErr("data content was null");
 			}
 					
 			// get the connection override, if any
@@ -244,7 +245,7 @@ public class IngestionRestController {
 			retval.addResults(dl.getLoadingErrorReport());
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromCsv*", e);
@@ -260,7 +261,7 @@ public class IngestionRestController {
 			logger.logEvent("Data ingestion", deets, "Add Instance Data To Triple Store");
 		}
 		JSONObject retvalJSON = retval.toJson();
-	//	System.err.println(retvalJSON.toJSONString());
+	//	LocalLogger.logToStdErr(retvalJSON.toJSONString());
 		return retvalJSON;
 	}
 			
@@ -279,7 +280,7 @@ public class IngestionRestController {
 			String sparqlEndpointPassword = prop.getSparqlPassword();
 			
 			// log the attempted credentials
-			System.err.println("the user name was: " + sparqlEndpointUser);
+			LocalLogger.logToStdErr("the user name was: " + sparqlEndpointUser);
 			
 			// get template file content and convert to json object for use. 
 			String templateContent = new String(templateFile.getBytes());
@@ -301,7 +302,7 @@ public class IngestionRestController {
 
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromOracleODBC", e);
@@ -324,8 +325,8 @@ public class IngestionRestController {
 			String sparqlEndpointPassword = prop.getSparqlPassword();
 			
 			// log the attempted user name and password
-			System.err.println("the user name was: " + sparqlEndpointUser);
-			System.err.println("the password was: " + sparqlEndpointPassword);
+			LocalLogger.logToStdErr("the user name was: " + sparqlEndpointUser);
+			LocalLogger.logToStdErr("the password was: " + sparqlEndpointPassword);
 			
 			// get template file content and convert to json object for use. 
 			String templateContent = new String(templateFile.getBytes());
@@ -347,7 +348,7 @@ public class IngestionRestController {
 
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
@@ -368,8 +369,8 @@ public class IngestionRestController {
 		}
 		catch(Exception eee){
 			// do nothing. 
-			System.err.println("logging failed. No other details available.");
-			eee.printStackTrace();
+			LocalLogger.logToStdErr("logging failed. No other details available.");
+			LocalLogger.printStackTrace(eee);
 		}
 		return logger;
 	}

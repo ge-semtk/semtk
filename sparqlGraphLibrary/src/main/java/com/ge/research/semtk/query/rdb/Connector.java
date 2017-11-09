@@ -155,7 +155,7 @@ public abstract class Connector {
 			return new Table(cols, colTypes, recs);
 
 		}catch(Exception e){
-			//e.printStackTrace();
+			//LocalLogger.printStackTrace(e);
 			throw e;
 		}finally{
 			if(stmt!=null){	stmt.close(); }

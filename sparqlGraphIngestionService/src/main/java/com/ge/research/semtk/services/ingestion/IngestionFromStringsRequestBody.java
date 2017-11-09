@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.services.ingestion;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 
 public class IngestionFromStringsRequestBody {
 	
@@ -37,7 +39,7 @@ public class IngestionFromStringsRequestBody {
 			return data;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			return "";
 		}
 	}

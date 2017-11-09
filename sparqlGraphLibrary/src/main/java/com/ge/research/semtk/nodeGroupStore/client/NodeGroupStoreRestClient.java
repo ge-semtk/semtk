@@ -25,6 +25,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroupStoreRestClient extends RestClient {
 
@@ -60,7 +61,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 			JSONObject jobj = (JSONObject) this.execute();
 			JSONObject tblWrapper = (JSONObject)jobj.get("table");
 			
-			System.err.println(tblWrapper);
+			LocalLogger.logToStdErr(tblWrapper.toString());
 						
 			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
 			retval.addResults(tbl);
@@ -185,7 +186,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 			}		
 			else{
 				this.parametersJSON.remove("id");
-				System.err.println("existence check succeeded. proceeding to insert node group: " + proposedId);
+				LocalLogger.logToStdErr("existence check succeeded. proceeding to insert node group: " + proposedId);
 				
 				// perform actual insertion.
 				conf.setServiceEndpoint("nodeGroupStore/storeNodeGroup");

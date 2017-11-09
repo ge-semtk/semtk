@@ -28,6 +28,7 @@ import java.util.UUID;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class JobTracker {
 	JobEndpointProperties prop = null;
@@ -66,7 +67,7 @@ public class JobTracker {
 	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
 	    
 	    if (trList.length > 1) {
-	    	System.err.println("getJobPercentComplete found multiple percentComplete entries:\n%s" + endpoint.getResponse());
+	    	LocalLogger.logToStdErr("getJobPercentComplete found multiple percentComplete entries:\n%s" + endpoint.getResponse());
 	    	throw new Exception(String.format("Job %s has %d percentComplete entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
 	    	if (! this.jobExists(jobId) ) {
@@ -131,7 +132,7 @@ public class JobTracker {
 	        "   optional {?Job job:statusMessage ?statusMessage.}" +
 	        "}",
 	    	percentComplete, SparqlToXUtils.safeSparqlString(message), SparqlToXUtils.safeSparqlString(jobId));
-	    System.err.println(query);
+	    LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -174,7 +175,7 @@ public class JobTracker {
 	        "}",
 	        
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
-	    System.err.println(query);
+	    LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -291,7 +292,7 @@ public class JobTracker {
 	        "}",
 	        
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
-	    System.err.println(query);
+	    LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -348,7 +349,7 @@ public class JobTracker {
 		        uriSampleURL, 
 		        ((sampleResultsURL != null) ? SparqlToXUtils.safeSparqlString(sampleResultsURL.toString()) : ""), 
 		        SparqlToXUtils.safeSparqlString(jobId));
-		    System.err.println(query);
+		    LocalLogger.logToStdErr(query);
 		    try {
 		    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 		    } catch (Exception e) {
@@ -463,7 +464,7 @@ public class JobTracker {
 	        "%s job:creationTime '%s'^^XMLSchema:dateTime. \n" +
 	        "}",
 	    	uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri, uri, xsdFormat.format(initialDate));
-	    System.err.println(query);
+	    LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -531,7 +532,7 @@ public class JobTracker {
 			"   optional { ?z ?zo ?zp. }  \n" +
 			"}",
 			SparqlToXUtils.safeSparqlString(jobId));
-	    System.err.println(query);
+	    LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -556,7 +557,7 @@ public class JobTracker {
 				"      VALUES ?id { '%s'^^XMLSchema:string }. \n" +
 				"}",
 				SparqlToXUtils.safeSparqlString(jobId));
-		System.err.println(query);
+		LocalLogger.logToStdErr(query);
 		try {
 			endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		    String trList[] = endpoint.getStringResultsColumn("callret-0");

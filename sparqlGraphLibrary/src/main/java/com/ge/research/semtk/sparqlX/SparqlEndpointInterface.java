@@ -271,7 +271,7 @@ public abstract class SparqlEndpointInterface {
 			endpoint.executeQuery(query, resultType);
 			return endpoint;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Error executing semantic query:\n\t" + e.getMessage());
 		}
 	}		
@@ -405,7 +405,7 @@ public abstract class SparqlEndpointInterface {
 		JSONObject interimObj = new JSONObject(this.response);
 		
 		if (this.response == null) {
-			System.err.println("the response could not be transformed into json");
+			LocalLogger.logToStdErr("the response could not be transformed into json");
 			entity.getContent().close();
 			return null;
 		}
@@ -435,7 +435,7 @@ public abstract class SparqlEndpointInterface {
 				new UsernamePasswordCredentials(this.userName, this.password));
 
 		String[] serverNoProtocol = this.server.split("://");
-		//System.err.println("the new server name is: " + serverNoProtocol[1]);
+		//LocalLogger.logToStdErr("the new server name is: " + serverNoProtocol[1]);
 
 		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);  //previous version assumes always http.
 
@@ -469,7 +469,7 @@ public abstract class SparqlEndpointInterface {
 		String responseTxt = EntityUtils.toString(entity, "UTF-8");
 
 		// some diagnostic output
-		if(responseTxt == null){ System.err.println("the response text was null!"); }
+		if(responseTxt == null){ LocalLogger.logToStdErr("the response text was null!"); }
 
 		if(responseTxt.trim().isEmpty()){
 			handleEmptyResponse();  // implementation-specific behavior
@@ -484,7 +484,7 @@ public abstract class SparqlEndpointInterface {
 		}
 		
 		if (resp == null) {
-			System.err.println("the response could not be transformed into json");
+			LocalLogger.logToStdErr("the response could not be transformed into json");
 
 			if(responseTxt.contains("Error")){
 				entity.getContent().close();
@@ -516,7 +516,7 @@ public abstract class SparqlEndpointInterface {
 				new UsernamePasswordCredentials(this.userName, this.password));
 
 		String[] serverNoProtocol = this.server.split("://");
-		//System.err.println("the new server name is: " + serverNoProtocol[1]);
+		//LocalLogger.logToStdErr("the new server name is: " + serverNoProtocol[1]);
 
 		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
 
@@ -636,7 +636,7 @@ LocalLogger.logToStdOut ("URL: " + url);
 		rd.close();   // close the reader
 
 		if (this.response == null) {
-			System.err.println("the response could not be transformed into json");
+			LocalLogger.logToStdErr("the response could not be transformed into json");
 
 			return null;
 		}
@@ -664,12 +664,12 @@ LocalLogger.logToStdOut ("URL: " + url);
 
 		//ResponseHandler<String> responseHandler = new BasicResponseHandler();
 
-		System.err.println("the server name was " + this.server);
-		System.err.println("the port id was " + this.port);
-		System.err.println("the user name was " + "SPARQL/" + this.userName);
-		System.err.println("the password was " + this.password);
+		LocalLogger.logToStdErr("the server name was " + this.server);
+		LocalLogger.logToStdErr("the port id was " + this.port);
+		LocalLogger.logToStdErr("the user name was " + "SPARQL/" + this.userName);
+		LocalLogger.logToStdErr("the password was " + this.password);
 
-		System.err.println(queryAndUrl);
+		LocalLogger.logToStdErr(queryAndUrl);
 
 		httpclient.getCredentialsProvider().setCredentials(
 				AuthScope.ANY,
@@ -677,7 +677,7 @@ LocalLogger.logToStdOut ("URL: " + url);
 
 
 		String[] serverNoProtocol = this.server.split("://");
-		System.err.println("the new server name is: " + serverNoProtocol[1]);
+		LocalLogger.logToStdErr("the new server name is: " + serverNoProtocol[1]);
 
 		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
 
@@ -702,16 +702,16 @@ LocalLogger.logToStdOut ("URL: " + url);
 		String responseTxt = EntityUtils.toString(entity, "UTF-8");
 
 		// some diagnostic output
-		if(responseTxt == null){ System.err.println("the response text was null!"); }
+		if(responseTxt == null){ LocalLogger.logToStdErr("the response text was null!"); }
 
 		if(responseTxt.trim().isEmpty()){
 			handleEmptyResponse();  // implementation-specific behavior
 		}
 
 		if(responseTxt.length() < 100){
-			System.err.println("SparqlEndpointInterface received: " + responseTxt);
+			LocalLogger.logToStdErr("SparqlEndpointInterface received: " + responseTxt);
 		}else{
-			System.err.println("SparqlEndpointInterface received: " + responseTxt.substring(0,99) + "... (" + responseTxt.length() + " chars)");
+			LocalLogger.logToStdErr("SparqlEndpointInterface received: " + responseTxt.substring(0,99) + "... (" + responseTxt.length() + " chars)");
 		}
 		
 		JSONObject resp;
@@ -722,7 +722,7 @@ LocalLogger.logToStdOut ("URL: " + url);
 		}
 
 		if (resp == null) {
-			System.err.println("the response could not be transformed into json");
+			LocalLogger.logToStdErr("the response could not be transformed into json");
 
 			if(responseTxt.contains("Error")){
 				throw new Exception(responseTxt); }
@@ -946,7 +946,7 @@ LocalLogger.logToStdOut ("URL: " + url);
 			for (int i=0; i < this.resBindings.size(); i++) {
 				// find a row of interest
 				if(((String)((JSONObject)((JSONObject)this.resBindings.get(i)).get(compareColName)).get("value")).equals(keyValue)){
-					//	System.err.println(keyValue + " found!");
+					//	LocalLogger.logToStdErr(keyValue + " found!");
 
 					String[] line = new String[gatherCols.length +  1]; // we include the key in there as well.
 					line[0] = keyValue;
@@ -958,7 +958,7 @@ LocalLogger.logToStdOut ("URL: " + url);
 					retval.add(line);	// make sure this is in the return set.
 				}
 			}
-			//	System.err.println("_____________________________");
+			//	LocalLogger.logToStdErr("_____________________________");
 			return retval;
 		}catch (Exception e){ throw new IOException(e.getMessage());}
 	}

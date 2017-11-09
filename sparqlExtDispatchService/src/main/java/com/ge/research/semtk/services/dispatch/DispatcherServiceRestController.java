@@ -39,6 +39,7 @@ import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -144,7 +145,7 @@ public class DispatcherServiceRestController {
 			 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromSparql()", e);
@@ -155,14 +156,14 @@ public class DispatcherServiceRestController {
 				sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 			} catch (Exception e2) {
 				// TODO Auto-generated catch block
-				e2.printStackTrace();
+				LocalLogger.printStackTrace(e2);
 			}
 			if(sClient != null){ 
 				try {
 					sClient.execSetFailure(e.getMessage());
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					LocalLogger.printStackTrace(e1);
 				}
 			}
 			
@@ -198,7 +199,7 @@ public class DispatcherServiceRestController {
 			 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromNodegroup()", e);
@@ -209,14 +210,14 @@ public class DispatcherServiceRestController {
 				sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 			} catch (Exception e2) {
 				// TODO Auto-generated catch block
-				e2.printStackTrace();
+				LocalLogger.printStackTrace(e2);
 			}
 			if(sClient != null){ 
 				try {
 					sClient.execSetFailure(e.getMessage());
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					LocalLogger.printStackTrace(e1);
 				}
 			}
 			
@@ -249,7 +250,7 @@ public class DispatcherServiceRestController {
 		}
 		catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getConstraintInfo", e);
@@ -280,7 +281,7 @@ public class DispatcherServiceRestController {
 		// check the qry request body.		
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 
-		System.err.println("Dispatcher type in use: " + props.getDispatcherClassName() );
+		LocalLogger.logToStdErr("Dispatcher type in use: " + props.getDispatcherClassName() );
 	
 	
 		SparqlQueryClientConfig queryConf = null;
@@ -316,7 +317,7 @@ public class DispatcherServiceRestController {
 		}
 		
 		if(queryClient == null){
-			System.err.println("!!!!!!! QUERY CLIENT IS NULL !!!!!!!");
+			LocalLogger.logToStdErr("!!!!!!! QUERY CLIENT IS NULL !!!!!!!");
 			throw new Exception("getDispatcher :: the attempt to create a query client failed.");
 		}
 		
@@ -333,9 +334,9 @@ public class DispatcherServiceRestController {
 
 			dspType = Class.forName(props.getDispatcherClassName());
 			
-			if(dspType == null) { System.err.println("DSPTYPE IS NULL!"); }
-			else{ System.err.println( "configured dispatcher type is " + dspType.getCanonicalName() ); }
-			System.err.println("attempting to get constructor for dispatcher subtype:");
+			if(dspType == null) { LocalLogger.logToStdErr("DSPTYPE IS NULL!"); }
+			else{ LocalLogger.logToStdErr( "configured dispatcher type is " + dspType.getCanonicalName() ); }
+			LocalLogger.logToStdErr("attempting to get constructor for dispatcher subtype:");
 			// build it.
 
 			Constructor ctor = null ; //dspType.getConstructor(String.class, JSONObject.class, ResultsClient.class, StatusClient.class, SparqlQueryClient.class);	
@@ -362,14 +363,14 @@ public class DispatcherServiceRestController {
 			
 		}
 		catch(Exception failedToFindClass){
-			System.err.println("retrieval of external dispatcher class failed:");
-			System.err.println( failedToFindClass.getMessage() );
-			failedToFindClass.printStackTrace();
+			LocalLogger.logToStdErr("retrieval of external dispatcher class failed:");
+			LocalLogger.logToStdErr( failedToFindClass.getMessage() );
+			LocalLogger.printStackTrace(failedToFindClass);
 			throw new Exception("getDispatcher :: unable to instantiate dispatcher of type " + props.getDispatcherClassName() + ".  Please check dispatch.externalDispatchJar property, additional jars directory, or dispatcher error log");
 		}
 		
 		
-		System.err.println("initialized job: " + requestId);
+		LocalLogger.logToStdErr("initialized job: " + requestId);
 	
 		return dsp;
 	}

@@ -34,6 +34,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 public class ResultsClient extends RestClient implements Runnable {
@@ -214,7 +215,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			if (timerFlag) { 
 				endTime = System.nanoTime();
 				prepSec += ((endTime - startTime) / 1000000000.0);
-				System.err.println(String.format("tot prep=%.2f sec", prepSec));
+				LocalLogger.logToStdErr(String.format("tot prep=%.2f sec", prepSec));
 				startTime = endTime;
 			}
 
@@ -232,7 +233,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			if (timerFlag) { 
 				endTime = System.nanoTime();
 				sendSec += ((endTime - startTime) / 1000000000.0);
-				System.err.println(String.format("tot send=%.2f sec", sendSec));
+				LocalLogger.logToStdErr(String.format("tot send=%.2f sec", sendSec));
 				startTime = endTime;
 			}
 		} // end of while loop.
@@ -248,7 +249,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		// wait for the finalize run to finish
 		waitForThreadToFinish(thread);
 
-		if (timerFlag) { System.err.println(String.format("prep=%.2f sec   send=%.2f sec", prepSec, sendSec)); }
+		if (timerFlag) { LocalLogger.logToStdErr(String.format("prep=%.2f sec   send=%.2f sec", prepSec, sendSec)); }
 		
 		return;
 	}

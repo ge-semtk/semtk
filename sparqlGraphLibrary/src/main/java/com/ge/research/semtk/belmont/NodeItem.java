@@ -26,6 +26,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.google.protobuf.TextFormat.ParseException;
 
 public class NodeItem {
@@ -125,7 +126,7 @@ public class NodeItem {
 					this.deletionFlags.add(Boolean.parseBoolean(rawVal));
 				}
 				catch( Exception pe){
-					System.err.println("value for deletion flag was null. this is being replaced with false.");
+					LocalLogger.logToStdErr("value for deletion flag was null. this is being replaced with false.");
 					this.deletionFlags.add(false);
 				}
 

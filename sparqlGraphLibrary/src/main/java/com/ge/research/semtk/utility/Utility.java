@@ -419,7 +419,7 @@ public abstract class Utility {
 				try {
 					Utility.validateProperty(propertyValue, propertyName);	// validate
 				} catch (Exception e) {
-					e.printStackTrace();
+					LocalLogger.printStackTrace(e);
 					LocalLogger.logToStdOut("============" + e.getMessage() + "...EXITING ============");	
 					System.exit(1);					// kill the process
 				} 

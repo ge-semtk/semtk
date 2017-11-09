@@ -250,7 +250,7 @@ public class SparqlQueryServiceRestController {
 			LocalLogger.logMessageAndTrace(e);	
 			return (new SimpleResultSet(false, e.getMessage())).toJson();
 		} catch (Throwable e) {
-			e.printStackTrace();	
+			LocalLogger.printStackTrace(e);	
 			return (new SimpleResultSet(false, e.getMessage())).toJson();
 		}
 	}	

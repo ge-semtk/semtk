@@ -22,6 +22,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodegroupRequestBody {
 	private String jsonRenderedNodeGroup;
@@ -46,9 +47,7 @@ public class NodegroupRequestBody {
 		try {
 			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			
+			LocalLogger.printStackTrace(e);	
 		}
 		
 		return retval;

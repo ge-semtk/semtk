@@ -62,6 +62,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * service to run stored nodegroups. 
@@ -90,7 +91,7 @@ public class NodeGroupExecutionRestController {
 			retval.addResult("status", results);
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
@@ -113,7 +114,7 @@ public class NodeGroupExecutionRestController {
 			retval.addResult("message", results);
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "jobStatusMessage", e);
@@ -141,7 +142,7 @@ public class NodeGroupExecutionRestController {
 			}
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionCheck", e);
@@ -165,7 +166,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionPercentage", e);
@@ -186,7 +187,7 @@ public class NodeGroupExecutionRestController {
 			retval.addResults(retTable);
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new TableResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
@@ -207,7 +208,7 @@ public class NodeGroupExecutionRestController {
 			retval.addResultsJSON(retLd);
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new NodeGroupResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
@@ -230,9 +231,9 @@ public class NodeGroupExecutionRestController {
 			retval.setSuccess(true);
 	
 			// a little diagnostic print:
-			System.err.println("results info for job (" + requestBody.getJobID() + ") : " + results.length + " records.");
+			LocalLogger.logToStdErr("results info for job (" + requestBody.getJobID() + ") : " + results.length + " records.");
 			for(URL i : results){
-				System.err.println("        record: " + i.toString());
+				LocalLogger.logToStdErr("        record: " + i.toString());
 			}
 			
 			
@@ -258,7 +259,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new TableResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsLocation", e);
@@ -306,7 +307,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage("service: " + SERVICE_NAME + " method: dispatchAnyJobById()", e);
@@ -341,7 +342,7 @@ public class NodeGroupExecutionRestController {
 			
 			// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
 			if(encodedNodeGroup.containsKey("sNodeGroup")){
-				System.err.println("located key: sNodeGroup");
+				LocalLogger.logToStdErr("located key: sNodeGroup");
 				ng.addJsonEncodedNodeGroup((JSONObject) encodedNodeGroup.get("sNodeGroup"));
 			}
 			
@@ -383,7 +384,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../dispatchAnyJobById()", e);
@@ -508,7 +509,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);

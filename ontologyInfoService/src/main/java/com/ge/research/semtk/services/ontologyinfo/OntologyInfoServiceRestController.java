@@ -33,6 +33,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 
 @CrossOrigin
 @RestController
@@ -63,7 +64,7 @@ public class OntologyInfoServiceRestController {
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "getDataDictionary", e);
-	    	e.printStackTrace();
+	    	LocalLogger.printStackTrace(e);
 	    }
 	    return res.toJson();
 	}
@@ -80,10 +81,10 @@ public class OntologyInfoServiceRestController {
 			retval.addResult("rdfOWL", oInfo.generateRdfOWL(requestBody.getBase()));
 			retval.setSuccess(true);
 		}
-		catch(Exception eee){
+		catch(Exception e){
 			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getRdfOWL", eee);
-			eee.printStackTrace();
+			retval.addRationaleMessage(SERVICE_NAME, "getRdfOWL", e);
+			LocalLogger.printStackTrace(e);
 		}
 		
 		return retval.toJson();		
@@ -100,10 +101,10 @@ public class OntologyInfoServiceRestController {
 			retval.addResult("SADL", oInfo.generateSADL(requestBody.getBase()));
 			retval.setSuccess(true);
 		}
-		catch(Exception eee){
+		catch(Exception e){
 			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getSADL", eee);
-			eee.printStackTrace();
+			retval.addRationaleMessage(SERVICE_NAME, "getSADL", e);
+			LocalLogger.printStackTrace(e);
 		}
 		
 		return retval.toJson();		
@@ -124,10 +125,10 @@ public class OntologyInfoServiceRestController {
 			retval.addResult("ontologyInfo", oInfoDetails);
 			retval.setSuccess(true);
 		}
-		catch(Exception eee){
+		catch(Exception e){
 			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getOntologyInfo", eee);
-			eee.printStackTrace();
+			retval.addRationaleMessage(SERVICE_NAME, "getOntologyInfo", e);
+			LocalLogger.printStackTrace(e);
 		}
 		// send it out.
 		return retval.toJson();

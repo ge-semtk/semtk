@@ -44,6 +44,7 @@ import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.PathException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroup {
 	private static final int VERSION = 7;
@@ -105,7 +106,7 @@ public class NodeGroup {
 		}		
 		
 		if(!jobj.containsKey("@graph")){
-			System.err.println("there was not @graph key in the JSON-LD. assuming this is intentional, nothing was added.");
+			LocalLogger.logToStdErr("there was not @graph key in the JSON-LD. assuming this is intentional, nothing was added.");
 			return new NodeGroup();
 		}
 		
@@ -412,7 +413,7 @@ public class NodeGroup {
 			
 			this.prefixHash.put(chunks[0], newPrefixName);
 			
-			//System.err.println("adding prefix: " + newPrefixName + " with key " + chunks[0] + " from input " + prefixedUri);
+			//LocalLogger.logToStdErr("adding prefix: " + newPrefixName + " with key " + chunks[0] + " from input " + prefixedUri);
 		}
 	}
 	

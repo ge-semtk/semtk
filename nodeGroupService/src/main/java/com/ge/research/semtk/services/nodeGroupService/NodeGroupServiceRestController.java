@@ -37,6 +37,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdRequest;
+import com.ge.research.semtk.utility.LocalLogger;
 
 @RestController
 @RequestMapping("/nodeGroup")
@@ -87,7 +88,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateSelect", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -111,7 +112,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateCountAll", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -135,7 +136,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateDelete", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -163,7 +164,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateFilter", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -187,7 +188,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateAsk", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -211,7 +212,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateConstruct", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -235,7 +236,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateConstruct", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();
@@ -255,7 +256,7 @@ public class NodeGroupServiceRestController {
 		catch(Exception eee){
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraints", eee);
-			eee.printStackTrace();
+			LocalLogger.printStackTrace(eee);
 		}
 		
 		return retval.toJson();		

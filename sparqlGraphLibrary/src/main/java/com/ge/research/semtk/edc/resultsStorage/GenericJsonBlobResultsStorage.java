@@ -4,6 +4,7 @@ import java.net.URL;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 public class GenericJsonBlobResultsStorage extends GeneralResultsStorage {
@@ -23,8 +24,8 @@ public class GenericJsonBlobResultsStorage extends GeneralResultsStorage {
 		// create and write the results data file
 		String fileName = writeToFile(jobID, jsonData, true);
 		
-		System.err.println("Blob metadata file was: " + metadatafile);
-		System.err.println("Blob data file was: " + fileName);
+		LocalLogger.logToStdErr("Blob metadata file was: " + metadatafile);
+		LocalLogger.logToStdErr("Blob data file was: " + fileName);
 		
 		return getURL(metadatafile);
 	}
@@ -38,7 +39,7 @@ public class GenericJsonBlobResultsStorage extends GeneralResultsStorage {
 			return new GenericJsonBlobResultsSerializer(dataFileLocation);
 
 		}catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Could not read results from store for " + url + ": " + e.toString());
 		}
 	}

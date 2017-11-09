@@ -27,6 +27,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class JsonLdResultsSerializer {
 	private static final int FLUSHFREQUENCY = 100;
@@ -70,14 +71,14 @@ public class JsonLdResultsSerializer {
 			processedRows += 1;
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
-				System.err.println("flushing after row: " +  processedRows);
+				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
 				aOutputStream.flush();
 			}
 		}
 		
 		// done with rows. flush.
 		aOutputStream.flush();
-		System.err.println("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
 	}
 
 	

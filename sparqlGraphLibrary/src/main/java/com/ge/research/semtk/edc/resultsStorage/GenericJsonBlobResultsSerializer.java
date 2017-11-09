@@ -6,6 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 public class GenericJsonBlobResultsSerializer {
 
 	private static final int FLUSHFREQUENCY = 100;
@@ -49,13 +51,13 @@ public class GenericJsonBlobResultsSerializer {
 			processedRows += 1;
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
-				System.err.println("flushing after row: " +  processedRows);
+				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
 				aOutputStream.flush();
 			}
 		}
 		
 		// done with rows. flush.
 		aOutputStream.flush();
-		System.err.println("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
 	}
 }

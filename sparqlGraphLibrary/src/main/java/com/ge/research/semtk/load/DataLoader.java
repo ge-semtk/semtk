@@ -106,21 +106,21 @@ public class DataLoader {
 				ds.close();  // close the dataset (e.g. if Oracle, will close the connection)
 				
 				// log some info on the bad column before throwing the exception.
-				System.err.println("column " + c + " not found in the data set. the length of the column name was " + c.length() + " . the character codes are as follows:");
+				LocalLogger.logToStdErr("column " + c + " not found in the data set. the length of the column name was " + c.length() + " . the character codes are as follows:");
 				for(int i = 0; i < c.length(); i += 1){
 					char curr = c.charAt(i);
 					System.err.print((int) curr + " ");
 				}
-				System.err.println("");
+				LocalLogger.logToStdErr("");
 				// available columns list 
-				System.err.println("available columns are: ");
+				LocalLogger.logToStdErr("available columns are: ");
 				for(String k : colNamesInDataset ){
 					System.err.print(k + " (");
 					for(int m = 0; m < k.length(); m += 1){
 						char curr = k.charAt(m);
 						System.err.print((int) curr + " ");
 					}
-					System.err.println(")" );
+					LocalLogger.logToStdErr(")" );
 				}
 				
 				throw new Exception("Column '" + c + "' not found in dataset. Available columns are: " + colNamesInDataset.toString());
@@ -155,9 +155,9 @@ public class DataLoader {
 
 		// check the nodegroup for consistency before continuing.
 		
-		System.err.println("about to validate against model.");
+		LocalLogger.logToStdErr("about to validate against model.");
 		this.master.validateAgainstModel(this.oInfo);
-		System.err.println("validation completed.");
+		LocalLogger.logToStdErr("validation completed.");
 		
 		Boolean dataCheckSucceeded = true;
 		this.totalRecordsProcessed = 0;	// reset the counter.
@@ -260,8 +260,8 @@ public class DataLoader {
 		String query =  lastNg.generateSparqlPrefix() + "Insert { " + totalInsertHead + " } where { " + totalInsertWhere + " } "; 
 
 //		// some diagnostic output:
-//		System.err.println("Insert generated : ");
-//		System.err.println(query);
+//		LocalLogger.logToStdErr("Insert generated : ");
+//		LocalLogger.logToStdErr(query);
 		
 		this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	}

@@ -27,6 +27,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class DispatchRestClient extends RestClient{
 
@@ -246,9 +247,9 @@ public class DispatchRestClient extends RestClient{
 		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
 	
 		
-		System.err.println("-- the outgoing connection json was: ---");
-		System.err.println(sc.toJson());
-		System.err.println("-- the outgoing connection json closed ---");
+		LocalLogger.logToStdErr("-- the outgoing connection json was: ---");
+		LocalLogger.logToStdErr(sc.toJson().toString());
+		LocalLogger.logToStdErr("-- the outgoing connection json closed ---");
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());

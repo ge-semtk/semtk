@@ -26,6 +26,7 @@ import java.nio.file.StandardOpenOption;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 public class JsonLdResultsStorage extends GeneralResultsStorage {
@@ -45,8 +46,8 @@ public class JsonLdResultsStorage extends GeneralResultsStorage {
 		// create and write the results data file
 		String fileName = writeToFile(jobID, jsonLdData, true);
 		
-		System.err.println("Graph metadata file was: " + metadatafile);
-		System.err.println("Graph data file was: " + fileName);
+		LocalLogger.logToStdErr("Graph metadata file was: " + metadatafile);
+		LocalLogger.logToStdErr("Graph data file was: " + fileName);
 		
 		return getURL(metadatafile);
 	}
@@ -61,7 +62,7 @@ public class JsonLdResultsStorage extends GeneralResultsStorage {
 			return new JsonLdResultsSerializer(dataFileLocation);
 
 		}catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Could not read results from store for " + url + ": " + e.toString());
 		}
 		

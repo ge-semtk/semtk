@@ -35,6 +35,7 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -110,9 +111,9 @@ public class NodeGroupStoreRestController {
 		retval = new SimpleResultSet(retBool);
 		
 		}
-		catch(Exception eee){
-			retval = new SimpleResultSet(false, eee.getMessage());
-			eee.printStackTrace();
+		catch(Exception e){
+			retval = new SimpleResultSet(false, e.getMessage());
+			LocalLogger.printStackTrace(e);
 		}
 		
 		return retval.toJson();
@@ -207,7 +208,7 @@ public class NodeGroupStoreRestController {
 				// check if this is a wrapped or unwrapped 
 				// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
 				if(json.containsKey("sNodeGroup")){
-					System.err.println("located key: sNodeGroup");
+					LocalLogger.logToStdErr("located key: sNodeGroup");
 					json = (JSONObject) json.get("sNodeGroup");
 				}
 				
@@ -231,7 +232,7 @@ public class NodeGroupStoreRestController {
 		catch(Exception e){
 			// something went wrong. report and exit. 
 			
-			System.err.println("a failure was encountered during the retrieval of runtime constraints: " + 
+			LocalLogger.logToStdErr("a failure was encountered during the retrieval of runtime constraints: " + 
 					e.getMessage());
 			
 			retval = new TableResultSet();
@@ -290,7 +291,7 @@ public class NodeGroupStoreRestController {
 		catch(Exception e){
 			// something went wrong. report and exit. 
 			
-			System.err.println("a failure was encountered during the deletion of " +  requestBody.getId() + ": " + 
+			LocalLogger.logToStdErr("a failure was encountered during the deletion of " +  requestBody.getId() + ": " + 
 					e.getMessage());
 			
 			retval = new SimpleResultSet();

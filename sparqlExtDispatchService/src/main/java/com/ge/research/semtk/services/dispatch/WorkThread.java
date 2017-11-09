@@ -26,6 +26,7 @@ import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
+import com.ge.research.semtk.utility.LocalLogger;
 
 
 public class WorkThread extends Thread {
@@ -71,7 +72,7 @@ public class WorkThread extends Thread {
 				TableResultSet trs = this.dsp.execute(constraintJson, this.myQT, targetObjectSparqlID);
 			}	
 		} catch (Exception e) {
-			e.printStackTrace();		
+			LocalLogger.printStackTrace(e);		
 		}
 	
     	this.dsp = null;

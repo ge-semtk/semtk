@@ -6,6 +6,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class OntologyInfoJsonRequest {
 
@@ -30,7 +31,7 @@ public class OntologyInfoJsonRequest {
 			return new OntologyInfo(json);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 		}
 		return null;
 	}

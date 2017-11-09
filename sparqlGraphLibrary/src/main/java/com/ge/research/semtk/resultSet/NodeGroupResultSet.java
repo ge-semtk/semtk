@@ -23,6 +23,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * A result set containing a NodeGroup (graph)
@@ -69,8 +70,8 @@ public class NodeGroupResultSet extends GeneralResultSet{
 		JSONObject retval = new JSONObject();
 		
 		try{
-			System.err.println("incoming nodegroup json was:");
-			System.err.println(jsonLD.toJSONString());
+			LocalLogger.logToStdErr("incoming nodegroup json was:");
+			LocalLogger.logToStdErr(jsonLD.toJSONString());
 			
 			String JSON_TYPE = "type";
 			String JSON_NODE_COUNT = "node_count";

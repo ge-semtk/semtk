@@ -33,6 +33,7 @@ import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -170,7 +171,7 @@ public class TableResultsStorage extends GeneralResultsStorage{
 			}		
 			
 		}catch(Exception e){
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Could not read results from store for " + url + ": " + e.toString());
 		}
 		
@@ -188,8 +189,8 @@ public class TableResultsStorage extends GeneralResultsStorage{
 			int retval = val.intValue();
 			return retval;
 		}
-		catch(Exception eee){
-			eee.printStackTrace();
+		catch(Exception e){
+			LocalLogger.printStackTrace(e);
 			throw new Exception("parse of row count size failed!");
 		}
 	}

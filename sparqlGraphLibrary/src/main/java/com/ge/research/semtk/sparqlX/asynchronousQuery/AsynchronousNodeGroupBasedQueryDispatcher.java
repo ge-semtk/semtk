@@ -43,6 +43,7 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 
@@ -66,19 +67,19 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		this.statusClient = sClient;
 		
 		// get nodegroup and sei from json
-		System.err.println("processing incoming nodegroup - in base class");
+		LocalLogger.logToStdErr("processing incoming nodegroup - in base class");
 
-		System.err.println("about to get the nodegroup");
+		LocalLogger.logToStdErr("about to get the nodegroup");
 		this.queryNodeGroup = sgJson.getNodeGroup();
 
-		System.err.println("about to get the default qry interface");
+		LocalLogger.logToStdErr("about to get the default qry interface");
 		this.sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 		
 		SparqlConnection nodegroupConn = sgJson.getSparqlConn();
 		this.domain = nodegroupConn.getDomain();
 		
 		if(queryClient.getConfig() instanceof SparqlQueryAuthClientConfig){
-			System.err.println("Dispatcher exec config WAS an instance of the auth query client");
+			LocalLogger.logToStdErr("Dispatcher exec config WAS an instance of the auth query client");
 			
 			SparqlQueryAuthClientConfig old = (SparqlQueryAuthClientConfig)queryClient.getConfig();
 			this.oInfo = new OntologyInfo(old, nodegroupConn);
@@ -97,7 +98,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			this.retrievalClient = new SparqlQueryClient(config );			
 		}
 		else{
-			System.err.println("Dispatcher exec config WAS NOT an instance of the auth query client");
+			LocalLogger.logToStdErr("Dispatcher exec config WAS NOT an instance of the auth query client");
 			
 			this.oInfo = new OntologyInfo(queryClient.getConfig(), nodegroupConn);
 			
@@ -179,9 +180,9 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			
 			this.resultsClient.execStoreTableResults(this.jobID, resTable);
 		}
-		catch(Exception eee){
-			this.statusClient.execSetFailure("Failed to write results: " + eee.getMessage());
-			eee.printStackTrace();
+		catch(Exception e){
+			this.statusClient.execSetFailure("Failed to write results: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Unable to write results");
 		}
 	}
@@ -192,9 +193,9 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			JSONObject resJSON = preRet.getResultsJSON();
 			this.resultsClient.execStoreGraphResults(this.jobID, resJSON);
 		}
-		catch(Exception eee){
-			this.statusClient.execSetFailure("Failed to write results: " + eee.getMessage());
-			eee.printStackTrace();
+		catch(Exception e){
+			this.statusClient.execSetFailure("Failed to write results: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Unable to write results");
 		}
 	}
@@ -231,10 +232,10 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected void updateStatusToFailed(String rationale) throws UnableToSetStatusException{
 		try{
 			this.statusClient.execSetFailure(rationale != null ? rationale : "Exception with e.getMessage()==null");
-			System.err.println("attempted to write failure message to status service");
+			LocalLogger.logToStdErr("attempted to write failure message to status service");
 		}
 		catch(Exception eee){
-			System.err.println("failed to write failure message to status service");
+			LocalLogger.logToStdErr("failed to write failure message to status service");
 			throw new UnableToSetStatusException(eee.getMessage());
 		}
 	}
@@ -261,10 +262,10 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		try{
 
 			Calendar cal = Calendar.getInstance();
-			System.err.println("Job " + this.jobID + ": AsynchronousNodeGroupExecutor start @ " + DATE_FORMAT.format(cal.getTime()));
+			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor start @ " + DATE_FORMAT.format(cal.getTime()));
 
-			System.err.println("Sparql Query to execute: ");
-			System.err.println(sparqlQuery);
+			LocalLogger.logToStdErr("Sparql Query to execute: ");
+			LocalLogger.logToStdErr(sparqlQuery);
 			
 			// run the actual query and get a result. 
 			GeneralResultSet preRet = null;
@@ -283,14 +284,14 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			
 			if (retval.getSuccess()) {
 				
-				System.err.println("about to write results for " + this.jobID);
+				LocalLogger.logToStdErr("about to write results for " + this.jobID);
 				if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT || supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION){
 					// constructs require particular support in the results client and the results service. this support would start here.
 					this.sendResultsToService((NodeGroupResultSet) preRet);
 				}
 				else {
 					// all other types
-					System.err.println("Query returned " + retval.getTable().getNumRows() + " results.");
+					LocalLogger.logToStdErr("Query returned " + retval.getTable().getNumRows() + " results.");
 					this.sendResultsToService(retval);
 				}
 				this.updateStatus(100);		// work's done
@@ -300,13 +301,13 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			}
 			
 			cal = Calendar.getInstance();
-			System.err.println("Job " + this.jobID + ": AsynchronousNodeGroupExecutor end   @ " + DATE_FORMAT.format(cal.getTime()));
+			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor end   @ " + DATE_FORMAT.format(cal.getTime()));
 
 		}
 		catch(Exception e){
 			// something went awry. set the job to failure. 
 			this.updateStatusToFailed(e.getMessage());
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Query failed: " + e.getMessage() );
 		}
 		

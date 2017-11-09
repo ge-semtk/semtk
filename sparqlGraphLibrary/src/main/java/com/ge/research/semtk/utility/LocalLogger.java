@@ -37,7 +37,7 @@ public class LocalLogger {
 	 * Log to standard error, and print stack trace.
 	 */
 	public static void printStackTrace(Throwable e){
-		logToStdErr(e.getMessage());  
+		logToStdErr(e.getMessage());  // need this to get the timestamp.
 		e.printStackTrace();		
 	}
 	

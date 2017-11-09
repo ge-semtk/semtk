@@ -36,6 +36,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage.TableResultsStorageTypes;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class TableResultsSerializer {
 	
@@ -75,7 +76,7 @@ public class TableResultsSerializer {
 		else if(this.cutoffValue >  totalRowsExpected - this.startingRowNumber)
 		{ this.cutoffValue = totalRowsExpected - this.startingRowNumber; }
 		
-		System.err.println("requested file record size = " + cutoffValue);
+		LocalLogger.logToStdErr("requested file record size = " + cutoffValue);
 		
 		if(this.frmt.equals(TableResultsStorageTypes.JSON)){
 			// json code call.
@@ -141,7 +142,7 @@ public class TableResultsSerializer {
 			processedRows += 1;
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
-				System.err.println("flushing after row: " +  processedRows);
+				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
 				aOutputStream.flush();
 			}
 		}
@@ -149,7 +150,7 @@ public class TableResultsSerializer {
 		
 		// done with rows. flush.
 		aOutputStream.flush();
-		System.err.println("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
 	}
 	
 	private void writeJSON( PrintWriter aOutputStream, Integer stopRowNumber) throws UnsupportedOperationException, IOException{
@@ -164,7 +165,7 @@ public class TableResultsSerializer {
 		// write the metadata to the stream
 		int columnCount = Integer.parseInt( "" + this.headerInfo.get(Table.JSON_KEY_COL_COUNT));
 		
-		System.err.println("requested row count : " + stopRowNumber);
+		LocalLogger.logToStdErr("requested row count : " + stopRowNumber);
 		
 		aOutputStream.write("{" + quote + Table.JSON_KEY_ROW_COUNT + quote + " : "  + stopRowNumber + ",");
 		aOutputStream.write(quote + Table.JSON_KEY_COL_COUNT + quote + " : "  + columnCount + ",");
@@ -220,7 +221,7 @@ public class TableResultsSerializer {
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
 				aOutputStream.flush();
-				System.err.println("flushing after row: " +  processedRows);
+				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
 			}
 		}
 		bfr.close();
@@ -228,7 +229,7 @@ public class TableResultsSerializer {
 		aOutputStream.write("]}");
 		// done with rows. flush.
 		aOutputStream.flush();
-		System.err.println("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
 		
 	}
 	

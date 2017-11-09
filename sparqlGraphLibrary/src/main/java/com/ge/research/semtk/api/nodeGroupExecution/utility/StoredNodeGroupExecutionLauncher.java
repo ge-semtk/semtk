@@ -32,6 +32,7 @@ import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class StoredNodeGroupExecutionLauncher {
 	
@@ -49,22 +50,22 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchSelectByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -73,7 +74,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchSelectJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -90,22 +91,22 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchDeleteByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -114,7 +115,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchDeleteJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -131,22 +132,22 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchCountByIdWithSimpleReturn(id, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -155,7 +156,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchCountJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -172,22 +173,22 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchFilterByIdWithSimpleReturn(id, targetObjectSparqlId, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -196,7 +197,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchFilterJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -214,23 +215,23 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchSelectFromNodeGroupWithSimpleReturn(ng, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 	
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -239,7 +240,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchSelectJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -256,23 +257,23 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchCountFromNodeGroupWithSimpleReturn(ng, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 	
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -281,7 +282,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchCountJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -298,23 +299,23 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchDeleteFromNodeGroupWithSimpleReturn(ng, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 	
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -323,7 +324,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchDeleteJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}
@@ -340,23 +341,23 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		
 		// get a name for the job.
-		System.err.println("About to request job");
+		LocalLogger.logToStdErr("About to request job");
 		String jobId = snec.executeDispatchFilterFromNodeGroupWithSimpleReturn(ng, targetObjectSparqlId, sparqlConnectionAsJsonObject, edcConstraints, runtimeConstraintsJson);
 	
-		System.err.println("job request created. Job ID returned was " + jobId);
+		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
-		System.err.println("About to wait for completion");
+		LocalLogger.logToStdErr("About to wait for completion");
 		while(snec.executeGetJobCompletionCheckWithSimpleReturn(jobId) == false){
 			Thread.sleep(100);
 		}
-		System.err.println("requested Job completed");
+		LocalLogger.logToStdErr("requested Job completed");
 		
 		// finished now. check the result.
 		String status = snec.executeGetJobStatusWithSimpleReturn(jobId);
 		
 		if(status.equalsIgnoreCase("success") ){
-			System.err.println("requested job succeeded");
+			LocalLogger.logToStdErr("requested job succeeded");
 			// get results.
 			Table retTable = snec.executeGetResultsTable(jobId);
 			retval = new TableResultSet(true);
@@ -365,7 +366,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		else{
 			// report failure.
-			System.err.println("requested job failed");
+			LocalLogger.logToStdErr("requested job failed");
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage("StoredNodeGroupExecutionLauncher.launchFilterJob", snec.executeGetJobStatusMessageWithSimpleReturn(jobId));
 		}

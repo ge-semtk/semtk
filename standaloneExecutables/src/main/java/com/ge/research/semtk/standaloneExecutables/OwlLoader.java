@@ -74,7 +74,7 @@ public class OwlLoader {
 				sei.executeAuthUploadOwl(owlFileBytes);			
 				LocalLogger.logToStdOut("Loaded OWL: " + owlFilePath);			
 			}catch(Exception e){
-				e.printStackTrace();
+				LocalLogger.printStackTrace(e);
 			}
 		
 		}catch(Exception e){

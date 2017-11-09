@@ -21,6 +21,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 public class StoreNodeGroupRequest {
 
 	private String jsonRenderedNodeGroup;
@@ -34,19 +36,19 @@ public class StoreNodeGroupRequest {
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
 		
-		System.err.println("----------START MESSAGE-------------");
+		LocalLogger.logToStdErr("----------START MESSAGE-------------");
 		
-		System.err.println("Store node group: ");
-		System.err.println(jsonRenderedNodeGroup);
+		LocalLogger.logToStdErr("Store node group: ");
+		LocalLogger.logToStdErr(jsonRenderedNodeGroup);
 		
-		System.err.println("----------END MESSAGE---------------");
+		LocalLogger.logToStdErr("----------END MESSAGE---------------");
 		
 		
 		try {
 			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 		}
 		return retval;
 	}

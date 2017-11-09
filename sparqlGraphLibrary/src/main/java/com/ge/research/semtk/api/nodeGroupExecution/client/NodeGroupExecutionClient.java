@@ -31,6 +31,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 public class NodeGroupExecutionClient extends RestClient {
@@ -411,7 +412,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
-			System.err.println("sending executeDispatchSelectById request");
+			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
@@ -422,7 +423,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("executeDispatchSelectById request finished without exception");
+		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
 	}
 	
@@ -436,7 +437,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
-			System.err.println("sending executeDispatchSelectById request");
+			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
@@ -447,7 +448,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("executeDispatchSelectById request finished without exception");
+		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
 	}
 	
@@ -461,7 +462,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
-			System.err.println("sending executeDispatchSelectById request");
+			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
@@ -472,7 +473,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("executeDispatchSelectById request finished without exception");
+		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
 	}
 	/**
@@ -501,7 +502,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		
 		try{
-			System.err.println("sending executeDispatchCountById request");
+			LocalLogger.logToStdErr("sending executeDispatchCountById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		}
@@ -512,7 +513,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("executeDispatchCountById request finished without exception");
+		LocalLogger.logToStdErr("executeDispatchCountById request finished without exception");
 		return retval;
 	}
 	
@@ -567,7 +568,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			
 			
 			try{
-				System.err.println("sending executeDispatchFilterById request");
+				LocalLogger.logToStdErr("sending executeDispatchFilterById request");
 				retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 				retval.throwExceptionIfUnsuccessful();
 			}
@@ -579,7 +580,7 @@ public class NodeGroupExecutionClient extends RestClient {
 				this.parametersJSON.remove("runtimeConstraints");
 				this.parametersJSON.remove("targetObjectSparqlId");
 			}
-			System.err.println("executeDispatchFilterById request finished without exception");
+			LocalLogger.logToStdErr("executeDispatchFilterById request finished without exception");
 			return retval;
 		}
 		
@@ -607,7 +608,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 			
 			try{
-				System.err.println("sending executeDispatchDeleteById request");
+				LocalLogger.logToStdErr("sending executeDispatchDeleteById request");
 				retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 				retval.throwExceptionIfUnsuccessful();
 			}
@@ -618,7 +619,7 @@ public class NodeGroupExecutionClient extends RestClient {
 				this.parametersJSON.remove("externalDataConnectionConstraints");
 				this.parametersJSON.remove("runtimeConstraints");
 			}
-			System.err.println("executeDispatchDeleteById request finished without exception");
+			LocalLogger.logToStdErr("executeDispatchDeleteById request finished without exception");
 			return retval;
 		}
 
@@ -895,7 +896,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		
 		try{
-			System.err.println("sending executeDispatchById request");
+			LocalLogger.logToStdErr("sending executeDispatchById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		}
@@ -906,7 +907,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("externalDataConnectionConstraints");
 			this.parametersJSON.remove("runtimeConstraints");
 		}
-		System.err.println("executeDispatchById request finished without exception");
+		LocalLogger.logToStdErr("executeDispatchById request finished without exception");
 		return retval;
 	}
 	
@@ -972,7 +973,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("sparqlConnection");
 			this.parametersJSON.remove("csvContent");
 		}
-		System.err.println("execIngestionFromCsvStr request finished without exception");
+		LocalLogger.logToStdErr("execIngestionFromCsvStr request finished without exception");
 		
 		return retval;
 	}

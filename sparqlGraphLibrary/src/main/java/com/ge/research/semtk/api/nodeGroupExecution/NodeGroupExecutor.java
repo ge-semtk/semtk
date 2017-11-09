@@ -316,7 +316,7 @@ public class NodeGroupExecutor {
 		
 		// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
 		if(encodedNodeGroup.containsKey("sNodeGroup")){
-			System.err.println("located key: sNodeGroup");
+			LocalLogger.logToStdErr("located key: sNodeGroup");
 			ng.addJsonEncodedNodeGroup((JSONObject) encodedNodeGroup.get("sNodeGroup"));
 		}
 		

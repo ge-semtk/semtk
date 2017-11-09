@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.services.results.ResultsEdcConfigProperties;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class DeleteThread extends Thread {
 
@@ -40,14 +41,14 @@ public class DeleteThread extends Thread {
 			this.jTracker = new JobTracker(edcProp);
 		} catch (Exception e) {
 			// something failed when getting the jobtracker. report it but continue anyway
-			System.err.println("unable to get a job tracker instance. reason given: " + e.getMessage());
-			e.printStackTrace();
+			LocalLogger.logToStdErr("unable to get a job tracker instance. reason given: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
 		}
 	}
 			
     public void run() {
     	
-    	System.err.println("Clean up initialized...");
+    	LocalLogger.logToStdErr("Clean up initialized...");
     	
     	while(true){
     		try{
@@ -56,7 +57,7 @@ public class DeleteThread extends Thread {
     	    	
     			long now = new Date().getTime();
     			long cutoff = now - this.runFrequencyInMilliseconds;
-    			System.err.println("Clean up started...");
+    			LocalLogger.logToStdErr("Clean up started...");
     			
     			for (File f : locationToDeleteFrom.listFiles()) {
 	                 if (f.lastModified() < cutoff) {
@@ -69,13 +70,13 @@ public class DeleteThread extends Thread {
     			
     		}
     		catch(Exception iei){
-    			System.err.println(iei.getMessage());
+    			LocalLogger.logToStdErr(iei.getMessage());
     		}
     		try {
-    			System.err.println("Clean up about to sleep for " + (double)runFrequencyInMilliseconds/(60 * 1000) + " minutes. ");
+    			LocalLogger.logToStdErr("Clean up about to sleep for " + (double)runFrequencyInMilliseconds/(60 * 1000) + " minutes. ");
 				Thread.sleep(runFrequencyInMilliseconds);
 			} catch (InterruptedException e) {
-				System.err.println("Sleep failed");
+				LocalLogger.logToStdErr("Sleep failed");
 			}
     	}
    

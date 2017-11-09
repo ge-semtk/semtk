@@ -42,6 +42,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 	
@@ -91,7 +92,7 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 		catch(Exception e){
 			// something went awry. set the job to failure. 
 			this.updateStatusToFailed(e.getMessage());
-			e.printStackTrace();
+			LocalLogger.printStackTrace(e);
 			throw new Exception("Query failed: " + e.getMessage() );
 		}
 		// ship the results.
