@@ -77,39 +77,46 @@ require([	'local/sparqlformconfig',
 		gConnSetup = function() {
 			// Establish Sparql Connection in gConn, using g		
 			gConn = new SparqlConnection();
-			gConn.setName(g.conn.name);
-			gConn.setDomain(g.conn.domain);
-			var serverType = SparqlConnection.VIRTUOSO_SERVER;
-	
-			// backwards-compatible single connection
-			if (g.conn.hasOwnProperty('serverURL') && g.conn.hasOwnProperty('dataset')) {
-				gConn.addDataInterface(	
-						serverType,
-						g.conn.serverURL,
-						g.conn.dataset
-						);
-				gConn.addModelInterface(
-						serverType,
-						g.conn.serverURL,
-						g.conn.dataset
-						);
-				
-			// newer double connection
-			} else if (g.conn.hasOwnProperty('dataServerURL') && g.conn.hasOwnProperty('dataDataset') &&
-					   g.conn.hasOwnProperty('ontologyServerURL') && g.conn.hasOwnProperty('ontologyDataset')) {
-				
-				gConn.addDataInterface(	
-						serverType,
-						g.conn.dataServerURL,
-						g.conn.dataDataset
-						);
-				gConn.addModelInterface(
-						serverType,
-						g.conn.ontologyServerURL,
-						g.conn.ontologyDataset,
-						g.conn.domain
-						);
-			} else {
+            
+            if (g.hasOwnProperty('conn')) {
+                gConn.setName(g.conn.name);
+                gConn.setDomain(g.conn.domain);
+                var serverType = SparqlConnection.VIRTUOSO_SERVER;
+
+                // backwards-compatible single connection
+                if (g.conn.hasOwnProperty('serverURL') && g.conn.hasOwnProperty('dataset')) {
+                    gConn.addDataInterface(	
+                            serverType,
+                            g.conn.serverURL,
+                            g.conn.dataset
+                            );
+                    gConn.addModelInterface(
+                            serverType,
+                            g.conn.serverURL,
+                            g.conn.dataset
+                            );
+
+                // backwards-compatible double connection
+                } else if (g.conn.hasOwnProperty('dataServerURL') && g.conn.hasOwnProperty('dataDataset') &&
+                           g.conn.hasOwnProperty('ontologyServerURL') && g.conn.hasOwnProperty('ontologyDataset')) {
+
+                    gConn.addDataInterface(	
+                            serverType,
+                            g.conn.dataServerURL,
+                            g.conn.dataDataset
+                            );
+                    gConn.addModelInterface(
+                            serverType,
+                            g.conn.ontologyServerURL,
+                            g.conn.ontologyDataset,
+                            g.conn.domain
+                            );
+                }
+            // normal
+			} else if (g.hasOwnProperty('model') || g.hasOwnProperty('onURL')) {
+                gConn.fromJson(g);
+                
+            } else {
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
 			}
 			
