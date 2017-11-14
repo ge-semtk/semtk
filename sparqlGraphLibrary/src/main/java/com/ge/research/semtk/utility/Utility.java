@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URL;
@@ -49,6 +50,7 @@ import java.util.zip.Inflater;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -559,5 +561,24 @@ public abstract class Utility {
 		}
 		// string confirmed json safe, return it as-is
 		return s;
+	}
+	
+	/**
+	 * Get a file resource as a string.  
+	 * 
+	 * @param obj the calling object
+	 * @param fileName the name of the file resource.  May need to prepend this with /
+	 * @return the file contents
+	 */
+	public static String getResourceAsString(Object obj, String fileName) {
+		String ret = null;
+		try{
+			InputStream in = obj.getClass().getResourceAsStream(fileName);
+			ret = IOUtils.toString(in, StandardCharsets.UTF_8);
+		}catch(Exception e){
+			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
+			LocalLogger.printStackTrace(e);
+		}
+		return ret;
 	}
 }
