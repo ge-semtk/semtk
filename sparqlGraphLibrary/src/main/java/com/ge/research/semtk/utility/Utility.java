@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
@@ -401,7 +402,7 @@ public abstract class Utility {
 	 * Print all properties.  Validate all properties and exit if any are invalid.
 	 * @param properties keys are property names, values are property values
 	 */
-	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties){
+	public static void validatePropertiesAndExitOnFailure(TreeMap<String,String> properties){
 		validatePropertiesAndExitOnFailure(properties, new HashSet<String>());
 	}
 	
@@ -410,7 +411,7 @@ public abstract class Utility {
 	 * @param properties keys are property names, values are property values
 	 * @param properties that should not be validated (e.g. they can be blank/missing/null)
 	 */
-	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
+	public static void validatePropertiesAndExitOnFailure(TreeMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
 		LocalLogger.logToStdOut("----- PROPERTIES: --------------------");
 		for(String propertyName : properties.keySet()){
 			String propertyValue = properties.get(propertyName);
@@ -427,6 +428,7 @@ public abstract class Utility {
 		}
 		LocalLogger.logToStdOut("--------------------------------------");
 	}
+
 	
 	/**
 	 * Validate a property.

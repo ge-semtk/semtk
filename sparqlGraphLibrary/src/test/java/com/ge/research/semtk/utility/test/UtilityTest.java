@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -71,7 +71,7 @@ public class UtilityTest {
 	
 	@Test
 	public void testValidatePropertiesAndExitOnFailure() throws Exception{
-		HashMap<String,String> properties = new HashMap<String,String>();
+		TreeMap<String,String> properties = new TreeMap<String,String>();
 		properties.put("color1","red");
 		properties.put("color2","yellow");
 		Utility.validatePropertiesAndExitOnFailure(properties);

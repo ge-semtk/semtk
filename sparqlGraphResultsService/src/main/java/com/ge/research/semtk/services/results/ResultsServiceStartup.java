@@ -18,7 +18,7 @@
 package com.ge.research.semtk.services.results;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -54,7 +54,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 			  "results.cleanUpThreadEnabled",
 			  "results.cleanUpThreadFrequency"
 	  };
-	  HashMap<String,String> properties = new HashMap<String,String>();
+	  TreeMap<String,String> properties = new TreeMap<String,String>();
 	  for(String propertyName : propertyNames){
 		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
 	  }

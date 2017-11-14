@@ -4,7 +4,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 
 import com.ge.research.semtk.utility.Utility;
@@ -23,7 +23,7 @@ public class HiveServiceStartup implements ApplicationListener<ApplicationReadyE
 			  "hive.username",
 			  "hive.executionEngine"
 	  };
-	  HashMap<String,String> properties = new HashMap<String,String>();
+	  TreeMap<String,String> properties = new TreeMap<String,String>();
 	  for(String propertyName : propertyNames){
 		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
 	  }

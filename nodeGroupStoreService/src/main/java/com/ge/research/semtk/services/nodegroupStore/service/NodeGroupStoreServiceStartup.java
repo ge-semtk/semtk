@@ -17,7 +17,7 @@
 
 package com.ge.research.semtk.services.nodegroupStore.service;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -49,7 +49,7 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 			  "store.sparqlServerType",
 			  "store.sparqlServiceUser"
 	  };
-	  HashMap<String,String> properties = new HashMap<String,String>();
+	  TreeMap<String,String> properties = new TreeMap<String,String>();
 	  for(String propertyName : propertyNames){
 		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
 	  }

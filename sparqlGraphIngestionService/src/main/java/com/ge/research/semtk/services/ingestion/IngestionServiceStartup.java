@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 import com.ge.research.semtk.utility.Utility;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 
 @Component
 public class IngestionServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
@@ -40,7 +40,7 @@ public class IngestionServiceStartup implements ApplicationListener<ApplicationR
 			  "ingestion.sparqlUserName",
 			  "ingestion.batchSize"
 	  };
-	  HashMap<String,String> properties = new HashMap<String,String>();
+	  TreeMap<String,String> properties = new TreeMap<String,String>();
 	  for(String propertyName : propertyNames){
 		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
 	  }
