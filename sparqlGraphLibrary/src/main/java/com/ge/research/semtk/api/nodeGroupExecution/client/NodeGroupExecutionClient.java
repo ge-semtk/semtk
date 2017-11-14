@@ -17,10 +17,6 @@
 
 package com.ge.research.semtk.api.nodeGroupExecution.client;
 
-import java.net.ConnectException;
-import java.net.URL;
-
-import org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore.Processor.isPartitionMarkedForEvent;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -30,9 +26,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
 
 public class NodeGroupExecutionClient extends RestClient {
 
@@ -83,8 +77,8 @@ public class NodeGroupExecutionClient extends RestClient {
 
 	}
 	
-	public NodeGroupExecutionClient (StoredNodeGroupExecutionClientConfig snecc){
-		this.conf = snecc;
+	public NodeGroupExecutionClient (NodeGroupExecutionClientConfig necc){
+		this.conf = necc;
 	}
 	
 	
