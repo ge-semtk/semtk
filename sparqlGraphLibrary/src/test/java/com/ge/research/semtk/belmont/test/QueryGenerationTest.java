@@ -267,6 +267,8 @@ public class QueryGenerationTest {
 				"select distinct ?score ?hdid ?code\r\n" + 
 				"		FROM <http://project/analytics/data>\r\n" + 
 				"		FROM <http://project/data>\r\n" + 
+				"		FROM <http://project/analytics>\r\n" + 
+				"		FROM <http://project>\r\n" + 
 				" where {\r\n" + 
 				"	?eioMatch a eiomatch:eioMatch .\r\n" + 
 				"	?eioMatch eiomatch:score ?score .\r\n" + 
@@ -303,6 +305,8 @@ public class QueryGenerationTest {
 				"select distinct ?score ?hdid ?code\r\n" + 
 				"		FROM <http://project/analytics/data>\r\n" + 
 				"		FROM <http://project/data>\r\n" + 
+				"		FROM <http://project/analytics>\r\n" + 
+				"		FROM <http://project>\r\n" + 
 				" where {\r\n" + 
 				"	?eioMatch a eiomatch:eioMatch .\r\n" + 
 				"	?eioMatch eiomatch:score ?score .\r\n" + 

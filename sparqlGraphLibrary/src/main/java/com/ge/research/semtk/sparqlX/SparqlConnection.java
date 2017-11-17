@@ -299,7 +299,14 @@ public class SparqlConnection {
 		ArrayList<String> ret = new ArrayList<String>();
 		
 		ret.addAll(this.getDataDatasetsForServer(serverURL));
-		ret.addAll(this.getModelDatasetsForServer(serverURL));
+		
+		// add any models that aren't duplicates of data
+		ArrayList<String> modelDatasets = this.getModelDatasetsForServer(serverURL);
+		for (String ds : modelDatasets) {
+			if (! ret.contains(ds)) {
+				ret.add(ds);
+			}
+		}
 		
 		return ret;
 	}
