@@ -17,31 +17,19 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution;
 
-import java.io.IOException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.hamcrest.core.IsInstanceOf;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
@@ -51,6 +39,7 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -519,19 +508,28 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
+	/**
+	 * Perform ingestion using a stored nodegroup ID.
+	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateIdAndCsvString(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
 		RecordProcessResults retval = null;
-		
-		NodeGroupExecutor sqe = this.getExecutor(prop, null );
-		// try to create a sparql connection
-		SparqlConnection connection = requestBody.getSparqlConnection();			
+		NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+		retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+		return retval.toJson();
+	}
 	
-		// call for the ingestion.
-		retval = sqe.ingestFromTemplateIdAndCsvString(connection, requestBody.getTemplateId(), requestBody.getCsvContent());
-		
-		// set the rest of the results.
+	/**
+	 * Perform ingestion by passing in a nodegroup.
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
+	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody) throws Exception{
+		RecordProcessResults retval = null;
+		NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+		SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
+		retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
 		return retval.toJson();
 	}
 

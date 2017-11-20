@@ -113,6 +113,14 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupstoreservice.port")).intValue();
 	}
 	
+	// nodegroup execution service
+	public static String getNodegroupExecutionServiceServer() throws Exception{
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupexecution.server");
+	}
+	public static int getNodegroupExecutionServicePort() throws Exception{
+		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupexecution.port")).intValue();
+	}
+	
 	// Hive
 	public static String getHiveServer() throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.server");

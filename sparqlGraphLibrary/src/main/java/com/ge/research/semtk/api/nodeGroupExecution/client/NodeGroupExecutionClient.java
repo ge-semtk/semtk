@@ -21,6 +21,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -39,6 +40,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static String dispatchByIdEndpoint = "/dispatchById";
 	private static String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
 	private static String ingestFromCsvStringsNewConnection = "/ingestFromCsvStringsNewConnection";
+	private static String ingestFromCsvStringsAndTemplateNewConnection = "/ingestFromCsvStringsAndTemplateNewConnection";
 	private static String getResultsTable = "/getResultsTable";
 	private static String getResultsJsonLd = "/getResultsJsonLd";
 	
@@ -947,6 +949,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		return retval;
 	}
 
+	/**
+	 * Ingest CSV using a nodegroup ID.
+	 */
+	@SuppressWarnings("unchecked")
 	public RecordProcessResults execIngestionFromCsvStr(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
 		RecordProcessResults retval = null;
 		
@@ -955,7 +961,6 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put("sparqlConnection", sparqlConnectionAsJsonObject.toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
 	
-		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
 			retval = new RecordProcessResults(jobj);
@@ -967,8 +972,32 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.parametersJSON.remove("sparqlConnection");
 			this.parametersJSON.remove("csvContent");
 		}
-		LocalLogger.logToStdErr("execIngestionFromCsvStr request finished without exception");
+		return retval;
+	}
+	
+	/**
+	 * Ingest CSV using a nodegroup.
+	 */
+	@SuppressWarnings("unchecked")
+	public RecordProcessResults execIngestionFromCsvStr(SparqlGraphJson sparqlGraphJson, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
+		RecordProcessResults retval = null;
 		
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateNewConnection);
+		this.parametersJSON.put("template", sparqlGraphJson.getJson().toJSONString());
+		this.parametersJSON.put("sparqlConnection", sparqlConnectionAsJsonObject.toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+	
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			retval = new RecordProcessResults(jobj);
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("template");
+			this.parametersJSON.remove("sparqlConnection");
+			this.parametersJSON.remove("csvContent");
+		}
 		return retval;
 	}
 
