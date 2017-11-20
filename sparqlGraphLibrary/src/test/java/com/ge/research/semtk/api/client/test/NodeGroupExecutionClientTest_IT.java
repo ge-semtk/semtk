@@ -52,7 +52,7 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
-			assertEquals(TestGraph.getNumTriples(),1311);	// confirm loaded some triples
+			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
 		
 	}
