@@ -20,6 +20,7 @@ package com.ge.research.semtk.sparqlX;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +29,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 public class SparqlToXUtils {
 	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");
+	public static final String BLANK_NODE_PREFIX = "nodeID://";
 	
 	// check that the passed Sparql query references the appropriate manadate columns in the return.
 	public static void validateSparqlQuery(String query, String[] requiredCols) throws IOException {
@@ -147,6 +149,78 @@ public class SparqlToXUtils {
     return query;
 
   }  
+  
+  public static String generateDeletePrefixQuery(String prefix) {
+	  // delete all triples containing any trace of the given prefix
+	  String sparql = String.format(
+				"delete {" +
+				"?x ?y ?z." +
+				"}" +
+				"where {" +
+				" ?x ?y ?z  FILTER ( strstarts(str(?x), \"%s\") || strstarts(str(?y), \"%s\") || strstarts(str(?z), \"%s\") )." +
+				"}", 
+				prefix, prefix, prefix);
+	  
+	  return sparql;
+  }
+  
+  public static String generateDeleteBySubjectPrefixQuery(String prefix) {
+	  // delete all triples containing any trace of the given prefix
+	  String sparql = String.format(
+				"delete {" +
+				"?x ?y ?z." +
+				"}" +
+				"where {" +
+				" ?x ?y ?z FILTER strstarts(str(?x), \"%s\")." +
+				"}", 
+				prefix);
+	  
+	  return sparql;
+  }
+  
+  public static String generateDeleteBySubjectRegexQuery(String regex) {
+	  // delete all triples containing any trace of the given prefix
+	  String sparql = String.format(
+				"delete {" +
+				"?x ?y ?z." +
+				"}" +
+				"where {" +
+				" ?x ?y ?z FILTER regex(str(?x), \"%s\")." +
+				"}", 
+				regex);
+	  
+	  return sparql;
+  }
+  
+  /**
+   * Delete all model triples given a list of prefixes.   Also deletes blank nodes.
+   * @param prefixes
+   * @return
+   */
+  public static String generateDeleteModelTriplesQuery(ArrayList<String> prefixes) {
+	  // init regex
+	  StringBuilder regex = new StringBuilder("^(");
+	  
+	  // add all prefixes
+	  for (String p : prefixes) {
+		  if (regex.toString().length() > 2) {
+			  regex.append("|");
+		  }
+		  regex.append(p);
+	  }
+	  
+	  // add blank node prefix
+	  regex.append("|" + SparqlToXUtils.BLANK_NODE_PREFIX + ")");
+	  
+	  // delete all triples w
+	  return SparqlToXUtils.generateDeleteBySubjectRegexQuery(regex.toString());
+	  
+  }
+  
+  
+  public static String genereateClearAllQuery() {
+	  return "clear all";
+  }
 	
 	// check that all required columns are found in the return values from the Sparql endpoint. 
 	public static void validateSparqlResults(SparqlEndpointInterface endpoint, String[] requiredCols) throws IOException {

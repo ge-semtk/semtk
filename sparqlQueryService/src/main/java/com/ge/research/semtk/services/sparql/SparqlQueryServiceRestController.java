@@ -35,6 +35,7 @@ import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -279,14 +280,7 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			query = String.format(
-					"delete {" +
-					"?x ?y ?z." +
-					"}" +
-					"where {" +
-					" ?x ?y ?z  FILTER ( strstarts(str(?x), \"%s\") || strstarts(str(?y), \"%s\") || strstarts(str(?z), \"%s\") )." +
-					"}", 
-					requestBody.prefix, requestBody.prefix, requestBody.prefix);
+			query = SparqlToXUtils.generateDeletePrefixQuery(requestBody.prefix);
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
@@ -322,7 +316,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
-			String query = "clear all";  // drop query
+			String query = SparqlToXUtils.genereateClearAllQuery();
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
