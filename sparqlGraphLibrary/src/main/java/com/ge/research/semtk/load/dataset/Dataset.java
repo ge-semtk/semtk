@@ -71,6 +71,7 @@ public abstract class Dataset {
 	
 	/**
 	 * Get the index of a column
+	 * @return the index, or -1 if the column does not exist
 	 */
 	public int getColumnIndex(String columnName) throws Exception {
 		return getColumnNamesinOrder().indexOf(columnName);

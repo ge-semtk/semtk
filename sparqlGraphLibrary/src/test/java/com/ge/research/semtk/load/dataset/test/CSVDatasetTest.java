@@ -57,6 +57,7 @@ public class CSVDatasetTest {
 		assertEquals(csvDataset.getColumnIndex("size in"),1);
 		assertEquals(csvDataset.getColumnIndex("lot"),2);
 		assertEquals(csvDataset.getColumnIndex("material"),3);
+		assertEquals(csvDataset.getColumnIndex("wuzzy"),-1);
 	}
 	
 	@Test
