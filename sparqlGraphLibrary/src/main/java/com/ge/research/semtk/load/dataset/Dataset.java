@@ -70,6 +70,14 @@ public abstract class Dataset {
 	public abstract ArrayList<String> getColumnNamesinOrder() throws Exception;
 	
 	/**
+	 * Get the index of a column
+	 * @return the index, or -1 if the column does not exist
+	 */
+	public int getColumnIndex(String columnName) throws Exception {
+		return getColumnNamesinOrder().indexOf(columnName);
+	}
+	
+	/**
 	 * Reset a dataset to the first record.
 	 */
 	public abstract void reset() throws Exception;
@@ -78,4 +86,6 @@ public abstract class Dataset {
 	 * Close the dataset
 	 */
 	public abstract void close() throws Exception;
+	
+
 }

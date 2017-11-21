@@ -23,16 +23,12 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.dataset.Dataset;
 
 
 public class CSVDatasetTest {
@@ -42,7 +38,7 @@ public class CSVDatasetTest {
 	public void testCSVDataset_BadFile() throws Exception {
 		try{
 			String[] headers = {"Battery","Cell","color","birthday"};
-			Dataset ds = new CSVDataset("src/test/resources/bad/path.csv", headers);
+			new CSVDataset("src/test/resources/bad/path.csv", headers);
 			fail("Did not throw expected exception");	
 		}catch(Exception e){
 			// expect to get here
@@ -56,7 +52,12 @@ public class CSVDatasetTest {
 		CSVDataset csvDataset = new CSVDataset(content, true);
 		ArrayList<ArrayList<String>> records = csvDataset.getNextRecords(10);
 		assertEquals(records.size(),3);
-		assertEquals(records.get(0).get(0),"cell1_import_0");		
+		assertEquals(records.get(0).get(0),"cell1_import_0");
+		assertEquals(csvDataset.getColumnIndex("cell"),0);
+		assertEquals(csvDataset.getColumnIndex("size in"),1);
+		assertEquals(csvDataset.getColumnIndex("lot"),2);
+		assertEquals(csvDataset.getColumnIndex("material"),3);
+		assertEquals(csvDataset.getColumnIndex("wuzzy"),-1);
 	}
 	
 	@Test
