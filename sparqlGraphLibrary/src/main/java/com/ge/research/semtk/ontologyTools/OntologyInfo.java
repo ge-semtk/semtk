@@ -106,6 +106,10 @@ public class OntologyInfo {
     	
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
 		
+		if (conn.getDomain().isEmpty()) {
+			throw new Exception("OntologyInfo can not load a connection with an empty domain.");
+		}
+		
 		for (int i = 0; i < modelInterfaces.size(); i++) {
     		this.load(modelInterfaces.get(i), conn.getDomain());
     	}
@@ -116,6 +120,9 @@ public class OntologyInfo {
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
 		ArrayList<SparqlQueryClientConfig> configs = clientConfig.getArrayForEndpoints(modelInterfaces);
 		
+		if (conn.getDomain().isEmpty()) {
+			throw new Exception("OntologyInfo can not load a connection with an empty domain.");
+		}
 		for (int i = 0; i < configs.size(); i++) {
 			
 			// check if this is an authorized connection or not. this can be done by looking at the config files.

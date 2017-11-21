@@ -30,7 +30,14 @@ public class OntologyClass extends AnnotatableElement {
 	private ArrayList<OntologyName> parentNames = new ArrayList<OntologyName>();
 	private ArrayList<OntologyProperty> properties = new ArrayList<OntologyProperty>();
 	
-	public OntologyClass(String name, ArrayList<String> parentNames){
+	public OntologyClass(String name, ArrayList<String> parentNames) throws Exception {
+		
+		// blank nodes from SADL don't seem to always be of type class so they'll blow things up
+		// Load queries work around blank nodes
+		// SparqlConnection domain should exclude them.
+		if (name.startsWith("nodeID://")) {
+			throw new Exception("Attempting to load a blank node class: " + name);
+		}
 		this.name = new OntologyName(name);
 		// add the parent(s)
 		if(parentNames != null){
@@ -40,7 +47,7 @@ public class OntologyClass extends AnnotatableElement {
 		}
 	}
 	
-	public OntologyClass(String name) {
+	public OntologyClass(String name) throws Exception {
 		this(name, null);
 	}
 

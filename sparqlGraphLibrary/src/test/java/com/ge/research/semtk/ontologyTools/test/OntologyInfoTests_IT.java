@@ -23,8 +23,11 @@ import org.junit.Test;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
 public class OntologyInfoTests_IT {
@@ -235,5 +238,24 @@ public class OntologyInfoTests_IT {
 
 	}
 
+
+	@Test
+	public void testBlankDomain() throws Exception {
+		
+        SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json"));
+       
+        // ruin the domain
+        SparqlConnection conn = sgJson.getSparqlConn();
+        conn.setDomain("");
+        sgJson.setSparqlConn(conn);
+        
+        try {
+        	OntologyInfo oInfo = sgJson.getOntologyInfo();  
+        	fail("Loading oInfo with empty domain did not throw an exception");
+        } catch (Exception e) {
+        	
+        }
+        
+	}
 
 }
