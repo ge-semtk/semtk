@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 public class StoreProperties {
 
 	// for write operations. 
+	private String templateLocation = "";
 	private String ingestorLocation = "";
 	private String ingestorProtocol = "";
 	private String ingestorPort     = "";
@@ -42,6 +43,14 @@ public class StoreProperties {
 	private String sparqlServerAndPort = "";
 	private String sparqlServerDataSet = "";
 	private String sparqlServerType = "";
+	
+	// template info.
+	public String getTemplateLocation() {
+		return templateLocation;
+	}
+	public void setTemplateLocation(String templateLocation) {
+		this.templateLocation = templateLocation;
+	}
 	
 	// info on our ingestion server
 	public String getIngestorLocation() {

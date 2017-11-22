@@ -17,6 +17,7 @@
 
 package com.ge.research.semtk.services.nodegroupStore.service;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
@@ -101,7 +102,7 @@ public class NodeGroupStoreRestController {
 		}
 		
 		// get the template information
-		JSONObject inputTemplateContents  = Utility.getJsonObjectFromString(Utility.getResourceAsString(this, "/store.json"));
+		JSONObject inputTemplateContents  = Utility.getJSONObjectFromFile(new File("/" + this.prop.getTemplateLocation()));
 		
 		// try to store the values.
 		boolean retBool = StoreNodeGroup.storeNodeGroup(ng, connectionInfo, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
