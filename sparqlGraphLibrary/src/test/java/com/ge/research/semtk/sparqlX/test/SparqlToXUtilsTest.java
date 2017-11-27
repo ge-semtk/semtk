@@ -53,9 +53,14 @@ public class SparqlToXUtilsTest {
 		prefixes.add("http://kdl.ge.com/batterydemo");
 		prefixes.add("http://does/nothing");
 		
-		String sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(prefixes);
+		String sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(prefixes, true);
 		
 		String expected = "delete {?x ?y ?z.}where { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing|nodeID://)\").}";
+		assertTrue(sparql.replaceAll("\\s+", " ").equals(expected.replaceAll("\\s+", " ")));
+		
+		// repeat with false
+		sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(prefixes, false);
+		expected = "delete {?x ?y ?z.}where { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing)\").}";
 		assertTrue(sparql.replaceAll("\\s+", " ").equals(expected.replaceAll("\\s+", " ")));
 		
 	}

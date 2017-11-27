@@ -197,7 +197,7 @@ public class SparqlToXUtils {
    * @param prefixes
    * @return
    */
-  public static String generateDeleteModelTriplesQuery(ArrayList<String> prefixes) {
+  public static String generateDeleteModelTriplesQuery(ArrayList<String> prefixes, Boolean deleteBlankNodes) {
 	  // init regex
 	  StringBuilder regex = new StringBuilder("^(");
 	  
@@ -210,7 +210,10 @@ public class SparqlToXUtils {
 	  }
 	  
 	  // add blank node prefix
-	  regex.append("|" + SparqlToXUtils.BLANK_NODE_PREFIX + ")");
+	  if (deleteBlankNodes) {
+		  regex.append("|" + SparqlToXUtils.BLANK_NODE_PREFIX);
+	  }
+	  regex.append(")");
 	  
 	  // delete all triples w
 	  return SparqlToXUtils.generateDeleteBySubjectRegexQuery(regex.toString());

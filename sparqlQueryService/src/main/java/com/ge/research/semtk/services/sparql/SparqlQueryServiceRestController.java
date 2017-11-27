@@ -294,6 +294,65 @@ public class SparqlQueryServiceRestController {
 		
 		return resultSet.toJson();
 	}	
+	
+	/**
+	 * Removes model with given uri prefix(es)
+	 * Practically: it removes ?s ?o ?p where ?s starts with one of the uri prefixes
+	 * NOTE: leaves any SADL blank nodes
+	 * @param requestBody
+	 * @return
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/clearModelPartial", method= RequestMethod.POST)
+	public JSONObject clearModelPartial(@RequestBody SparqlPrefixesAuthRequestBody requestBody){
+		return this.clearModel(requestBody, "clearModelPartial", false);
+	}
+	
+	/**
+	 * Removes model with given uri prefix(es), and all blank nodes
+	 * Practically: it removes ?s ?o ?p where ?s starts with one of the uri prefixes or the blank node prefix
+	 * NOTE: If you're not sure about removing blank nodes, use "/clearModelPartial"
+	 * @param requestBody
+	 * @return
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/clearModelFull", method= RequestMethod.POST)
+	public JSONObject clearModelFull(@RequestBody SparqlPrefixesAuthRequestBody requestBody){
+		return this.clearModel(requestBody, "clearModelPartial", true);
+	}
+	
+	public JSONObject clearModel(SparqlPrefixesAuthRequestBody requestBody, String endpointName, Boolean deleteBlankNodes){
+
+		GeneralResultSet resultSet = null;
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start " + endpointName);
+		
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); 
+		}
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  
+		}
+		
+		try{
+			requestBody.printInfo(); 	// print info to console			
+			requestBody.validate(); 	// check inputs 	
+			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(requestBody.prefixes, deleteBlankNodes);
+			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, endpointName, e);
+		}	
+		
+		return resultSet.toJson();
+	}	
+	
+	
 	/**
 	 * Execute clear all query 
 	 */
