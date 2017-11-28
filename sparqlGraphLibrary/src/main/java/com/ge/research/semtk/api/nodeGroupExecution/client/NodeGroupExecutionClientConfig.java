@@ -21,9 +21,9 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
 
-public class StoredNodeGroupExecutionClientConfig  extends RestClientConfig{
+public class NodeGroupExecutionClientConfig  extends RestClientConfig{
 
-	public StoredNodeGroupExecutionClientConfig(String serviceProtocol, String serviceServer,
+	public NodeGroupExecutionClientConfig(String serviceProtocol, String serviceServer,
 			int servicePort) throws Exception {
 		
 		

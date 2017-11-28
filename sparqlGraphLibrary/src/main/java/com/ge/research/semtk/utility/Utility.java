@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URL;
@@ -42,12 +43,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -401,7 +404,7 @@ public abstract class Utility {
 	 * Print all properties.  Validate all properties and exit if any are invalid.
 	 * @param properties keys are property names, values are property values
 	 */
-	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties){
+	public static void validatePropertiesAndExitOnFailure(TreeMap<String,String> properties){
 		validatePropertiesAndExitOnFailure(properties, new HashSet<String>());
 	}
 	
@@ -410,7 +413,7 @@ public abstract class Utility {
 	 * @param properties keys are property names, values are property values
 	 * @param properties that should not be validated (e.g. they can be blank/missing/null)
 	 */
-	public static void validatePropertiesAndExitOnFailure(HashMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
+	public static void validatePropertiesAndExitOnFailure(TreeMap<String,String> properties,  HashSet<String> propertiesSkipValidation){
 		LocalLogger.logToStdOut("----- PROPERTIES: --------------------");
 		for(String propertyName : properties.keySet()){
 			String propertyValue = properties.get(propertyName);
@@ -427,6 +430,7 @@ public abstract class Utility {
 		}
 		LocalLogger.logToStdOut("--------------------------------------");
 	}
+
 	
 	/**
 	 * Validate a property.
@@ -557,5 +561,24 @@ public abstract class Utility {
 		}
 		// string confirmed json safe, return it as-is
 		return s;
+	}
+	
+	/**
+	 * Get a file resource as a string.  
+	 * 
+	 * @param obj the calling object
+	 * @param fileName the name of the file resource.  May need to prepend this with /
+	 * @return the file contents
+	 */
+	public static String getResourceAsString(Object obj, String fileName) {
+		String ret = null;
+		try{
+			InputStream in = obj.getClass().getResourceAsStream(fileName);
+			ret = IOUtils.toString(in, StandardCharsets.UTF_8);
+		}catch(Exception e){
+			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
+			LocalLogger.printStackTrace(e);
+		}
+		return ret;
 	}
 }

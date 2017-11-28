@@ -35,6 +35,7 @@ import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -279,14 +280,7 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			query = String.format(
-					"delete {" +
-					"?x ?y ?z." +
-					"}" +
-					"where {" +
-					" ?x ?y ?z  FILTER ( strstarts(str(?x), \"%s\") || strstarts(str(?y), \"%s\") || strstarts(str(?z), \"%s\") )." +
-					"}", 
-					requestBody.prefix, requestBody.prefix, requestBody.prefix);
+			query = SparqlToXUtils.generateDeletePrefixQuery(requestBody.prefix);
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
@@ -300,6 +294,65 @@ public class SparqlQueryServiceRestController {
 		
 		return resultSet.toJson();
 	}	
+	
+	/**
+	 * Removes model with given uri prefix(es)
+	 * Practically: it removes ?s ?o ?p where ?s starts with one of the uri prefixes
+	 * NOTE: leaves any SADL blank nodes
+	 * @param requestBody
+	 * @return
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/clearModelPartial", method= RequestMethod.POST)
+	public JSONObject clearModelPartial(@RequestBody SparqlPrefixesAuthRequestBody requestBody){
+		return this.clearModel(requestBody, "clearModelPartial", false);
+	}
+	
+	/**
+	 * Removes model with given uri prefix(es), and all blank nodes
+	 * Practically: it removes ?s ?o ?p where ?s starts with one of the uri prefixes or the blank node prefix
+	 * NOTE: If you're not sure about removing blank nodes, use "/clearModelPartial"
+	 * @param requestBody
+	 * @return
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/clearModelFull", method= RequestMethod.POST)
+	public JSONObject clearModelFull(@RequestBody SparqlPrefixesAuthRequestBody requestBody){
+		return this.clearModel(requestBody, "clearModelPartial", true);
+	}
+	
+	public JSONObject clearModel(SparqlPrefixesAuthRequestBody requestBody, String endpointName, Boolean deleteBlankNodes){
+
+		GeneralResultSet resultSet = null;
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start " + endpointName);
+		
+		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
+			requestBody.serverAndPort = serviceProps.getServerAndPort(); 
+		}
+		
+		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
+			requestBody.serverType = serviceProps.getServerType();  
+		}
+		
+		try{
+			requestBody.printInfo(); 	// print info to console			
+			requestBody.validate(); 	// check inputs 	
+			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(requestBody.prefixes, deleteBlankNodes);
+			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, endpointName, e);
+		}	
+		
+		return resultSet.toJson();
+	}	
+	
+	
 	/**
 	 * Execute clear all query 
 	 */
@@ -322,7 +375,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
-			String query = "clear all";  // drop query
+			String query = SparqlToXUtils.genereateClearAllQuery();
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);

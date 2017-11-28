@@ -20,6 +20,8 @@ package com.ge.research.semtk.sparqlX.test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+
 import org.junit.Test;
 
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -44,4 +46,30 @@ public class SparqlToXUtilsTest {
 		assertFalse(SparqlToXUtils.isLegalURI("http://tree:05/hi/ther\u0006re"));      // bad char		
 	}
 	
+	@Test
+	public void testDeleteModel() throws Exception {
+		ArrayList<String> prefixes = new ArrayList<String>();
+		
+		prefixes.add("http://kdl.ge.com/batterydemo");
+		prefixes.add("http://does/nothing");
+		
+		String sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(prefixes, true);
+		
+		String expected = "delete {?x ?y ?z.}where { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing|nodeID://)\").}";
+		assertTrue(sparql.replaceAll("\\s+", " ").equals(expected.replaceAll("\\s+", " ")));
+		
+		// repeat with false
+		sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(prefixes, false);
+		expected = "delete {?x ?y ?z.}where { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing)\").}";
+		assertTrue(sparql.replaceAll("\\s+", " ").equals(expected.replaceAll("\\s+", " ")));
+		
+	}
+	
+	@Test
+	public void testDeletePrefix() throws Exception {
+		String sparql = SparqlToXUtils.generateDeletePrefixQuery("http://prefix");
+		
+		String expected = "delete {?x ?y ?z.}where { ?x ?y ?z  FILTER ( strstarts(str(?x), \"http://prefix\") || strstarts(str(?y), \"http://prefix\") || strstarts(str(?z), \"http://prefix\") ).}";
+		assertTrue(sparql.replaceAll("\\s+", " ").equals(expected.replaceAll("\\s+", " ")));
+	}
 }

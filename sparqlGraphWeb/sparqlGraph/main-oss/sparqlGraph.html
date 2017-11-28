@@ -204,6 +204,7 @@
 				  				   
 					<div class="btn-group">
 						<button id="query-tab-but"  class="btn" onclick="anchorTab1.click();" disabled><i class="icon-sitemap"></i> Query</button>
+                        <button id="edit-tab-but" class="btn" onclick="anchorTabE.click();" disabled style="display: none;"><i class="icon-edit"></i> Edit Ontology</button>  
 						<button id="mapping-tab-but" class="btn" onclick="anchorTab2.click();" disabled><i class="icon-table"></i> Map Input</button>  
 						<button id="upload-tab-but" class="btn" onclick="anchorTab3.click();" disabled><i class="icon-cloud-upload"></i> Import</button>      
 					</div>  
@@ -374,7 +375,49 @@
 					   		
 			</div>
 		</div>
-		
+        
+		<!------  Edit Import Tab ------>
+        <div id="tabs-e" >
+            <br>
+			<div class="container">
+		    	<!------------  button toolbar ------------>
+                <form class="form-search" action="javascript:gEditTab.doSearch()" style="margin-bottom:1ch;">
+                        <table width="100%"><tr>  
+                            <td align="left">  
+                                <div class="input-append">
+                                    <input type="text" id="editSearch" class="input-medium search-query" align="left">
+                                    <button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
+                                </div>
+                                <button class="btn" id="btnEditTreeExpand"   onclick="javascript:gEditTab.doExpand(); return false;" >Expand</button>
+                                <button class="btn" id="btnEditTreeCollapse" onclick="javascript:gEditTab.doCollapse(); return false;" >Collapse</button>
+                            </td>
+                            <td align="right">
+
+                            </td>
+                        </tr></table>
+                    </form>
+                
+                
+
+                    <div id="editTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
+                        <div id="editTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" > 
+                            <div id="editTreeDiv" ></div>
+                        </div>
+                        <div id="editCanvasWrapper" class="canvaswrap">
+                            <div id="editCanvasDiv" style="" class="canvas ui-widget-content">
+                            </div>
+                        </div>	
+                    </div>
+                
+                    <section class="module">
+                        <div id="editButtonDiv">
+                            <form class="form-horizontal"></form>
+                        </div>
+                    </section>
+                
+            </div>
+        </div>
+        
 		<!------  Data Import Tab ------>
 		<div id="tabs-2" >
 			<div class="container">

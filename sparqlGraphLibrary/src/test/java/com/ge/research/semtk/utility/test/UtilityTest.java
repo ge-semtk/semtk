@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -71,7 +71,7 @@ public class UtilityTest {
 	
 	@Test
 	public void testValidatePropertiesAndExitOnFailure() throws Exception{
-		HashMap<String,String> properties = new HashMap<String,String>();
+		TreeMap<String,String> properties = new TreeMap<String,String>();
 		properties.put("color1","red");
 		properties.put("color2","yellow");
 		Utility.validatePropertiesAndExitOnFailure(properties);
@@ -132,5 +132,12 @@ public class UtilityTest {
 		String compressedString = Utility.compress(s);
 		String decompressedString = Utility.decompress(compressedString);
 		assertEquals(s, decompressedString);
+	}
+	
+	@Test
+	public void testGetResourceAsString(){
+		String s = Utility.getResourceAsString(this, "/Pet.owl");
+		assertTrue(s.trim().startsWith("<rdf:RDF"));
+		assertTrue(s.trim().endsWith("</rdf:RDF>"));
 	}
 }

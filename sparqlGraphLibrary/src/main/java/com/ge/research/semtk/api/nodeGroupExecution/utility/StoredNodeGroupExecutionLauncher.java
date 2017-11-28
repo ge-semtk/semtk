@@ -19,19 +19,15 @@ package com.ge.research.semtk.api.nodeGroupExecution.utility;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
-import com.ge.research.semtk.api.nodeGroupExecution.client.StoredNodeGroupExecutionClientConfig;
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.api.storedQueryExecution.utility.insert.ColumnToRequestMapping;
 import com.ge.research.semtk.api.storedQueryExecution.utility.insert.GenericInsertionRequestBody;
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.load.client.IngestorClientConfig;
-import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class StoredNodeGroupExecutionLauncher {
@@ -42,7 +38,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}
 	// by ID
 	// select functionality
-	public TableResultSet launchSelectJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchSelectJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -83,7 +79,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 	
 	// Delete functionality
-	public TableResultSet launchDeleteJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchDeleteJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -124,7 +120,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 
 	// Count functionality
-	public TableResultSet launchCountJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchCountJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -165,7 +161,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 	
 	// select functionality
-	public TableResultSet launchFilterJob(String id, String targetObjectSparqlId, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchFilterJob(String id, String targetObjectSparqlId, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -207,7 +203,7 @@ public class StoredNodeGroupExecutionLauncher {
 	
 	// by NodeGroup			
 	// select functionality
-	public TableResultSet launchSelectJob(NodeGroup ng, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchSelectJob(NodeGroup ng, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -249,7 +245,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 		
 	// count functionality
-	public TableResultSet launchCounctJob(NodeGroup ng, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchCounctJob(NodeGroup ng, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -291,7 +287,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 		
 	// delete functionality
-	public TableResultSet launchDeleteJob(NodeGroup ng, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchDeleteJob(NodeGroup ng, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -333,7 +329,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 
 	// Filter functionality
-	public TableResultSet launchFilterJob(NodeGroup ng, String targetObjectSparqlId, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchFilterJob(NodeGroup ng, String targetObjectSparqlId, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -376,7 +372,7 @@ public class StoredNodeGroupExecutionLauncher {
 
 	
 	// insert functionality
-	public RecordProcessResults launchInsertJob(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public RecordProcessResults launchInsertJob(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		RecordProcessResults retval = null;
 		
 		// create the executor we will be using
@@ -389,7 +385,7 @@ public class StoredNodeGroupExecutionLauncher {
 		return retval;
 	}
 	
-	public RecordProcessResults launchInsertJob(String nodegroupAndTemplateId, JSONArray mappingArray, GenericInsertionRequestBody requestBody, JSONObject sparqlConnectionAsJsonObject, StoredNodeGroupExecutionClientConfig sncc) throws Exception{
+	public RecordProcessResults launchInsertJob(String nodegroupAndTemplateId, JSONArray mappingArray, GenericInsertionRequestBody requestBody, JSONObject sparqlConnectionAsJsonObject, NodeGroupExecutionClientConfig sncc) throws Exception{
 		RecordProcessResults retval = null;
 		
 		ColumnToRequestMapping colMapper = new ColumnToRequestMapping(mappingArray, requestBody);
