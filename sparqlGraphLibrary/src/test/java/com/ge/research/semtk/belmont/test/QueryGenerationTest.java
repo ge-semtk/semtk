@@ -127,6 +127,58 @@ public class QueryGenerationTest {
 	}
 	
 	@Test
+	public void generateInsertQueryWithEnumInstanceValues() throws Exception {
+		System.out.println("Insert query generation where enums are used.");
+		JSONObject json = Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json");
+		
+		SparqlGraphJson sgJson = new SparqlGraphJson(json);
+		NodeGroup ng = sgJson.getNodeGroup();
+		
+		// create the colors...
+		String[] classnames = { "http://kdl.ge.com/batterydemo#Color", "http://kdl.ge.com/batterydemo#Color", "http://kdl.ge.com/batterydemo#Color" };
+		String[] enumNames  = { "red", "white", "blue" };
+		
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.loadEnums(classnames, enumNames);
+		
+		
+		// set some values... 
+		// get ?Cell
+		Node nCell = ng.getNodeBySparqlID("?Cell");
+		nCell.setInstanceValue("SomeUriForACell");
+		
+		// get ?Color
+		Node nColor = ng.getNodeBySparqlID("?Color");
+		nColor.setInstanceValue("red");
+		
+		// get ?Battery
+		Node nBattery = ng.getNodeBySparqlID("?Battery");
+		nBattery.setInstanceValue("SomeUriForABattery");
+		
+		// try to generate an insert query:
+		String insertQuery = ng.generateSparqlInsert(oInfo);
+		
+		// compare to the basic output we expect...
+		String expected = 	"prefix generateSparqlInsert:<belmont/generateSparqlInsert#>\r\n" + 
+							"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>\r\n" + 
+							"prefix batterydemo:<http://kdl.ge.com/batterydemo#>\r\n" + 
+							" INSERT {\r\n" + 
+							"	?Cell a batterydemo:Cell . \r\n" + 
+							"	?Cell batterydemo:color ?Color .\r\n" + 
+							"	?Battery a batterydemo:Battery . \r\n" + 
+							"	?Battery batterydemo:cell ?Cell .\r\n" + 
+							"} WHERE {	BIND (generateSparqlInsert:red AS ?Color).\r\n" + 
+							"	BIND (generateSparqlInsert:SomeUriForACell AS ?Cell).\r\n" + 
+							"	BIND (generateSparqlInsert:SomeUriForABattery AS ?Battery).\r\n" + 
+							"}";
+		
+		assertEquals(insertQuery.replaceAll("\\s+",""),(expected.replaceAll("\\s+","")));
+		
+		
+		
+	}
+	
+	@Test
 	public void generateCountQuery() throws Exception {
 		JSONObject json = Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery_PlusConstraints.json");
 		SparqlGraphJson sgJson = new SparqlGraphJson(json);
