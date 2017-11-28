@@ -25,10 +25,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
+import org.json.simple.JSONObject;
+
+import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 public class JobTracker {
 	JobEndpointProperties prop = null;
@@ -482,25 +489,19 @@ public class JobTracker {
 		
 		Date initialDate = cal.getTime();
 		
+		String endtimesFilter = "    FILTER (?time < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime)" ;
+
+		JSONObject jObj = Utility.getJSONObjectFromFilePath("/src/main/resources/job_deletion.json");
+		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
 		
-		 String query = "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
-			        	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
-			        	" \n" +
-			        	"DELETE  {  \n" +
-			        	"   ?Job ?y ?z.    \n" +
-			        	"   ?z ?zo ?zp.  \n" +
-			        	"} \n" +
-			        	"where { \n" +
-			        	"   ?Job a job:Job. \n" +
-			        	"   ?Job job:creationTime ?time. \n" +
-			        	"    FILTER (?time < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime) \n" +
-			        	"   ?Job ?y ?z." +
-			        	"   optional { " +
-			        	"?z ?zo ?zp. " +
-			        	"MINUS {<http://research.ge.com/semtk/services/job#Job> ?zo ?zp }" +
-			        	"}  \n" +
-			        	"}";
-		    try {
+		NodeGroup ng = sgj.getNodeGroup();
+		
+		PropertyItem propertyToAlterTimingOn = ng.getPropertyItemBySparqlID("?creationTime");
+		propertyToAlterTimingOn.setValueConstraint(new ValueConstraint(endtimesFilter));
+		
+		String query = ng.generateSparqlDelete(null);
+		
+	    try {
 		    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 		    } catch (Exception e) {
 		    	throw new Exception(e.getMessage());
