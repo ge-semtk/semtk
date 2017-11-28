@@ -2250,9 +2250,10 @@ public class NodeGroup {
 			 */
 			
 			// only add this node if the current instance should be included. 
-			if((!currIsEnum) || (currIsEnum && !currInstanceBlank)){
-				retval += "\t" + sparqlID + " a " + this.getPrefixedUri(curr.getFullUriName()) + " . \n";
-				
+			if((!currIsEnum) || (currIsEnum && !currInstanceBlank)){   
+				if(!currIsEnum){	// do not include type info when the target is an enum...
+					retval += "\t" + sparqlID + " a " + this.getPrefixedUri(curr.getFullUriName()) + " . \n";
+				}
 				// insert each property we know of. 
 				for(PropertyItem prop : curr.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
