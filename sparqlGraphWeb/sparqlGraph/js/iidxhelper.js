@@ -308,6 +308,16 @@ define([	// properly require.config'ed
         return butElem;
     };
     
+    IIDXHelper.createNbspText = function() {
+        return document.createTextNode("\u00A0");
+    };
+    
+    IIDXHelper.createBoldText = function(text) {
+        var b = document.createElement("b");
+        b.appendChild(document.createTextNode(text));
+        return b
+    };
+    
     /*
      * Create a button group.
      * optDataToggleAttribute can be set to "buttons-radio" (single-select) or "buttons-checkbox" (multi-select)

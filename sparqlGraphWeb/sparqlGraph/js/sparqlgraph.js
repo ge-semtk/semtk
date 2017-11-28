@@ -118,9 +118,14 @@
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType(); 
 			
-            gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user") || "",
+            var user = localStorage.getItem("SPARQLgraph_user");
+            gModalStoreDialog = new ModalStoreDialog(user || "",
                                                      g.service.nodeGroupStore.url); 
 
+            // Paul auto-debug ontology editor
+            if (user == "200001934") {
+                activateOntologyEditor()
+            }
             
             // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
 	    	// gReady is at the end of the ready function
@@ -1047,17 +1052,8 @@
                     guiUnDisableAll();
                     setStatus("");
                 };
-                
-                var annoyCallback = function (okCall, cancelCall) {
-                    var user = localStorage.getItem("SPARQLgraph_user");
-                    if (user == "200005868" || user.indexOf("Jenny") > -1) {
-                        ModalIidx.okCancel("Really-really sureifier", "Are you really sure you meant to hit the 'Run Delete' button?", okCall, "I'm sure", cancelCall);
-                    } else {
-                        okCall();
-                    }
-                }.bind(this, okCallback, cancelCallback);
                     
-                ModalIidx.okCancel("Delete query", "Confirm SPARQL DELETE operation.", annoyCallback, "Run Delete", cancelCallback);
+                ModalIidx.okCancel("Delete query", "Confirm SPARQL DELETE operation.", okCallback, "Run Delete", cancelCallback);
                 break;
 			}
             
