@@ -6,14 +6,14 @@
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"url": "http://fake-location",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"url": "http://fake-location",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		]
