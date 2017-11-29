@@ -119,7 +119,7 @@
 			onchangeQueryType(); 
 			
             var user = localStorage.getItem("SPARQLgraph_user");
-            gModalStoreDialog = new ModalStoreDialog(user || "",
+            gStoreDialog = new ModalStoreDialog(user || "",
                                                      g.service.nodeGroupStore.url); 
 
             // Paul auto-debug ontology editor
@@ -1129,12 +1129,12 @@
         // launch the retrieval dialog
         // callback to the dialog is doQueryLoadJsonStr
         checkAnythingUnsavedThen(
-            gModalStoreDialog.launchRetrieveDialog.bind(gModalStoreDialog, doQueryLoadJsonStr)
+            gStoreDialog.launchRetrieveDialog.bind(gStoreDialog, doQueryLoadJsonStr)
         );
     };
 
    	var doDeleteFromNGStore = function() {
-        gModalStoreDialog.launchDeleteDialog();
+        gStoreDialog.launchDeleteDialog();
     };
    	
   	var doStoreNodeGroup = function () {
@@ -1145,11 +1145,11 @@
         
             // save user when done
             var doneCallback = function () {
-                localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
+                localStorage.setItem("SPARQLgraph_user", gStoreDialog.getUser());
             }
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
-            gModalStoreDialog.launchStoreDialog(sgJson, doneCallback); 
+            gStoreDialog.launchStoreDialog(sgJson, doneCallback); 
             
         });
         		

@@ -84,12 +84,12 @@ define([	// properly require.config'ed
         }
 
         fieldSet.appendChild(IIDXHelper.buildControlGroup(label, input));
-    }
+    };
 
     /*
      * classes - input-mini, input-small, input-medium, input-large, input-xlarge
      */
-    IIDXHelper.createTextInput = function (id, optClassName) {
+    IIDXHelper.createTextInput = function (id, optClassName, optDatalist) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("input");
         if (typeof id != "undefined" && id != null) { 
@@ -97,6 +97,22 @@ define([	// properly require.config'ed
         }
         elem.type = "text";
         elem.classList.add(className);
+        
+        if (typeof optDatalistId !== "undefined") {
+            elem.list = optDatalistId.id;
+        }
+        return elem;
+    };
+    
+    IIDXHelper.createDataList = function (id, valList) {
+        var elem = document.createElement("datalist");
+        elem.id = id;
+        
+        for (var i=0; i < valList.length; i++) {
+            var option = document.createElement("option");
+            option.innerHTML = valList[i];
+            elem.appendChild(option);
+        }
         return elem;
     };
 
