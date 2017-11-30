@@ -502,6 +502,10 @@ public class JobTracker {
 		
 		String query = ng.generateSparqlDelete(null);
 		
+		// deletion query sparql peek.
+		LocalLogger.logToStdErr("Generated Deletion:");
+		LocalLogger.logToStdErr(query);
+		
 	    try {
 		    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 		    } catch (Exception e) {
