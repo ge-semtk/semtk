@@ -98,8 +98,9 @@ define([	// properly require.config'ed
         elem.type = "text";
         elem.classList.add(className);
         
-        if (typeof optDatalistId !== "undefined") {
-            elem.list = optDatalistId.id;
+        if (typeof optDatalist !== "undefined") {
+            elem.setAttribute("list", optDatalist.id);
+            elem.setAttribute("autocomplete", "off");
         }
         return elem;
     };
@@ -370,15 +371,22 @@ define([	// properly require.config'ed
         controlsDiv.className = "controls";
         controlsDiv.appendChild(controlDOM);
 
-        if (typeof optHelpText !== "undefined") {
-            var p = document.createElement("p");
-            p.className = "help-block";
-            p.innerHTML = optHelpText;
-            controlsDiv.appendChild(p);
-        }
+        var s = document.createElement("span");  // formerly "p"
+        s.className = "help-inline";             // formerly "help-block"
+        s.innerHTML = (typeof optHelpText !== "undefined") ? optHelpText : "";
+        controlsDiv.appendChild(s);
 
         controlGroupDiv.appendChild(controlsDiv);
         return controlGroupDiv;
+    };
+    
+    IIDXHelper.changeControlGroupHelpText = function (controlGroupDiv, text, elemClass) {
+        // elemClass can be: "", "warning", "error", "success"
+        controlGroupDiv.className = "control-group " + elemClass;
+        
+        var cntlDiv = controlGroupDiv.getElementsByTagName("div")[0];
+        var span = cntlDiv.getElementsByTagName("span")[0];
+        span.innerHTML = text;
     };
 
     IIDXHelper.downloadFile = function (data, filename, mimetype) {
