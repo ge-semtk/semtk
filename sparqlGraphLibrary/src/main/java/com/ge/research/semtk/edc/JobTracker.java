@@ -491,7 +491,8 @@ public class JobTracker {
 		
 		String endtimesFilter = "    FILTER (?time < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime)" ;
 
-		JSONObject jObj = Utility.getJSONObjectFromFilePath("/src/main/resources/job_deletion.json");
+		String jobjAsStr = Utility.getResourceAsString(this, "/job_deletion.json");
+		JSONObject jObj = Utility.getJsonObjectFromString(jobjAsStr);
 		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
 		
 		NodeGroup ng = sgj.getNodeGroup();
