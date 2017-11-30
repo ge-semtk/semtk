@@ -489,7 +489,7 @@ public class JobTracker {
 		
 		Date initialDate = cal.getTime();
 		
-		String endtimesFilter = "    FILTER (?time < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime)" ;
+		String endtimesFilter = "    FILTER (?creationTime < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime)" ;
 
 		String jobjAsStr = Utility.getResourceAsString(this, "/job_deletion.json");
 		JSONObject jObj = Utility.getJsonObjectFromString(jobjAsStr);
