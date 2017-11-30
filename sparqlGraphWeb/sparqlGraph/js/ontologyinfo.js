@@ -173,7 +173,7 @@ OntologyInfo.prototype = {
 	},
 	
 	getNumClasses : function () {
-		return this.classHash.length;
+		return Object.keys(this.classHash).length;
 	},
 	
 	getClass : function(classNameStr) {
@@ -524,7 +524,6 @@ OntologyInfo.prototype = {
 		// load from rows of [class]
 		for (var i=0; i < classList.length; i++) {
 			var x = new OntologyClass(classList[i], "");
-			this.addClass(x);
 			this.addClass(x);
 		}
 	},
@@ -1223,6 +1222,135 @@ OntologyInfo.prototype = {
         }
     },
     
+    /* =========== Edit functions =============== */
+    
+    clearTempHashes : function () {
+        this.connHash = {};         
+        this.prefixHash = null;
+    },
+    
+    //
+    // Delete all traces of a namespace from each hash
+    // and from any classes
+    //
+    deleteNamespace : function (namespace) {
+        var prefix = namespace + "#";
+        this.clearTempHashes();
+        
+        // classHash
+        for (var c in this.classHash) {
+            if (c.startsWith(prefix)) {
+                delete this.classHash[c];
+            } else {
+                this.classHash[c].deleteNamespace(namespace);
+            }
+        }
+        
+        // propertyHash
+        for (var p in this.propertyHash) {
+             if (p.startsWith(prefix)) {
+                delete this.propertyHash[p];
+            }
+        }
+        
+        // subclassHash
+        for (var c in this.subclassHash) {
+            if (c.startsWith(prefix)) {
+                // delete whole list
+                delete this.subclassHash[c];
+            } else {
+                // delete only list values in namespace
+                for (var i=this.subclassHash[c].length-1; i >= 0; i--) {
+                    if (this.subclassHash[c][i].startsWith(prefix)) {
+                        this.subclassHash[c].slice(i,1);
+                    }
+                }
+            }
+        }
+        
+        // enumHash
+        for (var e in this.enumHash) {
+            if (e.startsWith(prefix)) {
+                // delete whole list
+                delete this.enumHash[e];
+            } else {
+                // delete only list values in namespace
+                for (var i=this.enumHash[e].length-1; i >= 0; i--) {
+                    if (this.enumHash[e][i].startsWith(prefix)) {
+                        this.enumHash[e].slice(i,1);
+                    }
+                }
+            }
+        }
+    },
+    
+    //
+    // Delete all traces of a namespace from each hash
+    // and from any classes
+    //
+    renameNamespace : function (oldName, newName) {
+        var oldPrefix = oldName + "#";
+        this.clearTempHashes();
+        
+        // usage:  uri = updateURI(uri)
+        var updateURI = function(oName, nName, uri) {
+           return nName + uri.slice(oName.length); 
+        }.bind(this, oldName, newName);
+        
+        // classHash
+        for (var c in this.classHash) {
+            // handle the class innards
+            this.classHash[c].renameNamespace(oldName, newName);
+            
+            if (c.startsWith(oldPrefix)) {
+                // rename hash key
+                this.classHash[updateURI(c)] = this.classHash[c];
+                delete this.classHash[c];
+            } 
+        }
+        
+        // propertyHash
+        for (var p in this.propertyHash) {
+             if (p.startsWith(oldPrefix)) {
+                // rename hash key
+                this.propertyHash[updateURI(p)] = this.classHash[p];
+                delete this.propertyHash[p];
+            }
+        }
+        
+        // subclassHash
+        for (var c in this.subclassHash) {
+            if (c.startsWith(oldPrefix)) {
+                // rename hash key
+                this.subclassHash[updateURI(c)] = this.subclassHash[c];
+                delete this.subclassHash[c];
+            } else {
+                // rename only list values in namespace
+                for (var i=this.subclassHash[c].length-1; i >= 0; i--) {
+                    if (this.subclassHash[c][i].startsWith(oldPrefix)) {
+                        this.subclassHash[c][i] = updateURI(this.subclassHash[c][i]);
+                    }
+                }
+            }
+        }
+        
+        // enumHash
+        for (var e in this.enumHash) {
+            if (e.startsWith(oldPrefix)) {
+                // rename hash key
+                this.enumHash[updateURI(e)] = this.enumHash[e];
+                delete this.enumHash[e];
+            } else {
+                // delete only list values in namespace
+                for (var i=this.enumHash[e].length-1; i >= 0; i--) {
+                    if (this.enumHash[e][i].startsWith(oldPrefix)) {
+                        this.enumHash[e][i] = updateURI(this.enumHash[e][i]);
+                    }
+                }
+            }
+        }
+    },
+    
     /*
      * Change name of a class
      * @param oClass {OntologyClass} - a class from this oInfo
@@ -1743,8 +1871,55 @@ OntologyClass.prototype = {
                 this.parentNames[i] = new OntologyName(newURI);
             }
         }
-    }
+    },
     
+    /* =========== Edit functions =============== */
+    
+    //
+    // delete parent or property if it belongs to namespace
+    //
+    deleteNamespace : function (namespace) {
+        
+        // parentNames
+        for (var i=this.parentNames.length-1; i >= 0; i--) {
+            if (this.parentNames[i].getNamespace() == namespace) {
+                this.parentNames.slice(i,1);
+            }
+        }
+        
+        // properties
+        for (var i=this.properties.length-1; i >= 0; i--) {
+            if (this.properties[i].getNamespace() == namespace) {
+                this.properties.slice(i,1);
+            }
+        }
+    },
+    
+    renameNamespace : function (oldName, newName) {
+        
+        // usage:  uri = updateURI(uri)
+        var updateURI = function(oName, nName, uri) {
+           return nName + uri.slice(oName.length); 
+        }.bind(this, oldName, newName);
+        
+        if (this.name.getNamespace() == oldName) {
+            this.name = new OntologyName(updateURI(this.name.getFullName()));
+        }
+        
+         // parentNames
+        for (var i=this.parentNames.length-1; i >= 0; i--) {
+            if (this.parentNames[i].getNamespace() == oldName) {
+                this.parentNames[i] = new OntologyName(updateURI(this.parentNames[i].getFullName()));
+            }
+        }
+        
+        // properties
+        for (var i=this.properties.length-1; i >= 0; i--) {
+            if (this.properties[i].getNamespace() == oldName) {
+                this.properties[i].setName(updateURI(this.properties[i].getName()));
+            }
+        }
+    },
 };
 
 /*
@@ -1772,6 +1947,10 @@ OntologyProperty.prototype = {
 	getName : function() {
 		return this.name;
 	},
+    
+    setName : function(n) {
+        this.name = n;
+    },
 	
 	getRange : function() {
 		return this.range;

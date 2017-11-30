@@ -84,12 +84,12 @@ define([	// properly require.config'ed
         }
 
         fieldSet.appendChild(IIDXHelper.buildControlGroup(label, input));
-    }
+    };
 
     /*
      * classes - input-mini, input-small, input-medium, input-large, input-xlarge
      */
-    IIDXHelper.createTextInput = function (id, optClassName) {
+    IIDXHelper.createTextInput = function (id, optClassName, optDatalist) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("input");
         if (typeof id != "undefined" && id != null) { 
@@ -97,6 +97,23 @@ define([	// properly require.config'ed
         }
         elem.type = "text";
         elem.classList.add(className);
+        
+        if (typeof optDatalist !== "undefined") {
+            elem.setAttribute("list", optDatalist.id);
+            elem.setAttribute("autocomplete", "off");
+        }
+        return elem;
+    };
+    
+    IIDXHelper.createDataList = function (id, valList) {
+        var elem = document.createElement("datalist");
+        elem.id = id;
+        
+        for (var i=0; i < valList.length; i++) {
+            var option = document.createElement("option");
+            option.innerHTML = valList[i];
+            elem.appendChild(option);
+        }
         return elem;
     };
 
@@ -308,6 +325,16 @@ define([	// properly require.config'ed
         return butElem;
     };
     
+    IIDXHelper.createNbspText = function() {
+        return document.createTextNode("\u00A0");
+    };
+    
+    IIDXHelper.createBoldText = function(text) {
+        var b = document.createElement("b");
+        b.appendChild(document.createTextNode(text));
+        return b
+    };
+    
     /*
      * Create a button group.
      * optDataToggleAttribute can be set to "buttons-radio" (single-select) or "buttons-checkbox" (multi-select)
@@ -344,15 +371,22 @@ define([	// properly require.config'ed
         controlsDiv.className = "controls";
         controlsDiv.appendChild(controlDOM);
 
-        if (typeof optHelpText !== "undefined") {
-            var p = document.createElement("p");
-            p.className = "help-block";
-            p.innerHTML = optHelpText;
-            controlsDiv.appendChild(p);
-        }
+        var s = document.createElement("span");  // formerly "p"
+        s.className = "help-inline";             // formerly "help-block"
+        s.innerHTML = (typeof optHelpText !== "undefined") ? optHelpText : "";
+        controlsDiv.appendChild(s);
 
         controlGroupDiv.appendChild(controlsDiv);
         return controlGroupDiv;
+    };
+    
+    IIDXHelper.changeControlGroupHelpText = function (controlGroupDiv, text, elemClass) {
+        // elemClass can be: "", "warning", "error", "success"
+        controlGroupDiv.className = "control-group " + elemClass;
+        
+        var cntlDiv = controlGroupDiv.getElementsByTagName("div")[0];
+        var span = cntlDiv.getElementsByTagName("span")[0];
+        span.innerHTML = text;
     };
 
     IIDXHelper.downloadFile = function (data, filename, mimetype) {

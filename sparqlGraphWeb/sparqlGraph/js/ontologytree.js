@@ -68,6 +68,13 @@ OntologyTree.prototype = {
 		return (this.specialClasses.indexOf(fullName) > -1);
 	},
 	
+    //
+    // delete old oInfo and put noOInfo into the tree
+    //
+    // preserve expanded/selected status of nodes
+    //   optRenameFrom \
+    //   optRenameTo   /  lists preserve status across name changes
+    //
     update : function (newOInfo, optRenameFrom, optRenameTo) {
         var renameFrom = optRenameFrom ? optRenameFrom : [];
         var renameTo   = optRenameTo   ? optRenameTo   : [];
@@ -214,12 +221,7 @@ OntologyTree.prototype = {
         		
         	// break the recursion when we get to the namespace node.  This one is not a class.
         	} else {
-        		parentNode = this.tree.getRoot().addChild({
-            		title: parentNameLocal,
-            		//key: parentName,
-            		tooltip: parentName,
-            		isFolder: true});
-        		parentNode.data.value = parentName;
+        		parentNode = this.addNamespace(parentName, parentNameLocal);
         	}
         }
         
@@ -261,6 +263,17 @@ OntologyTree.prototype = {
         return newNode;
 	},
 
+    addNamespace : function(fullName, localName) {
+        var parentNode = this.tree.getRoot().addChild({
+            title: localName,
+            tooltip: fullName,
+            isFolder: true});
+        
+        parentNode.data.value = fullName;
+        
+        return parentNode
+    },
+    
 	addNodeProps : function(node, ontClass, propList) {
 		// add propList to node if they are not already there
 		
@@ -353,6 +366,10 @@ OntologyTree.prototype = {
     
     nodeIsProperty : function(node) {
     	return this.oInfo.containsProperty(this.nodeGetURI(node));
+    },
+    
+    nodeIsNamespace : function(node) {
+        return (this.node.value.indexOf('#') == -1);
     },
     
     nodeGetParent : function(node) {

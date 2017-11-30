@@ -39,6 +39,7 @@ define([	// properly require.config'ed
             this.user = user; 
             this.serviceUrl = serviceUrl;
             this.callback = function () {};
+            this.lastRetrievedId = null;
 		};
 		
 		
@@ -133,6 +134,7 @@ define([	// properly require.config'ed
             retrieveNodeGroupCallback : function (retrieveCallback, resultSet) { 
 				if (! resultSet.isSuccess()) {
 					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
+                    this.lastRetrievedId = null;
 				} else {
 					var nodegroupArr = resultSet.getStringResultsColumn("NodeGroup");
 					
@@ -150,6 +152,7 @@ define([	// properly require.config'ed
             retrieveNodeGroupOK : function (retrieveCallback, idList) {   
                 var mq = new MsiClientNodeGroupStore(this.serviceUrl);
                 mq.getNodeGroupById(idList[0], this.retrieveNodeGroupCallback.bind(this, retrieveCallback));
+                this.lastRetrievedId = idList[0];
             },
             
             /**
@@ -219,43 +222,45 @@ define([	// properly require.config'ed
               * -Paul
               */
             launchStoreDialog : function (sgJson, doneCallback) {
+                // get all existing meta data, and call launchStoreDialog2
+                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+    		    mq.getNodeGroupMetadata(this.launchStoreDialog2.bind(this, sgJson, doneCallback));
+            },
+            
+            launchStoreDialog2 : function (sgJson, doneCallback, resultSet) {
+                // check that meta data returned
+                if (! resultSet.isSuccess()) {
+                    ModalIidx.alert("Failure retrieving store contents",
+                                    resultSet.getSimpleResultsHtml()
+                                   );
+                    return;
+                    
+				}
                 
-                var successCallback = function (id, resultSet) { 
+                // storing of dialog succeeded
+                var successCallback = function (id, closeModal, resultSet) { 
                     if (! resultSet.isSuccess()) {
                         ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
                     } else {
                         // store returns nothing
                         //ModalIidx.alert("Store Nodegroup", resultSet.getSimpleResultsHtml());
                         ModalIidx.alert("Store Nodegroup", "Successfully stored " + id);
+                        closeModal()
                         doneCallback();
                     }
                 };
-			
-                var validateCallback = function () { 
-                    var id = document.getElementById("sngIdText").value;
-                    var comments = document.getElementById("sngCommentsText").value;
-                    var creator = document.getElementById("sngCreatorText").value;
 
-                    if (id == null || id.length == 0) {
-                        return "Id cannot be null.";
-                    } else if (creator == null || creator.length == 0) {
-                        return "Creator cannot be null.";
-                    } else if (comments == null || comments.length == 0) {
-                        return "Comments cannot be null.";
-                    } else {
-                        return null;
-                    }
-                };
-
+                // user hit "Clear"
                 var clearCallback = function () { 
                     document.getElementById("sngIdText").value="";
                     document.getElementById("sngCommentsText").value="";
                     document.getElementById("sngCreatorText").value=this.user;
 
                 };
-
-                var submitCallback = function (json) { 
-                    var name = document.getElementById("sngIdText").value;
+                
+                // make the call to store a nodegoup
+                var submitCallbackStore = function (json, closeModal) { 
+                    var id = document.getElementById("sngIdText").value;
                     var comments = document.getElementById("sngCommentsText").value;
                     var creator = document.getElementById("sngCreatorText").value;
                     
@@ -263,26 +268,107 @@ define([	// properly require.config'ed
                     
                     // save user/creator
                     this.user = creator;
-                    
-                    mq.storeNodeGroup(json, creator, name, comments, successCallback.bind(this, name));
-                }.bind(this, sgJson);
+                    this.lastRetrievedId = id;
+                    mq.storeNodeGroup(json, creator, id, comments, successCallback.bind(this, id, closeModal));
+                }.bind(this);
+                
+                // delete nodegroup and submit if successful
+                var submitCallbackDeleteAndStore = function (id, json, closeModal) {
+                    var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+                    mq.deleteStoredNodeGroup(id, submitCallbackStore.bind(this, json, closeModal));
+                };
+                
+                // user hit "Submit"
+                // check everything, then start callback chain
+                var valSubmitCallback = function (rs, json, closeModal) { 
+                    var id = document.getElementById("sngIdText").value;
+                    var comments = document.getElementById("sngCommentsText").value;
+                    var creator = document.getElementById("sngCreatorText").value;
 
+                    if (id == null || id.length == 0) {
+                        ModalIidx.alert("Validation error", "ID cannot be empty.");
+                    } else if (creator == null || creator.length == 0) {
+                        ModalIidx.alert("Validation error", "Creator cannot be empty.");
+                    } else if (comments == null || comments.length == 0) {
+                        ModalIidx.alert("Validation error", "Comments cannot be empty.");
+                    } else if (rs.getStringResultsColumn("ID").indexOf(id) > -1) {
+                        // delete and store if user agrees
+                        ModalIidx.okCancel("Nodegroup already exists", 
+                                           "Do you want to overwrite " + id + " in the store?",
+                                            submitCallbackDeleteAndStore.bind(this, id, json, closeModal));
+                    } else {
+                        // simple store
+                        submitCallbackStore(json, closeModal);
+                    }
+                }.bind(this, resultSet, sgJson);
+                
+                // update comment based on id
+                var updateMetaData = function (rs) {
+                    var creatorTxt = document.getElementById("sngCreatorText");
+                    var idTxt = document.getElementById("sngIdText");
+                    var commentTxt = document.getElementById("sngCommentsText");
+                    var ngCreator = "";
+                    
+                    // search for ID
+                    var idCol = rs.getColumnNumber("ID");
+                    for (var i=0; i < rs.getRowCount(); i++) {
+                        if (rs.getRsData(i, idCol) == idTxt.value) {
+                            // update comments on screen
+                            commentTxt.value = rs.getRsData(i, rs.getColumnNumber("comments"));
+                            // save copy of creator
+                            ngCreator = rs.getRsData(i, rs.getColumnNumber("creator"));
+                            break;
+                        }
+                    }
+                    
+                    // leave comments unchanged when id changes
+                    
+                    // handle creator
+                    var creatorGroup = document.getElementById("sngCreatorGroup"); 
+                    if (ngCreator != "" && ngCreator != this.user) {
+                       IIDXHelper.changeControlGroupHelpText(creatorGroup, 
+                                                             "last saved by " + ngCreator, 
+                                                             "warning");
+                    } else {
+                       IIDXHelper.changeControlGroupHelpText(creatorGroup, "", "");
+                    }
+                }.bind(this, resultSet);
+                
+                // build form
                 var div = document.createElement("div");
                 var form = IIDXHelper.buildHorizontalForm();
                 div.appendChild(form);
                 var fieldset = IIDXHelper.addFieldset(form)
-
-                fieldset.appendChild(IIDXHelper.buildControlGroup("creator: ", IIDXHelper.createTextInput("sngCreatorText")));
-                fieldset.appendChild(IIDXHelper.buildControlGroup("id: ", IIDXHelper.createTextInput("sngIdText")));
-                fieldset.appendChild(IIDXHelper.buildControlGroup("comments: ", IIDXHelper.createTextArea("sngCommentsText", 2)));
-
+                
+                // build idListElem and idText
+                resultSet.sort("ID");
+                var idListElem = IIDXHelper.createDataList("storeIDs", resultSet.getStringResultsColumn("ID"));
+                div.appendChild(idListElem);
+                var idText =      IIDXHelper.createTextInput("sngIdText", "input-xlarge", idListElem);
+                idText.onchange = updateMetaData;
+                idText.value =      this.lastRetrievedId;
+                
+                // build the simple inputs
+                var commentText = IIDXHelper.createTextArea("sngCommentsText", 2);
+                var creatorText = IIDXHelper.createTextInput("sngCreatorText");
+                
+                // arrange the form
+                fieldset.appendChild(IIDXHelper.buildControlGroup("nodegroup id: ", idText));
+                fieldset.appendChild(IIDXHelper.buildControlGroup("comments: ", commentText));
+                
+                var creatorGroup = IIDXHelper.buildControlGroup("my id: ", creatorText);
+                creatorGroup.id = "sngCreatorGroup";
+                fieldset.appendChild(document.createElement("hr"));
+                fieldset.appendChild(creatorGroup);
+                
+                // launch
                 var m = new ModalIidx("storeNodeGroupDialog");
-                m.showClearCancelSubmit("Save nodegroup to store",
+                m.showClearCancelValSubmit("Save nodegroup to store",
                                         div, 
-                                        validateCallback,
                                         clearCallback, 
-                                        submitCallback
+                                        valSubmitCallback
                                         );
+                updateMetaData();
                 
                 document.getElementById("sngCreatorText").value=this.user;
                 

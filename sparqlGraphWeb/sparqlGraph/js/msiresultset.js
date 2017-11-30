@@ -454,7 +454,7 @@ define([	// properly require.config'ed   bootstrap-modal
             
 			sort : function(optColName) {
 				
-				var col = (typeof optColName != "undefined") ? this.getTable().col_names.indexOf(colName) : 0;
+				var col = (typeof optColName != "undefined") ? this.getTable().col_names.indexOf(optColName) : 0;
 
 				this.xhr.table["@table"].rows = this.xhr.table["@table"].rows.sort(function(a,b) {
 					// a row with only an optional value that is "null" comes back from virtuoso as a totally empty row
