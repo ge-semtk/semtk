@@ -51,6 +51,8 @@ define([	// properly require.config'ed
             canvasdiv.appendChild(this.canvasdiv);
             
             this.buttondiv = buttondiv;
+            this.buttonspan = document.createElement("span");
+            this.buttonspan.style.marginRight = "3ch";
             this.searchtxt = searchtxt;
             this.oInfo = null;
             this.oTree = null;
@@ -76,12 +78,9 @@ define([	// properly require.config'ed
                         // A DynaTreeNode object is passed to the activation handler
                         // Note: we also get this event, if persistence is on, and the page is reloaded.
                         
-                        //first click is select, second opens or closes
-                        //node.expand(!node.isExpanded());
-                        
-                        this.selectedNodeCallback(node);
-
+                        this.selectedNodeCallback(node);            
                     }.bind(this),
+                    
                     onDblClick: function(node) {
                         // A DynaTreeNode object is passed to the activation handler
                         // Note: we also get this event, if persistence is on, and the page is reloaded.
@@ -108,6 +107,10 @@ define([	// properly require.config'ed
                 });
                      
                 this.oTree = new OntologyTree($(treeSelector).dynatree("getTree")); 
+                
+                this.treediv.appendChild(IIDXHelper.createNbspText());
+                this.treediv.appendChild(IIDXHelper.createButton("New namespace", 
+                                                                 this.createNamespace.bind(this)));
             },
             
             initButtonDiv : function() {
@@ -116,12 +119,13 @@ define([	// properly require.config'ed
                 var but2 = IIDXHelper.createButton("SADL", this.butDownloadSadl.bind(this));
                 var but3 = IIDXHelper.createButton("JSON", this.butDownloadJson.bind(this));
 
-                var nbsp = "\u00A0";
-                this.buttondiv.innerHTML = "<b>Download: ";
+                this.buttondiv.innerHTML = "";
+                this.buttondiv.appendChild(this.buttonspan);
+                this.buttondiv.appendChild(IIDXHelper.createBoldText("Download: "));
                 this.buttondiv.appendChild(but1);
-                this.buttondiv.appendChild(document.createTextNode(nbsp));
+                this.buttondiv.appendChild(IIDXHelper.createNbspText());
                 this.buttondiv.appendChild(but2);
-                this.buttondiv.appendChild(document.createTextNode(nbsp));
+                this.buttondiv.appendChild(IIDXHelper.createNbspText());
                 this.buttondiv.appendChild(but3);
             },
             
@@ -160,21 +164,62 @@ define([	// properly require.config'ed
             },
             
             selectedNodeCallback : function (node) {
-                var name = node.data.value;
-                if (name.indexOf("#") == -1) {
-                    this.editNamespace(node);
-                    
-                } else if (this.oInfo.containsClass(name)) {
-                    this.editClass(node);
-                    
-                } else if (this.oInfo.containsProperty(name)) {
-                    this.editProperty(node);
+                
+                if (node == null) {
+                    this.canvasdiv.innerHTML = "";
+                    this.buttonspan.innerHTML = "";
                     
                 } else {
-                    throw new Error("Can't find selected node in oInfo.");
+                    var name = node.data.value;
+                    if (name.indexOf("#") == -1) {
+                        this.editNamespace(node);
+
+                    } else if (this.oInfo.containsClass(name)) {
+                        this.editClass(node);
+
+                    } else if (this.oInfo.containsProperty(name)) {
+                        this.editProperty(node);
+
+                    } else {
+                        throw new Error("Can't find selected node in oInfo.");
+                    }
                 }
             },
             
+            createNamespace : function () {
+                var fullName;
+                var count = 1;
+                
+                // generate a first shot a the new namespace name
+                if (this.oInfo.getNumClasses() > 0) {
+                    var randomClass = this.oInfo.getClass(this.oInfo.getClassNames()[0]);
+                    fullName = randomClass.getNamespaceStr();
+                    fullName = fullName.substring(0, fullName.lastIndexOf("/")+1) + "new";
+                } else {
+                    fullName = "new/new";
+                }
+                
+                // change namespace name if it already exists
+                while (this.oTree.getNodesByURI(fullName).length > 0) {
+                    count += 1;
+                    if (count > 2) {
+                        fullName = fullName.substring(0, fullName.lastIndexOf("_"));
+                    }
+                    fullName = fullName + "_" + count;
+                }
+                
+                // now make up a new classname
+                // oInfo can't hold a namespace with no classes in it
+                var className = fullName + "#NewClass";
+                var newClass = new OntologyClass(className, "");
+                this.oInfo.addClass(newClass);
+                this.oTree.update(this.oInfo);
+                
+                // activate and expand the new node
+                var nameNode = this.oTree.getNodesByURI(fullName)[0];
+                nameNode.activate(true);
+                nameNode.expand(true);
+            },
             
              editClassNEW : function (node) {
                 var name = node.data.value;
@@ -196,10 +241,40 @@ define([	// properly require.config'ed
             
             editNamespace : function (node) {
                 var name = node.data.value;
-                //this.canvasdiv.innerHTML = "Namespace<br>" + name;
-                
+            
+                var nameForm = IIDXHelper.buildHorizontalForm(true);
                 this.canvasdiv.innerHTML = "";
-                this.canvasdiv.appendChild(document.createTextNode("Namespace " + name));
+                this.canvasdiv.appendChild(nameForm);
+                
+                nameForm.appendChild(document.createTextNode("Namespace: "));
+                var nameInput = IIDXHelper.createTextInput("et_nameInput");
+                nameInput.value = name;
+                nameInput.onchange = this.onchangeNamespace.bind(this, node, nameInput);
+                nameForm.appendChild(nameInput);
+                
+                this.setNamespaceButtons(name);
+            },
+            
+            setNamespaceButtons : function (name) {
+                
+                var deleteCallback = function (name) {
+                    this.oInfo.deleteNamespace(name);
+                    this.selectedNodeCallback(null);
+                    this.oTree.update(this.oInfo);
+                }.bind(this, name);
+                
+                this.buttonspan.innerHTML = "";
+                this.buttonspan.appendChild(IIDXHelper.createBoldText("Namespace: "));
+                this.buttonspan.appendChild(IIDXHelper.createNbspText());
+                this.buttonspan.appendChild(IIDXHelper.createButton("Delete", deleteCallback));
+            },
+            
+            onchangeNamespace : function (node, input) {
+                var oldName = node.data.value;
+                var newName = input.value;
+                // PEC HERE: test this
+                this.oInfo.renameNamespace(oldName, newName);
+                this.oTree.update(this.oInfo, [oldName], [newName]);
             },
             
             /*
@@ -213,7 +288,7 @@ define([	// properly require.config'ed
                 var defineDiv = document.createElement("div");
                 var nameForm = IIDXHelper.buildHorizontalForm(true);
                 defineDiv.appendChild(nameForm);
-                nameForm.appendChild(document.createTextNode(splitName[0] + ":"));
+                nameForm.appendChild(document.createTextNode(splitName[0] + " # "));
                 var nameInput = IIDXHelper.createTextInput("et_nameInput");
                 nameInput.value = splitName[1];
                 nameInput.onchange = this.onchangeClassName.bind(this, oClass, nameInput);
@@ -262,6 +337,13 @@ define([	// properly require.config'ed
                 var divList = [defineDiv, propsDiv, inheritDiv, enumDiv];
                 this.canvasdiv.innerHTML = "";
                 this.canvasdiv.appendChild(IIDXHelper.buildTabs(nameList, divList));
+                
+                this.setClassButtons();
+            },
+            
+            setClassButtons : function (name) {
+                
+                this.buttonspan.innerHTML = "";
             },
             
             buildPropertyEditDom : function (oProp) {
@@ -433,46 +515,17 @@ define([	// properly require.config'ed
                 this.oTree.update(this.oInfo, [oldURI], [newURI]);
             },
             
-            editClassOLD : function (node) {
-                var oClass = this.oInfo.getClass(node.data.value);
-                var namespace = oClass.getNamespaceStr();
-                var name = oClass.getNameStr(true);
-                
-                this.legend.innerHTML = "Class " + name;
-                
-                this.fieldset.innerHTML = "";
-                IIDXHelper.fsAddTextInput(this.fieldset, "Namespace:", null, "input-xlarge", namespace, true);
-                IIDXHelper.fsAddTextInput(this.fieldset, "Superclass:", null, "input-xlarge", oClass.getParentNameStrs().toString(), true);
-
-                var subtitle = null;
-                subtitle = document.createElement("legend");
-                subtitle.innerHTML = "Inherited Properties";
-                this.fieldset.appendChild(subtitle);
-                
-                var inheritList = this.oInfo.getInheritedProperties(oClass);
-                for (var i=0; i < inheritList.length; i++) {
-                    IIDXHelper.fsAddTextInput(this.fieldset, inheritList[i].getName().getFullName(), null, "input-xlarge", inheritList[i].getRange().getFullName(), true);
-
-                }
-                
-                subtitle = document.createElement("legend");
-                subtitle.innerHTML = "Properties";
-                this.fieldset.appendChild(subtitle);
-                
-                var propList = oClass.getProperties();
-                for (var i=0; i < propList.length; i++) {
-                    IIDXHelper.fsAddTextInput(this.fieldset, propList[i].getName().getFullName(), null, "input-xlarge", propList[i].getRange().getFullName(), true);
-
-                }
-                
-                subtitle = document.createElement("legend");
-                subtitle.innerHTML = "OneOf Restrictions";
-                this.fieldset.appendChild(subtitle);
-            },
-            
             editProperty : function (node) {
                 var name = node.data.value;
                 this.canvasdiv.innerHTML = "Property<br>" + name;
+                this.setPropertyButtons();
+                
+            },
+            
+            
+            setPropertyButtons : function (name) {
+                
+                this.buttonspan.innerHTML = "";
             },
             
         };
