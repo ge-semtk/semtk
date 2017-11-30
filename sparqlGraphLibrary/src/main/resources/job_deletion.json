@@ -6,14 +6,14 @@
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://fake-location",
+				"url": "http://fake-location:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://fake-location",
+				"url": "http://fake-location:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		]
