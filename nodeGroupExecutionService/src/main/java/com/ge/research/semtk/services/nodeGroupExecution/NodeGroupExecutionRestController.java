@@ -515,8 +515,13 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateIdAndCsvString(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
 		RecordProcessResults retval = null;
-		NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-		retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+		try{
+			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+		}catch(Exception e){
+			retval = new RecordProcessResults(false);
+			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
+		}
 		return retval.toJson();
 	}
 	
@@ -527,9 +532,14 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody) throws Exception{
 		RecordProcessResults retval = null;
-		NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-		SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-		retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+		try{
+			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+			SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
+			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+		}catch(Exception e){
+			retval = new RecordProcessResults(false);
+			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
+		}
 		return retval.toJson();
 	}
 
