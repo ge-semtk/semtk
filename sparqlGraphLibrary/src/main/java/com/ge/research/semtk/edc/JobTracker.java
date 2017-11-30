@@ -520,24 +520,20 @@ public class JobTracker {
 	 */
 	public void deleteJob(String jobId) throws Exception {	    
 		
-		
-	    String query = String.format("  \n" +
-	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
-	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 
-	        " \n" +
-	        "DELETE  {  \n" +
-			"   ?Job ?y ?z.    \n" +
-			"   ?z ?zo ?zp.  \n" +
-			"} \n" +
-			"where { \n" +
-			"   ?Job a job:Job. \n" +
-			"   ?Job job:id ?id. \n" +
-			"      VALUES ?id { '%s'^^XMLSchema:string }. \n" +
-			"   ?Job ?y ?z." +
-			"   optional { ?z ?zo ?zp. }  \n" +
-			"}",
-			SparqlToXUtils.safeSparqlString(jobId));
+		String idFilter = "    FILTER (?id < '" + SparqlToXUtils.safeSparqlString(jobId) + "'^^XMLSchema:string)" ;
+
+		String jobjAsStr = Utility.getResourceAsString(this, "/job_deletion_by_id.json");
+		JSONObject jObj = Utility.getJsonObjectFromString(jobjAsStr);
+		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
+		
+		NodeGroup ng = sgj.getNodeGroup();
+		
+		PropertyItem propertyToAlterTimingOn = ng.getPropertyItemBySparqlID("?id");
+		propertyToAlterTimingOn.setValueConstraint(new ValueConstraint(idFilter));
+		
+		String query = ng.generateSparqlDelete(null);
+			    
 	    LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
