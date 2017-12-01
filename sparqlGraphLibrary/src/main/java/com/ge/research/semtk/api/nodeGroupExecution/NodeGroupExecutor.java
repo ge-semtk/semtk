@@ -375,8 +375,14 @@ public class NodeGroupExecutor {
 		return this.getResultsLocation();
 	}
 
+	
 	/**
 	 * Ingest CSV, given a nodegroup ID
+	 * @param conn - override, may be null
+	 * @param storedNodeGroupId
+	 * @param csvContents
+	 * @return
+	 * @throws Exception
 	 */
 	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, String storedNodeGroupId, String csvContents) throws Exception{
 		
@@ -398,15 +404,23 @@ public class NodeGroupExecutor {
 		return ingestFromTemplateIdAndCsvString(conn, sparqlGraphJson, csvContents);
 	}
 		
+	
 	/**
 	 * Ingest CSV, given a nodegroup object
+	 * @param conn - override, may be null
+	 * @param sparqlGraphJson
+	 * @param csvContents
+	 * @return
+	 * @throws Exception
 	 */
 	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents) throws Exception{
 		
 		RecordProcessResults retval = null;
 
 		// replace the connection information in the sparqlGraphJson
-		sparqlGraphJson.setSparqlConn(conn);   
+		if (conn != null) {
+			sparqlGraphJson.setSparqlConn(conn);   
+		}
 		
 		// check to make sure there is an importspec attached. how to do this?
 		if(sparqlGraphJson.getJson().get("importSpec") == null){
@@ -414,7 +428,7 @@ public class NodeGroupExecutor {
 			throw new Exception("ingestFromTemplateIdAndCsvString -- the stored nodeGroup did not contain an import spec and is not elligible to use to ingest data.");
 		}
 		
-		this.irc.execIngestionFromCsv(sparqlGraphJson.getJson().toJSONString(), csvContents, conn.toJson().toJSONString());
+		this.irc.execIngestionFromCsv(sparqlGraphJson.getJson().toJSONString(), csvContents, sparqlGraphJson.getSparqlConnJson().toJSONString());
 		retval = this.irc.getLastResult();
 
 		LocalLogger.logToStdOut("Ingestion results: " + retval.toJson().toJSONString());

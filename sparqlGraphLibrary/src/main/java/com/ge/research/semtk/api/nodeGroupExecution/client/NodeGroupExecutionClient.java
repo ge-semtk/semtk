@@ -40,6 +40,8 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static String dispatchByIdEndpoint = "/dispatchById";
 	private static String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
 	private static String ingestFromCsvStringsNewConnection = "/ingestFromCsvStringsNewConnection";
+	private static String ingestFromCsvStrings = "/ingestFromCsvStrings";
+
 	private static String ingestFromCsvStringsAndTemplateNewConnection = "/ingestFromCsvStringsAndTemplateNewConnection";
 	private static String getResultsTable = "/getResultsTable";
 	private static String getResultsJsonLd = "/getResultsJsonLd";
@@ -951,9 +953,17 @@ public class NodeGroupExecutionClient extends RestClient {
 
 	/**
 	 * Ingest CSV using a nodegroup ID.
+	 * MIS-NAMED FUNCTION retained for BACKWARDS COMPATIBILITY
+	 */
+	public RecordProcessResults execIngestionFromCsvStr(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
+		return this.execIngestionFromCsvStrNewConnection(nodegroupAndTemplateId, csvContentStr, sparqlConnectionAsJsonObject);
+	}
+	
+	/**
+	 * Ingest CSV using a nodegroup ID.
 	 */
 	@SuppressWarnings("unchecked")
-	public RecordProcessResults execIngestionFromCsvStr(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
+	public RecordProcessResults execIngestionFromCsvStrNewConnection(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
 		RecordProcessResults retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsNewConnection);
@@ -976,10 +986,41 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	/**
+	 * Ingest CSV using a nodegroup ID.
+	 */
+	@SuppressWarnings("unchecked")
+	public RecordProcessResults execIngestionFromCsvStr(String nodegroupAndTemplateId, String csvContentStr) throws Exception {
+		RecordProcessResults retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStrings);
+		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
+		this.parametersJSON.put("csvContent", csvContentStr);
+	
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			retval = new RecordProcessResults(jobj);
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("templateId");
+			this.parametersJSON.remove("csvContent");
+		}
+		return retval;
+	}
+	
+	/**
+	 * MIS-NAMED FUNCTION retained for BACKWARDS COMPATIBILITY
+	 */
+	public RecordProcessResults execIngestionFromCsvStr(SparqlGraphJson sparqlGraphJson, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
+		return 	this.execIngestionFromCsvStrNewConnection(sparqlGraphJson, csvContentStr, sparqlConnectionAsJsonObject);
+	}
+
+	/**
 	 * Ingest CSV using a nodegroup.
 	 */
 	@SuppressWarnings("unchecked")
-	public RecordProcessResults execIngestionFromCsvStr(SparqlGraphJson sparqlGraphJson, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
+	public RecordProcessResults execIngestionFromCsvStrNewConnection(SparqlGraphJson sparqlGraphJson, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
 		RecordProcessResults retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateNewConnection);

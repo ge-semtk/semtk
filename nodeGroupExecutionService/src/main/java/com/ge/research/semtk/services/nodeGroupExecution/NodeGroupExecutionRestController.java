@@ -513,11 +513,28 @@ public class NodeGroupExecutionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
-	public JSONObject ingestFromTemplateIdAndCsvString(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
+	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody) throws Exception{
 		RecordProcessResults retval = null;
 		try{
 			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
 			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+		}catch(Exception e){
+			retval = new RecordProcessResults(false);
+			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
+		}
+		return retval.toJson();
+	}
+	
+	/**
+	 * Perform ingestion using a stored nodegroup ID.
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/ingestFromCsvStrings", method=RequestMethod.POST)
+	public JSONObject ingestFromTemplateIdAndCsvString(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
+		RecordProcessResults retval = null;
+		try{
+			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(null, requestBody.getTemplateId(), requestBody.getCsvContent());
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
 			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
