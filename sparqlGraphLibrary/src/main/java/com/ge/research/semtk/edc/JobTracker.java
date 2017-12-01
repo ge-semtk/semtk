@@ -521,7 +521,7 @@ public class JobTracker {
 	public void deleteJob(String jobId) throws Exception {	    
 		
 
-		String idFilter = "    FILTER (?id < '" + SparqlToXUtils.safeSparqlString(jobId) + "'^^XMLSchema:string)" ;
+		String idFilter = "       VALUES ?id { '" + SparqlToXUtils.safeSparqlString(jobId) + "'^^XMLSchema:string }  "; 
 
 		String jobjAsStr = Utility.getResourceAsString(this, "/job_deletion_by_id.json");
 		JSONObject jObj = Utility.getJsonObjectFromString(jobjAsStr);
