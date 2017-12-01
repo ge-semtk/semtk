@@ -88,7 +88,7 @@ public class IngestionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection){
-		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+		return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
 	}
 	
 	/**
