@@ -41,6 +41,13 @@ public class RecordProcessResults extends GeneralResultSet{
 	public RecordProcessResults(JSONObject encoded) throws EndpointNotFoundException{
 		super();
 		this.readJson(encoded);
+		JSONObject unwrapped = (JSONObject) encoded.get(RESULTS_BLOCK_NAME);
+		
+		// copy failuresEncountered and recordsProcessed up to the top level
+		if(unwrapped.containsKey("failuresEncountered")){
+			this.failuresEncountered = ((Long) unwrapped.get("failuresEncountered")).intValue();}
+		if(unwrapped.containsKey("recordsProcessed")){
+			this.recordsProcessed = ((Long) unwrapped.get("recordsProcessed")).intValue();}
 	}
 	
 	@Override
@@ -48,8 +55,16 @@ public class RecordProcessResults extends GeneralResultSet{
 		return RESULTS_BLOCK_NAME;
 	}
 
+	public int getRecordsProcessed() {
+		return this.recordsProcessed;
+	}
+	
 	public void setRecordsProcessed(int recordsProcessed) {
 		this.recordsProcessed = recordsProcessed;
+	}
+	
+	public int getFailuresEncountered() {
+		return this.failuresEncountered;
 	}
 	
 	public void setFailuresEncountered(int failuresEncountered){

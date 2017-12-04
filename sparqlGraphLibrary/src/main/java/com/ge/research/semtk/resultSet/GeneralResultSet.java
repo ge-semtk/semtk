@@ -172,14 +172,13 @@ public abstract class GeneralResultSet {
 			
 		} else {
 			String s = jsonObj.get("status").toString();
-			if (s.equals(GeneralResultSet.SUCCESS)) {
-				success = true;
+			if (s.equals(GeneralResultSet.SUCCESS) || s.equals(GeneralResultSet.FAILURE)) {
+				success = s.equals(GeneralResultSet.SUCCESS);
 				// subclass has set resultsBlockName
-				resultsContents = (JSONObject) jsonObj.get(getResultsBlockName());
-				
-			} else if (s.equals(GeneralResultSet.FAILURE)) {
-				success = false;
-				resultsContents = null;
+				String blockName = this.getResultsBlockName();
+				if (jsonObj.containsKey(blockName)) {
+					resultsContents = (JSONObject) jsonObj.get(blockName);
+				}
 				
 			} else {
 				success = null;
