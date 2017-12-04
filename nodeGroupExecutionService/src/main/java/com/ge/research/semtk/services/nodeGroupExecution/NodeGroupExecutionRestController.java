@@ -537,7 +537,7 @@ public class NodeGroupExecutionRestController {
 			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(null, requestBody.getTemplateId(), requestBody.getCsvContent());
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
-			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
+			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
 		}
 		return retval.toJson();
 	}
