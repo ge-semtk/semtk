@@ -80,10 +80,7 @@ public class IngestorRestClient extends RestClient{
 		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
 		
 		try{
-			this.lastResult = this.execute();
-			
-			this.lastResult.throwExceptionIfUnsuccessful();
-	
+			this.lastResult = this.execute();	
 			return;
 		} 
 		finally {
@@ -106,9 +103,7 @@ public class IngestorRestClient extends RestClient{
 		this.parametersJSON.put("data", data);
 		
 		try{
-			this.lastResult = this.execute();
-			this.lastResult.throwExceptionIfUnsuccessful();
-	
+			this.lastResult = this.execute();	
 			return;
 		} 
 		finally {
