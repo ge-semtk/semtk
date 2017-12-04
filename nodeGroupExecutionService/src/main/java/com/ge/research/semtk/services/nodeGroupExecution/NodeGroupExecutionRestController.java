@@ -507,9 +507,9 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 
 	}
-	
 	/**
 	 * Perform ingestion using a stored nodegroup ID.
+	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
@@ -524,26 +524,10 @@ public class NodeGroupExecutionRestController {
 		}
 		return retval.toJson();
 	}
-	
-	/**
-	 * Perform ingestion using a stored nodegroup ID.
-	 */
-	@CrossOrigin
-	@RequestMapping(value="/ingestFromCsvStrings", method=RequestMethod.POST)
-	public JSONObject ingestFromTemplateIdAndCsvString(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
-		RecordProcessResults retval = null;
-		try{
-			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(null, requestBody.getTemplateId(), requestBody.getCsvContent());
-		}catch(Exception e){
-			retval = new RecordProcessResults(false);
-			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
-		}
-		return retval.toJson();
-	}
-	
+
 	/**
 	 * Perform ingestion by passing in a nodegroup.
+	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
@@ -556,6 +540,23 @@ public class NodeGroupExecutionRestController {
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
 			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
+		}
+		return retval.toJson();
+	}
+	
+	/**
+	 * Perform ingestion using a stored nodegroup ID.
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/ingestFromCsvStringsByIdInclConnection", method=RequestMethod.POST)
+	public JSONObject ingestFromCsvStringsByIdInclConnection(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
+		RecordProcessResults retval = null;
+		try{
+			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(null, requestBody.getTemplateId(), requestBody.getCsvContent());
+		}catch(Exception e){
+			retval = new RecordProcessResults(false);
+			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
 		}
 		return retval.toJson();
 	}
