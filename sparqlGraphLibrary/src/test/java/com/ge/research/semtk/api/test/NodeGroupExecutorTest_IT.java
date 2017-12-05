@@ -40,6 +40,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -114,6 +115,35 @@ public class NodeGroupExecutorTest_IT {
 		// do the insert (using nodegroup ID)
 		nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, DATA);
 		
+		// check number of triples after insert
+		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+	}
+	
+	@Test
+	public void testIsUseNodegroupConn() throws Exception {
+		boolean b = NodeGroupExecutor.isUseNodegroupConn(NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+		assertTrue(b);
+	}
+	
+	/**
+	 * Test ingesting data by nodegroup ID, use nodegroup's conn
+	 */
+	@Test
+	public void testIngestByNodegroupIDConn() throws Exception{				
+		
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		
+		// store a nodegroup to execute
+		SparqlGraphJson sparqlGraphJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		insertNodeGroupToStore(sparqlGraphJson.getJson().toJSONString());
+		
+		// check number of triples before insert
+		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+		
+		// do the insert (using nodegroup ID)
+		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(NodeGroupExecutor.get_USE_NODEGROUP_CONN(), ngID, DATA);
+		assertTrue(res.getSuccess());
 		// check number of triples after insert
 		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 	}

@@ -548,12 +548,12 @@ public class NodeGroupExecutionRestController {
 	 * Perform ingestion using a stored nodegroup ID.
 	 */
 	@CrossOrigin
-	@RequestMapping(value="/ingestFromCsvStringsByIdInclConnection", method=RequestMethod.POST)
-	public JSONObject ingestFromCsvStringsByIdInclConnection(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
+	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
+	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
 		RecordProcessResults retval = null;
 		try{
 			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(null, requestBody.getTemplateId(), requestBody.getCsvContent());
+			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
 			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);

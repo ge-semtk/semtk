@@ -33,7 +33,6 @@ public class SparqlConnection {
  * To match files written by historical javascript, this is mostly a JSON wrangler.
  * 
  */
-	
 	private final static String QUERY_SERVER = "kdl";
 	private final static String FUSEKI_SERVER = "fuseki";
 	private final static String VIRTUOSO_SERVER = "virtuoso";
@@ -66,7 +65,7 @@ public class SparqlConnection {
 				dataServicetURL,
 				dataset);
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
@@ -167,7 +166,6 @@ public class SparqlConnection {
 			otherStr = otherStr.replaceFirst(other.name, "NAME");
 		}
 		return (thisStr.equals(otherStr));
-		
 	}
 	
 	public void setName (String name) {

@@ -30,7 +30,7 @@ import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroupExecutionClient extends RestClient {
-
+	
 	private static String mappingPrefix = "/nodeGroupExecution";
 	private static String jobStatusEndpoint = "/jobStatus";
 	private static String jobStatusMessageEndpoint = "/jobStatusMessage";
@@ -40,7 +40,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static String dispatchByIdEndpoint = "/dispatchById";
 	private static String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
 	private static String ingestFromCsvStringsNewConnection = "/ingestFromCsvStringsNewConnection";
-	private static String ingestFromCsvStrings = "/ingestFromCsvStrings";
+	private static String ingestFromCsvStringsById = "/ingestFromCsvStringsById";
 
 	private static String ingestFromCsvStringsAndTemplateNewConnection = "/ingestFromCsvStringsAndTemplateNewConnection";
 	private static String getResultsTable = "/getResultsTable";
@@ -67,8 +67,7 @@ public class NodeGroupExecutionClient extends RestClient {
 
 	private static String dispatchConstructByIdEndpointForInstanceManipulation = "/dispatchConstructForInstanceManipulationById";
 	private static String dispatchConstructFromNodegroupEndpointForInstanceManipulation = "/dispatchConstructForInstanceManipulationFromNodegroup";
-	
-	
+
 	@Override
 	public void buildParametersJSON() throws Exception {
 		// TODO Auto-generated method stub
@@ -989,24 +988,8 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * Ingest CSV using a nodegroup ID.
 	 */
 	@SuppressWarnings("unchecked")
-	public RecordProcessResults execIngestionFromCsvStr(String nodegroupAndTemplateId, String csvContentStr) throws Exception {
-		RecordProcessResults retval = null;
-		
-		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStrings);
-		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
-		this.parametersJSON.put("csvContent", csvContentStr);
-	
-		try{
-			JSONObject jobj = (JSONObject) this.execute();
-			retval = new RecordProcessResults(jobj);
-			retval.throwExceptionIfUnsuccessful();
-		}
-		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("templateId");
-			this.parametersJSON.remove("csvContent");
-		}
-		return retval;
+	public RecordProcessResults execIngestionFromCsvStrById(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
+		return execIngestionFromCsvStrNewConnection(nodegroupAndTemplateId, csvContentStr, sparqlConnectionAsJsonObject);
 	}
 	
 	/**

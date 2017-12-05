@@ -40,14 +40,20 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroupExecutor {
-
+	// json representing intent to get SparqlConnection from the accompanying nodegroup
+	// note that spaces, quotes and capitalization will be ignored
+	private static final String USE_NODEGROUP_CONN_STR = 
+			"{ \"name\" :   \"%NODEGROUP%\","
+			+ "\"domain\" : \"%NODEGROUP%\","
+			+ "\"model\" : [], " 
+			+ "\"data\" : []        } ";
+		
 	// all the internal instances needed to manage external communications
 	private NodeGroupStoreRestClient ngsrc = null;
 	private DispatchRestClient drc = null;
 	private ResultsClient rc = null;
 	private StatusClient sc = null;
 	private IngestorRestClient irc = null;
-	
 	// internal data.
 	private String currentJobId = null;
 	
@@ -74,6 +80,10 @@ public class NodeGroupExecutor {
 
 		this.currentJobId = jobID;
 		this.sc.setJobId(jobID);
+	}
+	
+	public static SparqlConnection get_USE_NODEGROUP_CONN() throws Exception {
+		return new SparqlConnection(USE_NODEGROUP_CONN_STR);
 	}
 	
 	//Job ID related
@@ -328,7 +338,7 @@ public class NodeGroupExecutor {
 		}
 		
 		// retrieve the connection from the nodegroup if needed
-		if (sc == null) {
+		if (this.isUseNodegroupConn(sc)) {
 			if(encodedNodeGroup.containsKey("sparqlConn")) {
 				sc = new SparqlConnection();
 				sc.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
@@ -418,7 +428,7 @@ public class NodeGroupExecutor {
 		RecordProcessResults retval = null;
 
 		// replace the connection information in the sparqlGraphJson
-		if (conn != null) {
+		if (this.isUseNodegroupConn(conn)) {
 			sparqlGraphJson.setSparqlConn(conn);   
 		}
 		
@@ -434,6 +444,10 @@ public class NodeGroupExecutor {
 		LocalLogger.logToStdOut("Ingestion results: " + retval.toJson().toJSONString());
 		
 		return retval;
+	}
+	
+	public static boolean isUseNodegroupConn(SparqlConnection conn) throws Exception {
+		return conn.equals(NodeGroupExecutor.get_USE_NODEGROUP_CONN(), false);
 	}
 	
 }

@@ -19,10 +19,12 @@ package com.ge.research.semtk.api.client.test;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -71,6 +73,24 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 			nodeGroupExecutionClient.execIngestionFromCsvStrNewConnection(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
+			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+		}
+		
+		/**
+		 * Test ingesting data using nodegroup connection
+		 */
+		@Test
+		public void testIngestNGConn() throws Exception{				
+			
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+			
+			String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
+			
+			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+			
+			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+			nodeGroupExecutionClient.execIngestionFromCsvStrNewConnection(sgJson_TestGraph, DATA, NodeGroupExecutor.get_USE_NODEGROUP_CONN().toJson());
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
 		

@@ -19,23 +19,15 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class DispatchRequestBody extends SparqlConnRequestBody {
+public class SparqlConnRequestBody {
+	private String sparqlConnection;
 	
-	private String externalDataConnectionConstraints;
-	private String runtimeConstraints;
-	
-	public String getExternalDataConnectionConstraints() {
-		return externalDataConnectionConstraints;
-	}
-	public void setExternalDataConnectionConstraints(String externalDataConnectionConstraints) {
-		this.externalDataConnectionConstraints = externalDataConnectionConstraints;
-	}
-	public String getRuntimeConstraints(){
-		return(this.runtimeConstraints);
-	}
-	public void setRuntimeConstraints(String runtimeConstraints){
-		this.runtimeConstraints = runtimeConstraints;
+	public SparqlConnection getSparqlConnection() throws Exception {
+		return new SparqlConnection(this.sparqlConnection);
 	}
 	
+	public void setSparqlConnection(String sparqlConnection) {
+		this.sparqlConnection = sparqlConnection;
+	}
 }
 

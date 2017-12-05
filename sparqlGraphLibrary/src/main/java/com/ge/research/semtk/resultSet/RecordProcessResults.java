@@ -44,10 +44,12 @@ public class RecordProcessResults extends GeneralResultSet{
 		JSONObject unwrapped = (JSONObject) encoded.get(RESULTS_BLOCK_NAME);
 		
 		// copy failuresEncountered and recordsProcessed up to the top level
-		if(unwrapped.containsKey("failuresEncountered")){
-			this.failuresEncountered = ((Long) unwrapped.get("failuresEncountered")).intValue();}
-		if(unwrapped.containsKey("recordsProcessed")){
-			this.recordsProcessed = ((Long) unwrapped.get("recordsProcessed")).intValue();}
+		if(unwrapped != null) {
+			if(unwrapped.containsKey("failuresEncountered")){
+				this.failuresEncountered = ((Long) unwrapped.get("failuresEncountered")).intValue();}
+			if(unwrapped.containsKey("recordsProcessed")){
+				this.recordsProcessed = ((Long) unwrapped.get("recordsProcessed")).intValue();}
+		}
 	}
 	
 	@Override

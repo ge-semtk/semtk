@@ -19,7 +19,7 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class IngestByIdCsvStrRequestBody {
+public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 
 	private String templateId = "";
 	private String csvContent = "";
