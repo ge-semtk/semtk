@@ -42,7 +42,7 @@ public class NodeGroupExecutionClientTest_IT {
 		 * Test ingesting data.
 		 */
 		@Test
-		public void testIngest() throws Exception{				
+		public void testIngestOldName() throws Exception{				
 			
 			TestGraph.clearGraph();
 			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
@@ -55,6 +55,25 @@ public class NodeGroupExecutionClientTest_IT {
 			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
+		
+		/**
+		 * Test ingesting data.
+		 */
+		@Test
+		public void testIngest() throws Exception{				
+			
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+			
+			String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
+			
+			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+			
+			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+			nodeGroupExecutionClient.execIngestionFromCsvStrNewConnection(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
+			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+		}
+		
 		
 		/**
 		 * Test ingesting data with a missing column.

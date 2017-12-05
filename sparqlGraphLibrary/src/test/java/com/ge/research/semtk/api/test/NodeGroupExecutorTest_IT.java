@@ -19,6 +19,8 @@ package com.ge.research.semtk.api.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
@@ -32,9 +34,11 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
@@ -48,7 +52,8 @@ public class NodeGroupExecutorTest_IT {
 	private static NodeGroupStoreRestClient ngsrc = null;	
 	private static String ngID = "test" + UUID.randomUUID();
 	
-	private final String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
+	private final String DATA =     "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
+	private final String DATA_ERR = "cell,size in,lot,material,guy,treatment\ncellA,five,lot5,silver,Smith\n";
 	
 	@BeforeClass
 	public static void setup() throws Exception{
@@ -111,6 +116,29 @@ public class NodeGroupExecutorTest_IT {
 		
 		// check number of triples after insert
 		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+	}
+	
+	/**
+	 * Test ingesting data by nodegroup ID
+	 */
+	@Test
+	public void testIngestByNodegroupIDError() throws Exception{		
+		
+		String data = Utility.readFile("src/test/resources/sampleBatteryBadColor.csv");
+		String owlPath = "src/test/resources/sampleBattery.owl";
+		
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl(owlPath);
+		
+		// store a nodegroup to execute
+		SparqlGraphJson sparqlGraphJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+		insertNodeGroupToStore(sparqlGraphJson.getJson().toJSONString());
+		
+		// do the insert (using nodegroup ID)
+		RecordProcessResults retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, data);
+		// check number of triples after insert
+		assertEquals(retval.getFailuresEncountered(), 1);
+		assert(retval.getResultsJSON().containsKey("errorTable"));
 	}
 	
 }
