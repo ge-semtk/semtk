@@ -322,37 +322,33 @@ public class NodeGroupExecutor {
 		JSONParser jParse = new JSONParser();
 		JSONObject encodedNodeGroup = (JSONObject) jParse.parse(serializedNodeGroup);
 		NodeGroup ng = new NodeGroup();	
+		SparqlConnection conn = sc;
 		
-		// PEC TODO: use of the json keys here is dangerous copy/paste.
-		//           SparqlConnection, NodeGroup, SparqlGraphJson should be the only keepers of this knowledge
-		//           Either add functions to check, or try toJson() and catch the exceptions.   Something better.
+		// what is encodedNodeGroup
+		if (SparqlGraphJson.isSparqlGraphJson(encodedNodeGroup)) {
+			
+			// SparqlGraphJson
+			SparqlGraphJson sgJson = new SparqlGraphJson(encodedNodeGroup);
+			
+			ng.addJsonEncodedNodeGroup(sgJson.getSNodeGroupJson());
+			
+			if (NodeGroupExecutor.isUseNodegroupConn(sc)) {
+				conn = sgJson.getSparqlConn();
+			}
+			
 		
-		// override sparql connection
-		SparqlConnection conn = null;
-		if (NodeGroupExecutor.isUseNodegroupConn(sc)) {
-			if (encodedNodeGroup.containsKey("sparqlConn")) {
-				conn = new SparqlConnection();
-				conn.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
-			} else {
+		} else if (NodeGroup.isNodeGroup(encodedNodeGroup)) {
+			
+			// plain NodeGroup
+			ng.addJsonEncodedNodeGroup(encodedNodeGroup);
+			
+			if (NodeGroupExecutor.isUseNodegroupConn(sc)) {
 				throw new Exception("Caller requested use of nodegroup's connection but none exists.");
 			}
-		} else {
-			conn = sc;
-		}
-		
-		// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
-		if(encodedNodeGroup.containsKey("sNodeGroup")){
-			LocalLogger.logToStdErr("located key: sNodeGroup");
-			ng.addJsonEncodedNodeGroup((JSONObject) encodedNodeGroup.get("sNodeGroup"));
-		}
-		
-		// otherwise, check for a truncated one that is only the nodegroup proper.
-		else if(encodedNodeGroup.containsKey("sNodeList")){
-			ng.addJsonEncodedNodeGroup(encodedNodeGroup);
-		}
-		else{
-			// no idea what this is...
-			throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+			
+		// Error
+		} else{
+			throw new Exception("Value given for encoded node group is neither SparqlGraphJson nor NodeGroup");
 		}
 		
 		// dispatch the job itself

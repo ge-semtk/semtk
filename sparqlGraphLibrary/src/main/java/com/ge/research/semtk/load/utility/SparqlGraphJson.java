@@ -51,6 +51,14 @@ public class SparqlGraphJson {
 		this((JSONObject) (new JSONParser()).parse(s));		
 	}
 	
+	/*
+	 * Basic check that jsonObj looks like a sparqlGraphJson
+	 */
+	public static boolean isSparqlGraphJson(JSONObject jsonObj) {
+		return 	(	 jsonObj.containsKey("sparqlConn") &&
+					jsonObj.containsKey("sNodeGroup") );
+	}
+	
 	public SparqlConnection getSparqlConn() throws Exception {
 		if (this.conn == null) {
 			JSONObject connJson = (JSONObject) (jObj.get("sparqlConn"));

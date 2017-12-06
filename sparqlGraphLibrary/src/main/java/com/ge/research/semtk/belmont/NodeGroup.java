@@ -64,6 +64,13 @@ public class NodeGroup {
 		this.sparqlNameHash = new HashMap<String, String>();
 	}
 	
+	/*
+	 * Simple check that Json looks right
+	 */
+	public static boolean isNodeGroup(JSONObject jObj) {
+		return jObj.containsKey("sNodeList");
+	}
+	
 	public int getPrefixNumberStart(){
 		return this.prefixNumberStart;
 	}
