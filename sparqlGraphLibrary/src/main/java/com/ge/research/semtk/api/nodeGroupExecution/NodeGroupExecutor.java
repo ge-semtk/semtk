@@ -253,6 +253,7 @@ public class NodeGroupExecutor {
 		
 		// assemble the nodeGroup and the connection into a nodegroup as the services want them.
 		JSONObject sendable = new JSONObject();
+		
 		sendable.put("sparqlConn", serializedConnection);
 		sendable.put("sNodeGroup", serializedNodeGroup);
 		
@@ -322,6 +323,23 @@ public class NodeGroupExecutor {
 		JSONObject encodedNodeGroup = (JSONObject) jParse.parse(serializedNodeGroup);
 		NodeGroup ng = new NodeGroup();	
 		
+		// PEC TODO: use of the json keys here is dangerous copy/paste.
+		//           SparqlConnection, NodeGroup, SparqlGraphJson should be the only keepers of this knowledge
+		//           Either add functions to check, or try toJson() and catch the exceptions.   Something better.
+		
+		// override sparql connection
+		SparqlConnection conn = null;
+		if (NodeGroupExecutor.isUseNodegroupConn(sc)) {
+			if (encodedNodeGroup.containsKey("sparqlConn")) {
+				conn = new SparqlConnection();
+				conn.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
+			} else {
+				throw new Exception("Caller requested use of nodegroup's connection but none exists.");
+			}
+		} else {
+			conn = sc;
+		}
+		
 		// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
 		if(encodedNodeGroup.containsKey("sNodeGroup")){
 			LocalLogger.logToStdErr("located key: sNodeGroup");
@@ -337,18 +355,8 @@ public class NodeGroupExecutor {
 			throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
 		}
 		
-		// retrieve the connection from the nodegroup if needed
-		if (this.isUseNodegroupConn(sc)) {
-			if(encodedNodeGroup.containsKey("sparqlConn")) {
-				sc = new SparqlConnection();
-				sc.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
-			} else {
-				throw new Exception("No sparql connection is specified");
-			}
-		}
-		
 		// dispatch the job itself
-		this.dispatchJob(qt, sc, ng, externalConstraints, runtimeConstraints, targetObjectSparqlID);
+		this.dispatchJob(qt, conn, ng, externalConstraints, runtimeConstraints, targetObjectSparqlID);
 	}
 	
 	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception {
@@ -426,11 +434,6 @@ public class NodeGroupExecutor {
 	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents) throws Exception{
 		
 		RecordProcessResults retval = null;
-
-		// replace the connection information in the sparqlGraphJson
-		if (this.isUseNodegroupConn(conn)) {
-			sparqlGraphJson.setSparqlConn(conn);   
-		}
 		
 		// check to make sure there is an importspec attached. how to do this?
 		if(sparqlGraphJson.getJson().get("importSpec") == null){
@@ -438,12 +441,30 @@ public class NodeGroupExecutor {
 			throw new Exception("ingestFromTemplateIdAndCsvString -- the stored nodeGroup did not contain an import spec and is not elligible to use to ingest data.");
 		}
 		
-		this.irc.execIngestionFromCsv(sparqlGraphJson.getJson().toJSONString(), csvContents, sparqlGraphJson.getSparqlConnJson().toJSONString());
+		String sgjStr = sparqlGraphJson.getJson().toJSONString();
+		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
+		this.irc.execIngestionFromCsv(sgjStr, csvContents, connStr);
 		retval = this.irc.getLastResult();
 
 		LocalLogger.logToStdOut("Ingestion results: " + retval.toJson().toJSONString());
 		
 		return retval;
+	}
+	
+	
+	/**
+	 * Look at conn and sgJson and determine proper override connection
+	 * @param conn
+	 * @param sgJson
+	 * @return
+	 * @throws Exception
+	 */
+	private JSONObject getOverrideConnJson(SparqlConnection conn, SparqlGraphJson sgJson) throws Exception {
+		if (NodeGroupExecutor.isUseNodegroupConn(conn)) {
+			return sgJson.getSparqlConnJson();
+		} else {
+			return conn.toJson();
+		}
 	}
 	
 	public static boolean isUseNodegroupConn(SparqlConnection conn) throws Exception {
