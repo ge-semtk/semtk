@@ -14,7 +14,7 @@ function multikill {
 		kill -9 `grep -a $1 /proc/*/cmdline | grep -va grep  | cut -f 3 -d \/`
 	else
 		echo pkill -f $1
-		pkill -f ruleStorageService
+		pkill -f $1
 	fi
 }
 
