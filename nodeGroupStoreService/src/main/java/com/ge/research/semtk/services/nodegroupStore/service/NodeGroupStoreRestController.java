@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -207,18 +208,19 @@ public class NodeGroupStoreRestController {
 				
 				// check if this is a wrapped or unwrapped 
 				// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
-				if(json.containsKey("sNodeGroup")){
+				if (SparqlGraphJson.isSparqlGraphJson(json)) {
+					SparqlGraphJson sgJson = new SparqlGraphJson(json);
 					LocalLogger.logToStdErr("located key: sNodeGroup");
-					json = (JSONObject) json.get("sNodeGroup");
+					json = sgJson.getSNodeGroupJson();
 				}
 				
 				// otherwise, check for a truncated one that is only the nodegroup proper.
-				else if(json.containsKey("sNodeList")){
+				else if(NodeGroup.isNodeGroup(json)) {
 					// do nothing
 				}
 				else{
 					// no idea what this is...
-					throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+					throw new Exception("Value given for encoded node group does not seem to be a SparqlGraphJson nor a NodeGroup");
 				}
 				
 				

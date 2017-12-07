@@ -47,6 +47,8 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroup {
+	private static final String JSON_KEY_NODELIST = "sNodeList";
+	
 	private static final int VERSION = 7;
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
@@ -68,7 +70,11 @@ public class NodeGroup {
 	 * Simple check that Json looks right
 	 */
 	public static boolean isNodeGroup(JSONObject jObj) {
-		return jObj.containsKey("sNodeList");
+		return jObj.containsKey(JSON_KEY_NODELIST);
+	}
+	
+	public static JSONArray extractNodeList(JSONObject jObj) {
+		return (JSONArray) jObj.get(JSON_KEY_NODELIST);
 	}
 	
 	public int getPrefixNumberStart(){
@@ -522,7 +528,7 @@ public class NodeGroup {
 		}
 		
 		// attempt to add the nodes, using "changedHash" as a guide for IDs.Integer.parseInt
-		this.addJson((JSONArray) jobj.get("sNodeList"), uncompressOInfo); 
+		this.addJson((JSONArray) jobj.get(JSON_KEY_NODELIST), uncompressOInfo); 
 		
 		if (jobj.containsKey("orderBy")) {
 			JSONArray oList = (JSONArray) jobj.get("orderBy");
@@ -657,7 +663,7 @@ public class NodeGroup {
 		tempHash.putAll(this.sparqlNameHash);
 		
 		
-		JSONArray nodeArr = (JSONArray)jobj.get("sNodeList");
+		JSONArray nodeArr = (JSONArray)jobj.get(JSON_KEY_NODELIST);
 		// loop through the nodes in the JSONArray
 		for(int k = 0; k < nodeArr.size(); k += 1){
 			JSONObject jnode = (JSONObject) nodeArr.get(k);
@@ -2401,7 +2407,7 @@ public class NodeGroup {
 		for (int i=0; i < snList.size(); i++) {
 			sNodeList.add(snList.get(i).toJson(mappedPropItems));
 		}
-		ret.put("sNodeList", sNodeList);
+		ret.put(JSON_KEY_NODELIST, sNodeList);
 		
 		return ret;
 	}

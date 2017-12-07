@@ -55,10 +55,14 @@ public class SparqlGraphJson {
 	 * Basic check that jsonObj looks like a sparqlGraphJson
 	 */
 	public static boolean isSparqlGraphJson(JSONObject jsonObj) {
-		return 	(	 jsonObj.containsKey("sparqlConn") &&
-					jsonObj.containsKey("sNodeGroup") );
+		return 	(	jsonObj.containsKey("sNodeGroup") );
 	}
 	
+	/**
+	 * 
+	 * @return
+	 * @throws Exception - if no Conn
+	 */
 	public SparqlConnection getSparqlConn() throws Exception {
 		if (this.conn == null) {
 			JSONObject connJson = (JSONObject) (jObj.get("sparqlConn"));

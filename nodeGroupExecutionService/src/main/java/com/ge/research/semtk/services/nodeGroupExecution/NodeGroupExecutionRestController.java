@@ -329,30 +329,31 @@ public class NodeGroupExecutionRestController {
 			JSONObject encodedNodeGroup = requestBody.getJsonNodeGroup();
 			NodeGroup ng = new NodeGroup();
 			
-			// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
-			if(encodedNodeGroup.containsKey("sNodeGroup")){
-				LocalLogger.logToStdErr("located key: sNodeGroup");
-				ng.addJsonEncodedNodeGroup((JSONObject) encodedNodeGroup.get("sNodeGroup"));
+			// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.			
+			if (SparqlGraphJson.isSparqlGraphJson(encodedNodeGroup)) {
+				SparqlGraphJson sgJson = new SparqlGraphJson(encodedNodeGroup);
+				ng.addJsonEncodedNodeGroup(sgJson.getSNodeGroupJson());
+				
+				if (connection == null) {
+					connection = sgJson.getSparqlConn();
+				}
 			}
 			
 			// otherwise, check for a truncated one that is only the nodegroup proper.
-			else if(encodedNodeGroup.containsKey("sNodeList")){
+			else if(NodeGroup.isNodeGroup(encodedNodeGroup)) {
 				ng.addJsonEncodedNodeGroup(encodedNodeGroup);
+				
+				if (connection == null) {
+						throw new Exception("No sparql connection is specified");
+				}
 			}
 			else{
 				// no idea what this is...
-				throw new Exception("Value given for encoded node group does not seem to be a node group as it has neither sNodeGroup or sNodeList keys");
+				throw new Exception("Value given for encoded node group is neither SparqlGraphJson nor NodeGroup");
 			}
 		
 			// retrieve the connection from the nodegroup if needed
-			if (connection == null) {
-				if(encodedNodeGroup.containsKey("sparqlConn")) {
-					connection = new SparqlConnection();
-					connection.fromJson((JSONObject) encodedNodeGroup.get("sparqlConn"));
-				} else {
-					throw new Exception("No sparql connection is specified");
-				}
-			}
+			
 			
 			// try to get the runtime constraints
 			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
@@ -644,24 +645,27 @@ public class NodeGroupExecutionRestController {
 	// helper method to figure out if we are looking at a nodegroup alone or a sparqlgraphJSON
 	// and return a nodegroup from it.
 	private NodeGroup getNodeGroupFromJson(JSONObject jobj) throws Exception{
-		NodeGroup retval = new NodeGroup();
-		
-		if(jobj.containsKey("sNodeGroup")){
+		NodeGroup retval = null;;
+				
+		if(SparqlGraphJson.isSparqlGraphJson(jobj)){
 			// this was a sparqlGraphJson. unwrap before using.
-			JSONObject innerObj = (JSONObject) jobj.get("sNodeGroup");
-			retval.addJson((JSONArray) innerObj.get("sNodeList"));
+			SparqlGraphJson sgJson = new SparqlGraphJson(jobj);
+			retval = sgJson.getNodeGroup();
 		}
-		else if(jobj.containsKey("sNodeList")){
+		
+		else if(NodeGroup.isNodeGroup(jobj)){
 			// this was just a node group
-			retval.addJson((JSONArray) jobj.get("sNodeList"));
+			retval = new NodeGroup();
+			retval.addJson(NodeGroup.extractNodeList(jobj));
 		}
+		
 		else{
 			// something insane was passed. fail with some dignity.
 			throw new Exception("Request object does not seem to contain a valid nodegroup serialization");
 		}
 		
 		return retval;
-	}
+	}		
 	
 }
 
