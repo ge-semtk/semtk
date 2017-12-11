@@ -640,4 +640,18 @@ public class Table {
 						);	
 	}
 	
+	public void sortByColumnDouble(String colName) {
+		int col = this.getColumnIndex(colName);
+		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
+								Double.compare(Double.parseDouble(rowA.get(col)), Double.parseDouble(rowB.get(col)))
+						);	
+	}
+	
+	public void sortByColumnDoubleRev(String colName) {
+		int col = this.getColumnIndex(colName);
+		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
+								Double.compare(Double.parseDouble(rowB.get(col)), Double.parseDouble(rowA.get(col)))
+						);	
+	}
+	
 }
