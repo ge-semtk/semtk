@@ -491,7 +491,7 @@ public class JobTracker {
 		
 		String endtimesFilter = "    FILTER (?creationTime < '" + xsdFormat.format(initialDate) + "'^^XMLSchema:dateTime)" ;
 
-		String jobjAsStr = Utility.getResourceAsString(this, "/job_deletion.json");
+		String jobjAsStr = Utility.getResourceAsString(this, "/nodegroups/job_deletion.json");
 		JSONObject jObj = Utility.getJsonObjectFromString(jobjAsStr);
 		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
 		
@@ -523,7 +523,7 @@ public class JobTracker {
 
 		String idFilter = "       VALUES ?id { '" + SparqlToXUtils.safeSparqlString(jobId) + "'^^XMLSchema:string }  "; 
 
-		String jobjAsStr = Utility.getResourceAsString(this, "/job_deletion_by_id.json");
+		String jobjAsStr = Utility.getResourceAsString(this, "/nodegroups/job_deletion_by_id.json");
 		JSONObject jObj = Utility.getJsonObjectFromString(jobjAsStr);
 		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
 		
