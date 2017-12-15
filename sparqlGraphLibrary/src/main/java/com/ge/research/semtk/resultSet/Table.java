@@ -297,6 +297,37 @@ public class Table {
 		}
 	}
 	
+	public void append(Table other) throws Exception {
+		String [] myCols = Arrays.copyOf(this.getColumnNames(), Math.toIntExact(this.getNumColumns()));
+		String [] otherCols = Arrays.copyOf(other.getColumnNames(), Math.toIntExact(other.getNumColumns()));
+		Arrays.sort(myCols);
+		Arrays.sort(otherCols);
+		if (! Arrays.equals(myCols, otherCols)) {
+			throw new Exception("Can not append tables with different columns");
+		}
+		
+		// build   map(myCol) = otherCol
+		ArrayList<Integer> map = new ArrayList<Integer>();
+		for (int i=0; i < this.getNumColumns(); i++) {
+			map.add(i, other.getColumnIndex(this.getColumnNames()[i]));
+		}
+		
+		// loop through other rows
+		for (int i=0; i < other.getNumRows(); i++) {
+			ArrayList<String> rawRow = other.getRow(i);
+			ArrayList<String> newRow = new ArrayList<String>();
+			
+			// swap column order as defined by map
+			for (int j=0; j < other.getNumColumns(); j++) {
+				newRow.add(rawRow.get(map.get(j)));
+			}
+			
+			this.addRow(newRow);
+		}
+		
+	}
+		
+	
 	/**
 	 * Get a table instance from a JSON object
 	 * Json object looks like this: {"col_names":["colA","colB","colC"],"col_type":["String","String","String"],"rows":[["apple","banana","coconut"],["adam","barbara","chester"]],"col_count":3\"row_count":2}

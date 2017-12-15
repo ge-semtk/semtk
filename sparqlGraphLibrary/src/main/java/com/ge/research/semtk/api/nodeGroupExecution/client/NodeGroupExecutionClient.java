@@ -639,12 +639,15 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	
-	
 	public SimpleResultSet executeDispatchSelectFromNodeGroup(NodeGroup ng, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+		return this.executeDispatchSelectFromNodeGroup(ng.toJson(), sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+	}
+	
+	public SimpleResultSet executeDispatchSelectFromNodeGroup(JSONObject ngJson, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectFromNodegroupEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", ngJson.toJSONString());
 		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
 		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
 		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
@@ -739,6 +742,13 @@ public class NodeGroupExecutionClient extends RestClient {
 	public Table executeDispatchSelectFromNodeGroupToTable(NodeGroup ng, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		
 		SimpleResultSet ret = this.executeDispatchSelectFromNodeGroup(ng, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+		
+		return this.waitForJobAndGetTable(ret.getResult("JobId"));
+	}
+	
+	public Table executeDispatchSelectFromNodeGroupToTable(JSONObject ngJson, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+		
+		SimpleResultSet ret = this.executeDispatchSelectFromNodeGroup(ngJson, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 		
 		return this.waitForJobAndGetTable(ret.getResult("JobId"));
 	}
