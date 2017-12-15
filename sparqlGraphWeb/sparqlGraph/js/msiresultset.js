@@ -31,6 +31,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			
 			this.localUriFlag = false;
 			this.escapeHtmlFlag = false;
+            this.anchorFlag = false;
 		};
 		
 		
@@ -297,6 +298,9 @@ define([	// properly require.config'ed   bootstrap-modal
 			setEscapeHtmlFlag : function (val) {
 				this.escapeHtmlFlag = val;
 			},
+            setAnchorFlag : function (val) {
+				this.anchorFlag = val;
+			},
 			
 			tableGetCols : function () {
 				var ret = [];
@@ -342,10 +346,13 @@ define([	// properly require.config'ed   bootstrap-modal
 				
 				// which columns are URIs
 				var uriCols = [];
+                var nonUriCols = [];
 				for (var i=0; i < table.col_type.length; i++) {
 					if (table.col_type[i].toLowerCase().indexOf("uri") > -1) {
 						uriCols.push(i);
-					}
+					} else {
+                        nonUriCols.push(i);
+                    }
 				}
 				
 				// make a copy of the rows (in case we want to change it)
@@ -354,19 +361,27 @@ define([	// properly require.config'ed   bootstrap-modal
 				for (var i=0; i < table.rows.length; i++) {
 					row = table.rows[i].slice();
 					
-					// change URI's to local names
+					// change URI's to local names 
 					if (this.localUriFlag) {
 						for (var j=0; j < uriCols.length; j++) {
 							row[uriCols[j]] = new OntologyName(row[uriCols[j]]).getLocalName();
 						}
 					}
-					
-					// escape HTML
-					if (this.escapeHtmlFlag) {
-						for (var j=0; j < uriCols.length; j++) {
-							row[uriCols[j]] = IIDXHelper.htmlSafe(row[uriCols[j]]);
-						}
-					}
+                    
+                    // create anchors amd escapeHtml (non-URI columns)
+					if (this.anchorFlag || this.escapeHtmlFlag) {
+						for (var j=0; j < nonUriCols.length; j++) {
+                            
+                            if (this.escapeHtmlFlag) {
+                                row[nonUriCols[j]] = IIDXHelper.htmlSafe(row[nonUriCols[j]]);
+                            }
+                        
+                            if (this.anchorFlag) {
+                                row[nonUriCols[j]] = IIDXHelper.urlToAnchor(row[nonUriCols[j]]);
+                            }
+                        
+                        }
+                    }
 					
 					// change undefined to empty strings so the datagrid doesn't crash
 					for (var j=0; j < row.length; j++) {

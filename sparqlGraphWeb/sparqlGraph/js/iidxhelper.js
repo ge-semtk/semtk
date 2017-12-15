@@ -473,6 +473,18 @@ define([	// properly require.config'ed
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&percnt;");
     },
     
+    /** 
+      * if str is ONLY a URL then change to an anchor
+      * otherwise return as-is
+      */
+    IIDXHelper.urlToAnchor = function(str) {
+        if (str.search("^https?:\/\/[^\\s]+$") == 0) {
+            return "<a href=\"" + str + "\">" + str + "</a>";
+        } else {
+            return str;
+        }
+    },
+        
     IIDXHelper.removeHtml = function(str) {
         return String(str).replace(/<(br|p|h1|h2|h3)>/g, '\n').replace(/<[^>]+>/g, '').replace("&nbsp", ' ');
     },

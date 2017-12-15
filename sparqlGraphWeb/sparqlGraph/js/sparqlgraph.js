@@ -1117,6 +1117,7 @@
         headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
         tableResults.setLocalUriFlag(! getQueryShowNamespace());
         tableResults.setEscapeHtmlFlag(true);
+        tableResults.setAnchorFlag(true);
         tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml);
         
         guiUnDisableAll();

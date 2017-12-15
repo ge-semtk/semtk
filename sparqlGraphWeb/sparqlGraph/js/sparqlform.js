@@ -927,6 +927,7 @@ require([	'local/sparqlformconfig',
             if (results.getRowCount() == Config.resultsTable.sampleSize) {
                 headerHTML += " <span class='label label-warning'>Showing first " + String(Config.resultsTable.sampleSize) + " rows. </span> "
             }
+            results.setAnchorFlag(true);
 			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), headerHTML);
 											
 			guiEndQuery();
