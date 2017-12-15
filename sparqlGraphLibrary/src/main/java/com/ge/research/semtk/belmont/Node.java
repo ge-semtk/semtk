@@ -158,7 +158,7 @@ public class Node extends Returnable {
 		for (int i = 0; i < this.props.size(); i++) { 
 			PropertyItem p = this.props.get(i);
 			// if compressFlag, then only add property if returned or constrained
-			if (mappedPropItems == null || p.getIsReturned() || p.getConstraints() != null || mappedPropItems.contains(p)) {
+			if (mappedPropItems == null || p.isUsed() || mappedPropItems.contains(p)) {
 				jPropList.add(p.toJson());
 			}
 		}
@@ -609,11 +609,11 @@ public class Node extends Returnable {
 	}
 	
 	public boolean isUsed() {
-		if (this.isReturned || this.constraints != null || this.instanceValue != null) {
+		if (this.isReturned || this.constraints != null || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE) {
 			return true;
 		}
 		for (PropertyItem item : this.props) {
-			if (item.isReturned || item.getConstraints() != null || item.getInstanceValues().size() > 0) {
+			if (item.isReturned || item.getConstraints() != null || item.getInstanceValues().size() > 0 || item.getIsRuntimeConstrained() || item.getIsMarkedForDeletion()) {
 				return true;
 			}
 		}
@@ -631,7 +631,7 @@ public class Node extends Returnable {
 		}
 		return false;	
 	}
-	
+	 
 	public ArrayList<String> getSparqlIDList() {
 		// list all sparqlID's in use by this node
 		ArrayList<String> ret = new ArrayList<String>();

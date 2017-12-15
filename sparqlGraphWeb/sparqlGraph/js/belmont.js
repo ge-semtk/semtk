@@ -644,6 +644,13 @@ PropertyItem.prototype = {
 		if(index < 0 ) { return null;}
 		return this.instanceValues[index];
 	}, 
+    isUsed : function() {
+        return (  
+            this.isReturned ||
+            this.isRuntimeConstrained ||
+            this.instanceValues.length > 0 ||
+            this.isMarkedForDeletion)
+    },
 	clearInstanceValues : function() {
 		this.instanceValues = [];
 	},
@@ -731,6 +738,8 @@ PropertyItem.prototype = {
 			bitmap += 1;
 		if (this.hasConstraints())
 			bitmap += 2;
+        if (this.getIsRuntimeConstrained())
+            bitmap += 4;
 		return bitmap;
 	},
 	
@@ -887,7 +896,7 @@ SemanticNode.prototype = {
 		for (var i = 0; i < this.propList.length; i++) {
 			var p = this.propList[i];
 			// if deflateFlag, then only add property if returned or constrained
-			if (deflateFlag == false || p.getIsReturned() || p.getConstraints() != "" || mappedPropItems.indexOf(p) > -1) {
+			if (deflateFlag == false || p.isUsed() || mappedPropItems.indexOf(p) > -1) {
 				ret.propList.push(p.toJson());
 			}
 		}
@@ -1173,17 +1182,19 @@ SemanticNode.prototype = {
 			}
 		} else {
 			// does this node or its properties have any constrants or isReturned()
-			if (this.getIsReturned() || this.hasConstraints() || this.instanceValue != null) return true;
+			if (this.getIsReturned() || this.hasConstraints() || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE ) {
+                return true;
+            }
 			
 			for (var i = 0; i < this.propList.length; i++) {
-				if (this.propList[i].getIsReturned() || this.propList[i].hasConstraints() || this.propList[i].instanceValues.length > 0) {
+				if (this.propList[i].getIsReturned() || this.propList[i].hasConstraints() || this.propList[i].instanceValues.length > 0 || this.propList[i].getIsRuntimeConstrained() || this.propList[i].getIsMarkedForDeletion()) {
 					return true;
 				}
 			}
 		}
 		return false;
 	},
-	
+
 	countReturns : function () {
 		var ret = this.getIsReturned() ? 1 : 0;
 		

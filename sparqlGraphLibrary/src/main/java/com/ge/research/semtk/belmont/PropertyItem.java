@@ -149,6 +149,9 @@ public class PropertyItem extends Returnable {
 		
 	}
 
+	public boolean isUsed() {
+		return (this.isReturned || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion);
+	}
 	public ArrayList<String> getInstanceValues() {
 		return this.instanceValues;
 	}
