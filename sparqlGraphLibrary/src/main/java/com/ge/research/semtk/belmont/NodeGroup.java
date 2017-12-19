@@ -49,7 +49,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class NodeGroup {
 	private static final String JSON_KEY_NODELIST = "sNodeList";
 	
-	private static final int VERSION = 7;
+	private static final int VERSION = 8;
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();

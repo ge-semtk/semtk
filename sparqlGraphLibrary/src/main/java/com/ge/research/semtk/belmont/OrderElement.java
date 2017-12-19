@@ -18,7 +18,13 @@ public class OrderElement {
 	}
 	
 	public OrderElement(JSONObject jObj) throws Exception {
-		this.sparqlID = (String) jObj.get("sparqlID");
+		// support reading old inconsistent capitalization
+		if (jObj.containsKey("sparqlID")) {
+			this.sparqlID = (String) jObj.get("sparqlID");
+		} else {
+			this.sparqlID = (String) jObj.get("SparqlID");
+		}
+		
 		if (jObj.containsKey("func")) {
 			this.func = (String) jObj.get("func");
 		}
@@ -50,7 +56,7 @@ public class OrderElement {
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
-		jObj.put("sparqlID", this.sparqlID);
+		jObj.put("SparqlID", this.sparqlID);
 		if (! this.func.isEmpty()) {
 			jObj.put("func", this.func);
 		}
