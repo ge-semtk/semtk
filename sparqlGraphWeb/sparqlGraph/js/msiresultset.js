@@ -491,8 +491,11 @@ define([	// properly require.config'ed   bootstrap-modal
 			/**
 			 * build an html iidx datagrid and add it to the div.
 			 * return the datagrid table element.
+             *
+             * params:
+             *    optSortList - see IIDXHelper.buildDatagridInDiv
 			 */
-			putTableResultsDatagridInDiv : function (div, headerHtml, optFinishedCallback, optMenuList, optMenuCallbackList) {
+			putTableResultsDatagridInDiv : function (div, headerHtml, optFinishedCallback, optMenuList, optMenuCallbackList, optSortList) {
 				
 				if (! this.isTableResults()) {
 					div.innerHTML =  "<b>Error:</b> Results returned from service are not TableResults";
@@ -505,7 +508,8 @@ define([	// properly require.config'ed   bootstrap-modal
 								                      this.tableGetRows.bind(this), 
 								                      typeof optMenuList == "undefined" ? ["Save table csv"] : optMenuList, 
 								                      typeof optMenuCallbackList == "undefined" ? [this.tableDownloadCsv.bind(this)] : optMenuCallbackList, 
-								                      optFinishedCallback);
+								                      optFinishedCallback,
+                                                      optSortList);
 			},
             
             /**

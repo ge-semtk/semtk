@@ -193,7 +193,7 @@ define([	// properly require.config'ed
 				
 				// return a list containing just the text field
 				this.callback(	this.item, 
-								(returnChecked || rtConstrainedChecked || constraintTxt != "") ? sparqlID : "",
+								(returnChecked || rtConstrainedChecked || constraintTxt != "" || delMarker != null) ? sparqlID : "",
 								returnChecked,
                                 (optionalCheckElem == null) ? null : optionalCheckElem.checked,
 								delMarker,

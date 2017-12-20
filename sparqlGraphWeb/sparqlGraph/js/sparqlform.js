@@ -629,8 +629,9 @@ require([	'local/sparqlformconfig',
 			
 	    	// Note: ModalItemDialog validates that sparqlID is legal
 	    	
-	    	// snodes don't allow these
-	    	if (item.setAndReserveSparqlID) item.setAndReserveSparqlID(sparqlID);
+	    	// Not sure dialog lets you change sparqlID, but function will handle non-event
+	    	gNodeGroup.changeSparqlID(item, sparqlID);
+            
             item.setIsReturned(returnFlag);
 	    	
 	    	// Optional

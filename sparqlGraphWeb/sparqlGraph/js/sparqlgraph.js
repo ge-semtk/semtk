@@ -468,7 +468,7 @@
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
-        propItem.setAndReserveSparqlID(sparqlID);
+        gNodeGroup.changeSparqlID(propItem, sparqlID);
         propItem.setIsReturned(returnFlag);
         propItem.setIsOptional(optionalFlag);
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
@@ -484,10 +484,11 @@
     var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {    	
     	// Note: ModalItemDialog validates that sparqlID is legal
     	
-    	// don't un-set an SNode's sparqlID
-    	if (sparqlID != "") {
-    		snodeItem.setSparqlID(sparqlID);
-    	}
+        // don't allow removal of node item's sparqlID
+        if (sparqlID != "") {
+            gNodeGroup.changeSparqlID(snodeItem, sparqlID);
+        }
+        
         snodeItem.setIsReturned(returnFlag);
     	
     	// ignore optionalFlag in sparqlGraph.  It is still used in sparqlForm
@@ -1118,7 +1119,8 @@
         tableResults.setLocalUriFlag(! getQueryShowNamespace());
         tableResults.setEscapeHtmlFlag(true);
         tableResults.setAnchorFlag(true);
-        tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml);
+        var noSort = [];
+        tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml, undefined, undefined, undefined, noSort);
         
         guiUnDisableAll();
         guiResultsNonEmpty();

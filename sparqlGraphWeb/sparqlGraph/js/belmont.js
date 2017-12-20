@@ -743,29 +743,6 @@ PropertyItem.prototype = {
 		return bitmap;
 	},
 	
-	setAndReserveSparqlID : function(retName) {
-		// callback from setting the return name
-		// caller must check that retName is legal and work it out with the GUI if
-		// not.
-
-		var curName = this.getSparqlID(); // current name w/o the "?"
-
-		// if user entered an empty name, they don't want it returned anymore
-		if (retName == "") {
-			freeUnusedSparqlID(this);
-
-			// else user entered a real name
-		} else {
-			// if name changed: free old one and grab new one
-			if (retName != curName) {
-				gNodeGroup.freeSparqlID(curName);
-				gNodeGroup.reserveSparqlID(retName);
-				this.setSparqlID(retName);
-			}
-
-		}
-	},
-	
 	getItemType : function () {
 		return "PropertyItem";
 	},
@@ -778,18 +755,6 @@ PropertyItem.prototype = {
 		return this.isMarkedForDeletion;
 	}
 };
-
-var freeUnusedSparqlID = function(item) {
-	// set SparqlID to "" only if it is not returned or constrained
-	// item could be SNode or PropItem
-	var id = item.getSparqlID();
-	if (id != "" && item.getIsReturned() == false
-			&& item.hasConstraints() == false) {
-		gNodeGroup.freeSparqlID(id);
-		item.setSparqlID("");
-	}
-};
-
 
 /* to set nodes */
 var setNode = function(SNode) { // set up the node itself. this includes the
@@ -1109,6 +1074,7 @@ SemanticNode.prototype = {
 		}
 		this.SparqlID = id;
 	},
+    
 	getSparqlID : function() {
 		return this.SparqlID;
 	},
@@ -1632,14 +1598,20 @@ var getNodeDeletionTypeByName = function(delVal){
 };
 
 var OrderElement = function(sparqlID, func) {
-    this.sparqlID = sparqlID;
+    this.sparqlID = (typeof sparqlID != "undefined") ? sparqlID : "";
     this.func = (typeof func != "undefined") ? func : "";
     this.fixID();
 };
 
 OrderElement.prototype = {
     fromJson : function (jObj) {
-        this.sparqlID = jObj.sparqlID;
+        // support reading old inconsistent capitalization
+		if (jObj.hasOwnProperty("sparqlID")) {
+            this.sparqlID = jObj.sparqlID;
+        } else {
+            this.sparqlID = jObj.SparqlID;
+        }
+        
         if (jObj.hasOwnProperty("func")){
             this.func = jObj.func;
         } else {
@@ -1750,7 +1722,8 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 7;
+SemanticNodeGroup.JSON_VERSION = 8;
+// version 8 - fixes to order by
 // version 7 - offset, order by
 // version 6 - limit
 // version 5 - top-secret undocumented version 
@@ -1826,7 +1799,9 @@ SemanticNodeGroup.prototype = {
         if (jObj.hasOwnProperty("orderBy")) {
             for (var i=0; i < jObj.orderBy.length; i++) {
                 var j = jObj.orderBy[i];
-                this.appendOrderBy(j.sparqlID, j.hasOwnProperty("func") ? j.func : "");
+                var o = new OrderElement();
+                o.fromJson(j);
+                this.appendOrderBy(o);
             }
         }
         this.validateOrderBy();
@@ -2190,20 +2165,16 @@ SemanticNodeGroup.prototype = {
         return this.offset;
     },
     
+    getOrderBy : function () {
+        return this.orderBy;
+    },
+    
     clearOrderBy : function () {
         this.orderBy = [];
     },
     
-    appendOrderBy : function (sparqlID, func) {
-        if (this.getItemBySparqlID(sparqlID) == null) {
-            throw new Error("SparqlID can't be found in nodegroup: " + sparqlID);
-            
-        } else if (this.orderBy.indexOf(sparqlID) > -1) {
-            throw new Error("SparqlID can't be added to ORDER BY twice: " + sparqlID);
-            
-        } else {
-            this.orderBy.push(new OrderElement(sparqlID, func));
-        }
+    appendOrderBy : function (oElem) {
+        this.orderBy.push(oElem);
     },
     
     removeInvalidOrderBy : function() {
@@ -2239,10 +2210,10 @@ SemanticNodeGroup.prototype = {
         var rList = this.getReturnedItems();
         for (var i=0; i < rList.length; i++) {
             r = rList[i];
-            this.appendOrderBy(r.getSparqlID());
+            this.appendOrderBy(new OrderElement(r.getSparqlID(), ""));
         }
     },
-
+    
     setOffset : function(offset) {
         this.offset = offset;
     },
@@ -3027,7 +2998,15 @@ SemanticNodeGroup.prototype = {
         return ret;
 
     },
-        
+    
+    getReturnedSparqlIDs : function() {
+        var items = this.getReturnedItems();
+        var ret = [];
+        for (var i=0; i < items.length; i++) {
+            ret.push(item.getSparqlID());
+        }
+    },
+    
     getItemBySparqlID : function(id) {
         var item = null;
 		// search every SemanticNode for the sparqlID
@@ -3059,12 +3038,30 @@ SemanticNodeGroup.prototype = {
 		// etc...
 		// return the new id, which may be slightly different than the requested
 		// id.
-
-		this.freeSparqlID(obj.getSparqlID());
-		var newID = new SparqlFormatter().genSparqlID(requestID,
-				this.sparqlNameHash);
-		this.reserveSparqlID(newID);
-		obj.setSparqlID(newID);
+        var oldID = obj.getSparqlID();
+        
+        // return if non-event
+        if (requestID == oldID) {
+            return;
+        }
+    
+        // free old ID
+		this.freeSparqlID(oldID);
+        
+        // set new ID if it isn't blank
+        var newID = "";
+        if (requestID != "") {
+            newID = new SparqlFormatter().genSparqlID(requestID, this.sparqlNameHash);
+		  this.reserveSparqlID(newID);
+		  obj.setSparqlID(newID);
+        
+            // fix orderBy entries
+            for (var i=0; i < this.orderBy.length; i++) {
+                if (this.orderBy[i].getSparqlID() == oldID) {
+                    this.orderBy[i].setSparqlID(newID);
+                }
+            }
+        }
 		return newID;
 	},
 
@@ -3078,6 +3075,7 @@ SemanticNodeGroup.prototype = {
 		// alert("retiring " + id);
 		if (id != null && id != "") {
 			delete this.sparqlNameHash[id];
+            this.removeInvalidOrderBy();
 		}
 	},
 
@@ -3122,6 +3120,7 @@ SemanticNodeGroup.prototype = {
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.sparqlNameHash = {};
 		this.conn = null;
+        this.orderBy = [];
 
 	},
 	
@@ -3345,6 +3344,21 @@ SemanticNodeGroup.prototype = {
 		
 	},
 	
+    // Exists beyond V1 for the GUI to edit
+    generateOrderByClause : function () {
+		this.validateOrderBy();
+		
+		if (this.orderBy.length > 0) {
+			var ret = "ORDER BY";
+			for (var i=0; i < this.orderBy.length; i++) {
+				ret += " " + this.orderBy[i].toSparql();
+			}
+			return ret;
+		} else {
+			return "";
+		}
+	},
+    
 	//--- move start ----
     getBelmontV1 : function () {
         try {

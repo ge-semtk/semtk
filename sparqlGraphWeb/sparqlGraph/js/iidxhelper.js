@@ -675,7 +675,7 @@ define([	// properly require.config'ed
         return menuDiv;
     };
 
-    IIDXHelper.buildDatagridInDiv = function (div, headerHTML, colsCallback, dataCallback, menuLabelList, menuCallbackList, optFinishedCallback) {
+    IIDXHelper.buildDatagridInDiv = function (div, headerHTML, colsCallback, dataCallback, menuLabelList, menuCallbackList, optFinishedCallback, optSortList) {
         //
         // PARAMS:
         //   div - html div in which to put the menu and table
@@ -685,6 +685,7 @@ define([	// properly require.config'ed
         //   menuStringList - list of menu items
         //   menuCallbackList - list of callbacks for menu items
         //   optFinishedCallback - call when done
+        //   optSortList - default sort.  default is [[0,'asc']].  For no sorting, use []
         //
         // RETURNS the table element
 
@@ -693,7 +694,8 @@ define([	// properly require.config'ed
         var tableId = IIDXHelper.getNextId("table");
 
         var finishedCallback = (typeof optFinishedCallback == 'undefined' || optFinishedCallback == null) ? function(){} : optFinishedCallback;
-
+        var sortList = (typeof optSortList == 'undefined') ? [[ 0, 'asc' ]] : optSortList;
+        
         // search (moved into the grid)
         // var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
 
@@ -770,6 +772,7 @@ define([	// properly require.config'ed
             $("#"+tableId).iidsBasicDataGrid({
                 'aoColumns':   colsCallback(),
                 'aaData':      dataCallback(),
+                'aaSorting':   sortList,
                 'plugins': ['R'], //enable the col-reorder plugin (assumes 'col-reorder-amd' is on the page)
                 'useFloater': false,
                 'isResponsive': true
