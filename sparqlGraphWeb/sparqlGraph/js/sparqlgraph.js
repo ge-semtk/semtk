@@ -956,10 +956,26 @@
    	};
 
     var doTest = function () {
-        activateOntologyEditor();   
-       
+        alert("test");
+    };
+
+    var editOrderBy = function () {
+
+        require(['sparqlgraph/js/modalorderbydialog'], 
+    	         function (ModalOrderByDialog) {
+            
+            var callback = function (x) {
+                gNodeGroup.setOrderBy(x);
+                nodeGroupChanged(true);
+            };
+            
+            var dialog = new ModalOrderByDialog(gNodeGroup.getReturnedSparqlIDs(), gNodeGroup.getOrderBy(), callback);
+            dialog.launchOrderByDialog();
+        });
    	};
 
+
+    var gStopChecking = true;
 
     var checkServices = function () {
         require(['sparqlgraph/js/microserviceinterface',
@@ -970,35 +986,51 @@
             var div = document.createElement("div");
             for (var key in g.service) {
                 if (g.service.hasOwnProperty(key)) {
-                    div.innerHTML += g.service[key].url + "...</br>";
+                    div.innerHTML += g.service[key].url + ' is .</br>';
                 }
             }
+            div.innerHTML += "<br><center><i>Pinging every 5 sec until dialog closes.</i></center>";
             
             var m = new ModalIidx();
-            m.showOK("Services", div,  function(){});
+            m.showOK("Services", div,  function(){ gStopChecking = true; });
             
-            // callback replaces the line with the service url with a result
-            var callback = function(div, url, resultSet_or_html) {
+            // replaces the line with the service url with a result
+            var pingCallback = function(div, url, resultSet_or_html) {
                 
                 // failure callbacks use a string parameter
                 if (typeof(resultSet_or_html) == "string") {
                 //    ModalIidx.alert("Microservice Ping Failed", resultSet_or_html)
-                    div.innerHTML = div.innerHTML.replace(url + "...", url + ' is <font color="red">down</font>' );
+                    div.innerHTML = div.innerHTML.replace(new RegExp(url + "[^\.]*"), url + ' is <font color="red">down</font>' );
                     
                 } else {
-                    div.innerHTML = div.innerHTML.replace(url + "...", url + ' is <font color="green">up</font>' );
+                    div.innerHTML = div.innerHTML.replace(new RegExp(url + "[^\.]*"), url + ' is <font color="green">up</font>' );
                 }
             }.bind(div);
             
-            // launch service for each
-            for (var key in g.service) {
-                if (g.service.hasOwnProperty(key)) {
-                    var msi = new MicroServiceInterface(g.service[key].url);
-                    msi.ping(callback.bind(this, div, g.service[key].url),
-                             callback.bind(this, div, g.service[key].url), 
-                             10000);  // 10 seconds
+            var showWaiting = function(url) {
+                div.innerHTML = div.innerHTML.replace(new RegExp(url + "[^\.]*"), url + ' is <font color="gold">waiting</font>' );
+            };
+            
+            var checkAll = function() {
+                if (gStopChecking) return;
+                
+                for (var key in g.service) {
+                    if (g.service.hasOwnProperty(key)) {
+                        var url = g.service[key].url;
+                        showWaiting(url);
+                        var msi = new MicroServiceInterface(url);
+                        msi.ping(pingCallback.bind(this, div, url),
+                                 pingCallback.bind(this, div, url), 
+                                 10000);  // 10 sec timeout
+                    }
                 }
-            }
+                
+                setTimeout(checkAll, 5000);  // repeat every 5 sec
+            };
+            
+            // launch service for each
+            gStopChecking = false;
+            setTimeout(checkAll, 1);   // make the first call async
             
         });
         
@@ -1215,6 +1247,14 @@
         gNodeGroupChangedFlag = flag;
         
         guiUpdateGraphRunButton();
+        
+        // check up ORDER BY
+        gNodeGroup.removeInvalidOrderBy();
+        if (gNodeGroup.getOrderBy().length > 0) {
+            document.getElementById("SGOrderBy").classList.add("btn-primary");
+        } else {
+            document.getElementById("SGOrderBy").classList.remove("btn-primary");
+        }
         
         if (flag) {
             gNodeGroup.drawNodes();

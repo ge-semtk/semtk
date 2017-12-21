@@ -235,15 +235,6 @@ define([	// properly require.config'ed
         return outerDiv;
     };
     
-    IIDXHelper.createIconButton = function(iconClass) {
-        var ret = document.createElement("a");
-        ret.classList.add("btn");
-        var icon = document.createElement("icon");
-        icon.className = iconClass;
-        ret.appendChild(icon);
-        return ret;
-    };
-    
     /*
      * Get list of values for each selected option
      *
@@ -323,6 +314,19 @@ define([	// properly require.config'ed
             butElem.id = optId;
         }
         return butElem;
+    };
+    
+    IIDXHelper.createIconButton = function(iconClass, optCallback) {
+        var ret = document.createElement("a");
+        ret.classList.add("btn");
+        var icon = document.createElement("icon");
+        icon.className = iconClass;
+        ret.appendChild(icon);
+        
+        if (typeof optCallback != undefined) {
+            ret.onclick = optCallback;
+        }
+        return ret;
     };
     
     IIDXHelper.createNbspText = function() {
@@ -815,7 +819,7 @@ define([	// properly require.config'ed
         return ret;
 
     };
-
+    
     IIDXHelper.buildTabs = function(nameList, divList) {
         var panel = IIDXHelper.getNextId("panel");
         var ret = document.createElement("span");

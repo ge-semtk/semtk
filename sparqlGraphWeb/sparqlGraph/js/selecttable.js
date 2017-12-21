@@ -36,19 +36,24 @@ define([	// properly require.config'ed   bootstrap-modal
 		/*
          *  Params mimic jquery dataTable:
          *    cols - array of column names
-         *    rows - array of row arrays.  Can have "" but not undefined.
+         *    rows - array of row arrays.
+         *           each cell can be either:
+         *               innerHTML string, including ""
+         *               child dom
          *    widths - array of column widths in %
-         *    heightRows - height in rows
+         *    heightRows - Make rows compact 1ch and height about this many rows.  
+         #                 0 means non-compact rows and no height limit.
          *
          *  Cell widths:  are in percents.  Contents are truncated w/ ellipses
          *  heightRows is approximate
          */
-		var SelectTable = function (rows, cols, widths, heightRows, multiFlag) {
+		var SelectTable = function (rows, cols, widths, heightRows, multiFlag, optFilterFlag) {
 			this.rows = rows;
             this.cols = cols;
             this.widths = widths;
             this.heightRows = heightRows;
             this.multiFlag = multiFlag;
+            this.filterFlag = typeof optFilterFlag == "undefined" ? true : optFilterFlag;
             
             this.dom = null;
             this.headTab = null;
@@ -59,6 +64,14 @@ define([	// properly require.config'ed   bootstrap-modal
 		};
 		
 		SelectTable.prototype = {
+            getNumRows : function () {
+                return this.rowsTab.rows.length;
+            },
+            
+            getCellDom : function (r, c) {
+                return this.rowsTab.rows[r].cells[c];
+            },
+            
             getTableDom : function () {
                 return this.dom;
             },
@@ -116,13 +129,15 @@ define([	// properly require.config'ed   bootstrap-modal
                     cell.innerHTML = this.cols[i];
                     
                     // filter text box
-                    cell.appendChild(document.createElement("br"));
-                    input = document.createElement("input");
-                    cell.appendChild(input);
-                    input.type = "text";
-                    input.classList.add("input-small");
-                    input.placeholder=("filter...");
-                    input.onkeyup=this.filterCallback.bind(this, input, i);
+                    if (this.filterFlag) {
+                        cell.appendChild(document.createElement("br"));
+                        input = document.createElement("input");
+                        cell.appendChild(input);
+                        input.type = "text";
+                        input.classList.add("input-small");
+                        input.placeholder=("filter...");
+                        input.onkeyup=this.filterCallback.bind(this, input, i);
+                    }
                     
                     // cell styles
                     cell.style.width = this.widths[i] + "%";
@@ -134,9 +149,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 // row div and # rows
                 var rowDiv = document.createElement("div");
                 this.dom.appendChild(rowDiv);
-                rowDiv.style.height = this.heightRows * 3 + "ch";
+                if (this.heightRows != 0) {
+                    rowDiv.style.height = this.heightRows * 3 + "ch";
+                    rowDiv.style.overflowY = "auto";
+                }
                 rowDiv.style.width = "100%";
-                rowDiv.style.overflowY = "auto";
                 
                 this.rowsTab = document.createElement("table");
                 rowDiv.appendChild(this.rowsTab);
@@ -158,7 +175,9 @@ define([	// properly require.config'ed   bootstrap-modal
                     // create row
                     row = document.createElement("tr");
                     row.classList.add("odd");
-                    row.style.height - "1ch";
+                    if (this.heightRows != 0) {
+                        row.style.height = "1ch";
+                    }
                     row.onclick = this.rowClick.bind(this);
                     body.appendChild(row);
                     
@@ -167,9 +186,15 @@ define([	// properly require.config'ed   bootstrap-modal
                         this.filter[i].push(true);
                         cell = document.createElement("td");
                         row.appendChild(cell);
-                        cell.innerHTML = this.rows[i][j];
+                        if (typeof this.rows[i][j] == "string") {
+                            cell.innerHTML = this.rows[i][j];
+                        } else {
+                            cell.appendChild(this.rows[i][j]);
+                        }
                         cell.style.width = this.widths[j] + "%";
-                        cell.style.height = "1ch";
+                        if (this.heightRows != 0) {
+                            cell.style.height = "1ch";
+                        }
                         cell.style.whiteSpace = "nowrap";
                         cell.style.overflow = "hidden";
                         cell.style.textOverflow = "ellipsis";
@@ -222,9 +247,32 @@ define([	// properly require.config'ed   bootstrap-modal
                 }
             },
             
+            selectRow : function (r) {
+                // unselect others if not multiFlag
+                if (! this.multiFlag) {
+                    for (var i=0; i < this.rowsTab.rows.length; i++) {
+                        if (i != r) {
+                            this.rowsTab.rows[i].classList.remove("row_selected");
+                        }
+                    }
+                } 
+                this.rowsTab.rows[r].classList.add("row_selected");
+            },
+            
+            // boolRowFunc takes an array of <td> element doms
+            findRow : function (boolRowFunc) {
+                var ret = [];
+                for (var i=0; i < this.rowsTab.rows.length; i++) {
+                    if (boolRowFunc(this.rowsTab.rows[i].children)) {
+                        ret.push(i);
+                    }
+                }
+                return ret;
+            },
+            
             /*
-             * return the selected row index
-             * or -1
+             * return the selected row indices
+             * or []
              */
             getSelectedIndices : function () {
                 var ret = [];

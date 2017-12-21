@@ -1659,6 +1659,12 @@ OrderElement.prototype = {
             return this.sparqlID;
         }
     },
+    
+    deepCopy : function() {
+        var o = new OrderElement();
+        o.fromJson(this.toJson());
+        return o;
+    }
 };
 
 /* the semantic node group */
@@ -2167,6 +2173,10 @@ SemanticNodeGroup.prototype = {
     
     getOrderBy : function () {
         return this.orderBy;
+    },
+
+    setOrderBy : function (orderElemList) {
+        this.orderBy = orderElemList;
     },
     
     clearOrderBy : function () {
@@ -3003,8 +3013,9 @@ SemanticNodeGroup.prototype = {
         var items = this.getReturnedItems();
         var ret = [];
         for (var i=0; i < items.length; i++) {
-            ret.push(item.getSparqlID());
+            ret.push(items[i].getSparqlID());
         }
+        return ret;
     },
     
     getItemBySparqlID : function(id) {
