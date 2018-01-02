@@ -167,7 +167,11 @@ define([	// properly require.config'ed
      */
     IIDXHelper.createSelect = function (id, textValArray, selectedTexts, optMultiFlag, optClassName) {
         var select =  document.createElement("select");
-        select.id = id;
+        
+        if (typeof id != "undefined" && id != null && id != "") {
+            select.id = id;
+        }
+        
         if(typeof optClassName != "undefined"){
             select.className = optClassName;
         }

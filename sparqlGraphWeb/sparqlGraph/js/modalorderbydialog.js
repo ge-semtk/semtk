@@ -62,6 +62,7 @@ define([	// properly require.config'ed
 			},
 			
 			okCallback : function() {
+                this.updateOrderElems(true); 
                 this.callback(this.orderElems);
 			},
 			
@@ -150,11 +151,6 @@ define([	// properly require.config'ed
                 // build rows
                 var rows = [];
                 
-                // if orderElems is empty, create a blank OrderElement
-                if (this.orderElems.length == 0) {
-                    rows.push(this.buildTableRow("", ""));
-                }
-                
                 // add 'normal' rows
                 for (var i=0; i < this.orderElems.length; i++) {
                     
@@ -187,15 +183,18 @@ define([	// properly require.config'ed
             
             /*
              * Create new this.orderElems based on the this.selTable
+             *
+             * optRmBlanksFlag - if true, remove any blank rows (used for final "OK")
              */
-            updateOrderElems : function() {
+            updateOrderElems : function(optRmBlanksFlag) {
+                var rmBlanksFlag = typeof optRmBlanksFlag !== "undefined" ? optRmBlanksFlag : false;
                 this.orderElems = [];
                 
                 for (var i=0; i < this.selTable.getNumRows(); i++) {
                     var sparqlID = this.selTable.getCellDom(i,0).getElementsByTagName("select")[0].value;
                     
-                    // skip blank rows
-                    if (sparqlID != "") {
+                    // if we're not removing blanks or row isn't blank
+                    if (!rmBlanksFlag || sparqlID !== "")  {
                         var func     = this.selTable.getCellDom(i,1).getElementsByTagName("select")[0].value;
                         var oe = new OrderElement(sparqlID, func);
                         this.orderElems.push(oe);
@@ -279,7 +278,12 @@ define([	// properly require.config'ed
                 this.selTableDiv = document.createElement("div");
                 this.div.appendChild(this.selTableDiv);
                 
-                this.updateSelTable();
+                // if orderElems is empty, create a blank OrderElement
+                if (this.orderElems.length == 0) {
+                    this.orderElems = [new OrderElement("")];
+                }
+                
+                this.updateSelTable(); 
             
                 // launch the modal
                 var m = new ModalIidx();
