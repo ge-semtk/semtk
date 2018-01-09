@@ -44,6 +44,11 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.utility.LocalLogger;
 
+/**
+ * @author Justin
+ *
+ * Open source dispatcher.
+ */
 public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	protected static final int MAX_NUMBER_SIMULTANEOUS_QUERIES_PER_USER = 50;  // maybe move this to a configured value?
@@ -81,6 +86,9 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 		return null;
 	}
 
+	/**
+	 * Simplest form of dispatcher execute:  get SPARQL and execute it.
+	 */
 	@Override
 	public TableResultSet execute(Object ExecutionSpecificConfigObject, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception {
 	TableResultSet retval = null; // expect this to get instantiated with the appropriate subclass.		
@@ -98,9 +106,5 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 		// ship the results.
 		return retval;		
 	}
-
-
-	
-	
 
 }

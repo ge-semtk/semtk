@@ -44,7 +44,12 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.utility.LocalLogger;
-
+/**
+ * @author Justin
+ *
+ * Base class for dispatchers.
+ *
+ */
 public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
