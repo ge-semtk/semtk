@@ -257,6 +257,7 @@ public class DataLoader {
 		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
 		//       this way, we only need to get it's prefixes. 
 		
+		// TODO: this SPARQL-generation should be in NodeGroup.java
 		String query =  lastNg.generateSparqlPrefix() + "Insert { " + totalInsertHead + " } where { " + totalInsertWhere + " } "; 
 
 //		// some diagnostic output:

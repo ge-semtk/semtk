@@ -30,7 +30,7 @@ import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 /*
- * Takes data records and uses them to populate NodeGroups.
+ * Takes multiple data records and uses them to populate NodeGroups.
  */
 public class DataToModelTransformer {
 
