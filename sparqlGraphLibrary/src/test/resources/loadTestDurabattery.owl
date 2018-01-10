@@ -1,0 +1,125 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns="http://kdl.ge.com/durabattery#"
+  xml:base="http://kdl.ge.com/durabattery">
+  <owl:Ontology rdf:about="http://kdl.ge.com/durabattery">
+    <owl:versionInfo>$Revision:$ Last modified on   $Date:$</owl:versionInfo>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'sampleBattery2.sadl' and should not be edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="Cell">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass>
+          <owl:Class rdf:ID="Color"/>
+        </owl:onClass>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="color"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass>
+          <owl:Class rdf:about="http://kdl.ge.com/durabattery#Color"/>
+        </owl:onClass>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://kdl.ge.com/durabattery#color"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="cellId"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="Battery">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="assemblyDate"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="batteryDesc"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="batteryId"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="DuraBattery">
+    <rdfs:subClassOf rdf:resource="http://kdl.ge.com/durabattery#Battery"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://kdl.ge.com/durabattery#Color">
+    <owl:equivalentClass>
+      <owl:Class>
+        <owl:oneOf rdf:parseType="Collection">
+          <Color rdf:ID="red"/>
+          <Color rdf:ID="white"/>
+          <Color rdf:ID="blue"/>
+        </owl:oneOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="cell2">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#DuraBattery"/>
+    <rdfs:range rdf:resource="http://kdl.ge.com/durabattery#Cell"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://kdl.ge.com/durabattery#color">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#Cell"/>
+    <rdfs:range rdf:resource="http://kdl.ge.com/durabattery#Color"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="cell3">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#DuraBattery"/>
+    <rdfs:range rdf:resource="http://kdl.ge.com/durabattery#Cell"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="cell4">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#DuraBattery"/>
+    <rdfs:range rdf:resource="http://kdl.ge.com/durabattery#Cell"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="cell1">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#DuraBattery"/>
+    <rdfs:range rdf:resource="http://kdl.ge.com/durabattery#Cell"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://kdl.ge.com/durabattery#batteryDesc">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#Battery"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://kdl.ge.com/durabattery#batteryId">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#Battery"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://kdl.ge.com/durabattery#assemblyDate">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#Battery"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://kdl.ge.com/durabattery#cellId">
+    <rdfs:domain rdf:resource="http://kdl.ge.com/durabattery#Cell"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>
