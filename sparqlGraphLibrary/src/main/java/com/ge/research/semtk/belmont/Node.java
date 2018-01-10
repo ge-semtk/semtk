@@ -680,19 +680,24 @@ public class Node extends Returnable {
 		 * just return null. 
 		 * if an ID not prefixed with ? is passed, we are just going to add it.
 		 */
+		
+		int i = this.getPropertyItemIndexBySparqlID(currID);
+		if (i == -1) 
+			return null;
+		else
+			return this.props.get(i);
+	}
+	
+	public int getPropertyItemIndexBySparqlID(String currID) {
 		if(currID != null && !currID.isEmpty() && !currID.startsWith("?")){
 			currID = "?" + currID;
 		}
-		
-		PropertyItem retval = null;
-		for(PropertyItem pi : this.props ){
-			if(pi.sparqlID.equals(currID)){
-				retval = pi;
-				break;				// found it. move along. 
+		for (int i = 0; i < this.props.size(); i++) {
+			if (this.props.get(i).getSparqlID().equals(currID)) {
+				return i;
 			}
 		}
-		
-		return retval;
+		return -1;
 	}
 	
 	public PropertyItem getPropertyByKeyname(String keyname) {
@@ -704,6 +709,19 @@ public class Node extends Returnable {
 		return null;
 	}
 	
+	public PropertyItem getPropertyItem(int i) {
+		return this.props.get(i);
+	}
+	
+	public int getPropertyIndexByURIRelation(String uriRel) {
+		for (int i = 0; i < this.props.size(); i++) {
+			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	public PropertyItem getPropertyByURIRelation(String uriRel) {
 		for (int i = 0; i < this.props.size(); i++) {
 			if (this.props.get(i).getUriRelationship().equals(uriRel)) {

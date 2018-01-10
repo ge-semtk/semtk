@@ -16,10 +16,10 @@
  */
 
 
-package com.ge.research.semtk.load.utility;
-
-public enum ImportItemTypes {
-	COLUMN,   // use raw column value
-	TEXT,     // this is free text. use as-is
-	TRANSFORM // specifies a transform. 
-}
+//package com.ge.research.semtk.load.utility;
+//
+//public enum ImportItemTypes {
+//	COLUMN,   // use raw column value
+//	TEXT,     // this is free text. use as-is
+//	TRANSFORM // specifies a transform. 
+//}

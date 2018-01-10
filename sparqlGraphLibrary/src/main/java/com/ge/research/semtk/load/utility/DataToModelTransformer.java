@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,20 +36,20 @@ public class DataToModelTransformer {
 
 	Dataset ds = null;
 	int batchSize = 1;
-	JSONObject basisNodegroupJson;
 	ImportSpecHandler transformSpec = null;
 	OntologyInfo oInfo = null;
 	Table failuresEncountered = null;
 	int totalRecordsProcessed = 0;
 	
 	public DataToModelTransformer(SparqlGraphJson sgJson) throws Exception{
-		this.basisNodegroupJson = sgJson.getSNodeGroupJson();
 		this.oInfo = sgJson.getOntologyInfo();
 		this.transformSpec = sgJson.getImportSpec();
 		
-		if(basisNodegroupJson == null || transformSpec == null){
-			// none of this is valid. panic and throw exception.
-			throw new Exception("either the basis nodegroup or the data transformation spec were null.");
+		if (sgJson.getImportSpecJson() == null) {
+			throw new Exception("The data transformation import spec is null.");
+		}
+		if (sgJson.getSNodeGroupJson() == null) {
+			throw new Exception("The data transformation nodegroup is null.");
 		}
 	}
 
@@ -141,11 +141,11 @@ public class DataToModelTransformer {
 			this.totalRecordsProcessed += 1;
 			
 			// get our new node group
-			NodeGroup cng = NodeGroup.getInstanceFromJson(basisNodegroupJson);
+			NodeGroup cng = null;
 			
 			// add the values from the results to it.
 			try{
-				cng = this.transformSpec.importRecord(cng, curr);
+				cng = this.transformSpec.importRecord(curr);
 			
 				// add the new group to the output arraylist, only if it succceeded
 				retval.add(cng);
