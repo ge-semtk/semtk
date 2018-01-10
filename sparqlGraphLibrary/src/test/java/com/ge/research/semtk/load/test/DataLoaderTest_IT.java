@@ -301,7 +301,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, 5, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
