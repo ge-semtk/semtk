@@ -315,14 +315,26 @@ define([	// properly require.config'ed
 				// append one item row to an HTML table
 				var row = table.insertRow(-1);
 				var cell = null;
+                var uriFlag = (iRow.getPropItem() == null);
 				
+                // create column of lookup / mode controls   PEC HERE
 				cell = row.insertCell(-1);
-				if (iRow.getPropItem() == null) {
+				if (uriFlag) {
+                    
+                } else {
+                    var but = IIDXHelper.createIconButton("icon-key", function(){});
+                    cell.appendChild(but);
+                }
+                
+                // if URI label with sparqlID, else use property keyname
+				cell = row.insertCell(-1);
+                if (uriFlag) {
 					cell.innerHTML = "<b>" + iRow.node.getSparqlID() + "</b>";
 				} else {
 					cell.innerHTML = iRow.propItem.getKeyName();
 				}
 				
+                // set up cell for dropping things into
 				cell = row.insertCell(-1);
 				cell.id = MappingTab.PREFIX_ROW + this.getUniqueIndexStr();
 				this.elemHash[cell.id] = iRow;
@@ -342,6 +354,7 @@ define([	// properly require.config'ed
 
 				cell.ondrop = this.ondropUriRow.bind(this);
 				
+                // put in any Item elements that already exist
 				var itemList = iRow.getItemList();
 				for (var i=0; i < itemList.length; i++) {
 					var elem = this.createItemElem(itemList[i]);

@@ -106,6 +106,14 @@ OntologyTree.prototype = {
 		}.bind(this,expandList,selectList));
     },
     
+    activateByValue : function (val) {
+        this.tree.getRoot().visit(function(v, node) {
+            if (node.data.value == v) {    
+                node.activate();
+            }
+        }.bind(this, val))
+    },
+    
 	setOInfo : function (ontInfo) {
 		// associate an OntologyInfo		
 		this.oInfo = ontInfo;

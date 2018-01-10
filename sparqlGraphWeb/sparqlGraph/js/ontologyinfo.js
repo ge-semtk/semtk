@@ -55,6 +55,16 @@ var OntologyInfo = function(optJson) {
 
 OntologyInfo.JSON_VERSION = 2;
 
+OntologyInfo.localizeNamespace = function(fullNamespace) {
+   return fullNamespace.substring(fullNamespace.lastIndexOf('/')+1);
+};
+
+OntologyInfo.getSadlRangeList = function() {
+   return ["http://www.w3.org/2001/XMLSchema#int",
+           "http://www.w3.org/2001/XMLSchema#string",
+           "http://www.w3.org/2001/XMLSchema#dateTime"];
+};
+
 OntologyInfo.prototype = {
     
     /*
@@ -106,6 +116,7 @@ OntologyInfo.prototype = {
         }
     },
     
+    // TODO: this should be renamed and static
     getPrefix : function(namespace) {
         if (! this.prefixHash) this.calcPrefixHash();
         
@@ -115,9 +126,15 @@ OntologyInfo.prototype = {
     /*
      * split an OntologyName into [shortPrefix, localName]
      */
+    // TODO: this should be an OntologyName method
     splitName : function(oName) {
         return [this.getPrefix(oName.getNamespace()),
                 oName.getLocalName()];
+    },
+    
+    // TODO: this should be an OntologyName method
+    getPrefixedName : function(oName) {
+        return this.splitName(oName).join(":");
     },
     
 	addClass : function(ontClass) {
@@ -251,6 +268,21 @@ OntologyInfo.prototype = {
                 retHash[eList[i]] = 1;
             }
         }
+        return Object.keys(retHash);
+    },
+    
+    /*
+     * return a list of all namespace strings
+     */
+    getNamespaceNames : function () {
+        var retHash = {};
+        var names = this.getClassNames().concat(this.getPropNames()).concat(this.getEnumNames());
+        
+        for (var i=0; i < names.length; i++) {
+            var oName = new OntologyName(names[i]);
+            retHash[oName.getNamespace()] = 1;
+        }
+        
         return Object.keys(retHash);
     },
     
@@ -1411,6 +1443,48 @@ OntologyInfo.prototype = {
             
             return oClass;
         } 
+    },
+    
+    /*
+     * Change name of a class
+     * @param oClass {OntologyClass} - a class from this oInfo
+     * @param newName {String} - new name already checked to be legalURI and !uriIsKnown()
+     */
+    deleteClass : function(oClass) {
+        var oldURI = oClass.getNameStr(false);
+        
+                
+        // update classHash
+        delete this.classHash[oldURI];
+
+        // update subclassHash keys
+        if (oldURI in this.subclassHash) {
+            delete this.subclassHash[oldURI];
+        }
+
+        // update subclassHash contents
+        for (var key in this.subclassHash) {
+            var i = this.subclassHash[key].indexOf(oldURI);
+            if (i > -1) {
+                splice(this.subclassHash[key], i, 1);
+            }
+        }
+ 
+        // update enumHash
+        if (oldURI in this.enumHash) {
+            delete this.enumHash[oldURI];
+        }
+
+        // update enumHash contents
+        for (key in this.enumHash) {
+            var i = this.enumHash[key].indexOf(oldURI);
+            if (i > -1) {
+                splice(this.enumHash[key], i, 1);
+            }
+        }
+
+        // clear connHash
+        this.connHash = {};   
     }
 };
 

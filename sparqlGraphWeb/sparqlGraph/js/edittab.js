@@ -108,25 +108,56 @@ define([	// properly require.config'ed
                      
                 this.oTree = new OntologyTree($(treeSelector).dynatree("getTree")); 
                 
-                this.treediv.appendChild(IIDXHelper.createNbspText());
-                this.treediv.appendChild(IIDXHelper.createButton("New namespace", 
-                                                                 this.createNamespace.bind(this)));
             },
             
             initButtonDiv : function() {
-                this.buttondiv.align="right";
-                var but1 = IIDXHelper.createButton("Owl/Rdf", this.butDownloadOwl.bind(this));
-                var but2 = IIDXHelper.createButton("SADL", this.butDownloadSadl.bind(this));
-                var but3 = IIDXHelper.createButton("JSON", this.butDownloadJson.bind(this));
-
+                
                 this.buttondiv.innerHTML = "";
-                this.buttondiv.appendChild(this.buttonspan);
-                this.buttondiv.appendChild(IIDXHelper.createBoldText("Download: "));
-                this.buttondiv.appendChild(but1);
-                this.buttondiv.appendChild(IIDXHelper.createNbspText());
-                this.buttondiv.appendChild(but2);
-                this.buttondiv.appendChild(IIDXHelper.createNbspText());
-                this.buttondiv.appendChild(but3);
+                var table = document.createElement("table");
+                this.buttondiv.appendChild(table);
+                table.width = "100%";
+                
+                // match first column's width to treediv
+                var colgroup = document.createElement("colgroup");
+                table.appendChild(colgroup);
+                
+                var col = document.createElement("col");
+                colgroup.appendChild(col);
+                col.width = this.treediv.offsetWidth;
+                
+                var tbody = document.createElement("tbody");
+                table.appendChild(tbody);
+                
+                var tr = document.createElement("tr");
+                tbody.appendChild(tr);
+                
+                // cell 1/3
+                var td1 = document.createElement("td");
+                tr.appendChild(td1);
+                td1.appendChild(IIDXHelper.createButton("New namespace", this.createNamespace.bind(this)));
+                
+                // cell 2/3
+                var td2 = document.createElement("td");
+                tr.appendChild(td2);
+                td2.appendChild(this.buttonspan);
+                
+                // cell 3/3
+                var td3 = document.createElement("td");
+                tr.appendChild(td3);
+                
+                var div3 = document.createElement("div");
+                td3.appendChild(div3);
+                td3.align="right";
+                td3.appendChild(IIDXHelper.createBoldText("Download: "));
+                
+                var but1 = IIDXHelper.createButton("Owl/Rdf", this.butDownloadOwl.bind(this));
+                td3.appendChild(but1);
+                var but2 = IIDXHelper.createButton("SADL", this.butDownloadSadl.bind(this));
+                td3.appendChild(IIDXHelper.createNbspText());
+                td3.appendChild(but2);
+                var but3 = IIDXHelper.createButton("JSON", this.butDownloadJson.bind(this));
+                td3.appendChild(IIDXHelper.createNbspText());
+                td3.appendChild(but3);
             },
             
             butDownloadOwl : function() {
@@ -221,24 +252,6 @@ define([	// properly require.config'ed
                 nameNode.expand(true);
             },
             
-             editClassNEW : function (node) {
-                var name = node.data.value;
-                this.canvasdiv.innerHTML = "";
-                this.canvasdiv.appendChild(document.createTextNode("Namespace" + name));
-                
-                var nameList = ["one", "two", "three"];
-                var divList = [ document.createElement("div"),
-                                document.createElement("div"),
-                                document.createElement("div")
-                              ];
-                divList[0].innerHTML = "<h1>first</h1>stuff";
-                divList[1].innerHTML = "<h1>second</h1>stuff";
-                divList[2].innerHTML = "<h1>third</h1>stuff";
-                
-                this.canvasdiv.appendChild(IIDXHelper.buildTabs(nameList, divList));
-
-            },
-            
             editNamespace : function (node) {
                 var name = node.data.value;
             
@@ -255,18 +268,54 @@ define([	// properly require.config'ed
                 this.setNamespaceButtons(name);
             },
             
-            setNamespaceButtons : function (name) {
+            setClassButtons : function (oClass) {
                 
-                var deleteCallback = function (name) {
-                    this.oInfo.deleteNamespace(name);
+                var deleteCallback = function (cl) {
+                    this.oInfo.deleteClass(cl);
                     this.selectedNodeCallback(null);
                     this.oTree.update(this.oInfo);
+                }.bind(this, oClass);
+                
+                this.buttonspan.innerHTML = "";
+                this.buttonspan.appendChild(IIDXHelper.createBoldText("Class: "));
+                this.buttonspan.appendChild(IIDXHelper.createNbspText());
+                this.buttonspan.appendChild(IIDXHelper.createButton("Delete", deleteCallback));
+            },
+            
+            setNamespaceButtons : function (name) {
+                
+                var deleteCallback = function (ns) {
+                    this.oInfo.deleteNamespace(ns);
+                    this.selectedNodeCallback(null);
+                    this.oTree.update(this.oInfo);
+                }.bind(this, name);
+                
+                var addClassCallback = function(ns) {
+                    var className = "NewClass";
+                    
+                    // make sure name is unique
+                    var existingNames = this.oInfo.getClassNames();
+                    var i=-1;
+                    var fullName;
+                    do {
+                        fullName = ns + "#" + className + ((i>-1)?i.toString():"");
+                        i += 1;
+                    } while (existingNames.indexOf(fullName) > -1);
+                    
+                    // add new class
+                    var newClass = new OntologyClass(fullName, "");
+                    this.oInfo.addClass(newClass);
+                    this.oTree.update(this.oInfo);
+                    this.oTree.activateByValue(fullName);
+                    
                 }.bind(this, name);
                 
                 this.buttonspan.innerHTML = "";
                 this.buttonspan.appendChild(IIDXHelper.createBoldText("Namespace: "));
                 this.buttonspan.appendChild(IIDXHelper.createNbspText());
                 this.buttonspan.appendChild(IIDXHelper.createButton("Delete", deleteCallback));
+                this.buttonspan.appendChild(IIDXHelper.createNbspText());
+                this.buttonspan.appendChild(IIDXHelper.createButton("New Class", addClassCallback));
             },
             
             onchangeNamespace : function (node, input) {
@@ -338,12 +387,29 @@ define([	// properly require.config'ed
                 this.canvasdiv.innerHTML = "";
                 this.canvasdiv.appendChild(IIDXHelper.buildTabs(nameList, divList));
                 
-                this.setClassButtons();
+                this.setClassButtons(oClass);
             },
             
-            setClassButtons : function (name) {
-                
-                this.buttonspan.innerHTML = "";
+            buildNamespaceSelect : function(selected) {
+                var namespaces = this.oInfo.getNamespaceNames();
+                // change namespaces into [local, full]
+                for (var i=0; i < namespaces.length; i++) {
+                    namespaces[i] = [OntologyInfo.localizeNamespace(namespaces[i]), namespaces[i]];
+                }
+                var sel = IIDXHelper.createSelect(null, namespaces, [selected], false);
+                sel.style.width = "auto";
+                return sel;
+            },
+            
+             buildRangeSelect : function(oProp) {
+                var rangeList = OntologyInfo.getSadlRangeList().concat(this.oInfo.getClassNames());
+                 // change namespaces into [local, full]
+                for (var i=0; i < rangeList.length; i++) {
+                    rangeList[i] = [this.oInfo.getPrefixedName(new OntologyName(rangeList[i])), rangeList[i]];
+                }
+                var sel = IIDXHelper.createSelect(null, rangeList, [oProp.getRange().getName()]);
+                sel.style.width = "auto";
+                return sel;
             },
             
             buildPropertyEditDom : function (oProp) {
@@ -351,9 +417,21 @@ define([	// properly require.config'ed
                 var splitName = this.oInfo.splitName(oProp.getName());
                 var splitRange = this.oInfo.splitName(oProp.getRange().getName());
 
-                // PEC TODO: make this editable and non-garbage
-                var pStr = splitName.join(":") + " " + splitRange.join(":");
-                ret.appendChild(document.createTextNode(pStr));
+                // domain namespace
+                var nsSelect = this.buildNamespaceSelect(oProp.getName());
+                ret.appendChild(nsSelect);
+                // PEC HERE: callback on nsSelect
+                
+                ret.appendChild(document.createTextNode("#"));
+                var rangeText = IIDXHelper.createTextInput(null);
+                rangeText.value = splitName[1];
+                ret.appendChild(rangeText);
+                // PEC HERE: callback on rangeText
+                
+                var rangeSel = this.buildRangeSelect(oProp);
+                ret.appendChild(rangeSel);
+                // PEC HERE: callback on rangeSel
+                
                 ret.appendChild(document.createElement("br"));
 
                 var propAnnot = this.buildAnnotatorDom(oProp);

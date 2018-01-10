@@ -989,10 +989,9 @@
                     div.innerHTML += g.service[key].url + ' is .</br>';
                 }
             }
-            div.innerHTML += "<br><center><i>Pinging every 5 sec until dialog closes.</i></center>";
             
             var m = new ModalIidx();
-            m.showOK("Services", div,  function(){ gStopChecking = true; });
+            m.showOK("Services:  Ping every 5 sec", div,  function(){ gStopChecking = true; });
             
             // replaces the line with the service url with a result
             var pingCallback = function(div, url, resultSet_or_html) {
@@ -1601,10 +1600,13 @@
     var guiGraphNonEmpty = function () {
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
+    	document.getElementById("SGOrderBy").disabled = false;
+
     };
     
     var giuGraphEmpty = function () {
     	document.getElementById("btnLayout").disabled = true;
+        document.getElementById("SGOrderBy").disabled = true;
     	guiUpdateGraphRunButton();
     };
     
