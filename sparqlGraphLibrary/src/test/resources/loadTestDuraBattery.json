@@ -86,7 +86,7 @@
 						"fullURIName": "",
 						"SparqlID": "?cellId_4",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -132,7 +132,7 @@
 						"fullURIName": "",
 						"SparqlID": "?cellId_3",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -178,7 +178,7 @@
 						"fullURIName": "",
 						"SparqlID": "?cellId_2",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -224,7 +224,7 @@
 						"fullURIName": "",
 						"SparqlID": "?cellId_1",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -446,7 +446,7 @@
 			},
 			{
 				"colId": "col_1",
-				"colName": " cell2_ID"
+				"colName": " cell2_ID_opt"
 			},
 			{
 				"colId": "col_2",
@@ -454,7 +454,7 @@
 			},
 			{
 				"colId": "col_3",
-				"colName": " cell3_id"
+				"colName": " cell3_ID_opt"
 			},
 			{
 				"colId": "col_4",
@@ -466,7 +466,7 @@
 			},
 			{
 				"colId": "col_6",
-				"colName": "cell1_ID"
+				"colName": "cell1_ID_opt"
 			},
 			{
 				"colId": "col_7",
@@ -478,7 +478,7 @@
 			},
 			{
 				"colId": "col_9",
-				"colName": "cell4_id"
+				"colName": "cell4_ID_opt"
 			},
 			{
 				"colId": "col_10",
