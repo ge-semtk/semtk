@@ -1448,7 +1448,7 @@ public class NodeGroup {
 	
 	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) {
 		
-		if (! node.isUsed(instanceOnly)) {
+		if (! node.hasInstanceData()) {
 			ArrayList<Node> subNodes = this.getAllConnectedNodes(node);
 			ArrayList<ArrayList<Node>> subGraphs = new ArrayList<ArrayList<Node>>();
 			ArrayList<Integer> needSubTree = new ArrayList<Integer>();
@@ -1465,7 +1465,7 @@ public class NodeGroup {
 				for (int j=0; j < subGraphs.get(i).size(); j++) {
 					Node n = subGraphs.get(i).get(j);
 					
-					if (n.isUsed(instanceOnly))  {
+					if (n.hasInstanceData())  {
 						needSubTree.set(i, 1);
 						needSubTreeCount += 1;
 						break;

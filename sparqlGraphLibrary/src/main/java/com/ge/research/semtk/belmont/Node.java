@@ -600,6 +600,12 @@ public class Node extends Returnable {
 		return fullURIname;
 	}
 
+	/**
+	 * DEPRECATED Makes confusing code:  please use hasInstanceData() or isUsed()  
+	 * -Paul
+	 * @param instanceOnly
+	 * @return
+	 */
 	public boolean isUsed(boolean instanceOnly) {
 		if (instanceOnly) {
 			return this.hasInstanceData();
