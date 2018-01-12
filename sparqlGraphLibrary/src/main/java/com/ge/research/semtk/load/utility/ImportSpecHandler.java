@@ -23,11 +23,9 @@ import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -43,46 +41,52 @@ import com.ge.research.semtk.utility.Utility;
 
 public class ImportSpecHandler {
 
-	JSONObject importspec = null; 	// ultimately, this should be replaced by a more complext object 
-									// that does not endlessly reprocessthe same json.
-	HashMap<String, Integer> headerColumn = new HashMap<String, Integer>();
+	JSONObject importspec = null; 	 // TODO deprecate
+	
+	JSONObject ngJson = null;
+	HashMap<String, Integer> colIndexHash = new HashMap<String, Integer>();
 	HashMap<String, Transform> transformHash = new HashMap<String, Transform>();
 	HashMap<String, String> textHash = new HashMap<String, String>();
-	HashMap<String, String> colHash = new HashMap<String, String>();
+	HashMap<String, String> colNameHash = new HashMap<String, String>();
 	HashMap<String, Integer> colsUsed = new HashMap<String, Integer>();    // count of cols used.  Only includes counts > 0
 	
-	// ImportMapping
-	// 	MappingItems
+	ImportMapping mappings[] = null;
 	
 	UriResolver uriResolver;
 	
 	
-	public ImportSpecHandler(JSONObject importSpecJson, OntologyInfo oInf) throws Exception {
-		this.importspec = importSpecJson;   // TODO deprecate this
-		this.setupColumns(   (JSONArray) importSpecJson.get("columns"));
+	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
+		this.importspec = importSpecJson; 
+		
+		this.ngJson = ngJson;
+		this.setupColNameHash(   (JSONArray) importSpecJson.get("columns"));
 		this.setupTransforms((JSONArray) importSpecJson.get("transforms"));
-		this.setupTexts(     (JSONArray) importSpecJson.get("texts"));
-		this.setupNodes(     (JSONArray) importSpecJson.get("nodes"));
+		this.setupTextHash(     (JSONArray) importSpecJson.get("texts"));
 		
 		String userUriPrefixValue = (String) this.importspec.get("baseURI");
 		
 		// check the value of the UserURI Prefix
 		// LocalLogger.logToStdErr("User uri prefix set to: " +  userUriPrefixValue);
 		
-		this.uriResolver = new UriResolver(userUriPrefixValue, oInf);
+		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 	}
 	
-	public ImportSpecHandler(JSONObject spec, ArrayList<String> headers, OntologyInfo oInf) throws Exception{
-		this(spec, oInf);
+	public ImportSpecHandler(JSONObject importSpecJson, ArrayList<String> headers, JSONObject ngJson, OntologyInfo oInfo) throws Exception{
+		this(importSpecJson, ngJson, oInfo);
 		this.setHeaders(headers);
 	}
 
-	public void setHeaders(ArrayList<String> headers){
+	public void setHeaders(ArrayList<String> headers) throws Exception{
 		int counter = 0;
 		for(String h : headers){
-			this.headerColumn.put(h, counter);
+			this.colIndexHash.put(h, counter);
 			counter += 1;
 		}
+		
+		// TODO:  bad (unfixed from original code write)
+		//  setupNodes happens later because setHeaders happens later.
+		//  it seems like we could/should require this at instantiation time
+		this.setupNodes(     (JSONArray) this.importspec.get("nodes"));
 	}
 	
 	public String getUriPrefix() {
@@ -128,7 +132,7 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void setupTexts(JSONArray textsJsonArr) throws Exception{
+	private void setupTextHash(JSONArray textsJsonArr) throws Exception{
 		
 		if(textsJsonArr == null){ 
 			return;
@@ -146,7 +150,7 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void setupColumns(JSONArray columnsJsonArr) throws Exception{
+	private void setupColNameHash(JSONArray columnsJsonArr) throws Exception{
 		
 		if(columnsJsonArr == null){ 
 			return;
@@ -156,147 +160,140 @@ public class ImportSpecHandler {
 			JSONObject colsJson = (JSONObject) columnsJsonArr.get(j);
 			String colId = (String) colsJson.get("colId");      
 			String colName = ((String) colsJson.get("colName")).toLowerCase();  
-			this.colHash.put(colId, colName);
+			this.colNameHash.put(colId, colName);
 		}
 	}
 	
 	/**
 	 * Sets this.colsUsed to number of times each column is used.  Skipping ZEROS.
+	 * @throws Exception 
 	 */
-	private void setupNodes(JSONArray nodesJsonArr) {
+	private void setupNodes(JSONArray nodesJsonArr) throws Exception {
+		NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.ngJson);
+		ArrayList<ImportMapping> mappingsList = new ArrayList<ImportMapping>();
 		// clear cols used
 		colsUsed = new HashMap<String, Integer>();  
+		ImportMapping mapping = null;
 		
-		
+		// loop through .nodes
 		for (int i = 0; i < nodesJsonArr.size(); i++){  
-			JSONObject node = (JSONObject) nodesJsonArr.get(i);
+			JSONObject nodeJson = (JSONObject) nodesJsonArr.get(i);
 			
-			// check mappings in nodes
-			if (node.containsKey("mapping")) {
-				JSONArray mapItems = (JSONArray) node.get("mapping");
-				for (int j=0; j < mapItems.size(); j++) {
-					JSONObject item = (JSONObject) mapItems.get(j);
-					if (item.containsKey("colId")) {
-						String colId = (String) item.get("colId");
-						if (colsUsed.containsKey(colId)) {
-							colsUsed.put(colId, colsUsed.get(colId) + 1);
-						} else {
-							colsUsed.put(colId, 1);
-						}
+			// URI 
+			mapping = new ImportMapping();
+			
+			// get node index
+			String nodeSparqlID = nodeJson.get("sparqlID").toString();
+			int nodeIndex = tmpNodegroup.getNodeIndexBySparqlID(nodeSparqlID);
+			mapping.setsNodeIndex(nodeIndex);
+			
+			// add mapping
+			if (nodeJson.containsKey("mapping")) {
+				JSONArray mappingJsonArr = (JSONArray) nodeJson.get("mapping");
+				setupMappingItemList(mappingJsonArr, mapping);
+			}
+			mappingsList.add(mapping);
+			
+			// Properties
+			if (nodeJson.containsKey("props")) {
+				JSONArray propsJsonArr = (JSONArray) nodeJson.get("props");
+				Node snode = tmpNodegroup.getNode(nodeIndex);
+				
+				for (int p=0; p < propsJsonArr.size(); p++) {
+					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
+					mapping = new ImportMapping();
+					mapping.setsNodeIndex(nodeIndex);
+					int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get("URIRelation"));
+					mapping.setPropItemIndex(propIndex);
+					
+					// add mapping
+					if (propJson.containsKey("mapping")) {
+						JSONArray mappingJsonArr = (JSONArray) propJson.get("mapping");
+						setupMappingItemList(mappingJsonArr, mapping);
 					}
 				}
+				mappingsList.add(mapping);
 			}
-			if (node.containsKey("props")) {
-				JSONArray propItems = (JSONArray) node.get("props");
-				for (int p=0; p < propItems.size(); p++) {
-					JSONObject prop = (JSONObject) propItems.get(p);
-
-					// check mappings in props
-					if (prop.containsKey("mapping")) {
-						JSONArray mapItems = (JSONArray) prop.get("mapping");
-						for (int j=0; j < mapItems.size(); j++) {
-							JSONObject item = (JSONObject) mapItems.get(j);
-							if (item.containsKey("colId")) {
-								String colId = (String) item.get("colId");
-								if (colsUsed.containsKey(colId)) {
-									colsUsed.put(colId, colsUsed.get(colId) + 1);
-								} else {
-									colsUsed.put(colId, 1);
-								}
-							}
-						}
-					}
+		}
+		this.mappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
+	}
+	
+	/**
+	 * Put mapping items from json into an ImportMapping and update colUsed
+	 * @param mappingJsonArr
+	 * @param mapping
+	 * @throws Exception 
+	 */
+	private void setupMappingItemList(JSONArray mappingJsonArr, ImportMapping mapping) throws Exception {
+		
+		for (int j=0; j < mappingJsonArr.size(); j++) {
+			JSONObject itemJson = (JSONObject) mappingJsonArr.get(j);
+			
+			MappingItem mItem = new MappingItem();
+			mItem.fromJson(	itemJson, 
+							this.colNameHash, this.colIndexHash, this.textHash, this.transformHash);
+			mapping.addItem(mItem);
+			
+			if (itemJson.containsKey("colId")) {
+				// column item
+				String colId = (String) itemJson.get("colId");
+				
+				// colsUsed
+				if (colsUsed.containsKey(colId)) {
+					colsUsed.put(colId, colsUsed.get(colId) + 1);
+				} else {
+					colsUsed.put(colId, 1);
 				}
-			}
+			} 
 		}
 	}
 	
 	/**
-	 * Populate nodegroup with a single record (row) of data
+	 * Create a nodegroup from a single record (row) of data
 	 */
-	public NodeGroup importRecord(NodeGroup ng, ArrayList<String> record) throws Exception{
-		// this is a really naive implementation. it could probably be sped up drastically by caching
-		// the digested template instead of re-processing it for eac incoming record.
-		// the lack of conditional logic in this method would make that do-able. 
+	public NodeGroup importRecord(ArrayList<String> record) throws Exception{
+
+		// create a new nodegroup copy
+		NodeGroup retVal = NodeGroup.getInstanceFromJson(this.ngJson);
 		
-		NodeGroup retval = ng;
-		if(ng == null){ throw new Exception("Null nodegroup passed to ImportSpecHandler.getValues"); }
 		if(record  == null){ throw new Exception("incoming record cannot be null for ImportSpecHandler.getValues"); }
-		if(this.headerColumn.isEmpty()){ throw new Exception("the header positions were never set for the importspechandler"); }
+		if(this.colIndexHash.isEmpty()){ throw new Exception("the header positions were never set for the importspechandler"); }
 		
-		JSONArray nodesJson = (JSONArray) this.importspec.get("nodes");  // TODO: this.importspec should be deprecated / pre-computed
-		int nodesArraySize = nodesJson.size();
-		
-		for (int i = 0; i < nodesArraySize; i++){  
-			// loop through all of the values and get the parts we need to fill in the nodegroup entries. 
-			JSONObject nodeJson = (JSONObject) nodesJson.get(i);
-			JSONArray mappingJson = (JSONArray) nodeJson.get("mapping");
-			JSONArray propsJson  = (JSONArray) nodeJson.get("props");
-						
-			// get the related node from the NodeGroup
-			String sparqlID = nodeJson.get("sparqlID").toString();
-			Node node = ng.getNodeBySparqlID(sparqlID);   // TODO: node index should be cached
+		for (int i=0; i < this.mappings.length; i++) {
+			ImportMapping mapping = mappings[i];
+			String val = mapping.buildString(record);
+			Node node = retVal.getNode(mapping.getsNodeIndex());
+			PropertyItem propItem = null;
 			
-			// generate the uri value. all of this can be simplified later into a structure that actually remembers the format 
-			// because position info will not drift as each line is processed. this was done for expedience of development. 
-
-			String uri = this.buildMappingString(mappingJson, record);
-			
-			// check for a null column mapping having been found. if so, change the URI to a guid and make this a blank node. 
-			// encode uri and set it. 
-			if(StringUtils.isBlank(uri)){
-				node.setInstanceValue(null);
-			}
-			else{
-				uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), uri);
-				if (! SparqlToXUtils.isLegalURI(uri)) { throw new Exception("Attempting to insert ill-formed URI: " + uri); }
-				node.setInstanceValue(uri);
-			}
-			
-			
-			// set any applicable property values. again, this could be greatly simplified in terms of number of look ups and, 
-			// potentially, running time. it should be encapsulated into an object that understands the nodes itself and stores
-			// this sort of info. this was done the hard way in the interest of simplifying implementation and debugging. 
-			
-			ArrayList<PropertyItem> inScopeProperties = node.getPropertyItems();
-			
-			Iterator<JSONObject> pMap = propsJson.iterator();
-			while(pMap.hasNext()) {
-				String[] namesOfTransformsToApplyProp = null;
+			if (mapping.isProperty()) {
+				// properties
+				if(val.length() > 0) {
+					propItem = node.getPropertyItem(mapping.getPropItemIndex());
+					val = this.validateDataType(val, propItem.getValueType());						
+					propItem.addInstanceValue(val);
+				}
 				
-				// go through all the parts of the property as well. 
-				JSONObject currProp = pMap.next();
-				String uriRelation = currProp.get("URIRelation").toString();
-				
-				JSONArray mapping = (JSONArray) currProp.get("mapping");
-				
-				String instanceValue = this.buildMappingString(mapping, record);
-
-				// find and set the actual property value. 
-				for(PropertyItem pi : inScopeProperties){
-					if(pi.getUriRelationship().equals(uriRelation)){  // e.g. http://research.ge.com/print/testconfig#cellId
-						
-						if(this.notEmpty(instanceValue)){
-							if(pi.getValueType().equalsIgnoreCase("string")){
-								instanceValue = SparqlToXUtils.safeSparqlString(instanceValue);
-							}
-				
-							instanceValue = this.validateDataType(instanceValue, pi.getValueType());						
-							pi.addInstanceValue(instanceValue);
-						}
-						break;
-					}
+			} else {
+				// nodes
+				if(val.length() < 1){
+					node.setInstanceValue(null);
+				}
+				else{
+					String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), val);
+					if (! SparqlToXUtils.isLegalURI(uri)) { throw new Exception("Attempting to insert ill-formed URI: " + uri); }
+					node.setInstanceValue(uri);
 				}
 			}
+			
 		}
 			
 		// prune nodes that no longer belong (no uri and no properties)
-		ng.pruneAllUnused(true);
+		retVal.pruneAllUnused(true);
 		
 		// set URI for nulls
-		ng = this.setURIsForBlankNodes(ng);
+		retVal = this.setURIsForBlankNodes(retVal);
 		
-		return retval;
+		return retVal;
 	}
 	
 	/**
@@ -335,67 +332,6 @@ public class ImportSpecHandler {
 		
 		return ret;
 	}
-	/**
-	 * Build a value from a json mapping array and a data record
-	 * @param mappingArrayJson
-	 * @param record
-	 * @return result or Null if any column is empty
-	 * @throws Exception
-	 */
-	private String buildMappingString(JSONArray mappingArrayJson, ArrayList<String> record) throws Exception {
-		String ret = "";
-		
-		
-		// loop through the mapping array
-		Iterator<JSONObject> it = mappingArrayJson.iterator();
-		for (int i=0; i < mappingArrayJson.size(); i++) {
-			JSONObject mapItemJson = (JSONObject) mappingArrayJson.get(i);
-			
-			if (mapItemJson.containsKey("textId")) {        // TODO: cache to more efficient check
-				String text = null; 
-				// get text id
-				String id = mapItemJson.get("textId").toString();
-				
-				// look up text
-				try {
-					text = this.textHash.get(id);
-				} catch (Exception e) {
-					throw new Exception("Failed to look up textId: " + id);
-				}
-				
-				// if all is well, append the value
-				if(!StringUtils.isEmpty(text)){
-					ret += text;                            // TODO: cache: this item is a text, here's the value
-				}
-				
-			} else if (mapItemJson.containsKey("colId")) {  // TODO: cache to more efficient check
-				String colText = null;
-				Integer pos = null;
-				String id = mapItemJson.get("colId").toString();
-				try{
-					String textColLabel = this.colHash.get(id);
-					pos = this.headerColumn.get(textColLabel);   // TODO: cache pos
-					colText = record.get(pos);		// set the text equal to the correct column. 					
-				}
-				catch(Exception e){
-					colText = "";
-					if(pos == null){ throw new Exception("Cannot find column in header list.");}
-				}
-				
-				if(! StringUtils.isBlank(colText)){
-					ret += this.applyTransforms(colText, mapItemJson);   // TODO: cache list of transforms instead of using mapItemJson
-				}
-				else {
-					// found an empty column
-					return null;
-				}
-			} else {
-				throw new Exception("importSpec mapping item has no known type: " + mapItemJson.toString());
-			}
-		}
-		return ret;
-	}
-	
 	
 	
 	/**
@@ -408,30 +344,11 @@ public class ImportSpecHandler {
 		String [] ret = new String[colIds.size()];
 		int i=0;
 		for (String colId : colIds) {
-			ret[i++] = colHash.get(colId);
+			ret[i++] = colNameHash.get(colId);
 		}
 		return ret;
 	}
 
-	/**
-	 * If a column has transforms in the mapping, apply them to the input raw text
-	 * @param raw - untransformed string
-	 * @param mappingJson - single mapping entry
-	 * @return
-	 */
-	private String applyTransforms(String raw, JSONObject mappingJson) {    // TODO:  mappingJson could be cached ArrayList<Transform> or ArrayList<String> hash keys
-		if (mappingJson.containsKey("transformList")) {
-			String ret = raw;
-			JSONArray transformJsonArr = (JSONArray) mappingJson.get("transformList");
-			for(int i=0; i < transformJsonArr.size(); i += 1){
-				ret = transformHash.get( (String)transformJsonArr.get(i) ).applyTransform(ret);
-			}
-			return ret;
-			
-		} else {
-			return raw;
-		}
-	}
 	
 	private NodeGroup setURIsForBlankNodes(NodeGroup ng) throws Exception{
 		for(Node n : ng.getNodeList()){
@@ -443,16 +360,6 @@ public class ImportSpecHandler {
 		return ng;
 	}
 	
-	
-	private Boolean notEmpty(String instVal){
-		Boolean retval = true;
-		// simple checks for "emptiness"
-		if(instVal == null || instVal.isEmpty() || instVal == "" || instVal.length() ==0 ){
-			retval = false;
-		}
-		
-		return retval;
-	}
 
 	/**
 	 * Check that an input string is loadable as a certain SPARQL data type, and tweak it if necessary.
@@ -478,7 +385,7 @@ public class ImportSpecHandler {
 		String ret = input;
 		
 		 if(expectedSparqlGraphType.equalsIgnoreCase("string")){
-			 
+			 ret = SparqlToXUtils.safeSparqlString(input);
 		 }
 		 else if(expectedSparqlGraphType.equalsIgnoreCase("boolean")){
 			 try{

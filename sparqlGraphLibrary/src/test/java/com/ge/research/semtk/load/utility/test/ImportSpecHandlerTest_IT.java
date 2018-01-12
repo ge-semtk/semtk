@@ -45,7 +45,7 @@ public class ImportSpecHandlerTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		OntologyInfo oInfo = sgJson.getOntologyInfo();
 		NodeGroup nodegroup = sgJson.getNodeGroup();
-		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), oInfo);
+		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), sgJson.getSNodeGroupJson(), oInfo);
 		
 		// Test
 		ArrayList<PropertyItem> pItems = handler.getMappedPropItems(nodegroup);

@@ -742,17 +742,27 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	public Node getNodeBySparqlID(String currId) {
+	public int getNodeIndexBySparqlID(String currId) {
 		// look up a node by ID and return it. 
-		Node retval = null;
 		for(int i = 0; i < nodes.size(); i += 1){
 			// can we find it by name?
 			if(this.nodes.get(i).getSparqlID().equals(currId)){   // this was "==" but that failed in some cases...
-				retval = this.nodes.get(i);
-				break;
+				return i;
 			}
 		}
-		return retval;
+		return -1;
+	}
+	
+	public Node getNodeBySparqlID(String currId) {
+		int i = this.getNodeIndexBySparqlID(currId);
+		if (i == -1) 
+			return null;
+		else 
+			return this.nodes.get(i);
+	}
+	
+	public Node getNode(int i) {
+		return this.nodes.get(i);
 	}
 	
 	public PropertyItem getPropertyItemBySparqlID(String currId){
