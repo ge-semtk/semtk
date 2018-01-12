@@ -95,6 +95,10 @@ public class MappingItem {
 		}
 		
 	}
+
+	public boolean isColumnMapping() {
+		return this.textVal == null && this.columnIndex > -1;
+	}
 	
 	public String buildString(ArrayList<String> record) {
 		

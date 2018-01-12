@@ -2,7 +2,6 @@ battery name,cell id,color
 battery1,A20,red
 battery1,A21,white
 battery1,A22,blue
-battery2,,
 blue one,B100,blue
 blue one,B101,blue
 bat_91935,cell_26556,blue
@@ -1002,7 +1001,6 @@ bat_84358,cell_29006,white
 battery1b,A20b,red
 battery1b,A21b,white
 battery1b,A22b,blue
-battery2b,,
 blue oneb,B100b,blue
 blue oneb,B101b,blue
 bat_91935b,cell_26556b,blue

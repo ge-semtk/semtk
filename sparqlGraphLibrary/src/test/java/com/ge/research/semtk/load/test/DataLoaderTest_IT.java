@@ -292,7 +292,7 @@ public class DataLoaderTest_IT {
 	public void testLoadDataDuraBattery() throws Exception {
 		// Pre changes:   
 		// During changes:  
-		// Bigger-ish test of many import spec features and timing
+		// Bigger-ish test of many import spec features and timing. 
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
 		// setup
@@ -328,6 +328,30 @@ public class DataLoaderTest_IT {
 			assertTrue("Results equal expected", actual.equals(expected));
 		}
 		
+	}
+	
+	@Test
+	public void testLoadDataDuraBatteryEmptyCol() throws Exception {
+		// Pre changes:   
+		// During changes:  
+		// Bigger-ish test of many import spec features and timing
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
+
+		// import
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		
+		LocalLogger.logToStdOut("Starting load");
+		dl.importData(true);
+		LocalLogger.logToStdOut("Finished with load");
+		
+		Table err = dl.getLoadingErrorReport();
+		assertEquals(2, err.getNumRows());
+		assertTrue(err.toCSVString().contains("Empty value"));
 	}
 	
 	/**

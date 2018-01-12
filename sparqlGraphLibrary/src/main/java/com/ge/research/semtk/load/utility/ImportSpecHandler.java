@@ -53,12 +53,15 @@ public class ImportSpecHandler {
 	ImportMapping mappings[] = null;
 	
 	UriResolver uriResolver;
+	OntologyInfo oInfo;
 	
 	
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
 		
 		this.ngJson = ngJson;
+		this.oInfo = oInfo;
+		
 		this.setupColNameHash(   (JSONArray) importSpecJson.get("columns"));
 		this.setupTransforms((JSONArray) importSpecJson.get("transforms"));
 		this.setupTextHash(     (JSONArray) importSpecJson.get("texts"));
@@ -67,7 +70,7 @@ public class ImportSpecHandler {
 		
 		// check the value of the UserURI Prefix
 		// LocalLogger.logToStdErr("User uri prefix set to: " +  userUriPrefixValue);
-		
+	
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 	}
 	
@@ -177,42 +180,51 @@ public class ImportSpecHandler {
 		
 		// loop through .nodes
 		for (int i = 0; i < nodesJsonArr.size(); i++){  
+			
+			// ---- URI ----
 			JSONObject nodeJson = (JSONObject) nodesJsonArr.get(i);
-			
-			// URI 
-			mapping = new ImportMapping();
-			
-			// get node index
 			String nodeSparqlID = nodeJson.get("sparqlID").toString();
 			int nodeIndex = tmpNodegroup.getNodeIndexBySparqlID(nodeSparqlID);
-			mapping.setsNodeIndex(nodeIndex);
 			
-			// add mapping
+			// look for mapping != []
 			if (nodeJson.containsKey("mapping")) {
 				JSONArray mappingJsonArr = (JSONArray) nodeJson.get("mapping");
-				setupMappingItemList(mappingJsonArr, mapping);
+				if (mappingJsonArr.size() > 0) {
+					
+					mapping = new ImportMapping();
+					
+					// get node index
+					String type = (String) nodeJson.get("type");
+					mapping.setIsEnum(this.oInfo.classIsEnumeration(type));
+					mapping.setsNodeIndex(nodeIndex);
+					
+					setupMappingItemList(mappingJsonArr, mapping);
+					mappingsList.add(mapping);
+				}
 			}
-			mappingsList.add(mapping);
 			
-			// Properties
+			// ---- Properties ----
 			if (nodeJson.containsKey("props")) {
 				JSONArray propsJsonArr = (JSONArray) nodeJson.get("props");
 				Node snode = tmpNodegroup.getNode(nodeIndex);
 				
 				for (int p=0; p < propsJsonArr.size(); p++) {
 					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
-					mapping = new ImportMapping();
-					mapping.setsNodeIndex(nodeIndex);
-					int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get("URIRelation"));
-					mapping.setPropItemIndex(propIndex);
 					
-					// add mapping
+					// look for mapping != []
 					if (propJson.containsKey("mapping")) {
-						JSONArray mappingJsonArr = (JSONArray) propJson.get("mapping");
-						setupMappingItemList(mappingJsonArr, mapping);
-					}
+						JSONArray mappingJsonArr = (JSONArray) propJson.get("mapping");	
+						if (mappingJsonArr.size() > 0) {
+							
+							mapping = new ImportMapping();
+							mapping.setsNodeIndex(nodeIndex);
+							int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get("URIRelation"));
+							mapping.setPropItemIndex(propIndex);
 					
-					mappingsList.add(mapping);
+							setupMappingItemList(mappingJsonArr, mapping);
+							mappingsList.add(mapping);
+						}
+					}	
 				}
 				
 			}
@@ -263,25 +275,34 @@ public class ImportSpecHandler {
 		
 		for (int i=0; i < this.mappings.length; i++) {
 			ImportMapping mapping = mappings[i];
-			String val = mapping.buildString(record);
+			String builtString = mapping.buildString(record);
 			Node node = retVal.getNode(mapping.getsNodeIndex());
 			PropertyItem propItem = null;
 			
 			if (mapping.isProperty()) {
 				// properties
-				if(val.length() > 0) {
+				if(builtString.length() > 0) {
 					propItem = node.getPropertyItem(mapping.getPropItemIndex());
-					val = this.validateDataType(val, propItem.getValueType());						
-					propItem.addInstanceValue(val);
+					builtString = this.validateDataType(builtString, propItem.getValueType());						
+					propItem.addInstanceValue(builtString);
 				}
 				
 			} else {
+				// URIs
+				
+				// URI may not have empty columns in it's build unless it is an enum
+				// enum will either:
+				//    - be totally empty and prune, or 
+				//    - evaluate to a valid or invalid value and be treated accordingly
+				if (!mapping.getIsEnum() && mapping.getBlanksInLastBuild() > 0) {
+					throw new Exception("Empty values in URI build");
+				}
 				// nodes
-				if(val.length() < 1){
+				if(builtString.length() < 1){
 					node.setInstanceValue(null);
 				}
 				else{
-					String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), val);
+					String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), builtString);
 					if (! SparqlToXUtils.isLegalURI(uri)) { throw new Exception("Attempting to insert ill-formed URI: " + uri); }
 					node.setInstanceValue(uri);
 				}
