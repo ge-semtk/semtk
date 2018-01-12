@@ -363,8 +363,6 @@ public class DataLoaderTest_IT {
 		String prefix = sgJson.getImportSpec().getUriPrefix();
 		uri = prefix + "Cell_" + uri.replaceAll("e", "E");
 
-		// delete uri if left over from previous tests
-		deleteUri(uri);
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());

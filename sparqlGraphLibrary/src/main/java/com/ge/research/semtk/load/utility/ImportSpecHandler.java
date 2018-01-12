@@ -211,8 +211,10 @@ public class ImportSpecHandler {
 						JSONArray mappingJsonArr = (JSONArray) propJson.get("mapping");
 						setupMappingItemList(mappingJsonArr, mapping);
 					}
+					
+					mappingsList.add(mapping);
 				}
-				mappingsList.add(mapping);
+				
 			}
 		}
 		this.mappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
