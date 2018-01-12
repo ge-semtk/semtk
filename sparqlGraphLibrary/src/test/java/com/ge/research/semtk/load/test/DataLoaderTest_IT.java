@@ -322,8 +322,8 @@ public class DataLoaderTest_IT {
 				
 		// if not equal, print them out
 		if (! actual.equals(expected)) {
-			System.out.print("Expected:\n--------\n" + StringEscapeUtils.escapeJava(expected) + "--------\n");
-			System.out.print("Actual:\n--------\n" + StringEscapeUtils.escapeJava(actual) + "--------\n");
+			System.out.print("Expected:\n--------\n" + StringEscapeUtils.escapeJava(expected) + "\n--------\n");
+			System.out.print("Actual:\n--------\n" + StringEscapeUtils.escapeJava(actual) + "\n--------\n");
 			
 			assertTrue("Results equal expected", actual.equals(expected));
 		}

@@ -579,28 +579,7 @@
 			{
 				"sparqlID": "?Cell1",
 				"type": "http://kdl.ge.com/durabattery#Cell",
-				"mapping": [
-					{
-						"textId": "text_2",
-						"text": "cell"
-					},
-					{
-						"colId": "col_6",
-						"transformList": [
-							"trans_0"
-						]
-					},
-					{
-						"textId": "text_1",
-						"text": "_"
-					},
-					{
-						"colId": "col_0",
-						"transformList": [
-							"trans_0"
-						]
-					}
-				],
+				"mapping": [],
 				"props": [
 					{
 						"URIRelation": "http://kdl.ge.com/durabattery#cellId",
