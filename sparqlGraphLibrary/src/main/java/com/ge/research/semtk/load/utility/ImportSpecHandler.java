@@ -41,7 +41,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class ImportSpecHandler {
 
-	JSONObject importspec = null; 	 // TODO deprecate
+	JSONObject importspec = null; 
 	
 	JSONObject ngJson = null;
 	HashMap<String, Integer> colIndexHash = new HashMap<String, Integer>();
@@ -62,11 +62,11 @@ public class ImportSpecHandler {
 		this.ngJson = ngJson;
 		this.oInfo = oInfo;
 		
-		this.setupColNameHash(   (JSONArray) importSpecJson.get("columns"));
-		this.setupTransforms((JSONArray) importSpecJson.get("transforms"));
-		this.setupTextHash(     (JSONArray) importSpecJson.get("texts"));
+		this.setupColNameHash(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
+		this.setupTransforms((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
+		this.setupTextHash(     (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TEXTS));
 		
-		String userUriPrefixValue = (String) this.importspec.get("baseURI");
+		String userUriPrefixValue = (String) this.importspec.get(SparqlGraphJson.JKEY_IS_BASE_URI);
 		
 		// check the value of the UserURI Prefix
 		// LocalLogger.logToStdErr("User uri prefix set to: " +  userUriPrefixValue);
@@ -86,10 +86,10 @@ public class ImportSpecHandler {
 			counter += 1;
 		}
 		
-		// TODO:  bad (unfixed from original code write)
+		//  bad (unfixed from original code write)
 		//  setupNodes happens later because setHeaders happens later.
 		//  it seems like we could/should require this at instantiation time
-		this.setupNodes(     (JSONArray) this.importspec.get("nodes"));
+		this.setupNodes(     (JSONArray) this.importspec.get(SparqlGraphJson.JKEY_IS_NODES));
 	}
 	
 	public String getUriPrefix() {
@@ -109,8 +109,8 @@ public class ImportSpecHandler {
 		
 		for (int j = 0; j < transformsJsonArr.size(); ++j) {
 			JSONObject xform = (JSONObject) transformsJsonArr.get(j);
-			String instanceID = (String) xform.get("transId"); // get the instanceID for the transform
-			String transType = (String) xform.get("transType"); // get the xform type 
+			String instanceID = (String) xform.get(SparqlGraphJson.JKEY_IS_TRANS_ID); // get the instanceID for the transform
+			String transType = (String) xform.get(SparqlGraphJson.JKEY_IS_TRANS_TYPE); // get the xform type 
 			
 			// go through all the entries besides "name", "transType", "transId" and 
 			// add them to the outgoing HashMap to be sent to the transform creation.
@@ -143,8 +143,8 @@ public class ImportSpecHandler {
 		
 		for (int j = 0; j < textsJsonArr.size(); ++j) {
 			JSONObject textJson = (JSONObject) textsJsonArr.get(j);
-			String instanceID = (String) textJson.get("textId"); 
-			String textVal = (String) textJson.get("text");  
+			String instanceID = (String) textJson.get(SparqlGraphJson.JKEY_IS_TEXT_ID); 
+			String textVal = (String) textJson.get(SparqlGraphJson.JKEY_IS_TEXT_TEXT);  
 			this.textHash.put(instanceID, textVal);
 		}
 	}
@@ -161,8 +161,8 @@ public class ImportSpecHandler {
 		
 		for (int j = 0; j < columnsJsonArr.size(); ++j) {
 			JSONObject colsJson = (JSONObject) columnsJsonArr.get(j);
-			String colId = (String) colsJson.get("colId");      
-			String colName = ((String) colsJson.get("colName")).toLowerCase();  
+			String colId = (String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_ID);      
+			String colName = ((String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_NAME)).toLowerCase();  
 			this.colNameHash.put(colId, colName);
 		}
 	}
@@ -183,18 +183,18 @@ public class ImportSpecHandler {
 			
 			// ---- URI ----
 			JSONObject nodeJson = (JSONObject) nodesJsonArr.get(i);
-			String nodeSparqlID = nodeJson.get("sparqlID").toString();
+			String nodeSparqlID = nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID).toString();
 			int nodeIndex = tmpNodegroup.getNodeIndexBySparqlID(nodeSparqlID);
 			
 			// look for mapping != []
-			if (nodeJson.containsKey("mapping")) {
-				JSONArray mappingJsonArr = (JSONArray) nodeJson.get("mapping");
+			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
+				JSONArray mappingJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING);
 				if (mappingJsonArr.size() > 0) {
 					
 					mapping = new ImportMapping();
 					
 					// get node index
-					String type = (String) nodeJson.get("type");
+					String type = (String) nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_TYPE);
 					mapping.setIsEnum(this.oInfo.classIsEnumeration(type));
 					mapping.setsNodeIndex(nodeIndex);
 					
@@ -204,21 +204,21 @@ public class ImportSpecHandler {
 			}
 			
 			// ---- Properties ----
-			if (nodeJson.containsKey("props")) {
-				JSONArray propsJsonArr = (JSONArray) nodeJson.get("props");
+			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_PROPS)) {
+				JSONArray propsJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS);
 				Node snode = tmpNodegroup.getNode(nodeIndex);
 				
 				for (int p=0; p < propsJsonArr.size(); p++) {
 					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
 					
 					// look for mapping != []
-					if (propJson.containsKey("mapping")) {
-						JSONArray mappingJsonArr = (JSONArray) propJson.get("mapping");	
+					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
+						JSONArray mappingJsonArr = (JSONArray) propJson.get(SparqlGraphJson.JKEY_IS_MAPPING);	
 						if (mappingJsonArr.size() > 0) {
 							
 							mapping = new ImportMapping();
 							mapping.setsNodeIndex(nodeIndex);
-							int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get("URIRelation"));
+							int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL));
 							mapping.setPropItemIndex(propIndex);
 					
 							setupMappingItemList(mappingJsonArr, mapping);
@@ -248,9 +248,9 @@ public class ImportSpecHandler {
 							this.colNameHash, this.colIndexHash, this.textHash, this.transformHash);
 			mapping.addItem(mItem);
 			
-			if (itemJson.containsKey("colId")) {
+			if (itemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID)) {
 				// column item
-				String colId = (String) itemJson.get("colId");
+				String colId = (String) itemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID);
 				
 				// colsUsed
 				if (colsUsed.containsKey(colId)) {
@@ -283,20 +283,12 @@ public class ImportSpecHandler {
 				// properties
 				if(builtString.length() > 0) {
 					propItem = node.getPropertyItem(mapping.getPropItemIndex());
-					builtString = this.validateDataType(builtString, propItem.getValueType());						
+					builtString = validateDataType(builtString, propItem.getValueType());						
 					propItem.addInstanceValue(builtString);
 				}
 				
-			} else {
-				// URIs
+			} else {				
 				
-				// URI may not have empty columns in it's build unless it is an enum
-				// enum will either:
-				//    - be totally empty and prune, or 
-				//    - evaluate to a valid or invalid value and be treated accordingly
-				if (!mapping.getIsEnum() && mapping.getBlanksInLastBuild() > 0) {
-					throw new Exception("Empty values in URI build");
-				}
 				// nodes
 				if(builtString.length() < 1){
 					node.setInstanceValue(null);
@@ -326,30 +318,13 @@ public class ImportSpecHandler {
 	 */
 	public ArrayList<PropertyItem> getMappedPropItems(NodeGroup ng) {
 		// TODO: this is only used by tests?
+
 		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
 		
-		JSONArray nodes = (JSONArray) this.importspec.get("nodes");  // TODO: this.importspec should be deprecated / pre-computed
-		
-		// loop through the json nodes in the import spec
-		for (int i = 0; i < nodes.size(); i++){  
-			JSONObject nodeJson = (JSONObject) nodes.get(i);
-						
-			// get the related node from the NodeGroup
-			String sparqlID = nodeJson.get("sparqlID").toString();
-			Node snode = ng.getNodeBySparqlID(sparqlID);
-			
-			// loop through Json node's properties
-			JSONArray propsJArr  = (JSONArray) nodeJson.get("props");
-			for (int j=0; j < propsJArr.size(); j++) {
-				JSONObject propJson = (JSONObject) propsJArr.get(j);
-				String uriRelation = propJson.get("URIRelation").toString();
-				
-				// if propertyJson has a mapping, return the PropertyItem
-				JSONArray propMapJArr = (JSONArray) propJson.get("mapping");
-				if (propMapJArr != null && propMapJArr.size() > 0) {
-					PropertyItem pItem = snode.getPropertyByURIRelation(uriRelation);
-					ret.add(pItem);
-				}
+		for (int i=0; i < this.mappings.length; i++) {
+			if (this.mappings[i].isProperty()) {
+				ImportMapping m = this.mappings[i];
+				ret.add(ng.getNode(m.getsNodeIndex()).getPropertyItem(m.getPropItemIndex()));
 			}
 		}
 		

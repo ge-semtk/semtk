@@ -49,9 +49,9 @@ public class MappingItem {
 	 * @throws Exception
 	 */
 	public void fromJson(JSONObject mapItemJson, HashMap<String, String> colNameHash, HashMap<String, Integer> colIndexHash, HashMap<String,String> textHash, HashMap<String,Transform> transformHash) throws Exception {
-		if (mapItemJson.containsKey("textId")) {       
+		if (mapItemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_TEXT_ID)) {       
 			
-			String id = mapItemJson.get("textId").toString();
+			String id = mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_TEXT_ID).toString();
 			
 			// look up text
 			try {
@@ -60,9 +60,9 @@ public class MappingItem {
 				throw new Exception("Failed to look up textId: " + id);
 			}
 			
-		} else if (mapItemJson.containsKey("colId")) { 
+		} else if (mapItemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID)) { 
 			
-			String id = mapItemJson.get("colId").toString();
+			String id = mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID).toString();
 			String colName = null;
 			
 			// column name
@@ -82,7 +82,7 @@ public class MappingItem {
 			}
 			
 			// transforms
-			JSONArray transformJsonArr = (JSONArray) mapItemJson.get("transformList");
+			JSONArray transformJsonArr = (JSONArray) mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_TRANSFORM_LIST);
 			if (transformJsonArr != null) {
 				this.transformList = new Transform[transformJsonArr.size()];
 				for(int i=0; i < transformJsonArr.size(); i++) {
@@ -100,6 +100,11 @@ public class MappingItem {
 		return this.textVal == null && this.columnIndex > -1;
 	}
 	
+	/**
+	 * Build string for one item in a snode or property's import mapping
+	 * @param record
+	 * @return
+	 */
 	public String buildString(ArrayList<String> record) {
 		
 		if (this.textVal != null) {

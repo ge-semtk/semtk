@@ -7,7 +7,6 @@ public class ImportMapping {
 	private int propItemIndex = -1;
 	private ArrayList<MappingItem> itemList = new ArrayList<MappingItem>();
 	private boolean isEnum = false;     // does sNodeIndex point to an enum
-	private int blanksInLastBuild = 0;  // how many blank columns contributed to last buildString()
 	
 	public int getsNodeIndex() {
 		return sNodeIndex;
@@ -20,9 +19,6 @@ public class ImportMapping {
 	}
 	public void setPropItemIndex(int propItemIndex) {
 		this.propItemIndex = propItemIndex;
-	}
-	public int getBlanksInLastBuild() {
-		return this.blanksInLastBuild;
 	}
 	public void setIsEnum(boolean b) {
 		this.isEnum = b;
@@ -42,20 +38,30 @@ public class ImportMapping {
 		this.itemList.add(item);
 	}
 	
+	/**
+	 * Build the string for a node or property import value
+	 * @param record
+	 * @return
+	 * @throws Exception
+	 */
 	public String buildString(ArrayList<String> record) throws Exception {
 		StringBuilder ret = new StringBuilder();
 		
-		this.blanksInLastBuild = 0;
 		String str = "";
 		MappingItem item;
 
 		for (int i=0; i < this.itemList.size(); i++) {
 			item = this.itemList.get(i);
 			str = item.buildString(record);
-			// count blank columns
-			if (str.equals("") && item.isColumnMapping()) {
-				this.blanksInLastBuild += 1;
+			
+			// URI may not have empty columns in it's build unless it is an enum
+			// enum will either:
+			//    - be totally empty and prune, or 
+			//    - evaluate to a valid or invalid value and be treated accordingly
+			if (str.equals("") && this.propItemIndex == -1 && ! this.isEnum && item.isColumnMapping() ) {
+				throw new Exception("Empty values in URI build");
 			}
+			
 			// build the return
 			ret.append(str);
 		}

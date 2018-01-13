@@ -33,6 +33,40 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
  * 
  */
 public class SparqlGraphJson {
+	static final String JKEY_NODEGROUP = "sNodeGroup";
+	
+	static final String JKEY_SPARQLCONN = "sparqlConn";
+	
+	static final String JKEY_IMPORTSPEC = "importSpec";
+	static final String JKEY_IS_VERSION = "version";
+	static final String JKEY_IS_BASE_URI = "baseURI";
+	static final String JKEY_IS_COLUMNS = "columns";
+	static final String JKEY_IS_COL_COL_ID = "colId";
+	static final String JKEY_IS_COL_COL_NAME = "colName";
+	static final String JKEY_IS_TEXTS = "texts";
+	static final String JKEY_IS_TEXT_ID = "textId";
+	static final String JKEY_IS_TEXT_TEXT = "text";
+	static final String JKEY_IS_TRANSFORMS = "transforms";
+	static final String JKEY_IS_TRANS_ID = "transId";
+	static final String JKEY_IS_TRANS_NAME = "name";
+	static final String JKEY_IS_TRANS_TYPE = "transType";
+	static final String JKEY_IS_TRANS_ARG1 = "arg1";
+	static final String JKEY_IS_TRANS_ARG2 = "arg2";
+	static final String JKEY_IS_NODES = "nodes";
+	static final String JKEY_IS_NODE_SPARQL_ID = "sparqlID";
+	static final String JKEY_IS_NODE_TYPE = "type";
+	static final String JKEY_IS_MAPPING = "mapping";
+	static final String JKEY_IS_MAPPING_TEXT_ID = "textId";
+	static final String JKEY_IS_MAPPING_TEXT = "text";
+	static final String JKEY_IS_MAPPING_COL_ID = "colId";
+	static final String JKEY_IS_MAPPING_COL_NAME = "colName";
+	static final String JKEY_IS_MAPPING_TRANSFORM_LIST = "transformList";
+	static final String JKEY_IS_MAPPING_PROPS = "props";
+	static final String JKEY_IS_MAPPING_PROPS_URI_REL = "URIRelation";
+
+	
+	static final String JKEY_RUNTIMECONST = "RuntimeConstraints";
+	
 	private JSONObject jObj = null;
 	
 	private SparqlConnection conn = null;
@@ -55,7 +89,7 @@ public class SparqlGraphJson {
 	 * Basic check that jsonObj looks like a sparqlGraphJson
 	 */
 	public static boolean isSparqlGraphJson(JSONObject jsonObj) {
-		return 	(	jsonObj.containsKey("sNodeGroup") );
+		return 	(	jsonObj.containsKey(JKEY_NODEGROUP) );
 	}
 	
 	/**
@@ -65,7 +99,7 @@ public class SparqlGraphJson {
 	 */
 	public SparqlConnection getSparqlConn() throws Exception {
 		if (this.conn == null) {
-			JSONObject connJson = (JSONObject) (jObj.get("sparqlConn"));
+			JSONObject connJson = (JSONObject) (jObj.get(JKEY_SPARQLCONN));
 			if (connJson == null) {
 				throw new Exception("JSON does not contain a sparqlConn");
 			}
@@ -80,8 +114,8 @@ public class SparqlGraphJson {
 	}
 	
 	public JSONObject getSparqlConnJson() throws Exception {
-		if (jObj.containsKey("sparqlConn")) {
-			return (JSONObject)jObj.get("sparqlConn");
+		if (jObj.containsKey(JKEY_SPARQLCONN)) {
+			return (JSONObject)jObj.get(JKEY_SPARQLCONN);
 		}
 		else{
 			return null;
@@ -89,24 +123,24 @@ public class SparqlGraphJson {
 	}
 	
 	public JSONObject getSNodeGroupJson() {
-		if (jObj.containsKey("sNodeGroup")) {
-			return (JSONObject) jObj.get("sNodeGroup");
+		if (jObj.containsKey(JKEY_NODEGROUP)) {
+			return (JSONObject) jObj.get(JKEY_NODEGROUP);
 		} else {
 			return null;
 		}
 	}
 	
 	public JSONObject getImportSpecJson() {
-		if (jObj.containsKey("importSpec")) {
-			return (JSONObject) jObj.get("importSpec");
+		if (jObj.containsKey(JKEY_IMPORTSPEC)) {
+			return (JSONObject) jObj.get(JKEY_IMPORTSPEC);
 		} else {
 			return null;
 		}
 	}
 	
 	public JSONArray getRuntimeConstraintsJson(){
-		if (jObj.containsKey("RuntimeConstraints")) {
-			return (JSONArray) jObj.get("RuntimeConstraints");
+		if (jObj.containsKey(JKEY_RUNTIMECONST)) {
+			return (JSONArray) jObj.get(JKEY_RUNTIMECONST);
 		} else {
 			return null;
 		}
@@ -170,14 +204,14 @@ public class SparqlGraphJson {
 	
 	public void setSparqlConn(SparqlConnection conn) {
 		if(jObj != null){
-			jObj.remove("sparqlConn");					// remove the older one
-			jObj.put("sparqlConn", conn.toJson());		// add the new one.
+			jObj.remove(JKEY_SPARQLCONN);					// remove the older one
+			jObj.put(JKEY_SPARQLCONN, conn.toJson());		// add the new one.
 			this.conn = conn;							// insert the new one.
 			this.oInfo = null;
 		}
 		else{
 			this.jObj = new JSONObject();
-			this.jObj.put("sparqlConn", conn.toJson());		// add the new one.
+			this.jObj.put(JKEY_SPARQLCONN, conn.toJson());		// add the new one.
 			this.conn = conn;							// insert the new one.
 			this.oInfo = null;
 		}
