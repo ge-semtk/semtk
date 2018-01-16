@@ -99,4 +99,13 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 			throw new Exception("Failure executing test query.  Authentication might have failed.", e);
 		}
 	}
+
+	@Override
+	public SparqlEndpointInterface copy() throws Exception {
+		VirtuosoSparqlEndpointInterface retval = null;
+		
+		retval = new VirtuosoSparqlEndpointInterface(this.getServerAndPort(), this.dataset, this.userName, this.password);
+		
+		return (SparqlEndpointInterface) retval;
+	}
 }

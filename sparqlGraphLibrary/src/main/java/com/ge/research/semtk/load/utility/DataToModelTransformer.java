@@ -105,6 +105,14 @@ public class DataToModelTransformer {
 		this.batchSize = bSize;
 	}
 	
+	public ArrayList<ArrayList<String>> getNextRecordsFromDataSet(int nRecordsRequested) throws Exception{
+		 return this.ds.getNextRecords(nRecordsRequested);
+	}
+
+	public ArrayList<ArrayList<String>> getNextRecordsFromDataSet() throws Exception{
+		 return this.ds.getNextRecords(this.batchSize);
+	}
+	
 	public ArrayList<NodeGroup> getNextNodeGroups(int nRecordsRequested, boolean skipValidation) throws Exception {
 		ArrayList<NodeGroup> nGroups;		// this will be filled out and returned. 
 		
@@ -125,7 +133,7 @@ public class DataToModelTransformer {
 		return this.getNextNodeGroups(this.batchSize, skipValidation);	
 	}
 
-	private ArrayList<NodeGroup> convertToNodeGroups(ArrayList<ArrayList<String>> resp, boolean skipValidation) throws Exception {
+	public ArrayList<NodeGroup> convertToNodeGroups(ArrayList<ArrayList<String>> resp, boolean skipValidation) throws Exception {
 		// take the response we received and build the result node groups we care about.
 		ArrayList<NodeGroup> retval = new ArrayList<NodeGroup>();
 		
@@ -171,4 +179,10 @@ public class DataToModelTransformer {
 	public Table getErrorReport(){
 		return this.failuresEncountered;
 	}
+
+	public int getBatchSize() {
+		return this.batchSize;
+	}
+	
+	public int getTotalRecordsProcessed(){ return this.totalRecordsProcessed; }
 }

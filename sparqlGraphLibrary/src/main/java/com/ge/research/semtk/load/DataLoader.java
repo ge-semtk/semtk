@@ -49,6 +49,8 @@ public class DataLoader {
 	String password = null;
 	OntologyInfo oInfo = null;
 	
+	int MAX_WORKER_THREADS = 10;
+	
 	public final static String FAILURE_CAUSE_COLUMN_NAME = "Failure Cause";
 	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
 
@@ -188,35 +190,41 @@ public class DataLoader {
 			// that data
 			System.out.print("Records processed:");
 			long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
+			
+			ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
+			
 			while (true) {
-				ArrayList<NodeGroup> ngBatch = new ArrayList<NodeGroup>();
-				try {
-					ngBatch = this.dttmf.getNextNodeGroupBatch(checkFirst);
-				} catch (DataSetExhaustedException e) {
-					// no more data to get.
-					break;
+				// get the next set of records from the data set.
+				ArrayList<ArrayList<String>> nextRecords = null;
+		
+				try{
+					nextRecords = this.dttmf.getNextRecordsFromDataSet();
+				}catch(Exception e){ break; } // record set exhausted
+				
+				if(nextRecords == null || nextRecords.size() == 0 ){ break; }
+				
+				// spin up a thread to do the work.
+				if(wrkrs.size() < this.MAX_WORKER_THREADS){
+					// spin up the thread and do the work. 
+					IngestionWorkerThread neo = new IngestionWorkerThread(this.endpoint.copy(), this.dttmf, nextRecords, this.oInfo, checkFirst);
+					wrkrs.add(neo);
+					neo.start();
+					this.totalRecordsProcessed += nextRecords.size();
 				}
-				for (NodeGroup n : ngBatch) {
-					// add the returned ones to load list
-					this.nodeGroupBatch.add(n);
-					this.totalRecordsProcessed += 1;
+				// wait until we free up.
+				if(wrkrs.size() == this.MAX_WORKER_THREADS){
+					for(int counter = 0; counter < wrkrs.size(); counter++){
+						wrkrs.get(counter).join();
+					}
+					// reset it all 
+					wrkrs.clear();
 				}
-				// if we are at the max batch size, flush the values to the store
-				if (this.nodeGroupBatch.size() >= this.batchSize) {
-					this.insertToTripleStore(); // write them out
-					this.nodeGroupBatch.clear(); // clear the collection
-				}
-				if(System.currentTimeMillis() - timeMillis > 1000){  // report # records loaded every 1 second
-					System.out.print("..." + this.totalRecordsProcessed);
-					timeMillis = System.currentTimeMillis();
-				}
+			}
+			// await any still running threads:
+			for(int counter = 0; counter < wrkrs.size(); counter++){
+				wrkrs.get(counter).join();
 			}
 
-			// check for remaining values to flush:
-			if (this.nodeGroupBatch.size() > 0) {
-				this.insertToTripleStore();
-				this.nodeGroupBatch.clear();   // cleared for consistency's sake, even though we are done
-			}
 		}
 		LocalLogger.logToStdOut("..." + this.totalRecordsProcessed + "(DONE)");
 		this.dttmf.closeDataSet();			// close all connections and clean up

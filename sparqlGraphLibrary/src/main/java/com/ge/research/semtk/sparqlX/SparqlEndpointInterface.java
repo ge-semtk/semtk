@@ -1158,4 +1158,5 @@ LocalLogger.logToStdOut ("URL: " + url);
 		return tableJson;
 	}	
 
+	public abstract SparqlEndpointInterface copy() throws Exception;
 }

@@ -72,5 +72,13 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		return null;
 	}
 	
+	@Override
+	public SparqlEndpointInterface copy() throws Exception {
+		FusekiSparqlEndpointInterface retval = null;
+		
+		retval = new FusekiSparqlEndpointInterface(this.getServerAndPort(), this.dataset, this.userName, this.password);
+		
+		return (SparqlEndpointInterface) retval;
+	}
 	
 }
