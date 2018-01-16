@@ -2224,30 +2224,67 @@ public class NodeGroup {
 		return this.generateSparqlInsert(null, oInfo);
 	}
 	
-	public String generateSparqlInsert(String post, OntologyInfo oInfo) throws Exception {
+	public String generateSparqlInsert(String sparqlIDSuffix, OntologyInfo oInfo) throws Exception {
 		this.buildPrefixHash();
 		
 		String retval = "";
 		// get the primary insert body.
-		String primaryBody = this.getInsertLeader(post, oInfo);
+		String primaryBody = this.getInsertLeader(sparqlIDSuffix, oInfo);
 		
 		// get the where clause body
-		String whereBody = this.getInsertWhereBody(post, oInfo);
+		String whereBody = this.getInsertWhereBody(sparqlIDSuffix, oInfo);
 		
 		retval =  this.generateSparqlPrefix() + " INSERT {\n" + primaryBody + "} WHERE {" + whereBody + "}\n";
 		
 		return retval;
+		
 	}
 	
+	/**
+	 * Generate insert for a group of nodegroups, which must be identical except for their instance data
+	 * @param ngList - WARNING: will add to prefixHash as side-effect  (We'll miss you, Justin)
+	 * @param oInfo
+	 * @return sparql insert statement
+	 * @throws Exception
+	 */
+	public static String generateCombinedSparqlInsert(ArrayList<NodeGroup> ngList, OntologyInfo oInfo) throws Exception {
+		
+		HashMap<String, String> prefixHash = new HashMap<String, String>();
+		String totalInsertHead = "";
+		String totalInsertWhere = "";
+		NodeGroup ng = null;
+		
+		for (int i=0; i < ngList.size(); i++) {
+			ng = ngList.get(i);
+			
+			// pass prefixHash on to next nodegroup
+			if(i > 0){
+				ng.rebuildPrefixHash(prefixHash);	// add new elements, as needed.
+			}
+			prefixHash = ng.getPrefixHash();
+			
+			String seq = "__" + i;
+			totalInsertHead  += ng.getInsertLeader(seq, oInfo);
+			totalInsertWhere += ng.getInsertWhereBody(seq, oInfo);
+				
+		}
+		
+		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
+		//       this way, we only need to get it's prefixes. 
+		
+		String query =  ng.generateSparqlPrefix() + " INSERT { " + totalInsertHead + " } WHERE { " + totalInsertWhere + " } ";
+		
+		return query;
+	}
 
-	public String getInsertLeader(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception  {
+	public String getInsertLeader(String sparqlIDSuffix, OntologyInfo oInfo) throws Exception  {
 		// this method creates the top section of the insert statements.
 		// the single argument is used to post-fix the sparqlIDs, if required. 
 		// this is used in the generation of bulk insertions. 
 		this.buildPrefixHash();
 		
 		String retval = "";
-		if(postfixSparqlIDs == null){ postfixSparqlIDs = "";}
+		if(sparqlIDSuffix == null){ sparqlIDSuffix = "";}
 		
 		// loop through the nodes and get any values we may need. 
 		for(Node curr : this.nodes){
@@ -2260,7 +2297,7 @@ public class NodeGroup {
 				currInstanceBlank = true;
 			}
 
-			String sparqlID = curr.getSparqlID() + postfixSparqlIDs;
+			String sparqlID = curr.getSparqlID() + sparqlIDSuffix;
 			// makes sure to indicate that this node was of its own type. it comes up.
 		
 			/**
@@ -2288,7 +2325,7 @@ public class NodeGroup {
 				// insert a line for each node item
 				for(NodeItem ni : curr.getNodeItemList()){
 					for(Node currentConnection : ni.getNodeList()){
-						retval += "\t" + sparqlID + " " + this.getPrefixedUri(ni.getUriConnectBy()) + " " + currentConnection.getSparqlID() + postfixSparqlIDs + " .\n";
+						retval += "\t" + sparqlID + " " + this.getPrefixedUri(ni.getUriConnectBy()) + " " + currentConnection.getSparqlID() + sparqlIDSuffix + " .\n";
 					}
 				}
 			}
@@ -2297,17 +2334,17 @@ public class NodeGroup {
 		return retval;
 	}
 	
-	public String getInsertWhereBody(String postfixSparqlIDs, OntologyInfo oInfo) throws Exception  {
+	public String getInsertWhereBody(String sparqlIDSuffix, OntologyInfo oInfo) throws Exception  {
 		
 		this.buildPrefixHash();
 		StringBuilder sparql = new StringBuilder();
 		
-		if (postfixSparqlIDs == null) {
-			postfixSparqlIDs = "";
+		if (sparqlIDSuffix == null) {
+			sparqlIDSuffix = "";
 		}
 		
 		for (Node node : this.nodes) {
-			String sparqlId = node.getSparqlID() + postfixSparqlIDs;
+			String sparqlId = node.getSparqlID() + sparqlIDSuffix;
 			
 
 			Boolean currIsEnum = oInfo.classIsEnumeration(node.getFullUriName());

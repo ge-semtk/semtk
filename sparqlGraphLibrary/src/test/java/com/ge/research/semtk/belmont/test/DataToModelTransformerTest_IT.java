@@ -32,23 +32,8 @@ public class DataToModelTransformerTest_IT {
 		TestGraph.clearGraph();
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 
-		DataToModelTransformer dtmx = new DataToModelTransformer(sgJson, 6, ds);
-		ArrayList<NodeGroup> ngArr = dtmx.getNextBatch();
-	
-//		for (NodeGroup n : ngArr) {
-//			for (Node nd : n.getNodeList()) {
-//				System.out.println(nd.getSparqlID() + " instance value was " + nd.getInstanceValue());
-//				for (PropertyItem prop : nd.getPropertyItems()) {
-//					String ret = "";
-//					for (String inst : prop.getInstanceValues()) {
-//						ret += inst + ",";
-//					}
-//					if (ret != "") {
-//						System.out.println("\t" + prop.getUriRelationship()	+ " ----> " + ret);
-//					}
-//				}
-//			}
-//		}		
+		DataToModelTransformer dtmx = new DataToModelTransformer(sgJson, 6, ds, null);  // TODO temporary null endpoint
+		ArrayList<NodeGroup> ngArr = dtmx.getNextNodeGroupBatch(false);	
 
 		assertEquals(ngArr.size(),4);		
 		assertEquals(ngArr.get(0).getNodeCount(),3);

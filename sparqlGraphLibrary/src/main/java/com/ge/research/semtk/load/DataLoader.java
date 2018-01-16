@@ -41,7 +41,7 @@ public class DataLoader {
 	// actually orchestrates the loading of data from a dataset based on a template.
 
 	NodeGroup master = null;
-	ArrayList<NodeGroup> subGraphsToLoad = new ArrayList<NodeGroup>();     // stores the subgraphs to be loaded.  
+	ArrayList<NodeGroup> nodeGroupBatch = new ArrayList<NodeGroup>();     // stores the subgraphs to be loaded.  
 	SparqlEndpointInterface endpoint = null;
 	DataToModelTransformer dttmf = null; 
 	int batchSize = 1;	// maximum batch size for insertion to the triple store
@@ -69,7 +69,7 @@ public class DataLoader {
 		
 		this.oInfo = sgJson.getOntologyInfo();				
 		this.master = sgJson.getNodeGroup(this.oInfo);
-		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize);		
+		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize, endpoint);		
 	}
 	
 
@@ -168,7 +168,7 @@ public class DataLoader {
 			// try structuring around model but do not load. 	
 			while(true){
 				try{					
-					this.dttmf.getNext();
+					this.dttmf.getNextNodeGroups(1, false);
 					totalPreflightRecordsChecked++;
 				}
 				catch(DataSetExhaustedException e){
@@ -189,22 +189,22 @@ public class DataLoader {
 			System.out.print("Records processed:");
 			long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 			while (true) {
-				ArrayList<NodeGroup> curr = new ArrayList<NodeGroup>();
+				ArrayList<NodeGroup> ngBatch = new ArrayList<NodeGroup>();
 				try {
-					curr = this.dttmf.getNextBatch();
+					ngBatch = this.dttmf.getNextNodeGroupBatch(checkFirst);
 				} catch (DataSetExhaustedException e) {
 					// no more data to get.
 					break;
 				}
-				for (NodeGroup n : curr) {
+				for (NodeGroup n : ngBatch) {
 					// add the returned ones to load list
-					this.subGraphsToLoad.add(n);
+					this.nodeGroupBatch.add(n);
 					this.totalRecordsProcessed += 1;
 				}
 				// if we are at the max batch size, flush the values to the store
-				if (this.subGraphsToLoad.size() >= this.batchSize) {
+				if (this.nodeGroupBatch.size() >= this.batchSize) {
 					this.insertToTripleStore(); // write them out
-					this.subGraphsToLoad.clear(); // clear the collection
+					this.nodeGroupBatch.clear(); // clear the collection
 				}
 				if(System.currentTimeMillis() - timeMillis > 1000){  // report # records loaded every 1 second
 					System.out.print("..." + this.totalRecordsProcessed);
@@ -213,57 +213,21 @@ public class DataLoader {
 			}
 
 			// check for remaining values to flush:
-			if (this.subGraphsToLoad.size() > 0) {
+			if (this.nodeGroupBatch.size() > 0) {
 				this.insertToTripleStore();
-				this.subGraphsToLoad.clear();// cleared for consistency's sake,
-												// even though we are done
+				this.nodeGroupBatch.clear();   // cleared for consistency's sake, even though we are done
 			}
 		}
 		LocalLogger.logToStdOut("..." + this.totalRecordsProcessed + "(DONE)");
 		this.dttmf.closeDataSet();			// close all connections and clean up
 		return this.totalRecordsProcessed;  // report.
 	}
+	
 	public void insertToTripleStore() throws Exception{
 		// take the values from the current collection of node groups and then send them off to the store. 
-	
-		HashMap<String, String> prefixHash = new HashMap<String, String>();
-		String prefixes = "";
-		String totalInsertHead = "";
-		String totalInsertWhere = "";
-		
-		int seqNum = 0;
-		NodeGroup lastNg = null;
-		for(NodeGroup ng : this.subGraphsToLoad){
-			
-			// we are going to use one prefix hash and add to is as needed. 
-			
-			if(seqNum == 0){
-				prefixHash = ng.getPrefixHash();
-			}
-			else{
-				ng.rebuildPrefixHash(prefixHash);	// add new elements, as needed.
-				prefixHash = ng.getPrefixHash(); 	// get back a copy. 
-			}
-			
-			String seq = "__" + seqNum;
-			
-			totalInsertHead  += ng.getInsertLeader(seq, this.oInfo);
-			totalInsertWhere += ng.getInsertWhereBody(seq, this.oInfo);
-			
-			seqNum += 1;
-			lastNg = ng;
-		}
-		// make the query and send it off.
-		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
-		//       this way, we only need to get it's prefixes. 
-		
-		// TODO: this SPARQL-generation should be in NodeGroup.java
-		String query =  lastNg.generateSparqlPrefix() + "Insert { " + totalInsertHead + " } where { " + totalInsertWhere + " } "; 
 
-//		// some diagnostic output:
-//		LocalLogger.logToStdErr("Insert generated : ");
-//		LocalLogger.logToStdErr(query);
-		
+		String query =  NodeGroup.generateCombinedSparqlInsert(this.nodeGroupBatch, this.oInfo);
+
 		this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	}
 	

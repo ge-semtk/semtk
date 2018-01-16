@@ -20,8 +20,6 @@ package com.ge.research.semtk.load.utility;
 
 import java.util.ArrayList;
 
-import org.json.simple.JSONObject;
-
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -29,6 +27,7 @@ import com.ge.research.semtk.load.utility.DataSetExhaustedException;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 /*
  * Takes multiple data records and uses them to populate NodeGroups.
  */
@@ -36,14 +35,16 @@ public class DataToModelTransformer {
 
 	Dataset ds = null;
 	int batchSize = 1;
-	ImportSpecHandler transformSpec = null;
+	ImportSpecHandler importSpec = null;
 	OntologyInfo oInfo = null;
 	Table failuresEncountered = null;
 	int totalRecordsProcessed = 0;
 	
-	public DataToModelTransformer(SparqlGraphJson sgJson) throws Exception{
+	// TODO: passing through the endpoint is questionable & temporary for POC
+	public DataToModelTransformer(SparqlGraphJson sgJson, SparqlEndpointInterface endpoint) throws Exception{
 		this.oInfo = sgJson.getOntologyInfo();
-		this.transformSpec = sgJson.getImportSpec();
+		this.importSpec = sgJson.getImportSpec();
+		this.importSpec.setEndpoint(endpoint);
 		
 		if (sgJson.getImportSpecJson() == null) {
 			throw new Exception("The data transformation import spec is null.");
@@ -53,25 +54,25 @@ public class DataToModelTransformer {
 		}
 	}
 
-	public DataToModelTransformer(SparqlGraphJson sgJson, int batchSize) throws Exception{
-		this(sgJson);
+	public DataToModelTransformer(SparqlGraphJson sgJson, int batchSize, SparqlEndpointInterface endpoint) throws Exception{
+		this(sgJson, endpoint);
 		this.batchSize = batchSize;
 	}
 
-	public DataToModelTransformer(SparqlGraphJson sgJson, int batchSize, Dataset ds) throws Exception{
-		this(sgJson);
+	public DataToModelTransformer(SparqlGraphJson sgJson, int batchSize, Dataset ds, SparqlEndpointInterface endpoint) throws Exception{
+		this(sgJson, endpoint);
 		this.batchSize = batchSize;
 		this.setDataset(ds);
 	}
 	
 	public String [] getImportColNames() {
-		return transformSpec.getColNamesUsed();
+		return importSpec.getColNamesUsed();
 	}
 	
 	public void setDataset(Dataset ds) throws Exception{
 		this.ds = ds;
 		if(ds != null){
-			this.transformSpec.setHeaders(ds.getColumnNamesinOrder());
+			this.importSpec.setHeaders(ds.getColumnNamesinOrder());
 			
 			ArrayList<String> failureCols = this.ds.getColumnNamesinOrder();
 			failureCols.add(DataLoader.FAILURE_CAUSE_COLUMN_NAME);
@@ -104,7 +105,7 @@ public class DataToModelTransformer {
 		this.batchSize = bSize;
 	}
 	
-	private ArrayList<NodeGroup> getNextNRecords(int nRecordsRequested) throws Exception {
+	public ArrayList<NodeGroup> getNextNodeGroups(int nRecordsRequested, boolean skipValidation) throws Exception {
 		ArrayList<NodeGroup> nGroups;		// this will be filled out and returned. 
 		
 		ArrayList<ArrayList<String>> resp = this.ds.getNextRecords(nRecordsRequested);
@@ -115,20 +116,16 @@ public class DataToModelTransformer {
 		}
 		
 		// add the values to the NodeGroup...
-		nGroups = this.convertToNodeGroups(resp);
+		nGroups = this.convertToNodeGroups(resp, skipValidation);
 		
 		return nGroups;
 	}
-	
-	public ArrayList<NodeGroup> getNext() throws Exception {
-		return this.getNextNRecords(1);
+
+	public ArrayList<NodeGroup> getNextNodeGroupBatch(boolean skipValidation) throws Exception {
+		return this.getNextNodeGroups(this.batchSize, skipValidation);	
 	}
 
-	public ArrayList<NodeGroup> getNextBatch() throws Exception {
-		return this.getNextNRecords(this.batchSize);	
-	}
-
-	private ArrayList<NodeGroup> convertToNodeGroups(ArrayList<ArrayList<String>> resp) throws Exception {
+	private ArrayList<NodeGroup> convertToNodeGroups(ArrayList<ArrayList<String>> resp, boolean skipValidation) throws Exception {
 		// take the response we received and build the result node groups we care about.
 		ArrayList<NodeGroup> retval = new ArrayList<NodeGroup>();
 		
@@ -145,7 +142,7 @@ public class DataToModelTransformer {
 			
 			// add the values from the results to it.
 			try{
-				cng = this.transformSpec.importRecord(curr);
+				cng = this.importSpec.buildImportNodegroup(curr, skipValidation);
 			
 				// add the new group to the output arraylist, only if it succceeded
 				retval.add(cng);

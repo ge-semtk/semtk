@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.belmont;
 
+import java.util.ArrayList;
+
 public class ValueConstraint {
 
 	private String constraint = "";
@@ -40,6 +42,26 @@ public class ValueConstraint {
 	 */
 	public String toString() {
 		return this.constraint == null ? "" : this.constraint;
+	}
+	
+	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList) throws Exception {
+		// build a value constraint for an "item" (see item interface comment)
+		StringBuffer ret = new StringBuffer();
+		if (valList.size() > 0) {
+			String t = item.getValueType();
+			ret.append("VALUES " + item.getSparqlID() + " {");
+			
+			for (int i=0; i < valList.size(); i++) {
+				if (XSDSupportedTypes.getMatchingName(t).equals("NODE_URI")) {
+					ret.append(" <" + valList.get(i) + ">");
+				} else {
+					ret.append(" '" + valList.get(i) + "'^^" + XSDSupportUtil.getPrefixedName(item.getValueType()));
+				}
+			}
+			
+			ret.append(" } ");
+		}
+		return ret.toString();
 	}
 	
 	public static String buildFilterConstraint(Returnable item, String oper, String pred)  throws Exception {

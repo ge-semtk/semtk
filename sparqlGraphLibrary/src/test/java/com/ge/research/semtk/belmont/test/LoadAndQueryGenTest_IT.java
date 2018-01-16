@@ -46,7 +46,7 @@ public class LoadAndQueryGenTest_IT {
 
 		SparqlEndpointInterface sei =  sgJson.getSparqlConn().getDefaultQueryInterface();
 		sei.executeQuery(qry, SparqlResultTypes.TABLE);
-		assertEquals(sei.getResponse().toString().length(),2344);  	// character count of response		
+		assertEquals(2349, sei.getResponse().toString().length());  	// character count of response		
 	}
 	
 	@Test

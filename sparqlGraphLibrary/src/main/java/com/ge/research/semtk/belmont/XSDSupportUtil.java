@@ -20,9 +20,19 @@ package com.ge.research.semtk.belmont;
 
 public class XSDSupportUtil {
 
-	private static String xmlSchemaPrefix = "^^<http://www.w3.org/2001/XMLSchema#";
+	private static String xmlSchemaRawPrefix = "http://www.w3.org/2001/XMLSchema";
+	private static String xmlSchemaPrefix = "^^<" + xmlSchemaRawPrefix + "#";
 	private static String xmlSchemaTrailer = ">";
 			
+	public static String getFullName(String typeFragment, String delim) {
+		return xmlSchemaRawPrefix + delim + typeFragment;
+	}
+	
+	// PEC TODO: this is confused
+	public static String getPrefixedName(String typeFragment) {
+		return "XMLSchema:" + typeFragment;
+	}
+	
 	public static boolean supportedType(String candidate){
 		boolean retval = true;
 		

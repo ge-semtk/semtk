@@ -55,6 +55,7 @@ public class SparqlGraphJson {
 	static final String JKEY_IS_NODES = "nodes";
 	static final String JKEY_IS_NODE_SPARQL_ID = "sparqlID";
 	static final String JKEY_IS_NODE_TYPE = "type";
+	static final String JKEY_IS_URI_LOOKUP = "URILookup";
 	static final String JKEY_IS_MAPPING = "mapping";
 	static final String JKEY_IS_MAPPING_TEXT_ID = "textId";
 	static final String JKEY_IS_MAPPING_TEXT = "text";
