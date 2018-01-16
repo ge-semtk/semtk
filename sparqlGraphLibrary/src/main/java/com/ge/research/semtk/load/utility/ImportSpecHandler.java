@@ -72,7 +72,11 @@ public class ImportSpecHandler {
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
 		
-		this.ngJson = ngJson;
+		// reset the nodegroup and store as json (for efficient duplication)
+		NodeGroup ng = NodeGroup.getInstanceFromJson(ngJson);
+		ng.reset();
+		this.ngJson = ng.toJson();
+		
 		this.oInfo = oInfo;
 		
 		this.setupColNameHash(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));

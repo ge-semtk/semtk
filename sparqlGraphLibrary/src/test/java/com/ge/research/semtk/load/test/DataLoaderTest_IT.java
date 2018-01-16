@@ -351,7 +351,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
 
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescData.csv", false);
-
+		
 		// import
 		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -360,7 +360,43 @@ public class DataLoaderTest_IT {
 		Table err = dl.getLoadingErrorReport();
 		assertEquals(0, err.getNumRows());
 		
-		this.queryAndCheckResults(sgJson.getNodeGroup(), "/lookupBatteryIdAddDesc.csv");
+		this.queryAndCheckResults(sgJson.getNodeGroup(), "/lookupBatteryIdAddDescResults.csv");
+		
+	}
+	
+	@Test
+	public void testLookupBatteryIdAddDescShort() throws Exception {
+		// setup
+		TestGraph.clearGraph();
+				
+		// ==== pre set some data =====
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryShortData.csv", false);
+
+		DataLoader dl0 = new DataLoader(sgJson0, 2, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		dl0.importData(true);
+		
+		Table err0 = dl0.getLoadingErrorReport();
+		if (err0.getNumRows() > 0) {
+			fail(err0.toCSVString());
+		}
+				
+				
+		// Try URI lookup
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+
+		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescShortData.csv", false);
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+
+
+		Table err = dl.getLoadingErrorReport();
+		assertEquals(0, err.getNumRows());
+		
+		this.queryAndCheckResults(sgJson.getNodeGroup(), "/lookupBatteryIdAddDescShortResults.csv");
 		
 	}
 	

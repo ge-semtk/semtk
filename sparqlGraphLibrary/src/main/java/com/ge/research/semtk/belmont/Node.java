@@ -389,6 +389,25 @@ public class Node extends Returnable {
 		}
 	}
 	
+	/** 
+	 * clear everything except names and connections between nodes
+	 */
+	public void reset() {
+		this.instanceValue = null;
+		this.isReturned = false;
+		this.deletionMode = NodeDeletionTypes.NO_DELETE;
+		this.constraints = null;
+		this.isRuntimeConstrained = false;
+		
+		for (PropertyItem p : this.props) {
+			p.reset();
+		}
+		
+		for (NodeItem n : this.nodes) {
+			n.reset();
+		}
+	}
+	
 	public void setSparqlID(String ID){
 		if (this.constraints != null) {
 			this.constraints.changeSparqlID(this.sparqlID, ID);
