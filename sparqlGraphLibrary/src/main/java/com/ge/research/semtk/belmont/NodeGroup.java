@@ -288,6 +288,17 @@ public class NodeGroup {
 		return copy;
 	}
 	
+	/**
+	 * Clear everything except names, types, node connections
+	 */
+	public void reset() {
+		this.limit = 0;
+		this.offset = 0;
+		this.orderBy = new ArrayList<OrderElement>();
+		for (Node n : this.nodes) {
+			n.reset();
+		}
+	}
 	public int getLimit() {
 		return this.limit;
 	}

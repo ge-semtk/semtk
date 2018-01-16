@@ -165,6 +165,16 @@ public class NodeItem {
 		
 		return ret;
 	}
+	
+	public void reset() {
+		for (int i=0; i < this.deletionFlags.size(); i++) {
+			this.deletionFlags.set(i, false);
+		}
+		for (int i=0; i < this.snodeOptionals.size(); i++) {
+			this.snodeOptionals.set(i, OPTIONAL_FALSE);
+		}
+	}
+	
 	public String getKeyName() {
 		return this.keyName;
 	}

@@ -121,6 +121,17 @@ public class PropertyItem extends Returnable {
 		return ret;
 	}
 
+	/** 
+	 * clear everything except names, types, and connections between nodes
+	 */
+	public void reset() {
+		this.constraints = null;
+		this.isReturned = false;
+		this.isOptional = false;
+		this.isMarkedForDeletion = false;
+		this.isRuntimeConstrained = false;
+	}
+	
 	public boolean getIsOptional() {
 		return this.isOptional;
 	}
