@@ -647,6 +647,7 @@ PropertyItem.prototype = {
     isUsed : function() {
         return (  
             this.isReturned ||
+            this.hasConstraints() ||
             this.isRuntimeConstrained ||
             this.instanceValues.length > 0 ||
             this.isMarkedForDeletion)
@@ -661,7 +662,7 @@ PropertyItem.prototype = {
 		this.ValueType = typ;
 	},
 	setSparqlID : function(id) {
-		if (this.SparqlID != null && this.constraints != null) {
+		if (this.SparqlID != null && this.hasConstraints()) {
 			this.constraints = this.constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
 		}
 		this.SparqlID = id;

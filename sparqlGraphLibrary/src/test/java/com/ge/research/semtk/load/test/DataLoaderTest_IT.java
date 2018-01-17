@@ -382,7 +382,7 @@ public class DataLoaderTest_IT {
 			fail(err0.toCSVString());
 		}
 				
-				
+		LocalLogger.logToStdErr("------ done import 1 -------");		
 		// Try URI lookup
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
 
