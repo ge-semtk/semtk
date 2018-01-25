@@ -56,7 +56,7 @@ public class TestGraph {
 	
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
-		SparqlEndpointInterface sei = new VirtuosoSparqlEndpointInterface(getSparqlServer(), generateDatasetName("both"), getUsername(), getPassword());
+		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(getSparqlServerType(), getSparqlServer(), generateDatasetName("both"), getUsername(), getPassword());
 		try{
 			sei.executeTestQuery();
 		}catch(Exception e){
@@ -299,5 +299,15 @@ public class TestGraph {
 		dl.importData(true);
 		
 		return sgJson;
+	}
+	
+	public static Table runQuery(String query) throws Exception {
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+		if (!res.getSuccess()) {
+			throw new Exception("Failure querying: " + query + " \nrationale: "	+ res.getRationaleAsString(" "));
+		}
+		Table tab = res.getTable();
+		return tab;
 	}
 }
