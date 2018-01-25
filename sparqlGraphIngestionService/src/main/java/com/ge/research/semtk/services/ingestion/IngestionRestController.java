@@ -165,7 +165,7 @@ public class IngestionRestController {
 			JSONObject json = null;
 			
 			if(templateContent != null){
-				LocalLogger.logToStdErr("template size :"  + templateContent.length());
+				LocalLogger.logToStdErr("template size: "  + templateContent.length());
 			}
 			else{
 				LocalLogger.logToStdErr("template content was null");
@@ -182,8 +182,7 @@ public class IngestionRestController {
 			}
 			
 			if(dataFileContent != null){
-				LocalLogger.logToStdErr("data size :"  + dataFileContent.length());
-				LocalLogger.logToStdErr(dataFileContent);
+				LocalLogger.logToStdErr("data size: "  + dataFileContent.length());
 			}
 			else{
 				LocalLogger.logToStdErr("data content was null");
