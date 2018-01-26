@@ -489,5 +489,26 @@ public class TableTest {
 		assertEquals(tableSubset.getRows().get(0).get(2), "coconut");
 	}
 	
+	@Test
+	public void testTableAllRowsMatch() throws Exception{
+		String jsonStr;
+		JSONObject jsonObj;
+		Table table;
+		
+		jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"],[\"\",\"tropicana\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":3}";
+		jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
+		table = Table.fromJson(jsonObj);
+		assertFalse(table.allRowsMatch());
+		
+		jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"apple\",\"banana\",\"coconut\"],[\"apple\",\"banana\",\"coconut\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":3}";
+		jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
+		table = Table.fromJson(jsonObj);
+		assertTrue(table.allRowsMatch());
+		
+		jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":0}";
+		jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
+		table = Table.fromJson(jsonObj);
+		assertTrue(table.allRowsMatch());
+	}
 	
 }

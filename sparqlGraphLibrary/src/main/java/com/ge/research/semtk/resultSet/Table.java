@@ -96,28 +96,33 @@ public class Table {
 		
 	}
 	
-	public void replaceColumnNames(String [] newColumnnNames) throws Exception{
-		// this allows the replacement of the existing column names with a new set. 
-		// it requires that the incoming count of names match the ones being replaced.
-		
-		if(this.columnNames.length != newColumnnNames.length){
-			throw new Exception("replaceColumnNames: the incoming column name count (" + newColumnnNames.length + ") does not match the target column names count (" + this.columnNames.length + ")");
-		}
-		
-		else{
-			this.columnNames = newColumnnNames;
-		}
-		
+	/**
+	 * Replace the existing column names with a new set.
+	 */
+	public void replaceColumnNames(String [] newColumnNames) throws Exception{
+		if(this.columnNames.length != newColumnNames.length){
+			throw new Exception("replaceColumnNames: the incoming column name count (" + newColumnNames.length + ") does not match the target column names count (" + this.columnNames.length + ")");
+		}	
+		this.columnNames = newColumnNames;
 	}
 	
+	/**
+	 * Get the number of rows in the table.
+	 */
 	public int getNumRows(){
 		return rows.size();
 	}
 	
+	/**
+	 * Get the number of columns in the table.
+	 */
 	public int getNumColumns(){
 		return columnNames.length;
 	}
 	
+	/**
+	 * Get the column names.
+	 */
 	public String[] getColumnNames(){
 		return columnNames;
 	}
@@ -259,11 +264,8 @@ public class Table {
 	}
 	
 	public String getHeaderAsCSVString() throws IOException {
-		
 		ArrayList<String> headers = new ArrayList<String>( Arrays.asList( this.getColumnNames() ) ); // gets col names in order
 		return (Utility.getCSVString(headers));
-		
-		
 	}
 	
 	public String getCell(int row, int col) {
@@ -685,4 +687,16 @@ public class Table {
 						);	
 	}
 	
+	/**
+	 * Returns true if all the rows in the table are the same.
+	 */
+	public boolean allRowsMatch(){
+		// check that each column only has 1 unique value.
+		for(int i = 0; i < getNumColumns(); i++){
+			if(getColumnUniqueValues(i).length > 1){
+				return false;
+			}
+		}
+		return true;
+	}
 }
