@@ -1,0 +1,5 @@
+description_opt,batt_ID,assembly_date_opt,cell1_ID_opt, cell1_color, cell2_ID_opt, cell2_color, cell3_ID_opt,cell3_color,cell4_ID_opt,cell4_color
+normal battery,full,2017-03-23T10:23:00,A,red,B,white,C,blue,D,red
+three cell,three,,A1,red,B1,white,C1,blue,,
+only colors,onlycolor,,,blue,,blue,,blue,,blue
+no cells,nocells,2017-03-23T10:23:01,,,,,,,,

@@ -26,7 +26,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataSetExhaustedException;
-import com.ge.research.semtk.load.utility.DataToModelTransformer;
+import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
@@ -43,7 +43,7 @@ public class DataLoader {
 	NodeGroup master = null;
 	ArrayList<NodeGroup> nodeGroupBatch = new ArrayList<NodeGroup>();     // stores the subgraphs to be loaded.  
 	SparqlEndpointInterface endpoint = null;
-	DataToModelTransformer dttmf = null; 
+	DataLoadBatchHandler batchHandler = null; 
 	int batchSize = 1;	// maximum batch size for insertion to the triple store
 	String username = null;
 	String password = null;
@@ -71,7 +71,7 @@ public class DataLoader {
 		
 		this.oInfo = sgJson.getOntologyInfo();				
 		this.master = sgJson.getNodeGroup(this.oInfo);
-		this.dttmf = new DataToModelTransformer(sgJson, this.batchSize, endpoint);		
+		this.batchHandler = new DataLoadBatchHandler(sgJson, this.batchSize, endpoint);		
 	}
 	
 
@@ -101,7 +101,7 @@ public class DataLoader {
 	
 	private void validateColumns(Dataset ds) throws Exception {
 		// validate that the columns specified in the template are present in the dataset
-		String[] colNamesToIngest = dttmf.getImportColNames();   // col names from JSON		
+		String[] colNamesToIngest = batchHandler.getImportColNames();   // col names from JSON		
 		ArrayList<String> colNamesInDataset = ds.getColumnNamesinOrder();
 		for(String c: colNamesToIngest){
 			if(!colNamesInDataset.contains(c)){
@@ -134,11 +134,11 @@ public class DataLoader {
 	}
 	
 	public void setDataset(Dataset ds) throws Exception{
-		if(this.dttmf == null){
+		if(this.batchHandler == null){
 			throw new Exception("There was no DAta to model TRansform initialized when setting dataset.");
 		}
 		else{
-			this.dttmf.setDataset(ds);
+			this.batchHandler.setDataset(ds);
 		}
 		
 	}
@@ -149,7 +149,7 @@ public class DataLoader {
 	}	
 	
 	public void setRetrivalBatchSize(int rBatchSize){
-		this.dttmf.setBatchSize(rBatchSize);
+		this.batchHandler.setBatchSize(rBatchSize);
 	}
 	
 	
@@ -168,9 +168,11 @@ public class DataLoader {
 		int totalPreflightRecordsChecked = 0;
 		if(checkFirst){
 			// try structuring around model but do not load. 	
+			int startingRow = 1;
 			while(true){
 				try{					
-					this.dttmf.getNextNodeGroups(1, false);
+					ArrayList<NodeGroup> ngBatch = this.batchHandler.getNextNodeGroups(1, startingRow, false);
+					startingRow += ngBatch.size();
 					totalPreflightRecordsChecked++;
 				}
 				catch(DataSetExhaustedException e){
@@ -178,14 +180,15 @@ public class DataLoader {
 				}
 			}
 			// inspect the transformer to determine if the checks succeeded
-			Table errorReport = this.dttmf.getErrorReport();
+			Table errorReport = this.batchHandler.getErrorReport();
 			if(errorReport.getRows().size() != 0){
 				dataCheckSucceeded = false;
 			}
 		}
 				
 		if (dataCheckSucceeded) {
-			this.dttmf.resetDataSet();
+			int startingRow = 1;
+			this.batchHandler.resetDataSet();
 			// orchestrate the retrieval of new nodegroups and the flushing of
 			// that data
 			System.out.print("Records processed:");
@@ -193,12 +196,12 @@ public class DataLoader {
 			
 			ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
 			
+			ArrayList<ArrayList<String>> nextRecords = null;
 			while (true) {
 				// get the next set of records from the data set.
-				ArrayList<ArrayList<String>> nextRecords = null;
 		
 				try{
-					nextRecords = this.dttmf.getNextRecordsFromDataSet();
+					nextRecords = this.batchHandler.getNextRecordsFromDataSet();
 				}catch(Exception e){ break; } // record set exhausted
 				
 				if(nextRecords == null || nextRecords.size() == 0 ){ break; }
@@ -206,29 +209,45 @@ public class DataLoader {
 				// spin up a thread to do the work.
 				if(wrkrs.size() < this.MAX_WORKER_THREADS){
 					// spin up the thread and do the work. 
-					IngestionWorkerThread neo = new IngestionWorkerThread(this.endpoint.copy(), this.dttmf, nextRecords, this.oInfo, checkFirst);
-					wrkrs.add(neo);
-					neo.start();
+					IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, checkFirst);
+					startingRow += nextRecords.size();
+					wrkrs.add(worker);
+					worker.start();
 					this.totalRecordsProcessed += nextRecords.size();
 				}
-				// wait until we free up.
+				
+				// thread pool is full.  Wait for all of them to complete.
+				// and then we can start over.
+				// Over simplistic logic could be improved for performance.
 				if(wrkrs.size() == this.MAX_WORKER_THREADS){
-					for(int counter = 0; counter < wrkrs.size(); counter++){
-						wrkrs.get(counter).join();
+					for(int i = 0; i < wrkrs.size(); i++){
+						this.joinAndDebriefWorker(wrkrs.get(i));
 					}
-					// reset it all 
 					wrkrs.clear();
 				}
 			}
-			// await any still running threads:
-			for(int counter = 0; counter < wrkrs.size(); counter++){
-				wrkrs.get(counter).join();
+			
+			// join all remaining threads
+			for(int i = 0; i < wrkrs.size(); i++){
+				this.joinAndDebriefWorker(wrkrs.get(i));
 			}
-
 		}
+		
 		LocalLogger.logToStdOut("..." + this.totalRecordsProcessed + "(DONE)");
-		this.dttmf.closeDataSet();			// close all connections and clean up
-		return this.totalRecordsProcessed;  // report.
+		this.batchHandler.closeDataSet();			// close all connections and clean up
+		return this.totalRecordsProcessed;          // report.
+	}
+	
+	/**
+	 * Check completed thread for exceptions and failure information
+	 * @param worker
+	 */
+	private void joinAndDebriefWorker(IngestionWorkerThread worker) throws Exception {
+		worker.join();
+		Exception e = worker.getException();
+		if (e != null) {
+			throw new Exception("Warning: partial ingestion may have occurred.  At least one thread threw exception.  e.g.: ", e);
+		}
 	}
 	
 	public void insertToTripleStore() throws Exception{
@@ -243,7 +262,7 @@ public class DataLoader {
 	 * Returns a table containing the failed data rows, along with failure cause and row number.
 	 */
 	public Table getLoadingErrorReport(){
-		return this.dttmf.getErrorReport();
+		return this.batchHandler.getErrorReport();
 	}
 	
 	/**
@@ -251,7 +270,7 @@ public class DataLoader {
 	 */
 	public String getLoadingErrorReportBrief(){
 		String s = "";
-		Table errorReport = this.dttmf.getErrorReport();
+		Table errorReport = this.batchHandler.getErrorReport();
 		int failureCauseIndex = errorReport.getColumnIndex(FAILURE_CAUSE_COLUMN_NAME);
 		int failureRowIndex = errorReport.getColumnIndex(FAILURE_RECORD_COLUMN_NAME);
 		ArrayList<ArrayList<String>> rows = errorReport.getRows();

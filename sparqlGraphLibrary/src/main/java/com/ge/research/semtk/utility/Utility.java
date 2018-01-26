@@ -581,4 +581,23 @@ public abstract class Utility {
 		}
 		return ret;
 	}
+	
+	/**
+	 * Replace UUIDs in a string with "<UUID>".
+	 * Note: does not affect hashes.
+	 * @param orig
+	 * @return
+	 */
+	public static String replaceUUIDs(String orig) {
+		return orig.replaceAll("\\w\\w\\w\\w\\w\\w\\w\\w-\\w\\w\\w\\w-\\w\\w\\w\\w-\\w\\w\\w\\w-\\w\\w\\w\\w\\w\\w\\w\\w\\w\\w\\w\\w", "<UUID>");
+	}
+	
+	/**
+	 * change \r\n to \n 
+	 * @param orig
+	 * @return
+	 */
+	public static String standardizeCRLF(String orig) {
+		return orig.replaceAll("\r\n", "\n");
+	}
 }

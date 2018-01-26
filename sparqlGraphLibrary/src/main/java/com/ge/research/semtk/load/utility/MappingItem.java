@@ -39,16 +39,25 @@ public class MappingItem {
 	String textVal = null;
 	Transform transformList[] = null;
 	
+	
+	public int getColumnIndex() {
+		return columnIndex;
+	}
+
+	public void setColumnIndex(int columnIndex) {
+		this.columnIndex = columnIndex;
+	}
+
 	/**
 	 * Create from JSON with lots of help from hash tables to make this super-efficient
 	 * @param mapItemJson
 	 * @param colNameHash   col id -> name
-	 * @param colIndexHash  col name -> col index
+	 * @param colNameToIndexHash  col name -> col index
 	 * @param textHash      text id -> text value
 	 * @param transformHash transform id -> transform obj
 	 * @throws Exception
 	 */
-	public void fromJson(JSONObject mapItemJson, HashMap<String, String> colNameHash, HashMap<String, Integer> colIndexHash, HashMap<String,String> textHash, HashMap<String,Transform> transformHash) throws Exception {
+	public void fromJson(JSONObject mapItemJson, HashMap<String, String> colNameHash, HashMap<String, Integer> colNameToIndexHash, HashMap<String,String> textHash, HashMap<String,Transform> transformHash) throws Exception {
 		if (mapItemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_TEXT_ID)) {       
 			
 			String id = mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_TEXT_ID).toString();
@@ -75,7 +84,7 @@ public class MappingItem {
 			
 			// change into columnIndex
 			try{
-				this.columnIndex = colIndexHash.get(colName);  
+				this.columnIndex = colNameToIndexHash.get(colName);  
 			}
 			catch(Exception e){
 				throw new Exception("Failed to look up column position: " + colName);
@@ -98,6 +107,31 @@ public class MappingItem {
 
 	public boolean isColumnMapping() {
 		return this.textVal == null && this.columnIndex > -1;
+	}
+	
+	/**
+	 * Use translateHash to translate old column index to new one.  Do lots-o-error-handling
+	 * @param translateHash
+	 * @param oldNameToIndexHash 
+	 * @throws Exception
+	 */
+	public void updateColumnIndex(HashMap<Integer, Integer> translateHash, HashMap<String, Integer> oldNameToIndexHash) throws Exception {
+		if (this.isColumnMapping()) {
+			int oldIndex = this.getColumnIndex();
+			
+			// error if there's no translation for an old column index: means new headers don't have it.
+			if (!translateHash.containsKey(oldIndex)) {
+				for (String k : oldNameToIndexHash.keySet()) {
+					if (oldNameToIndexHash.get(k) == oldIndex)  {
+						throw new Exception("Data source headers are missing required column: " + k);
+					}
+				}
+				throw new Exception("Internal error: can't find old or new column name");
+			}
+			
+			// make the change
+			this.setColumnIndex(translateHash.get(oldIndex));
+		}
 	}
 	
 	/**

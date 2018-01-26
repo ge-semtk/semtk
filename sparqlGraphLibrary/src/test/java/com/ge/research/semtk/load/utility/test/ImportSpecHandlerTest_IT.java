@@ -20,6 +20,7 @@ package com.ge.research.semtk.load.utility.test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -47,8 +48,18 @@ public class ImportSpecHandlerTest_IT {
 		NodeGroup nodegroup = sgJson.getNodeGroup();
 		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), sgJson.getSNodeGroupJson(), oInfo);
 		
-		// Test
+		// Try it with no headers
 		ArrayList<PropertyItem> pItems = handler.getMappedPropItems(nodegroup);
+		assertTrue(pItems.size() == 3);
+				
+		// Test
+		handler.setHeaders(new ArrayList<String>(Arrays.asList("Battery", "Cell", "birthday", "color")));
+		pItems = handler.getMappedPropItems(nodegroup);
+		assertTrue(pItems.size() == 3);
+		
+		// Try it again in different order and capitalization
+		handler.setHeaders(new ArrayList<String>(Arrays.asList("battery", "color", "Cell", "birthday")));
+		pItems = handler.getMappedPropItems(nodegroup);
 		assertTrue(pItems.size() == 3);
 	}
 

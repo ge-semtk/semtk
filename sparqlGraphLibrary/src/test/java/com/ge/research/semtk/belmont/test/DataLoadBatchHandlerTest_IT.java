@@ -16,12 +16,12 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.DataToModelTransformer;
+import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class DataToModelTransformerTest_IT {
+public class DataLoadBatchHandlerTest_IT {
 
 	@Test
 	public void checkSpecHandlerFunction() throws Exception {
@@ -32,8 +32,9 @@ public class DataToModelTransformerTest_IT {
 		TestGraph.clearGraph();
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 
-		DataToModelTransformer dtmx = new DataToModelTransformer(sgJson, 6, ds, null);  // TODO temporary null endpoint
-		ArrayList<NodeGroup> ngArr = dtmx.getNextNodeGroupBatch(false);	
+		DataLoadBatchHandler dtmx = new DataLoadBatchHandler(sgJson, 6, ds, null);  // TODO temporary null endpoint
+		ArrayList<ArrayList<String>> recordList = dtmx.getNextRecordsFromDataSet();
+		ArrayList<NodeGroup> ngArr = dtmx.convertToNodeGroups(recordList, 1, false);	
 
 		assertEquals(ngArr.size(),4);		
 		assertEquals(ngArr.get(0).getNodeCount(),3);

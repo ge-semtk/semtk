@@ -22,7 +22,9 @@ import java.util.ArrayList;
 
 public class ValueConstraint {
 
-	private String constraint = "";
+	protected String constraint = "";
+	
+	public ValueConstraint() {}
 	
 	public ValueConstraint(String vc){
 		this.constraint = vc;
@@ -37,6 +39,7 @@ public class ValueConstraint {
 			this.constraint = this.constraint.replaceAll("\\" + oldID + "\\b", newID);
 		}
 	}
+	
 	/** 
 	 * to non-null string
 	 */

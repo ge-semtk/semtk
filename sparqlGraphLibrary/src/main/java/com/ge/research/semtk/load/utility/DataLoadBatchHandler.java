@@ -30,18 +30,18 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 /*
  * Takes multiple data records and uses them to populate NodeGroups.
+ * 
+ * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
  */
-public class DataToModelTransformer {
+public class DataLoadBatchHandler {
 
 	Dataset ds = null;
 	int batchSize = 1;
 	ImportSpecHandler importSpec = null;
 	OntologyInfo oInfo = null;
 	Table failuresEncountered = null;
-	int totalRecordsProcessed = 0;
 	
-	// TODO: passing through the endpoint is questionable & temporary for POC
-	public DataToModelTransformer(SparqlGraphJson sgJson, SparqlEndpointInterface endpoint) throws Exception{
+	public DataLoadBatchHandler(SparqlGraphJson sgJson, SparqlEndpointInterface endpoint) throws Exception{
 		this.oInfo = sgJson.getOntologyInfo();
 		this.importSpec = sgJson.getImportSpec();
 		this.importSpec.setEndpoint(endpoint);
@@ -54,12 +54,12 @@ public class DataToModelTransformer {
 		}
 	}
 
-	public DataToModelTransformer(SparqlGraphJson sgJson, int batchSize, SparqlEndpointInterface endpoint) throws Exception{
+	public DataLoadBatchHandler(SparqlGraphJson sgJson, int batchSize, SparqlEndpointInterface endpoint) throws Exception{
 		this(sgJson, endpoint);
 		this.batchSize = batchSize;
 	}
 
-	public DataToModelTransformer(SparqlGraphJson sgJson, int batchSize, Dataset ds, SparqlEndpointInterface endpoint) throws Exception{
+	public DataLoadBatchHandler(SparqlGraphJson sgJson, int batchSize, Dataset ds, SparqlEndpointInterface endpoint) throws Exception{
 		this(sgJson, endpoint);
 		this.batchSize = batchSize;
 		this.setDataset(ds);
@@ -97,7 +97,6 @@ public class DataToModelTransformer {
 	
 	public void resetDataSet() throws Exception{
 		this.ds.reset();
-		this.totalRecordsProcessed = 0;
 		this.failuresEncountered.clearRows();
 	}
 	
@@ -113,44 +112,48 @@ public class DataToModelTransformer {
 		 return this.ds.getNextRecords(this.batchSize);
 	}
 	
-	public ArrayList<NodeGroup> getNextNodeGroups(int nRecordsRequested, boolean skipValidation) throws Exception {
-		ArrayList<NodeGroup> nGroups;		// this will be filled out and returned. 
+	public ArrayList<NodeGroup> getNextNodeGroups(int nRecordsRequested, int startingRowNum, boolean skipValidation) throws Exception {
 		
-		ArrayList<ArrayList<String>> resp = this.ds.getNextRecords(nRecordsRequested);
+		ArrayList<ArrayList<String>> recordList = this.ds.getNextRecords(nRecordsRequested);
 		
-		if(resp.size() == 0){
+		if(recordList.size() == 0){
 			// no new records
 			throw new DataSetExhaustedException("No more records to read");
 		}
 		
-		// add the values to the NodeGroup...
-		nGroups = this.convertToNodeGroups(resp, skipValidation);
+		return this.convertToNodeGroups(recordList, startingRowNum, skipValidation);
 		
-		return nGroups;
 	}
 
-	public ArrayList<NodeGroup> getNextNodeGroupBatch(boolean skipValidation) throws Exception {
-		return this.getNextNodeGroups(this.batchSize, skipValidation);	
-	}
-
-	public ArrayList<NodeGroup> convertToNodeGroups(ArrayList<ArrayList<String>> resp, boolean skipValidation) throws Exception {
+	/**
+	 * Creates one nodegroup per successfully converted record.   SUCCESS: if ret.size() == recordList.size()
+	 * Also writes to failuresEncountered if failures occur.
+	 * 
+	 * NOTE: this method in particular needs to be THREAD SAFE
+	 * 
+	 * @param recordList
+	 * @param skipValidation
+	 * @return nodegroup for each successfully converted record.   
+	 * @throws Exception - only on serious internal error
+	 */
+	public ArrayList<NodeGroup> convertToNodeGroups(ArrayList<ArrayList<String>> recordList, int startingRowNum, boolean skipValidation) throws Exception {
 		// take the response we received and build the result node groups we care about.
 		ArrayList<NodeGroup> retval = new ArrayList<NodeGroup>();
 		
 		// if cannot read more records (e.g. if all records have been read already), nothing to do
-		if(resp == null){
+		if(recordList == null){
 			return retval;
 		}
 		
-		for(ArrayList<String> curr : resp){
-			this.totalRecordsProcessed += 1;
+		for (int i=0; i < recordList.size(); i++) {
+			ArrayList<String> record = recordList.get(i);
 			
 			// get our new node group
 			NodeGroup cng = null;
 			
 			// add the values from the results to it.
 			try{
-				cng = this.importSpec.buildImportNodegroup(curr, skipValidation);
+				cng = this.importSpec.buildImportNodegroup(record, skipValidation);
 			
 				// add the new group to the output arraylist, only if it succceeded
 				retval.add(cng);
@@ -159,24 +162,34 @@ public class DataToModelTransformer {
 				// some variety of failure occured.
 				ArrayList<String> newErrorReport = new ArrayList<String>();
 				// add default columns
-				for(String currCol : curr){
+				for(String currCol : record){
 					newErrorReport.add(currCol);
 				}
 				// add error report columns
 				newErrorReport.add(e.getMessage());
-				newErrorReport.add(this.totalRecordsProcessed + "");
-				this.failuresEncountered.addRow(newErrorReport);
+				newErrorReport.add(String.valueOf(startingRowNum + i));
+				this.addFailureRow(newErrorReport);
 			}
 		}
 			
 		return retval;
 	}
 
+	/**
+	 * Append to the failureEncountered Table in a thread-safe manner
+	 * @param newErrorReport
+	 * @throws Exception
+	 */
+	private synchronized void addFailureRow(ArrayList<String> newErrorReport) throws Exception {
+		this.failuresEncountered.addRow(newErrorReport);
+	}
+	
 	public void closeDataSet() throws Exception {
 		this.ds.close();
 	}
 	
 	public Table getErrorReport(){
+		this.failuresEncountered.sortByColumnInt(DataLoader.FAILURE_RECORD_COLUMN_NAME);
 		return this.failuresEncountered;
 	}
 
@@ -184,5 +197,4 @@ public class DataToModelTransformer {
 		return this.batchSize;
 	}
 	
-	public int getTotalRecordsProcessed(){ return this.totalRecordsProcessed; }
 }

@@ -1089,7 +1089,7 @@ public class OntologyInfo {
 	
 	/**
 	 * loads all of the data for the ontology into the OntologyInfo object
-	 * @param endpoint
+	 * @param threadUnsafeEndpoint
 	 * @param domain
 	 * @throws Exception
 	 */

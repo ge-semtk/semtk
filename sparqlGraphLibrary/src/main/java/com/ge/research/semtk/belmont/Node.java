@@ -448,7 +448,12 @@ public class Node extends Returnable {
 			this.instanceValue = null;
 		}
 		try{
-			this.constraints = new ValueConstraint(nodeEncoded.get("valueConstraint").toString());
+			String vc = nodeEncoded.get("valueConstraint").toString();
+			if (vc.length() < 1) {  // change blank constraints to null
+				this.constraints = null;
+			} else {
+				this.constraints = new ValueConstraint(vc);
+			}
 		}
 		catch(Exception E){ // the value was not set
 			this.constraints = null;

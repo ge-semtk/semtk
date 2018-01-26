@@ -42,7 +42,6 @@ public class SparqlGraphJsonTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");		
 		
-		// load in ImportSpecHandler
 		String jsonPath = "src/test/resources/sampleBatteryTestDeflate.json";
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		OntologyInfo oInfo = sgJson.getOntologyInfo();

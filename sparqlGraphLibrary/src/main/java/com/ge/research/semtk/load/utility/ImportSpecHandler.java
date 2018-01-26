@@ -34,6 +34,7 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.belmont.ValuesConstraint;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
 import com.ge.research.semtk.load.utility.UriResolver;
@@ -46,12 +47,20 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
+/*
+ * NOT a port of javascript ImportSpec.
+ * Java-specific and highly optimized (ha) for ingestion 
+ * Handles the importSpec portion of SparqlGraphJson
+ * 
+ * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
+ */
 public class ImportSpecHandler {
 	
 	JSONObject importspec = null; 
 	
-	JSONObject ngJson = null;
-	HashMap<String, Integer> colIndexHash = new HashMap<String, Integer>();
+	JSONObject lookupNgJson = null;
+	NodeGroup lookupNodegroups[] = null;
+	HashMap<String, Integer> colNameToIndexHash = new HashMap<String, Integer>();
 	HashMap<String, Transform> transformHash = new HashMap<String, Transform>();
 	HashMap<String, String> textHash = new HashMap<String, String>();
 	HashMap<String, String> colNameHash = new HashMap<String, String>();
@@ -67,8 +76,8 @@ public class ImportSpecHandler {
 	HashMap<Integer, ArrayList<ImportMapping>> uriLookup = new HashMap<Integer, ArrayList<ImportMapping>>();
 	HashMap<String, String> uriCache = new HashMap<String, String>();
 	
-	// TODO questionable design
-	SparqlEndpointInterface endpoint = null;
+	// Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
+	SparqlEndpointInterface nonThreadSafeEndpoint = null;
 	
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
@@ -76,14 +85,14 @@ public class ImportSpecHandler {
 		// reset the nodegroup and store as json (for efficient duplication)
 		NodeGroup ng = NodeGroup.getInstanceFromJson(ngJson);
 		ng.reset();
-		this.ngJson = ng.toJson();
+		this.lookupNgJson = ng.toJson();
 		
 		this.oInfo = oInfo;
 		
-		this.setupColNameHash(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
+		this.setupColHashes(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
 		this.setupTransforms((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
 		this.setupTextHash(     (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TEXTS));
-		
+		this.setupNodes((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_NODES));
 		String userUriPrefixValue = (String) this.importspec.get(SparqlGraphJson.JKEY_IS_BASE_URI);
 		
 		// check the value of the UserURI Prefix
@@ -98,20 +107,43 @@ public class ImportSpecHandler {
 	}
 
 	public void setEndpoint(SparqlEndpointInterface endpoint) {
-		this.endpoint = endpoint;
+		this.nonThreadSafeEndpoint = endpoint;
 	}
 	
-	public void setHeaders(ArrayList<String> headers) throws Exception{
+	public void setHeaders(ArrayList<String> headers) throws Exception {
+		HashMap<String, Integer> oldNameToIndexHash = this.colNameToIndexHash;
+		HashMap<String, Integer> newNameToIndexHash = new HashMap<String, Integer>();
+		HashMap<Integer, Integer> translateHash = new HashMap<Integer, Integer>();
+		
+		// build hashes
 		int counter = 0;
 		for(String h : headers){
-			this.colIndexHash.put(h, counter);
+			String name = h.toLowerCase();
+			// build new colNameToIndexHash
+			newNameToIndexHash.put(name, counter);
+			// build a translation hash
+			translateHash.put(oldNameToIndexHash.get(name), counter);
 			counter += 1;
 		}
 		
-		//  bad (unfixed from original code write)
-		//  setupNodes happens later because setHeaders happens later.
-		//  it seems like we could/should require this at instantiation time
-		this.setupNodes(     (JSONArray) this.importspec.get(SparqlGraphJson.JKEY_IS_NODES));
+		// change every mapping item's column index
+		for (int i=0; i < this.mappings.length; i++) {
+			for (MappingItem mItem : this.mappings[i].getItemList()) {
+				mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
+			}
+		}
+		
+		// repeat for URI lookup mappings, which strangely are copies??
+		for (Integer i : this.uriLookup.keySet()) {
+			for (ImportMapping map : this.uriLookup.get(i)) {
+				for (MappingItem mItem : map.getItemList()) {
+					mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
+				}
+			}
+		}
+		
+		// use the new name-to-index hash
+		this.colNameToIndexHash = newNameToIndexHash;
 	}
 	
 	public String getUriPrefix() {
@@ -175,7 +207,7 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void setupColNameHash(JSONArray columnsJsonArr) throws Exception{
+	private void setupColHashes(JSONArray columnsJsonArr) throws Exception{
 		
 		if(columnsJsonArr == null){ 
 			return;
@@ -186,6 +218,7 @@ public class ImportSpecHandler {
 			String colId = (String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_ID);      
 			String colName = ((String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_NAME)).toLowerCase();  
 			this.colNameHash.put(colId, colName);
+			this.colNameToIndexHash.put(colName, j);      // initialize colIndexHash with columns in the order provided
 		}
 	}
 	
@@ -194,7 +227,7 @@ public class ImportSpecHandler {
 	 * @throws Exception 
 	 */
 	private void setupNodes(JSONArray nodesJsonArr) throws Exception {
-		NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.ngJson);
+		NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.lookupNgJson);
 		tmpNodegroup.clearOrderBy();
 		ArrayList<ImportMapping> mappingsList = new ArrayList<ImportMapping>();
 		// clear cols used
@@ -209,7 +242,7 @@ public class ImportSpecHandler {
 			String nodeSparqlID = nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID).toString();
 			int nodeIndex = tmpNodegroup.getNodeIndexBySparqlID(nodeSparqlID);
 			
-			// look for mapping != [] that is not a URILookup
+			// build mapping if it isn't empty AND it isn't a URILookup
 			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING) &&
 				!nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
 				JSONArray mappingJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING);
@@ -236,7 +269,7 @@ public class ImportSpecHandler {
 					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
 					
 					mapping = null;
-					// look for mapping != [] that is not a URI Lookup
+					// build mapping if it isn't empty AND it isn't a URILookup
 					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
 						JSONArray mappingJsonArr = (JSONArray) propJson.get(SparqlGraphJson.JKEY_IS_MAPPING);	
 						if (mappingJsonArr.size() > 0) {
@@ -265,7 +298,7 @@ public class ImportSpecHandler {
 		// create some final efficient arrays
 		this.mappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
 		this.colsUsedKeys = this.colsUsed.keySet().toArray(new String[this.colsUsed.size()]);
-
+		this.lookupNodegroups = new NodeGroup[tmpNodegroup.getNodeCount()];
 	}
 	
 	/**
@@ -326,7 +359,7 @@ public class ImportSpecHandler {
 			// mapping item
 			MappingItem mItem = new MappingItem();
 			mItem.fromJson(	itemJson, 
-							this.colNameHash, this.colIndexHash, this.textHash, this.transformHash);
+							this.colNameHash, this.colNameToIndexHash, this.textHash, this.transformHash);
 			mapping.addItem(mItem);
 			
 			if (itemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID)) {
@@ -349,23 +382,17 @@ public class ImportSpecHandler {
 	public NodeGroup buildImportNodegroup(ArrayList<String> record, boolean skipValidation) throws Exception{
 
 		// create a new nodegroup copy
-		NodeGroup retVal = NodeGroup.getInstanceFromJson(this.ngJson);
+		NodeGroup retVal = NodeGroup.getInstanceFromJson(this.lookupNgJson);
 		retVal.clearOrderBy();
 		
 		if(record  == null){ throw new Exception("incoming record cannot be null for ImportSpecHandler.getValues"); }
-		if(this.colIndexHash.isEmpty()){ throw new Exception("the header positions were never set for the importspechandler"); }
+		if(this.colNameToIndexHash.isEmpty()){ throw new Exception("the header positions were never set for the importspechandler"); }
 		
-		// do URI lookups first
-		for (int i=0; i < retVal.getNodeCount(); i++) {
-			if (this.uriLookup.containsKey(i)) {
-				String uri = this.lookupUri(i, record);
-				retVal.getNode(i).setInstanceValue(uri);
-			}
-		}
+		this.lookupAllUris(retVal, record);
 		
 		// do mappings second
 		for (int i=0; i < this.mappings.length; i++) {
-			ImportMapping mapping = mappings[i];
+			ImportMapping mapping = this.mappings[i];
 			String builtString = mapping.buildString(record);
 			Node node = retVal.getNode(mapping.getsNodeIndex());
 			PropertyItem propItem = null;
@@ -407,13 +434,28 @@ public class ImportSpecHandler {
 		
 		// set URI for nulls
 		retVal = this.setURIsForBlankNodes(retVal);
-		
 		return retVal;
 	}
 	
 	/**
+	 * lookup each URI for a nodegroup
+	 * @param ng
+	 * @param record
+	 * @throws Exception
+	 */
+	private void lookupAllUris(NodeGroup ng, ArrayList<String> record) throws Exception {
+		// do URI lookups first
+		for (int i=0; i < ng.getNodeCount(); i++) {
+			if (this.uriLookup.containsKey(i)) {
+				String uri = this.lookupUri(i, record);
+				ng.getNode(i).setInstanceValue(uri);
+			}
+		}	
+	}
+	
+	/**
 	 * POC ONLY
-	 * Look up a URI
+	 * Look up a URI.  Maintaining an internal cache.
 	 * @param lookupMappings
 	 * @return
 	 * @throws Exception 
@@ -421,7 +463,6 @@ public class ImportSpecHandler {
 	private String lookupUri(int nodeIndex, ArrayList<String> record) throws Exception {
 		
 		// create a new nodegroup copy:  
-		// TODO this is too expensive.  cache one Nodegroup per nodeIndex and wipe constraints
 		ArrayList<String> builtStrings = new ArrayList<String>();
 		
 		// Build the mapping results into builtStrings
@@ -437,15 +478,17 @@ public class ImportSpecHandler {
 				
 		// return quickly if answer is already cached
 		// In virtuoso, saves remarkably little time.
-		// Running 1000 queries twice takes 10.5 seconds.
-		// Running them once takes 8.8 seconds
 		if (this.uriCache.containsKey(cacheKey)) {
 			return this.uriCache.get(cacheKey);
 			
 		} else {
 			// build a nodegroup and do the lookup
-			NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.ngJson);
-			tmpNodegroup.clearOrderBy();
+			NodeGroup tmpNodegroup = null;
+			if (this.lookupNodegroups[nodeIndex] == null) {
+				tmpNodegroup = NodeGroup.getInstanceFromJson(this.lookupNgJson);
+			} else {
+				tmpNodegroup = this.lookupNodegroups[nodeIndex];
+			}
 			
 			// return the URI
 			tmpNodegroup.getNode(nodeIndex).setIsReturned(true);
@@ -454,34 +497,40 @@ public class ImportSpecHandler {
 			int i = 0;
 			for (ImportMapping mapping : this.uriLookup.get(nodeIndex)) {
 
-				ArrayList<String> valList = new ArrayList<String>();
-				valList.add(builtStrings.get(i++));
+				String builtString = builtStrings.get(i++);
 				if (mapping.isNode()) {
 					Node node = tmpNodegroup.getNode(mapping.getsNodeIndex());
-					ValueConstraint v = new ValueConstraint(ValueConstraint.buildValuesConstraint(node, valList));
+					ValuesConstraint v = new ValuesConstraint(node, builtString);
 					node.setValueConstraint(v);
 				} else {
 					PropertyItem prop = tmpNodegroup.getNode(mapping.getsNodeIndex()).getPropertyItem(mapping.getPropItemIndex());
-					ValueConstraint v = new ValueConstraint(ValueConstraint.buildValuesConstraint(prop, valList));
+					ValuesConstraint v = new ValuesConstraint(prop, builtString);
 					prop.setValueConstraint(v);
 				}
 			}
 			
+			// if lookupNodegroup wasn't cached, it needs to be pruned and then cached
+			if (this.lookupNodegroups[nodeIndex] == null) {
+				tmpNodegroup.pruneAllUnused();
+				this.lookupNodegroups[nodeIndex] = tmpNodegroup;
+			}
+			
 			String query = tmpNodegroup.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, 0, null);
 			
+			// Run the query
 			// make this thread-safe
-			// TODO: questionable design just got worse.
-			SparqlEndpointInterface endpointCopy = this.endpoint.copy();
-			TableResultSet res = (TableResultSet) endpointCopy.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+			SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
+			TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 			res.throwExceptionIfUnsuccessful();
-			
 			Table tab = res.getTable();
 			
+			// Check and return results
 			if (tab.getNumRows() == 0) {
 				throw new Exception("URI lookup failed.");
 			} else if (tab.getNumRows() > 1) {
 				throw new Exception("URI lookup found multiple URI's");
 			} else {
+				// cache and return
 				String ret = tab.getCell(0,0);
 				this.uriCache.put(cacheKey, ret);
 				return ret;
@@ -498,23 +547,23 @@ public class ImportSpecHandler {
 	 * @return
 	 */
 	public ArrayList<PropertyItem> getMappedPropItems(NodeGroup ng) {
-		// TODO: this is only used by tests?
 
 		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
 		
-		for (int i=0; i < this.mappings.length; i++) {
-			if (this.mappings[i].isProperty()) {
-				ImportMapping m = this.mappings[i];
-				ret.add(ng.getNode(m.getsNodeIndex()).getPropertyItem(m.getPropItemIndex()));
+		if (this.mappings != null) {
+			for (int i=0; i < this.mappings.length; i++) {
+				if (this.mappings[i].isProperty()) {
+					ImportMapping m = this.mappings[i];
+					ret.add(ng.getNode(m.getsNodeIndex()).getPropertyItem(m.getPropItemIndex()));
+				}
 			}
 		}
-		
 		return ret;
 	}
 	
 	
 	/**
-	 * Get all column names that were actually used (lowercased)
+	 * Get all column names that were actually used in mappings.
 	 * @return
 	 */
 	public String[] getColNamesUsed(){

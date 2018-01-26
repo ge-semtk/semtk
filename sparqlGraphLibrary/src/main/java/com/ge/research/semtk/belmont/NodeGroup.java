@@ -2280,9 +2280,9 @@ public class NodeGroup {
 				
 		}
 		
+		
 		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
 		//       this way, we only need to get it's prefixes. 
-		
 		String query =  ng.generateSparqlPrefix() + " INSERT { " + totalInsertHead + " } WHERE { " + totalInsertWhere + " } ";
 		
 		return query;
