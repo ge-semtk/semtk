@@ -17,6 +17,17 @@
 
 package com.ge.research.semtk.test;
 
+import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.edc.client.StatusClient;
+import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.load.client.IngestorClientConfig;
+import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
+import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -155,4 +166,23 @@ public class IntegrationTestUtility {
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.database");
 	}	
 	
+	
+	/**
+	 * Get a NodeGroupStoreRestClient using the integration test properties.
+	 */
+	public static NodeGroupStoreRestClient getNodeGroupStoreRestClient() throws Exception{
+		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupStoreServiceServer(),  IntegrationTestUtility.getNodegroupStoreServicePort()));
+	}
+	
+	/**
+	 * Get a NodeGroupExecutor using the integration test properties.
+	 */
+	public static NodeGroupExecutor getNodegroupExecutor() throws Exception{
+		NodeGroupStoreRestClient ngsrc = getNodeGroupStoreRestClient();
+		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getDispatchServiceServer(), IntegrationTestUtility.getDispatchServicePort()));
+		StatusClient stc = new StatusClient(new StatusClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getStatusServiceServer(), IntegrationTestUtility.getStatusServicePort(), "totally fake"));
+		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getResultsServiceServer(), IntegrationTestUtility.getResultsServicePort()));
+		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getIngestionServiceServer(), IntegrationTestUtility.getIngestionServicePort()));		
+		return new NodeGroupExecutor(ngsrc, drc, rc, stc, ic);
+	}
 }
