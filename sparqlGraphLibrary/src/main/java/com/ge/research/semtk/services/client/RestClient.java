@@ -53,6 +53,13 @@ public abstract class RestClient extends Client implements Runnable {
 	public RestClient(){
 	}
 	
+	/**
+	 * Constructor
+	 */
+	public RestClient(RestClientConfig conf){
+		this.conf = conf;
+	}
+	
 	public RestClientConfig getConfig() {
 		return this.conf;
 	}
