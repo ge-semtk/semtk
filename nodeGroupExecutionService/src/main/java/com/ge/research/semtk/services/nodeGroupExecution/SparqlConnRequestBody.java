@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class SparqlConnRequestBody {
+	
 	private String sparqlConnection;
 	
 	public SparqlConnection getSparqlConnection() throws Exception {
@@ -28,6 +29,15 @@ public class SparqlConnRequestBody {
 	
 	public void setSparqlConnection(String sparqlConnection) {
 		this.sparqlConnection = sparqlConnection;
+	}
+	
+	/**
+	 * Validate request contents.  Throws an exception if validation fails.
+	 */
+	public void validate() throws Exception{
+		if(sparqlConnection == null || sparqlConnection.trim().isEmpty()){
+			throw new Exception("Request is missing 'sparqlConnection'");
+		}
 	}
 }
 

@@ -18,6 +18,7 @@
 package com.ge.research.semtk.services.nodeGroupExecution;
 
 public class DispatchByIdRequestBody extends DispatchRequestBody {
+	
 	private String nodeGroupId;
 
 	public void setNodeGroupId(String nodeGroupId){
@@ -26,4 +27,15 @@ public class DispatchByIdRequestBody extends DispatchRequestBody {
 	public String getNodeGroupId(){
 		return this.nodeGroupId;
 	}	
+	
+	/**
+	 * Validate request contents.  Throws an exception if validation fails.
+	 */
+	public void validate() throws Exception{
+		super.validate();
+
+		if(nodeGroupId == null || nodeGroupId.trim().isEmpty()){
+			throw new Exception("Request is missing 'nodeGroupId'");
+		}
+	}
 }
