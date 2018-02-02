@@ -31,6 +31,15 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroupExecutionClient extends RestClient {
 	
+	// json keys
+	// TODO should probably move these elsewhere and/or consolidate with other classes
+	private static final String JSON_KEY_JOB_ID = "jobID";
+	private static final String JSON_KEY_NODEGROUP_ID = "nodeGroupId";
+	private static final String JSON_KEY_NODEGROUP  = "jsonRenderedNodeGroup";
+	private static final String JSON_KEY_SPARQL_CONNECTION = "sparqlConnection";
+	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
+	private static final String JSON_KEY_EDC_CONSTRAINTS = "externalDataConnectionConstraints";
+	
 	private static String mappingPrefix = "/nodeGroupExecution";
 	private static String jobStatusEndpoint = "/jobStatus";
 	private static String jobStatusMessageEndpoint = "/jobStatusMessage";
@@ -95,7 +104,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + jobStatusEndpoint);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -103,7 +112,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobID");
+			this.parametersJSON.remove(JSON_KEY_JOB_ID);
 		}
 		
 		return retval;
@@ -122,14 +131,14 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + jobCompletionCheckEndpoint);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		} finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobID");
+			this.parametersJSON.remove(JSON_KEY_JOB_ID);
 		}		
 		return retval;		
 	}
@@ -145,7 +154,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + jobStatusMessageEndpoint);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -162,7 +171,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + jobCompletionPercentEndpoint);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -185,14 +194,14 @@ public class NodeGroupExecutionClient extends RestClient {
 		TableResultSet retval = new TableResultSet();
 		
 		conf.setServiceEndpoint(mappingPrefix + getResultsTable);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			retval = this.executeWithTableResultReturn();
 		} finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobID");
+			this.parametersJSON.remove(JSON_KEY_JOB_ID);
 		}
 		
 		if (! retval.getSuccess()) {
@@ -208,14 +217,14 @@ public class NodeGroupExecutionClient extends RestClient {
 		JSONObject retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + getResultsJsonLd);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			retval = (JSONObject) this.execute();
 		} finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobID");
+			this.parametersJSON.remove(JSON_KEY_JOB_ID);
 		}
 		
 		return retval;
@@ -231,7 +240,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		TableResultSet retval = new TableResultSet();
 		
 		conf.setServiceEndpoint(mappingPrefix + resultsLocationEndpoint);
-		this.parametersJSON.put("jobID", jobId);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
@@ -245,7 +254,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobID");
+			this.parametersJSON.remove(JSON_KEY_JOB_ID);
 		}
 		
 		return retval;
@@ -398,10 +407,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectByIdEndpoint);
-		this.parametersJSON.put("nodeGroupId", nodegroupID);
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
@@ -410,10 +419,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("nodeGroupId");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
@@ -424,10 +433,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchConstructByIdEndpoint);
-		this.parametersJSON.put("nodeGroupId", nodegroupID);
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
@@ -436,10 +445,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("nodeGroupId");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
@@ -450,10 +459,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchConstructByIdEndpointForInstanceManipulation);
-		this.parametersJSON.put("nodeGroupId", nodegroupID);
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
@@ -462,10 +471,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("nodeGroupId");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
@@ -490,10 +499,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchCountByIdEndpoint);
-		this.parametersJSON.put("nodeGroupId", nodegroupID);
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		
 		try{
@@ -503,10 +512,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("nodeGroupId");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		LocalLogger.logToStdErr("executeDispatchCountById request finished without exception");
 		return retval;
@@ -556,11 +565,11 @@ public class NodeGroupExecutionClient extends RestClient {
 			SimpleResultSet retval = null;
 			
 			conf.setServiceEndpoint(mappingPrefix + dispatchFilterByIdEndpoint);
-			this.parametersJSON.put("nodeGroupId", nodegroupID);
-			this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
+			this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+			this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
 			this.parametersJSON.put("targetObjectSparqlId", targetObjectSparqlId);
-			this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-			this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+			this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+			this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 			
 			
 			try{
@@ -570,10 +579,10 @@ public class NodeGroupExecutionClient extends RestClient {
 			}
 			finally{
 				conf.setServiceEndpoint(null);
-				this.parametersJSON.remove("nodeGroupId");
-				this.parametersJSON.remove("sparqlConnection");
-				this.parametersJSON.remove("externalDataConnectionConstraints");
-				this.parametersJSON.remove("runtimeConstraints");
+				this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+				this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+				this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+				this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 				this.parametersJSON.remove("targetObjectSparqlId");
 			}
 			LocalLogger.logToStdErr("executeDispatchFilterById request finished without exception");
@@ -599,10 +608,10 @@ public class NodeGroupExecutionClient extends RestClient {
 			SimpleResultSet retval = null;
 			
 			conf.setServiceEndpoint(mappingPrefix + dispatchDeleteByIdEndpoint);
-			this.parametersJSON.put("nodeGroupId", nodegroupID);
-			this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-			this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-			this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+			this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+			this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+			this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+			this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 			
 			try{
 				LocalLogger.logToStdErr("sending executeDispatchDeleteById request");
@@ -611,10 +620,10 @@ public class NodeGroupExecutionClient extends RestClient {
 			}
 			finally{
 				conf.setServiceEndpoint(null);
-				this.parametersJSON.remove("nodeGroupId");
-				this.parametersJSON.remove("sparqlConnection");
-				this.parametersJSON.remove("externalDataConnectionConstraints");
-				this.parametersJSON.remove("runtimeConstraints");
+				this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+				this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+				this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+				this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 			}
 			LocalLogger.logToStdErr("executeDispatchDeleteById request finished without exception");
 			return retval;
@@ -648,10 +657,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectFromNodegroupEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ngJson.toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ngJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -659,10 +668,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		
 		return retval;
@@ -683,10 +692,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchConstructFromNodegroupEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -694,10 +703,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		
 		return retval;
@@ -708,10 +717,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchConstructFromNodegroupEndpointForInstanceManipulation);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -719,10 +728,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		
 		return retval;
@@ -777,10 +786,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchCountFromNodegroupEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -788,10 +797,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		
 		return retval;
@@ -818,10 +827,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchDeleteFromNodegroupEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -829,10 +838,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		
 		return retval;
@@ -860,10 +869,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchFilterByIdEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		this.parametersJSON.put("targetObjectSparqlId", targetObjectSparqlId);
 		
 		try{
@@ -872,10 +881,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 			this.parametersJSON.remove("targetObjectSparqlId");
 		}
 		
@@ -903,10 +912,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchByIdEndpoint);
-		this.parametersJSON.put("nodeGroupId", nodegroupID);
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		
 		try{
@@ -916,10 +925,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("nodeGroupId");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		LocalLogger.logToStdErr("executeDispatchById request finished without exception");
 		return retval;
@@ -948,10 +957,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchFromNodegroupEndpoint);
-		this.parametersJSON.put("jsonRenderedNodeGroup", ng.toJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionJson.toJSONString());
-		this.parametersJSON.put("externalDataConnectionConstraints", edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put("runtimeConstraints",            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -959,10 +968,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		finally{
 			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
-			this.parametersJSON.remove("sparqlConnection");
-			this.parametersJSON.remove("externalDataConnectionConstraints");
-			this.parametersJSON.remove("runtimeConstraints");
+			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
+			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
+			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
 		}
 		
 		return retval;
@@ -985,7 +994,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsNewConnection);
 		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionAsJsonObject.toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionAsJsonObject.toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
 	
 		try{
@@ -996,7 +1005,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		finally{
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("templateId");
-			this.parametersJSON.remove("sparqlConnection");
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
 			this.parametersJSON.remove("csvContent");
 		}
 		return retval;
@@ -1025,7 +1034,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateNewConnection);
 		this.parametersJSON.put("template", sparqlGraphJson.getJson().toJSONString());
-		this.parametersJSON.put("sparqlConnection", sparqlConnectionAsJsonObject.toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionAsJsonObject.toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
 	
 		try{
@@ -1036,7 +1045,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		finally{
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("template");
-			this.parametersJSON.remove("sparqlConnection");
+			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
 			this.parametersJSON.remove("csvContent");
 		}
 		return retval;
