@@ -40,42 +40,35 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
 	private static final String JSON_KEY_EDC_CONSTRAINTS = "externalDataConnectionConstraints";
 	
-	private static String mappingPrefix = "/nodeGroupExecution";
-	private static String jobStatusEndpoint = "/jobStatus";
-	private static String jobStatusMessageEndpoint = "/jobStatusMessage";
-	private static String jobCompletionCheckEndpoint = "/getJobCompletionCheck";
-	private static String jobCompletionPercentEndpoint = "/getJobCompletionPercentage";
-	private static String resultsLocationEndpoint = "/getResultsLocation";
-	private static String dispatchByIdEndpoint = "/dispatchById";
-	private static String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
-	private static String ingestFromCsvStringsNewConnection = "/ingestFromCsvStringsNewConnection";
-	private static String ingestFromCsvStringsById = "/ingestFromCsvStringsById";
-
-	private static String ingestFromCsvStringsAndTemplateNewConnection = "/ingestFromCsvStringsAndTemplateNewConnection";
-	private static String getResultsTable = "/getResultsTable";
-	private static String getResultsJsonLd = "/getResultsJsonLd";
+	// service mapping
+	private static final String mappingPrefix = "/nodeGroupExecution";
 	
-	
-	// action-specific endpoints
-	private static String dispatchSelectByIdEndpoint = "/dispatchSelectById";
-	private static String dispatchSelectFromNodegroupEndpoint = "/dispatchSelectFromNodegroup";
-	
-	private static String dispatchCountByIdEndpoint = "/dispatchCountById";
-	private static String dispatchCountFromNodegroupEndpoint = "/dispatchCountFromNodegroup";
-	
-	private static String dispatchFilterByIdEndpoint = "/dispatchFilterById";
-	private static String dispatchFilterFromNodegroupEndpoint ="/dispatchFilterFromNodegroup";
-	
-	private static String dispatchDeleteByIdEndpoint = "/dispatchDeleteById";
-	private static String dispatchDeleteFromNodegroupEndpoint = "/dispatchDeleteFromNodegroup";
-	
-	private static String dispatchRawSparqlEndpoint = "/dispatchRawSparql";
-	
-	private static String dispatchConstructByIdEndpoint = "/dispatchConstructById";
-	private static String dispatchConstructFromNodegroupEndpoint = "/dispatchConstructFromNodegroup";
-
-	private static String dispatchConstructByIdEndpointForInstanceManipulation = "/dispatchConstructForInstanceManipulationById";
-	private static String dispatchConstructFromNodegroupEndpointForInstanceManipulation = "/dispatchConstructForInstanceManipulationFromNodegroup";
+	// endpoints
+	private static final String jobStatusEndpoint = "/jobStatus";
+	private static final String jobStatusMessageEndpoint = "/jobStatusMessage";
+	private static final String jobCompletionCheckEndpoint = "/getJobCompletionCheck";
+	private static final String jobCompletionPercentEndpoint = "/getJobCompletionPercentage";
+	private static final String resultsLocationEndpoint = "/getResultsLocation";
+	private static final String dispatchByIdEndpoint = "/dispatchById";
+	private static final String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
+	private static final String ingestFromCsvStringsNewConnectionEndpoint = "/ingestFromCsvStringsNewConnection";
+	private static final String ingestFromCsvStringsByIdEndpoint = "/ingestFromCsvStringsById";
+	private static final String ingestFromCsvStringsAndTemplateNewConnectionEndpoint = "/ingestFromCsvStringsAndTemplateNewConnection";
+	private static final String getResultsTableEndpoint = "/getResultsTable";
+	private static final String getResultsJsonLdEndpoint = "/getResultsJsonLd";
+	private static final String dispatchSelectByIdEndpoint = "/dispatchSelectById";
+	private static final String dispatchSelectFromNodegroupEndpoint = "/dispatchSelectFromNodegroup";
+	private static final String dispatchCountByIdEndpoint = "/dispatchCountById";
+	private static final String dispatchCountFromNodegroupEndpoint = "/dispatchCountFromNodegroup";
+	private static final String dispatchFilterByIdEndpoint = "/dispatchFilterById";
+	private static final String dispatchFilterFromNodegroupEndpoint ="/dispatchFilterFromNodegroup";
+	private static final String dispatchDeleteByIdEndpoint = "/dispatchDeleteById";
+	private static final String dispatchDeleteFromNodegroupEndpoint = "/dispatchDeleteFromNodegroup";
+	private static final String dispatchRawSparqlEndpoint = "/dispatchRawSparql";
+	private static final String dispatchConstructByIdEndpoint = "/dispatchConstructById";
+	private static final String dispatchConstructFromNodegroupEndpoint = "/dispatchConstructFromNodegroup";
+	private static final String dispatchConstructByIdEndpointForInstanceManipulationEndpoint = "/dispatchConstructForInstanceManipulationById";
+	private static final String dispatchConstructFromNodegroupEndpointForInstanceManipulationEndpoint = "/dispatchConstructForInstanceManipulationFromNodegroup";
 
 	@Override
 	public void buildParametersJSON() throws Exception {
@@ -88,7 +81,6 @@ public class NodeGroupExecutionClient extends RestClient {
 	public NodeGroupExecutionClient (NodeGroupExecutionClientConfig necc){
 		this.conf = necc;
 	}
-	
 	
 	public String executeGetJobStatusWithSimpleReturn(String jobId) throws Exception{
 		SimpleResultSet ret = this.executeGetJobStatus(jobId);
@@ -193,7 +185,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public Table executeGetResultsTable(String jobId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
-		conf.setServiceEndpoint(mappingPrefix + getResultsTable);
+		conf.setServiceEndpoint(mappingPrefix + getResultsTableEndpoint);
 		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
@@ -216,7 +208,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public JSONObject executeGetResultsJsonLd(String jobId) throws Exception {
 		JSONObject retval = null;
 		
-		conf.setServiceEndpoint(mappingPrefix + getResultsJsonLd);
+		conf.setServiceEndpoint(mappingPrefix + getResultsJsonLdEndpoint);
 		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
 		
 		try{
@@ -458,7 +450,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public SimpleResultSet executeDispatchConstructForInstanceManipulationById(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet retval = null;
 		
-		conf.setServiceEndpoint(mappingPrefix + dispatchConstructByIdEndpointForInstanceManipulation);
+		conf.setServiceEndpoint(mappingPrefix + dispatchConstructByIdEndpointForInstanceManipulationEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
@@ -716,7 +708,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public SimpleResultSet executeDispatchConstructForInstanceManipulationFromNodeGroup(NodeGroup ng, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet retval = null;
 		
-		conf.setServiceEndpoint(mappingPrefix + dispatchConstructFromNodegroupEndpointForInstanceManipulation);
+		conf.setServiceEndpoint(mappingPrefix + dispatchConstructFromNodegroupEndpointForInstanceManipulationEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP, ng.toJson().toJSONString());
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
@@ -917,7 +909,6 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
 		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
-		
 		try{
 			LocalLogger.logToStdErr("sending executeDispatchById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -992,7 +983,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public RecordProcessResults execIngestionFromCsvStrNewConnection(String nodegroupAndTemplateId, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
 		RecordProcessResults retval = null;
 		
-		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsNewConnection);
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsNewConnectionEndpoint);
 		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionAsJsonObject.toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
@@ -1032,7 +1023,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public RecordProcessResults execIngestionFromCsvStrNewConnection(SparqlGraphJson sparqlGraphJson, String csvContentStr, JSONObject sparqlConnectionAsJsonObject) throws Exception {
 		RecordProcessResults retval = null;
 		
-		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateNewConnection);
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateNewConnectionEndpoint);
 		this.parametersJSON.put("template", sparqlGraphJson.getJson().toJSONString());
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionAsJsonObject.toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
