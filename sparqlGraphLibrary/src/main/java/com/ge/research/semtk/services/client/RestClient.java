@@ -64,6 +64,17 @@ public abstract class RestClient extends Client implements Runnable {
 		return this.conf;
 	}
 	
+	/** 
+	 * Remove endpoint and parameter settings, so this client can be used to connect to a new endpoint. 
+	 * Also remove any results and exceptions.
+	 */
+	public void reset(){
+		this.conf.setServiceEndpoint(null);
+		this.parametersJSON.clear();
+		this.runRes = null;
+		this.runException = null;
+	}
+	
 	/**
 	 * Execute as a thread,
 	 *    puts results in runRes

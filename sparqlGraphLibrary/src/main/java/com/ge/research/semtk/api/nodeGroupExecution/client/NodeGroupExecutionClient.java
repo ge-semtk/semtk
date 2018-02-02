@@ -103,8 +103,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_JOB_ID);
+			this.reset();
 		}
 		
 		return retval;
@@ -129,8 +128,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		} finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_JOB_ID);
+			this.reset();
 		}		
 		return retval;		
 	}
@@ -152,8 +150,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		} finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
+			this.reset();
 		}
 		return retval;		
 	}
@@ -169,8 +166,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
 			retval.throwExceptionIfUnsuccessful();
 		}finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("jobId");
+			this.reset();
 		}
 		return retval;
 	}
@@ -191,9 +187,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		try{
 			retval = this.executeWithTableResultReturn();
 		} finally{
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_JOB_ID);
+			this.reset();
 		}
 		
 		if (! retval.getSuccess()) {
@@ -214,9 +208,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		try{
 			retval = (JSONObject) this.execute();
 		} finally{
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_JOB_ID);
+			this.reset();
 		}
 		
 		return retval;
@@ -244,9 +236,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_JOB_ID);
+			this.reset();
 		}
 		
 		return retval;
@@ -318,12 +308,10 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		try {
 			return this.waitForJobAndGetTable(jobId);
-			
 		} catch (Exception e) {
 			// Add nodegroupID and "SELECT" to the error message
 			throw new Exception(String.format("Error executing SELECT on nodegroup id='%s'", nodegroupID), e);
 		}
-		
 	}
 	
 	public JSONObject executeDispatchConstructByIdToJsonLd(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception {
@@ -332,13 +320,11 @@ public class NodeGroupExecutionClient extends RestClient {
 		String jobId = this.executeDispatchConstructByIdToJobId(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 		
 		try {
-			return this.waitForJobAndGetJsonLd(jobId);
-			
+			return this.waitForJobAndGetJsonLd(jobId);			
 		} catch (Exception e) {
 			// Add nodegroupID and "SELECT" to the error message
 			throw new Exception(String.format("Error executing Construct on nodegroup id='%s'", nodegroupID), e);
-		}
-		
+		}		
 	}
 	
 	public JSONObject executeDispatchConstructForInstanceManipulationByIdToJsonLd(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception {
@@ -347,13 +333,11 @@ public class NodeGroupExecutionClient extends RestClient {
 		String jobId = this.executeDispatchConstructForInstanceManipulationByIdToJobId(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 		
 		try {
-			return this.waitForJobAndGetJsonLd(jobId);
-			
+			return this.waitForJobAndGetJsonLd(jobId);			
 		} catch (Exception e) {
 			// Add nodegroupID and "SELECT" to the error message
 			throw new Exception(String.format("Error executing Construct on nodegroup id='%s'", nodegroupID), e);
-		}
-		
+		}		
 	}
 	
 	/**
@@ -410,11 +394,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
@@ -436,11 +416,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
@@ -462,11 +438,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
 		return retval;
@@ -503,11 +475,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		LocalLogger.logToStdErr("executeDispatchCountById request finished without exception");
 		return retval;
@@ -570,12 +538,7 @@ public class NodeGroupExecutionClient extends RestClient {
 				retval.throwExceptionIfUnsuccessful();
 			}
 			finally{
-				conf.setServiceEndpoint(null);
-				this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-				this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-				this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-				this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
-				this.parametersJSON.remove("targetObjectSparqlId");
+				this.reset();
 			}
 			LocalLogger.logToStdErr("executeDispatchFilterById request finished without exception");
 			return retval;
@@ -611,11 +574,7 @@ public class NodeGroupExecutionClient extends RestClient {
 				retval.throwExceptionIfUnsuccessful();
 			}
 			finally{
-				conf.setServiceEndpoint(null);
-				this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-				this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-				this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-				this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+				this.reset();
 			}
 			LocalLogger.logToStdErr("executeDispatchDeleteById request finished without exception");
 			return retval;
@@ -659,11 +618,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful("Error at " + mappingPrefix + dispatchSelectFromNodegroupEndpoint);
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		
 		return retval;
@@ -694,11 +649,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful("Error at " + mappingPrefix + dispatchSelectFromNodegroupEndpoint);
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		
 		return retval;
@@ -719,11 +670,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful("Error at " + mappingPrefix + dispatchSelectFromNodegroupEndpoint);
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		
 		return retval;
@@ -788,11 +735,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		
 		return retval;
@@ -829,11 +772,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		
 		return retval;
@@ -872,12 +811,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
-			this.parametersJSON.remove("targetObjectSparqlId");
+			this.reset();
 		}
 		
 		return retval;
@@ -915,11 +849,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP_ID);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		LocalLogger.logToStdErr("executeDispatchById request finished without exception");
 		return retval;
@@ -958,11 +888,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove(JSON_KEY_NODEGROUP);
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove(JSON_KEY_EDC_CONSTRAINTS);
-			this.parametersJSON.remove(JSON_KEY_RUNTIME_CONSTRAINTS);
+			this.reset();
 		}
 		
 		return retval;
@@ -994,10 +920,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("templateId");
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove("csvContent");
+			this.reset();
 		}
 		return retval;
 	}
@@ -1034,10 +957,7 @@ public class NodeGroupExecutionClient extends RestClient {
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("template");
-			this.parametersJSON.remove(JSON_KEY_SPARQL_CONNECTION);
-			this.parametersJSON.remove("csvContent");
+			this.reset();
 		}
 		return retval;
 	}
