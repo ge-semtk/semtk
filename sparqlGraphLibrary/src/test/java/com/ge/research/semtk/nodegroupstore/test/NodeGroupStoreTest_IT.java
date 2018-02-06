@@ -27,7 +27,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -42,11 +41,6 @@ public class NodeGroupStoreTest_IT {
 
 	// for stored nodegroup execution
 	private static NodeGroupStoreRestClient nodeGroupStoreClient = null;
-	
-	// needed for the nodegroup store client
-	private static String protocol;
-	private static String storeServer;
-	private static int storePort;
 		
 	// id to use for stored nodegroups
 	private final static String ID = "test" + UUID.randomUUID();
@@ -59,14 +53,8 @@ public class NodeGroupStoreTest_IT {
 	
 	@BeforeClass
 	public static void setup() throws Exception{
-		
 		NG_JSON = Utility.getJsonObjectFromString(NG_JSON_STRING);
-		
-		// instantiate client, with configurations from properties file
-		protocol = IntegrationTestUtility.getServiceProtocol();
-		storeServer = IntegrationTestUtility.getNodegroupStoreServiceServer();
-		storePort = IntegrationTestUtility.getNodegroupStoreServicePort();
-		nodeGroupStoreClient = new NodeGroupStoreRestClient(new NodeGroupStoreConfig(protocol, storeServer, storePort));
+		nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
 	}
 	
 	@AfterClass

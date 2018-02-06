@@ -17,8 +17,6 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution;
 
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-
 public class DispatchRequestBody extends SparqlConnRequestBody {
 	
 	private String externalDataConnectionConstraints;
@@ -37,5 +35,15 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 		this.runtimeConstraints = runtimeConstraints;
 	}
 	
+	/**
+	 * Validate request contents.  Throws an exception if validation fails.
+	 */
+	public void validate() throws Exception{
+
+		super.validate();
+
+		// we are allowing the constraints objects to be null
+	}
+
 }
 

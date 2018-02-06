@@ -61,6 +61,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 @RestController
 @RequestMapping("/nodeGroupExecution")
 public class NodeGroupExecutionRestController {
+	
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
  	
 	@Autowired
@@ -260,9 +261,14 @@ public class NodeGroupExecutionRestController {
 	// base methods which others use
 	
 	public JSONObject dispatchAnyJobById(@RequestBody DispatchByIdRequestBody requestBody, DispatcherSupportedQueryTypes qt){
+		
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
+			
+			// make sure the request has the needed parameters
+			requestBody.validate();
+			
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor sqe = this.getExecutor(prop, null );
 			// try to create a sparql connection

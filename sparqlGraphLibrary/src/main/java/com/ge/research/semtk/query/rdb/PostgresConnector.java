@@ -30,19 +30,17 @@ public class PostgresConnector extends Connector {
 	private static String POSTGRES_URL_PREFIX = "jdbc:postgresql://";			// assume invariant for now
 	private static String POSTGRES_TEST_QUERY = "SELECT * from clock_timestamp();";
 	
-	// ADD CONSTRUCTOR THAT ALLOWS PASSING IN DRIVER?
-	
 	/**
 	 * Instantiate the connector.
 	 * @throws Exception 
 	 */
 	public PostgresConnector(String host, int port, String database, String username, String password) throws Exception{
-		this.driver = POSTGRES_DRIVER;
-		this.dbUrl = getDatabaseURL(host, port, database); 
-		this.username = username;
-		this.password = password;
-		this.connectionTestQuery = POSTGRES_TEST_QUERY;
-		testConnection();  
+		setDriver(POSTGRES_DRIVER);
+		setDatabaseUrl(getDatabaseURL(host, port, database)); 
+		setConnectionProperty(PROPERTY_KEY_USERNAME, username);
+		setConnectionProperty(PROPERTY_KEY_PASSWORD, password);
+		validate();
+		testConnection(POSTGRES_TEST_QUERY);
 	}
 	
 	/**
@@ -53,17 +51,19 @@ public class PostgresConnector extends Connector {
 	}
 	
 	/**
-	 * Utility method to get the POSTGRES database URL prefix
-	 */
-	public static String getDatabaseURLPrefix(){
-		return POSTGRES_URL_PREFIX;
-	}
-	
-	/**
 	 * Utility method to construct an POSTGRES database URL (works for SID or service name)
 	 */
 	public static String getDatabaseURL(String host, int port, String database){
 		return POSTGRES_URL_PREFIX + host + ":" + port + "/" + database;
 	}	
 
+	/**
+	 * Check for required connection information
+	 */
+	protected void validate() throws Exception{	
+		super.validate();
+		validateProperty(PROPERTY_KEY_USERNAME);
+		validateProperty(PROPERTY_KEY_PASSWORD);
+	}
+	
 }

@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import com.ge.research.semtk.resultSet.Table;
 
@@ -32,44 +33,95 @@ import com.ge.research.semtk.resultSet.Table;
  */
 public abstract class Connector {
 	
-	protected String driver;  	// the database driver class
-	protected String dbUrl;		// the database url, e.g. prefix@//host:port/sid
-	protected String username;
-	protected String password;
-	protected String connectionTestQuery; // a query to test the connection
+	// keys for connection properties
+	protected final static String PROPERTY_KEY_USERNAME = "user";
+	protected final static String PROPERTY_KEY_PASSWORD = "password";
 	
+	// these are the items needed to create a connection
+	private String driver;  										// the database driver class
+	private String dbUrl;											// the database url, e.g. prefix@//host:port/sid
+	private Properties connectionProperties = new Properties();  	// connection properties (e.g. username, password)
 	
 	/**
-	 * Validate the connection
-	 * @throw Exception if fails
+	 * Set the driver for this connection
 	 */
-	public void testConnection() throws Exception{
-		
-		// validate connection parameters
+	protected void setDriver(String driver){
+		this.driver = driver;
+	}
+	
+	/**
+	 * Set the database URL for this connection
+	 */
+	protected void setDatabaseUrl(String dbUrl){
+		this.dbUrl = dbUrl;
+	}
+	
+	/**
+	 * Set a property for this connection.  
+	 * Common properties are username and password, but different connectors may require other properties.
+	 */
+	protected void setConnectionProperty(String key, String value){
+		if(key != null && value != null){
+			this.connectionProperties.setProperty(key, value);		
+		}
+	}
+	
+	/**
+	 * Get a property that has already been set for this connection.  .
+	 */
+	protected String getConnectionProperty(String key){
+		return this.connectionProperties.getProperty(key);		
+	}
+	
+	/**
+	 * Confirm that a property is non-empty for this connection.
+	 * @throws Exception if the property is null or empty
+	 */
+	protected void validateProperty(String key) throws Exception{
+		if(getConnectionProperty(key) == null || getConnectionProperty(key).trim().isEmpty()){
+			throw new Exception("Connection requires a `" + key + "`");
+		}		
+	}
+	
+	/**
+	 * Check that required fields are are available.
+	 * Extend in subclasses to add validation for required properties.
+	 */
+	protected void validate() throws Exception{
 		if(driver == null || driver.trim().isEmpty()){
-			throw new Exception("Must specify a driver");
+			throw new Exception("Connection requires a driver");
 		}
 		if(dbUrl == null || dbUrl.trim().isEmpty()){
-			throw new Exception("Must specify a connection string");
+			throw new Exception("Connection requires a connection string");
 		}
-		if(username == null || username.trim().isEmpty()){
-			throw new Exception("Must specify a username");
-		}
-//		if(password == null || password.trim().isEmpty()){    // leaving this commented out because sometimes password is blank
-//			throw new Exception("Must specify a password");
-//		}
-		if(connectionTestQuery == null || connectionTestQuery.trim().isEmpty()){
-			throw new Exception("Cannot test connection - no connection test query");
-		}
+	}
+	
+	/**
+	 * Get a java.sql.Connection object
+	 */
+	private Connection getConnection() throws Exception{
+		Class.forName(driver);
+		return DriverManager.getConnection(dbUrl, connectionProperties);
+	}
+	
+	/**
+	 * Test the connection.
+	 * @param a simple query for testing the connection, e.g. ("show tables");
+	 * @throw Exception if fails
+	 */
+	public void testConnection(String testQuery) throws Exception{
 		
+		if(testQuery == null || testQuery.trim().isEmpty()){
+			throw new Exception("Connection requires a test query");
+		}
+	
 		Connection conn = null;
 		Statement stmt = null;
 		try{
 			// open connection and execute the test query
-			Class.forName(driver);
-			conn = DriverManager.getConnection(dbUrl, username, password); 
+			conn = getConnection(); 
 			stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery(connectionTestQuery);
+			ResultSet rs = stmt.executeQuery(testQuery);
 			rs.getMetaData();
 
 			// clean up
@@ -92,7 +144,7 @@ public abstract class Connector {
 	 * @throws Exception 
 	 */
 	public Table query(String query) throws Exception {
-
+		
 		// validate query
 		query = query.trim();
 		if(query == null || query.trim().isEmpty()){
@@ -112,8 +164,7 @@ public abstract class Connector {
 		Statement stmt = null;
 		try{
 			// register JDBC driver, open connection
-			Class.forName(driver);
-			conn = DriverManager.getConnection(dbUrl, username, password); 
+			conn = getConnection();
 			stmt = conn.createStatement();
 			String[] queries = query.split(";");
 			ResultSet rs = null;

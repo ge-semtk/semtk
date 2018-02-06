@@ -144,7 +144,7 @@ public class CSVDataLoaderRunner {
 			}
 		}
 		catch(Exception eee){
-			LocalLogger.printStackTrace(eee);
+			LocalLogger.logToStdOut("Logging not enabled");
 		}
 	}
 	
