@@ -39,7 +39,8 @@ public class HiveConnector extends Connector {
 		setDatabaseUrl(getDatabaseURL(host, port, database));
 		setConnectionProperty(PROPERTY_KEY_USERNAME, username);
 		setConnectionProperty(PROPERTY_KEY_PASSWORD, password);
-		testConnection(HIVE_TEST_QUERY);	
+		validate();
+		testConnection(HIVE_TEST_QUERY);
 	}
 
 	/**
@@ -56,4 +57,12 @@ public class HiveConnector extends Connector {
 		return HIVE_URL_PREFIX + host + ":" + port + "/" + database;
 	}		
 
+	/**
+	 * Check for required connection information
+	 */
+	protected void validate() throws Exception{	
+		super.validate();
+		validateProperty(PROPERTY_KEY_USERNAME);
+	}
+	
 }

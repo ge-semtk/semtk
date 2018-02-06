@@ -61,7 +61,39 @@ public abstract class Connector {
 	 * Common properties are username and password, but different connectors may require other properties.
 	 */
 	protected void setConnectionProperty(String key, String value){
-		this.connectionProperties.setProperty(key, value);		
+		if(key != null && value != null){
+			this.connectionProperties.setProperty(key, value);		
+		}
+	}
+	
+	/**
+	 * Get a property that has already been set for this connection.  .
+	 */
+	protected String getConnectionProperty(String key){
+		return this.connectionProperties.getProperty(key);		
+	}
+	
+	/**
+	 * Confirm that a property is non-empty for this connection.
+	 * @throws Exception if the property is null or empty
+	 */
+	protected void validateProperty(String key) throws Exception{
+		if(getConnectionProperty(key) == null || getConnectionProperty(key).trim().isEmpty()){
+			throw new Exception("Connection requires a `" + key + "`");
+		}		
+	}
+	
+	/**
+	 * Check that required fields are are available.
+	 * Extend in subclasses to add validation for required properties.
+	 */
+	protected void validate() throws Exception{
+		if(driver == null || driver.trim().isEmpty()){
+			throw new Exception("Connection requires a driver");
+		}
+		if(dbUrl == null || dbUrl.trim().isEmpty()){
+			throw new Exception("Connection requires a connection string");
+		}
 	}
 	
 	/**
@@ -73,29 +105,16 @@ public abstract class Connector {
 	}
 	
 	/**
-	 * Validate the connection
+	 * Test the connection.
 	 * @param a simple query for testing the connection, e.g. ("show tables");
 	 * @throw Exception if fails
 	 */
 	public void testConnection(String testQuery) throws Exception{
 		
-		// validate connection parameters
-		if(driver == null || driver.trim().isEmpty()){
-			throw new Exception("Must specify a driver");
-		}
-		if(dbUrl == null || dbUrl.trim().isEmpty()){
-			throw new Exception("Must specify a connection string");
-		}
-		if(connectionProperties.getProperty(PROPERTY_KEY_USERNAME) == null || connectionProperties.getProperty(PROPERTY_KEY_USERNAME).trim().isEmpty()){
-			throw new Exception("Must specify a username");
-		}
-//		if(properties.getProperty(PROPERTY_KEY_PASSWORD) == null || properties.getProperty(PROPERTY_KEY_PASSWORD).trim().isEmpty()){    // leaving this commented out because sometimes password is blank
-//			throw new Exception("Must specify a password");
-//		}
 		if(testQuery == null || testQuery.trim().isEmpty()){
-			throw new Exception("Cannot test connection - no test query");
+			throw new Exception("Connection requires a test query");
 		}
-		
+	
 		Connection conn = null;
 		Statement stmt = null;
 		try{

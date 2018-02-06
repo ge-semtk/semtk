@@ -39,7 +39,8 @@ public class OracleConnector extends Connector {
 		setDatabaseUrl(getDatabaseURL(host, port, database));
 		setConnectionProperty(PROPERTY_KEY_USERNAME, username);
 		setConnectionProperty(PROPERTY_KEY_PASSWORD, password);
-		testConnection(ORACLE_TEST_QUERY);  
+		validate();
+		testConnection(ORACLE_TEST_QUERY);
 	}
 	
 	/**
@@ -54,6 +55,15 @@ public class OracleConnector extends Connector {
 	 */
 	public static String getDatabaseURL(String host, int port, String database){
 		return ORACLE_URL_PREFIX + host + ":" + port + "/" + database;
-	}	
+	}		
+	
+	/**
+	 * Check for required connection information
+	 */
+	protected void validate() throws Exception{	
+		super.validate();
+		validateProperty(PROPERTY_KEY_USERNAME);
+		validateProperty(PROPERTY_KEY_PASSWORD);
+	}
 
 }
