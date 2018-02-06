@@ -39,6 +39,8 @@ define([	// properly require.config'ed   bootstrap-modal
             progressCallback(min + Math.floor((max - min) * val / 100));
         };
     
+        MsiClientNodeGroupExec.USE_NODEGROUP_CONN = '{"name": "%NODEGROUP%","domain": "%NODEGROUP%","model": [],"data": []}';
+    
         /* 
          * Create a jobIdCallback suitable for the execAsync* functions, that 
          *      handles the status and results clients
@@ -231,6 +233,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.runAsyncSparql("dispatchRawSparql",
                                         sparql, conn, jobIdCallback, failureCallback);
             },
+            
+            execAsyncDispatchSelectById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupId("dispatchSelectById",
+                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
 
             /* ===================================================================================== */
             
@@ -273,6 +280,18 @@ define([	// properly require.config'ed   bootstrap-modal
                 
 				var data = JSON.stringify ({
                     "jsonRenderedNodeGroup": JSON.stringify(nodegroup.toJson()),
+                    "sparqlConnection":      JSON.stringify(conn.toJson()),
+                    "runtimeConstraints":    (typeof runtimeConstraints == "undefined" || runtimeConstraints == null) ? "" : JSON.stringify(runtimeConstraints.toJson()),
+                    "externalDataConnectionConstraints": (typeof edcConstraints == "undefined" || edcConstraints == null) ? "" : JSON.stringify(edcConstraints.toJson())
+                });
+
+				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
+			},
+                
+            runAsyncNodegroupId : function (endpoint, nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                
+				var data = JSON.stringify ({
+                    "nodeGroupId": nodegroupId,
                     "sparqlConnection":      JSON.stringify(conn.toJson()),
                     "runtimeConstraints":    (typeof runtimeConstraints == "undefined" || runtimeConstraints == null) ? "" : JSON.stringify(runtimeConstraints.toJson()),
                     "externalDataConnectionConstraints": (typeof edcConstraints == "undefined" || edcConstraints == null) ? "" : JSON.stringify(edcConstraints.toJson())

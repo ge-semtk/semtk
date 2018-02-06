@@ -956,7 +956,56 @@
    	};
 
     var doTest = function () {
-        alert("test");
+        require(['sparqlgraph/js/msiresultset',
+                 'sparqlgraph/js/msiclientnodegroupexec',
+                 'sparqlgraph/js/sparqlconnection'
+                ], 
+                function(MsiResultSet, MsiClientNodeGroupExec, SparqlConnection) {
+            
+            var didUserCancel = function() {
+                return false;
+            };
+            
+            var statusCallback = function(percent) {
+                console.log("Percent complete: " + percent);
+            };
+            var failureCallback = function(html) {
+                alert("Failure html: \n" + html);
+            };
+            var tableResCallback = function (csvFilename, fullURL, msiresultset) { 
+                alert("Success\nfilename: " + csvFilename + "\nfullURL: " + fullURL);
+                alert(msiresultset.tableGetCsv());
+            };
+
+
+            var TEST_TIMEOUT_MS = 5000;
+
+            var NGE_URL = "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/";
+            var STATUS_URL = "http://vesuvius37.crd.ge.com:12051/status/";
+            var RESULTS_URL = "http://vesuvius37.crd.ge.com:12052/results/";
+            var client = new MsiClientNodeGroupExec(NGE_URL, TEST_TIMEOUT_MS);
+            var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(
+                                        200,
+                                        tableResCallback,
+                                        failureCallback,
+                                        statusCallback,
+                                        didUserCancel,
+                                        STATUS_URL,
+                                        RESULTS_URL);
+            
+            var nodegroupId = "Materia POC 1";
+            var conn = new SparqlConnection(MsiClientNodeGroupExec.USE_NODEGROUP_CONN);
+            var edcConstraints = null;
+            var runtimeConstraints = null;
+            client.execAsyncDispatchSelectById(
+                                        nodegroupId, 
+                                        conn, 
+                                        edcConstraints, 
+                                        runtimeConstraints, 
+                                        jobIdCallback, 
+                                        failureCallback);
+
+        });
     };
 
     var editOrderBy = function () {
