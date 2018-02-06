@@ -23,13 +23,11 @@ import com.ge.research.semtk.query.rdb.Connector;
 
 /**
  * Hive connector
- * 
- * If you get a ConnectException, start the Thrift server: on vesuvius05, run "hive --service hiveserver"
  */
 public class HiveConnector extends Connector {
 
-	private static String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";	// TODO put in properties file?
-	private static String HIVE_URL_PREFIX = "jdbc:hive2://";				// TODO put in properties file?
+	private static String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";	
+	private static String HIVE_URL_PREFIX = "jdbc:hive2://";			
 	private static String HIVE_TEST_QUERY = "show tables";
 	
 	/**
@@ -37,12 +35,11 @@ public class HiveConnector extends Connector {
 	 * @throws Exception 
 	 */
 	public HiveConnector(String host, int port, String database, String username, String password) throws Exception{
-		this.driver = HIVE_DRIVER;
-		this.dbUrl = getDatabaseURL(host, port, database); // TODO have ODBCDataset use this too
-		this.username = username;
-		this.password = password;
-		this.connectionTestQuery = HIVE_TEST_QUERY;
-		testConnection();	
+		setDriver(HIVE_DRIVER);
+		setDatabaseUrl(getDatabaseURL(host, port, database));
+		setConnectionProperty(PROPERTY_KEY_USERNAME, username);
+		setConnectionProperty(PROPERTY_KEY_PASSWORD, password);
+		testConnection(HIVE_TEST_QUERY);	
 	}
 
 	/**
@@ -50,13 +47,6 @@ public class HiveConnector extends Connector {
 	 */
 	public static String getDriver(){
 		return HIVE_DRIVER;
-	}
-	
-	/**
-	 * Get the Hive database URL prefix
-	 */
-	public static String getDatabaseURLPrefix(){
-		return HIVE_URL_PREFIX;
 	}
 	
 	/**

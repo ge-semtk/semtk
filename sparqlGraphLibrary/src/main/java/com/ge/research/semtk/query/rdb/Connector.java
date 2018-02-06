@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import com.ge.research.semtk.resultSet.Table;
 
@@ -32,18 +33,51 @@ import com.ge.research.semtk.resultSet.Table;
  */
 public abstract class Connector {
 	
-	protected String driver;  	// the database driver class
-	protected String dbUrl;		// the database url, e.g. prefix@//host:port/sid
-	protected String username;
-	protected String password;
-	protected String connectionTestQuery; // a query to test the connection
+	// keys for connection properties
+	protected final static String PROPERTY_KEY_USERNAME = "user";
+	protected final static String PROPERTY_KEY_PASSWORD = "password";
 	
+	// these are the items needed to create a connection
+	private String driver;  										// the database driver class
+	private String dbUrl;											// the database url, e.g. prefix@//host:port/sid
+	private Properties connectionProperties = new Properties();  	// connection properties (e.g. username, password)
+	
+	/**
+	 * Set the driver for this connection
+	 */
+	protected void setDriver(String driver){
+		this.driver = driver;
+	}
+	
+	/**
+	 * Set the database URL for this connection
+	 */
+	protected void setDatabaseUrl(String dbUrl){
+		this.dbUrl = dbUrl;
+	}
+	
+	/**
+	 * Set a property for this connection.  
+	 * Common properties are username and password, but different connectors may require other properties.
+	 */
+	protected void setConnectionProperty(String key, String value){
+		this.connectionProperties.setProperty(key, value);		
+	}
+	
+	/**
+	 * Get a java.sql.Connection object
+	 */
+	private Connection getConnection() throws Exception{
+		Class.forName(driver);
+		return DriverManager.getConnection(dbUrl, connectionProperties);
+	}
 	
 	/**
 	 * Validate the connection
+	 * @param a simple query for testing the connection, e.g. ("show tables");
 	 * @throw Exception if fails
 	 */
-	public void testConnection() throws Exception{
+	public void testConnection(String testQuery) throws Exception{
 		
 		// validate connection parameters
 		if(driver == null || driver.trim().isEmpty()){
@@ -52,24 +86,23 @@ public abstract class Connector {
 		if(dbUrl == null || dbUrl.trim().isEmpty()){
 			throw new Exception("Must specify a connection string");
 		}
-		if(username == null || username.trim().isEmpty()){
+		if(connectionProperties.getProperty(PROPERTY_KEY_USERNAME) == null || connectionProperties.getProperty(PROPERTY_KEY_USERNAME).trim().isEmpty()){
 			throw new Exception("Must specify a username");
 		}
-//		if(password == null || password.trim().isEmpty()){    // leaving this commented out because sometimes password is blank
+//		if(properties.getProperty(PROPERTY_KEY_PASSWORD) == null || properties.getProperty(PROPERTY_KEY_PASSWORD).trim().isEmpty()){    // leaving this commented out because sometimes password is blank
 //			throw new Exception("Must specify a password");
 //		}
-		if(connectionTestQuery == null || connectionTestQuery.trim().isEmpty()){
-			throw new Exception("Cannot test connection - no connection test query");
+		if(testQuery == null || testQuery.trim().isEmpty()){
+			throw new Exception("Cannot test connection - no test query");
 		}
 		
 		Connection conn = null;
 		Statement stmt = null;
 		try{
 			// open connection and execute the test query
-			Class.forName(driver);
-			conn = DriverManager.getConnection(dbUrl, username, password); 
+			conn = getConnection(); 
 			stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery(connectionTestQuery);
+			ResultSet rs = stmt.executeQuery(testQuery);
 			rs.getMetaData();
 
 			// clean up
@@ -92,7 +125,7 @@ public abstract class Connector {
 	 * @throws Exception 
 	 */
 	public Table query(String query) throws Exception {
-
+		
 		// validate query
 		query = query.trim();
 		if(query == null || query.trim().isEmpty()){
@@ -112,8 +145,7 @@ public abstract class Connector {
 		Statement stmt = null;
 		try{
 			// register JDBC driver, open connection
-			Class.forName(driver);
-			conn = DriverManager.getConnection(dbUrl, username, password); 
+			conn = getConnection();
 			stmt = conn.createStatement();
 			String[] queries = query.split(";");
 			ResultSet rs = null;
