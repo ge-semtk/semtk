@@ -18,13 +18,13 @@
 
 package com.ge.research.semtk.query.rdb;
 
-import com.ge.research.semtk.query.rdb.Connector;
+import com.ge.research.semtk.query.rdb.JdbcConnector;
 
 
 /**
  * Hive connector
  */
-public class HiveConnector extends Connector {
+public class HiveConnector extends JdbcConnector {
 
 	private static String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";	
 	private static String HIVE_URL_PREFIX = "jdbc:hive2://";			

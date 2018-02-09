@@ -18,13 +18,13 @@
 
 package com.ge.research.semtk.query.rdb;
 
-import com.ge.research.semtk.query.rdb.Connector;
+import com.ge.research.semtk.query.rdb.JdbcConnector;
 
 
 /**
  * Postgres connector
  */
-public class PostgresConnector extends Connector {
+public class PostgresConnector extends JdbcConnector {
 
 	private static String POSTGRES_DRIVER = "org.postgresql.Driver";	// assume invariant for now
 	private static String POSTGRES_URL_PREFIX = "jdbc:postgresql://";			// assume invariant for now

@@ -18,13 +18,13 @@
 
 package com.ge.research.semtk.query.rdb;
 
-import com.ge.research.semtk.query.rdb.Connector;
+import com.ge.research.semtk.query.rdb.JdbcConnector;
 
 
 /**
  * Oracle connector
  */
-public class OracleConnector extends Connector {
+public class OracleConnector extends JdbcConnector {
 
 	private static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";	
 	private static String ORACLE_URL_PREFIX = "jdbc:oracle:thin:@//";			
