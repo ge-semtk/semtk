@@ -73,24 +73,24 @@ Graph.prototype = {
      *              being interpreted by the layout algorithm or the graph
      *              representation
      */
-    addNode: function(nd, content) {
+    addNode: function(snode, content) {
         /* testing if node is already existing in the graph */
         
-        if(this.nodes[nd.getSparqlID() ] == undefined) {
-            this.nodes[nd.getSparqlID() ] = nd.node;   //new Graph.Node(nd.NodeName, nd.getSparqlID(), nd.node);
-            //console.log("trying to create a node" + nd.NodeName + " " + nd.getSparqlID());
+        if(this.nodes[snode.getSparqlID() ] == undefined) {
+            this.nodes[snode.getSparqlID() ] = snode.node;   //new Graph.Node(snode.NodeName, snode.getSparqlID(), snode.node);
+            //console.log("trying to create a node" + snode.NodeName + " " + snode.getSparqlID());
         }
         else{
-          //console.log("no need to create a node" + nd.NodeName + " " + nd.getSparqlID());	
+          //console.log("no need to create a node" + snode.NodeName + " " + snode.getSparqlID());	
         
         }
-        return this.nodes[nd.node.id];
+        return this.nodes[snode.getSparqlID()];
     },
     // added by justin for belmont
-    addExistingNode: function(existentNode) {
-    	var id = existentNode.id;
+    addExistingNode: function(existingSnode) {
+    	var id = existingSnode.id;
     	
-    	this.nodes[id] = existentNode;
+    	this.nodes[id] = existingSnode;
     	//console.log("adding the existing node " + id );
     	
     },
