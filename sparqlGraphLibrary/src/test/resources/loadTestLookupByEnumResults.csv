@@ -1,0 +1,5 @@
+assemblyDate,batteryDesc,batteryId,Color_1,Color_2,Color_3,Color_4
+2017-03-23T10:23:00,normal battery,full,http://kdl.ge.com/durabattery#red,http://kdl.ge.com/durabattery#white,http://kdl.ge.com/durabattery#blue,http://kdl.ge.com/durabattery#red
+2017-03-23T10:23:01,no cells,nocells,,,,
+1966-03-23T08:00:00,only colors,onlycolor,http://kdl.ge.com/durabattery#blue,http://kdl.ge.com/durabattery#blue,http://kdl.ge.com/durabattery#blue,http://kdl.ge.com/durabattery#blue
+"",three cell,three,http://kdl.ge.com/durabattery#red,http://kdl.ge.com/durabattery#white,http://kdl.ge.com/durabattery#blue,

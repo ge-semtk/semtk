@@ -1,18 +1,43 @@
+/**
+ ** Copyright 2016-2018 General Electric Company
+ **
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
 package com.ge.research.semtk.load.utility;
 
 import java.util.ArrayList;
 
 public class ImportMapping {
-	private int sNodeIndex = -1;
+	private int importNodeIndex = -1;
 	private int propItemIndex = -1;
 	private ArrayList<MappingItem> itemList = new ArrayList<MappingItem>();
 	private boolean isEnum = false;     // does sNodeIndex point to an enum
-	
-	public int getsNodeIndex() {
-		return sNodeIndex;
+	private int lookupNodeIndex = -1;
+
+	public int getLookupNodeIndex() {
+		return lookupNodeIndex;
 	}
-	public void setsNodeIndex(int sNodeIndex) {
-		this.sNodeIndex = sNodeIndex;
+	public void setLookupNodeIndex(int lookupNodeIndex) {
+		this.lookupNodeIndex = lookupNodeIndex;
+	}
+	
+	public int getImportNodeIndex() {
+		return importNodeIndex;
+	}
+	public void setImportNodeIndex(int sNodeIndex) {
+		this.importNodeIndex = sNodeIndex;
 	}
 	public int getPropItemIndex() {
 		return propItemIndex;
@@ -90,37 +115,6 @@ public class ImportMapping {
 		}
 		
 		// build the return
-		return ret.toString();
-	}
-	
-	/**
-	 * Build the string for a node or property import value
-	 * @param record
-	 * @return
-	 * @throws Exception
-	 */
-	public String buildStringPREV(ArrayList<String> record) throws Exception {
-		StringBuilder ret = new StringBuilder();
-		
-		String str = "";
-		MappingItem item;
-
-		for (int i=0; i < this.itemList.size(); i++) {
-			item = this.itemList.get(i);
-			str = item.buildString(record);
-			
-			// URI may not have empty columns in it's build unless it is an enum
-			// enum will either:
-			//    - be totally empty and prune, or 
-			//    - evaluate to a valid or invalid value and be treated accordingly
-			if (str.equals("") && this.isNode() && ! this.isEnum && item.isColumnMapping() ) {
-				throw new Exception("Empty values in URI build");
-			}
-			
-			// build the return
-			ret.append(str);
-		}
-		
 		return ret.toString();
 	}
 }

@@ -17,16 +17,18 @@ public class IngestionWorkerThread extends Thread {
 	DataLoadBatchHandler batchHandler = null;
 	ArrayList<ArrayList<String>> dataSetRecords = null;
 	Boolean skipChecks = false;
+	Boolean skipIngest = false;
 	int startingRowNum = 0;
 	Exception e = null;
 	
-	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks) throws Exception{
+	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest) throws Exception{
 		
 		this.endpoint = endpoint.copy();    // endpoint is not thread-safe as it contains query results
 		this.batchHandler = batchHandler;
 		this.dataSetRecords = dataSetRecords;
 		this.startingRowNum = startingRowNum;
 		this.skipChecks = skipChecks;
+		this.skipIngest = skipIngest;
 		this.oInfo = oInfo;
 	}
 	
@@ -34,11 +36,7 @@ public class IngestionWorkerThread extends Thread {
 		try {
 			ArrayList<NodeGroup> nodeGroupList = this.batchHandler.convertToNodeGroups(this.dataSetRecords, this.startingRowNum, this.skipChecks);
 			
-			// Ingest everything that succeeded.
-			// If nodeGroupList.size() < dataSetRecords.size(), then there was a failure during actual ingestion which is very bad.
-			// But that will have generated an exception in this.e or row in batchHandler.failuresEncountered
-			// so it is safe to silently ignore it here.
-			if (nodeGroupList.size() > 0) {
+			if (nodeGroupList.size() > 0 && ! this.skipIngest) {
 				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo);
 				this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 			}

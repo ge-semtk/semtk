@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-8 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +22,11 @@ import java.net.URI;
 import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -55,29 +57,31 @@ import com.ge.research.semtk.utility.Utility;
  * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
  */
 public class ImportSpecHandler {
+	static final String LOOKUP_MODE_NO_CREATE = "noCreate";
+	static final String LOOKUP_MODE_CREATE = "createIfMissing";
 	
 	JSONObject importspec = null; 
 	
-	JSONObject lookupNgJson = null;
-	NodeGroup lookupNodegroups[] = null;
-	HashMap<String, Integer> colNameToIndexHash = new HashMap<String, Integer>();
+	JSONObject nodegroupJson = null;      
+	HashMap<Integer, JSONObject> lookupNodegroupsJson = new HashMap<Integer, JSONObject>();       // cache of pruned nodegroups ready for lookup
+	HashMap<Integer, String>    lookupMode = new HashMap<Integer, String>();
+	HashMap<String, Integer>   colNameToIndexHash = new HashMap<String, Integer>();
 	HashMap<String, Transform> transformHash = new HashMap<String, Transform>();
-	HashMap<String, String> textHash = new HashMap<String, String>();
-	HashMap<String, String> colNameHash = new HashMap<String, String>();
-	HashMap<String, Integer> colsUsed = new HashMap<String, Integer>();    // count of cols used.  Only includes counts > 0
+	HashMap<String, String>    textHash = new HashMap<String, String>();
+	HashMap<String, String>    colNameHash = new HashMap<String, String>();
+	HashMap<String, Integer>   colsUsed = new HashMap<String, Integer>();    // count of cols used.  Only includes counts > 0
 	
-	ImportMapping mappings[] = null;
+	ImportMapping importMappings[] = null;
+	HashMap<Integer, ArrayList<ImportMapping>> lookupMappings = new HashMap<Integer, ArrayList<ImportMapping>>();  // for each node index, the mappings that do URI lookup
+
 	String [] colsUsedKeys = null;
 	
 	UriResolver uriResolver;
 	OntologyInfo oInfo;
 	
-	// for each node index, the mappings that do URI lookup
-	HashMap<Integer, ArrayList<ImportMapping>> uriLookup = new HashMap<Integer, ArrayList<ImportMapping>>();
-	HashMap<String, String> uriCache = new HashMap<String, String>();
+	UriCache uriCache = new UriCache();
 	
-	// Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
-	SparqlEndpointInterface nonThreadSafeEndpoint = null;
+	SparqlEndpointInterface nonThreadSafeEndpoint = null;  // Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
 	
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
@@ -85,14 +89,14 @@ public class ImportSpecHandler {
 		// reset the nodegroup and store as json (for efficient duplication)
 		NodeGroup ng = NodeGroup.getInstanceFromJson(ngJson);
 		ng.reset();
-		this.lookupNgJson = ng.toJson();
+		this.nodegroupJson = ng.toJson();
 		
 		this.oInfo = oInfo;
 		
-		this.setupColHashes(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
-		this.setupTransforms((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
-		this.setupTextHash(     (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TEXTS));
-		this.setupNodes((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_NODES));
+		this.colHashesFromJson(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
+		this.transformsFromJson((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
+		this.textHashFromJson(     (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TEXTS));
+		this.nodesFromJson((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_NODES));
 		String userUriPrefixValue = (String) this.importspec.get(SparqlGraphJson.JKEY_IS_BASE_URI);
 		
 		// check the value of the UserURI Prefix
@@ -110,6 +114,11 @@ public class ImportSpecHandler {
 		this.nonThreadSafeEndpoint = endpoint;
 	}
 	
+	/**
+	 * Set the data source headers
+	 * @param headers
+	 * @throws Exception
+	 */
 	public void setHeaders(ArrayList<String> headers) throws Exception {
 		HashMap<String, Integer> oldNameToIndexHash = this.colNameToIndexHash;
 		HashMap<String, Integer> newNameToIndexHash = new HashMap<String, Integer>();
@@ -127,15 +136,15 @@ public class ImportSpecHandler {
 		}
 		
 		// change every mapping item's column index
-		for (int i=0; i < this.mappings.length; i++) {
-			for (MappingItem mItem : this.mappings[i].getItemList()) {
+		for (int i=0; i < this.importMappings.length; i++) {
+			for (MappingItem mItem : this.importMappings[i].getItemList()) {
 				mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
 			}
 		}
 		
-		// repeat for URI lookup mappings, which strangely are copies??
-		for (Integer i : this.uriLookup.keySet()) {
-			for (ImportMapping map : this.uriLookup.get(i)) {
+		// repeat for URI lookup mappings
+		for (Integer i : this.lookupMappings.keySet()) {
+			for (ImportMapping map : this.lookupMappings.get(i)) {
 				for (MappingItem mItem : map.getItemList()) {
 					mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
 				}
@@ -154,7 +163,7 @@ public class ImportSpecHandler {
 	 * Populate the transforms with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void setupTransforms(JSONArray transformsJsonArr) throws Exception{
+	private void transformsFromJson(JSONArray transformsJsonArr) throws Exception{
 		
 		if(transformsJsonArr == null){ 
 			// in the event there was no transform block found in the JSON, just return.
@@ -189,7 +198,7 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void setupTextHash(JSONArray textsJsonArr) throws Exception{
+	private void textHashFromJson(JSONArray textsJsonArr) throws Exception{
 		
 		if(textsJsonArr == null){ 
 			return;
@@ -207,7 +216,7 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void setupColHashes(JSONArray columnsJsonArr) throws Exception{
+	private void colHashesFromJson(JSONArray columnsJsonArr) throws Exception{
 		
 		if(columnsJsonArr == null){ 
 			return;
@@ -223,11 +232,12 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * Sets this.colsUsed to number of times each column is used.  Skipping ZEROS.
-	 * @throws Exception 
+	 * 
+	 * @param nodesJsonArr
+	 * @throws Exception
 	 */
-	private void setupNodes(JSONArray nodesJsonArr) throws Exception {
-		NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.lookupNgJson);
+	private void nodesFromJson(JSONArray nodesJsonArr) throws Exception {
+		NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.nodegroupJson);
 		tmpNodegroup.clearOrderBy();
 		ArrayList<ImportMapping> mappingsList = new ArrayList<ImportMapping>();
 		// clear cols used
@@ -241,10 +251,21 @@ public class ImportSpecHandler {
 			JSONObject nodeJson = (JSONObject) nodesJsonArr.get(i);
 			String nodeSparqlID = nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID).toString();
 			int nodeIndex = tmpNodegroup.getNodeIndexBySparqlID(nodeSparqlID);
+			// lookup mode
+			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE)) {
+				String mode = (String)nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE);
+				switch (mode) {
+				case ImportSpecHandler.LOOKUP_MODE_CREATE:
+				case ImportSpecHandler.LOOKUP_MODE_NO_CREATE:
+					this.lookupMode.put(i, mode);
+					break;
+				default:
+					throw new Exception("Unknown " + SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE + ": " + mode);
+				}
+			}
 			
 			// build mapping if it isn't empty AND it isn't a URILookup
-			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING) &&
-				!nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
+			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
 				JSONArray mappingJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING);
 				if (mappingJsonArr.size() > 0) {
 					
@@ -253,11 +274,18 @@ public class ImportSpecHandler {
 					// get node index
 					String type = (String) nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_TYPE);
 					mapping.setIsEnum(this.oInfo.classIsEnumeration(type));
-					mapping.setsNodeIndex(nodeIndex);
-					
+					mapping.setImportNodeIndex(nodeIndex);
 					setupMappingItemList(mappingJsonArr, mapping);
-					mappingsList.add(mapping);
+					
+					// add non-lookup mappings to mapping list
+					if (!nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
+						mappingsList.add(mapping);
+					}
 				}
+			}
+			// handle URILookup, even if mapping was missing or blank
+			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
+				this.setupUriLookup(nodeJson, mapping, tmpNodegroup);
 			}
 			
 			// ---- Properties ----
@@ -269,81 +297,132 @@ public class ImportSpecHandler {
 					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
 					
 					mapping = null;
-					// build mapping if it isn't empty AND it isn't a URILookup
+					// build mapping if it isn't empty
 					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
 						JSONArray mappingJsonArr = (JSONArray) propJson.get(SparqlGraphJson.JKEY_IS_MAPPING);	
 						if (mappingJsonArr.size() > 0) {
 							
 							mapping = new ImportMapping();
-							mapping.setsNodeIndex(nodeIndex);
+							
+							// populate the mapping
+							mapping.setImportNodeIndex(nodeIndex);
 							int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL));
 							mapping.setPropItemIndex(propIndex);
-					
 							setupMappingItemList(mappingJsonArr, mapping);
 							
-							// Add to mappingsList unless this is a URILookup mapping
+							// add non-lookup mappings to mapping list
 							if (!propJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
 								mappingsList.add(mapping);
 							}
 						}
 					}
 					
-					// look for URILookup != []
-					this.setupUriLookup(propJson, mapping, tmpNodegroup);
-					
+					// handle URILookup, even if mapping was missing or blank
+					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
+						this.setupUriLookup(propJson, mapping, tmpNodegroup);
+					}
 				}
 			}
 		}
 		
 		// create some final efficient arrays
-		this.mappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
+		this.importMappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
 		this.colsUsedKeys = this.colsUsed.keySet().toArray(new String[this.colsUsed.size()]);
-		this.lookupNodegroups = new NodeGroup[tmpNodegroup.getNodeCount()];
+		this.setupLookupNodegroups();
 	}
 	
 	/**
-	 * Process a URI Lookup json array
+	 * Build lookupNodegroups by adding sample data & pruning.
+	 * Then find the right lookupNodeIndex for each lookup mapping
+	 * @throws Exception
+	 */
+	private void setupLookupNodegroups() throws Exception {
+		ArrayList<String> sample = new ArrayList<String>();
+		sample.add("sample");
+		
+		NodeGroup importNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
+		
+		// for each node with lookupMapping(s)
+		for (Integer importNodeIndex : this.lookupMappings.keySet()) {
+			NodeGroup lookupNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
+			
+			// add a sample value for each
+			for (ImportMapping map : this.lookupMappings.get(importNodeIndex)) {
+				Node node = lookupNg.getNode(map.getImportNodeIndex());
+				
+				if (map.isNode()) {
+					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(node, sample)));
+				} else {
+					PropertyItem propItem = node.getPropertyItem(map.getPropItemIndex());
+					propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(propItem, sample)));
+				}
+			}
+			
+			// prune
+			lookupNg.getNode(importNodeIndex).setIsReturned(true);
+			lookupNg.pruneAllUnused();
+			
+			// make another pass through lookupMappings and add the lookupNodeIndex
+			// which is the node index after pruning
+			for (ImportMapping map : this.lookupMappings.get(importNodeIndex)) {
+				// find sparqlID in importNg
+				String nodeID = importNg.getNode(map.getImportNodeIndex()).getSparqlID();
+				// find same node in the lookupNg
+				map.setLookupNodeIndex(lookupNg.getNodeIndexBySparqlID(nodeID));
+			}
+			
+			// save the lookupNodegroupJson
+			this.lookupNodegroupsJson.put(importNodeIndex, lookupNg.toJson());
+		}
+	}
+	
+	/**
+	 * Add a lookup ImportMapping to this.lookupMappings in the right place(s).   For any node this is looking up.
 	 * @param uriLookupJsonArr
 	 * @param mapping - mapping of the node or property which owns this URI lookup, or null if none
 	 * @param tmpNodegroup - example nodegroup
-	 * @throws Exception
+	 * @throws Exception - lots of error checks for bad JSON
 	 */
 	private void setupUriLookup(JSONObject nodeOrPropJson, ImportMapping mapping, NodeGroup tmpNodegroup) throws Exception {
-		
-		// does this json have a URI lookup
-		if (nodeOrPropJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-			JSONArray uriLookupJsonArr = (JSONArray) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_URI_LOOKUP);
 			
-			// is the URI lookup non-empty
-			if (uriLookupJsonArr.size() > 0) {
-				
-				// check for empty mapping
-				if (mapping == null) {
-					String name;
-					if (nodeOrPropJson.containsKey(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID)) {
-						name = (String) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID);
-					} else {
-						name = (String) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL);
-					}
-					throw new Exception("Error in ImportSpec. Item is a URI lookup but has no mapping: " + name );
-				}
-				
-				// loop through the sparql ID's of nodes this item is looking up
-				for (int j=0; j < uriLookupJsonArr.size(); j++) {
-					String lookupSparqlID = (String)uriLookupJsonArr.get(j);
-					int lookupNodeIndex = tmpNodegroup.getNodeIndexBySparqlID(lookupSparqlID);
-					if (lookupNodeIndex == -1) {
-						throw new Exception ("Error in ImportSpec. Invalid sparqlID in URI lookup: " + lookupSparqlID );
-					}
-					
-					// add mapping to this.uriLookup
-					if (!this.uriLookup.containsKey(lookupNodeIndex)) {
-						this.uriLookup.put(lookupNodeIndex, new ArrayList<ImportMapping>());
-					}
-					this.uriLookup.get(lookupNodeIndex).add(mapping);
-				}
-			}
+		
+		// get item name in case of error messages
+		String name;
+		if (nodeOrPropJson.containsKey(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID)) {
+			name = (String) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID);
+		} else {
+			name = (String) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL);
 		}
+		
+		// error check missing or empty mapping
+		if (mapping == null) {		
+			throw new Exception("Error in ImportSpec. Item is a URI lookup but has no mapping: " + name );
+		} else if (mapping.getItemList().size() < 1) {
+			throw new Exception("Error in ImportSpec. Item is a URI lookup but has empty mapping: " + name );
+		}
+		
+		// 
+		JSONArray uriLookupJsonArr = (JSONArray) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_URI_LOOKUP);
+		if (uriLookupJsonArr.size() == 0) {
+			throw new Exception("Error in ImportSpec: Empty URI lookup: " + name);
+				
+		} else {
+			
+			// loop through the sparql ID's of nodes this item is looking up
+			for (int j=0; j < uriLookupJsonArr.size(); j++) {
+				String lookupSparqlID = (String)uriLookupJsonArr.get(j);
+				int lookupNodeIndex = tmpNodegroup.getNodeIndexBySparqlID(lookupSparqlID);
+				if (lookupNodeIndex == -1) {
+					throw new Exception ("Error in ImportSpec. Invalid sparqlID in URI lookup: " + lookupSparqlID );
+				}
+				
+				// add mapping to this.lookupMappings
+				if (!this.lookupMappings.containsKey(lookupNodeIndex)) {
+					this.lookupMappings.put(lookupNodeIndex, new ArrayList<ImportMapping>());
+				}
+				this.lookupMappings.get(lookupNodeIndex).add(mapping);
+			}
+		} 
 	}
 	/**
 	 * Put mapping items from json into an ImportMapping and update colUsed
@@ -377,64 +456,124 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * Create a nodegroup from a single record (row) of data
+	 * Create a nodegroup to ingest a single record
+	 * Always performs URILookup (checking UriCache first), possibly setting to NOT_FOUND
+	 * 
+	 * In order to accommodate threading and generation of unknown Uris,
+	 * this function must always be called twice:
+	 * Option 1:  "pre-check"
+	 * 		buildImportNodegroup(record, false)  // do validation and URI lookup.  Threaded if desired.
+	 *                                           // Caller join threads and make sure all validations passed, or quit.
+	 *      generateNotFoundURIs()               // generate any legally not found URI's after validation threads are joined
+	 *      buildImportNodegroup(record, true)   // quicker generation using cached URI's and no validation
+	 *                                           // This can be threaded
+     *                                           // caller should do the insert on the nodegroup
+	 *                                           
+	 * Option 2: "single pass"
+	 * 		buildImportNodegroup(record, true)   // No validation of types.  URI lookup with silent failure. Threaded if desired.    
+	 *                                           // Even though not validating, this pass is needed to discover NOT_FOUND Uri's                
+	 *      generateNotFoundURIs()               // generate any legally not found URI's after threads are joined
+	 *      buildImportNodegroup(record, false)  // validation and nodegroup generation using cached URI's
+	 *                                           // This can be threaded
+	 *                                           // caller should insert nodegroup.  Incomplete load possible.
+	 *                                           // caller report any incomplete loads                                        
+	 * @param record
+	 * @param skipValidation
+	 * @return
+	 * @throws Exception
 	 */
 	public NodeGroup buildImportNodegroup(ArrayList<String> record, boolean skipValidation) throws Exception{
 
-		// create a new nodegroup copy
-		NodeGroup retVal = NodeGroup.getInstanceFromJson(this.lookupNgJson);
-		retVal.clearOrderBy();
+		// create a new nodegroup copy. 
+		NodeGroup retNodegroup = NodeGroup.getInstanceFromJson(this.nodegroupJson);
+		retNodegroup.clearOrderBy();
 		
 		if(record  == null){ throw new Exception("incoming record cannot be null for ImportSpecHandler.getValues"); }
 		if(this.colNameToIndexHash.isEmpty()){ throw new Exception("the header positions were never set for the importspechandler"); }
 		
-		this.lookupAllUris(retVal, record);
+		// fill in all URI's, possibly with NOT_FOUND if that's legal
+		try {
+			this.lookupAllUris(retNodegroup, record);
+		} catch (Exception e) {
+			// swallow URI lookup exception if we're skipping validation
+			if (skipValidation) {
+				throw e;
+			}
+		}
 		
-		// do mappings second
-		for (int i=0; i < this.mappings.length; i++) {
-			ImportMapping mapping = this.mappings[i];
-			String builtString = mapping.buildString(record);
-			Node node = retVal.getNode(mapping.getsNodeIndex());
-			PropertyItem propItem = null;
-			
-			if (mapping.isProperty()) {
-				// ---- property ----
-				if(builtString.length() > 0) {
-					propItem = node.getPropertyItem(mapping.getPropItemIndex());
-					builtString = validateDataType(builtString, propItem.getValueType(), skipValidation);						
-					propItem.addInstanceValue(builtString);
-				}
-				
-			} else {				
-				
-				// ---- node ----
-				
-				// if node has uri lookup
-				if (this.uriLookup.containsKey(mapping.getsNodeIndex())) {
-					LocalLogger.logToStdErr("Node has uriLookup and mapping: " + node.getSparqlID());
-				}
-				
-				// if build string is null
-				else if(builtString.length() < 1){
-					node.setInstanceValue(null);
-				}
-				
-				// use built string
-				else{
-					String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), builtString);
-					if (! SparqlToXUtils.isLegalURI(uri)) { throw new Exception("Attempting to insert ill-formed URI: " + uri); }
-					node.setInstanceValue(uri);
+		// do mappings
+		for (int i=0; i < this.importMappings.length; i++) {
+			this.addMappingToNodegroup(retNodegroup, this.importMappings[i], record, skipValidation);
+		}
+		
+		// also do lookupMappings for any URI that was just generated
+		for (int i=0; i < retNodegroup.getNodeCount(); i++) {
+			if (this.uriCache.isGenerated(retNodegroup.getNode(i).getInstanceValue())) {
+				for (ImportMapping lookupMapping : this.lookupMappings.get(i)) {
+					this.addMappingToNodegroup(retNodegroup,  lookupMapping, record, skipValidation);
 				}
 			}
-			
 		}
-			
+		
 		// prune nodes that no longer belong (no uri and no properties)
-		retVal.pruneAllUnused(true);
+		retNodegroup.pruneAllUnused(true);
 		
 		// set URI for nulls
-		retVal = this.setURIsForBlankNodes(retVal);
-		return retVal;
+		retNodegroup = this.setURIsForNullNodes(retNodegroup);
+		return retNodegroup;
+	}
+	
+	/**
+	 * After a possibly threaded pass where lookupURI labeled some URI's as NOT_FOUND
+	 * Now go through and generate GUIDs for them.
+	 * @throws Exception
+	 */
+	public void generateNotFoundURIs() throws Exception {
+		this.uriCache.generateNotFoundURIs(this.uriResolver);
+	}
+	
+	/**
+	 * Use record to add mapping value to an import nodegroup
+	 * @param importNodegroup
+	 * @param mapping
+	 * @param record
+	 * @param skipValidation
+	 * @throws Exception
+	 */
+	private void addMappingToNodegroup(NodeGroup importNodegroup, ImportMapping mapping, ArrayList<String> record, boolean skipValidation) throws Exception {
+		String builtString = mapping.buildString(record);
+		Node node = importNodegroup.getNode(mapping.getImportNodeIndex());
+		PropertyItem propItem = null;
+		
+		if (mapping.isProperty()) {
+			// ---- property ----
+			if(builtString.length() > 0) {
+				propItem = node.getPropertyItem(mapping.getPropItemIndex());
+				builtString = validateDataType(builtString, propItem.getValueType(), skipValidation);						
+				propItem.addInstanceValue(builtString);
+			}
+			
+		} else {				
+			
+			// ---- node ----
+			
+			// if node has uri lookup
+			if (this.lookupMappings.containsKey(mapping.getImportNodeIndex())) {
+				LocalLogger.logToStdErr("Node has uriLookup and mapping: " + node.getSparqlID());
+			}
+			
+			// if build string is null
+			else if(builtString.length() < 1){
+				node.setInstanceValue(null);
+			}
+			
+			// use built string
+			else{
+				String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), builtString);
+				if (! SparqlToXUtils.isLegalURI(uri)) { throw new Exception("Attempting to insert ill-formed URI: " + uri); }
+				node.setInstanceValue(uri);
+			}
+		}
 	}
 	
 	/**
@@ -446,7 +585,7 @@ public class ImportSpecHandler {
 	private void lookupAllUris(NodeGroup ng, ArrayList<String> record) throws Exception {
 		// do URI lookups first
 		for (int i=0; i < ng.getNodeCount(); i++) {
-			if (this.uriLookup.containsKey(i)) {
+			if (this.lookupMappings.containsKey(i)) {
 				String uri = this.lookupUri(i, record);
 				ng.getNode(i).setInstanceValue(uri);
 			}
@@ -454,11 +593,12 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * POC ONLY
-	 * Look up a URI.  Maintaining an internal cache.
-	 * @param lookupMappings
-	 * @return
-	 * @throws Exception 
+	 * Look up a URI.  Checking URICache first, and saving results to URICache.
+	 * If URI is not found and MODE_CREATE, then it returns UriCache.NOT_FOUND
+	 *    and caller is responsible for generating not found guids.
+	 * @param ImportMappings
+	 * @return  uri or URICache.NOT_FOUND
+	 * @throws Exception - error, or not found and NO_CREATE, or found multiple
 	 */
 	private String lookupUri(int nodeIndex, ArrayList<String> record) throws Exception {
 		
@@ -466,56 +606,48 @@ public class ImportSpecHandler {
 		ArrayList<String> builtStrings = new ArrayList<String>();
 		
 		// Build the mapping results into builtStrings
-		// and build a cacheKey
-		StringBuffer cacheKey0 = new StringBuffer();
-		cacheKey0.append(((Integer)nodeIndex).toString() + "-");
-		for (ImportMapping mapping : this.uriLookup.get(nodeIndex)) {
+		for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
 			String builtStr = mapping.buildString(record);
 			builtStrings.add(builtStr);
-			cacheKey0.append(builtStr + "-");
 		}
-		String cacheKey = cacheKey0.toString();
 				
 		// return quickly if answer is already cached
-		// In virtuoso, saves remarkably little time.
-		if (this.uriCache.containsKey(cacheKey)) {
-			return this.uriCache.get(cacheKey);
+		String cachedUri = this.uriCache.getUri(nodeIndex, builtStrings);
+		if (cachedUri != null) {
+			return cachedUri;
 			
 		} else {
-			// build a nodegroup and do the lookup
-			NodeGroup tmpNodegroup = null;
-			if (this.lookupNodegroups[nodeIndex] == null) {
-				tmpNodegroup = NodeGroup.getInstanceFromJson(this.lookupNgJson);
-			} else {
-				tmpNodegroup = this.lookupNodegroups[nodeIndex];
-			}
+			// get the nodegroup and do the lookup
+			NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
 			
-			// return the URI
-			tmpNodegroup.getNode(nodeIndex).setIsReturned(true);
-			
-			// set constraint for each mapping in the uriLookup
+			// loop through lookupMappings and add constraints to the lookupNodegroup
 			int i = 0;
-			for (ImportMapping mapping : this.uriLookup.get(nodeIndex)) {
+			for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
 
 				String builtString = builtStrings.get(i++);
+				Node node = lookupNodegroup.getNode(mapping.getLookupNodeIndex());
+				
+				// check for empties
+				if (builtString == null || builtString.isEmpty()) {
+					throw new Exception("URI Lookup field is empty for node " + node.getSparqlID());
+				}
+				
 				if (mapping.isNode()) {
-					Node node = tmpNodegroup.getNode(mapping.getsNodeIndex());
+					if (this.oInfo.classIsEnumeration(node.getFullUriName())) {
+						builtString = this.oInfo.getMatchingEnumeration(node.getFullUriName(), builtString);
+					}
+					
 					ValuesConstraint v = new ValuesConstraint(node, builtString);
 					node.setValueConstraint(v);
+					
 				} else {
-					PropertyItem prop = tmpNodegroup.getNode(mapping.getsNodeIndex()).getPropertyItem(mapping.getPropItemIndex());
+					PropertyItem prop = node.getPropertyItem(mapping.getPropItemIndex());
 					ValuesConstraint v = new ValuesConstraint(prop, builtString);
 					prop.setValueConstraint(v);
 				}
 			}
 			
-			// if lookupNodegroup wasn't cached, it needs to be pruned and then cached
-			if (this.lookupNodegroups[nodeIndex] == null) {
-				tmpNodegroup.pruneAllUnused();
-				this.lookupNodegroups[nodeIndex] = tmpNodegroup;
-			}
-			
-			String query = tmpNodegroup.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, 0, null);
+			String query = lookupNodegroup.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, 0, null);
 			
 			// Run the query
 			// make this thread-safe
@@ -525,21 +657,44 @@ public class ImportSpecHandler {
 			Table tab = res.getTable();
 			
 			// Check and return results
-			if (tab.getNumRows() == 0) {
-				throw new Exception("URI lookup failed.");
-			} else if (tab.getNumRows() > 1) {
+			if (tab.getNumRows() > 1) {
+				// multiple found: error
 				throw new Exception("URI lookup found multiple URI's");
+				
+			} else if (tab.getNumRows() == 0) {
+				// zero found
+				String mode = this.lookupMode.get(nodeIndex);
+				if (this.getLookupMode(nodeIndex).equals(LOOKUP_MODE_NO_CREATE)) {
+					throw new Exception("URI lookup failed.");
+					
+				} else {
+					// set URI to NOT_FOUND
+					this.uriCache.setUriNotFound(nodeIndex, builtStrings);
+					return UriCache.NOT_FOUND;
+				}
+				
 			} else {
-				// cache and return
-				String ret = tab.getCell(0,0);
-				this.uriCache.put(cacheKey, ret);
-				return ret;
+				// 1 found:  cache and return
+				String uri = tab.getCell(0,0);
+				this.uriCache.putUri(nodeIndex, builtStrings, uri);
+				return uri;
 			}
 		}
-		
 	}
 	
-	
+	/**
+	 * Find lookupMode.   If not set, then use the default.
+	 * @param nodeIndex
+	 * @return - always a valid mode string
+	 */
+	private String getLookupMode(int nodeIndex) {
+		String mode = this.lookupMode.get(nodeIndex);
+		if (mode == null) {
+			return ImportSpecHandler.LOOKUP_MODE_NO_CREATE;   // default mode
+		} else {
+			return mode;
+		}
+	}
 	
 	/**
 	 * Return a pointer to every PropertyItem in ng that has a mapping in the import spec
@@ -550,11 +705,11 @@ public class ImportSpecHandler {
 
 		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
 		
-		if (this.mappings != null) {
-			for (int i=0; i < this.mappings.length; i++) {
-				if (this.mappings[i].isProperty()) {
-					ImportMapping m = this.mappings[i];
-					ret.add(ng.getNode(m.getsNodeIndex()).getPropertyItem(m.getPropItemIndex()));
+		if (this.importMappings != null) {
+			for (int i=0; i < this.importMappings.length; i++) {
+				if (this.importMappings[i].isProperty()) {
+					ImportMapping m = this.importMappings[i];
+					ret.add(ng.getNode(m.getImportNodeIndex()).getPropertyItem(m.getPropItemIndex()));
 				}
 			}
 		}
@@ -571,7 +726,7 @@ public class ImportSpecHandler {
 	}
 
 	
-	private NodeGroup setURIsForBlankNodes(NodeGroup ng) throws Exception{
+	private NodeGroup setURIsForNullNodes(NodeGroup ng) throws Exception{
 		for(Node n : ng.getNodeList()){
 			if(n.getInstanceValue() == null ){
 				n.setInstanceValue(this.uriResolver.getInstanceUriWithPrefix(n.getFullUriName(), UUID.randomUUID().toString()) );
@@ -581,6 +736,18 @@ public class ImportSpecHandler {
 		return ng;
 	}
 	
+	/**
+	 * Does LOOKUP_MODE_CREATE appear anywhere in the ImportSpec
+	 * @return
+	 */
+	public boolean containsLookupModeCreate() {
+		for (Integer key : this.lookupMode.keySet()) {
+			if (this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_CREATE)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public static String validateDataType(String input, String expectedSparqlGraphType) throws Exception{
 		return validateDataType(input, expectedSparqlGraphType, false);

@@ -281,9 +281,11 @@ public class NodeGroup {
 		copy.addJsonEncodedNodeGroup(nodegroup.toJson());
 		
 		// connection
-		SparqlConnection conn = new SparqlConnection();
-		conn.fromJson(nodegroup.conn.toJson());
-		copy.setSparqlConnection(conn);
+		if (nodegroup.conn != null) {
+			SparqlConnection conn = new SparqlConnection();
+			conn.fromJson(nodegroup.conn.toJson());
+			copy.setSparqlConnection(conn);
+		}
 		
 		return copy;
 	}
@@ -298,6 +300,7 @@ public class NodeGroup {
 		for (Node n : this.nodes) {
 			n.reset();
 		}
+		this.prefixHash = new HashMap<String, String>();
 	}
 	public int getLimit() {
 		return this.limit;

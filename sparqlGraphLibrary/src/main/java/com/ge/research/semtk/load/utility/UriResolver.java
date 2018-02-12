@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.load.utility;
 
+import java.util.UUID;
+
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 
 public class UriResolver {
@@ -126,6 +128,14 @@ public class UriResolver {
 
 		// return results
 		return retval;
+	}
+	
+	public String generateRandomUri() throws Exception {
+		if (this.userUriPrefix != null && !this.userUriPrefix.isEmpty()) {
+			return this.userUriPrefix + UUID.randomUUID().toString();
+		} else {
+			return DEFAULT_URI_PREFIX + UUID.randomUUID().toString();
+		}
 	}
 
 }

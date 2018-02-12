@@ -152,85 +152,70 @@ public class DataLoader {
 		this.batchHandler.setBatchSize(rBatchSize);
 	}
 	
-	
-	public int importData(Boolean checkFirst) throws Exception{
+	/**
+	 * Performs one or two pass ingestion.
+	 * @param twoPassPrecheck
+	 * @return
+	 * @throws Exception
+	 */
+	public int importData(Boolean twoPassPrecheck) throws Exception{
 
 		// check the nodegroup for consistency before continuing.
 		
 		LocalLogger.logToStdErr("about to validate against model.");
+		
 		this.master.validateAgainstModel(this.oInfo);
 		LocalLogger.logToStdErr("validation completed.");
 		
-		Boolean dataCheckSucceeded = true;
+		Boolean precheckFailed = false;
 		this.totalRecordsProcessed = 0;	// reset the counter.
 		
-		// preflight the data to make sure everything seems okay before a load.
-		int totalPreflightRecordsChecked = 0;
-		if(checkFirst){
-			// try structuring around model but do not load. 	
-			int startingRow = 1;
-			while(true){
-				try{					
-					ArrayList<NodeGroup> ngBatch = this.batchHandler.getNextNodeGroups(1, startingRow, false);
-					startingRow += ngBatch.size();
-					totalPreflightRecordsChecked++;
-				}
-				catch(DataSetExhaustedException e){
-					break;
-				}
-			}
+		// PASS 1
+		if(twoPassPrecheck){
+			// perform "pre-check"
+			String exceptionHeader = "Error during ingest pre-check.  At least one thread threw exception.  e.g.: ";
+			Boolean skipCheck = false;
+			Boolean skipIngest = true;
+			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
+			this.batchHandler.generateNotFoundURIs();
+			
 			// inspect the transformer to determine if the checks succeeded
-			Table errorReport = this.batchHandler.getErrorReport();
-			if(errorReport.getRows().size() != 0){
-				dataCheckSucceeded = false;
+			if(this.batchHandler.getErrorReport().getRows().size() != 0){
+				precheckFailed = true;
 			}
+			
+		} else if (this.batchHandler.containsLookupModeCreate()) {
+			
+			// perform invisible pass.  Only goal is to identify legally missing URI's and set them to NOT_FOUND.
+			String exceptionHeader = "Error during URILookup first pass.  At least one thread threw exception.  e.g.: ";
+			Boolean skipCheck = true;
+			Boolean skipIngest = true;
+			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
+			this.batchHandler.generateNotFoundURIs();
 		}
-				
-		if (dataCheckSucceeded) {
-			int startingRow = 1;
-			this.batchHandler.resetDataSet();
-			// orchestrate the retrieval of new nodegroups and the flushing of
-			// that data
-			System.out.print("Records processed:");
-			long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
-			
-			ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
-			
-			ArrayList<ArrayList<String>> nextRecords = null;
-			while (true) {
-				// get the next set of records from the data set.
 		
-				try{
-					nextRecords = this.batchHandler.getNextRecordsFromDataSet();
-				}catch(Exception e){ break; } // record set exhausted
-				
-				if(nextRecords == null || nextRecords.size() == 0 ){ break; }
-				
-				// spin up a thread to do the work.
-				if(wrkrs.size() < this.MAX_WORKER_THREADS){
-					// spin up the thread and do the work. 
-					IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, checkFirst);
-					startingRow += nextRecords.size();
-					wrkrs.add(worker);
-					worker.start();
-					this.totalRecordsProcessed += nextRecords.size();
-				}
-				
-				// thread pool is full.  Wait for all of them to complete.
-				// and then we can start over.
-				// Over simplistic logic could be improved for performance.
-				if(wrkrs.size() == this.MAX_WORKER_THREADS){
-					for(int i = 0; i < wrkrs.size(); i++){
-						this.joinAndDebriefWorker(wrkrs.get(i));
-					}
-					wrkrs.clear();
-				}
-			}
+		
+		
+		// NOTE: when create-URI-if-lookup-fails exists is implemented,
+		//       another pass will be needed here.   
+		//       Pass 1 would flag URI's that need to be created (possibly duplicated from different threads)
+		//       And right here, those flagged URI's would be given UUIDs.
+		
+		// PASS 2
+		if (! precheckFailed) {
+			String exceptionHeader = null;
+			if (twoPassPrecheck) 
+				exceptionHeader = "Error in ingestion after successful pre-check.\nPartial ingestion may have occurred.  At least one thread threw exception.  e.g.: ";
+			else
+				exceptionHeader = "Error during one-pass ingestion.\nParial ingestion may have occurred.  At least one thread threw exception.  e.g.:";
 			
-			// join all remaining threads
-			for(int i = 0; i < wrkrs.size(); i++){
-				this.joinAndDebriefWorker(wrkrs.get(i));
-			}
+			this.batchHandler.resetDataSet();
+			Boolean skipCheck = twoPassPrecheck;
+			Boolean skipIngest = false;
+			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
+			
+		} else {
+			this.totalRecordsProcessed = 0;
 		}
 		
 		LocalLogger.logToStdOut("..." + this.totalRecordsProcessed + "(DONE)");
@@ -239,23 +224,73 @@ public class DataLoader {
 	}
 	
 	/**
+	 * Make a pass through all the data with multi-threaded IngestionWorkerThreads
+	 * throwing an exception if any happen
+	 * and creating the Error Report if any errors occur.
+	 * @param skipIngest
+	 * @param skipCheck
+	 * @param exceptionHeader
+	 * @return recordsProcessed
+	 * @throws Exception - if any thread throws an exception, one will be thrown as (exceptionHeader + e)
+	 */
+	private int runIngestionThreads(boolean skipIngest, boolean skipCheck, String exceptionHeader) throws Exception {		
+		
+		int recordsProcessed = 0;
+		int startingRow = 1;
+		LocalLogger.logToStdOut("Records processed:");
+		long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
+		
+		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
+		
+		ArrayList<ArrayList<String>> nextRecords = null;
+		while (true) {
+			// get the next set of records from the data set.
+	
+			try{
+				nextRecords = this.batchHandler.getNextRecordsFromDataSet();
+			}catch(Exception e){ break; } // record set exhausted
+			
+			if(nextRecords == null || nextRecords.size() == 0 ){ break; }
+			
+			// spin up a thread to do the work.
+			if(wrkrs.size() < this.MAX_WORKER_THREADS){
+				// spin up the thread and do the work. 
+				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
+				startingRow += nextRecords.size();
+				wrkrs.add(worker);
+				worker.start();
+				recordsProcessed += nextRecords.size();
+			}
+			
+			// thread pool is full.  Wait for all of them to complete.
+			// and then we can start over.
+			// Over simplistic logic could be improved for performance.
+			if(wrkrs.size() == this.MAX_WORKER_THREADS){
+				for(int i = 0; i < wrkrs.size(); i++){
+					this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
+				}
+				wrkrs.clear();
+			}
+		}
+		
+		// join all remaining threads
+		for(int i = 0; i < wrkrs.size(); i++){
+			this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
+		}
+		
+		return recordsProcessed;
+	}
+	
+	/**
 	 * Check completed thread for exceptions and failure information
 	 * @param worker
 	 */
-	private void joinAndDebriefWorker(IngestionWorkerThread worker) throws Exception {
+	private void joinAndThrowIfException(IngestionWorkerThread worker, String exceptionHeader) throws Exception {
 		worker.join();
 		Exception e = worker.getException();
 		if (e != null) {
-			throw new Exception("Warning: partial ingestion may have occurred.  At least one thread threw exception.  e.g.: ", e);
+			throw new Exception(exceptionHeader, e);
 		}
-	}
-	
-	public void insertToTripleStore() throws Exception{
-		// take the values from the current collection of node groups and then send them off to the store. 
-
-		String query =  NodeGroup.generateCombinedSparqlInsert(this.nodeGroupBatch, this.oInfo);
-
-		this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	}
 	
 	/**

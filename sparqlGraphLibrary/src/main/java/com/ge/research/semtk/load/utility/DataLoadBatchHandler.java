@@ -197,4 +197,20 @@ public class DataLoadBatchHandler {
 		return this.batchSize;
 	}
 	
+	/**
+	 * After a possibly threaded pass where lookupURI labeled some URI's as NOT_FOUND
+	 * Now go through and generate GUIDs for them.
+	 * @throws Exception
+	 */
+	public void generateNotFoundURIs() throws Exception {
+		this.importSpec.generateNotFoundURIs();
+	}
+	
+	/**
+	 * Does LOOKUP_MODE_CREATE appear anywhere in the ImportSpec
+	 * @return
+	 */
+	public boolean containsLookupModeCreate() {
+		return this.importSpec.containsLookupModeCreate();
+	}
 }
