@@ -222,14 +222,14 @@ define([// properly require.config'ed
 					
 					// find node row and fill it in
 					var n = this.getMapping(jObj.nodes[i].sparqlID, null);
-					n.fromJsonNode(jObj.nodes[i], idHash, this);
+					n.fromJsonNode(jObj.nodes[i], idHash, this.nodegroup);
 					
 					for (var j=0; j < jObj.nodes[i].props.length; j++) {
 						if (! jObj.nodes[i].props[j].hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  Prop has no URIRelation in node: " + jObj.nodes[i].sparqlID );}
 						
 						// find property row and fill it in
 						var p = this.getMapping(jObj.nodes[i].sparqlID, jObj.nodes[i].props[j].URIRelation);
-						p.fromJsonProp(jObj.nodes[i].props[j], n.getNode(), idHash);
+						p.fromJsonProp(jObj.nodes[i].props[j], n.getNode(), idHash, this.nodegroup);
 					}
 				}
 			},
@@ -337,6 +337,8 @@ define([// properly require.config'ed
 					var key = map.genUniqueKey();
 					if (key in oldRowHash) { 
 						map.itemList = oldRowHash[key].itemList.slice(); 
+                        map.setUriLookupMode(oldRowHash[key].getUriLookupMode());
+                        map.setUriLookupNodes(oldRowHash[key].getUriLookupNodes());
 						oldRowHash[key] = null;
 					}
 					
@@ -351,6 +353,7 @@ define([// properly require.config'ed
 							var keyP = map.genUniqueKey();
 							if (keyP in oldRowHash) { 
 								map.itemList = oldRowHash[keyP].itemList.slice(); 
+                                map.setUriLookupNodes(oldRowHash[keyP].getUriLookupNodes());
 								oldRowHash[keyP] = null;
 							}
 							

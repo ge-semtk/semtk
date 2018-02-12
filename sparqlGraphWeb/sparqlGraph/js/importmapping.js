@@ -31,14 +31,25 @@ define([	// properly require.config'ed
 			 * @alias ImportMapping
 			 * @class
 			 */
-			var ImportMapping = function (node, propItem) {
+			var ImportMapping = function (node, propItem, optUriLookupNodes, optUriLookupMode) {
 				// params are purposely not documented for jsdoc.  Not designed for the API.
 				// node: SemanticNode
 				// propItem: PropertyItem
 				this.node = node;
-				this.propItem = propItem;
-				this.itemList = [];
+				this.propItem = propItem;  // could be null if this is a node
+                this.uriLookupNodes = typeof optUriLookupNodes == "undefined" ? []   : optUriLookupNodes;
+				this.uriLookupMode =  typeof optUriLookupMode == "undefined"  ? null : optUriLookupMode;
+                this.itemList = [];
 			};
+    
+            // Every Json key needs to have a constant like in the java
+            // and I believe they should all be moved to sparqlGraphJson
+            ImportMapping.JKEY_IS_NODE_LOOKUP_MODE = "URILookupMode";
+            ImportMapping.JKEY_IS_URI_LOOKUP =       "URILookup";
+    
+            ImportMapping.LOOKUP_MODE_NO_CREATE = "noCreate";
+            ImportMapping.LOOKUP_MODE_CREATE = "createIfMissing";
+    
 			
 			ImportMapping.staticGenUniqueKey = function(sparqlId, propUri) {
 				return sparqlId + "." + (propUri != null ? propUri : "");
@@ -86,19 +97,34 @@ define([	// properly require.config'ed
 					this.itemList.splice(i, 1);
 				},
 				
-				fromJsonNode : function (jNode, idHash, iSpec) {
+				fromJsonNode : function (jNode, idHash, ng) {
 					if (! jNode.hasOwnProperty("sparqlID")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonNode().  No sparqlID field.");}
 					
-					var node = iSpec.nodegroup.getNodeBySparqlID(jNode.sparqlID);
+					var node = ng.getNodeBySparqlID(jNode.sparqlID);
 					if (! node) {kdlLogAndThrow("ImportMapping.fromJsonNode() can't find node in nodegroup: " + jNode.sparqlID); }
 					this.node = node;
 					this.propItem = null;
 					
-					if (! jNode.hasOwnProperty("mapping")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonNode().  No mapping field.");}
+					if (! jNode.hasOwnProperty("mapping")) { 
+                        kdlLogAndThrow("Internal error in ImportRow.fromJsonNode().  No mapping field.");
+                    }
 					this.itemsFromJson(jNode.mapping, idHash);
+                    
+                    if (jNode.hasOwnProperty(ImportMapping.JKEY_IS_NODE_LOOKUP_MODE)) {
+                        if (jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE] == ImportMapping.LOOKUP_MODE_CREATE ||
+                            jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE] == ImportMapping.LOOKUP_MODE_NO_CREATE) {
+                            this.uriLookupMode = jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE];
+                        } else {
+                            kdlLogAndThrow("Invalid URILookupMode in import spec: " + jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE]);
+                        }
+                    } else {
+                        this.uriLookupMode = null;
+                    }
+                    
+                    this.fromJsonUriLookup(jNode, ng);
 				},
 				
-				fromJsonProp : function (jProp, node, idHash) {
+				fromJsonProp : function (jProp, node, idHash, ng) {
 					this.node = node;   
 					
 					if (! jProp.hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonProp().  No URIRelation field.");}
@@ -107,8 +133,41 @@ define([	// properly require.config'ed
 
 					if (! jProp.hasOwnProperty("mapping")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonProp().  No mapping field.");}
 					this.itemsFromJson(jProp.mapping, idHash);
+                    
+                    this.fromJsonUriLookup(jProp, ng);
 				},
+                
+                fromJsonUriLookup : function (jObj, ng) {
+                    if (jObj.hasOwnProperty(ImportMapping.JKEY_IS_URI_LOOKUP)) {
+                        var sparqlIDs = jObj[ImportMapping.JKEY_IS_URI_LOOKUP];
+                        for (var i=0; i < sparqlIDs.length; i++) {
+                            var snode = ng.getNodeBySparqlID(sparqlIDs[i]);
+                            if (snode == null) {
+                                kdlLogAndThrow("Invalid URILookup sparqlID in import spec: " + sparqlIDs[i]);
+                            } else {
+                                this.uriLookupNodes.push(snode);
+                            }
+                        }
+                    }
+                },
 				
+                getUriLookupNodes : function() {
+                    return this.uriLookupNodes;
+                },
+                
+                setUriLookupNodes : function(snodeList) {
+                    this.uriLookupNodes = snodeList;
+                },
+                
+                getUriLookupMode : function() {
+                    return this.uriLookupMode;
+                },
+                
+                setUriLookupMode : function(modeStr) {
+                    this.uriLookupMode = modeStr;
+                },
+                
+                
 				getNode : function () {
 					return this.node;
 				},
@@ -148,6 +207,18 @@ define([	// properly require.config'ed
 						// prop row
 						ret.URIRelation = this.propItem.getUriRelation();
 					}
+                    
+                    // URILookupMode
+                    if (this.uriLookupMode != null) {
+                        ret.URILookupMode = this.uriLookupMode;
+                    }
+                    
+                    if (this.uriLookupNodes.length != 0) {
+                        ret.URILookup = [];
+                        for (var i=0; i < this.uriLookupNodes.length; i++) {
+                            ret.URILookup.push(this.uriLookupNodes[i].getSparqlID());
+                        }
+                    }
 					
 					//mapping
 					ret.mapping = [];
