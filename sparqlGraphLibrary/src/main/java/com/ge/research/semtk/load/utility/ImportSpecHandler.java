@@ -257,7 +257,7 @@ public class ImportSpecHandler {
 				switch (mode) {
 				case ImportSpecHandler.LOOKUP_MODE_CREATE:
 				case ImportSpecHandler.LOOKUP_MODE_NO_CREATE:
-					this.lookupMode.put(i, mode);
+					this.lookupMode.put(nodeIndex, mode);
 					break;
 				default:
 					throw new Exception("Unknown " + SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE + ": " + mode);

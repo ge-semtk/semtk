@@ -732,6 +732,31 @@ public class DataLoaderTest_IT {
 		assertTrue(dl.getTotalRecordsProcessed() == 0);
 	}
 	
+	@Test
+	public void test_TEMPORARY() throws Exception {
+		String csvPath = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\GRC_Powder_Characterization_SummarySheet-vkg.csv";
+		String jsonPath = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\sparql_graph.json";
+		String owlPath1 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\additiveMaterials.owl";
+		String owlPath2 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\additiveMeasuresAndUtils.owl";
+
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
+		CSVDataset csvDataset = new CSVDataset(csvPath, false);
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl(owlPath1);
+		TestGraph.uploadOwl(owlPath2);
+
+		
+        // load data 1
+		DataLoader dl = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+	}
+	
 	
 	
 	
