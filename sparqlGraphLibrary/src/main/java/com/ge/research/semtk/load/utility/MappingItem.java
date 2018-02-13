@@ -39,6 +39,22 @@ public class MappingItem {
 	String textVal = null;
 	Transform transformList[] = null;
 	
+	// copy deep enough for import spec.   Transforms don't need deep copying
+	public static MappingItem importSpecCopy(MappingItem other) {
+		MappingItem ret = new MappingItem();
+		ret.columnIndex = other.columnIndex;
+		ret.textVal = other.textVal;
+		if (other.transformList == null) {
+			ret.transformList = null;
+		} else {
+			ret.transformList = new Transform[other.transformList.length];
+			for (int i=0; i < other.transformList.length; i++) {
+				ret.transformList[i] = other.transformList[i];
+			}
+		}
+		
+		return ret;
+	}
 	
 	public int getColumnIndex() {
 		return columnIndex;

@@ -26,6 +26,19 @@ public class ImportMapping {
 	private boolean isEnum = false;     // does sNodeIndex point to an enum
 	private int lookupNodeIndex = -1;
 
+	public static ImportMapping importSpecCopy(ImportMapping other) {
+		ImportMapping ret = new ImportMapping();
+		ret.importNodeIndex = other.importNodeIndex;
+		ret.propItemIndex = other.propItemIndex;
+		for (MappingItem item : other.itemList) {
+			ret.itemList.add(MappingItem.importSpecCopy(item)); 
+		}
+		ret.isEnum = other.isEnum;
+		ret.lookupNodeIndex = other.lookupNodeIndex;
+		
+		return ret;
+	}
+	
 	public int getLookupNodeIndex() {
 		return lookupNodeIndex;
 	}

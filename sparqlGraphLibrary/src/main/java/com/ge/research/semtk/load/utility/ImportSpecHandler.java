@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -135,10 +136,15 @@ public class ImportSpecHandler {
 			counter += 1;
 		}
 		
+		HashSet<MappingItem> done = new HashSet<MappingItem>();
+		
 		// change every mapping item's column index
 		for (int i=0; i < this.importMappings.length; i++) {
 			for (MappingItem mItem : this.importMappings[i].getItemList()) {
-				mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
+				if (!done.contains(mItem)) {
+					mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
+					done.add(mItem);
+				}
 			}
 		}
 		
@@ -146,7 +152,10 @@ public class ImportSpecHandler {
 		for (Integer i : this.lookupMappings.keySet()) {
 			for (ImportMapping map : this.lookupMappings.get(i)) {
 				for (MappingItem mItem : map.getItemList()) {
-					mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
+					if (!done.contains(mItem)) {
+						mItem.updateColumnIndex(translateHash, oldNameToIndexHash);
+						done.add(mItem);
+					}
 				}
 			}
 		}
@@ -368,7 +377,8 @@ public class ImportSpecHandler {
 				// find sparqlID in importNg
 				String nodeID = importNg.getNode(map.getImportNodeIndex()).getSparqlID();
 				// find same node in the lookupNg
-				map.setLookupNodeIndex(lookupNg.getNodeIndexBySparqlID(nodeID));
+				int lookupIndex = lookupNg.getNodeIndexBySparqlID(nodeID);
+				map.setLookupNodeIndex(lookupIndex);
 			}
 			
 			// save the lookupNodegroupJson
@@ -420,7 +430,8 @@ public class ImportSpecHandler {
 				if (!this.lookupMappings.containsKey(lookupNodeIndex)) {
 					this.lookupMappings.put(lookupNodeIndex, new ArrayList<ImportMapping>());
 				}
-				this.lookupMappings.get(lookupNodeIndex).add(mapping);
+				// add copies of the mapping to each lookupMapping
+				this.lookupMappings.get(lookupNodeIndex).add(ImportMapping.importSpecCopy(mapping));
 			}
 		} 
 	}
@@ -578,16 +589,16 @@ public class ImportSpecHandler {
 	
 	/**
 	 * lookup each URI for a nodegroup
-	 * @param ng
+	 * @param importNg
 	 * @param record
 	 * @throws Exception
 	 */
-	private void lookupAllUris(NodeGroup ng, ArrayList<String> record) throws Exception {
+	private void lookupAllUris(NodeGroup importNg, ArrayList<String> record) throws Exception {
 		// do URI lookups first
-		for (int i=0; i < ng.getNodeCount(); i++) {
+		for (int i=0; i < importNg.getNodeCount(); i++) {
 			if (this.lookupMappings.containsKey(i)) {
 				String uri = this.lookupUri(i, record);
-				ng.getNode(i).setInstanceValue(uri);
+				importNg.getNode(i).setInstanceValue(uri);
 			}
 		}	
 	}

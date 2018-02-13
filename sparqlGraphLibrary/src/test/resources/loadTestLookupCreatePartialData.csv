@@ -1,0 +1,3 @@
+cell1Id,date,notes
+A1,2017-03-23T10:00:00,add assembly date to battery three
+B1,2017-03-23T10:00:01,create new battery with cell1 B1 and assembly date

@@ -640,6 +640,42 @@ public class DataLoaderTest_IT {
 
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
 	}
+	
+	@Test
+	public void testLookupCreatePartial() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import durabattery first4.  
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// the real test  
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreatePartial.json");
+		ds = new CSVDataset("src/test/resources/loadTestLookupCreatePartialData.csv", false);
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		// PEC HERE:  fix the nodegroup with sort and URI returns and check results
+		//            it would be awfully nice to find a way to confirm Cell with cellid B1 wasn't created twice
+		//            perhaps another nodegroup select would be easiest
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreatePartialResults.csv");
+		
+	}
 	@Test
 	public void testCaseTransform() throws Exception {
 		// Paul
@@ -732,31 +768,48 @@ public class DataLoaderTest_IT {
 		assertTrue(dl.getTotalRecordsProcessed() == 0);
 	}
 	
+	/**
 	@Test
 	public void test_TEMPORARY() throws Exception {
 		String csvPath = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\GRC_Powder_Characterization_SummarySheet-vkg.csv";
-		String jsonPath = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\sparql_graph.json";
+		String jsonPath1 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\loadxMatPowderCharacterization.json";
+		String jsonPath2 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\loadxMatPowderCharacterization-set2.json";
 		String owlPath1 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\additiveMaterials.owl";
 		String owlPath2 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\additiveMeasuresAndUtils.owl";
 
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
+		//
+		SparqlGraphJson sgJson1 = TestGraph.getSparqlGraphJsonFromFile(jsonPath1);
 		CSVDataset csvDataset = new CSVDataset(csvPath, false);
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl(owlPath1);
 		TestGraph.uploadOwl(owlPath2);
-
 		
         // load data 1
-		DataLoader dl = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
-		dl.importData(true);
+		DataLoader dl1 = new DataLoader(sgJson1, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl1.importData(true);
 		
-		Table err = dl.getLoadingErrorReport();
+		Table err = dl1.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
 			LocalLogger.logToStdErr(err.toCSVString());
 			fail();
 		}
+		
+		//
+		SparqlGraphJson sgJson2 = TestGraph.getSparqlGraphJsonFromFile(jsonPath2);
+		
+        // load data 2
+		csvDataset.reset();
+		DataLoader dl2 = new DataLoader(sgJson2, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl2.importData(true);
+		
+		err = dl2.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
 	}
-	
+	**/
 	
 	
 	
