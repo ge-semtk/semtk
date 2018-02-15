@@ -22,12 +22,9 @@ import java.net.URI;
 import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -47,7 +44,6 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /*
@@ -104,6 +100,8 @@ public class ImportSpecHandler {
 		// LocalLogger.logToStdErr("User uri prefix set to: " +  userUriPrefixValue);
 	
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
+		
+		this.errorCheckImportSpec();
 	}
 	
 	public ImportSpecHandler(JSONObject importSpecJson, ArrayList<String> headers, JSONObject ngJson, OntologyInfo oInfo) throws Exception{
@@ -246,8 +244,8 @@ public class ImportSpecHandler {
 	 * @throws Exception
 	 */
 	private void nodesFromJson(JSONArray nodesJsonArr) throws Exception {
-		NodeGroup tmpNodegroup = NodeGroup.getInstanceFromJson(this.nodegroupJson);
-		tmpNodegroup.clearOrderBy();
+		NodeGroup tmpImportNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
+		tmpImportNg.clearOrderBy();
 		ArrayList<ImportMapping> mappingsList = new ArrayList<ImportMapping>();
 		// clear cols used
 		colsUsed = new HashMap<String, Integer>();  
@@ -259,7 +257,10 @@ public class ImportSpecHandler {
 			// ---- URI ----
 			JSONObject nodeJson = (JSONObject) nodesJsonArr.get(i);
 			String nodeSparqlID = nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID).toString();
-			int nodeIndex = tmpNodegroup.getNodeIndexBySparqlID(nodeSparqlID);
+			int nodeIndex = tmpImportNg.getNodeIndexBySparqlID(nodeSparqlID);
+			if (nodeIndex == -1) {
+				throw new Exception("Error in ImportSpec JSON: can't find node in nodegroup: " + nodeSparqlID);
+			}
 			// lookup mode
 			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE)) {
 				String mode = (String)nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE);
@@ -294,13 +295,13 @@ public class ImportSpecHandler {
 			}
 			// handle URILookup, even if mapping was missing or blank
 			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-				this.setupUriLookup(nodeJson, mapping, tmpNodegroup);
+				this.setupUriLookup(nodeJson, mapping, tmpImportNg);
 			}
 			
 			// ---- Properties ----
 			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_PROPS)) {
 				JSONArray propsJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS);
-				Node snode = tmpNodegroup.getNode(nodeIndex);
+				Node snode = tmpImportNg.getNode(nodeIndex);
 				
 				for (int p=0; p < propsJsonArr.size(); p++) {
 					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
@@ -315,7 +316,11 @@ public class ImportSpecHandler {
 							
 							// populate the mapping
 							mapping.setImportNodeIndex(nodeIndex);
-							int propIndex = snode.getPropertyIndexByURIRelation((String)propJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL));
+							String uriRel = (String)propJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL);
+							int propIndex = snode.getPropertyIndexByURIRelation(uriRel);
+							if (propIndex == -1) {
+								throw new Exception("Error in ImportSpec JSON: can't find property in nodegroup: " + nodeSparqlID + "->" + uriRel);
+							}
 							mapping.setPropItemIndex(propIndex);
 							setupMappingItemList(mappingJsonArr, mapping);
 							
@@ -328,7 +333,7 @@ public class ImportSpecHandler {
 					
 					// handle URILookup, even if mapping was missing or blank
 					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-						this.setupUriLookup(propJson, mapping, tmpNodegroup);
+						this.setupUriLookup(propJson, mapping, tmpImportNg);
 					}
 				}
 			}
@@ -338,6 +343,17 @@ public class ImportSpecHandler {
 		this.importMappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
 		this.colsUsedKeys = this.colsUsed.keySet().toArray(new String[this.colsUsed.size()]);
 		this.setupLookupNodegroups();
+	}
+	
+	private void errorCheckImportSpec() throws Exception {
+		for (int i=0; i < this.importMappings.length; i++) {
+			ImportMapping importMap = this.importMappings[i];
+			if (importMap.isNode() && this.lookupMappings.containsKey(importMap.getImportNodeIndex())) {
+				NodeGroup tmpImportNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
+				Node node = tmpImportNg.getNode(importMap.getImportNodeIndex());
+				throw new Exception("Node is slated for lookup and also has mapping for URI: " + node.getSparqlID());
+			}
+		}
 	}
 	
 	/**
@@ -568,13 +584,8 @@ public class ImportSpecHandler {
 			
 			// ---- node ----
 			
-			// if node has uri lookup
-			if (this.lookupMappings.containsKey(mapping.getImportNodeIndex())) {
-				LocalLogger.logToStdErr("Node has uriLookup and mapping: " + node.getSparqlID());
-			}
-			
 			// if build string is null
-			else if(builtString.length() < 1){
+			if(builtString.length() < 1){
 				node.setInstanceValue(null);
 			}
 			
@@ -674,7 +685,6 @@ public class ImportSpecHandler {
 				
 			} else if (tab.getNumRows() == 0) {
 				// zero found
-				String mode = this.lookupMode.get(nodeIndex);
 				if (this.getLookupMode(nodeIndex).equals(LOOKUP_MODE_NO_CREATE)) {
 					throw new Exception("URI lookup failed.");
 					

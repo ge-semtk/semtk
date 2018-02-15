@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -38,12 +37,10 @@ import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-//import com.ge.research.semtk.servlet.utility.Utility;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
 
 public class DataLoaderTest_IT {
 
@@ -669,12 +666,23 @@ public class DataLoaderTest_IT {
 			LocalLogger.logToStdErr(err.toCSVString());
 			fail();
 		}
-
-		// PEC HERE:  fix the nodegroup with sort and URI returns and check results
-		//            it would be awfully nice to find a way to confirm Cell with cellid B1 wasn't created twice
-		//            perhaps another nodegroup select would be easiest
+		
+		// check that results match expected in csv
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreatePartialResults.csv");
 		
+		// Check that no new cells were created
+		String query = "prefix generateSparqlInsert:<belmont/generateSparqlInsert#>\r\n" + 
+				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>\r\n" + 
+				"prefix durabattery:<http://kdl.ge.com/durabattery#>\r\n" + 
+				"SELECT (COUNT(*) as ?count) { \r\n" + 
+				"select distinct ?Cell ?cellId where {\r\n" + 
+				"	?Cell a durabattery:Cell .\r\n" + 
+				"	?Cell durabattery:cellId ?cellId .\r\n" + 
+				"}\r\n" + 
+				"\r\n" + 
+				"}";
+		Table tab = TestGraph.runQuery(query);
+		assertEquals(7, tab.getCellAsInt(0, 0));
 	}
 	@Test
 	public void testCaseTransform() throws Exception {
@@ -768,48 +776,81 @@ public class DataLoaderTest_IT {
 		assertTrue(dl.getTotalRecordsProcessed() == 0);
 	}
 	
-	/**
+	
 	@Test
 	public void test_TEMPORARY() throws Exception {
-		String csvPath = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\GRC_Powder_Characterization_SummarySheet-vkg.csv";
-		String jsonPath1 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\loadxMatPowderCharacterization.json";
-		String jsonPath2 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\loadxMatPowderCharacterization-set2.json";
-		String owlPath1 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\additiveMaterials.owl";
-		String owlPath2 = "C:\\Users\\200001934\\Desktop\\Temp\\LookupTest\\additiveMeasuresAndUtils.owl";
-
-		//
-		SparqlGraphJson sgJson1 = TestGraph.getSparqlGraphJsonFromFile(jsonPath1);
-		CSVDataset csvDataset = new CSVDataset(csvPath, false);
-		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlPath1);
-		TestGraph.uploadOwl(owlPath2);
+		// This test will load up to two owls
+		// then a csv dataset
+		// and ingest up to three templates against the csv
+		String csvPath = "";
+		String jsonPath1 = "";
+		String jsonPath2 = "";
+		String jsonPath3 = "";
+		String owlPath1 = "";
+		String owlPath2 = "";
 		
-        // load data 1
-		DataLoader dl1 = new DataLoader(sgJson1, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
-		dl1.importData(true);
-		
-		Table err = dl1.getLoadingErrorReport();
-		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+		if (csvPath.isEmpty() || owlPath1.isEmpty()) {
+			return;
 		}
 		
-		//
-		SparqlGraphJson sgJson2 = TestGraph.getSparqlGraphJsonFromFile(jsonPath2);
+		// load csv
+		CSVDataset csvDataset = new CSVDataset(csvPath, false);
+		
+		// owl1
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl(owlPath1);
+		
+		// owl2
+		if (!owlPath2.isEmpty()) {
+			TestGraph.uploadOwl(owlPath2);
+		}
+		
+		SparqlGraphJson sgJson = null;
+		
+        // load data 1
+		if (!jsonPath1.isEmpty()) {
+			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath1);
+			DataLoader dl1 = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+			dl1.importData(true);
+			
+			Table err = dl1.getLoadingErrorReport();
+			if (err.getNumRows() > 0) {
+				LocalLogger.logToStdErr(err.toCSVString());
+				fail();
+			}
+		}
 		
         // load data 2
-		csvDataset.reset();
-		DataLoader dl2 = new DataLoader(sgJson2, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
-		dl2.importData(true);
-		
-		err = dl2.getLoadingErrorReport();
-		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+		if (!jsonPath2.isEmpty()) {
+	
+			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath2);
+			csvDataset.reset();
+			DataLoader dl2 = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+			dl2.importData(true);
+			
+			Table err = dl2.getLoadingErrorReport();
+			if (err.getNumRows() > 0) {
+				LocalLogger.logToStdErr(err.toCSVString());
+				fail();
+			}
+		}
+			
+		// load data 3
+		if (!jsonPath3.isEmpty()) {
+
+			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath3);
+			csvDataset.reset();
+			DataLoader dl3 = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+			dl3.importData(true);
+			
+			Table err = dl3.getLoadingErrorReport();
+			if (err.getNumRows() > 0) {
+				LocalLogger.logToStdErr(err.toCSVString());
+				fail();
+			}
 		}
 		
 	}
-	**/
 	
 	
 	

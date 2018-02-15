@@ -174,7 +174,7 @@
 						"fullURIName": "",
 						"SparqlID": "?batteryId",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -261,7 +261,11 @@
 				"deletionMode": "NO_DELETE"
 			}
 		],
-		"orderBy": []
+		"orderBy": [
+			{
+				"sparqlID": "?assemblyDate"
+			}
+		]
 	},
 	"importSpec": {
 		"version": "1",
@@ -286,7 +290,7 @@
 			{
 				"sparqlID": "?DuraBattery",
 				"type": "http://kdl.ge.com/durabattery#DuraBattery",
-				"URILookupMode":"createIfMissing",
+				"URILookupMode": "createIfMissing",
 				"mapping": [],
 				"props": [
 					{
@@ -302,12 +306,15 @@
 			{
 				"sparqlID": "?Cell_1",
 				"type": "http://kdl.ge.com/durabattery#Cell",
-				"URILookupMode":"createIfMissing",
+				"URILookupMode": "createIfMissing",
 				"mapping": [],
 				"props": [
 					{
 						"URIRelation": "http://kdl.ge.com/durabattery#cellId",
-						"URILookup": ["?Cell_1", "?DuraBattery"],
+						"URILookup": [
+							"?Cell_1",
+							"?DuraBattery"
+						],
 						"mapping": [
 							{
 								"colId": "col_0"
