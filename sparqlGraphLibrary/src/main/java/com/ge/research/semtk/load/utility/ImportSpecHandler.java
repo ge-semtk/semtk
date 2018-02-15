@@ -22,12 +22,9 @@ import java.net.URI;
 import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -47,7 +44,6 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /*
@@ -682,8 +678,6 @@ public class ImportSpecHandler {
 			res.throwExceptionIfUnsuccessful();
 			Table tab = res.getTable();
 			
-			System.out.println(query);
-			System.out.println(tab.getNumRows());
 			// Check and return results
 			if (tab.getNumRows() > 1) {
 				// multiple found: error
@@ -691,7 +685,6 @@ public class ImportSpecHandler {
 				
 			} else if (tab.getNumRows() == 0) {
 				// zero found
-				String mode = this.lookupMode.get(nodeIndex);
 				if (this.getLookupMode(nodeIndex).equals(LOOKUP_MODE_NO_CREATE)) {
 					throw new Exception("URI lookup failed.");
 					

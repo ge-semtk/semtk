@@ -1,0 +1,6 @@
+assemblyDate,batteryDesc,batteryId,cellId1,cellId2,cellId3,cellId4
+"",only colors,onlycolor,,,,
+2017-03-23T10:00:00,three cell,three,A1,B1,C1,
+2017-03-23T10:00:01,,,B1,,,
+2017-03-23T10:23:00,normal battery,full,A,B,C,D
+2017-03-23T10:23:01,no cells,nocells,,,,
