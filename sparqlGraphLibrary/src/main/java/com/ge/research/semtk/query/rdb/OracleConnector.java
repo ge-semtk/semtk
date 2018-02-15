@@ -26,9 +26,9 @@ import com.ge.research.semtk.query.rdb.JdbcConnector;
  */
 public class OracleConnector extends JdbcConnector {
 
-	private static String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";	
-	private static String ORACLE_URL_PREFIX = "jdbc:oracle:thin:@//";			
-	private static String ORACLE_TEST_QUERY = "select table_name from user_tables";
+	private static final String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";	
+	private static final String ORACLE_URL_PREFIX = "jdbc:oracle:thin:@//";			
+	private static final String ORACLE_TEST_QUERY = "select table_name from user_tables";
 	
 	/**
 	 * Instantiate the connector.

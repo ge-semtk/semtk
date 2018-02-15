@@ -26,9 +26,9 @@ import com.ge.research.semtk.query.rdb.JdbcConnector;
  */
 public class PostgresConnector extends JdbcConnector {
 
-	private static String POSTGRES_DRIVER = "org.postgresql.Driver";	// assume invariant for now
-	private static String POSTGRES_URL_PREFIX = "jdbc:postgresql://";			// assume invariant for now
-	private static String POSTGRES_TEST_QUERY = "SELECT * from clock_timestamp();";
+	private static final String POSTGRES_DRIVER = "org.postgresql.Driver";			
+	private static final String POSTGRES_URL_PREFIX = "jdbc:postgresql://";			
+	private static final String POSTGRES_TEST_QUERY = "SELECT * from clock_timestamp();";
 	
 	/**
 	 * Instantiate the connector.
