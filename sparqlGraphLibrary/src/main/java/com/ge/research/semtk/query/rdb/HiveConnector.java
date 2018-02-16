@@ -26,9 +26,9 @@ import com.ge.research.semtk.query.rdb.JdbcConnector;
  */
 public class HiveConnector extends JdbcConnector {
 
-	private static String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";	
-	private static String HIVE_URL_PREFIX = "jdbc:hive2://";			
-	private static String HIVE_TEST_QUERY = "show tables";
+	private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";	
+	private static final String HIVE_URL_PREFIX = "jdbc:hive2://";			
+	private static final String HIVE_TEST_QUERY = "show tables";
 	
 	/**
 	 * Instantiate the connector.
