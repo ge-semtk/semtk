@@ -26,10 +26,6 @@ public class LocalLogger {
 		System.out.println(getTimestampPrefix() + s);
 	}
 	
-	public static void logToStdOutNoEOL(String s) {
-		System.out.print(s);
-	}
-	
 	/**
 	 * Log to standard error.
 	 */

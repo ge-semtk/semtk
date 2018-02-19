@@ -46,7 +46,7 @@ public class DataLoaderTest_IT {
 
 	private static final String DELETE_URI_FMT = "delete { ?x ?y ?z.} where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";
 	private static final String SELECT_URI_TRIPLES_FMT = "select distinct ?x ?y ?z where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";	
-	private static final int DEFAULT_BATCH_SIZE = 32;
+	
 	@Test
 	public void testOriginal() throws Exception {
 		Dataset ds = new CSVDataset("src/test/resources/testTransforms.csv", false);
@@ -57,7 +57,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// test
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -91,7 +91,7 @@ public class DataLoaderTest_IT {
 		deleteUri(uri);
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -126,7 +126,7 @@ public class DataLoaderTest_IT {
 		//String prefix = sgJson.getImportSpec().getUriPrefix();
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 
 		int records = dl.importData(true);
 		assertTrue(records == 0);
@@ -153,7 +153,7 @@ public class DataLoaderTest_IT {
 		deleteUri(uri);
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -199,7 +199,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -258,7 +258,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 5, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
@@ -287,7 +287,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, 8, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
@@ -314,7 +314,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
@@ -336,7 +336,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
-		DataLoader dl0 = new DataLoader(sgJson0, DEFAULT_BATCH_SIZE, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl0 = new DataLoader(sgJson0, 2, ds0, TestGraph.getUsername(), TestGraph.getPassword());
 		dl0.importData(true);
 		
 		Table err0 = dl0.getLoadingErrorReport();
@@ -351,7 +351,7 @@ public class DataLoaderTest_IT {
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescData.csv", false);
 		
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 
 
@@ -375,7 +375,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryShortData.csv", false);
 
-		DataLoader dl0 = new DataLoader(sgJson0, DEFAULT_BATCH_SIZE, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl0 = new DataLoader(sgJson0, 2, ds0, TestGraph.getUsername(), TestGraph.getPassword());
 		dl0.importData(true);
 		
 		Table err0 = dl0.getLoadingErrorReport();
@@ -390,7 +390,7 @@ public class DataLoaderTest_IT {
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescShortData.csv", false);
 		
 		// import the actual test: lookup URI and add description
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 
 
@@ -415,7 +415,7 @@ public class DataLoaderTest_IT {
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescShortData.csv", false);
 		
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 
 
@@ -437,7 +437,7 @@ public class DataLoaderTest_IT {
 
 		// import durabattery twice.  
 		// Puts two copies of each cell (GUID URI)  on each battery (mapped URI)
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -446,7 +446,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// second load
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -457,7 +457,7 @@ public class DataLoaderTest_IT {
 		// the real test
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupCellDuraBattery.json");
 		// real test's load
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		
@@ -482,7 +482,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -493,7 +493,7 @@ public class DataLoaderTest_IT {
 		// the real test
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookXNodes.json");
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookXNodesData.csv", false);
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -515,7 +515,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -526,7 +526,7 @@ public class DataLoaderTest_IT {
 		// the real test
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryConnectNodes.json");
 		ds = new CSVDataset("src/test/resources/lookupBatteryConnectNodesData.csv", false);
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -548,7 +548,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -559,7 +559,7 @@ public class DataLoaderTest_IT {
 		// the real test 
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupByEnum.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupByEnumData.csv", false);
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -581,7 +581,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -592,7 +592,7 @@ public class DataLoaderTest_IT {
 		// the real test  
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupByEnum.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupByEnumBlanksData.csv", false);
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() != 1) {
@@ -616,7 +616,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -627,7 +627,7 @@ public class DataLoaderTest_IT {
 		// the real test  
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() != 0) {
@@ -648,7 +648,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -659,7 +659,7 @@ public class DataLoaderTest_IT {
 		// the real test  
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreatePartial.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreatePartialData.csv", false);
-		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() != 0) {
@@ -709,7 +709,7 @@ public class DataLoaderTest_IT {
 
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 2, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -750,7 +750,7 @@ public class DataLoaderTest_IT {
 	public void testGraphLoadBattery() throws Exception {
 		SparqlGraphJson sgJson = TestGraph.initGraphWithData("sampleBattery");
 		CSVDataset csvDataset = new CSVDataset("src/test/resources/sampleBattery.csv", false);
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 5, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		assertEquals(dl.getTotalRecordsProcessed(), 4);
 	}
@@ -767,7 +767,7 @@ public class DataLoaderTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl(owlPath);
 
-		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, 5, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		String report = dl.getLoadingErrorReportBrief();
 
@@ -810,7 +810,7 @@ public class DataLoaderTest_IT {
         // load data 1
 		if (!jsonPath1.isEmpty()) {
 			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath1);
-			DataLoader dl1 = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+			DataLoader dl1 = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 			dl1.importData(true);
 			
 			Table err = dl1.getLoadingErrorReport();
@@ -825,7 +825,7 @@ public class DataLoaderTest_IT {
 	
 			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath2);
 			csvDataset.reset();
-			DataLoader dl2 = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+			DataLoader dl2 = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 			dl2.importData(true);
 			
 			Table err = dl2.getLoadingErrorReport();
@@ -840,7 +840,7 @@ public class DataLoaderTest_IT {
 
 			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath3);
 			csvDataset.reset();
-			DataLoader dl3 = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+			DataLoader dl3 = new DataLoader(sgJson, 1, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 			dl3.importData(true);
 			
 			Table err = dl3.getLoadingErrorReport();

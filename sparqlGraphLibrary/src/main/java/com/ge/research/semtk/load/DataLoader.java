@@ -218,6 +218,7 @@ public class DataLoader {
 			this.totalRecordsProcessed = 0;
 		}
 		
+		LocalLogger.logToStdOut("..." + this.totalRecordsProcessed + "(DONE)");
 		this.batchHandler.closeDataSet();			// close all connections and clean up
 		return this.totalRecordsProcessed;          // report.
 	}
@@ -236,18 +237,15 @@ public class DataLoader {
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
-		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : ""));
+		LocalLogger.logToStdOut("Records processed:");
 		long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 		
 		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
 		
 		ArrayList<ArrayList<String>> nextRecords = null;
-		
-		int numThreads = 2;    // first pass, run few threads to get recommendBatchSize
-		                                             // turns out that this hurt performance, set to MAX_WORKER_THREADS
 		while (true) {
 			// get the next set of records from the data set.
-			
+	
 			try{
 				nextRecords = this.batchHandler.getNextRecordsFromDataSet();
 			}catch(Exception e){ break; } // record set exhausted
@@ -255,7 +253,7 @@ public class DataLoader {
 			if(nextRecords == null || nextRecords.size() == 0 ){ break; }
 			
 			// spin up a thread to do the work.
-			if(wrkrs.size() < numThreads){
+			if(wrkrs.size() < this.MAX_WORKER_THREADS){
 				// spin up the thread and do the work. 
 				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				startingRow += nextRecords.size();
@@ -267,21 +265,11 @@ public class DataLoader {
 			// thread pool is full.  Wait for all of them to complete.
 			// and then we can start over.
 			// Over simplistic logic could be improved for performance.
-			if(wrkrs.size() == numThreads){
+			if(wrkrs.size() == this.MAX_WORKER_THREADS){
 				for(int i = 0; i < wrkrs.size(); i++){
-					IngestionWorkerThread thread = wrkrs.get(i);
-					this.joinAndThrowIfException(thread, exceptionHeader);
-					
-					// check recommended batch size
-					if (thread.getRecommendedBatchSize() < this.batchHandler.getBatchSize()) {
-						LocalLogger.logToStdOut("Changing batch size from " + this.batchHandler.getBatchSize() + " to " + thread.getRecommendedBatchSize()); 
-						this.batchHandler.setBatchSize(thread.getRecommendedBatchSize());
-					}
+					this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
 				}
 				wrkrs.clear();
-				numThreads = this.MAX_WORKER_THREADS;   // after first pass, go full speed with MAX_WORKER_THREADS
-				LocalLogger.logToStdOutNoEOL("..." + startingRow);
-
 			}
 		}
 		
@@ -289,7 +277,7 @@ public class DataLoader {
 		for(int i = 0; i < wrkrs.size(); i++){
 			this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
 		}
-		LocalLogger.logToStdOut("(DONE)");
+		
 		return recordsProcessed;
 	}
 	
