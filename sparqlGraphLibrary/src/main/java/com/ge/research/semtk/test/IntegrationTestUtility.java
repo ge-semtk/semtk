@@ -26,6 +26,8 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.utility.Utility;
@@ -159,11 +161,33 @@ public class IntegrationTestUtility {
 	}	
 	
 	
+	
+	/**
+	 * Get a ResultsClient using the integration test properties.
+	 */
+	public static ResultsClient getResultsClient() throws Exception{
+		return new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
+	}
+	
+	/**
+	 * Get a StatusClient using the integration test properties.
+	 */
+	public static StatusClient getStatusClient(String jobId) throws Exception{
+		return new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), jobId));
+	}	
+	
+	/**
+	 * Get a SparqlQueryClient using the integration test properties.
+	 */
+	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
+		return new SparqlQueryClient(new SparqlQueryClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset));
+	}
+	
 	/**
 	 * Get a NodeGroupStoreRestClient using the integration test properties.
 	 */
 	public static NodeGroupStoreRestClient getNodeGroupStoreRestClient() throws Exception{
-		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupStoreServiceServer(),  IntegrationTestUtility.getNodegroupStoreServicePort()));
+		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(getServiceProtocol(), getNodegroupStoreServiceServer(),  getNodegroupStoreServicePort()));
 	}
 	
 	/**
@@ -171,10 +195,10 @@ public class IntegrationTestUtility {
 	 */
 	public static NodeGroupExecutor getNodegroupExecutor() throws Exception{
 		NodeGroupStoreRestClient ngsrc = getNodeGroupStoreRestClient();
-		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getDispatchServiceServer(), IntegrationTestUtility.getDispatchServicePort()));
-		StatusClient stc = new StatusClient(new StatusClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getStatusServiceServer(), IntegrationTestUtility.getStatusServicePort(), "totally fake"));
-		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getResultsServiceServer(), IntegrationTestUtility.getResultsServicePort()));
-		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getIngestionServiceServer(), IntegrationTestUtility.getIngestionServicePort()));		
+		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(getServiceProtocol(), getDispatchServiceServer(), getDispatchServicePort()));
+		StatusClient stc = new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), "totally fake"));
+		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
+		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(getServiceProtocol(), getIngestionServiceServer(), getIngestionServicePort()));		
 		return new NodeGroupExecutor(ngsrc, drc, rc, stc, ic);
 	}
 }
