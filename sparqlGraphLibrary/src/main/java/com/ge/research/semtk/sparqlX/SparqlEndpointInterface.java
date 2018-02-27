@@ -486,9 +486,11 @@ public abstract class SparqlEndpointInterface {
 		if (resp == null) {
 			LocalLogger.logToStdErr("the response could not be transformed into json");
 
-			if(responseTxt.contains("Error")){
+			if(responseTxt.contains("Error")) {
 				entity.getContent().close();
-				throw new Exception(responseTxt); }
+				String explanation = this.explainResponseTxt(responseTxt);
+				throw new Exception(explanation + responseTxt); 
+			}
 			entity.getContent().close();
 			return null;
 		}
@@ -500,6 +502,18 @@ public abstract class SparqlEndpointInterface {
 		}
 	}
 	
+	/**
+	 * Get explanations of known triple store errors
+	 * @param responseTxt
+	 * @return
+	 */
+	private String explainResponseTxt(String responseTxt) {
+		if (responseTxt.contains("Virtuoso") && responseTxt.contains("Error SP031")) {
+			return "SemTK says: Virtuoso query may be too large or complex.\n";
+		}
+		
+		return "";
+	}
 
 	/**
 	 * Execute an auth query using POST

@@ -72,7 +72,7 @@ public class IngestionWorkerThread extends Thread {
 				// try to run one efficient query
 				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo);
 				if (query.length() <= this.optimalQueryChars) {
-					System.out.println("Query length DEBUG-1: " + query.length());   // TODO: remove DEBUG
+					//System.out.println("Query length DEBUG-1: " + query.length());   
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 					
 				} else {
@@ -81,7 +81,7 @@ public class IngestionWorkerThread extends Thread {
 					
 					// run queryList
 					for (String q : queryList) {
-						System.out.println("Query length DEBUG-2: " + q.length());   // TODO: remove DEBUG
+						//System.out.println("Query length DEBUG-2: " + q.length());   
 						this.endpoint.executeQuery(q, SparqlResultTypes.CONFIRM);
 					}
 				}
