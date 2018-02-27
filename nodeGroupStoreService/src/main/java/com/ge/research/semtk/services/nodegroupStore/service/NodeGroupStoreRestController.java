@@ -89,14 +89,15 @@ public class NodeGroupStoreRestController {
 		}
 			
 		// get the nodeGroup and the connection info:
-		SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
+		JSONObject sgJsonJson = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 
+		SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
 																// the next line was removed to make sure the node group is not "stripped" -- cut down to just the nodegroup proper when stored. 
 																// the executor is smart enough to deal with both cases. 
-		JSONObject ng = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 				
+						
 		
-		JSONObject connectionInfo = sgJson.getSparqlConnJson();
+		JSONObject connJson = sgJson.getSparqlConnJson();
 		
-		if(connectionInfo == null){
+		if(connJson == null){
 			// we really should not continue if we are not sure where this came from originally. 
 			// throw an error and fail gracefully... ish.
 			throw new Exception("storeNodeGroup :: sparqlgraph jason serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
@@ -106,7 +107,7 @@ public class NodeGroupStoreRestController {
 		JSONObject inputTemplateContents  = Utility.getJSONObjectFromFile(new File("/" + this.prop.getTemplateLocation()));
 		
 		// try to store the values.
-		boolean retBool = StoreNodeGroup.storeNodeGroup(ng, connectionInfo, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
+		boolean retBool = StoreNodeGroup.storeNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
 				inputTemplateContents.toString(), prop.getIngestorLocation(), prop.getIngestorProtocol(), prop.getIngestorPort());
 		
 		retval = new SimpleResultSet(retBool);
