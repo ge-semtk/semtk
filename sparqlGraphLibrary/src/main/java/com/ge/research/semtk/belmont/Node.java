@@ -140,10 +140,10 @@ public class Node extends Returnable {
 	
 	/**
 	 *
-	 * @param mappedPropItems - null=don't deflate ;  non-null=deflate
+	 * @param dontDeflatePropItems - list of PropertyItems which should not be deflated
 	 * @return
 	 */
-	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems) {
+	public JSONObject toJson(ArrayList<PropertyItem> dontDeflatePropItems) {
 		// return a JSON object of things needed to serialize
 		JSONObject ret = new JSONObject();
 		JSONArray jPropList = new JSONArray();
@@ -158,7 +158,7 @@ public class Node extends Returnable {
 		for (int i = 0; i < this.props.size(); i++) { 
 			PropertyItem p = this.props.get(i);
 			// if compressFlag, then only add property if returned or constrained
-			if (mappedPropItems == null || p.isUsed() || mappedPropItems.contains(p)) {
+			if (dontDeflatePropItems == null || p.isUsed() || dontDeflatePropItems.contains(p)) {
 				jPropList.add(p.toJson());
 			}
 		}
@@ -166,7 +166,7 @@ public class Node extends Returnable {
 		// add nodes
 		for (int i = 0; i < this.nodes.size(); i++) {
 			// if we're deflating, only add connected nodes
-			if (mappedPropItems == null || this.nodes.get(i).getConnected()) {
+			if (dontDeflatePropItems == null || this.nodes.get(i).getConnected()) {
 				jNodeList.add(this.nodes.get(i).toJson());
 			}
 		}

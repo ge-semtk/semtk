@@ -49,17 +49,17 @@ public class ImportSpecHandlerTest_IT {
 		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), sgJson.getSNodeGroupJson(), oInfo);
 		
 		// Try it with no headers
-		ArrayList<PropertyItem> pItems = handler.getMappedPropItems(nodegroup);
+		ArrayList<PropertyItem> pItems = handler.getUndeflatablePropItems(nodegroup);
 		assertTrue(pItems.size() == 3);
 				
 		// Test
 		handler.setHeaders(new ArrayList<String>(Arrays.asList("Battery", "Cell", "birthday", "color")));
-		pItems = handler.getMappedPropItems(nodegroup);
+		pItems = handler.getUndeflatablePropItems(nodegroup);
 		assertTrue(pItems.size() == 3);
 		
 		// Try it again in different order and capitalization
 		handler.setHeaders(new ArrayList<String>(Arrays.asList("battery", "color", "Cell", "birthday")));
-		pItems = handler.getMappedPropItems(nodegroup);
+		pItems = handler.getUndeflatablePropItems(nodegroup);
 		assertTrue(pItems.size() == 3);
 	}
 
