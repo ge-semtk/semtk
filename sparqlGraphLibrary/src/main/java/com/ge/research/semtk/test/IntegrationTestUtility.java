@@ -26,6 +26,8 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.utility.Utility;
@@ -43,135 +45,149 @@ public class IntegrationTestUtility {
 	
 	// protocol for all services
 	public static String getServiceProtocol() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.protocol");
+		return getIntegrationTestProperty("integrationtest.protocol");
 	}
 	
 	// sparql endpoint
 	public static String getSparqlServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.server");
+		return getIntegrationTestProperty("integrationtest.sparqlendpoint.server");
 	}
 	public static String getSparqlServerType() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.type");
+		return getIntegrationTestProperty("integrationtest.sparqlendpoint.type");
 	}
 	public static String getSparqlServerUsername() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.username");
+		return getIntegrationTestProperty("integrationtest.sparqlendpoint.username");
 	}
 	public static String getSparqlServerPassword() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlendpoint.password");
+		return getIntegrationTestProperty("integrationtest.sparqlendpoint.password");
 	}
 	
 	// sparql query service
 	public static String getSparqlQueryServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlqueryservice.server");
+		return getIntegrationTestProperty("integrationtest.sparqlqueryservice.server");
 	}
 	public static int getSparqlQueryServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.sparqlqueryservice.port")).intValue();	
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.sparqlqueryservice.port")).intValue();	
 	}	
 	
 	// ingestion service
 	public static String getIngestionServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.ingestionservice.server");
+		return getIntegrationTestProperty("integrationtest.ingestionservice.server");
 	}
 	public static int getIngestionServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.ingestionservice.port")).intValue();	
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.ingestionservice.port")).intValue();	
 	}	
 		
 	// status service
 	public static String getStatusServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.statusservice.server");
+		return getIntegrationTestProperty("integrationtest.statusservice.server");
 	}
 	public static int getStatusServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.statusservice.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.statusservice.port")).intValue();
 	}
 	
 	// results service
 	public static String getResultsServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.server");
+		return getIntegrationTestProperty("integrationtest.resultsservice.server");
 	}
 	public static int getResultsServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.resultsservice.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.resultsservice.port")).intValue();
 	}
 	
 	// dispatch service
 	public static String getDispatchServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.dispatchservice.server");
+		return getIntegrationTestProperty("integrationtest.dispatchservice.server");
 	}
 	public static int getDispatchServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.dispatchservice.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.dispatchservice.port")).intValue();
 	}	
-	
-	// RDB query generator service
-	public static String getRDBQueryGeneratorServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.server");
-	}
-	public static int getRDBQueryGeneratorServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.rdbquerygenservice.port")).intValue();
-	}
 		
 	// Hive service
 	public static String getHiveServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hiveservice.server");
+		return getIntegrationTestProperty("integrationtest.hiveservice.server");
 	}
 	public static int getHiveServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hiveservice.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.hiveservice.port")).intValue();
 	}
 	
 	// nodegroup store service
 	public static String getNodegroupStoreServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupstoreservice.server");
+		return getIntegrationTestProperty("integrationtest.nodegroupstoreservice.server");
 	}
 	public static int getNodegroupStoreServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupstoreservice.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupstoreservice.port")).intValue();
 	}
 	
 	// nodegroup execution service
 	public static String getNodegroupExecutionServiceServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupexecution.server");
+		return getIntegrationTestProperty("integrationtest.nodegroupexecution.server");
 	}
 	public static int getNodegroupExecutionServicePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.nodegroupexecution.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupexecution.port")).intValue();
 	}
 	
 	// Hive
 	public static String getHiveServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.server");
+		return getIntegrationTestProperty("integrationtest.hive.server");
 	}
 	public static int getHivePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.hive.port")).intValue();
 	}
 	public static String getHiveUsername() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.username");
+		return getIntegrationTestProperty("integrationtest.hive.username");
 	}
 	public static String getHivePassword() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.password");
+		return getIntegrationTestProperty("integrationtest.hive.password");
 	}
 	public static String getHiveDatabase() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.hive.database");
+		return getIntegrationTestProperty("integrationtest.hive.database");
 	}
 	
 	// Oracle
 	public static String getOracleServer() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.server");
+		return getIntegrationTestProperty("integrationtest.oracle.server");
 	}
 	public static int getOraclePort() throws Exception{
-		return Integer.valueOf(Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.port")).intValue();
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.oracle.port")).intValue();
 	}
 	public static String getOracleUsername() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.username");
+		return getIntegrationTestProperty("integrationtest.oracle.username");
 	}
 	public static String getOraclePassword() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.password");
+		return getIntegrationTestProperty("integrationtest.oracle.password");
 	}
 	public static String getOracleDatabase() throws Exception{
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest.oracle.database");
+		return getIntegrationTestProperty("integrationtest.oracle.database");
 	}	
 	
+	
+	
+	/**
+	 * Get a ResultsClient using the integration test properties.
+	 */
+	public static ResultsClient getResultsClient() throws Exception{
+		return new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
+	}
+	
+	/**
+	 * Get a StatusClient using the integration test properties.
+	 */
+	public static StatusClient getStatusClient(String jobId) throws Exception{
+		return new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), jobId));
+	}	
+	
+	/**
+	 * Get a SparqlQueryClient using the integration test properties.
+	 */
+	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
+		return new SparqlQueryClient(new SparqlQueryClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset));
+	}
 	
 	/**
 	 * Get a NodeGroupStoreRestClient using the integration test properties.
 	 */
 	public static NodeGroupStoreRestClient getNodeGroupStoreRestClient() throws Exception{
-		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupStoreServiceServer(),  IntegrationTestUtility.getNodegroupStoreServicePort()));
+		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(getServiceProtocol(), getNodegroupStoreServiceServer(),  getNodegroupStoreServicePort()));
 	}
 	
 	/**
@@ -179,10 +195,26 @@ public class IntegrationTestUtility {
 	 */
 	public static NodeGroupExecutor getNodegroupExecutor() throws Exception{
 		NodeGroupStoreRestClient ngsrc = getNodeGroupStoreRestClient();
-		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getDispatchServiceServer(), IntegrationTestUtility.getDispatchServicePort()));
-		StatusClient stc = new StatusClient(new StatusClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getStatusServiceServer(), IntegrationTestUtility.getStatusServicePort(), "totally fake"));
-		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getResultsServiceServer(), IntegrationTestUtility.getResultsServicePort()));
-		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getIngestionServiceServer(), IntegrationTestUtility.getIngestionServicePort()));		
+		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(getServiceProtocol(), getDispatchServiceServer(), getDispatchServicePort()));
+		StatusClient stc = new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), "totally fake"));
+		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
+		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(getServiceProtocol(), getIngestionServiceServer(), getIngestionServicePort()));		
 		return new NodeGroupExecutor(ngsrc, drc, rc, stc, ic);
+	}
+	
+	public static String getIntegrationTestProperty(String key) throws Exception{
+		try { 
+			return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
+		} catch (Exception e) {
+			try {
+				// try again with a sub-project
+				// Sorry I can't figure out a combo of getResource() that works
+				// -Paul
+				return Utility.getPropertyFromFile("../SparqlGraphLibrary/" + INTEGRATION_TEST_PROPERTY_FILE, key);
+			} catch (Exception ee) {
+				// if both fail, throw the original exception
+				throw e;
+			}
+		}
 	}
 }

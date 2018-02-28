@@ -36,14 +36,14 @@ import com.ge.research.semtk.utility.Utility;
 public class StoreNodeGroup {
 
 	
-	public static boolean storeNodeGroup(JSONObject ng, JSONObject connectionInfo, String id, String comments, String creator, String insertTemplate, String ingestorLocation, String ingestorProtocol, String ingestorPort) throws Exception{
+	public static boolean storeNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator, String insertTemplate, String ingestorLocation, String ingestorProtocol, String ingestorPort) throws Exception{
 		boolean retval = true;
 		
 		// generate creation date string, format MM/DD/YYYY
 		String creationDateString = Utility.getSPARQLCurrentDateString(); 
 		
 		// get everything we need to send. 
-		String data = SparqlQueries.getHeaderRow() + getInsertRow(ng, connectionInfo, id, comments, creator, creationDateString);  
+		String data = SparqlQueries.getHeaderRow() + getInsertRow(sgJsonJson, connJson, id, comments, creator, creationDateString);  
 
 //		LocalLogger.logToStdErr(":: csv data output ::");	
 //		LocalLogger.logToStdErr(data);

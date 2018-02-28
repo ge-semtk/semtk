@@ -718,11 +718,12 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * Return a pointer to every PropertyItem in ng that has a mapping in the import spec
+	 * Return a pointer to every PropertyItem in ng that is used in the import spec
+	 *   mapping or URILookup
 	 * @param ng
 	 * @return
 	 */
-	public ArrayList<PropertyItem> getMappedPropItems(NodeGroup ng) {
+	public ArrayList<PropertyItem> getUndeflatablePropItems(NodeGroup ng) {
 
 		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
 		
@@ -730,7 +731,22 @@ public class ImportSpecHandler {
 			for (int i=0; i < this.importMappings.length; i++) {
 				if (this.importMappings[i].isProperty()) {
 					ImportMapping m = this.importMappings[i];
-					ret.add(ng.getNode(m.getImportNodeIndex()).getPropertyItem(m.getPropItemIndex()));
+					PropertyItem pItem = ng.getNode(m.getImportNodeIndex()).getPropertyItem(m.getPropItemIndex());
+					ret.add(pItem);
+				}
+			}
+		}
+		
+		if (this.lookupMappings != null) {
+			for (int i : this.lookupMappings.keySet()) {
+				ArrayList<ImportMapping> mapList = this.lookupMappings.get(i);
+				for (ImportMapping m : mapList) {
+					if (m.isProperty()) {
+						PropertyItem pItem = ng.getNode(m.getImportNodeIndex()).getPropertyItem(m.getPropItemIndex());
+						if (!ret.contains(pItem)) {
+							ret.add(pItem);
+						}
+					}
 				}
 			}
 		}

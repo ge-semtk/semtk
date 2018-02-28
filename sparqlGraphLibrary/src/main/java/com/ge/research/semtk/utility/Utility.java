@@ -70,6 +70,9 @@ public abstract class Utility {
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 
+	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");	// e.g. 2014-12-01 00:00:00 
+	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyKmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy K:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
+	
 	static{
 		// supported input date formats 
 		/**
@@ -99,7 +102,7 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"));
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss"));
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"));
-		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		DATETIME_FORMATTERS.add(DATETIME_FORMATTER_yyyyMMddHHmmss);
 		DATETIME_FORMATTERS.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'hh:mm:ss"));
 	
 		// case-insensitive dd-MMM-yyyy HH:mm:ss (e.g. 12-Jun-2008 05:00:00 or 12-JUN-2008 05:00:00)
@@ -109,6 +112,18 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(dateFormat);
 	}
 
+	/**
+	 * Change the format of a datetime string.
+	 * @param dateTimeString		the string, e.g. "02/02/2018 4:00:00 AM"
+	 * @param inputFormatter		the input formatter
+	 * @param outputFormatter		the output formatter
+	 * @return the formatted string
+	 */
+	public static String formatDateTime(String dateTimeString, DateTimeFormatter inputFormatter, DateTimeFormatter outputFormatter){
+		LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, inputFormatter);		
+		return dateTime.format(outputFormatter);
+	}
+	
 	/**
 	 * Gets a CSV record string from an arraylist of Strings.
 	 * Does not include a record separator (will not append \n at the end of the line)

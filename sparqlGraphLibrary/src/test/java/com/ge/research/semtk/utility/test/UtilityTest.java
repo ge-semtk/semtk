@@ -32,6 +32,12 @@ import com.ge.research.semtk.utility.Utility;
 public class UtilityTest {
 
 	@Test
+	public void testFormatDateTime() throws Exception{
+		assertEquals(Utility.formatDateTime("02/05/2018 4:33:10 AM", Utility.DATETIME_FORMATTER_MMddyyyyKmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 04:33:10");
+		assertEquals(Utility.formatDateTime("02/05/2018 4:33:10 PM", Utility.DATETIME_FORMATTER_MMddyyyyKmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 16:33:10");
+	}
+	
+	@Test
 	public void testGetURLContentsAsString() throws Exception{		
 		URL url = new URL(new URL("file:"), "src/test/resources/test.csv");
 		String s = Utility.getURLContentsAsString(url);

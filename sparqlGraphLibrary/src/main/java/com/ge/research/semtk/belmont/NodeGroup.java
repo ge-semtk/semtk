@@ -2436,12 +2436,12 @@ public class NodeGroup {
 
 	/**
 	 * 
-	 * @param mappedPropItems - null=don't deflate ;  non-null=deflate
+	 * @param dontDeflatePropItems - null=don't deflate ;  non-null=deflate
 	 * @return
 	 * @
 	 */
 	@SuppressWarnings("unchecked")
-	public JSONObject toJson(ArrayList<PropertyItem> mappedPropItems)  {
+	public JSONObject toJson(ArrayList<PropertyItem> dontDeflatePropItems)  {
 		JSONObject ret = new JSONObject();
 		
 		// get list in order such that linked nodes always preceed the node that
@@ -2466,7 +2466,7 @@ public class NodeGroup {
 		// sNodeList
 		JSONArray sNodeList = new JSONArray();
 		for (int i=0; i < snList.size(); i++) {
-			sNodeList.add(snList.get(i).toJson(mappedPropItems));
+			sNodeList.add(snList.get(i).toJson(dontDeflatePropItems));
 		}
 		ret.put(JSON_KEY_NODELIST, sNodeList);
 		
