@@ -10,7 +10,6 @@ import org.junit.Test;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.test.UtilityTest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
