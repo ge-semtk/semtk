@@ -36,13 +36,11 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedObject;
 import com.ge.research.semtk.load.utility.UriResolver;
-import com.ge.research.semtk.ontologyTools.ClassException;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
-import com.ge.research.semtk.ontologyTools.PathException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -150,7 +148,7 @@ public class NodeGroup {
 						
 			// this format differs between Virtuoso 7.2 and 7.2.5.  Support both.
 			String classURI;
-			Object typeEntry0 = (((JSONArray)nodeJson.get("@type"))).get(0);
+			Object typeEntry0 = NodeGroup.getAsArray(nodeJson, "@type").get(0);
 			if(typeEntry0 instanceof JSONObject && ((JSONObject)typeEntry0).containsKey("@id")){
 				classURI = ((JSONObject)typeEntry0).get("@id").toString(); // "@type" : [ { "@id": "http://research.ge.com/energy/turbineeng/configuration#TestType"} ]  (in Virtuoso 7.2)
 			}else{
@@ -165,11 +163,11 @@ public class NodeGroup {
 			nodeGroup.addOneNode(node, null, null, null);	// add node to node group
 						
 			ArrayList<PropertyItem> properties = new ArrayList<PropertyItem>();
-			Iterator<String> keysItr = (Iterator<String>) nodeJson.keySet().iterator();
+			@SuppressWarnings("unchecked")
+			Iterator<String> keysItr = ((Iterator<String>) nodeJson.keySet().iterator());
 		    while(keysItr.hasNext()) {
 		    			    	
-		        String key = keysItr.next();
-		        Object value = nodeJson.get(key);		        
+		        String key = keysItr.next();		        
 		        if(key.equals("@id") || key.equals("@type") || key.equals("@Original-SparqlId")){
 		        	continue;  // already got node id and type above, so skip
 		        }		        
@@ -177,7 +175,7 @@ public class NodeGroup {
 		        // primitive properties are like this:
 		        // e.g. KEY=http://research.ge.com/print/testconfig#material VALUE=[{"@value":"Red Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"} {"@value":"Blue Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"}]
 		        		         
-		        JSONArray valueArray = (JSONArray)value; 	// the value is an array
+		        JSONArray valueArray = NodeGroup.getAsArray(nodeJson, key);
 	        	if(!((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if no @type then this is not a primitive property   
 	        		continue;  
 	        	}		        
@@ -213,11 +211,14 @@ public class NodeGroup {
         	Node fromNode = nodeHash.get(fromNodeURI);  	        
 			
 			ArrayList<NodeItem> nodeItems = new ArrayList<NodeItem>();
-		    Iterator<String> keysItr = (Iterator<String>) nodeJson.keySet().iterator();
+			
+		    @SuppressWarnings("unchecked")
+			Iterator<String> keysItr = (Iterator<String>) nodeJson.keySet().iterator();
+		    
 		    while(keysItr.hasNext()) {
 		    			    	
 		        String key = keysItr.next();
-		        Object value = nodeJson.get(key);		        		        
+		        	        		        
 		        if(key.equals("@id") || key.equals("@type") || key.equals("@Original-SparqlId")){
 		        	continue;  // already got node id and type above, so skip
 		        }		        
@@ -225,7 +226,7 @@ public class NodeGroup {
 		        // node items are in this format:
 		        // e.g. KEY=http://research.ge.com/print/testconfig#screenPrinting VALUE=[{"@id":"http:\/\/research.ge.com\/print\/data#ScrnPrnt_ABC"}]        		        
 		        
-		        JSONArray valueArray = (JSONArray)value; 	// the value is an array
+		        JSONArray valueArray = NodeGroup.getAsArray(nodeJson, key);
 	        	if(((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if has @type then this is not a node item
 	        		continue;  
 	        	}
@@ -237,7 +238,6 @@ public class NodeGroup {
 			        String relationship = key;  // e.g. http://research.ge.com/print/testconfig#screenPrinting
 			        String relationshipLocal = (new OntologyName(relationship)).getLocalName(); // e.g. screenPrinting			        
 		        	String toNodeURI = valueJSONObject.get("@id").toString(); // e.g. http://research.ge.com/print/data#ScrnPrnt_ABC
-		        	String toNodeURILocal = (new OntologyName(toNodeURI)).getLocalName(); // e.g. ScrnPrnt_ABC
 			        Node toNode = nodeHash.get(toNodeURI);  
 			        String toNodeClassURI = toNode.getFullUriName(); // e.g. http://research.ge.com/print/testconfig#ScreenPrinting		        	
 			        
@@ -260,6 +260,26 @@ public class NodeGroup {
 		}		    		  
 		
 		return nodeGroup;
+	}
+	
+	/**
+	 * If jObj[fieldName] is an array, return it.  Else put it in an array and return that.
+	 * Helper function for different style JSON-LD.
+	 * Some versions of Virtuoso return single values of @type as-is, and other versions return an array of types, even if there's just one.
+	 * @param jObj
+	 * @param fieldName
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private static JSONArray getAsArray(JSONObject jObj, String fieldName) {
+		Object field = jObj.get(fieldName);
+		if (field instanceof JSONArray) {
+			return ((JSONArray) field);
+		} else {
+			JSONArray ret = new JSONArray();
+			ret.add(field);
+			return ret;
+		}
 	}
 	
 	public void addOrphanedNode(Node node){
@@ -700,8 +720,7 @@ public class NodeGroup {
 				JSONArray nodeConnections = (JSONArray)node.get("SnodeSparqlIDs");
 				for(int m = 0; m < nodeConnections.size(); m += 1){
 					// this should update the values we care about
-					JSONArray nodeInst = (JSONArray)node.get("SnodeSparqlIDs");
-					nodeInst = BelmontUtil.updateSparqlIdsForJSON(nodeConnections, m, changedHash, tempHash);
+					BelmontUtil.updateSparqlIdsForJSON(nodeConnections, m, changedHash, tempHash);
 				}
 			}
 		}
@@ -864,7 +883,6 @@ public class NodeGroup {
 			return retval;
 		}
 		
-		ArrayList<Node> orderedNodes = this.getOrderedNodeList();
 		StringBuilder sparql = new StringBuilder();
 		sparql.append(this.generateSparqlPrefix());
 		
@@ -1422,6 +1440,7 @@ public class NodeGroup {
 		}
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private ArrayList<Node> getOrderedNodeList()  {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		
@@ -1645,7 +1664,7 @@ public class NodeGroup {
 		// normal link from anchor node to last node
 		} else {
 			int opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
-			NodeItem nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
+			anchorNode.setConnection(lastNode, attUri, opt);
 		}
 		return retNode;
 

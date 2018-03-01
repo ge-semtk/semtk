@@ -598,6 +598,17 @@ public abstract class Utility {
 	}
 	
 	/**
+	 * Get a file resource as JSON
+	 * @param obj
+	 * @param fileName
+	 * @return
+	 * @throws Exception
+	 */
+	public static JSONObject getResourceAsJson(Object obj, String fileName) throws Exception {
+		return Utility.getJsonObjectFromString(Utility.getResourceAsString(obj, fileName));
+	}
+	
+	/**
 	 * Replace UUIDs in a string with "<UUID>".
 	 * Note: does not affect hashes.
 	 * @param orig
