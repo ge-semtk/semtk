@@ -1,0 +1,3 @@
+id,date,desc,notes
+id1,,first_desc,
+id1,,second_desc,fails if lookup by id but create URI by desc

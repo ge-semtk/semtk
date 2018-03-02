@@ -346,14 +346,17 @@ public class ImportSpecHandler {
 	}
 	
 	private void errorCheckImportSpec() throws Exception {
-		for (int i=0; i < this.importMappings.length; i++) {
-			ImportMapping importMap = this.importMappings[i];
-			if (importMap.isNode() && this.lookupMappings.containsKey(importMap.getImportNodeIndex())) {
-				NodeGroup tmpImportNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
-				Node node = tmpImportNg.getNode(importMap.getImportNodeIndex());
-				throw new Exception("Node is slated for lookup and also has mapping for URI: " + node.getSparqlID());
-			}
-		}
+		// no longer illegal
+		// nothing at all to check right now
+		
+//		for (int i=0; i < this.importMappings.length; i++) {
+//			ImportMapping importMap = this.importMappings[i];
+//			if (importMap.isNode() && this.lookupMappings.containsKey(importMap.getImportNodeIndex())) {
+//				NodeGroup tmpImportNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
+//				Node node = tmpImportNg.getNode(importMap.getImportNodeIndex());
+//				throw new Exception("Node is slated for lookup and also has mapping for URI: " + node.getSparqlID());
+//			}
+//		}
 	}
 	
 	/**
@@ -584,6 +587,10 @@ public class ImportSpecHandler {
 			
 			// ---- node ----
 			
+			// Mapping is invalid if URI has already been looked up.  Return.
+			if (node.getInstanceValue() != null)
+				return;
+						
 			// if build string is null
 			if(builtString.length() < 1){
 				node.setInstanceValue(null);
@@ -635,7 +642,28 @@ public class ImportSpecHandler {
 				
 		// return quickly if answer is already cached
 		String cachedUri = this.uriCache.getUri(nodeIndex, builtStrings);
+		
+		// if already cached
 		if (cachedUri != null) {
+		
+			// if "createIfMissing" and has a mapping and is a generated (not looked up) URI
+			if (this.lookupMode.containsKey(nodeIndex) && 
+					this.lookupMode.get(nodeIndex).equals(ImportSpecHandler.LOOKUP_MODE_CREATE) && 
+					this.getImportMapping(nodeIndex, -1) != null &&
+					this.uriCache.isGenerated(cachedUri)) {
+				
+				// make sure that two different records aren't creating different values for same URI
+				ImportMapping map = this.getImportMapping(nodeIndex, -1);
+				String newUri = map.buildString(record);
+				
+				if (! newUri.equals(cachedUri)) {
+					if (newUri.equals(UriCache.NOT_FOUND))    { newUri = "<GUID>"; }
+					if (cachedUri.equals(UriCache.NOT_FOUND)) { cachedUri = "<GUID>"; }
+					throw new Exception("Can't create a URI with two different values: " + cachedUri + " and " + newUri);
+				}
+			}
+			
+			// survived the check: return the cached value
 			return cachedUri;
 			
 		} else {
@@ -690,7 +718,8 @@ public class ImportSpecHandler {
 					
 				} else {
 					// set URI to NOT_FOUND
-					this.uriCache.setUriNotFound(nodeIndex, builtStrings);
+					ImportMapping m = this.getImportMapping(nodeIndex, -1);
+					this.uriCache.setUriNotFound(nodeIndex, builtStrings, (m == null) ? null : m.buildString(record));
 					return UriCache.NOT_FOUND;
 				}
 				
@@ -701,6 +730,21 @@ public class ImportSpecHandler {
 				return uri;
 			}
 		}
+	}
+	
+	/**
+	 * Find an import mapping for the given node and property
+	 * @param nodeIndex
+	 * @param propIndex - can be -1 for none
+	 * @return ImportMapping or null
+	 */
+	private ImportMapping getImportMapping(int nodeIndex, int propIndex) {
+		for (int i=0; i < this.importMappings.length; i++) {
+			if (this.importMappings[i].getImportNodeIndex() == nodeIndex && this.importMappings[i].getPropItemIndex() == propIndex ) {
+				return this.importMappings[i];
+			}
+		}
+		return null;
 	}
 	
 	/**

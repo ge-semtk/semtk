@@ -638,6 +638,7 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
 	}
 	
+	
 	@Test
 	public void testLookupCreatePartial() throws Exception {
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
@@ -684,6 +685,8 @@ public class DataLoaderTest_IT {
 		Table tab = TestGraph.runQuery(query);
 		assertEquals(7, tab.getCellAsInt(0, 0));
 	}
+	
+	
 	@Test
 	public void testCaseTransform() throws Exception {
 		// Paul
@@ -776,6 +779,69 @@ public class DataLoaderTest_IT {
 		assertTrue(dl.getTotalRecordsProcessed() == 0);
 	}
 	
+	@Test
+	public void testLookupCreateWithMapping() throws Exception {
+		//  lookup Fails:    create 4 new batteries with assemglyDate, batteryDesc, batteryId
+		//  lookup Succeeds: add assemblyDate to battery with batteryId="onlycolor" retaining original URI
+		//  leave alone:     three others should remain un-changed
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import durabattery first4.  
+		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// the real test  
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreateWMap.json");
+		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
+		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateWMapResults.csv");
+	}
+	
+	@Test
+	public void testLookupCreateWithMappingFail() throws Exception {
+		//  Try lookup by id that doesn't exist.  CreateIfMissing with a mapping.
+		//  But the mapping uses description, and two rows have same id but diff mapping
+		//  So it should fail on conflicting URI's for same lookup.
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+	  
+		DataLoader dl;
+		Table err;
+		
+		// the real test  
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreateWMapFail.json");
+		ds = new CSVDataset("src/test/resources/loadTestLookupCreateWMapFailData.csv", false);
+		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 1 || !err.getCell(0, 4).contains("Can't create a URI with two different values")) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+	}
 	
 	@Test
 	public void test_TEMPORARY() throws Exception {
