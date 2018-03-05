@@ -5,7 +5,6 @@
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: updateWebapps.sh webapps_path"
-    exit 1
 fi
 
 # Get webapps
@@ -13,7 +12,6 @@ WEBAPPS=$1
 
 if [ ! -d $WEBAPPS ]; then
     echo "Usage: updateWebapps.sh webapps_path"
-    exit 1
 fi
 
 # SEMTK = directory holding this script
