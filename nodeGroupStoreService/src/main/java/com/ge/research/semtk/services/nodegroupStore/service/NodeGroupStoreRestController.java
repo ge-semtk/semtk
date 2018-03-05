@@ -104,8 +104,7 @@ public class NodeGroupStoreRestController {
 		}
 		
 		// get the template information
-		// for the "object" use instanceTable since it is in SparqlGraphLibrary, and so is the template
-		JSONObject inputTemplateContents  = Utility.getResourceAsJson(instanceTable, "/" + this.prop.getTemplateLocation());
+		JSONObject inputTemplateContents  = Utility.getJSONObjectFromFile(new File("/" + this.prop.getTemplateLocation()));
 		
 		// try to store the values.
 		boolean retBool = StoreNodeGroup.storeNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
