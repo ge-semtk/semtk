@@ -106,6 +106,9 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_NODEGROUP_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
+# BROKEN - BELOW
+exit 0  
+
 #
 # wait for services
 #
