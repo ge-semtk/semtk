@@ -106,22 +106,19 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_NODEGROUP_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
-# BROKEN - BELOW
-exit 0  
-
 #
 # wait for services
 #
 MAX_SEC=300
-declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE, 
-                  $PORT_SPARQLGRAPH_RESULTS_SERVICE, 
-                  $PORT_DISPATCH_SERVICE, 
-                  $PORT_HIVE_SERVICE, 
-                  $PORT_NODEGROUPSTORE_SERVICE, 
+declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
+                  $PORT_SPARQLGRAPH_RESULTS_SERVICE
+                  $PORT_DISPATCH_SERVICE
+                  $PORT_HIVE_SERVICE
+                  $PORT_NODEGROUPSTORE_SERVICE
                   $PORT_ONTOLOGYINFO_SERVICE, 
-                  $PORT_NODEGROUPEXECUTION_SERVICE, 
-                  $PORT_SPARQL_QUERY_SERVICE, 
-                  $PORT_INGESTION_SERVICE, 
+                  $PORT_NODEGROUPEXECUTION_SERVICE
+                  $PORT_SPARQL_QUERY_SERVICE
+                  $PORT_INGESTION_SERVICE
                   $PORT_NODEGROUP_SERVICE
                  )
 
