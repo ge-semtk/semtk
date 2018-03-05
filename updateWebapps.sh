@@ -5,6 +5,7 @@
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: updateWebapps.sh webapps_path"
+    exit 1
 fi
 
 # Get webapps
@@ -12,6 +13,7 @@ WEBAPPS=$1
 
 if [ ! -d $WEBAPPS ]; then
     echo "Usage: updateWebapps.sh webapps_path"
+    exit 1
 fi
 
 # SEMTK = directory holding this script
@@ -80,7 +82,9 @@ do
                         echo WARNING: these files need to be manually merged to keep local configuration:
                         echo "        $SAVED"
                         echo "        $CURRENT"
+                        exit 1
                 fi
         fi
 done
+exit 0
                            
