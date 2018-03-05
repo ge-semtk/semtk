@@ -80,7 +80,10 @@ do
                         echo WARNING: these files need to be manually merged to keep local configuration:
                         echo "        $SAVED"
                         echo "        $CURRENT"
+                        exit 1
                 fi
         fi
 done
+
+exit 0
                            
