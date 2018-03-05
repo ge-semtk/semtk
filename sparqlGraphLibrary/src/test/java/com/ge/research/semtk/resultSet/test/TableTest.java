@@ -511,4 +511,60 @@ public class TableTest {
 		assertTrue(table.allRowsMatch());
 	}
 	
+	@Test
+	public void testSlice() throws Exception{
+		
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("coconut");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("chester");
+		rows.add(rowNames);
+		ArrayList<String> rowLastNames = new ArrayList<String>();
+		rowLastNames.add("adamson");
+		rowLastNames.add("barberson");
+		rowLastNames.add("chesterton");
+		rows.add(rowLastNames);
+		ArrayList<String> rowVegetables = new ArrayList<String>();
+		rowVegetables.add("asparagus");
+		rowVegetables.add("broccoli");
+		rowVegetables.add("cauliflower");
+		rows.add(rowVegetables);
+		Table table = new Table(cols, colTypes, rows);
+		
+		Table tableSlice;
+		
+		tableSlice = table.slice(0,2);
+		assertEquals(tableSlice.getNumRows(),2);
+		assertEquals(tableSlice.getRows().get(0),rowFruit);
+		assertEquals(tableSlice.getRows().get(1),rowNames);
+		
+		tableSlice = table.slice(1,10);					// asking for more rows than exist in the table
+		assertEquals(tableSlice.getNumRows(),3);	
+		assertEquals(tableSlice.getRows().get(0),rowNames);
+		assertEquals(tableSlice.getRows().get(1),rowLastNames);
+		assertEquals(tableSlice.getRows().get(2),rowVegetables);
+		
+		// expect 1 row if offset is at the last row
+		tableSlice = table.slice(3,12);		
+		assertEquals(tableSlice.getNumRows(),1);
+		
+		// expect empty table if specify an offset that is beyond the number of rows
+		tableSlice = table.slice(4,12);			
+		assertEquals(tableSlice.getNumRows(),0);
+		
+		// expect empty table if specify an offset that is equal to the number of rows
+		tableSlice = table.slice(10,12);			
+		assertEquals(tableSlice.getNumRows(),0);
+		
+
+		
+	}
 }

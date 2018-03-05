@@ -129,14 +129,21 @@ public class Table {
 	
 	/**
 	 * Get slice of table from row offset to offset + limit - 1
-	 * @param offset
+	 * @param offset the offset index
 	 * @param size - if 0, then go til the end
-	 * @return
+	 * @return the subset of Table rows
 	 * @throws Exception
 	 */
 	public Table slice(int offset, int size) throws Exception {
-		int upper;
+		
+		// if offset is bigger than the number of rows, return an empty table
+		// (chose an empty table instead of an Exception because this allows calling functions to more easily know when they've reached the end of the data)
+		if(offset >= this.getNumRows()){
+			return new Table(this.columnNames, this.columnTypes );	// return an empty table 
+		}
+
 		// make sure upper limit is in bounds
+		int upper;
 		if (size == 0 || offset + size > this.getNumRows()) {
 			upper = this.getNumRows();
 		} else {

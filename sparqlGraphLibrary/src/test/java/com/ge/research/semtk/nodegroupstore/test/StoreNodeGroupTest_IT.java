@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.nodegroupStore.test;
+package com.ge.research.semtk.nodegroupstore.test;
 
 import static org.junit.Assert.*;
 
@@ -43,7 +43,7 @@ public class StoreNodeGroupTest_IT {
 		String data = SparqlQueries.getHeaderRow() + StoreNodeGroup.getInsertRow(sgJson.getJson(), sgJson.getSparqlConnJson(), "TEST_id", "TEST_comments", "TEST_creator", creationDateString);
 		
 		// get the nodegroup ingestion template
-		JSONObject templateJson = Utility.getJSONObjectFromFilePath("src/main/resources/store.json");
+		JSONObject templateJson = Utility.getResourceAsJson(this, "/nodegroups/store.json");
 		SparqlGraphJson templateSgJson = new SparqlGraphJson(templateJson);
 		templateSgJson.setSparqlConn(TestGraph.getSparqlConn("http://"));
 		

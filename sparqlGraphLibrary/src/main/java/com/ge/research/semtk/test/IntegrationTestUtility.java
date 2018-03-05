@@ -203,18 +203,6 @@ public class IntegrationTestUtility {
 	}
 	
 	public static String getIntegrationTestProperty(String key) throws Exception{
-		try { 
-			return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
-		} catch (Exception e) {
-			try {
-				// try again with a sub-project
-				// Sorry I can't figure out a combo of getResource() that works
-				// -Paul
-				return Utility.getPropertyFromFile("../SparqlGraphLibrary/" + INTEGRATION_TEST_PROPERTY_FILE, key);
-			} catch (Exception ee) {
-				// if both fail, throw the original exception
-				throw e;
-			}
-		}
+		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
 	}
 }
