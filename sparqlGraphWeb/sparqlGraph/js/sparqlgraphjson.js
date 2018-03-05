@@ -52,8 +52,8 @@ define([	// properly require.config'ed
 			
 			if (typeof nodegroup != "undefined" && nodegroup != null) { 
 				if (deflateFlag) {
-					var mappedPropItems = (typeof mappingTab != "undefined" && mappingTab != null) ? mappingTab.getMappedPropItems() : [];
-					this.jObj.sNodeGroup = nodegroup.toJson(true, mappedPropItems); 
+					var undeflatablePropItems = (typeof mappingTab != "undefined" && mappingTab != null) ? mappingTab.getUndeflatablePropItems() : [];
+					this.jObj.sNodeGroup = nodegroup.toJson(true, undeflatablePropItems); 
 				} else {
 					this.jObj.sNodeGroup = nodegroup.toJson(false, []); 
 				}

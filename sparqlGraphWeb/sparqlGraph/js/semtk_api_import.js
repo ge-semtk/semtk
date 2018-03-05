@@ -219,7 +219,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			 * @returns {ImportMapping[]} List of ImportMappings
 			 */
 			getImportMappings : function () {
-				return this.importSpec.getSortedRows();
+				return this.importSpec.getSortedMappings();
 			},
 			
 			/** 

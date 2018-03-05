@@ -839,9 +839,9 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 // the functions used by the SemanticNode in order to keep things in order.
 SemanticNode.prototype = {
 
-	toJson : function(optDeflateFlag, optMappedPropItems) {
+	toJson : function(optDeflateFlag, optDontDeflatePropItems) {
 		var deflateFlag = (typeof optDeflateFlag === "undefined") ? false : optDeflateFlag;
-		var mappedPropItems = (typeof optMappedPropItems === "undefined") ? [] : optMappedPropItems;
+		var dontDeflatePropItems = (typeof optDontDeflatePropItems === "undefined") ? [] : optDontDeflatePropItems;
 
 		// return a JSON object of things needed to serialize
 		var ret = {
@@ -862,7 +862,7 @@ SemanticNode.prototype = {
 		for (var i = 0; i < this.propList.length; i++) {
 			var p = this.propList[i];
 			// if deflateFlag, then only add property if returned or constrained
-			if (deflateFlag == false || p.isUsed() || mappedPropItems.indexOf(p) > -1) {
+			if (deflateFlag == false || p.isUsed() || dontDeflatePropItems.indexOf(p) > -1) {
 				ret.propList.push(p.toJson());
 			}
 		}
@@ -1746,9 +1746,9 @@ SemanticNodeGroup.INSERT_FULL = "belmont/generateSparqlInsert#";
 SemanticNodeGroup.prototype = {
 		
 	
-	toJson : function(optDeflateFlag, optMappedPropItems) {
+	toJson : function(optDeflateFlag, optDontDeflatePropItems) {
 		var deflateFlag = (typeof optDeflateFlag === "undefined") ? false : optDeflateFlag;
-		var mappedPropItems = (typeof optMappedPropItems === "undefined") ? [] : optMappedPropItems;
+		var dontDeflatePropItems = (typeof optDontDeflatePropItems === "undefined") ? [] : optDontDeflatePropItems;
 
 		// get list in order such that linked nodes always preceed the node that
 		// links to them
@@ -1764,7 +1764,7 @@ SemanticNodeGroup.prototype = {
         
 		// add json snodes to sNodeList
 		for (var i = 0; i < snList.length; i++) {
-			ret.sNodeList.push(snList[i].toJson(deflateFlag, mappedPropItems));
+			ret.sNodeList.push(snList[i].toJson(deflateFlag, dontDeflatePropItems));
 		}
         
         // orderBy
