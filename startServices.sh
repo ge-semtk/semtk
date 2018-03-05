@@ -106,4 +106,14 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --server.port=$PORT_NODEGROUP_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
+#
+# wait for services
+#
+for port in $PORT_SPARQLGRAPH_STATUS_SERVICE $PORT_SPARQLGRAPH_RESULTS_SERVICE $PORT_DISPATCH_SERVICE $PORT_HIVE_SERVICE $PORT_NODEGROUPSTORE_SERVICE $PORT_ONTOLOGYINFO_SERVICE $PORT_NODEGROUPEXECUTION_SERVICE $PORT_SPARQL_QUERY_SERVICE $PORT_INGESTION_SERVICE $PORT_NODEGROUP_SERVICE ; do
+   while !  curl -X POST http://localhost:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
+        echo waiting for service on port $port
+        sleep 2
+   done
+   echo service on port $port is up
+done
 echo "=== DONE ==="
