@@ -110,7 +110,19 @@ echo "=== START MICROSERVICES... ==="
 # wait for services
 #
 MAX_SEC=300
-for port in $PORT_SPARQLGRAPH_STATUS_SERVICE $PORT_SPARQLGRAPH_RESULTS_SERVICE $PORT_DISPATCH_SERVICE $PORT_HIVE_SERVICE $PORT_NODEGROUPSTORE_SERVICE $PORT_ONTOLOGYINFO_SERVICE $PORT_NODEGROUPEXECUTION_SERVICE $PORT_SPARQL_QUERY_SERVICE $PORT_INGESTION_SERVICE $PORT_NODEGROUP_SERVICE ; do
+declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE, 
+                  $PORT_SPARQLGRAPH_RESULTS_SERVICE, 
+                  $PORT_DISPATCH_SERVICE, 
+                  $PORT_HIVE_SERVICE, 
+                  $PORT_NODEGROUPSTORE_SERVICE, 
+                  $PORT_ONTOLOGYINFO_SERVICE, 
+                  $PORT_NODEGROUPEXECUTION_SERVICE, 
+                  $PORT_SPARQL_QUERY_SERVICE, 
+                  $PORT_INGESTION_SERVICE, 
+                  $PORT_NODEGROUP_SERVICE
+                 )
+
+for port in "${PORTS[@]}"; do
    while !  curl -X POST http://localhost:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
         echo waiting for service on port $port
         if (($SECONDS > $MAX_SEC)) ; then
