@@ -14,12 +14,12 @@ if [ ! -d $WEBAPPS ]; then
     echo "Usage: updateWebapps.sh webapps_path"
 fi
 
-# SEMTK = directory holding this script
-SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SPARQLGRAPHWEB=$SEMTK/sparqlGraphWeb
+# SEMTK_OSS = directory holding this script
+SEMTK_OSS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SPARQLGRAPHWEB=$SEMTK_OSS/sparqlGraphWeb
 
 # make tmp directory
-TMP=$SEMTK/tmp
+TMP=$SEMTK_OSS/tmp
 rm -rf $TMP
 mkdir $TMP
 
@@ -37,30 +37,42 @@ do
                 cp $WEBAPPS/$v $TMP
         fi
 done
+
 # get list of dirs to move to webapps
-cd $SPARQLGRAPHWEB
-COPYDIRS=($(ls -d */))
-cd $SEMTK
+
+COPYDIRS=( "iidx-oss"
+           "semtk-api-doc"
+           "sparqlForm/main-oss"
+           "sparqlGraph/main-oss"
+         )
+cd $SEMTK_OSS
 
 # process each array
 for d in "${COPYDIRS[@]}"
 do
         DIR=${d%?}   # remove trailing /
-        if [ $DIR == "ROOT" ]; then
-                # Allow other files to remain in ROOT
-                mkdir -p $SPARQLGRAPHWEB/$DIR
-                echo cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
-                cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
-        else
-                # Wipe out and replace other known dirs
-                echo rm -rf $WEBAPPS/$DIR
-                rm -rf $WEBAPPS/$DIR
+        
+        # Wipe out and replace other known dirs
+        echo rm -rf $WEBAPPS/$DIR
+        rm -rf $WEBAPPS/$DIR
 
-                echo cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/
-                cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/
-        fi
+        echo cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/
+        cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/    
 done
 
+# --- special cases ---
+# Allow other files to remain in ROOT
+echo mkdir -p $SPARQLGRAPHWEB/ROOT
+     mkdir -p $SPARQLGRAPHWEB/ROOT
+echo cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
+     cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
+
+# Copy over html files from sparqlForm & sparqlGraph
+echo cp sparqlForm/*.html $WEBAPPS/sparqlForm
+     cp sparqlForm/*.html $WEBAPPS/sparqlForm
+echo cp sparqlGraph/*.html $WEBAPPS/sparqlGraph
+     cp sparqlGraph/*.html $WEBAPPS/sparqlGraph
+        
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
