@@ -42,6 +42,7 @@ done
 
 COPYDIRS=( "iidx-oss"
            "semtk-api-doc"
+           "sparqlForm/js"
            "sparqlForm/main-oss"
            "sparqlGraph/main-oss"
          )
