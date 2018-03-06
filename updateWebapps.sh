@@ -48,9 +48,8 @@ COPYDIRS=( "iidx-oss"
 cd $SEMTK_OSS
 
 # process each array
-for d in "${COPYDIRS[@]}"
+for DIR in "${COPYDIRS[@]}"
 do
-        DIR=${d%?}   # remove trailing /
         
         # Wipe out and replace other known dirs
         echo rm -rf $WEBAPPS/$DIR
