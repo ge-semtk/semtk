@@ -67,10 +67,10 @@ echo cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
      cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
 
 # Copy over html files from sparqlForm & sparqlGraph
-echo cp sparqlForm/*.html $WEBAPPS/sparqlForm
-     cp sparqlForm/*.html $WEBAPPS/sparqlForm
-echo cp sparqlGraph/*.html $WEBAPPS/sparqlGraph
-     cp sparqlGraph/*.html $WEBAPPS/sparqlGraph
+echo cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
+     cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
+echo cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
+     cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
         
 # replace versioned files
 for v in "${VERSIONED[@]}"
