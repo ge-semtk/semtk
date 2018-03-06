@@ -3,6 +3,9 @@
 #  Moves html, js, css, etc onto the apache web server
 #
 
+# stop if anything goes bad
+set -e
+
 if [ "$#" -ne 1 ]; then
     echo "Usage: updateWebapps.sh webapps_path"
 fi
@@ -36,13 +39,12 @@ do
                 echo cp $WEBAPPS/$v $TMP
                 cp $WEBAPPS/$v $TMP
         fi
-done
+donepwd
 
 # get list of dirs to move to webapps
 
 COPYDIRS=( "iidx-oss"
            "semtk-api-doc"
-           "sparqlForm/js"
            "sparqlForm/main-oss"
            "sparqlGraph/main-oss"
          )
@@ -97,5 +99,6 @@ do
                 fi
         fi
 done
+
 exit 0
-                           
+                    
