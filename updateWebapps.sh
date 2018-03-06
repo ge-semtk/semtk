@@ -47,16 +47,17 @@ COPYDIRS=( "iidx-oss"
          )
 cd $SEMTK_OSS
 
-# process each array
+# process each dir
 for DIR in "${COPYDIRS[@]}"
 do
+        DEST_DIR=$(dirname ${WEBAPPS}/${DIR})
         
         # Wipe out and replace other known dirs
         echo rm -rf $WEBAPPS/$DIR
-        rm -rf $WEBAPPS/$DIR
+             rm -rf $WEBAPPS/$DIR
 
-        echo cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/
-        cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/    
+        echo cp -r $SPARQLGRAPHWEB/$DIR $DEST_DIR
+             cp -r $SPARQLGRAPHWEB/$DIR $DEST_DIR
 done
 
 # --- special cases ---
