@@ -39,7 +39,7 @@ do
                 echo cp $WEBAPPS/$v $TMP
                 cp $WEBAPPS/$v $TMP
         fi
-donepwd
+done
 
 # get list of dirs to move to webapps
 
@@ -101,4 +101,4 @@ do
 done
 
 exit 0
-                    
+                
