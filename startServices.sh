@@ -18,8 +18,9 @@
 #
 # Starts microservices, including the ones needed for SparqlGraph.
 #
-# Usage: ./startServices            to use default configuration files in src/main/resources
-# Usage: ./startServices CONFIG_DIR to use configuration files in CONFIG_DIR 
+# Usage: ./startServices                                to use default configuration files in src/main/resources
+# Usage: ./startServices CONFIG_DIR                     to use configuration files in CONFIG_DIR 
+# Usage: ./startServices CONFIG_DIR DISPATCHER_JAR_DIR  to add additional dispatcher jars
 
 
 # uniform JVM config for all services, for now
@@ -38,12 +39,9 @@ PORT_INGESTION_SERVICE=12091
 PORT_NODEGROUP_SERVICE=12059
 PORT_UTILITY_SERVICE=12060	# placeholder for when this service is created
 
-LOCATION_ADDITIONAL_DISPATCHER_JARS=""
-
-
 if [ -z "$JAVA_HOME" ]; then
         >&2 echo No JAVA_HOME
-        exit
+        exit 1
 fi
 
 # SEMTK = directory holding this script
@@ -62,7 +60,7 @@ CONFIG_EXEC_SERVICE="$SEMTK"/nodeGroupExecutionService/src/main/resources/exec.p
 CONFIG_INGESTION_SERVICE="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties
 
 # use different config files if given a config directory parameter
-if [ $# -eq 1 ]; then
+if [ $# -gt 0 ]; then
 	CONFIG_DIR=$1
 	echo USING CONFIG FILES IN "$CONFIG_DIR"
     CONFIG_ONTOLOGYINFO_SERVICE="$CONFIG_DIR"/ontologyinfo.properties
@@ -77,8 +75,15 @@ else
 	echo USING DEFAULT CONFIGS in src/main/resources/
 fi
 
+if [ $# -gt 1 ]; then
+	echo ADDING DISPATCHER JARS IN $2
+	LOCATION_ADDITIONAL_DISPATCHER_JARS=$2
+else
+	LOCATION_ADDITIONAL_DISPATCHER_JARS=""
+fi
 
-mkdir -p $LOGS
+
+mkdir -p $LOGSc
 
 echo "=== START MICROSERVICES... ==="
 
