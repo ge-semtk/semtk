@@ -80,6 +80,7 @@ echo cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
 echo cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
      cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
         
+WARNINGS=0
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
@@ -88,21 +89,27 @@ do
 
         if [ ! -e $SAVED ]; then
                 echo WARNING: file needs to be modified for local configuration: $CURRENT
+                WARNINGS=1
         else
-                CURRENT_VERSION="($(grep VERSION $CURRENT))"
-                SAVED_VERSION="($(grep VERSION $SAVED))"
+                CURRENT_VERSION=($(grep VERSION $CURRENT))
+                SAVED_VERSION=($(grep VERSION $SAVED))
 
-                if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then 
+                if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then
                         echo cp $SAVED $CURRENT
                         cp $SAVED $CURRENT
+                        chmod 666 $CURRENT
                 else
                         echo WARNING: these files need to be manually merged to keep local configuration:
                         echo "        $SAVED"
                         echo "        $CURRENT"
-                        exit 1
+                        WARNINGS=1
                 fi
         fi
 done
+
+if [ "$WARNINGS" -ne "0" ]; then
+	exit 1
+fi
 
 
                 
