@@ -42,10 +42,14 @@ do
 done
 
 # get list of dirs to move to webapps
-
 COPYDIRS=( "iidx-oss"
            "semtk-api-doc"
            "sparqlForm/main-oss"
+           "sparqlGraph/css"
+           "sparqlGraph/dynatree-1.2.5"
+           "sparqlGraph/images"
+           "sparqlGraph/jquery"
+           "sparqlGraph/js"
            "sparqlGraph/main-oss"
          )
 cd $SEMTK_OSS
