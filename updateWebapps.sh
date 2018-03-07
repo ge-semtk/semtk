@@ -3,6 +3,9 @@
 #  Moves html, js, css, etc onto the apache web server
 #
 
+# stop if anything goes bad
+set -e
+
 if [ "$#" -ne 1 ]; then
     echo "Usage: updateWebapps.sh webapps_path"
 fi
@@ -14,12 +17,12 @@ if [ ! -d $WEBAPPS ]; then
     echo "Usage: updateWebapps.sh webapps_path"
 fi
 
-# SEMTK = directory holding this script
-SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SPARQLGRAPHWEB=$SEMTK/sparqlGraphWeb
+# SEMTK_OSS = directory holding this script
+SEMTK_OSS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SPARQLGRAPHWEB=$SEMTK_OSS/sparqlGraphWeb
 
 # make tmp directory
-TMP=$SEMTK/tmp
+TMP=$SEMTK_OSS/tmp
 rm -rf $TMP
 mkdir $TMP
 
@@ -37,30 +40,46 @@ do
                 cp $WEBAPPS/$v $TMP
         fi
 done
+
 # get list of dirs to move to webapps
-cd $SPARQLGRAPHWEB
-COPYDIRS=($(ls -d */))
-cd $SEMTK
+COPYDIRS=( "iidx-oss"
+           "semtk-api-doc"
+           "sparqlForm/main-oss"
+           "sparqlGraph/css"
+           "sparqlGraph/dynatree-1.2.5"
+           "sparqlGraph/images"
+           "sparqlGraph/jquery"
+           "sparqlGraph/js"
+           "sparqlGraph/main-oss"
+         )
+cd $SEMTK_OSS
 
-# process each array
-for d in "${COPYDIRS[@]}"
+# process each dir
+for DIR in "${COPYDIRS[@]}"
 do
-        DIR=${d%?}   # remove trailing /
-        if [ $DIR == "ROOT" ]; then
-                # Allow other files to remain in ROOT
-                mkdir -p $SPARQLGRAPHWEB/$DIR
-                echo cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
-                cp -r $SPARQLGRAPHWEB/$DIR/* $WEBAPPS/$DIR
-        else
-                # Wipe out and replace other known dirs
-                echo rm -rf $WEBAPPS/$DIR
-                rm -rf $WEBAPPS/$DIR
+        DEST_DIR=$(dirname ${WEBAPPS}/${DIR})
+        
+        # Wipe out and replace other known dirs
+        echo rm -rf $WEBAPPS/$DIR
+             rm -rf $WEBAPPS/$DIR
 
-                echo cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/
-                cp -r $SPARQLGRAPHWEB/$DIR $WEBAPPS/
-        fi
+        echo cp -r $SPARQLGRAPHWEB/$DIR $DEST_DIR
+             cp -r $SPARQLGRAPHWEB/$DIR $DEST_DIR
 done
 
+# --- special cases ---
+# Allow other files to remain in ROOT
+echo mkdir -p $SPARQLGRAPHWEB/ROOT
+     mkdir -p $SPARQLGRAPHWEB/ROOT
+echo cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
+     cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
+
+# Copy over html files from sparqlForm & sparqlGraph
+echo cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
+     cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
+echo cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
+     cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
+        
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
@@ -84,5 +103,6 @@ do
                 fi
         fi
 done
-exit 0
-                           
+
+
+                
