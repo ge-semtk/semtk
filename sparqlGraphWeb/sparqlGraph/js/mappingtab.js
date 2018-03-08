@@ -278,7 +278,7 @@ define([	// properly require.config'ed
 					// rows
 					var rowList = this.importSpec.getSortedMappings();
 					for (var i=0; i < rowList.length; i++) {
-						this.drawUriRow(table, rowList[i]);
+						this.drawMappingRow(table, rowList[i]);
 					}
 					
 					this.canvasDiv.appendChild(table);
@@ -322,7 +322,8 @@ define([	// properly require.config'ed
 									"Go Ahead");
 			},
 			
-			drawUriRow : function (table, iMapping) {
+            // initial draw of a mapping row
+			drawMappingRow : function (table, iMapping) {
 				// append one item row to an HTML table
 				var row = table.insertRow(-1);
 				var cell = null;
@@ -381,12 +382,40 @@ define([	// properly require.config'ed
 					var elem = this.createItemElem(itemList[i]);
 					cell.appendChild(elem);
 				}
+                
+                this.setRowHelpBlock(cell);
 			},
+            
+            setRowHelpBlock : function(rowCell) {
+                
+                // return if this isn't a URI (node) row
+                var mapping = this.iSpecHash[rowCell.id];
+                if (! mapping.isNode()) {
+                    return;
+                }
+                
+                // add help-block to any empty row
+                if (rowCell.childElementCount == 0) {
+                    var s = document.createElement("span");
+                    s.innerHTML = "--Generate UUID--";
+                    s.classList.add("help-block");
+                    rowCell.appendChild(s);
+                    
+                // remove help-block from any non-empty row
+                } else if (rowCell.childElementCount > 1) {
+                    for (var i=0; i < rowCell.childElementCount; i++) {
+                        if (rowCell.children[i].classList.contains("help-block")) {
+                            rowCell.removeChild(rowCell.children[i]);
+                        }
+                    }
+                }
+                
+            },
             
             // Either an error or dragging to garbage
             // could have caused a URI lookup with no mapping items.
             // Remove these.
-            removeUriLookupsWithNoItems() {
+            removeUriLookupsWithNoItems : function() {
                 for (var i=0; i < this.buttonList.length; i++) {
                     var but = this.buttonList[i];
                     var map = this.iSpecHash[but.id];
@@ -399,7 +428,7 @@ define([	// properly require.config'ed
                 }
             },
             
-            updateAllUriLookupButtons() {
+            updateAllUriLookupButtons : function() {
                 
                 // now update all the buttons
                 for (var i=0; i < this.buttonList.length; i++) {
@@ -415,7 +444,7 @@ define([	// properly require.config'ed
             //     - there are mapping items (so the URILookup fields COULD be set)
             //
             // make the mapping button "primary" if any URILookup field has been set set
-            updateUriLookupButton(button, mapping) {
+            updateUriLookupButton : function(button, mapping) {
                 var disable = false;
                 if (    mapping.getUriLookupNodes().length > 0 || 
                         mapping.getUriLookupMode() != null     ||
@@ -441,7 +470,7 @@ define([	// properly require.config'ed
             },
             
             // get the GUI string for the URI mode
-            getUriLookupModeStr(iMapping) {
+            getUriLookupModeStr : function(iMapping) {
                 var mode = iMapping.getUriLookupMode();
                 var ret = "";
                 var itemCount = iMapping.getItemList().length;
@@ -1028,7 +1057,9 @@ define([	// properly require.config'ed
 			    	}
 			    	
 			    	// remove from html parent
-			    	dragElem.parentNode.removeChild(dragElem);
+                    var formerParent = dragElem.parentNode;
+			    	formerParent.removeChild(dragElem);
+                    this.setRowHelpBlock(formerParent);
 			    	
 			    	// drop item is this element
 			    	dropElem = dragElem;
@@ -1052,8 +1083,9 @@ define([	// properly require.config'ed
 				 var insertBeforeElem = null;
 				 var insertBeforeIObj = null;
 				 
+                
 				 // if event bubbled to here, find the column or text item target it bubbled through
-				 if (ev.target != rowElem) {
+				 if (ev.target != rowElem && ! ev.target.classList.contains("help-block")) {
 					 insertBeforeElem = ev.target;
 					 while (!this.elemIsColumnItem(insertBeforeElem) && !this.elemIsTextItem(insertBeforeElem)) {
 						 insertBeforeElem = insertBeforeElem.parentNode;
@@ -1067,6 +1099,7 @@ define([	// properly require.config'ed
 
 					 // do html
 					 rowElem.insertBefore(dropElem, insertBeforeElem);
+                     this.setRowHelpBlock(rowElem);
 					 
 					 // insert in right spot in importSpec
 					 var iMapping = this.iSpecHash[rowElem.id];
@@ -1203,8 +1236,12 @@ define([	// properly require.config'ed
 			    	this.importSpec.delText(iText);
 			    }
 			    
-			    // update html and iSpecHash
-			    dragParent.removeChild(dragElem);
+                // remove from html parent
+                var formerParent = dragElem.parentNode;
+                formerParent.removeChild(dragElem);
+                this.setRowHelpBlock(formerParent);
+                
+			    // update iSpecHash
 			    delete this.iSpecHash[dragElem.id];
 			    
 			    // House-keeping
