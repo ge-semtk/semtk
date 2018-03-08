@@ -128,6 +128,10 @@ define([	// properly require.config'ed
         return elem;
     };
 
+    IIDXHelper.removeMargins = function(e) {
+        e.style.margin = "0px 0px 0px 0px";
+    };
+    
     IIDXHelper.createVAlignedCheckbox = function () {
         var checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -320,7 +324,8 @@ define([	// properly require.config'ed
         return butElem;
     };
     
-    IIDXHelper.createIconButton = function(iconClass, optCallback) {
+    
+    IIDXHelper.createIconButtonOLD = function(iconClass, optCallback) {
         var ret = document.createElement("a");
         ret.classList.add("btn");
         var icon = document.createElement("icon");
@@ -333,6 +338,23 @@ define([	// properly require.config'ed
         return ret;
     };
     
+    IIDXHelper.createIconButton = function(iconClass, callback, optClassList, optId) {
+        var butElem = document.createElement("button");
+        var icon = document.createElement("icon");
+        icon.className = iconClass;
+        butElem.appendChild(icon);
+        butElem.onclick = callback;
+        if (typeof optClassList != "undefined") {
+            for (var i=0; i < optClassList.length; i++) {
+                butElem.classList.add(optClassList[i]);
+            }
+        }
+        if (typeof optId != "undefined") {
+            butElem.id = optId;
+        }
+        return butElem;
+    };
+    
     IIDXHelper.createNbspText = function() {
         return document.createTextNode("\u00A0");
     };
@@ -341,6 +363,11 @@ define([	// properly require.config'ed
         var b = document.createElement("b");
         b.appendChild(document.createTextNode(text));
         return b
+    };
+    
+    IIDXHelper.appendTextLine = function(elem, text) {
+        elem.appendChild(document.createTextNode(text));
+        elem.appendChild(document.createElement("br"));
     };
     
     /*

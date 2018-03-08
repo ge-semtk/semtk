@@ -34,6 +34,7 @@ define([	// properly require.config'ed
         	'sparqlgraph/js/importtrans',
         	'sparqlgraph/js/importmapping',
          	'sparqlgraph/js/modaliidx',
+            'sparqlgraph/js/importmappingmodal',
          	'sparqlgraph/js/importtransformmodal',
          	'sparqlgraph/js/iidxhelper',
 
@@ -44,7 +45,7 @@ define([	// properly require.config'ed
          	
 		],
 
-	function(ImportColumn, ImportCsvSpec, MappingItem, ImportSpec, ImportText, ImportTransform, ImportMapping, ModalIidx, ImportTransformModal, IIDXHelper, $) {
+	function(ImportColumn, ImportCsvSpec, MappingItem, ImportSpec, ImportText, ImportTransform, ImportMapping, ModalIidx, ImportMappingModal, ImportTransformModal, IIDXHelper, $) {
 		
 		
 		//============ local object  MappingTab =============
@@ -68,7 +69,7 @@ define([	// properly require.config'ed
 		    this.csvCallback = csvCallback;
 		    this.alertCallback = alertCallback;          //  alert(htmlMessage, optTitleText)
 		    this.dragEvTargetId = null;
-		    this.elemHash = {};     // elemHash[elem.id] = the ImportSpec object
+		    this.iSpecHash = {};     // iSpecHash[elem.id] = the ImportSpec object
 		                            //   column names    before drag-and-drop - ImportColumn
 		                            //   text names      before drag-and-drop - ImportText
 		                            //
@@ -76,6 +77,7 @@ define([	// properly require.config'ed
 		                            //
 		                            //   text or column  after drag and drop - MappingItems
                                     //   drop area for each row (table cells) - ImportRow
+            this.buttonList = [];
 		};
 		
 		
@@ -103,7 +105,8 @@ define([	// properly require.config'ed
 
 			    this.uniqueIndex = 0;  
                 this.changedFlag = false;
-			    this.elemHash = {};   
+			    this.iSpecHash = {};   
+                this.buttonList = [];
 			},
 			
 			getCsvFile : function () {
@@ -119,8 +122,8 @@ define([	// properly require.config'ed
 				}
 			},
 			
-			getMappedPropItems : function () {
-				return this.importSpec.getMappedPropItems();
+			getUndeflatablePropItems : function () {
+				return this.importSpec.getUndeflatablePropItems();
 			},
 			
 			getUniqueIndexStr : function () {
@@ -138,7 +141,7 @@ define([	// properly require.config'ed
 						
 			draw : function() {
 				kdlLogEvent("Import Tab Draw");
-
+                
 				// create an ImportSpec if there is none
 				if (this.importCsvSpec == null) {
 					this.importCsvSpec = new ImportCsvSpec();
@@ -149,7 +152,8 @@ define([	// properly require.config'ed
 				window.ondrop     = function (e) { e.stopPropagation(); e.preventDefault();};			
 				
 				// starting over
-				this.elemHash = {};
+				this.iSpecHash = {};
+                this.buttonList = [];
 				
 				// --- draw columns side (right) ---
 				this.rightDiv.innerHTML = "";
@@ -270,11 +274,11 @@ define([	// properly require.config'ed
 					
 				} else {
 					var table = this.createCanvasTable();
-					
+					this.importSpec.updateEmptyUriLookupModes();
 					// rows
-					var rowList = this.importSpec.getSortedRows();
+					var rowList = this.importSpec.getSortedMappings();
 					for (var i=0; i < rowList.length; i++) {
-						this.drawUriRow(table, rowList[i]);
+						this.drawMappingRow(table, rowList[i]);
 					}
 					
 					this.canvasDiv.appendChild(table);
@@ -282,8 +286,15 @@ define([	// properly require.config'ed
 					// usage style changes
 					this.updateUseStyles();
 				}
+                
+                this.validateRows();
+                this.updateAllUriLookupButtons();
 			},
 			
+            getUriLookupButton : function(rowElem) {
+                return rowElem.parentElement.children[1].children[0];
+            },
+            
 			createClearAllBut : function () {
 				// create the "New" button for the text div
 				var elem = document.createElement("button");
@@ -311,33 +322,44 @@ define([	// properly require.config'ed
 									"Go Ahead");
 			},
 			
-			drawUriRow : function (table, iRow) {
+            // initial draw of a mapping row
+			drawMappingRow : function (table, iMapping) {
 				// append one item row to an HTML table
 				var row = table.insertRow(-1);
 				var cell = null;
-                var uriFlag = (iRow.getPropItem() == null);
 				
-                // create column of lookup / mode controls   PEC HERE
+                // COL  Name: if URI label with sparqlID, else use property keyname
 				cell = row.insertCell(-1);
-				if (uriFlag) {
-                    
-                } else {
-                    var but = IIDXHelper.createIconButton("icon-key", function(){});
-                    cell.appendChild(but);
-                }
-                
-                // if URI label with sparqlID, else use property keyname
-				cell = row.insertCell(-1);
-                if (uriFlag) {
-					cell.innerHTML = "<b>" + iRow.node.getSparqlID() + "</b>";
+                if (iMapping.isNode()) {
+					cell.innerHTML = "<b>" + iMapping.getName() + "</b>";
 				} else {
-					cell.innerHTML = iRow.propItem.getKeyName();
+					cell.innerHTML = iMapping.getName();
 				}
-				
-                // set up cell for dropping things into
+                
+                cell = row.insertCell(-1);
+                
+                // create mapping dialog button
+                var but = IIDXHelper.createIconButton("icon-tasks", function(){});
+                but.id = IIDXHelper.getNextId("but");
+                this.iSpecHash[but.id] = iMapping;
+                this.buttonList.push(but);
+                
+                this.updateUriLookupButton(but, iMapping);
+                cell.appendChild(but);
+                
+                // button onclick launches dialog
+                but.onclick = function(mapping, ispec, cb) {
+                    var m = new ImportMappingModal(mapping, ispec, cb);
+                    m.launch();
+                }.bind(this, 
+                       iMapping, 
+                       this.importSpec, 
+                       this.updateAllUriLookupButtons.bind(this, iMapping));
+                
+                // COL area for dropping things into
 				cell = row.insertCell(-1);
 				cell.id = MappingTab.PREFIX_ROW + this.getUniqueIndexStr();
-				this.elemHash[cell.id] = iRow;
+				this.iSpecHash[cell.id] = iMapping;
 				
 				cell.style="border: 1px solid #aaaaaa";
 				cell.innerHTML="";
@@ -353,27 +375,129 @@ define([	// properly require.config'ed
 				}.bind(this);
 
 				cell.ondrop = this.ondropUriRow.bind(this);
-				
+                
                 // put in any Item elements that already exist
-				var itemList = iRow.getItemList();
+				var itemList = iMapping.getItemList();
 				for (var i=0; i < itemList.length; i++) {
 					var elem = this.createItemElem(itemList[i]);
 					cell.appendChild(elem);
 				}
-				
+                
+                this.setRowHelpBlock(cell);
 			},
+            
+            setRowHelpBlock : function(rowCell) {
+                
+                // return if this isn't a URI (node) row
+                var mapping = this.iSpecHash[rowCell.id];
+                if (! mapping.isNode()) {
+                    return;
+                }
+                
+                // add help-block to any empty row
+                if (rowCell.childElementCount == 0) {
+                    var s = document.createElement("span");
+                    s.innerHTML = "--Generate UUID--";
+                    s.classList.add("help-block");
+                    rowCell.appendChild(s);
+                    
+                // remove help-block from any non-empty row
+                } else if (rowCell.childElementCount > 1) {
+                    for (var i=0; i < rowCell.childElementCount; i++) {
+                        if (rowCell.children[i].classList.contains("help-block")) {
+                            rowCell.removeChild(rowCell.children[i]);
+                        }
+                    }
+                }
+                
+            },
+            
+            // Either an error or dragging to garbage
+            // could have caused a URI lookup with no mapping items.
+            // Remove these.
+            removeUriLookupsWithNoItems : function() {
+                for (var i=0; i < this.buttonList.length; i++) {
+                    var but = this.buttonList[i];
+                    var map = this.iSpecHash[but.id];
+                    
+                    // remove URI Lookup if there is no mapping
+                    // TODO do we need a dialog here
+                    if (map.getItemList().length == 0 && map.getUriLookupNodes().length > 0) {
+                        map.setUriLookupNodes([]);
+                    }
+                }
+            },
+            
+            updateAllUriLookupButtons : function() {
+                
+                // now update all the buttons
+                for (var i=0; i < this.buttonList.length; i++) {
+                    var but = this.buttonList[i];
+                    var map = this.iSpecHash[but.id];
+                    
+                    this.updateUriLookupButton(but, map);
+                }
+            },
+            
+            // enable button if 
+            //     - URILookup fields are used, or 
+            //     - there are mapping items (so the URILookup fields COULD be set)
+            //
+            // make the mapping button "primary" if any URILookup field has been set set
+            updateUriLookupButton : function(button, mapping) {
+                var disable = false;
+                if (    mapping.getUriLookupNodes().length > 0 || 
+                        mapping.getUriLookupMode() != null     ||
+                        this.importSpec.getLookupMappings(mapping).length > 0) {
+                    button.classList.add("btn-primary");
+                    button.disabled = false;
+                } else {
+                    button.classList.remove("btn-primary");
+                    disable = (mapping.getItemList().length == 0);
+                    button.disabled = disable;
+                }
+                
+                // Set the hover title
+                if (disable) {
+                    if (mapping.isNode()) {
+                        button.title = "Add mapping items or set a field to look up this URI first";
+                    } else {
+                        button.title = "Add mapping items first";
+                    }
+                } else {
+                    button.value = null;
+                }
+            },
+            
+            // get the GUI string for the URI mode
+            getUriLookupModeStr : function(iMapping) {
+                var mode = iMapping.getUriLookupMode();
+                var ret = "";
+                var itemCount = iMapping.getItemList().length;
+                
+                if (mode == ImportMapping.LOOKUP_MODE_NO_CREATE)   { ret = "Lookup"; }
+                else if (mode == ImportMapping.LOOKUP_MODE_CREATE) { ret = "Lookup/Add"; }
+                else if (itemCount > 0)                            { ret = "Ingest:"; }
+                else                                               { ret = "UUID"; }
+                
+                return ret;
+            },
+            
+            checkUriLookupErrors() {
+                
+            },
 			
 			createItemElem : function (item) {
 				// create an element from an importSpec item
 			
 				if (item.getType() === MappingItem.TYPE_TEXT) {
 					var textElem = this.createTextElem(item.getTextObj(), true);
-					this.elemHash[textElem.id] = item;   // overwrite so element points to MappingItem not ImportText
+					this.iSpecHash[textElem.id] = item;   // overwrite so element points to MappingItem not ImportText
 					return textElem;
 					
 				} else {
 					var colElem = this.createColElem(item.getColumnObj(), true);
-					this.elemHash[colElem.id] = item;   // overwrite so element points to MappingItem not ImportColumn
+					this.iSpecHash[colElem.id] = item;   // overwrite so element points to MappingItem not ImportColumn
 
 					var tList = item.getTransformList();
 					// add the transform
@@ -415,7 +539,7 @@ define([	// properly require.config'ed
 				elem.id = "modal_text";
 				elem.type = "text";
 				elem.class = "input-small";
-				elem.value = (textElem != null) ? this.elemHash[textElem.id].getText() : "";
+				elem.value = (textElem != null) ? this.iSpecHash[textElem.id].getText() : "";
 				nameForm.appendChild(elem);
 				
 				var modalValidate = function() {
@@ -468,7 +592,7 @@ define([	// properly require.config'ed
 				} else {
 					elem.id = MappingTab.PREFIX_TEXT + this.getUniqueIndexStr();
 				}
-				this.elemHash[elem.id] = iText;
+				this.iSpecHash[elem.id] = iText;
 				
 				elem.className = MappingTab.classTextUnused;
 				elem.innerHTML = iText.getText();
@@ -534,7 +658,7 @@ define([	// properly require.config'ed
 					span.id = MappingTab.PREFIX_TRANSFORM;
 				}
 				span.id += name.replace(/[^A-Za-z0-9]/g,"_") + this.getUniqueIndexStr();
-				this.elemHash[span.id] = iTrans;
+				this.iSpecHash[span.id] = iTrans;
 				
 				// appearance
 				span.className = MappingTab.classTransformUnused;
@@ -589,7 +713,7 @@ define([	// properly require.config'ed
 				// get iTrans
 				var iTrans = null;
 				if (transElem) {
-					iTrans = this.elemHash[transElem.id];
+					iTrans = this.iSpecHash[transElem.id];
 					kdlLogEvent("Import Tab Edit Transform", "name", iTrans.getName());
 				} else {
 					kdlLogEvent("Import Tab Create Transform");
@@ -640,8 +764,8 @@ define([	// properly require.config'ed
 				// columns
 				var children = this.columnDiv.childNodes;
 				for (var i=0; i < children.length; i++) {
-					if (children[i].id in this.elemHash) {
-						var elemIObj = this.elemHash[children[i].id];
+					if (children[i].id in this.iSpecHash) {
+						var elemIObj = this.iSpecHash[children[i].id];
 						if (iObj == null || elemIObj == iObj) { 
 							if (elemIObj.getUse() > 0) {
 								children[i].className = MappingTab.classColumnUsed;
@@ -655,8 +779,8 @@ define([	// properly require.config'ed
 				// text
 				children = this.textDiv.childNodes;
 				for (var i=0; i < children.length; i++) {
-					if (children[i].id in this.elemHash) {
-						var elemIObj = this.elemHash[children[i].id];
+					if (children[i].id in this.iSpecHash) {
+						var elemIObj = this.iSpecHash[children[i].id];
 						if (iObj == null || elemIObj == iObj) { 
 							if (elemIObj.getUse() > 0) {
 								children[i].className = MappingTab.classTextUsed;
@@ -670,8 +794,8 @@ define([	// properly require.config'ed
 				// transforms
 				children = this.transformDiv.childNodes;
 				for (var i=0; i < children.length; i++) {
-					if (children[i].id in this.elemHash) {
-						var elemIObj = this.elemHash[children[i].id];
+					if (children[i].id in this.iSpecHash) {
+						var elemIObj = this.iSpecHash[children[i].id];
 						if (iObj == null || elemIObj == iObj) { 
 							if (elemIObj.getUse() > 0) {
 								children[i].className = MappingTab.classTransformUsed;
@@ -723,7 +847,7 @@ define([	// properly require.config'ed
 										if (this.isTrashable(ev)) {
 											this.ondropTrash(ev); 
 											ev.currentTarget.style.color = "gray";
-										} else { console.log ("Paul is a bad programmer in trash ondrop()"); }
+										} 
 										ev.stopPropagation();
 							   		}.bind(this);
 							   		
@@ -750,7 +874,7 @@ define([	// properly require.config'ed
 				
 				// set the text button
 				textElem.innerHTML = text;
-				var iText = this.elemHash[textElem.id];
+				var iText = this.iSpecHash[textElem.id];
 				
 				// set the ImportText value
 				iText.setText(text);
@@ -765,10 +889,10 @@ define([	// properly require.config'ed
 				// apply applyFunc(elem) to each html element
 				var numApplied = 0;
 				
-				for (var elemId in this.elemHash) {
+				for (var elemId in this.iSpecHash) {
 					
 					// find all matching items
-					var iItem = this.elemHash[elemId];
+					var iItem = this.iSpecHash[elemId];
 					if (this.idIsTextItem(elemId) || this.idIsColumnItem(elemId)) {
 						if (iItem.getColumnOrTextObj() == iTextOrCol) {
 							applyFunc( document.getElementById(elemId) );
@@ -789,11 +913,11 @@ define([	// properly require.config'ed
 				// and apply applyFunc(elem) to each html element
 				
 				var numApplied = 0;
-				for (var elemId in this.elemHash) {
+				for (var elemId in this.iSpecHash) {
 
 					// find all matching items
 					if (this.idIsTransformInItem(elemId)) {
-						if (this.elemHash[elemId] == iTrans) {
+						if (this.iSpecHash[elemId] == iTrans) {
 							applyFunc( document.getElementById(elemId) );
 							numApplied += 1;
 							
@@ -818,7 +942,7 @@ define([	// properly require.config'ed
 				} else {
 					span.id = MappingTab.PREFIX_COL + iCol.getColName().replace(/[^A-Za-z0-9]/g,"_") + this.getUniqueIndexStr();
 				}
-				this.elemHash[span.id] = iCol;
+				this.iSpecHash[span.id] = iCol;
 				
 				// appearance
 				span.className = MappingTab.classColumnUnused;
@@ -855,24 +979,22 @@ define([	// properly require.config'ed
 				// create table
 				var table = document.createElement("table");
 				table.id = "canvas-table";
+                table.style.width="98%";
 				
 				// insert an empty header just to set widths
 				var headerRow = table.insertRow(-1);
 				
-				// first viz col
+				//  col0:  name
+				var cell = headerRow.insertCell(-1);
+                cell.style.width="20%";
+                
+				// col1  button
 				var cell = headerRow.insertCell(-1);
 				cell.style+=";white-space: nowrap;";
-				//cell.innerHTML="Model Element";
 				
-				// second viz col
+                //  col2 drop area
 				cell = headerRow.insertCell(-1);
-				cell.width="90%";
-				//cell.innerHTML="Value";
-				
-				// third viz col
-				cell = headerRow.insertCell(-1);
-				cell.width="5%";
-				cell.innerHTML=" ";
+				cell.width="100%";
 				
 				return table;
 			},
@@ -891,30 +1013,30 @@ define([	// properly require.config'ed
 			
 			prepDropElement : function (dragElem) {
 				// when something is about to be dropped,
-				//    - if we're dropping a copy: create elem and item.   Set this.elemHash[elem.id] = item
+				//    - if we're dropping a copy: create elem and item.   Set this.iSpecHash[elem.id] = item
 				//    - delete from html parent element if appropriate
 				//    - remove hashed item from it's spot in ImportSpec, if appropriate
 				//    
 				// RETURN:  the new elem or dragElem
-				//          this.elemHash[ret.id] = any new ImportSpec item
+				//          this.iSpecHash[ret.id] = any new ImportSpec item
 				
 				var dropElem = dragElem;
 				
 				if (dragElem.parentNode == this.columnDiv) {
 			    	//====  pulling in a column from cols list ====
-					var iCol = this.elemHash[dragElem.id];
+					var iCol = this.iSpecHash[dragElem.id];
 					var item = new MappingItem(MappingItem.TYPE_COLUMN, iCol, []);
 				    dropElem = this.createItemElem(item); 
 				
 			    } else if (dragElem.parentNode == this.textDiv) {
 			    	//====  pulling in a transform from transform list ====
-			    	var iText = this.elemHash[dragElem.id];
+			    	var iText = this.iSpecHash[dragElem.id];
 					var item = new MappingItem(MappingItem.TYPE_TEXT, iText, []);
 				    dropElem = this.createItemElem(item); 
 			    
 			    } else if (dragElem.parentNode == this.transformDiv) {
 			    	//====  pulling in a transform from transform list ====
-			    	var trans = this.elemHash[dragElem.id];
+			    	var trans = this.iSpecHash[dragElem.id];
 				    dropElem = this.createTransformElem(trans, true); 
 			    	
 			    } else {
@@ -923,19 +1045,21 @@ define([	// properly require.config'ed
 			    	// remove element from its old position in the importSpec
 			    	if (this.elemIsTextItem(dragElem) || this.elemIsColumnItem(dragElem)) {
 			    		// this is a col or text: get the row item and remove it
-			    		var iRow = this.elemHash[dragElem.parentNode.id];
-			    		var item = this.elemHash[dragElem.id];
-			    		iRow.delItem(item);
+			    		var iMapping = this.iSpecHash[dragElem.parentNode.id];
+			    		var item = this.iSpecHash[dragElem.id];
+			    		iMapping.delItem(item);
 			    		
 			    	} else if (this.elemIsTransformInItem(dragElem)) {
 			    		// this is a trans item, so remove it from col
-			    		var iColItem = this.elemHash[dragElem.parentNode.id];
-			    		var iTrans = this.elemHash[dragElem.id];
+			    		var iColItem = this.iSpecHash[dragElem.parentNode.id];
+			    		var iTrans = this.iSpecHash[dragElem.id];
 			    		iColItem.delTransform(iTrans);
 			    	}
 			    	
 			    	// remove from html parent
-			    	dragElem.parentNode.removeChild(dragElem);
+                    var formerParent = dragElem.parentNode;
+			    	formerParent.removeChild(dragElem);
+                    this.setRowHelpBlock(formerParent);
 			    	
 			    	// drop item is this element
 			    	dropElem = dragElem;
@@ -954,19 +1078,20 @@ define([	// properly require.config'ed
 				 var dragElem = document.getElementById(id);
 				 var rowElem = ev.currentTarget;
 				 var dropElem = this.prepDropElement(dragElem);
-				 var dropItem = this.elemHash[dropElem.id];
+				 var dropItem = this.iSpecHash[dropElem.id];
 				 
 				 var insertBeforeElem = null;
 				 var insertBeforeIObj = null;
 				 
+                
 				 // if event bubbled to here, find the column or text item target it bubbled through
-				 if (ev.target != rowElem) {
+				 if (ev.target != rowElem && ! ev.target.classList.contains("help-block")) {
 					 insertBeforeElem = ev.target;
 					 while (!this.elemIsColumnItem(insertBeforeElem) && !this.elemIsTextItem(insertBeforeElem)) {
 						 insertBeforeElem = insertBeforeElem.parentNode;
 						 if (insertBeforeElem == rowElem) { throw "MappingTab.ondropUriRow() internal error."; }
 					 }
-					 insertBeforeIObj = this.elemHash[insertBeforeElem.id];
+					 insertBeforeIObj = this.iSpecHash[insertBeforeElem.id];
 				 }
 				 
 				 // Transforms can't be dropped on UriRows.  Everything else: go for it
@@ -974,10 +1099,13 @@ define([	// properly require.config'ed
 
 					 // do html
 					 rowElem.insertBefore(dropElem, insertBeforeElem);
+                     this.setRowHelpBlock(rowElem);
 					 
 					 // insert in right spot in importSpec
-					 var iRow = this.elemHash[rowElem.id];
-					 iRow.addItem(dropItem, insertBeforeIObj);
+					 var iMapping = this.iSpecHash[rowElem.id];
+					 iMapping.addItem(dropItem, insertBeforeIObj);
+                     this.validateRows();
+                     this.updateAllUriLookupButtons();
 				     this.updateUseStyles(dropItem.getColumnOrTextObj());
 				     this.setChangedFlag(true);
 				 }
@@ -1021,8 +1149,8 @@ define([	// properly require.config'ed
 					targetElem.appendChild(dropElem);
 					
 					// insert in right spot in importSpec
-					var item = this.elemHash[targetElem.id];
-					var iTrans = this.elemHash[dragElem.id];
+					var item = this.iSpecHash[targetElem.id];
+					var iTrans = this.iSpecHash[dragElem.id];
 					item.addTransform(iTrans, null);
 					
 					// halt further actions
@@ -1033,6 +1161,7 @@ define([	// properly require.config'ed
 				
 			},
 			
+            // Dropping something onto a transform
 			ondropTransformItem : function (ev) {
 				// only transforms drop on transforms, so dragElem and targetElem are both transforms
 				
@@ -1059,9 +1188,9 @@ define([	// properly require.config'ed
 					colElem.insertBefore(dropElem, insertBefore);
 					
 					// insert in right spot in importSpec
-					var iCol = this.elemHash[colElem.id];
-					var item = this.elemHash[dropElem.id];
-					var beforeItem = this.elemHash[insertBefore.id];
+					var iCol = this.iSpecHash[colElem.id];
+					var item = this.iSpecHash[dropElem.id];
+					var beforeItem = this.iSpecHash[insertBefore.id];
 					iCol.addTransform(item, beforeItem);
 					
 					ev.preventDefault();
@@ -1084,9 +1213,9 @@ define([	// properly require.config'ed
 			    // update ImportSpec
 			    if (this.elemIsColumnItem(dragElem) || this.elemIsTextItem(dragElem)) {
 			    	// update iSpec
-			    	var item = this.elemHash[dragElem.id];
-			    	var iRow = this.elemHash[dragParent.id];
-			    	iRow.delItem(item);
+			    	var item = this.iSpecHash[dragElem.id];
+			    	var iMapping = this.iSpecHash[dragParent.id];
+			    	iMapping.delItem(item);
 			    	
 			    	// manage appearance
 			    	var iObj = item.getColumnOrTextObj();
@@ -1094,26 +1223,31 @@ define([	// properly require.config'ed
 			    	
 			    } else if (this.elemIsTransformInItem(dragElem)) {
 			    	// update iSpec
-			    	var iColItem = this.elemHash[dragParent.id];
-			    	var iTrans = this.elemHash[dragElem.id];
+			    	var iColItem = this.iSpecHash[dragParent.id];
+			    	var iTrans = this.iSpecHash[dragElem.id];
 			    	iColItem.delTransform(iTrans);
 			    	
 			    } else if (this.elemIsTransform(dragElem)) {
-			    	var iTrans = this.elemHash[dragElem.id];
+			    	var iTrans = this.iSpecHash[dragElem.id];
 			    	this.importSpec.delTransform(iTrans);
 			    	
 			    } else if (this.elemIsText(dragElem)) {
-			    	var iText = this.elemHash[dragElem.id];
+			    	var iText = this.iSpecHash[dragElem.id];
 			    	this.importSpec.delText(iText);
 			    }
 			    
-			    // update html and elemHash
-			    dragParent.removeChild(dragElem);
-			    delete this.elemHash[dragElem.id];
+                // remove from html parent
+                var formerParent = dragElem.parentNode;
+                formerParent.removeChild(dragElem);
+                this.setRowHelpBlock(formerParent);
+                
+			    // update iSpecHash
+			    delete this.iSpecHash[dragElem.id];
 			    
 			    // House-keeping
 			    this.setChangedFlag(true);
 			    this.validateRows();
+                this.updateAllUriLookupButtons();
 			    
 			    // halt further actions
 			    ev.currentTarget.style.cursor = "default";
@@ -1123,7 +1257,7 @@ define([	// properly require.config'ed
 			
 			// ======= what is droppable on what ======= 
 			isUriRowDroppable: function (ev) {
-				console.log("isUriRowDroppable ev.target.id=" + ev.target.id + " this.dragEvTargetId=" + this.dragEvTargetId);
+				// console.log("isUriRowDroppable ev.target.id=" + ev.target.id + " this.dragEvTargetId=" + this.dragEvTargetId);
 				// if dragged thing is col or text or textTool
 				var id = this.dragEvTargetId;
 				if (id) {
@@ -1188,12 +1322,12 @@ define([	// properly require.config'ed
 					}
 					
 					// unused Transforms 
-					else if (this.elemIsTransform(elem) && this.elemHash[id].getUse() == 0) {
+					else if (this.elemIsTransform(elem) && this.iSpecHash[id].getUse() == 0) {
 						return true;
 					}
 					
 					// unused Text
-					else if (this.elemIsText(elem) && this.elemHash[id].getUse() == 0) {
+					else if (this.elemIsText(elem) && this.iSpecHash[id].getUse() == 0) {
 						return true;
 					}
 				}
@@ -1241,7 +1375,8 @@ define([	// properly require.config'ed
 			},
 			
 			validateRows: function () {
-				
+                this.removeUriLookupsWithNoItems();
+                this.importSpec.updateEmptyUriLookupModes();
 			},
 			
             toJson : function (optDeflateFlag) {

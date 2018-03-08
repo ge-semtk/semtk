@@ -166,7 +166,11 @@ public class DataLoadBatchHandler {
 					newErrorReport.add(currCol);
 				}
 				// add error report columns
-				newErrorReport.add(e.getMessage());
+				if (e instanceof RuntimeException) {
+					newErrorReport.add(e.toString());
+				} else {
+					newErrorReport.add(e.getMessage());
+				}
 				newErrorReport.add(String.valueOf(startingRowNum + i));
 				this.addFailureRow(newErrorReport);
 			}

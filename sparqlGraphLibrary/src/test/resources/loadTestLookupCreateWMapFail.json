@@ -1,0 +1,159 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit ves-test",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"dataset": "http://200001934/junit/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"dataset": "http://200001934/junit/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 8,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "assemblyDate",
+						"ValueType": "dateTime",
+						"relationship": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"UriRelationship": "http://kdl.ge.com/durabattery#assemblyDate",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?assemblyDate",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "batteryDesc",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryDesc",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?batteryDesc",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "batteryId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryId",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?batteryId",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "DuraBattery",
+				"fullURIName": "http://kdl.ge.com/durabattery#DuraBattery",
+				"subClassNames": [],
+				"SparqlID": "?DuraBattery",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?batteryDesc"
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "uri://durabattery/data_create",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "date"
+			},
+			{
+				"colId": "col_1",
+				"colName": "desc"
+			},
+			{
+				"colId": "col_2",
+				"colName": "id"
+			}
+		],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "Batt_"
+			}
+		],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?DuraBattery",
+				"type": "http://kdl.ge.com/durabattery#DuraBattery",
+				"URILookupMode": "createIfMissing",
+				"mapping": [
+					{
+						"textId": "text_0",
+						"text": "Batt_"
+					},
+					{
+						"colId": "col_1"
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#assemblyDate",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryDesc",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryId",
+						"URILookup": [
+							"?DuraBattery"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

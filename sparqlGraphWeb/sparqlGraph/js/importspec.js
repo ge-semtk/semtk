@@ -78,9 +78,9 @@ define([// properly require.config'ed
 				this.transformList.push(iTrans);
 			},
 			
-			addRow : function (iRow) {
-				this.mapList.push(iRow);
-				this.mapHash[iRow.genUniqueKey()] = iRow;
+			addRow : function (iMapping) {
+				this.mapList.push(iMapping);
+				this.mapHash[iMapping.genUniqueKey()] = iMapping;
 			},
 			
 			delText : function (iText) {
@@ -105,6 +105,10 @@ define([// properly require.config'ed
 				this.baseURI = uri;
 			},
 			
+            getNodegroup : function() {
+                return this.nodegroup;
+            },
+            
 			getNumColumns : function () {
 				return this.colList.length;
 			},
@@ -145,11 +149,21 @@ define([// properly require.config'ed
 				return ret;
 			},
 			
-			getSortedRows : function () {
+			getSortedMappings : function () {
 				// rows are always sorted by node and prop
 				return this.mapList;
 			},
 			
+            getUriSparqlIDs : function () {
+                var ret = [];
+                for (var i=0; i < this.mapList.length; i++) {
+                    if (this.mapList[i].isNode()) {
+                        ret.push(this.mapList[i].getName());
+                    }
+                }
+                return ret;
+            },
+                
 			getMapping : function(sparqlId, propUri) {
 				// find a row
 				// propUri may be null				
@@ -161,6 +175,43 @@ define([// properly require.config'ed
 				}
 			},
 			
+            // get any mappings that have uriLookups containing this mapping
+            getLookupMappings : function(mapping) {
+                var mapName = mapping.getName();
+                var ret = [];
+                for (var i=0; i < this.mapList.length; i++) {
+					if (this.mapList[i].getUriLookupSparqlIDs().indexOf(mapName) > -1) {
+                        ret.push(this.mapList[i]);
+                    }
+				}
+                return ret;
+            },
+            
+            // make sure URILookupModes are null iff no other node is looking it up
+            updateEmptyUriLookupModes : function() {
+                for (var i=0; i < this.mapList.length; i++) {
+					var map = this.mapList[i];
+					
+					// if row is for a node (not a prop)
+					if (map.isNode()) {
+                        
+                        // set back to null if no one is lookup up this node
+                        if (map.getUriLookupMode() != null) {
+                            if (this.getLookupMappings(map).length == 0) {
+                                map.setUriLookupMode(null);
+                            }
+                        
+                        // set to default if null and someone is looking up this node
+                        } else {
+                            if (this.getLookupMappings(map).length > 0) {
+                                map.setUriLookupMode(ImportMapping.LOOKUP_MODE_NO_CREATE);
+                            }
+                        }
+                        
+					} 
+				}
+            },
+            
 			fromJson : function(jObj) {
 				// load from json.   
 				// Presume that nodegroup is loaded so rows exist but their items will be overwritten.
@@ -242,6 +293,8 @@ define([// properly require.config'ed
 				
 				ret.version = "1";
 				
+                this.updateEmptyUriLookupModes();
+                
 				// baseURI
 				ret.baseURI = this.baseURI;
 				
@@ -283,26 +336,25 @@ define([// properly require.config'ed
 						ret.nodes.push(lastNodeObj);
 						
 					// if row is property and has items
-					} else if (map.getItemList().length > 0) {
-						// push the row as a property to the last node
-						var mapJson = map.toJson(idHash);
-						if (compressFlag == false || mapJson.mapping.length > 0) {
-							lastNodeObj.props.push(map.toJson(idHash));
-						}
+					} else if (map.getItemList().length > 0 || map.getUriLookupNodes().length > 0) {
+                        
+				        lastNodeObj.props.push(map.toJson(idHash));
 					}
 				}
 				return ret;
 			},
 			
 			// get list of all PropertyItems that have mappings
-			getMappedPropItems() {
+			getUndeflatablePropItems() {
 				var ret = [];
 				for (var i=0; i < this.mapList.length; i++) {
 					var map = this.mapList[i];
-					var pItem = map.getPropItem();
 					// if row is for a node (not a prop)
-					if (pItem != null && map.getItemList().length > 0) {
-						ret.push(pItem);
+					if (map.isProperty()) {
+                        if (map.getItemList().length > 0 || map.getUriLookupNodes().length > 0) {
+                            var pItem = map.getPropItem();
+                            ret.push(pItem);
+                        }
 					}
 				}
 				return ret;
