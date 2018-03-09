@@ -19,7 +19,7 @@ fi
 
 # SEMTK_OSS = directory holding this script
 SEMTK_OSS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SPARQLGRAPHWEB=$SEMTK_OSS/sparqlGraphWeb
+SG_WEB_OSS=$SEMTK_OSS/sparqlGraphWeb
 
 # make tmp directory
 TMP=$SEMTK_OSS/tmp
@@ -64,7 +64,7 @@ do
         set -x
         
         rm -rf $WEBAPPS/$DIR
-		cp -r $SG_WEB_GE/$DIR $DEST_DIR
+		cp -r $SG_WEB_OSS/$DIR $DEST_DIR
 		
 		set +x        
 done
@@ -73,12 +73,12 @@ done
 set -x
 
 # Allow other files to remain in ROOT
-mkdir -p $SPARQLGRAPHWEB/ROOT
-cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
+mkdir -p $SG_WEB_OSS/ROOT
+cp -r $SG_WEB_OSS/ROOT/* $WEBAPPS/ROOT
 
 # Copy over html files from sparqlForm & sparqlGraph
-cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
-cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
+cp $SG_WEB_OSS/sparqlForm/*.html $WEBAPPS/sparqlForm
+cp $SG_WEB_OSS/sparqlGraph/*.html $WEBAPPS/sparqlGraph
 
 set +x
    
