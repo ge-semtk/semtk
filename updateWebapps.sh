@@ -4,7 +4,7 @@
 #
 
 # stop if anything goes bad
-set -e
+set -o erronexit
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: updateWebapps.sh webapps_path"
@@ -36,8 +36,9 @@ declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
 for v in "${VERSIONED[@]}"
 do
         if [ -e $WEBAPPS/$v ]; then
-                echo cp $WEBAPPS/$v $TMP
+                set -o xtrace
                 cp $WEBAPPS/$v $TMP
+                set +o xtrace
         fi
 done
 
@@ -60,26 +61,27 @@ do
         DEST_DIR=$(dirname ${WEBAPPS}/${DIR})
         
         # Wipe out and replace other known dirs
-        echo rm -rf $WEBAPPS/$DIR
-             rm -rf $WEBAPPS/$DIR
-
-        echo cp -r $SPARQLGRAPHWEB/$DIR $DEST_DIR
-             cp -r $SPARQLGRAPHWEB/$DIR $DEST_DIR
+        set -o xtrace
+        
+        rm -rf $WEBAPPS/$DIR
+		cp -r $SG_WEB_GE/$DIR $DEST_DIR
+		
+		set +o xtrace        
 done
 
 # --- special cases ---
+set -o xtrace
+
 # Allow other files to remain in ROOT
-echo mkdir -p $SPARQLGRAPHWEB/ROOT
-     mkdir -p $SPARQLGRAPHWEB/ROOT
-echo cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
-     cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
+mkdir -p $SPARQLGRAPHWEB/ROOT
+cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
 
 # Copy over html files from sparqlForm & sparqlGraph
-echo cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
-     cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
-echo cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
-     cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
-        
+cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
+cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
+
+set +o xtrace
+   
 WARNINGS=0
 # replace versioned files
 for v in "${VERSIONED[@]}"
@@ -90,14 +92,15 @@ do
         if [ ! -e $SAVED ]; then
                 echo WARNING: file needs to be modified for local configuration: $CURRENT
                 WARNINGS=1
-        else
+        else	
+        		echo grepping version info from $CURRENT and $SAVED
                 CURRENT_VERSION=($(grep VERSION $CURRENT))
                 SAVED_VERSION=($(grep VERSION $SAVED))
 
                 if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then
-                        echo cp $SAVED $CURRENT
+                        set -o xtrace
                         cp $SAVED $CURRENT
-                        chmod 666 $CURRENT
+                        set +o xtrace
                 else
                         echo WARNING: these files need to be manually merged to keep local configuration:
                         echo "        $SAVED"
@@ -105,6 +108,10 @@ do
                         WARNINGS=1
                 fi
         fi
+        
+        set -o xtrace
+        chmod 666 $CURRENT
+        set +o xtrace
 done
 
 if [ "$WARNINGS" -ne "0" ]; then
