@@ -116,8 +116,12 @@ do
 done
 
 if [ "$WARNINGS" -ne "0" ]; then
+	set -x
 	exit 1
+	set +x
 fi
+
+echo ==== updateWebapps.sh SUCCESS ====
 
 
                 
