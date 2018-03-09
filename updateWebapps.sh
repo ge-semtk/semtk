@@ -4,7 +4,7 @@
 #
 
 # stop if anything goes bad
-set -o erronexit
+set -e
 
 if [ "$#" -ne 1 ]; then
     echo "Usage: updateWebapps.sh webapps_path"
@@ -36,9 +36,9 @@ declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
 for v in "${VERSIONED[@]}"
 do
         if [ -e $WEBAPPS/$v ]; then
-                set -o xtrace
+                set -x
                 cp $WEBAPPS/$v $TMP
-                set +o xtrace
+                set +x
         fi
 done
 
@@ -61,16 +61,16 @@ do
         DEST_DIR=$(dirname ${WEBAPPS}/${DIR})
         
         # Wipe out and replace other known dirs
-        set -o xtrace
+        set -x
         
         rm -rf $WEBAPPS/$DIR
 		cp -r $SG_WEB_GE/$DIR $DEST_DIR
 		
-		set +o xtrace        
+		set +x        
 done
 
 # --- special cases ---
-set -o xtrace
+set -x
 
 # Allow other files to remain in ROOT
 mkdir -p $SPARQLGRAPHWEB/ROOT
@@ -80,7 +80,7 @@ cp -r $SPARQLGRAPHWEB/ROOT/* $WEBAPPS/ROOT
 cp $SPARQLGRAPHWEB/sparqlForm/*.html $WEBAPPS/sparqlForm
 cp $SPARQLGRAPHWEB/sparqlGraph/*.html $WEBAPPS/sparqlGraph
 
-set +o xtrace
+set +x
    
 WARNINGS=0
 # replace versioned files
@@ -93,14 +93,15 @@ do
                 echo WARNING: file needs to be modified for local configuration: $CURRENT
                 WARNINGS=1
         else	
-        		echo grepping version info from $CURRENT and $SAVED
+        		set +e
                 CURRENT_VERSION=($(grep VERSION $CURRENT))
                 SAVED_VERSION=($(grep VERSION $SAVED))
+                set -e
 
                 if [ "$CURRENT_VERSION" == "$SAVED_VERSION" ]; then
-                        set -o xtrace
+                        set -x
                         cp $SAVED $CURRENT
-                        set +o xtrace
+                        set +x
                 else
                         echo WARNING: these files need to be manually merged to keep local configuration:
                         echo "        $SAVED"
@@ -109,9 +110,9 @@ do
                 fi
         fi
         
-        set -o xtrace
+        set -x
         chmod 666 $CURRENT
-        set +o xtrace
+        set +x
 done
 
 if [ "$WARNINGS" -ne "0" ]; then
