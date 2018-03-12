@@ -83,7 +83,7 @@ else
 fi
 
 
-mkdir -p $LOGSc
+mkdir -p $LOGS
 
 echo "=== START MICROSERVICES... ==="
 
