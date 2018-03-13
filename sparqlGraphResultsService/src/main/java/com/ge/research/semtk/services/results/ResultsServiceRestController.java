@@ -155,6 +155,9 @@ public class ResultsServiceRestController {
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
+	/* storeBinary()
+	 * getBinaryResults()   -- comment to test branch
+	 */
 	
 	/**
 	 * Call 1 of 3 for storing JSON results.
