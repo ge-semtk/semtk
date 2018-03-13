@@ -155,9 +155,36 @@ public class ResultsServiceRestController {
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
-	/* storeBinary()
-	 * getBinaryResults()   -- comment to test branch
-	 * roberto's comment
+	/* 
+	 *  gui -> dispatcher  :   run some kind of query
+	 *  ... magic ...
+	 *  dispatcher creates a TableResult
+	 *>>dispatcher -> resultsService : storeBinaryFile I have a binary picture.jpg, store and give me URL
+	 *                               : storeBinaryFile I have another binary picture2.gif, store and give me URL
+	 *                               
+	 *                The URL you return should be configurable in the properties file.
+	 *      
+	 *  dispatcher now replaces the hdfs urls in its table results with the storeBinaryFile Urls
+	 *                              
+	 *  dispatcher -> resultsService : storeTable...(jobID, table-with-new-URLS)
+	 *  gui -> resultsService : getTableResultsJsonForWebClient(jobID)
+	 *  
+	 *>>gui -> resultsService : getBinaryFile?id=lskjw-ekjr-ejkwe  to get picture.jpg  
+	 * 
+	 * ------------------------------------------------------------------------------------------
+	 * storeBinary() - takes a binary, and a not-necessarily-unique file name (including valid file extension)
+	 *               - store the file ("stage" it)
+	 *               - return a URL that is resultsService/getBinaryResults?roberto-special-guid
+	 * getBinaryResults()  - GET
+	 * 
+	 * 
+	 * ------------------------------------------------------------------------------------------
+	 * TEST:
+	 *   com.ge.research.semtk.edc.client.test.ResultsClientTest_IT.java - use the ResultsClient to
+	 * 		- storeBinary a binary file, gives back a URL  (which is actually http://properties/file/prefix/resultsService/getBinaryResults?id=skj-1uh-123)
+	 *      - use the resulting URL to retrieve the binary file with GET
+	 *      - make sure the name is the same
+	 *      - make sure the contents are the same
 	 */
 	
 	/**
