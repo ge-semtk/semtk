@@ -10,7 +10,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.TestGraph;
 
 
-public class DataDictionaryTest {
+public class DataDictionaryTest_IT {
 	
 	@Test
 	public void test() throws Exception {

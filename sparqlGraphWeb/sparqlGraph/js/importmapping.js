@@ -155,10 +155,20 @@ define([	// properly require.config'ed
                     return this.uriLookupNodes;
                 },
                 
+                getUriLookupSparqlIDs : function () {
+                    var ret = [];
+                    for (var i=0; i < this.uriLookupNodes.length; i++) {
+                        ret.push(this.uriLookupNodes[i].getSparqlID());
+                    }
+                    return ret;
+                },
+                
+                // snodeList may be []
                 setUriLookupNodes : function(snodeList) {
                     this.uriLookupNodes = snodeList;
                 },
                 
+                // returns a URILookupMode or null
                 getUriLookupMode : function() {
                     return this.uriLookupMode;
                 },
@@ -189,6 +199,23 @@ define([	// properly require.config'ed
 					return ImportMapping.staticGenUniqueKey(this.getNodeSparqlId(), this.getPropUri());
 				},
 				
+                // return ?SparqlID of node or keyname of propItem
+                getName : function () {
+                    if (this.isNode()) {
+                        return this.node.getSparqlID();
+                    } else {
+                        return this.propItem.getKeyName();
+                    }
+                },
+                
+                isProperty : function() {
+                    return (this.propItem != null);
+                },
+                
+                isNode : function() {
+                    return ! this.isProperty();
+                },
+                
 				itemsFromJson : function (jMapping, idHash) {
 					for (var i=0; i < jMapping.length; i++) {
 						var item = new  MappingItem(null, null, null);
@@ -214,10 +241,7 @@ define([	// properly require.config'ed
                     }
                     
                     if (this.uriLookupNodes.length != 0) {
-                        ret.URILookup = [];
-                        for (var i=0; i < this.uriLookupNodes.length; i++) {
-                            ret.URILookup.push(this.uriLookupNodes[i].getSparqlID());
-                        }
+                        ret.URILookup = this.getUriLookupSparqlIDs();
                     }
 					
 					//mapping
@@ -235,21 +259,6 @@ define([	// properly require.config'ed
 				
 				getPropUri : function() {
 					return this.propItem ? this.propItem.getUriRelation() : null;
-				},
-				
-				// OLD
-
-				getItemListJson_OLD : function () {
-					// skip line if user didn't enter anything
-					if (this.itemList.length === 0) return null;
-
-					// parse the cell of things entered by the user
-					var rowJson = [];
-					for (var j=0; j < this.itemList.length; j++) {
-						rowJson.push(this.itemList[j].toJson());
-					}
-
-					return rowJson;
 				},
 
 				
