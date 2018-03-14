@@ -113,9 +113,11 @@ do
 
 				if [ -z "${CURRENT_VERSION}" ]; then
 					echo "file is missing expected VERSION: ${CURRENT}"
+					WARNINGS=1
 				fi
 				if [ -z "${SAVED_VERSION}" ]; then
 					echo "file is missing expected VERSION: ${SAVED}"
+					WARNINGS=1
 				fi
 
 				if [ "${CURRENT_VERSION}" == "${SAVED_VERSION}" ]; then
