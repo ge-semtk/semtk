@@ -111,10 +111,10 @@ do
                 SAVED_VERSION="$(grep VERSION ${SAVED})"
 				set -e
 
-				if [ "${CURRENT_VERSION}" == "" ]; then
+				if [ -z "${CURRENT_VERSION}" ]; then
 					echo "file is missing expected VERSION: ${CURRENT}"
 				fi
-				if [ "${SAVED_VERSION}" == "" ]; then
+				if [ -z "${SAVED_VERSION}" ]; then
 					echo "file is missing expected VERSION: ${SAVED}"
 				fi
 
