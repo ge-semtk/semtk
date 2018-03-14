@@ -237,7 +237,7 @@ public class DataLoader {
 		int recordsProcessed = 0;
 		int startingRow = 1;
 		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : ""));
-		long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
+		long lastMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 		
 		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
 		
@@ -280,10 +280,17 @@ public class DataLoader {
 				}
 				wrkrs.clear();
 				numThreads = this.MAX_WORKER_THREADS;   // after first pass, go full speed with MAX_WORKER_THREADS
-				LocalLogger.logToStdOutNoEOL("..." + startingRow);
-
+				
+				// log to stdout occasionally
+				long nowMillis = System.currentTimeMillis();
+				if (nowMillis - lastMillis > 1000) {
+					LocalLogger.logToStdOutNoEOL("..." + startingRow);
+					lastMillis = nowMillis;
+				}
 			}
 		}
+		
+		LocalLogger.logToStdOutNoEOL("..." + startingRow + "\n");
 		
 		// join all remaining threads
 		for(int i = 0; i < wrkrs.size(); i++){
