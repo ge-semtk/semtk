@@ -118,7 +118,6 @@ do
 					echo "file is missing expected VERSION: ${SAVED}"
 				fi
 
-				echo versions ${CURRENT_VERSION}  ${SAVED_VERSION}
 				if [ "${CURRENT_VERSION}" == "${SAVED_VERSION}" ]; then
 					set -x
 					cp ${SAVED} ${CURRENT}
