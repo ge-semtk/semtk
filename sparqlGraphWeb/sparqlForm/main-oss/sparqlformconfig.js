@@ -24,25 +24,25 @@ define([], function() {
 	var Config = {
 		"services" : { 
 			"query" : {
-				"url" : "http://vesuvius37.crd.ge.com:12050/sparqlQueryService",  
+				"url" : "http://localhost:12050/sparqlQueryService",  
 			},
 			"status" : {
-				"url" : "http://vesuvius37.crd.ge.com:12051/status/",    
+				"url" : "http://localhost:12051/status/",    
 			},
 			"results" : {
-				"url" : "http://vesuvius37.crd.ge.com:12052/results/",     
+				"url" : "http://localhost:12052/results/",     
 			},
 			"dispatcher" : {
-				"url" : "http://vesuvius37.crd.ge.com:12053/dispatcher/",  
+				"url" : "http://localhost:12053/dispatcher/",  
 			},
             nodeGroup:{
-                url : "http://vesuvius37.crd.ge.com:12059/nodeGroup/",
+                url : "http://localhost:12059/nodeGroup/",
             },
             "nodeGroupExec" : {
-			     url : "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/",
+			     url : "http://localhost:12058/nodeGroupExecution/",
             },
             nodeGroupStore:{
-                url : "http://vesuvius37.crd.ge.com:12056/nodeGroupStore/",
+                url : "http://localhost:12056/nodeGroupStore/",
             },
 		},
 		"help" : {
