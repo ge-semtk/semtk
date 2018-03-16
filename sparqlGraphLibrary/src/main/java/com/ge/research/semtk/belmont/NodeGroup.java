@@ -193,6 +193,9 @@ public class NodeGroup {
 		        	String propertyValue = valueJSONObject.get("@value").toString();  // e.g. Ce0.8Sm0.2 Oxide Paste
 		        	property.addInstanceValue(propertyValue);		        
 		        }	
+		        if (property.getSparqlID().isEmpty()) {
+		        	property.setSparqlID(BelmontUtil.generateSparqlID(property.getKeyName(), nodeGroup.getSparqlNameHash()));
+		        }
 		        property.setIsReturned(true);	// note - Javascript had this inside the for loop
 		        properties.add(property);		// note - Javascript had this inside the for loop
 		    }

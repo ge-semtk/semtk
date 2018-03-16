@@ -1874,6 +1874,11 @@ SemanticNodeGroup.prototype = {
 						createdProp = true;
 						// thanks Jenny for pointing out this bug, explained below. 
 						propertyList.push(currPropertyItem);
+                        if (currPropertyItem.getSparqlID() == "") {
+                            var f = new SparqlFormatter();
+                            var id = f.genSparqlID(currPropertyItem.getKeyName());
+                            currPropertyItem.setSparqlID(id);
+                        }
 						currPropertyItem.setIsReturned(true);
 
 					}
