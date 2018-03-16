@@ -638,6 +638,41 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
 	}
 	
+	@Test
+	public void testLookupCreateNOPROPS() throws Exception {
+		//  Just like testLookupCreate
+		//  Except ingestion nodegroup has no return values, no sparqlIDs on the properties
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import durabattery first4.  
+		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// the real test  
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate_NOPROPS.json");
+		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
+		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate.json");
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
+	}
+	
 	
 	@Test
 	public void testLookupCreatePartial() throws Exception {
@@ -848,12 +883,12 @@ public class DataLoaderTest_IT {
 		// This test will load up to two owls
 		// then a csv dataset
 		// and ingest up to three templates against the csv
-		String csvPath = "";
-		String jsonPath1 = "";
+		String csvPath = "H:\\Materia\\Co-Cr-LCF\\Sample Images\\images.csv";
+		String jsonPath1 = "H:\\Materia\\Co-Cr-LCF\\Sample Images\\nodegroup_import_images.json";
 		String jsonPath2 = "";
 		String jsonPath3 = "";
-		String owlPath1 = "";
-		String owlPath2 = "";
+		String owlPath1 = "H:\\Materia\\Co-Cr-LCF\\materials.owl";
+		String owlPath2 = "H:\\Materia\\Co-Cr-LCF\\uitypes.owl";
 		
 		if (csvPath.isEmpty() || owlPath1.isEmpty()) {
 			return;
@@ -924,7 +959,7 @@ public class DataLoaderTest_IT {
 	
 	// TODO: fails if we don't set SparqlID
 	// TODO: fails if SparqlID doesn't start with "?"
-	private void returnProp(NodeGroup nodegroup, String node, String prop) {
+	private void returnProp(NodeGroup nodegroup, String node, String prop) throws Exception {
 		PropertyItem cellId = nodegroup.getNodeBySparqlID("?" + node).getPropertyByKeyname(prop);
 		cellId.setSparqlID("?" + prop);
 		cellId.setIsReturned(true);
