@@ -883,12 +883,12 @@ public class DataLoaderTest_IT {
 		// This test will load up to two owls
 		// then a csv dataset
 		// and ingest up to three templates against the csv
-		String csvPath = "H:\\Materia\\Co-Cr-LCF\\Sample Images\\images.csv";
-		String jsonPath1 = "H:\\Materia\\Co-Cr-LCF\\Sample Images\\nodegroup_import_images.json";
+		String csvPath = "";
+		String jsonPath1 = "";
 		String jsonPath2 = "";
 		String jsonPath3 = "";
-		String owlPath1 = "H:\\Materia\\Co-Cr-LCF\\materials.owl";
-		String owlPath2 = "H:\\Materia\\Co-Cr-LCF\\uitypes.owl";
+		String owlPath1 = "";
+		String owlPath2 = "";
 		
 		if (csvPath.isEmpty() || owlPath1.isEmpty()) {
 			return;
