@@ -49,6 +49,11 @@ public class ValueConstraint {
 	
 	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList) throws Exception {
 		// build a value constraint for an "item" (see item interface comment)
+		
+		if (item.getSparqlID().isEmpty()) {
+			throw new Error("Trying to build VALUES constraint for property with empty sparql ID");
+		}
+
 		StringBuffer ret = new StringBuffer();
 		if (valList.size() > 0) {
 			String t = item.getValueType();

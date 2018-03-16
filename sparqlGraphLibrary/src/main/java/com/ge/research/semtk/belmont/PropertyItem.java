@@ -179,7 +179,10 @@ public class PropertyItem extends Returnable {
 		this.instanceValues.add(value);
 	}
 	
-	public void setIsReturned(boolean b){
+	public void setIsReturned(boolean b) throws Exception {
+		if (b == true && this.sparqlID.isEmpty()) {
+			throw new Exception("Attempt to return property with no sparqlID");
+		}
 		this.isReturned = b;
 	}
 	
