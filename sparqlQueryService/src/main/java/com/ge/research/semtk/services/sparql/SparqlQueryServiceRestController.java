@@ -84,6 +84,7 @@ public class SparqlQueryServiceRestController {
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start query");
+		long startTime = System.nanoTime();
 
 		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
 			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
@@ -118,6 +119,11 @@ public class SparqlQueryServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "query", e);
 		}
+		
+		// print elapsed time
+		long endTime = System.nanoTime();
+		double elapsed = ((endTime - startTime) / 1000000000.0);
+		LocalLogger.logToStdOut(String.format("Query time: %.2f sec", elapsed));
 			
 		return resultSet.toJson();
 		
