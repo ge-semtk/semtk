@@ -189,6 +189,10 @@ SparqlFormatter.prototype = {
 	buildValueConstraint : function(item, valList) {
 		// build a value constraint for an "item" (see item interface comment)
 		var ret = "";
+        
+        if (item.getSparqlID() == "") {
+            throw new Error("Internal: trying to build VALUES constraint for property with empty sparql ID");
+        }
 		if (valList.length > 0) {
 			ret = "VALUES " + item.getSparqlID() + " {";
 			
@@ -676,6 +680,9 @@ PropertyItem.prototype = {
 		this.relationship = rel;
 	},
 	setIsReturned : function(val) {
+        if (val == true && this.SparqlID == "") {
+            throw new Error("Internal: trying to return a property whose sparqlID is empty.");
+        }
 		this.isReturned = val;
 	},
 	setIsOptional : function(bool) {
@@ -1867,6 +1874,11 @@ SemanticNodeGroup.prototype = {
 						createdProp = true;
 						// thanks Jenny for pointing out this bug, explained below. 
 						propertyList.push(currPropertyItem);
+                        if (currPropertyItem.getSparqlID() == "") {
+                            var f = new SparqlFormatter();
+                            var id = f.genSparqlID(currPropertyItem.getKeyName());
+                            currPropertyItem.setSparqlID(id);
+                        }
 						currPropertyItem.setIsReturned(true);
 
 					}
