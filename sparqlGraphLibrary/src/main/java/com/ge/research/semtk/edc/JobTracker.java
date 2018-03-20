@@ -139,7 +139,7 @@ public class JobTracker {
 	        "   optional {?Job job:statusMessage ?statusMessage.}" +
 	        "}",
 	    	percentComplete, SparqlToXUtils.safeSparqlString(message), SparqlToXUtils.safeSparqlString(jobId));
-	    LocalLogger.logToStdErr(query);
+	 	// LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -182,7 +182,7 @@ public class JobTracker {
 	        "}",
 	        
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
-	    LocalLogger.logToStdErr(query);
+	 	// LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
@@ -276,35 +276,35 @@ public class JobTracker {
 	    	this.createJob(jobId);
 	    }
 	    
-	    String query = String.format("  \n" +
-	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
-	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
-	        " \n" +
-	        "DELETE {\n" +
-			"   ?Job job:percentComplete ?percentComplete . \n" +
-			"   ?Job job:statusMessage ?statusMessage . \n" +
-	        "   ?Job job:status ?status." +
-	        "} \n" +
-	        "INSERT {\n" +
-			"   ?Job job:percentComplete '100'^^XMLSchema:integer.  \n" +
-	        "   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
-	        "   ?Job job:status job:Success. \n" +
-	        "} \n" +
-	        "where { \n" +
-	        "   ?Job a job:Job. \n" +
-	        "   ?Job job:id '%s'^^XMLSchema:string . \n" +
-			"   optional {?Job job:percentComplete ?percentComplete .} \n" +
-	        "   optional {?Job job:statusMessage ?statusMessage.} \n" +
-	        "   optional {?Job job:status ?status.} \n" +
-	        "}",
-	        
-	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
-	    LocalLogger.logToStdErr(query);
-	    try {
-	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
-	    } catch (Exception e) {
-	    	throw new Exception(e.getMessage());
-	    }
+		String query = String.format("  \n" +
+				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
+				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
+				" \n" +
+				"DELETE {\n" +
+				"   ?Job job:percentComplete ?percentComplete . \n" +
+				"   ?Job job:statusMessage ?statusMessage . \n" +
+				"   ?Job job:status ?status." +
+				"} \n" +
+				"INSERT {\n" +
+				"   ?Job job:percentComplete '100'^^XMLSchema:integer.  \n" +
+				"   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
+				"   ?Job job:status job:Success. \n" +
+				"} \n" +
+				"where { \n" +
+				"   ?Job a job:Job. \n" +
+				"   ?Job job:id '%s'^^XMLSchema:string . \n" +
+				"   optional {?Job job:percentComplete ?percentComplete .} \n" +
+				"   optional {?Job job:statusMessage ?statusMessage.} \n" +
+				"   optional {?Job job:status ?status.} \n" +
+				"}",
+
+				SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
+		// LocalLogger.logToStdErr(query);
+		try {
+			endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
+		} catch (Exception e) {
+			throw new Exception(e.getMessage());
+		}
 	}
 
 	
@@ -356,14 +356,14 @@ public class JobTracker {
 		        uriSampleURL, 
 		        ((sampleResultsURL != null) ? SparqlToXUtils.safeSparqlString(sampleResultsURL.toString()) : ""), 
 		        SparqlToXUtils.safeSparqlString(jobId));
-		    LocalLogger.logToStdErr(query);
-		    try {
-		    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
-		    } catch (Exception e) {
-		    	throw new Exception(e.getMessage());
-		    }
+		// LocalLogger.logToStdErr(query);
+		try {
+			endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
+		} catch (Exception e) {
+			throw new Exception(e.getMessage());
+		}
 	}
-	
+
 	/**
 	 * Get a jobId's full results URL
 	 * @param jobId
@@ -470,15 +470,15 @@ public class JobTracker {
 	        "%s job:percentComplete '0'^^XMLSchema:integer. \n" +
 	        "%s job:creationTime '%s'^^XMLSchema:dateTime. \n" +
 	        "}",
-	    	uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri, uri, xsdFormat.format(initialDate));
-	    LocalLogger.logToStdErr(query);
+	        uri, uri, SparqlToXUtils.safeSparqlString(jobId), uri, uri, xsdFormat.format(initialDate));
+	    // LocalLogger.logToStdErr(query);
 	    try {
 	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
 	}
-	
+
 	
 	public void deleteJobsBeforeGivenMinutesAgo(int minutesAgo) throws Exception {
 	
@@ -559,7 +559,8 @@ public class JobTracker {
 				"      VALUES ?id { '%s'^^XMLSchema:string }. \n" +
 				"}",
 				SparqlToXUtils.safeSparqlString(jobId));
-		LocalLogger.logToStdErr(query);
+		
+		// LocalLogger.logToStdErr(query);
 		try {
 			endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		    String trList[] = endpoint.getStringResultsColumn("callret-0");
@@ -604,5 +605,34 @@ public class JobTracker {
 			totalMsec += sleepMsec;
 		}
 		throw new Exception(String.format("Maximum wait time of %d Msec has passed without job %s reaching %d percent complete.", maxWaitMsec, jobId, percentComplete));
+	}
+	
+	/**
+	 * Return when job is at least percentComplete complete or maxWaitMse have expired
+	 * @param jobId
+	 * @param percentComplete
+	 * @param maxWaitMsec
+	 * @returns percent complete
+	 * @throws Exception on error
+	 */
+	public int waitForPercentOrMsec(String jobId, int percentComplete, int maxWaitMsec) throws Exception {
+		int totalMsec = 0;
+		long sleepMsec = 200;
+		int actualPercent = 0;
+		
+		// wait maximum of this.prop.jobMaxWatiMsec
+		while (totalMsec < maxWaitMsec) {
+			actualPercent = this.getJobPercentComplete(jobId);
+			if (actualPercent >= percentComplete) {
+				break;
+			}
+			// wait 1.3x seconds longer each time until 3 seconds
+			if (sleepMsec < 3000) {
+				sleepMsec = Math.round(sleepMsec * 1.3);
+			}
+			Thread.sleep(sleepMsec);
+			totalMsec += sleepMsec;
+		}
+		return actualPercent;
 	}
 }
