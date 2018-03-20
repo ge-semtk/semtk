@@ -18,11 +18,13 @@
 
 package com.ge.research.semtk.edc.client;
 
+import java.io.File;
 import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import com.ge.research.semtk.services.client.RestClientConfig;
 import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -111,7 +113,42 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.clear();
 		
 	}
-	
+
+
+	public JSONObject execStoreBinaryFile(File file) throws Exception{
+
+		this.parametersJSON.clear();
+		this.fileParameter = file;
+
+		conf.setServiceEndpoint("results/storeBinaryFile");
+
+		JSONObject res = (JSONObject)execute(false);
+		SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+		simpleRes.throwExceptionIfUnsuccessful();
+
+		this.parametersJSON.clear();
+		this.fileParameter = null;
+
+		return res;
+
+	}
+
+
+	public String execReadBinaryFile(String fileId) throws Exception{
+
+		this.parametersJSON.clear();
+		this.conf.setMethod(RestClientConfig.Methods.GET);
+		conf.setServiceEndpoint("results/getBinaryFile/"+fileId);
+
+		String res = (String) execute(true);
+
+		this.parametersJSON.clear();
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		return res;
+
+	}
+
+
 	public JSONObject execGetBlobResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
 		this.parametersJSON.clear();
 				

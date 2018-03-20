@@ -18,14 +18,20 @@
 
 package com.ge.research.semtk.services.client;
 
+import java.io.File;
 import java.net.ConnectException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
@@ -46,7 +52,10 @@ public abstract class RestClient extends Client implements Runnable {
 	Object runRes = null;
 	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
-	
+
+	protected File fileParameter = null;
+
+
 	/**
 	 * Constructor
 	 */
@@ -161,17 +170,38 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
 
-		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
-		HttpPost httppost = new HttpPost(this.conf.getServiceURL());
-	    httppost.setEntity(entity);
-		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+		HttpEntity entity = null;
+		if (fileParameter != null) {
+			FileBody bin = new FileBody(fileParameter);
+			entity = MultipartEntityBuilder.create()
+					.addPart("file", bin)
+					.build();
+		} else {
+			entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
+		}
+
+		HttpRequestBase httpreq = null;
+		if (conf.method == RestClientConfig.Methods.GET) {
+			HttpGet httpget = new HttpGet(this.conf.getServiceURL());
+			httpget.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
+			httpreq = httpget;
+
+		} else {
+			HttpPost httppost = new HttpPost(this.conf.getServiceURL());
+			httppost.setEntity(entity);
+			if (fileParameter == null) {
+				httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+			}
+			httpreq = httppost;
+		}
 
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
 		
 		HttpResponse httpresponse = null;
 		try {
-			httpresponse = httpclient.execute(targetHost, httppost);
+			httpresponse = httpclient.execute(targetHost, httpreq);
 		} catch (Exception e) {
 			throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);
 		}

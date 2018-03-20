@@ -227,8 +227,12 @@ public class ResultsServiceRestController {
                     LocalLogger.printStackTrace(e);
                 }
 
+                String downloadUrl = prop.getBaseURL()+reqUri.replace("storeBinaryFile", "getBinaryFile")+"/"+fileId;
+                String adjustedUrl = downloadUrl.replace("DISPATCH_RESULTS/","");
+
 				res.setSuccess(true);
-                res.addResult("fullUrl", prop.getBaseURL()+reqUri.replace("storeBinaryFile", "getBinaryFile")+fileId);
+                res.addResult("fullUrl", adjustedUrl);
+                res.addResult("fileId", fileId);
 			}
 
 		} catch (Exception e) {

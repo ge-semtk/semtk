@@ -20,11 +20,13 @@ package com.ge.research.semtk.edc.client.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -459,8 +461,25 @@ public class ResultsClientTest_IT {
 		if(!retrievedResultsAfterStoring){
 			fail();	
 		}
-	}	
-	
+	}
+
+	@Test
+	public void testStoreAndRetrieveBinaryFile() throws Exception {
+
+		File testFile = new File("src/test/resources/test.csv");
+
+		JSONObject res = client.execStoreBinaryFile(testFile);
+		assertEquals("success", res.get("status"));
+		JSONObject results = (JSONObject) res.get("simpleresults");
+		assertNotNull(results);
+
+		String fileId = (String) results.get("fileId");
+		String fileContent = client.execReadBinaryFile(fileId);
+		assertNotNull(fileContent);
+
+	}
+
+
 	private void cleanup(ResultsClient client, String jobId) throws Exception {
 		client.execDeleteStorage(jobId);
 	}
