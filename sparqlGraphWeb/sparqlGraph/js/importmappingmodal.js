@@ -74,7 +74,11 @@ define([	// properly require.config'ed
                 
                 // URILookupMode (nodes only)
                 if (this.mapping.isNode()) {
-                    var mode = IIDXHelper.getSelectValues(this.uriLookupModeSelect);
+                    var modeArr = IIDXHelper.getSelectValues(this.uriLookupModeSelect);
+                    if (modeArr.length > 1) {
+                        throw new Error("Internal: multiple URI lookup modes for same node");
+                    }
+                    var mode = (modeArr.length == 0) ? null : modeArr[0];
                 
                     // keep the mode null if it is NO_CREATE and there is nothing actually looking it up
                     if (this.mapping.getUriLookupMode() == null && 
