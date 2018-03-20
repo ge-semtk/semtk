@@ -430,6 +430,44 @@ public class StatusClientTest_IT {
 	}
 	
 	@Test
+	public void testWaitForPercentOrMsec_Msec() {
+		final int PERCENT = 5;
+		
+		StatusClientConfig config = null;
+		StatusClient client = null;
+
+		try {			
+			// create
+			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
+			client = new StatusClient(config);
+			
+			// set and wait for timeout.   Get back original percent
+			client.execSetPercentComplete(PERCENT);
+			int percent = client.execWaitForPercentOrMsec(PERCENT + 5, 500);
+			assertEquals(PERCENT, percent);
+			
+			// try again
+			percent = client.execWaitForPercentOrMsec(PERCENT, 500);
+			assertEquals(PERCENT, percent);
+			
+			// NOTE: this doesn't test detecting percent complete reached during the wait
+			//       i.e. there is no threaded test.
+			
+		} catch (ConnectException e) {
+			e.printStackTrace();
+			fail("No service running at this location.");
+		} catch (EndpointNotFoundException e) {
+			e.printStackTrace();
+			fail("Wrong service running at this location.");
+		} catch (Exception e){
+			e.printStackTrace();
+			fail("Unexpected exception");
+		} finally {
+			cleanup(client);
+		}
+	}
+	
+	@Test
 	public void testWaitForPercentComplete() {
 		// TODO - get time and gumption to write multi-threaded wait test 
 	}
