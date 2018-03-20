@@ -68,19 +68,19 @@ public class DispatcherServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/queryFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject querySelectFromNodeGroup_BC(@RequestBody QueryRequestBody requestBody){
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, false);
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/querySelectFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject querySelectFromNodeGroup(@RequestBody QueryRequestBody requestBody){
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, false);
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/queryCountFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryCounttFromNodeGroup(@RequestBody QueryRequestBody requestBody){
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, false);
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, true);
 	}
 	
 	@CrossOrigin
@@ -92,7 +92,7 @@ public class DispatcherServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/queryFilterFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryFilterFromNodeGroup(@RequestBody FilterConstraintsRequestBody requestBody){
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, false);
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, true);
 	}
 
 	@CrossOrigin
@@ -104,13 +104,13 @@ public class DispatcherServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody){
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, false);
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, true);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroupForInstanceManipulation", method=RequestMethod.POST)
 	public JSONObject queryConstructFromNodeGroupForInstanceManipulation(@RequestBody QueryRequestBody requestBody){
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, false);
+		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, true);
 	}
 		
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
@@ -173,6 +173,13 @@ public class DispatcherServiceRestController {
 		return retval.toJson();
 	}
 	
+	/**
+	 * 
+	 * @param requestBody
+	 * @param qt
+	 * @param useAuth    NOTE - set to true for performance.  Non-auth queries containing FROM clauses are very slow when using the non-auth endpoint.
+	 * @return
+	 */
 	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody, DispatcherSupportedQueryTypes qt, Boolean useAuth){
 		String requestId = this.getRequestId();
 		SimpleResultSet retval = new SimpleResultSet(true);
@@ -237,7 +244,7 @@ public class DispatcherServiceRestController {
 		// get the things we need for the dispatcher
 		try {
 			
-			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, false, false);
+			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, true, false);
 			
 			retval.addResult("constraintType", dsp.getConstraintType());
 			retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
