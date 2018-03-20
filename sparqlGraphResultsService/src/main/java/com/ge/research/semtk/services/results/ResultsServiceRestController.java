@@ -207,6 +207,10 @@ public class ResultsServiceRestController {
 		SimpleResultSet res = new SimpleResultSet();
 		Path rootLocation = Paths.get(prop.getFileLocation());
 
+        // logging
+        LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+        LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile start");
+
 		try{
 			if (file != null) {
 			    String fileId = UUID.randomUUID().toString();
@@ -236,8 +240,8 @@ public class ResultsServiceRestController {
 			}
 
 		} catch (Exception e) {
-			//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
-			LocalLogger.printStackTrace(e);
+			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile exception", "message", e.toString());
+			//LocalLogger.printStackTrace(e);
 		}
 
 		LocalLogger.logToStdErr("done uploading file");
@@ -247,7 +251,12 @@ public class ResultsServiceRestController {
     @CrossOrigin
     @RequestMapping(value="/getBinaryFile/{fileId}", method=RequestMethod.GET)
     @ResponseBody
-    public FileSystemResource storeBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp){
+    public FileSystemResource getBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp){
+
+        // logging
+        LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+        LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
+
         String fileName = prop.getFileLocation()+"/"+fileId;
         String fileMeta = fileName.concat(META_SUFFIX);
 
@@ -263,8 +272,12 @@ public class ResultsServiceRestController {
         }
 
 	    File file = new File(prop.getFileLocation()+"/"+fileId);
-        resp.setHeader("Content-Disposition", "attachment; "+FILE_PROP_NAME+"=\"" + originalFileName + "\"");
-        return new FileSystemResource(file);
+        if (file.exists()) {
+            resp.setHeader("Content-Disposition", "attachment; " + FILE_PROP_NAME + "=\"" + originalFileName + "\"");
+            return new FileSystemResource(file);
+        } else {
+            return null;
+        }
     }
 
 

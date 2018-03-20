@@ -466,6 +466,8 @@ public class ResultsClientTest_IT {
 	@Test
 	public void testStoreAndRetrieveBinaryFile() throws Exception {
 
+
+		// Happy path
 		File testFile = new File("src/test/resources/test.csv");
 
 		JSONObject res = client.execStoreBinaryFile(testFile);
@@ -476,6 +478,14 @@ public class ResultsClientTest_IT {
 		String fileId = (String) results.get("fileId");
 		String fileContent = client.execReadBinaryFile(fileId);
 		assertNotNull(fileContent);
+
+		// Error case
+		try {
+			fileContent = client.execReadBinaryFile("wrongId");
+		} catch (Exception e) {
+			System.out.println("Exception: "+e.toString());
+			assertTrue(true);
+		}
 
 	}
 
