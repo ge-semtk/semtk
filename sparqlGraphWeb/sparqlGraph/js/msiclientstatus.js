@@ -98,6 +98,40 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.execGetPercentComplete(successCallback);
             },
             
+            execWaitForPercentOrMsec : function (percent, timeoutMsec, successCallback) {
+				var myData = JSON.stringify ({
+					"jobId" : this.jobId,
+					"maxWaitMsec" : timeoutMsec,
+					"percentComplete" : percent,
+				});				
+				
+				this.msi.postToEndpoint("waitForPercentOrMsec", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 5000);
+			},
+            
+            /*
+             * New-fashioned callbacks get success values
+             * otherwise failureCallback
+             *
+             */
+            execWaitForPercentOrMsecInt : function (percent, timeoutMsec, percentCallback) {
+                // Callback checks for success and gets a percent int before calling percentCallback
+                var successCallback = function(percCallback, resultSet) {
+                    if (resultSet.isSuccess()) {
+                        var thisPercent = resultSet.getSimpleResultField("percentComplete");
+                        if (thisPercent == null) {
+                            this.doFailureCallback(resultSet, 
+                                                    "Status service execWaitForPercentOrMsec did not return a percent.");
+                        } else {
+                            percCallback(parseInt(thisPercent));
+                        } 
+                    } else {
+                        this.doFailureCallback(resultSet, null);
+                    }
+                }.bind(this, percentCallback);
+                
+                this.execWaitForPercentOrMsec(percent, timeoutMsec, successCallback);
+            },
+            
             execGetStatusBoolean :  function(booleanCallback) {
                 
                 var successCallback = function(successBoolCallback0, resultSet) {
@@ -146,9 +180,55 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.execGetStatusMessage(successCallback);
             },
             
-            /*===================================================*/
+            /**
+              *  NEW: Call status at 10 sec intervals but it returns sooner if status changed.
+              *  
+              *  Letting status service make multiple checks each call results in fewer service calls.
+              *
+              */
+            execAsyncWaitUntilDone : function (jobSuccessCallback, checkForCancelCallback, statusBarCallback) {
+   
+                this.execWaitForPercentOrMsecInt(5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
+                                                                                jobSuccessCallback,
+                                                                                statusBarCallback,
+                                                                                checkForCancelCallback
+                                                                                ) );
+            },
+            
+            /*
+             * execAsync chain's percent complete loop
+             * @private
+             */
+            execAsyncWaitUntilDoneCallback : function (jobSuccessCallback, statusBarCallback, checkForCancelCallback, thisPercent) {
+                if (checkForCancelCallback()) {
+                    this.doFailureCallbackHtml("Operation cancelled.");
+                    
+                } else if (thisPercent > 99) {
+                    
+                    statusBarCallback(100);
+                    this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
+
+                } else {
+
+                    statusBarCallback(thisPercent);
+                    
+                    this.execWaitForPercentOrMsecInt(thisPercent + 5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
+                                                                                jobSuccessCallback,
+                                                                                statusBarCallback,
+                                                                                checkForCancelCallback
+                                                                                ) );
+                } 
+            },
+            
+            /**
+              *  OLD: synchronous calls to the status service
+              *  handle the wait msec between calls here at the client
+              *
+              *  This results in more service calls.
+              *
+              */
             execAsyncPercentUntilDone : function (jobSuccessCallback, checkForCancelCallback, statusBarCallback) {
-                
+                console.log("Using DEPRECATED msiclientstatus.execAsyncPercentUntilDone().   Please use execAsyncWaitUntilDone() ")
                 this.execGetPercentCompleteInt(this.execAsyncPercentCallback.bind( this,
                                                                                 0,
                                                                                 50,
@@ -173,7 +253,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 } else {
 
-                    statusBarCallback(lastPercent);
+                    statusBarCallback(thisPercent);
 
                     // if percent just changed, reset timeout 
                     var thisTimeout = (thisPercent == lastPercent) ? timeout : 50;

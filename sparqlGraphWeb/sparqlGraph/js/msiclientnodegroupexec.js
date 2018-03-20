@@ -94,7 +94,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 
                 // call status service loop
                 var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
-                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
+                statusClient.execAsyncWaitUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
                 
             }.bind(this, maxRows, csvUrlSampleJsonCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl);
                         
@@ -133,7 +133,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 
                 // call status service loop
                 var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
-                statusClient.execAsyncPercentUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
+                statusClient.execAsyncWaitUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
                 
             }.bind(this, tableResCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl);
             
