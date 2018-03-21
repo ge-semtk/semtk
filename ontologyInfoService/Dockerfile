@@ -8,5 +8,5 @@ COPY target/*.jar /service/
 
 COPY service/*.properties /service/
 
-CMD cd /service; ls -al; java ${JVM_OPTIONS} -jar `ls -tr *.jar | tail -n1` --spring.config.location=${CONFIG_INGESTION_SERVICE} --multipart.maxFileSize=1000Mb
+CMD cd /service; ls -al; java ${JVM_OPTIONS} -jar `ls -tr *.jar | tail -n1` --spring.config.location=${CONFIG_ONTOLOGYINFO_SERVICE}
 

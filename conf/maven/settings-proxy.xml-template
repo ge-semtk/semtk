@@ -1,0 +1,19 @@
+  <proxies>
+    <proxy>
+      <id>optional</id>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>${httpProxyHost}</host>
+      <port>${httpProxyPort}</port>
+      <nonProxyHosts>${nonProxyHosts}</nonProxyHosts>
+    </proxy>
+    <proxy>
+      <id>optional-https</id>
+      <active>true</active>
+      <protocol>https</protocol>
+      <host>${httpsProxyHost}</host>
+      <port>${httpsProxyPort}</port>
+      <nonProxyHosts>${nonProxyHosts}</nonProxyHosts>
+    </proxy>
+  </proxies>
+
