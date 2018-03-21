@@ -9,6 +9,8 @@ services:
     image: ${REGISTRY}semtk-nodegroup${TAG}
     ports:
       - ${PORT_NODEGROUP_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-nodegroup-store:
     build:
@@ -32,6 +34,8 @@ services:
       - storeSparqlServicePass
     ports:
       - ${PORT_NODEGROUPSTORE_SERVICE}:8080
+    networks:
+      - semtknet
   
   semtk-ontology-info:
     build:
@@ -50,6 +54,8 @@ services:
       - oinfoApplicationLogName
     ports:
       - ${PORT_ONTOLOGYINFO_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-sparqlgraph-status:
     build:
@@ -73,6 +79,8 @@ services:
       - statusApplicationLogName
     ports:
       - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080 
+    networks:
+      - semtknet
 
   semtk-sparqlgraph-results:
     build:
@@ -101,6 +109,8 @@ services:
       - resultsSampleLines
     ports:
       - ${PORT_SPARQLGRAPH_RESULTS_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-hive:
     build:
@@ -113,6 +123,8 @@ services:
       - hivePassword
     ports:
       - ${PORT_HIVE_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-dispatch:
     build:
@@ -138,6 +150,8 @@ services:
       - dispatchDispatcherClassName
     ports:
       - ${PORT_DISPATCH_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-nodegroup-execution:
     build:
@@ -163,6 +177,8 @@ services:
       - nodeGroupExecutionIngestPort
     ports:
       - ${PORT_NODEGROUPEXECUTION_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-sparql-query:
     build:
@@ -175,6 +191,8 @@ services:
       - triplestoreServerAndPort
     ports:
       - ${PORT_SPARQL_QUERY_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-ingestion:
     build:
@@ -194,6 +212,8 @@ services:
       - ingestionApplicationName
     ports:
       - ${PORT_INGESTION_SERVICE}:8080
+    networks:
+      - semtknet
 
   semtk-sparqlgraph-web:
     build:
@@ -205,4 +225,10 @@ services:
       - QUERY_URL
     ports:
       - ${PORT_SPARQLGRAPH_WEB}:8080
+    networks:
+      - semtknet
+
+networks:
+  semtknet:
+    driver: bridge
 

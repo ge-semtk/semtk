@@ -43,6 +43,10 @@ then simply bring up the services using the same compose.sh script. This script 
 
 where service name is the nameo of the service (example semtk-nodegroup-store)
 
+#### Get a shell into a running container
+
+    ./compose.sh exec <service_name> bash
+
 #### Stop all services
 
     ./compose.sh down
