@@ -63,9 +63,9 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public String getPostURL(){
 		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
-			return this.server + "/sparql-auth";
+			return String.format("%s:%s/sparql-auth", this.server, this.port);
 		}else{
-			return this.server + "/sparql";
+			return String.format("%s:%s/sparql", this.server, this.port);
 		}
 	}
 
