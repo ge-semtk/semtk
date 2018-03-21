@@ -9,6 +9,7 @@ COPY ROOT/ /usr/local/tomcat/webapps/ROOT/
 COPY sparqlForm/ /usr/local/tomcat/webapps/sparqlForm/
 COPY sparqlGraph/ /usr/local/tomcat/webapps/sparqlGraph/
 COPY ./entrypoint.sh /usr/local/tomcat/entrypoint.sh
+RUN chmod +x /usr/local/tomcat/*.sh
 
 WORKDIR /usr/local/tomcat
 
