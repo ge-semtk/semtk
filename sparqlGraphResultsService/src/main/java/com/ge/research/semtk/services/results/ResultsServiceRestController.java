@@ -231,8 +231,8 @@ public class ResultsServiceRestController {
                     LocalLogger.printStackTrace(e);
                 }
 
-                String downloadUrl = prop.getBaseURL()+reqUri.replace("storeBinaryFile", "getBinaryFile")+"/"+fileId;
-                String adjustedUrl = downloadUrl.replace("DISPATCH_RESULTS/","");
+                String requestUrl = req.getRequestURL().toString();
+                String adjustedUrl = requestUrl.replace("storeBinaryFile", "getBinaryFile")+"/"+fileId;
 
 				res.setSuccess(true);
                 res.addResult("fullUrl", adjustedUrl);
