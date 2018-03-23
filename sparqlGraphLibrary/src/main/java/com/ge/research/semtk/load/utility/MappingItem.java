@@ -154,14 +154,20 @@ public class MappingItem {
 	 * Build string for one item in a snode or property's import mapping
 	 * @param record
 	 * @return
+	 * @throws Exception 
 	 */
-	public String buildString(ArrayList<String> record) {
+	public String buildString(ArrayList<String> record) throws Exception {
 		
 		if (this.textVal != null) {
 			return this.textVal;
 			
 		} else {
-			String ret = record.get(this.columnIndex);
+			String ret ="";
+			try {
+				ret = record.get(this.columnIndex);
+			} catch (IndexOutOfBoundsException iob) {
+				throw new Exception("Record does not have enough columns.", iob);
+			}
 			if (this.transformList != null) {
 				for(int i=0; i < this.transformList.length; i++) {
 					ret = this.transformList[i].applyTransform(ret);

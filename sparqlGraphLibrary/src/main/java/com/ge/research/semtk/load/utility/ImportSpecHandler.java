@@ -535,9 +535,7 @@ public class ImportSpecHandler {
 			this.lookupAllUris(retNodegroup, record);
 		} catch (Exception e) {
 			// swallow URI lookup exception if we're skipping validation
-			// PEC TODO:  I'd like to throw virutoso errors
-			//            But there is some other errors (what are they?) that we want to swallow.
-			if (skipValidation) {
+			if (!skipValidation) {
 				throw e;
 			}
 		}

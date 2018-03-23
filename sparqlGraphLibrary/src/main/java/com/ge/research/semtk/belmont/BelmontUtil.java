@@ -194,4 +194,13 @@ public class BelmontUtil {
 		return prefixes + "\n" + retval;
 		
 	}
+	
+	/**
+	 * Make a string safe for use as part of a SPARQL statement
+	 * @param str
+	 * @return
+	 */
+	static String sparqlSafe(String str) {
+		return str.replace("\"", "\\\"").replace("\'", "\\\'").replace("\n", "\\n");
+	}
 }

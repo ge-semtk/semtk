@@ -165,12 +165,17 @@ public class DataLoadBatchHandler {
 				for(String currCol : record){
 					newErrorReport.add(currCol);
 				}
-				// add error report columns
+				// fill in any missing columns
+				while (newErrorReport.size() < this.failuresEncountered.getNumColumns() - 2 ) {
+					newErrorReport.add("");
+				}
+				// add error report column
 				if (e instanceof RuntimeException) {
 					newErrorReport.add(e.toString());
 				} else {
 					newErrorReport.add(e.getMessage());
 				}
+				// add line number column
 				newErrorReport.add(String.valueOf(startingRowNum + i));
 				this.addFailureRow(newErrorReport);
 			}
