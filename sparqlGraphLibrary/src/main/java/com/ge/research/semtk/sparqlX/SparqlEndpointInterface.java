@@ -484,7 +484,7 @@ public abstract class SparqlEndpointInterface {
 		}
 		
 		if (resp == null) {
-			LocalLogger.logToStdErr("the response could not be transformed into json");
+			LocalLogger.logToStdErr("the response could not be transformed into json: " + responseTxt);
 
 			if(responseTxt.contains("Error")) {
 				entity.getContent().close();
