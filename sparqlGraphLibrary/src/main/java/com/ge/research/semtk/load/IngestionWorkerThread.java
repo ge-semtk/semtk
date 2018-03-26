@@ -42,7 +42,7 @@ public class IngestionWorkerThread extends Thread {
 	int maxQueryChars = 100000;    // Arbitrarily limit query size.  Virtuoso seems to lock up in the millions.  Only 10's of thousands are needed ususally.
 									// TODO: make this configurable instead of batch size
     
-	int optimalQueryChars = 1500 // 3500;   // Virtuoso is far more efficient around this size during large loads
+	int optimalQueryChars =  3500;   // Virtuoso is far more efficient around this size during large loads
 									// TODO: make this configurable instead of batch size 3500
     
 	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest) throws Exception{
