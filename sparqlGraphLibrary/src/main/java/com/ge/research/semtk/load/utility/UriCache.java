@@ -26,7 +26,6 @@ public class UriCache {
 	ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap<String, String>();   // the cache
 	ConcurrentHashMap<String, Boolean> notFound = new ConcurrentHashMap<String, Boolean>(); // any == NOT_FOUND
 	ConcurrentHashMap<String, Boolean> isGenerated = new ConcurrentHashMap<String, Boolean>();  // any URI that was generated
-
 	
 	private String getKey(int importNodeIndex, ArrayList<String> builtStrings) {
 		return String.valueOf(importNodeIndex) + "-" + String.join("-", builtStrings);

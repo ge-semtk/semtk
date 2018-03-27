@@ -45,6 +45,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /*
@@ -62,7 +63,9 @@ public class ImportSpecHandler {
 	
 	JSONObject nodegroupJson = null;      
 	HashMap<Integer, JSONObject> lookupNodegroupsJson = new HashMap<Integer, JSONObject>();       // cache of pruned nodegroups ready for lookup
-	HashMap<Integer, String>    lookupMode = new HashMap<Integer, String>();
+	HashMap<Integer, String>     lookupMode = new HashMap<Integer, String>();
+	HashMap<Integer, Long>    	 lookupResultCount = new HashMap<Integer, Long>();                // number of URI's in the triple-store to choose from
+
 	HashMap<String, Integer>   colNameToIndexHash = new HashMap<String, Integer>();
 	HashMap<String, Transform> transformHash = new HashMap<String, Transform>();
 	HashMap<String, String>    textHash = new HashMap<String, String>();
@@ -373,6 +376,7 @@ public class ImportSpecHandler {
 		
 		// for each node with lookupMapping(s)
 		for (Integer importNodeIndex : this.lookupMappings.keySet()) {
+			// initialize to "normal"			
 			NodeGroup lookupNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
 			
 			// add a sample value for each
@@ -390,7 +394,7 @@ public class ImportSpecHandler {
 						propItem.setSparqlID(sparqlID); 
 					}
 					
-					// apply value constraint
+					// apply value constraint so it isn't pruned
 					propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(propItem, sample)));
 				}
 			}
@@ -640,6 +644,11 @@ public class ImportSpecHandler {
 	 */
 	private String lookupUri(int nodeIndex, ArrayList<String> record) throws Exception {
 		
+		// get total possible number available, if it isn't known
+		if (! this.lookupResultCount.containsKey(nodeIndex)) {
+			this.lookupResultCount.put(nodeIndex, this.lookupCount(nodeIndex));
+		}
+		
 		// create a new nodegroup copy:  
 		ArrayList<String> builtStrings = new ArrayList<String>();
 		
@@ -710,10 +719,16 @@ public class ImportSpecHandler {
 			
 			// Run the query
 			// make this thread-safe
-			SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
-			TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-			res.throwExceptionIfUnsuccessful();
-			Table tab = res.getTable();
+			Table tab = null;
+			if (this.lookupResultCount.get(nodeIndex) == 0) {
+				// don't run a query if we know it's going to fail.
+				tab = new Table(new String[] {"empty_row"}, new String[] {"string"});
+			} else {
+				SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
+				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+				res.throwExceptionIfUnsuccessful();
+				tab = res.getTable();
+			}
 			
 			// Check and return results
 			if (tab.getNumRows() > 1) {
@@ -739,6 +754,136 @@ public class ImportSpecHandler {
 				return uri;
 			}
 		}
+	}
+	
+	/**
+	 * 
+	 * @param nodeIndex
+	 * @param record
+	 * @param limit
+	 * @return
+	 * @throws Exception
+	 */
+	private void lookupRandomUris(int nodeIndex, ArrayList<String> record, int limit) throws Exception {
+		
+		// create a new nodegroup copy:  
+		ArrayList<String> builtStrings = new ArrayList<String>();
+		
+		// Build the mapping results into builtStrings
+		for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
+			String builtStr = mapping.buildString(record);
+			builtStrings.add(builtStr);
+		}
+		
+		// get the nodegroup 
+		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		
+		// 0th mapping (all same) lookupNodeIndex has SparqlID of the result URI.  Hash it to -1
+		HashMap<String, Integer> colHash = new HashMap<String,Integer>();
+		colHash.put(lookupNodegroup.getNode(this.lookupMappings.get(nodeIndex).get(0).getLookupNodeIndex()).getSparqlID(), -1);
+		
+		// loop through lookupMappings and add constraints to the lookupNodegroup
+		int i = 0;
+		for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
+
+			String builtString = builtStrings.get(i);
+			Node node = lookupNodegroup.getNode(mapping.getLookupNodeIndex());
+
+			if (mapping.isNode()) {
+				// check for empties
+				if (builtString == null || builtString.isEmpty()) {
+					if (this.oInfo.classIsEnumeration(node.getFullUriName())) {
+						builtString = this.oInfo.getMatchingEnumeration(node.getFullUriName(), builtString);
+					}
+
+					// --- leave nodes unconstrained ---
+					//ValuesConstraint v = new ValuesConstraint(node, builtString);
+					//node.setValueConstraint(v);
+				}
+				colHash.put(node.getSparqlID(), i);
+				node.setIsReturned(true);
+
+			} else {
+				PropertyItem prop = node.getPropertyItem(mapping.getPropItemIndex());
+				if (builtString == null || builtString.isEmpty()) {
+					String t = prop.getValueType();
+					
+					// --- leave properties unconstrained ---
+					//ValuesConstraint v = new ValuesConstraint(prop, builtString);
+					//prop.setValueConstraint(v);
+				}
+				colHash.put(prop.getSparqlID(), i);
+				prop.setIsReturned(true);
+			}
+			
+			i += 1;
+		}
+
+		lookupNodegroup.setLimit(limit);
+		String query = lookupNodegroup.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, 0, null);
+
+		// Run the query
+		// make this thread-safe
+		SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
+		TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+		res.throwExceptionIfUnsuccessful();
+		Table tab = res.getTable();
+
+		// add everything we found to the cache
+		for (int row=0; row < tab.getNumRows(); row++) {
+			// initialize uri and foundStrings
+			String uri = "";
+			ArrayList<String> foundStrings = new ArrayList<String>();
+			for (int j=0; j < builtStrings.size(); j++) {
+				foundStrings.add("");
+			}
+			
+			// shuffle resulting row into uri and foundStrings
+			for (int col=0; col < tab.getNumColumns(); col++) {
+				String colVal = tab.getRow(row).get(col);
+				int colLoc = colHash.get(tab.getColumnNames()[col]);
+				if (colLoc == -1) {
+					uri = colVal;
+				} else {
+					foundStrings.set(colLoc, colVal);
+				}
+			}
+			
+			// add to cache
+			this.uriCache.putUri(nodeIndex, foundStrings, uri);
+		}
+	}
+	
+	private long lookupCount(int nodeIndex) throws Exception {
+		
+		// get the nodegroup 
+		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		
+		// loop through lookupMappings and remove constraints
+		for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
+			Node node = lookupNodegroup.getNode(mapping.getLookupNodeIndex());
+
+			if (mapping.isNode()) {
+				node.setValueConstraint(null);
+
+			} else {
+				PropertyItem prop = node.getPropertyItem(mapping.getPropItemIndex());
+				prop.setValueConstraint(null);
+			}
+		}
+		
+		
+		String query = lookupNodegroup.generateSparql(AutoGeneratedQueryTypes.QUERY_COUNT, false, 0, null);
+
+		// Run the query
+		// make this thread-safe
+		SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
+		TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+		res.throwExceptionIfUnsuccessful();
+		Table tab = res.getTable();
+
+		return tab.getCellAsLong(0, 0);
+		
 	}
 	
 	/**

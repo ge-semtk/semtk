@@ -169,6 +169,7 @@ public class DataLoader {
 		
 		Boolean precheckFailed = false;
 		this.totalRecordsProcessed = 0;	// reset the counter.
+		this.batchHandler.resetDataSet();
 		
 		// PASS 1
 		if(twoPassPrecheck){

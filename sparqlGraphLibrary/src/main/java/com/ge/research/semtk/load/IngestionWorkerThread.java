@@ -33,7 +33,7 @@ public class IngestionWorkerThread extends Thread {
 	SparqlEndpointInterface endpoint = null;
 	DataLoadBatchHandler batchHandler = null;
 	ArrayList<ArrayList<String>> dataSetRecords = null;
-	Boolean skipChecks = false;
+	private Boolean skipChecks = false;
 	Boolean skipIngest = false;
 	int startingRowNum = 0;
 	Exception e = null;
@@ -43,7 +43,7 @@ public class IngestionWorkerThread extends Thread {
 									// TODO: make this configurable instead of batch size
     
 	int optimalQueryChars =  3500;   // Virtuoso is far more efficient around this size during large loads
-									// TODO: make this configurable instead of batch size 3500
+									 // TODO: make this configurable instead of batch size 3500
     
 	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest) throws Exception{
 		
