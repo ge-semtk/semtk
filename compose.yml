@@ -44,8 +44,6 @@ services:
     image: ${REGISTRY}semtk-ontology-info${TAG}
     environment:
       - CONFIG_ONTOLOGYINFO_SERVICE
-      - oinfoServerType
-      - oinfoServerURL
       - oinfoLoggingEnabled
       - oinfoLoggingProtocol
       - oinfoLoggingServer
