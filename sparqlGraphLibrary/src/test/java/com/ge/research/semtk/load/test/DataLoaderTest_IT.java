@@ -461,9 +461,10 @@ public class DataLoaderTest_IT {
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		
-		LocalLogger.logToStdErr("Expecting 20 rows, found: \n" + err.toCSVString());
-		
-		assertEquals(20, err.getNumRows());
+		if (err.getNumRows() != 20) {
+			LocalLogger.logToStdErr("Expecting 20 error rows, found: \n" + err.toCSVString());
+			fail();
+		}
 		TestGraph.compareResults(err.toCSVString(), this, "/loadTestLookupFailTwoFoundResults.csv");
 		
 	}

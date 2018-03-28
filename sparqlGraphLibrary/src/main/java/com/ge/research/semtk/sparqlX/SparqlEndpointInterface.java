@@ -81,7 +81,7 @@ public abstract class SparqlEndpointInterface {
 	// results types to request
 	private static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	private static final String CONTENTTYPE_JSON_LD = "application/x-json+ld";
-	private static final int MAX_QUERY_TRIES = 3;
+	private static final int MAX_QUERY_TRIES = 4;
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private static URLStreamHandler handler = null; // set only by unit tests
@@ -340,10 +340,18 @@ public abstract class SparqlEndpointInterface {
 				}
 			} catch (Exception e) {
 				if (tryCount >= MAX_QUERY_TRIES) {
+					LocalLogger.logToStdOut (String.format("SPARQL query failed after %d tries.  Giving up.", tryCount));
+					LocalLogger.logToStdErr(e.getMessage());
 					throw e;
 				} else {	// else unnecessary, but makes code easier to read
-					LocalLogger.logToStdOut ("SPARQL query failed.  Sleeping 2 seconds and trying again...");
-					TimeUnit.SECONDS.sleep (2); // sleep 2 seconds and try again
+					int sleepSec = 2 * tryCount;
+					// if we're overwhelming a server, really throttle
+					if (e.getMessage().contains("Address already in use: connect")) {
+						sleepSec = 10 * tryCount;
+					}
+					LocalLogger.logToStdOut (String.format("SPARQL query failed.  Sleeping %d seconds and trying again...", sleepSec));
+					LocalLogger.logToStdErr(e.getMessage());
+					TimeUnit.SECONDS.sleep(sleepSec); // sleep and try again
 				}
 			}
 		}
@@ -484,7 +492,7 @@ public abstract class SparqlEndpointInterface {
 		}
 		
 		if (resp == null) {
-			LocalLogger.logToStdErr("the response could not be transformed into json");
+			LocalLogger.logToStdErr("the response could not be transformed into json: " + responseTxt);
 
 			if(responseTxt.contains("Error")) {
 				entity.getContent().close();

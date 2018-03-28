@@ -49,7 +49,7 @@ public class DataLoader {
 	String password = null;
 	OntologyInfo oInfo = null;
 	
-	int MAX_WORKER_THREADS = 10;
+	int MAX_WORKER_THREADS = 2; // 10;
 	
 	public final static String FAILURE_CAUSE_COLUMN_NAME = "Failure Cause";
 	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
@@ -169,6 +169,7 @@ public class DataLoader {
 		
 		Boolean precheckFailed = false;
 		this.totalRecordsProcessed = 0;	// reset the counter.
+		this.batchHandler.resetDataSet();
 		
 		// PASS 1
 		if(twoPassPrecheck){
