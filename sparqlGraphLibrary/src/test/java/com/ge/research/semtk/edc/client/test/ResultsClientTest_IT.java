@@ -482,6 +482,7 @@ public class ResultsClientTest_IT {
 		// Error case
 		try {
 			fileContent = client.execReadBinaryFile("wrongId");
+			fail();
 		} catch (Exception e) {
 			System.out.println("Exception: "+e.toString());
 			assertTrue(true);

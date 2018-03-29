@@ -59,6 +59,10 @@ public class ResultsClient extends RestClient implements Runnable {
 		throw new Exception("Received empty response");
 	}	
 	
+	private void cleanUp() {
+		conf.setServiceEndpoint(null);
+		this.parametersJSON.clear();
+	}
 	
 	// graph result support
 	public void execStoreGraphResults(String jobID, JSONObject resJSON) throws Exception {
@@ -66,19 +70,24 @@ public class ResultsClient extends RestClient implements Runnable {
 		// this strategy will have to be revisited in the event that writes are slow.
 		this.parametersJSON.clear();
 		
-		conf.setServiceEndpoint("results/storeJsonLdResults"); 
+		this.conf.setServiceEndpoint("results/storeJsonLdResults"); 
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobID);
 		this.parametersJSON.put("jsonRenderedGraph", resJSON.toJSONString());
 		this.parametersJSON.put("jsonRenderedHeader", NodeGroupResultSet.getJsonLdResultsMetaData(resJSON).toJSONString());
 
-		JSONObject res = (JSONObject)execute(false);
-		SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
-		simpleRes.throwExceptionIfUnsuccessful();
-		
+		try {
+			JSONObject res = (JSONObject)execute(false);
+			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+			simpleRes.throwExceptionIfUnsuccessful();
+		} finally {
+			this.cleanUp();
+		}
 	}	
 	
 	public JSONObject execGetGraphResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
-		conf.setServiceEndpoint("results/getJsonLdResults");
+		this.conf.setServiceEndpoint("results/getJsonLdResults");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		
 		this.parametersJSON.put("appendDownloadHeaders", false);
@@ -91,9 +100,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			
 			return retval;
 		} finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.clear();
+			this.cleanUp();
 		}
 	}	
 	
@@ -102,15 +109,19 @@ public class ResultsClient extends RestClient implements Runnable {
 
 		this.parametersJSON.clear();
 		
-		conf.setServiceEndpoint("results/storeJsonBlobResults"); 
-		this.parametersJSON.put("jobId", jobID);
-		this.parametersJSON.put("jsonBlobString", resJson.toJSONString());
-
-		JSONObject res = (JSONObject)execute(false);
-		SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
-		simpleRes.throwExceptionIfUnsuccessful();
-		
-		this.parametersJSON.clear();
+		try {
+			this.conf.setServiceEndpoint("results/storeJsonBlobResults"); 
+			this.conf.setMethod(RestClientConfig.Methods.POST);
+			this.parametersJSON.put("jobId", jobID);
+			this.parametersJSON.put("jsonBlobString", resJson.toJSONString());
+	
+			JSONObject res = (JSONObject)execute(false);
+			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+			simpleRes.throwExceptionIfUnsuccessful();
+			
+		} finally {
+			this.cleanUp();
+		}
 		
 	}
 
@@ -120,41 +131,43 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.clear();
 		this.fileParameter = file;
 
-		conf.setServiceEndpoint("results/storeBinaryFile");
+		this.conf.setServiceEndpoint("results/storeBinaryFile");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		try {
+			JSONObject res = (JSONObject)execute(false);
+			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+			simpleRes.throwExceptionIfUnsuccessful();
 
-		JSONObject res = (JSONObject)execute(false);
-		SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
-		simpleRes.throwExceptionIfUnsuccessful();
+			return res;
 
-		this.parametersJSON.clear();
-		this.fileParameter = null;
-
-		return res;
-
+		} finally {
+			this.fileParameter = null;
+			this.cleanUp();
+		}
 	}
 
 
 	public String execReadBinaryFile(String fileId) throws Exception{
 
 		this.parametersJSON.clear();
+		this.conf.setServiceEndpoint("results/getBinaryFile/"+fileId);
 		this.conf.setMethod(RestClientConfig.Methods.GET);
-		conf.setServiceEndpoint("results/getBinaryFile/"+fileId);
+		try {
+			String res = (String) execute(true);
 
-		String res = (String) execute(true);
-
-		this.parametersJSON.clear();
-		this.conf.setMethod(RestClientConfig.Methods.POST);
-		return res;
-
+			return res;
+		} finally {
+			this.cleanUp();
+		}
 	}
 
 
 	public JSONObject execGetBlobResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
 		this.parametersJSON.clear();
 				
-		conf.setServiceEndpoint("results/getJsonBlobResults");
+		this.conf.setServiceEndpoint("results/getJsonBlobResults");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
-		
 		this.parametersJSON.put("appendDownloadHeaders", false);
 
 		try {
@@ -165,9 +178,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			
 			return retval;
 		} finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.clear();
+			this.cleanUp();
 		}
 	}	
 		
@@ -195,7 +206,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		Thread thread = null;
 
 		// write the start of the JSON
-		conf.setServiceEndpoint("results/storeTableResultsJsonInitialize"); 
+		this.conf.setServiceEndpoint("results/storeTableResultsJsonInitialize"); 
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		this.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
 		thread = new Thread(this);
@@ -246,6 +258,7 @@ public class ResultsClient extends RestClient implements Runnable {
 
 			// fail if tableRowsDone has not changed. this implies that even the first result was too large.
 			if((tableRowsDone == tableRowsAtStart) && (tableRowsDone < totalRows)){
+				this.cleanUp();
 				throw new Exception("unable to write results. there is a row size which is too large. row number was " + tableRowsDone + " of a total " + totalRows + ".");
 			}
 
@@ -258,10 +271,10 @@ public class ResultsClient extends RestClient implements Runnable {
 
 			// wait for previous batch to finish
 			waitForThreadToFinish(thread);
-			conf.setServiceEndpoint(null);			
 			
 			// send the current batch  
-			conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
+			this.conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
+			this.conf.setMethod(RestClientConfig.Methods.POST);
 			this.parametersJSON.put("contents", Utility.compress(resultsSoFar.toString())); 
 			this.parametersJSON.put("jobId", jobId);
 			thread = new Thread(this);
@@ -279,7 +292,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		waitForThreadToFinish(thread);
 		
 		// write the end of the JSON
-		conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
+		this.conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		thread = new Thread(this);
 		thread.start();
@@ -287,7 +301,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		waitForThreadToFinish(thread);
 
 		if (timerFlag) { LocalLogger.logToStdErr(String.format("prep=%.2f sec   send=%.2f sec", prepSec, sendSec)); }
-		
+		this.cleanUp();
 		return;
 	}
 		
@@ -323,7 +337,8 @@ public class ResultsClient extends RestClient implements Runnable {
 			for(int i = 0; i < numBatches; i++){
 				
 				// set request parameters
-				conf.setServiceEndpoint("results/getTableResultsJson");
+				this.conf.setServiceEndpoint("results/getTableResultsJson");
+				this.conf.setMethod(RestClientConfig.Methods.POST);
 				this.parametersJSON.put("jobId", jobId);
 				this.parametersJSON.put("startRow", i * BATCH_SIZE_RETRIEVE);
 				if(i < numBatches - 1){
@@ -366,9 +381,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			
 			return ret;			
 		} finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.clear();
+			this.cleanUp();
 		}
 	}		
 
@@ -378,7 +391,8 @@ public class ResultsClient extends RestClient implements Runnable {
 	 */
 	@SuppressWarnings("unchecked")
 	public CSVDataset execTableResultsCsv(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
-		conf.setServiceEndpoint("results/getTableResultsCsv");
+		this.conf.setServiceEndpoint("results/getTableResultsCsv");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		if(maxRows != null){
 			this.parametersJSON.put("maxRows", maxRows.intValue());
@@ -389,9 +403,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
 			return new CSVDataset(s, true);
 		} finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.clear();
+			this.cleanUp();
 		}
 	}	
 	
@@ -400,7 +412,8 @@ public class ResultsClient extends RestClient implements Runnable {
 	 */
 	@SuppressWarnings("unchecked")
 	public URL [] execGetResults(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
-		conf.setServiceEndpoint("results/getResults");
+		this.conf.setServiceEndpoint("results/getResults");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 
 		try {
@@ -414,24 +427,21 @@ public class ResultsClient extends RestClient implements Runnable {
 			URL [] ret = { sampleUrl, fullUrl };
 			return ret;			
 		} finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.clear();
+			this.cleanUp();
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	public void execDeleteStorage(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
-		conf.setServiceEndpoint("results/deleteStorage");
+		this.conf.setServiceEndpoint("results/deleteStorage");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		
 		try {
 			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();			
 		} finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.clear();
+			this.cleanUp();
 		}
 	}
 	
@@ -479,16 +489,22 @@ public class ResultsClient extends RestClient implements Runnable {
 	 * @throws Exception 
 	 */
 	private int getNumRows(String jobId) throws Exception {
-		conf.setServiceEndpoint("results/getTableResultsRowCount");
+		this.conf.setServiceEndpoint("results/getTableResultsRowCount");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
-		this.run();
-		SimpleResultSet res = this.getRunResAsSimpleResultSet();
-		res.throwExceptionIfUnsuccessful();
-		if (this.getRunException() != null) {
-			throw this.getRunException();
+		
+		try {
+			this.run();
+
+			SimpleResultSet res = this.getRunResAsSimpleResultSet();
+			res.throwExceptionIfUnsuccessful();
+			if (this.getRunException() != null) {
+				throw this.getRunException();
+			}
+			return res.getResultInt("rowCount");
+		} finally {
+			this.cleanUp();
 		}
-		this.parametersJSON.clear();  // clear parameters for next time
-		return res.getResultInt("rowCount");
 	}
 
 }
