@@ -28,19 +28,24 @@ package com.ge.research.semtk.services.results;
  * What is the best way to use properties in this situation.
  */
 
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
@@ -56,6 +61,10 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Service to get query results.
@@ -155,39 +164,94 @@ public class ResultsServiceRestController {
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
-	/* 
-	 *  gui -> dispatcher  :   run some kind of query
-	 *  ... magic ...
-	 *  dispatcher creates a TableResult
-	 *>>dispatcher -> resultsService : storeBinaryFile I have a binary picture.jpg, store and give me URL
-	 *                               : storeBinaryFile I have another binary picture2.gif, store and give me URL
-	 *                               
-	 *                The URL you return should be configurable in the properties file.
-	 *      
-	 *  dispatcher now replaces the hdfs urls in its table results with the storeBinaryFile Urls
-	 *                              
-	 *  dispatcher -> resultsService : storeTable...(jobID, table-with-new-URLS)
-	 *  gui -> resultsService : getTableResultsJsonForWebClient(jobID)
-	 *  
-	 *>>gui -> resultsService : getBinaryFile?id=lskjw-ekjr-ejkwe  to get picture.jpg  
-	 * 
-	 * ------------------------------------------------------------------------------------------
-	 * storeBinary() - takes a binary, and a not-necessarily-unique file name (including valid file extension)
-	 *               - store the file ("stage" it)
-	 *               - return a URL that is resultsService/getBinaryResults?roberto-special-guid
-	 * getBinaryResults()  - GET
-	 * 
-	 * 
-	 * ------------------------------------------------------------------------------------------
-	 * TEST:
-	 *   com.ge.research.semtk.edc.client.test.ResultsClientTest_IT.java - use the ResultsClient to
-	 * 		- storeBinary a binary file, gives back a URL  (which is actually http://properties/file/prefix/resultsService/getBinaryResults?id=skj-1uh-123)
-	 *      - use the resulting URL to retrieve the binary file with GET
-	 *      - make sure the name is the same
-	 *      - make sure the contents are the same
-	 */
 	
-	/**
+
+	private static final String META_SUFFIX = "_meta.json";
+    private static final String FILE_PROP_NAME = "filename";
+
+	@CrossOrigin
+	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
+	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, HttpServletRequest req, HttpServletResponse resp){
+
+	    String reqUri = req.getRequestURI();
+		SimpleResultSet res = new SimpleResultSet();
+		Path rootLocation = Paths.get(prop.getFileLocation());
+
+        // logging
+        LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+        LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile start");
+
+		try{
+			if (file != null) {
+			    String fileId = UUID.randomUUID().toString();
+				String originalFileName = file.getOriginalFilename();
+				String destinationFile = prop.getFileLocation()+"/"+fileId;
+				LocalLogger.logToStdOut("Saving original file: " + originalFileName+" to: "+destinationFile);
+
+				Files.copy(file.getInputStream(), rootLocation.resolve(destinationFile));
+
+				String destinationFileMeta = destinationFile.concat(META_SUFFIX);
+                JSONObject metaInfo = new JSONObject();
+                metaInfo.put(FILE_PROP_NAME, originalFileName);
+
+                try (FileWriter fw = new FileWriter(destinationFileMeta)) {
+                    fw.write(metaInfo.toJSONString());
+                    fw.flush();
+                } catch (IOException e) {
+                    LocalLogger.printStackTrace(e);
+                }
+
+                String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
+
+				res.setSuccess(true);
+                res.addResult("fullUrl", adjustedUrl);
+                res.addResult("fileId", fileId);
+			}
+
+		} catch (Exception e) {
+			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile exception", "message", e.toString());
+			//LocalLogger.printStackTrace(e);
+		}
+
+		LocalLogger.logToStdErr("done uploading file");
+		return res.toJson();
+	}
+
+    @CrossOrigin
+    @RequestMapping(value="/getBinaryFile/{fileId}", method=RequestMethod.GET)
+    @ResponseBody
+    public FileSystemResource getBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp){
+
+        // logging
+        LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+        LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
+
+        String fileName = prop.getFileLocation()+"/"+fileId;
+        String fileMeta = fileName.concat(META_SUFFIX);
+
+        JSONParser parser = new JSONParser();
+        String originalFileName = "unknown";
+        try {
+            JSONObject jsonObject = (JSONObject) parser.parse(new FileReader(fileMeta));
+            originalFileName = (String) jsonObject.get(FILE_PROP_NAME);
+        } catch (IOException e) {
+            LocalLogger.printStackTrace(e);
+        } catch (ParseException e) {
+            LocalLogger.printStackTrace(e);
+        }
+
+	    File file = new File(prop.getFileLocation()+"/"+fileId);
+        if (file.exists()) {
+            resp.setHeader("Content-Disposition", "attachment; " + FILE_PROP_NAME + "=\"" + originalFileName + "\"");
+            return new FileSystemResource(file);
+        } else {
+            return null;
+        }
+    }
+
+
+
+    /**
 	 * Call 1 of 3 for storing JSON results.
 	 * Writes JSON start, column names, and column types.
 	 */
