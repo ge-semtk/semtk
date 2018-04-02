@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class UriCache {
 	static final String NOT_FOUND = "0-NOT-FOUND";
+	static final String EMPTY_LOOKUP = "1-EMPTY-LOOKUP";
 	
 	ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap<String, String>();   // the cache
 	ConcurrentHashMap<String, Boolean> notFound = new ConcurrentHashMap<String, Boolean>(); // any == NOT_FOUND

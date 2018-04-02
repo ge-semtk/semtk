@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 
 import org.json.simple.JSONArray;
@@ -559,11 +560,43 @@ public class ImportSpecHandler {
 		}
 		
 		// prune nodes that no longer belong (no uri and no properties)
-		retNodegroup.pruneAllUnused(true);
+		this.pruneImportNodegroup(retNodegroup);
 		
 		// set URI for nulls
 		retNodegroup = this.setURIsForNullNodes(retNodegroup);
 		return retNodegroup;
+	}
+	
+	/**
+	 * Prune an import nodegroup, checking for empty URI lookups
+	 * @param importNg
+	 * @throws Exception
+	 */
+	private void pruneImportNodegroup(NodeGroup importNg) throws Exception {
+		
+		// remove all EMPTY_LOOKUP URIs from the nodegroup, remembering their sparqlIDs
+		HashSet<String> emptyLookupSparqlIDs = new HashSet<String>();
+		for (int i=0; i < importNg.getNodeCount(); i++) {
+			Node n = importNg.getNode(i);
+			String instanceVal = n.getInstanceValue();
+			if (instanceVal != null && instanceVal.equals(UriCache.EMPTY_LOOKUP)) {
+				// remove the value so it might be pruned
+				n.setInstanceValue(null);
+				// remember the sparqlID
+				emptyLookupSparqlIDs.add(n.getSparqlID());
+			}
+		}
+		
+		// prune the nodegroup
+		importNg.pruneAllUnused(true);
+		
+		// make sure all the EMPTY_LOOKUP URIs are gone (pruned)
+		for (String id : emptyLookupSparqlIDs) {
+			Node n = importNg.getNodeBySparqlID(id);
+			if (n != null) {
+				throw new Exception("At least one URI lookup field was null: " + id);
+			}
+		}
 	}
 	
 	/**
@@ -639,7 +672,7 @@ public class ImportSpecHandler {
 	 * If URI is not found and MODE_CREATE, then it returns UriCache.NOT_FOUND
 	 *    and caller is responsible for generating not found guids.
 	 * @param ImportMappings
-	 * @return  uri or URICache.NOT_FOUND
+	 * @return  uri or URICache.NOT_FOUND or URICache.EMPTY_LOOKUP
 	 * @throws Exception - error, or not found and NO_CREATE, or found multiple
 	 */
 	private String lookupUri(int nodeIndex, ArrayList<String> record) throws Exception {
@@ -697,7 +730,8 @@ public class ImportSpecHandler {
 				
 				// check for empties
 				if (builtString == null || builtString.isEmpty()) {
-					throw new Exception("URI Lookup field is empty for node " + node.getSparqlID());
+					//throw new Exception("URI Lookup field is empty for node " + node.getSparqlID());
+					return UriCache.EMPTY_LOOKUP;
 				}
 				
 				if (mapping.isNode()) {

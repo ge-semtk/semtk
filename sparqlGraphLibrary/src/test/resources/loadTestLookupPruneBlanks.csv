@@ -1,0 +1,4 @@
+batteryId,batteryDesc,cell1Id,color,desc
+batt-1,desc 1,A1,blue,good: all fields
+batt-2,desc 2,B1,,missing color is ok since its pruned
+batt-3,desc 3,,,missing cell and color ok since they're pruned
