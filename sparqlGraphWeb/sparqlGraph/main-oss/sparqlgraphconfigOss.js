@@ -22,12 +22,12 @@
 //VERSION: 85!
 var g = {
 	help : {
-		buildHtml : "SPARQLgraph 2.0",
-		aboutHtml : "Knowledge Discovery Lab<br>\
+		buildHtml : "SPARQLgraph 2.1",
+		aboutHtml : "AI and Machine Learning<br>\
 				     GE Research, Niskayuna<br>\
 				    ",
 
-		legalNoticeHtml : ' Copyright © 2014-2017  General Electric Company.  <br>\
+		legalNoticeHtml : ' Copyright © 2014-2018  General Electric Company.  <br>\
 						    <b>Licensed under the Apache License, Version 2.0 (the "License") </b>  <br>\
 						    you may not use this file except in compliance with the License.  <br>\
 						    You may obtain a copy of the License at  <br>\
@@ -70,7 +70,24 @@ var g = {
 
 		}
 	},
-	
+	defaultConn : {
+		"name": "demo",
+		"domain": "http://com.ge.research",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://semtk/demo"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://semtk/demo"
+			}
+		]
+	},
 	service : {
 		ingestion :{
 			url : "http://localhost:12091/ingestion/",

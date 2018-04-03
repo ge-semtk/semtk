@@ -111,6 +111,9 @@
 	    
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
+            if (!conn) {
+                conn = g.defaultConn;
+            }
 			if (conn) {
 				doLoadConnection(conn);
 			}
