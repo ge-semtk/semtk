@@ -111,8 +111,10 @@
 	    
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
-            if (!conn) {
-                conn = g.defaultConn;
+            if (!conn && g.defaultConn) {
+                var newConn = new SparqlConnection();
+                newConn.fromJson(g.defaultConn);
+                conn = newConn;
             }
 			if (conn) {
 				doLoadConnection(conn);
