@@ -111,10 +111,17 @@
 	    
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
-            if (!conn && g.defaultConn) {
-                var newConn = new SparqlConnection();
-                newConn.fromJson(g.defaultConn);
-                conn = newConn;
+            
+            // If no connection, load the demo nodegroup
+            if (!conn) {
+                try {
+                    fetch("demoNodegroup.json")
+                        .then(response => response.text())
+                        .then(text => doQueryLoadJsonStr(text));
+                    window.open("http://www.google.com", "_blank","location=yes");
+                } catch (e) {
+                    console.log("Couldn't load demoNodegroup.json: " + e);
+                }
             }
 			if (conn) {
 				doLoadConnection(conn);

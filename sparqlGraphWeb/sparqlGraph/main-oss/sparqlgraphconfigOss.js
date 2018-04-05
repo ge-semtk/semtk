@@ -70,24 +70,6 @@ var g = {
 
 		}
 	},
-	defaultConn : {
-		"name": "demo",
-		"domain": "http://com.ge.research",
-		"model": [
-			{
-				"type": "virtuoso",
-				"url": "http://localhost:2420",
-				"dataset": "http://semtk/demo"
-			}
-		],
-		"data": [
-			{
-				"type": "virtuoso",
-				"url": "http://localhost:2420",
-				"dataset": "http://semtk/demo"
-			}
-		]
-	},
 	service : {
 		ingestion :{
 			url : "http://localhost:12091/ingestion/",
