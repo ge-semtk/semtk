@@ -19,7 +19,7 @@
 // SparqlGraph config variables
 // GOAL: everything that changes with deployment is in here
 
-//VERSION: 86
+//VERSION: 85!
 var g = {
 	help : {
 		buildHtml : "SPARQLgraph 2.1",
@@ -70,6 +70,24 @@ var g = {
 
 		}
 	},
+	defaultConn : {
+		"name": "demo",
+		"domain": "http://com.ge.research",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://semtk/demo"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://semtk/demo"
+			}
+		]
+	},
 	service : {
 		ingestion :{
 			url : "http://localhost:12091/ingestion/",
@@ -102,25 +120,7 @@ var g = {
 			url : "http://localhost:12059/nodeGroup/",
 		},
 	},
-	defaultConn : {
-		"name": "demo",
-		"domain": "http://com.ge.research",
-		"model": [
-			{
-				"type": "virtuoso",
-				"url": "http://localhost:2420",
-				"dataset": "http://semtk/demo/ontology"
-			}
-		],
-		"data": [
-			{
-				"type": "virtuoso",
-				"url": "http://localhost:2420",
-				"dataset": "http://semtk/demo/data"
-			}
-		]
-	},
-        
+	
 	tab : {
 		query : "queryTab",
 		mapping : "mappingTab",
