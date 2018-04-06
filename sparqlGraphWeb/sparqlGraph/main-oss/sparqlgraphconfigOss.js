@@ -68,6 +68,9 @@ var g = {
 
 		}
 	},
+    
+    demoNg : "demoNodegroup.json",
+        
 	service : {
 		ingestion :{
 			url : "http://localhost:12091/ingestion/",
