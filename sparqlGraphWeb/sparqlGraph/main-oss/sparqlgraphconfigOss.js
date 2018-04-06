@@ -19,10 +19,10 @@
 // SparqlGraph config variables
 // GOAL: everything that changes with deployment is in here
 
-//VERSION: 85!
+//VERSION: 86
 var g = {
 	help : {
-		buildHtml : "SPARQLgraph 2.1",
+		buildHtml : "SPARQLgraph<br>",
 		aboutHtml : "AI and Machine Learning<br>\
 				     GE Research, Niskayuna<br>\
 				    ",
@@ -60,13 +60,11 @@ var g = {
 						    ',
 		
 		url : {
-			base : "http://www.google.com",
-			blog : "http://www.google.com",
+			base : "https://github.com/ge-semtk/semtk/wiki",
+			blog : "https://github.com/ge-semtk/semtk/wiki",
 			
 			// base#tab
-			queryTab : "QueryTab",
-			importTab : "MapInputTab",
-			uploadTab : "ImportTab",
+			demo : "demo",
 
 		}
 	},
