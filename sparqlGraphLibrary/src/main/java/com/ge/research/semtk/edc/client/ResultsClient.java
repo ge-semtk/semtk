@@ -125,8 +125,13 @@ public class ResultsClient extends RestClient implements Runnable {
 		
 	}
 
-
-	public JSONObject execStoreBinaryFile(File file) throws Exception{
+	/**
+	 * Store a file 
+	 * @param file
+	 * @return Successful SimpleResultSet containing fullUrl and fileId
+	 * @throws Exception
+	 */
+	public SimpleResultSet execStoreBinaryFile(File file) throws Exception{
 
 		this.parametersJSON.clear();
 		this.fileParameter = file;
@@ -137,9 +142,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			JSONObject res = (JSONObject)execute(false);
 			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
 			simpleRes.throwExceptionIfUnsuccessful();
-
-			return res;
-
+			return simpleRes;
 		} finally {
 			this.fileParameter = null;
 			this.cleanUp();

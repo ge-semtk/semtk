@@ -34,6 +34,7 @@ import org.junit.Test;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -470,13 +471,15 @@ public class ResultsClientTest_IT {
 		// Happy path
 		File testFile = new File("src/test/resources/test.csv");
 
-		JSONObject res = client.execStoreBinaryFile(testFile);
-		assertEquals("success", res.get("status"));
-		JSONObject results = (JSONObject) res.get("simpleresults");
-		assertNotNull(results);
-
-		String fileId = (String) results.get("fileId");
+		SimpleResultSet res = client.execStoreBinaryFile(testFile);
+		
+		String fileId = (String) res.getResult("fileId");
+		String fullUrl = (String) res.getResult("fullUrl");
+		
+		String s = Utility.getURLContentsAsString(new URL(fullUrl));
 		String fileContent = client.execReadBinaryFile(fileId);
+		
+		assertNotNull(s);
 		assertNotNull(fileContent);
 
 		// Error case
