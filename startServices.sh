@@ -22,17 +22,19 @@
 # Usage: ./startServices CONFIG_DIR                     to use configuration files in CONFIG_DIR 
 # Usage: ./startServices CONFIG_DIR DISPATCHER_JAR_DIR  to add additional dispatcher jars
 
-source .env
-
-if [ -z "$JAVA_HOME" ]; then
-        >&2 echo No JAVA_HOME
-        exit 1
-fi
 
 # SEMTK = directory holding this script
 SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOGS=$SEMTK/logs
 echo $SEMTK
+
+source $SEMTK/.env
+
+# JAVA_HOME
+if [ -z "$JAVA_HOME" ]; then
+        >&2 echo No JAVA_HOME
+        exit 1
+fi
 
 # default config file locations
 CONFIG_ONTOLOGYINFO_SERVICE="$SEMTK"/ontologyInfoService/src/main/resources/ontologyinfo.properties 
@@ -66,7 +68,6 @@ if [ $# -gt 1 ]; then
 else
 	LOCATION_ADDITIONAL_DISPATCHER_JARS=""
 fi
-
 
 mkdir -p $LOGS
 
