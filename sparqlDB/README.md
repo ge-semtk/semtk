@@ -1,2 +1,3 @@
 # sparqlDB
-This project contains a default containerized RDF-compliant database instance based on Virtuoso). This instance gets initialized with a services and nodegroup store model upon first startup.
+This project contains a default containerized RDF-compliant database instance based on Virtuoso. This instance gets initialized with a services and nodegroup store model upon first startup. Any models or data that need to be loaded to the database can be placed in Container-Root/toLoad folder. Files from that folder get loaded in $DEFAULT_GRAPH. If a file is located in a subfolder, then the extra path is added to the graph location.
+Data gets persisted by default in folder sparqlDB/virtuoso. This location can be changed by setting the DATA_SPARQLDB environment variable in file ".env"
