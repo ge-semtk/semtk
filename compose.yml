@@ -2,6 +2,31 @@ version: '3'
 
 services:
 
+  semtk-sparqldb:
+    build:
+      context: ./sparqlDB
+      dockerfile: Dockerfile
+      args:
+        http_proxy: $http_proxy
+        https_proxy: $https_proxy
+    image: ${REGISTRY}semtk-sparqldb${TAG}
+    environment:
+      - http_proxy
+      - https_proxy
+      - no_proxy
+      - DBA_PASSWORD=${PWD_SPARQLDB}
+      - GRAPH_SPARQL_UPDATE=true
+      - DEFAULT_GRAPH=http://research.ge.com
+      - VIRT_Parameters_DirsAllowed=/
+      - VIRT_SPARQL_MaxQueryCostEstimationTime=40000
+      - VIRT_SPARQL_MaxQueryExecutionTime=300
+    ports:
+      - ${PORT_SPARQLDB}:8890
+      - 1111:1111
+    volumes:
+      - ${DATA_SPARQLDB}:/data
+    networks:
+      - semtknet
   semtk-nodegroup:
     build:
       context: ./nodeGroupService
