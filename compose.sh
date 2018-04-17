@@ -24,8 +24,8 @@ if [ "${docker_exists}" == "0" ]; then
 else
     source .env
     ENV_FILE=$(mktemp /tmp/env.XXXXXXXXX)
-    env > ${ENV_FILE}
-    docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/wd --env-file ${ENV_FILE} docker/compose:1.19.0 -f /wd/compose.yml ${@}
+    env | grep -v "PATH" > ${ENV_FILE}
+    docker container run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/wd --env-file ${ENV_FILE} ${COMPOSE_IMAGE} -f /wd/compose.yml ${@}
     rm -f ${ENV_FILE}
 fi
 

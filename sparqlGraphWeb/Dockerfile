@@ -2,7 +2,14 @@
 
 FROM tomcat:8.0.36
 
-MAINTAINER Justin McHugh <mchugh@ge.com>
+MAINTAINER Alex Iankoulski <iankouls@bhge.com>
+
+ARG http_proxy
+ARG https_proxy
+
+RUN [ -n "$http_proxy" ] && echo "Acquire::http::proxy \"${http_proxy}\";" > /etc/apt/apt.conf; \
+    [ -n "$https_proxy" ] && echo "Acquire::https::proxy \"${https_proxy}\";" >> /etc/apt/apt.conf; \
+    [ -f /etc/apt/apt.conf ] && cat /etc/apt/apt.conf; exit 0
 
 COPY iidx-oss/ /usr/local/tomcat/webapps/iidx-oss/
 COPY ROOT/ /usr/local/tomcat/webapps/ROOT/
