@@ -474,7 +474,7 @@ public class ResultsClientTest_IT {
 		SimpleResultSet res = client.execStoreBinaryFile(testFile);
 		
 		String fileId = (String) res.getResult("fileId");
-		String fullUrl = (String) res.getResult("fullUrl");
+		String fullUrl = (String) res.getResult("fullURL");
 		
 		String s = Utility.getURLContentsAsString(new URL(fullUrl));
 		String fileContent = client.execReadBinaryFile(fileId);

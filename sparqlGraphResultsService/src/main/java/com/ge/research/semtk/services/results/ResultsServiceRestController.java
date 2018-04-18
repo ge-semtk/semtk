@@ -204,7 +204,7 @@ public class ResultsServiceRestController {
                 String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
 
 				res.setSuccess(true);
-                res.addResult("fullUrl", adjustedUrl);
+                res.addResult("fullURL", adjustedUrl);
                 res.addResult("fileId", fileId);
 			}
 
