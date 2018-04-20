@@ -49,7 +49,7 @@ public class DataLoader {
 	String password = null;
 	OntologyInfo oInfo = null;
 	
-	int MAX_WORKER_THREADS = 10;
+	int MAX_WORKER_THREADS = 2; // 10;
 	
 	public final static String FAILURE_CAUSE_COLUMN_NAME = "Failure Cause";
 	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
@@ -169,6 +169,7 @@ public class DataLoader {
 		
 		Boolean precheckFailed = false;
 		this.totalRecordsProcessed = 0;	// reset the counter.
+		this.batchHandler.resetDataSet();
 		
 		// PASS 1
 		if(twoPassPrecheck){
@@ -237,7 +238,7 @@ public class DataLoader {
 		int recordsProcessed = 0;
 		int startingRow = 1;
 		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : ""));
-		long timeMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
+		long lastMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 		
 		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
 		
@@ -280,10 +281,17 @@ public class DataLoader {
 				}
 				wrkrs.clear();
 				numThreads = this.MAX_WORKER_THREADS;   // after first pass, go full speed with MAX_WORKER_THREADS
-				LocalLogger.logToStdOutNoEOL("..." + startingRow);
-
+				
+				// log to stdout occasionally
+				long nowMillis = System.currentTimeMillis();
+				if (nowMillis - lastMillis > 1000) {
+					LocalLogger.logToStdOutNoEOL("..." + startingRow);
+					lastMillis = nowMillis;
+				}
 			}
 		}
+		
+		LocalLogger.logToStdOutNoEOL("..." + startingRow + "\n");
 		
 		// join all remaining threads
 		for(int i = 0; i < wrkrs.size(); i++){

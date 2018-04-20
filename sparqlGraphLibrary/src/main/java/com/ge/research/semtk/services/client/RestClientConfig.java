@@ -24,12 +24,15 @@ package com.ge.research.semtk.services.client;
  */
 public abstract class RestClientConfig {
 
+	public enum Methods {POST, GET};
+
 	protected String serviceProtocol;
 	protected String serviceServer; // may be either the FQDN or IP address.
 	protected int servicePort;
-	protected String serviceEndpoint; // the service endpoint (i.e "/Logging/LogEvent")	
+	protected String serviceEndpoint; // the service endpoint (i.e "/Logging/LogEvent")
 	//protected String serviceUser; 	// TODO
 	//protected String servicePassword; // TODO
+	protected Methods method = Methods.POST;
 	
 	/**
 	 * Default constructor
@@ -51,10 +54,15 @@ public abstract class RestClientConfig {
 		this.serviceServer = serviceServer;
 		this.servicePort = servicePort;
 		this.serviceEndpoint = serviceEndpoint;
-	}	
-	
+	}
 
-	public String getServiceProtocol(){ 
+
+	public RestClientConfig(String serviceProtocol, String serviceServer, int servicePort, String serviceEndpoint, Methods method) throws Exception {
+		this(serviceProtocol, serviceServer, servicePort, serviceEndpoint);
+		this.method = method;
+	}
+
+	public String getServiceProtocol(){
 		return this.serviceProtocol; 
 	}
 	
@@ -100,6 +108,14 @@ public abstract class RestClientConfig {
 	
 	public void setServiceEndpoint(String serviceEndpoint){
 		this.serviceEndpoint = serviceEndpoint;
-	}	
-	
+	}
+
+	public Methods getMethod() {
+		return method;
+	}
+
+	public void setMethod(Methods method) {
+		this.method = method;
+	}
+
 }

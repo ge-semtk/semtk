@@ -6,14 +6,14 @@
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius37.crd.ge.com:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://durabattery"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius37.crd.ge.com:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://durabattery"
 			}
 		]

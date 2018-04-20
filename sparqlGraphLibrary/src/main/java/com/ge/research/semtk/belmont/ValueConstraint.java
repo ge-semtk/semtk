@@ -49,6 +49,11 @@ public class ValueConstraint {
 	
 	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList) throws Exception {
 		// build a value constraint for an "item" (see item interface comment)
+		
+		if (item.getSparqlID().isEmpty()) {
+			throw new Error("Trying to build VALUES constraint for property with empty sparql ID");
+		}
+
 		StringBuffer ret = new StringBuffer();
 		if (valList.size() > 0) {
 			String t = item.getValueType();
@@ -58,7 +63,7 @@ public class ValueConstraint {
 				if (XSDSupportedTypes.getMatchingName(t).equals("NODE_URI")) {
 					ret.append(" <" + valList.get(i) + ">");
 				} else {
-					ret.append(" '" + valList.get(i) + "'^^" + XSDSupportUtil.getPrefixedName(item.getValueType()));
+					ret.append(" '" + BelmontUtil.sparqlSafe(valList.get(i)) + "'^^" + XSDSupportUtil.getPrefixedName(item.getValueType()));
 				}
 			}
 			
@@ -84,15 +89,19 @@ public class ValueConstraint {
 		if (!XSDSupportUtil.supportedType(t)) {
 			throw new Exception("Unknown type for constraint: " + t);
 		}
-		
+		String v = BelmontUtil.sparqlSafe(pred);
 		if (XSDSupportUtil.dateOperationAvailable(t)) {
-			ret = String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, pred, XSDSupportUtil.getXsdSparqlTrailer(t));
+			// date
+			ret = String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, v, XSDSupportUtil.getXsdSparqlTrailer(t));
 		} else if (XSDSupportUtil.regexIsAvailable(t)) {
-			ret = String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, pred, XSDSupportUtil.getXsdSparqlTrailer(t));
+			// string
+			ret = String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, v, XSDSupportUtil.getXsdSparqlTrailer(t));
 		} else if (XSDSupportedTypes.getMatchingName(t).equals("NODE_URI")) {
-			ret = String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, pred);
+			// URI
+			ret = String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, v);
 		} else 	{
-			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, pred, XSDSupportUtil.getXsdSparqlTrailer(t));
+			// leftovers
+			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, v, XSDSupportUtil.getXsdSparqlTrailer(t));
 		} 
 		return ret;
 	}

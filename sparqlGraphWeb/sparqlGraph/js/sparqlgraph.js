@@ -63,6 +63,7 @@
     	
 	    require([ 'sparqlgraph/js/edittab',
                   'sparqlgraph/js/mappingtab',
+                  'sparqlgraph/js/modaliidx',
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/uploadtab',
@@ -72,7 +73,7 @@
                  
 	              'local/sparqlgraphlocal'
                 ], 
-                function (EditTab, MappingTab, ModalLoadDialog, ModalStoreDialog, UploadTab) {
+                function (EditTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, UploadTab) {
 	    
 	    	console.log(".ready()");
 	    	
@@ -111,21 +112,38 @@
 	    
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
-			if (conn) {
+            
+            if (conn) { 
 				doLoadConnection(conn);
-			}
-			
+                
+			} else {
+                var loadDemo =  function(jsonStr){ 
+                    // if the demo file loaded
+                    if (jsonStr.toLowerCase().indexOf("status 404") == -1) {
+                        // warn the user and load the nodegroup, and launch the help page
+                        ModalIIDX.okCancel( "Demo",
+                                            "Loading demo nodegroup, and<br>Launching demo documentation pop-up.",
+                                            function() {
+                                                window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
+                                                doQueryLoadJsonStr(jsonStr)
+                                            }
+                                          );
+                    } else {
+                        console.log("404 Error loading demoNodegroup.json");
+                    }
+                }
+               
+                fetch("demoNodegroup.json")
+                            .then(response => response.text())
+                            .then(text => loadDemo(text));
+            
+            }
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType(); 
 			
             var user = localStorage.getItem("SPARQLgraph_user");
             gStoreDialog = new ModalStoreDialog(user || "",
                                                      g.service.nodeGroupStore.url); 
-
-            // Paul auto-debug ontology editor
-            if (user == "200001934") {
-                activateOntologyEditor()
-            }
             
             // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
 	    	// gReady is at the end of the ready function
@@ -955,57 +973,9 @@
         document.getElementById("edit-tab-but").disabled=false;
    	};
 
-    var doTest = function () {
-        require(['sparqlgraph/js/msiresultset',
-                 'sparqlgraph/js/msiclientnodegroupexec',
-                 'sparqlgraph/js/sparqlconnection'
-                ], 
-                function(MsiResultSet, MsiClientNodeGroupExec, SparqlConnection) {
-            
-            var didUserCancel = function() {
-                return false;
-            };
-            
-            var statusCallback = function(percent) {
-                console.log("Percent complete: " + percent);
-            };
-            var failureCallback = function(html) {
-                alert("Failure html: \n" + html);
-            };
-            var tableResCallback = function (csvFilename, fullURL, msiresultset) { 
-                alert("Success\nfilename: " + csvFilename + "\nfullURL: " + fullURL);
-                alert(msiresultset.tableGetCsv());
-            };
-
-
-            var TEST_TIMEOUT_MS = 5000;
-
-            var NGE_URL = "http://vesuvius37.crd.ge.com:12058/nodeGroupExecution/";
-            var STATUS_URL = "http://vesuvius37.crd.ge.com:12051/status/";
-            var RESULTS_URL = "http://vesuvius37.crd.ge.com:12052/results/";
-            var client = new MsiClientNodeGroupExec(NGE_URL, TEST_TIMEOUT_MS);
-            var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(
-                                        200,
-                                        tableResCallback,
-                                        failureCallback,
-                                        statusCallback,
-                                        didUserCancel,
-                                        STATUS_URL,
-                                        RESULTS_URL);
-            
-            var nodegroupId = "Materia POC 1";
-            var conn = new SparqlConnection(MsiClientNodeGroupExec.USE_NODEGROUP_CONN);
-            var edcConstraints = null;
-            var runtimeConstraints = null;
-            client.execAsyncDispatchSelectById(
-                                        nodegroupId, 
-                                        conn, 
-                                        edcConstraints, 
-                                        runtimeConstraints, 
-                                        jobIdCallback, 
-                                        failureCallback);
-
-        });
+    var doTest = function () {            
+        activateOntologyEditor()
+        alert("test");
     };
 
     var editOrderBy = function () {

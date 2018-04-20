@@ -20,11 +20,13 @@ package com.ge.research.semtk.edc.client.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,6 +34,7 @@ import org.junit.Test;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -459,8 +462,38 @@ public class ResultsClientTest_IT {
 		if(!retrievedResultsAfterStoring){
 			fail();	
 		}
-	}	
-	
+	}
+
+	@Test
+	public void testStoreAndRetrieveBinaryFile() throws Exception {
+
+
+		// Happy path
+		File testFile = new File("src/test/resources/test.csv");
+
+		SimpleResultSet res = client.execStoreBinaryFile(testFile);
+		
+		String fileId = (String) res.getResult("fileId");
+		String fullUrl = (String) res.getResult("fullURL");
+		
+		String s = Utility.getURLContentsAsString(new URL(fullUrl));
+		String fileContent = client.execReadBinaryFile(fileId);
+		
+		assertNotNull(s);
+		assertNotNull(fileContent);
+
+		// Error case
+		try {
+			fileContent = client.execReadBinaryFile("wrongId");
+			fail();
+		} catch (Exception e) {
+			System.out.println("Exception: "+e.toString());
+			assertTrue(true);
+		}
+
+	}
+
+
 	private void cleanup(ResultsClient client, String jobId) throws Exception {
 		client.execDeleteStorage(jobId);
 	}

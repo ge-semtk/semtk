@@ -120,6 +120,32 @@ public class StatusClient extends RestClient {
 		}
 	}
 	/**
+	 * Wait until percentComplete is reached or maxWaitMsec has elapsed
+	 * @param percentComplete
+	 * @param maxWaitMsec
+	 * @return percentComplete
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public int execWaitForPercentOrMsec(int percentComplete, int maxWaitMsec) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("status/waitForPercentOrMsec");
+		this.parametersJSON.put("percentComplete", percentComplete);
+		this.parametersJSON.put("maxWaitMsec", maxWaitMsec);
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return Integer.parseInt(res.getResult("percentComplete"));
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("percentComplete");
+			this.parametersJSON.remove("maxWaitMsec");
+		}
+	}
+	/**
 	 * 
 	 * @param percentComplete
 	 * @throws Exception

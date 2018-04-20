@@ -6,14 +6,14 @@
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://200001934/junit/both"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://200001934/junit/both"
 			}
 		]

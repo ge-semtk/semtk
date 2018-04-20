@@ -105,22 +105,34 @@ do
         if [ ! -e ${SAVED} ]; then
                 echo WARNING: file needs to be modified for local configuration: ${CURRENT}
                 WARNINGS=1
-        else	
-        		set +e
-                CURRENT_VERSION=($(grep VERSION ${CURRENT}))
-                SAVED_VERSION=($(grep VERSION ${SAVED}))
-                set -e
+        else
+				set +e
+				CURRENT_VERSION="$(grep VERSION ${CURRENT})"
+                SAVED_VERSION="$(grep VERSION ${SAVED})"
+				set -e
 
-                if [ "${CURRENT_VERSION}" == "${SAVED_VERSION}" ]; then
-                        set -x
-                        cp ${SAVED} ${CURRENT}
-                        set +x
-                else
-                        echo WARNING: these files need to be manually merged to keep local configuration:
-                        echo "        ${SAVED}"
-                        echo "        ${CURRENT}"
-                        WARNINGS=1
-                fi
+				if [ -z "${CURRENT_VERSION}" ]; then
+					echo "file is missing expected VERSION: ${CURRENT}"
+					WARNINGS=1
+				fi
+				if [ -z "${SAVED_VERSION}" ]; then
+					echo "file is missing expected VERSION: ${SAVED}"
+					WARNINGS=1
+				fi
+
+				if [ "${CURRENT_VERSION}" == "${SAVED_VERSION}" ]; then
+					set -x
+					cp ${SAVED} ${CURRENT}
+					set +x
+				else
+					echo "WARNING: Git pull has overwritten web config:"
+					echo ">   deployed version:   ${CURRENT}"
+					echo ">   prev version saved: ${SAVED}"
+				 	echo ">  "
+					echo ">   You should manually merge into ${CURRENT} before the next build"
+					echo ">   As next build will succeed regardless."
+					WARNINGS=1
+				fi
         fi
         
         set -x

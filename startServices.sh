@@ -23,31 +23,18 @@
 # Usage: ./startServices CONFIG_DIR DISPATCHER_JAR_DIR  to add additional dispatcher jars
 
 
-# uniform JVM config for all services, for now
-JVM_OPTIONS="-Xmx20G -Xincgc" 
-
-PORT_SPARQLGRAPH_STATUS_SERVICE=12051
-PORT_SPARQLGRAPH_RESULTS_SERVICE=12052
-PORT_DISPATCH_SERVICE=12053
-PORT_HIVE_SERVICE=12055
-PORT_ORACLE_SERVICE=none
-PORT_NODEGROUPSTORE_SERVICE=12056
-PORT_ONTOLOGYINFO_SERVICE=12057
-PORT_NODEGROUPEXECUTION_SERVICE=12058
-PORT_SPARQL_QUERY_SERVICE=12050
-PORT_INGESTION_SERVICE=12091
-PORT_NODEGROUP_SERVICE=12059
-PORT_UTILITY_SERVICE=12060	# placeholder for when this service is created
-
-if [ -z "$JAVA_HOME" ]; then
-        >&2 echo No JAVA_HOME
-        exit 1
-fi
-
 # SEMTK = directory holding this script
 SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOGS=$SEMTK/logs
 echo $SEMTK
+
+source $SEMTK/.env
+
+# JAVA_HOME
+if [ -z "$JAVA_HOME" ]; then
+        >&2 echo No JAVA_HOME
+        exit 1
+fi
 
 # default config file locations
 CONFIG_ONTOLOGYINFO_SERVICE="$SEMTK"/ontologyInfoService/src/main/resources/ontologyinfo.properties 
@@ -81,7 +68,6 @@ if [ $# -gt 1 ]; then
 else
 	LOCATION_ADDITIONAL_DISPATCHER_JARS=""
 fi
-
 
 mkdir -p $LOGS
 

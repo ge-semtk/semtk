@@ -447,7 +447,6 @@ define([	// properly require.config'ed
             updateUriLookupButton : function(button, mapping) {
                 var disable = false;
                 if (    mapping.getUriLookupNodes().length > 0 || 
-                        mapping.getUriLookupMode() != null     ||
                         this.importSpec.getLookupMappings(mapping).length > 0) {
                     button.classList.add("btn-primary");
                     button.disabled = false;

@@ -42,6 +42,12 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 
+/**
+ * Testing data loading WITHOUT SERVICE LAYER.
+ * This is only "_IT" integration test because of the triple-store
+ * @author 200001934
+ *
+ */
 public class DataLoaderTest_IT {
 
 	private static final String DELETE_URI_FMT = "delete { ?x ?y ?z.} where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";
@@ -461,9 +467,10 @@ public class DataLoaderTest_IT {
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		
-		LocalLogger.logToStdErr("Expecting 20 rows, found: \n" + err.toCSVString());
-		
-		assertEquals(20, err.getNumRows());
+		if (err.getNumRows() != 20) {
+			LocalLogger.logToStdErr("Expecting 20 error rows, found: \n" + err.toCSVString());
+			fail();
+		}
 		TestGraph.compareResults(err.toCSVString(), this, "/loadTestLookupFailTwoFoundResults.csv");
 		
 	}
@@ -589,20 +596,56 @@ public class DataLoaderTest_IT {
 			fail();
 		}
 		
-		// the real test  
+		// the real test : look up battery by two colors and add assembly date.  But one color is blank.
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupByEnum.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupByEnumBlanksData.csv", false);
 		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
+		// make sure there's an error on URI lookup
 		if (err.getNumRows() != 1) {
 			LocalLogger.logToStdErr(err.toCSVString());
 			fail();
 		}
 
-		assertTrue(err.toCSVString().contains("URI Lookup field is empty for node ?Color_2"));
+		assertTrue(err.toCSVString().contains("ookup"));
 	}
 	
+	@Test
+	public void testLookupPruneBlanks() throws Exception {
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		
+		// the real test : look up battery by two colors and add assembly date.  But one color is blank.
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupPruneBlanks.json");
+		CSVDataset ds = new CSVDataset("src/test/resources/loadTestLookupPruneBlanks.csv", false);
+		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		
+		// no errors
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// load it again, just for grins.  Nothing should happen.
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		
+		// no errors
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// test results
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupPruneBlanksResults.csv");
+
+
+	}
 	@Test
 	public void testLookupCreate() throws Exception {
 		//  lookup Fails:    create 4 new batteries with assemglyDate, batteryDesc, batteryId
@@ -635,6 +678,41 @@ public class DataLoaderTest_IT {
 			fail();
 		}
 
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
+	}
+	
+	@Test
+	public void testLookupCreateNOPROPS() throws Exception {
+		//  Just like testLookupCreate
+		//  Except ingestion nodegroup has no return values, no sparqlIDs on the properties
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import durabattery first4.  
+		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// the real test  
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate_NOPROPS.json");
+		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
+		dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate.json");
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
 	}
 	
@@ -924,7 +1002,7 @@ public class DataLoaderTest_IT {
 	
 	// TODO: fails if we don't set SparqlID
 	// TODO: fails if SparqlID doesn't start with "?"
-	private void returnProp(NodeGroup nodegroup, String node, String prop) {
+	private void returnProp(NodeGroup nodegroup, String node, String prop) throws Exception {
 		PropertyItem cellId = nodegroup.getNodeBySparqlID("?" + node).getPropertyByKeyname(prop);
 		cellId.setSparqlID("?" + prop);
 		cellId.setIsReturned(true);

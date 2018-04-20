@@ -1,0 +1,232 @@
+version: '3'
+
+services:
+
+  semtk-nodegroup:
+    build:
+      context: ./nodeGroupService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-nodegroup${TAG}
+    ports:
+      - ${PORT_NODEGROUP_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-nodegroup-store:
+    build:
+      context: ./nodeGroupStoreService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-nodegroup-store${TAG}
+    environment:
+      - CONFIG_NODEGROUPSTORE_SERVICE
+      - storeIngestorLocation
+      - storeIngestorPort
+      - storeTemplateLocation
+      - storeIngestorProtocol
+      - storeSparqlServiceServer
+      - storeSparqlServicePort
+      - storeSparqlServiceProtocol
+      - storeSparqlServiceEndpoint
+      - storeSparqlServerAndPort
+      - storeSparqlServerDataSet
+      - storeSparqlServerType
+      - storeSparqlServiceUser
+      - storeSparqlServicePass
+    ports:
+      - ${PORT_NODEGROUPSTORE_SERVICE}:8080
+    networks:
+      - semtknet
+  
+  semtk-ontology-info:
+    build:
+      context: ./ontologyInfoService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-ontology-info${TAG}
+    environment:
+      - CONFIG_ONTOLOGYINFO_SERVICE
+      - oinfoLoggingEnabled
+      - oinfoLoggingProtocol
+      - oinfoLoggingServer
+      - oinfoLoggingPort
+      - oinfoLoggingServiceLocation
+      - oinfoApplicationLogName
+    ports:
+      - ${PORT_ONTOLOGYINFO_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-sparqlgraph-status:
+    build:
+      context: ./sparqlGraphStatusService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-sparqlgraph-status${TAG}
+    environment:
+      - CONFIG_SPARQLGRAPH_STATUS_SERVICE
+      - statusJobEndpointType
+      - statusJobEndpointDomain
+      - statusJobEndpointServerUrl
+      - statusJobEndpointDataset
+      - statusJobEndpointUsername
+      - statusJobEndpointPassword
+      - statusJobMaxWaitMsec
+      - statusLoggingEnabled
+      - statusLoggingProtocol
+      - statusLoggingServer
+      - statusLoggingPort
+      - statusLoggingServiceLocation
+      - statusApplicationLogName
+    ports:
+      - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080 
+    networks:
+      - semtknet
+
+  semtk-sparqlgraph-results:
+    build:
+      context: ./sparqlGraphResultsService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-sparqlgraph-results${TAG}
+    environment:
+      - CONFIG_SPARQLGRAPH_RESULTS_SERVICE
+      - resultsCleanUpThreadsEnabled
+      - resultsCleanUpThreadsFrequency
+      - resultsJobEndpointType
+      - resultsJobEndpointDomain
+      - resultsJobEndpointServerUrl
+      - resultsJobEndpointDataset
+      - resultsJobEndpointUsername
+      - resultsJobEndpointPassword
+      - resultsLoggingEnabled
+      - resultsLoggingProtocol
+      - resultsLoggingServer
+      - resultsLoggingPort
+      - resultsLoggingServiceLocation
+      - resultsApplicationLogName
+      - resultsBaseURL
+      - resultsServiceURL
+      - resultsFileLocation
+      - resultsSampleLines
+    ports:
+      - ${PORT_SPARQLGRAPH_RESULTS_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-hive:
+    build:
+      context: ./hiveService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-hive${TAG}
+    environment:
+      - CONFIG_HIVE_SERVICE
+      - hiveUsername
+      - hivePassword
+    ports:
+      - ${PORT_HIVE_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-dispatch:
+    build:
+      context: ./sparqlExtDispatchService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-dispatch${TAG}
+    environment:
+      - CONFIG_DISPATCH_SERVICE
+      - LOCATION_ADDITIONAL_DISPATCHER_JARS
+      - dispatchSparqlServiceServer
+      - dispatchSparqlServicePort
+      - dispatchSparqlServiceProtocol
+      - dispatchSparqlServiceEndpoint
+      - dispatchEdcSparqlServerAndPort
+      - dispatchEdcSparqlServerDataset
+      - dispatchEdcSparqlServerType
+      - dispatchResultsServiceProtocol
+      - dispatchResultsServiceServer
+      - dispatchResultsServicePort
+      - dispatchStatusServiceProtocol
+      - dispatchStatusServiceServer
+      - dispatchStatusServicePort
+      - dispatchDispatcherClassName
+    ports:
+      - ${PORT_DISPATCH_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-nodegroup-execution:
+    build:
+      context: ./nodeGroupExecutionService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-nodegroup-execution${TAG}
+    environment:
+      - CONFIG_EXEC_SERVICE
+      - nodeGroupExecutionNgStoreProtocol
+      - nodeGroupExecutionNgStoreServer
+      - nodeGroupExecutionNgStorePort
+      - nodeGroupExecutionDispatchProtocol
+      - nodeGroupExecutionDispatchServer
+      - nodeGroupExecutionDispatchPort
+      - nodeGroupExecutionResultsProtocol
+      - nodeGroupExecutionResultsServer
+      - nodeGroupExecutionResultsPort
+      - nodeGroupExecutionStatusProtocol
+      - nodeGroupExecutionStatusServer
+      - nodeGroupExecutionStatusPort
+      - nodeGroupExecutionIngestProtocol
+      - nodeGroupExecutionIngestServer
+      - nodeGroupExecutionIngestPort
+    ports:
+      - ${PORT_NODEGROUPEXECUTION_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-sparql-query:
+    build:
+      context: ./sparqlQueryService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-sparql-query${TAG}
+    environment:
+      - CONFIG_SPARQL_QUERY_SERVICE
+      - triplestoreServerType
+      - triplestoreServerAndPort
+    ports:
+      - ${PORT_SPARQL_QUERY_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-ingestion:
+    build:
+      context: ./sparqlGraphIngestionService
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-ingestion${TAG}
+    environment:
+      - CONFIG_INGESTION_SERVICE
+      - ingestionSparqlUserName
+      - ingestionSparqlPassword
+      - ingestionBatchSize
+      - ingestionLoggingEnabled
+      - ingestionLoggingProtocol
+      - ingestionLoggingServer
+      - ingestionLoggingPort
+      - ingestionLoggingServiceLocation
+      - ingestionApplicationName
+    ports:
+      - ${PORT_INGESTION_SERVICE}:8080
+    networks:
+      - semtknet
+
+  semtk-sparqlgraph-web:
+    build:
+      context: ./sparqlGraphWeb
+      dockerfile: Dockerfile
+    image: ${REGISTRY}semtk-sparqlgraph-web${TAG}
+    environment:
+      - INGEST_URL
+      - QUERY_URL
+    ports:
+      - ${PORT_SPARQLGRAPH_WEB}:8080
+    networks:
+      - semtknet
+
+networks:
+  semtknet:
+    driver: bridge
+

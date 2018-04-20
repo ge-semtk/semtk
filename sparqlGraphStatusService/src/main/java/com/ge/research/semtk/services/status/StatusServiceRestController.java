@@ -170,6 +170,36 @@ public class StatusServiceRestController {
 	    return res.toJson();
 	}
 	
+	
+	
+	/**
+	 * Block until status is percent complete is reached or Msec have elapsed
+	 */
+	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
+	public JSONObject waitForPercentOrMsec(@RequestBody StatusRequestBodyPercentMsec requestBody){
+	    String jobId = requestBody.jobId;
+	    
+	    SimpleResultSet res = new SimpleResultSet();
+	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+    	LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete start", "JobId", jobId);
+    	LocalLogger.logToStdOut("Status Service waitForPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
+    	
+    	
+	    try {
+	    	JobTracker tracker = new JobTracker(edc_prop);
+	    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
+		    res.addResult("percentComplete", String.valueOf(percentComplete));
+		    res.setSuccess(true);
+		    
+	    } catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
+		    LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentOrMsec exception", "message", e.toString());
+		    LocalLogger.logToStdOut("Status Service waitForPercentOrMsec exception message=" + e.toString());
+	    }
+	    
+	    return res.toJson();
+	}
 	/**
 	 * set job to a given percent complete
 	 * @param requestBody
