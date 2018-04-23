@@ -206,14 +206,15 @@ public class ResultsServiceRestController {
 				res.setSuccess(true);
                 res.addResult("fullURL", adjustedUrl);
                 res.addResult("fileId", fileId);
+        		LocalLogger.logToStdErr("done uploading file");
 			}
-
+			
 		} catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, "storeBinaryFile", e);
 			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile exception", "message", e.toString());
-			//LocalLogger.printStackTrace(e);
+			LocalLogger.printStackTrace(e);
 		}
-
-		LocalLogger.logToStdErr("done uploading file");
 		return res.toJson();
 	}
 
