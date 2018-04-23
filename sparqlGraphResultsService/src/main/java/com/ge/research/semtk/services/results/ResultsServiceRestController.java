@@ -167,23 +167,23 @@ public class ResultsServiceRestController {
 	
 
 	private static final String META_SUFFIX = "_meta.json";
-    private static final String FILE_PROP_NAME = "filename";
+	private static final String FILE_PROP_NAME = "filename";
 
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
 	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, HttpServletRequest req, HttpServletResponse resp){
 
-	    String reqUri = req.getRequestURI();
+		String reqUri = req.getRequestURI();
 		SimpleResultSet res = new SimpleResultSet();
 		Path rootLocation = Paths.get(prop.getFileLocation());
 
-        // logging
-        LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
-        LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile start");
+		// logging
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile start");
 
 		try{
 			if (file != null) {
-			    String fileId = UUID.randomUUID().toString();
+				String fileId = UUID.randomUUID().toString();
 				String originalFileName = file.getOriginalFilename();
 				String destinationFile = prop.getFileLocation()+"/"+fileId;
 				LocalLogger.logToStdOut("Saving original file: " + originalFileName+" to: "+destinationFile);
@@ -191,27 +191,27 @@ public class ResultsServiceRestController {
 				Files.copy(file.getInputStream(), rootLocation.resolve(destinationFile));
 
 				String destinationFileMeta = destinationFile.concat(META_SUFFIX);
-                JSONObject metaInfo = new JSONObject();
-                metaInfo.put(FILE_PROP_NAME, originalFileName);
+				JSONObject metaInfo = new JSONObject();
+				metaInfo.put(FILE_PROP_NAME, originalFileName);
 
-                try (FileWriter fw = new FileWriter(destinationFileMeta)) {
-                    fw.write(metaInfo.toJSONString());
-                    fw.flush();
-                } catch (IOException e) {
-                    LocalLogger.printStackTrace(e);
-                }
+				try (FileWriter fw = new FileWriter(destinationFileMeta)) {
+					fw.write(metaInfo.toJSONString());
+					fw.flush();
+				} catch (IOException e) {
+					LocalLogger.printStackTrace(e);
+				}
 
-                String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
+				String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
 
 				res.setSuccess(true);
-                res.addResult("fullURL", adjustedUrl);
-                res.addResult("fileId", fileId);
-        		LocalLogger.logToStdErr("done uploading file");
+				res.addResult("fullURL", adjustedUrl);
+				res.addResult("fileId", fileId);
+				LocalLogger.logToStdOut("done uploading file");
 			}
-			
+
 		} catch (Exception e) {
-	    	res.setSuccess(false);
-	    	res.addRationaleMessage(SERVICE_NAME, "storeBinaryFile", e);
+			res.setSuccess(false);
+			res.addRationaleMessage(SERVICE_NAME, "storeBinaryFile", e);
 			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile exception", "message", e.toString());
 			LocalLogger.printStackTrace(e);
 		}
