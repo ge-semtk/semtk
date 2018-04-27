@@ -55,6 +55,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 
 
@@ -177,6 +178,26 @@ public abstract class Utility {
 			}
 		}
 		return ret.toString();
+	}
+	
+	/**
+	 * Built a ping result
+	 * @return
+	 */
+	public static JSONObject buildPingResult() {
+		SimpleResultSet retval = null;
+		
+		try{
+			retval = new SimpleResultSet(true);
+			retval.addResult("available", "yes");
+			
+		}
+		catch(Exception e){
+			retval = new SimpleResultSet(false, e.getMessage());
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();
 	}
 	
 	public static Table getURLResultsContentAsTable(URL url) throws Exception{

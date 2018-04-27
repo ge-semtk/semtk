@@ -26,29 +26,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/serviceInfo")
+@RequestMapping(value={"/serviceInfo", "/nodeGroupExecution/serviceInfo"})
 public class ServiceAvailabilityInformation {
 
-	
 	@CrossOrigin
 	@RequestMapping(value="/ping", method= RequestMethod.POST)
 	public JSONObject ping(){
 		
-		SimpleResultSet retval = null;
-		
-		try{
-			retval = new SimpleResultSet(true);
-			retval.addResult("available", "yes");
-			
-		}
-		catch(Exception e){
-			retval = new SimpleResultSet(false, e.getMessage());
-			LocalLogger.printStackTrace(e);
-		}
-		
-		return retval.toJson();
+		return Utility.buildPingResult();
 	}
 }
