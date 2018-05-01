@@ -279,6 +279,15 @@ services:
     environment:
       - INGEST_URL
       - QUERY_URL
+      - STATUS_URL
+      - RESULTS_URL
+      - DISPATCHER_URL
+      - HIVE_URL
+      - NGSTORE_URL
+      - OINFO_URL
+      - NGEXEC_URL
+      - NG_URL
+      - triplestoreServerAndPort
     ports:
       - ${PORT_SPARQLGRAPH_WEB}:8080
     networks:
