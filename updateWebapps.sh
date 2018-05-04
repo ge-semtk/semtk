@@ -14,35 +14,23 @@ fi
 # Get webapps
 WEBAPPS=$1
 
-if [ ! -d ${WEBAPPS} ]; then
+if [ ! -d "${WEBAPPS}" ]; then
     echo "Usage: updateWebapps.sh webapps_path"
     exit 1
 fi
 
-# SEMTK_OSS = directory holding this script
-SEMTK_OSS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SG_WEB_OSS=${SEMTK_OSS}/sparqlGraphWeb
+# SCRIPT_HOME = directory holding this script
+SCRIPT_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SG_WEB_OSS=${SCRIPT_HOME}/sparqlGraphWeb
 
-# make tmp directory
-TMP=${SEMTK_OSS}/tmp
-rm -rf ${TMP}
-mkdir ${TMP}
+# GET ENV
+pushd "${SCRIPT_HOME}" ; . ./.env ; popd
 
 # define array of versioned files
 declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
                       "sparqlGraph/main-oss/KDLEasyLoggerConfigOss.js" 
                       "sparqlForm/main-oss/sparqlformconfig.js"
                       "sparqlForm/main-oss/KDLEasyLoggerConfig.js")
-
-# copy versioned files to ${TMP}
-for v in "${VERSIONED[@]}"
-do
-        if [ -e ${WEBAPPS}/${v} ]; then
-                set -x
-                cp ${WEBAPPS}/${v} ${TMP}
-                set +x
-        fi
-done
 
 # make sure these exist in webapps
 # or else the COPYDIRS might fail in weird ways
@@ -66,18 +54,18 @@ COPYDIRS=( "iidx-oss"
            "sparqlGraph/js"
            "sparqlGraph/main-oss"
          )
-cd ${SEMTK_OSS}
+cd "${SCRIPT_HOME}"
 
 # process each dir
 for DIR in "${COPYDIRS[@]}"
 do
-        DEST_DIR=$(dirname ${WEBAPPS}/${DIR})
+        DEST_DIR=$(dirname "${WEBAPPS}/${DIR}")
         
         # Wipe out and replace other known dirs
         set -x
         
-        rm -rf ${WEBAPPS}/${DIR}
-		cp -r ${SG_WEB_OSS}/${DIR} ${DEST_DIR}
+        rm -rf "${WEBAPPS}/${DIR}"
+		cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
 		
 		set +x        
 done
@@ -86,65 +74,20 @@ done
 set -x
 
 # Allow other files to remain in ROOT
-mkdir -p ${SG_WEB_OSS}/ROOT
-cp -r ${SG_WEB_OSS}/ROOT/* ${WEBAPPS}/ROOT
+mkdir -p "${SG_WEB_OSS}"/ROOT
+cp -r "${SG_WEB_OSS}"/ROOT/* "${WEBAPPS}"/ROOT
 
 # Copy over html files from sparqlForm & sparqlGraph
-cp ${SG_WEB_OSS}/sparqlForm/*.html ${WEBAPPS}/sparqlForm
-cp ${SG_WEB_OSS}/sparqlGraph/*.html ${WEBAPPS}/sparqlGraph
+cp "${SG_WEB_OSS}"/sparqlForm/*.html "${WEBAPPS}"/sparqlForm
+cp "${SG_WEB_OSS}"/sparqlGraph/*.html "${WEBAPPS}"/sparqlGraph
 
 set +x
    
-WARNINGS=0
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
-        SAVED=${TMP}/${v##*/}
-        CURRENT=${WEBAPPS}/${v}
-
-        if [ ! -e ${SAVED} ]; then
-                echo WARNING: file needs to be modified for local configuration: ${CURRENT}
-                WARNINGS=1
-        else
-				set +e
-				CURRENT_VERSION="$(grep VERSION ${CURRENT})"
-                SAVED_VERSION="$(grep VERSION ${SAVED})"
-				set -e
-
-				if [ -z "${CURRENT_VERSION}" ]; then
-					echo "file is missing expected VERSION: ${CURRENT}"
-					WARNINGS=1
-				fi
-				if [ -z "${SAVED_VERSION}" ]; then
-					echo "file is missing expected VERSION: ${SAVED}"
-					WARNINGS=1
-				fi
-
-				if [ "${CURRENT_VERSION}" == "${SAVED_VERSION}" ]; then
-					set -x
-					cp ${SAVED} ${CURRENT}
-					set +x
-				else
-					echo "WARNING: Git pull has overwritten web config:"
-					echo ">   deployed version:   ${CURRENT}"
-					echo ">   prev version saved: ${SAVED}"
-				 	echo ">  "
-					echo ">   You should manually merge into ${CURRENT} before the next build"
-					echo ">   As next build will succeed regardless."
-					WARNINGS=1
-				fi
-        fi
-        
-        set -x
-        chmod 666 ${CURRENT}
-        set +x
+        replace_vars_in_file "${WEBAPPS}/${v}" "^WEB_"
 done
-
-if [ "${WARNINGS}" -ne "0" ]; then
-	set -x
-	exit 1
-	set +x
-fi
 
 echo ==== updateWebapps.sh SUCCESS ====
 

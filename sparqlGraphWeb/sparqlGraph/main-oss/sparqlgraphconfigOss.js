@@ -19,7 +19,6 @@
 // SparqlGraph config variables
 // GOAL: everything that changes with deployment is in here
 
-//VERSION: 86
 var g = {
 	help : {
 		buildHtml : "SPARQLgraph<br>",
@@ -70,40 +69,39 @@ var g = {
 	},
     
     demoNg : "demoNodegroup.json",
-        
+
 	service : {
 		ingestion :{
-			url : "http://localhost:12091/ingestion/",
+			url : "http://${WEB_INGESTION_HOST}:${WEB_INGESTION_PORT}/ingestion/",
 		},
 		sparqlQuery:{
-			url : "http://localhost:12050/sparqlQueryService/",
+			url : "http://${WEB_SPARQL_QUERY_HOST}:${WEB_SPARQL_QUERY_PORT}/sparqlQueryService/",
 		},
         status : {
-			"url" : "http://localhost:12051/status/",    
+			"url" : "http://${WEB_STATUS_HOST}:${WEB_STATUS_PORT}/status/",  // window.location.origin + "/status/",    
 		},
 		results : {
-			"url" : "http://localhost:12052/results/",     
+			"url" : "http://${WEB_RESULTS_HOST}:${WEB_RESULTS_PORT}/results/",     
 		},
         dispatcher : {
-			"url" : "http://localhost:12053/dispatcher/",     
+			"url" : "http://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",     
 		},
         hive : {
-			"url" : "http://localhost:12055/hiveService/",     
+			"url" : "http://${WEB_HIVE_HOST}:${WEB_HIVE_PORT}/hiveService/",     
 		},
 		nodeGroupStore:{
-			url : "http://localhost:12056/nodeGroupStore/",
+			url : "http://${WEB_NODEGROUPSTORE_HOST}:${WEB_NODEGROUPSTORE_PORT}/nodeGroupStore/",
 		},
         ontologyInfo:{
-			url : "http://localhost:12057/ontologyinfo/",
+			url : "http://${WEB_ONTOLOGYINFO_HOST}:${WEB_ONTOLOGYINFO_PORT}/ontologyinfo/",
 		},
         nodeGroupExec:{
-			url : "http://localhost:12058/nodeGroupExecution/",
+			url : "http://${WEB_NODEGROUPEXECUTION_HOST}:${WEB_NODEGROUPEXECUTION_PORT}/nodeGroupExecution/",
 		}, 
         nodeGroup:{
-			url : "http://localhost:12059/nodeGroup/",
+			url : "http://${WEB_NODEGROUP_HOST}:${WEB_NODEGROUP_PORT}/nodeGroup/",
 		},
 	},
-	
 	tab : {
 		query : "queryTab",
 		mapping : "mappingTab",

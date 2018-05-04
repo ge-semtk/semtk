@@ -8,3 +8,4 @@ target
 sparqlGraphLibrary/src/test/resources/datacleanertest-output.csv
 logs/
 *.swp
+DOT_SETTINGS

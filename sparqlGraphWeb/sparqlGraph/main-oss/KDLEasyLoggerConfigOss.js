@@ -15,7 +15,6 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-// VERSION=1
 // basic config information needed to run the logging
 
 var KDLEasyLoggerConfig = function(){

@@ -19,30 +19,29 @@
 // SparqlForm config variables
 // GOAL: everything that changes with deployment is in here
 
-//VERSION: 85
 define([], function() {
 	var Config = {
 		"services" : { 
 			"query" : {
-				"url" : "http://localhost:12050/sparqlQueryService",  
+				url : "http://${WEB_SPARQL_QUERY_HOST}:${WEB_SPARQL_QUERY_PORT}/sparqlQueryService/",
 			},
 			"status" : {
-				"url" : "http://localhost:12051/status/",    
+				"url" : "http://${WEB_STATUS_HOST}:${WEB_STATUS_PORT}/status/",  // window.location.origin + "/status/",    
 			},
 			"results" : {
-				"url" : "http://localhost:12052/results/",     
+				"url" : "http://${WEB_RESULTS_HOST}:${WEB_RESULTS_PORT}/results/",     
 			},
 			"dispatcher" : {
-				"url" : "http://localhost:12053/dispatcher/",  
+				"url" : "http://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",     
 			},
             nodeGroup:{
-                url : "http://localhost:12059/nodeGroup/",
+				url : "http://${WEB_NODEGROUP_HOST}:${WEB_NODEGROUP_PORT}/nodeGroup/",
             },
             "nodeGroupExec" : {
-			     url : "http://localhost:12058/nodeGroupExecution/",
+				url : "http://${WEB_NODEGROUPEXECUTION_HOST}:${WEB_NODEGROUPEXECUTION_PORT}/nodeGroupExecution/",
             },
             nodeGroupStore:{
-                url : "http://localhost:12056/nodeGroupStore/",
+				url : "http://${WEB_NODEGROUPSTORE_HOST}:${WEB_NODEGROUPSTORE_PORT}/nodeGroupStore/",
             },
 		},
 		"help" : {

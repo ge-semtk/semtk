@@ -266,7 +266,6 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		
 		try{
 
-			Calendar cal = Calendar.getInstance();
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor start");
 
 			LocalLogger.logToStdErr("Sparql Query to execute: ");
@@ -305,8 +304,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				this.updateStatusToFailed("Query client returned error to dispatch client: \n" + retval.getRationaleAsString("\n"));
 			}
 			
-			cal = Calendar.getInstance();
-			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor end   @ " + DATE_FORMAT.format(cal.getTime()));
+			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor end ");
 
 		}
 		catch(Exception e){
