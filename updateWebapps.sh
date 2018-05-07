@@ -6,13 +6,17 @@
 # stop if anything goes bad
 set -e
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: updateWebapps.sh webapps_path"
+if [ "$#" -ne 1 ]  && [ "$#" -ne 2 ] && [ "$#" -ne 4 ] ; then
+    echo "Usage: updateWebapps.sh webapps_path [filter [search replace]]"
     exit 1
 fi
 
-# Get webapps
+# Get args
 WEBAPPS=$1
+OPT_VARNAME_FILTER=${2:-^WEB_}
+OPT_VARNAME_SEARCH=$3
+OPT_VARNAME_REPLACE=$4
+
 
 if [ ! -d "${WEBAPPS}" ]; then
     echo "Usage: updateWebapps.sh webapps_path"
@@ -86,7 +90,7 @@ set +x
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
-        replace_vars_in_file "${WEBAPPS}/${v}" "^WEB_"
+        replace_vars_in_file "${WEBAPPS}/${v}" "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"
 done
 
 echo ==== updateWebapps.sh SUCCESS ====
