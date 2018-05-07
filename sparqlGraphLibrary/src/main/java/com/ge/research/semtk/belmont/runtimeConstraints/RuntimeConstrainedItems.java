@@ -127,11 +127,13 @@ public class RuntimeConstrainedItems {
 			ArrayList<String> operands = new ArrayList<String>();   // however obvious, the operands will go here. 
 			
 			// get the object referenced by this sparql ID.
+			if(this.members.get(sparqlId) == null){
+				throw new Exception("Cannot apply runtime constraint for " + sparqlId);
+			}
 			if( this.members.get(sparqlId).getObjectType().equals(SupportedTypes.NODE) ){
 				// this was a node and the type should be URI.
 				operandType = XSDSupportedTypes.NODE_URI.name();
-			}
-			
+			}			
 			else if ( this.members.get(sparqlId).getObjectType().equals(SupportedTypes.PROPERTYITEM) ){
 				// check the property item itself to get the expected type.
 				operandType = this.members.get(sparqlId).getValueType();  // this should return the expected XSD type with no prefix. 

@@ -17,7 +17,7 @@
 
 package com.ge.research.semtk.belmont.runtimeConstraints.test;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +32,7 @@ import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedObject;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.utility.Utility;
 
 public class RuntimeConstraintsTest {
 
@@ -123,6 +124,26 @@ public class RuntimeConstraintsTest {
 		}
 		else{ fail(); }
 	}
+	
+	
+	/**
+	 * Confirm that we get a good error message if try to apply runtime constraint with an invalid sparqlId ("durationInYears")
+	 */
+	@Test
+	public void failIfBadRuntimeConstraints() throws Exception{
+		boolean exceptionThrown = false;
+		try{
+			this.setup();
+			RuntimeConstrainedItems rtci = new RuntimeConstrainedItems(ng);
+			JSONArray invalidRuntimeConstraintJSON = Utility.getJsonArrayFromString("[ { \"SparqlID\" : \"?durationInYears\", \"Operator\" : \"GREATERTHANOREQUALS\", \"Operands\" : [ 300 ] } ]");
+			rtci.applyConstraintJson(invalidRuntimeConstraintJSON);
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("Cannot apply runtime constraint for ?durationInYears"));
+		}
+		assertTrue(exceptionThrown);
+	}
+	
 	
 	@Test 
 	public void getSparqlUsingRuntimeConstraints() throws Exception{
