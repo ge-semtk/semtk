@@ -11,7 +11,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/serviceInfo")
+@RequestMapping(value={"/serviceInfo", "/hiveService/serviceInfo"})
 public class ServiceAvailabilityInformation {
 
 	
