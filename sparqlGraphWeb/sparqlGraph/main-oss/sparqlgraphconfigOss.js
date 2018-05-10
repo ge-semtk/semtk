@@ -106,7 +106,10 @@ var g = {
 		query : "queryTab",
 		mapping : "mappingTab",
 		upload : "uploadTab",
-	}
+	},
+	
+	longTimeoutMsec: 8000,
+	shortTimeoutMsec: 5000,
 };
 
 

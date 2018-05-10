@@ -48,8 +48,7 @@
     var gQueryTypeIndex = 0;   // sel index of QueryType
     var gQuerySource = "SERVICES";
 
-    var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
-    var SHORT_TIMEOUT = 5000;    // 5 sec
+    var RESULTS_MAX_ROWS = 5000; // 5000 sample rows 
         
     // READY FUNCTION 
     $('document').ready(function(){
@@ -669,7 +668,7 @@
                                                                                  checkForCancel,
                                                                                  g.service.status.url,
                                                                                  g.service.results.url);
-                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
+                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
 
                 statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, rtConstraints, jsonCallback, failureCallback);
@@ -1076,7 +1075,7 @@
                         var msi = new MicroServiceInterface(url);
                         msi.ping(pingCallback.bind(this, div, url),
                                  pingCallback.bind(this, div, url), 
-                                 10000);  // 10 sec timeout
+                                 4000);  
                     }
                 }
                 
@@ -1114,7 +1113,7 @@
 			
             var runViaServices = true;
             guiDisableAll(runViaServices);
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, SHORT_TIMEOUT);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
     		
             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
@@ -1154,7 +1153,7 @@
     	         'sparqlgraph/js/modaliidx'], 
     	         function (MsiClientNodeGroupExec, ModalIidx) {
 			
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, SHORT_TIMEOUT);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, g.shortTimeoutMsec);
     		
              var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,

@@ -181,14 +181,14 @@ define([	// properly require.config'ed   bootstrap-modal
             },
             
             /**
-              *  NEW: Call status at 10 sec intervals but it returns sooner if status changed.
+              *  NEW: Call status at "long timeout" intervals but it returns sooner if status changed.
               *  
               *  Letting status service make multiple checks each call results in fewer service calls.
               *
               */
             execAsyncWaitUntilDone : function (jobSuccessCallback, checkForCancelCallback, statusBarCallback) {
    
-                this.execWaitForPercentOrMsecInt(5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
+                this.execWaitForPercentOrMsecInt(5, g.longTimeoutMsec, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
                                                                                 statusBarCallback,
                                                                                 checkForCancelCallback
@@ -212,7 +212,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                     statusBarCallback(thisPercent);
                     
-                    this.execWaitForPercentOrMsecInt(thisPercent + 5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
+                    this.execWaitForPercentOrMsecInt(thisPercent + 5, g.longTimeoutMsec, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
                                                                                 statusBarCallback,
                                                                                 checkForCancelCallback
