@@ -127,31 +127,13 @@ define([	// properly require.config'ed
                 var mq = new MsiClientNodeGroupStore(this.serviceUrl);
     		    mq.getNodeGroupMetadata(this.launchNodeGroupDialogCallback.bind(this, multiFlag));
             },
-            
-            /**
-              * Recieved nodegroup to load, now load it
-              */
-            retrieveNodeGroupCallback : function (retrieveCallback, resultSet) { 
-				if (! resultSet.isSuccess()) {
-					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
-                    this.lastRetrievedId = null;
-				} else {
-					var nodegroupArr = resultSet.getStringResultsColumn("NodeGroup");
-					
-					if (nodegroupArr.length < 1) {
-						ModalIidx.alert("Retrieval Failure", "<b>Failure retrieving nodegroup.</b><br>Diagnostic: getNodeGroupById returned zero rows.");
-					} else {
-						retrieveCallback(nodegroupArr[0]);
-					}
-				}
-			},
 			
             /**
               * load the id
               */
             retrieveNodeGroupOK : function (retrieveCallback, idList) {   
                 var mq = new MsiClientNodeGroupStore(this.serviceUrl);
-                mq.getNodeGroupById(idList[0], this.retrieveNodeGroupCallback.bind(this, retrieveCallback));
+                mq.getNodeGroupByIdToJsonStr(idList[0], retrieveCallback);
                 this.lastRetrievedId = idList[0];
             },
             

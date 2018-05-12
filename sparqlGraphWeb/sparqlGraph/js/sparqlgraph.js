@@ -65,6 +65,7 @@
                   'sparqlgraph/js/modaliidx',
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
+                  'sparqlgraph/js/msiclientnodegroupstore',
                   'sparqlgraph/js/uploadtab',
 
                   // shim
@@ -72,7 +73,7 @@
                  
 	              'local/sparqlgraphlocal'
                 ], 
-                function (EditTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, UploadTab) {
+                function (EditTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, UploadTab) {
 	    
 	    	console.log(".ready()");
 	    	
@@ -116,26 +117,17 @@
 				doLoadConnection(conn);
                 
 			} else {
-                var loadDemo =  function(jsonStr){ 
-                    // if the demo file loaded
-                    if (jsonStr.toLowerCase().indexOf("status 404") == -1) {
-                        // warn the user and load the nodegroup, and launch the help page
-                        ModalIIDX.okCancel( "Demo",
-                                            "Loading demo nodegroup, and<br>Launching demo documentation pop-up.",
-                                            function() {
-                                                window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
-                                                doQueryLoadJsonStr(jsonStr)
-                                            }
-                                          );
-                    } else {
-                        console.log("404 Error loading demoNodegroup.json");
-                    }
-                }
-               
-                fetch("demoNodegroup.json")
-                            .then(response => response.text())
-                            .then(text => loadDemo(text));
-            
+                
+                ModalIIDX.okCancel( "Demo",
+                                    "Loading demo nodegroup, and<br>Launching demo documentation pop-up.",
+                                    function() {
+                                        window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
+                                       
+                                        var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);
+                                    }
+                                  );
+                   
             }
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType(); 

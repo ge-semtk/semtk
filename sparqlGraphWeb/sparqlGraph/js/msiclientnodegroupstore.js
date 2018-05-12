@@ -45,6 +45,24 @@ define([	// properly require.config'ed   bootstrap-modal
 				var data = JSON.stringify ({ "id": id });
 				this.msi.postToEndpoint("getNodeGroupById", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
+            
+            getNodeGroupByIdToJsonStr : function (id, jsonStrCallback) {
+                var successCallback = function(jsCallback, resultSet) {
+                    if (! resultSet.isSuccess()) {
+                        this.msi.userFailureCallback(resultSet.getGeneralResultHtml());
+                    } else {
+                        var nodegroupArr = resultSet.getStringResultsColumn("NodeGroup");
+
+                        if (nodegroupArr.length < 1) {
+                             this.msi.userFailureCallback("<b>Failure retrieving nodegroup.</b><br>Diagnostic: getNodeGroupById returned zero rows.");
+                        } else {
+                            jsCallback(nodegroupArr[0]);
+                        }
+                    }
+                }.bind(this, jsonStrCallback);
+                
+                this.getNodeGroupById(id, successCallback);
+            },
 			
 			getNodeGroupList : function (successCallback) {
 				var data = JSON.stringify ({});
