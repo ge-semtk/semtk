@@ -19,7 +19,7 @@ OPT_VARNAME_REPLACE=$4
 
 
 if [ ! -d "${WEBAPPS}" ]; then
-    echo "Usage: updateWebapps.sh webapps_path"
+    echo WEBAPPS is not a valid directory: ${WEBAPPS}
     exit 1
 fi
 
