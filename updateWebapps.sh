@@ -15,7 +15,7 @@ fi
 WEBAPPS=$1
 
 if [ ! -d "${WEBAPPS}" ]; then
-    echo WEBAPPS is not a valid directory: ${WEBAPPS}
+    echo "Usage: updateWebapps.sh webapps_path"
     exit 1
 fi
 
