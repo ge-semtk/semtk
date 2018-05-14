@@ -43,7 +43,6 @@ CONFIG_SPARQLGRAPH_STATUS_SERVICE="$SEMTK"/sparqlGraphStatusService/src/main/res
 CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
 CONFIG_HIVE_SERVICE="$SEMTK"/hiveService/src/main/resources/hive.properties 
 CONFIG_DISPATCH_SERVICE="$SEMTK"/sparqlExtDispatchService/src/main/resources/dispatch.properties
-CONFIG_EXEC_SERVICE="$SEMTK"/nodeGroupExecutionService/src/main/resources/exec.properties
 CONFIG_INGESTION_SERVICE="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties
 
 # use different config files if given a config directory parameter
@@ -56,7 +55,6 @@ if [ $# -gt 0 ]; then
     CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$CONFIG_DIR"/results.properties
     CONFIG_HIVE_SERVICE="$CONFIG_DIR"/hive.properties
     CONFIG_DISPATCH_SERVICE="$CONFIG_DIR"/dispatch.properties
-    CONFIG_EXEC_SERVICE="$CONFIG_DIR"/exec.properties
     CONFIG_INGESTION_SERVICE="$CONFIG_DIR"/ingest.properties
 else
 	echo USING DEFAULT CONFIGS in src/main/resources/
