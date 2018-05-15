@@ -28,7 +28,7 @@ SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOGS=$SEMTK/logs
 echo $SEMTK
 
-source $SEMTK/.env
+pushd $SEMTK; . .env; popd
 
 # JAVA_HOME
 if [ -z "$JAVA_HOME" ]; then
