@@ -41,7 +41,6 @@ CONFIG_ONTOLOGYINFO_SERVICE="$SEMTK"/ontologyInfoService/src/main/resources/onto
 CONFIG_NODEGROUPSTORE_SERVICE="$SEMTK"/nodeGroupStoreService/src/main/resources/store.properties 
 CONFIG_SPARQLGRAPH_STATUS_SERVICE="$SEMTK"/sparqlGraphStatusService/src/main/resources/status.properties 
 CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
-CONFIG_HIVE_SERVICE="$SEMTK"/hiveService/src/main/resources/hive.properties 
 CONFIG_DISPATCH_SERVICE="$SEMTK"/sparqlExtDispatchService/src/main/resources/dispatch.properties
 CONFIG_INGESTION_SERVICE="$SEMTK"/sparqlGraphIngestionService/src/main/resources/ingest.properties
 
@@ -53,7 +52,6 @@ if [ $# -gt 0 ]; then
     CONFIG_NODEGROUPSTORE_SERVICE="$CONFIG_DIR"/store.properties
     CONFIG_SPARQLGRAPH_STATUS_SERVICE="$CONFIG_DIR"/status.properties
     CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$CONFIG_DIR"/results.properties
-    CONFIG_HIVE_SERVICE="$CONFIG_DIR"/hive.properties
     CONFIG_DISPATCH_SERVICE="$CONFIG_DIR"/dispatch.properties
     CONFIG_INGESTION_SERVICE="$CONFIG_DIR"/ingest.properties
 else
@@ -81,7 +79,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar --spring.config.location="$CONFIG_SPARQLGRAPH_RESULTS_SERVICE" --server.port=$PORT_SPARQLGRAPH_RESULTS_SERVICE --multipart.maxFileSize=1000Mb --multipart.maxRequestSize=1000Mb > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar --spring.config.location="$CONFIG_HIVE_SERVICE" --server.port=$PORT_HIVE_SERVICE > "$LOGS"/hiveService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar --spring.config.location="$CONFIG_DISPATCH_SERVICE" --server.port=$PORT_DISPATCH_SERVICE > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
