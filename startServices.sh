@@ -36,8 +36,7 @@ if [ -z "$JAVA_HOME" ]; then
         exit 1
 fi
 
-# default config file locations
-CONFIG_ONTOLOGYINFO_SERVICE="$SEMTK"/ontologyInfoService/src/main/resources/ontologyinfo.properties 
+# default config file locations 
 CONFIG_NODEGROUPSTORE_SERVICE="$SEMTK"/nodeGroupStoreService/src/main/resources/store.properties 
 CONFIG_SPARQLGRAPH_STATUS_SERVICE="$SEMTK"/sparqlGraphStatusService/src/main/resources/status.properties 
 CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
@@ -48,7 +47,6 @@ CONFIG_INGESTION_SERVICE="$SEMTK"/sparqlGraphIngestionService/src/main/resources
 if [ $# -gt 0 ]; then
 	CONFIG_DIR=$1
 	echo USING CONFIG FILES IN "$CONFIG_DIR"
-    CONFIG_ONTOLOGYINFO_SERVICE="$CONFIG_DIR"/ontologyinfo.properties
     CONFIG_NODEGROUPSTORE_SERVICE="$CONFIG_DIR"/store.properties
     CONFIG_SPARQLGRAPH_STATUS_SERVICE="$CONFIG_DIR"/status.properties
     CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$CONFIG_DIR"/results.properties
@@ -71,7 +69,7 @@ echo "=== START MICROSERVICES... ==="
 
 # start SPARQL query service, ingestion service
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar --spring.config.location="$CONFIG_ONTOLOGYINFO_SERVICE" --server.port=$PORT_ONTOLOGYINFO_SERVICE > "$LOGS"/ontologyInfoService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar --spring.config.location="$CONFIG_NODEGROUPSTORE_SERVICE" --server.port=$PORT_NODEGROUPSTORE_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
 
