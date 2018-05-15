@@ -119,7 +119,7 @@
 			} else {
                 
                 ModalIIDX.okCancel( "Demo",
-                                    "Loading demo nodegroup, and<br>Launching demo documentation pop-up.",
+                                    "Loading demo nodegroup, and<br>Launching demo documentation pop-up.<br>(You may need to override your pop-up blocker.)<br>",
                                     function() {
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
                                        
