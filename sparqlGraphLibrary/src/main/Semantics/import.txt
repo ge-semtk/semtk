@@ -2,18 +2,19 @@
 
 # ISWC demo model
 graph: http://iswc/model
-	hardware.owl
-	testconfig.owl
+	OwlModels/hardware.owl
+	OwlModels/testconfig.owl
 
 # ISWC demo data	
 graph: http://iswc/data
-	turtle file dumped from current http://iswc/data
+	ttl/demoData.ttl
 	
+	
+# nodegroup store model
+graph: http://research.ge.com/knowledge/prefab/model
+	OwlModels/prefabNodeGroup.owl	
 
 # demo nodegroup in nodegroup store	
 graph: http://research.ge.com/knowledge/prefab/data
-	turtle file dumped from current http://research.ge.com/knowledge/prefab/data2
+	ttl/demoInNodegroupStore.ttl
 
-# nodegroup store model
-graph: http://research.ge.com/knowledge/prefab/model
-	prefabNodeGroup.owl
