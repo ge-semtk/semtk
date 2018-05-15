@@ -1,0 +1,50 @@
+uri "http://com.ge.research/sample/testconfig" alias testconfig.
+
+import "http://com.ge.research/sample/hardware".
+
+Test is a top-level class,
+	described by testPurpose with a single value of type string,
+	described by testTitle with a single value of type string,
+	described by testType with a single value of type string,
+	described by testDate with a single value of type dateTime,
+	described by testNum with a single value of type int,
+	described by hasTestConfig with a single value of type TestConfig,
+	described by dataLayer with values of type Layer.
+	
+TestConfig is a top-level class,
+	described by parts with values of type hardware:HardwarePart,
+	described by request with a single value of type TestRequest.
+	
+TestRequest is a top-level class,
+	described by testCell with a single value of type string,
+	described by equipSerialNum with a single value of type string,
+	described by requestDate with a single value of type dateTime.
+	
+Layer is a top-level class,
+	described by code with a single value of type string,
+	described by creator with a single value of type string,
+	described by startTime with a single value of type dateTime,
+	described by endTime with a single value of type dateTime,
+	described by notes with a single value of type string,
+	described by hasDataset with a single value of type Table.
+
+Table is a top-level class,
+	described by hasTableType with a single value of type TableType,
+	described by hasMap with a single value of type MeasurementMap.
+	
+TableType is a class must be one of {Average, Interpolated, HourMax}.
+	
+MeasurementMap is a top-level class,
+	described by mapName with a single value of type string,
+	described by measurement  with a single value of type Measurement.
+	
+Measurement is a top-level class,
+	described by hasDescription  with a single value of type string,
+	described by hasUnits  with a single value of type string,
+	described by tag  with a single value of type string,
+	described by variableName  with a single value of type string,
+	described by measurementValue with values of type MeasurementValue.
+	
+MeasurementValue is a top-level class,
+	described by timestamp with a single value of type dateTime,
+	described by hasValue with a single value of type float.
