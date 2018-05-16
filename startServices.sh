@@ -37,14 +37,12 @@ if [ -z "$JAVA_HOME" ]; then
 fi
 
 # default config file locations 
-CONFIG_NODEGROUPSTORE_SERVICE="$SEMTK"/nodeGroupStoreService/src/main/resources/store.properties 
 CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
 
 # use different config files if given a config directory parameter
 if [ $# -gt 0 ]; then
 	CONFIG_DIR=$1
 	echo USING CONFIG FILES IN "$CONFIG_DIR"
-    CONFIG_NODEGROUPSTORE_SERVICE="$CONFIG_DIR"/store.properties
     CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$CONFIG_DIR"/results.properties
 else
 	echo USING DEFAULT CONFIGS in src/main/resources/
@@ -63,7 +61,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar --spring.config.location="$CONFIG_NODEGROUPSTORE_SERVICE" --server.port=$PORT_NODEGROUPSTORE_SERVICE --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
 
