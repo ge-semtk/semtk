@@ -42,6 +42,7 @@
 		<module>sparqlExtDispatchService</module>
 		<module>nodeGroupExecutionService</module>
 		<module>nodeGroupService</module>
+		<module>springServiceLibrary</module>
 	</modules>
 
 	<properties>

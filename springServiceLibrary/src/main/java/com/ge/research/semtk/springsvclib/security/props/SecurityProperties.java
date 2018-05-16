@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.client;
+package com.ge.research.semtk.springsvclib.security.props;
 
 public class SecurityProperties {
 	private boolean useSecurity = false;
