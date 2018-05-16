@@ -18,9 +18,8 @@
 #
 # Starts microservices, including the ones needed for SparqlGraph.
 #
-# Usage: ./startServices                                to use default configuration files in src/main/resources
-# Usage: ./startServices CONFIG_DIR                     to use configuration files in CONFIG_DIR 
-# Usage: ./startServices CONFIG_DIR DISPATCHER_JAR_DIR  to add additional dispatcher jars
+# Usage: ./startServices                          
+# Usage: ./startServices DISPATCHER_JAR_DIR  to add additional dispatcher jars
 
 
 # SEMTK = directory holding this script
@@ -36,9 +35,9 @@ if [ -z "$JAVA_HOME" ]; then
         exit 1
 fi
 
-if [ $# -gt 1 ]; then
-	echo ADDING DISPATCHER JARS IN $2
-	LOCATION_ADDITIONAL_DISPATCHER_JARS=$2
+if [ $# -gt 0 ]; then
+	echo ADDING DISPATCHER JARS IN $1
+	LOCATION_ADDITIONAL_DISPATCHER_JARS=$1
 else
 	LOCATION_ADDITIONAL_DISPATCHER_JARS=""
 fi
