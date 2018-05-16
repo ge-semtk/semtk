@@ -36,18 +36,6 @@ if [ -z "$JAVA_HOME" ]; then
         exit 1
 fi
 
-# default config file locations 
-CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$SEMTK"/sparqlGraphResultsService/src/main/resources/results.properties 
-
-# use different config files if given a config directory parameter
-if [ $# -gt 0 ]; then
-	CONFIG_DIR=$1
-	echo USING CONFIG FILES IN "$CONFIG_DIR"
-    CONFIG_SPARQLGRAPH_RESULTS_SERVICE="$CONFIG_DIR"/results.properties
-else
-	echo USING DEFAULT CONFIGS in src/main/resources/
-fi
-
 if [ $# -gt 1 ]; then
 	echo ADDING DISPATCHER JARS IN $2
 	LOCATION_ADDITIONAL_DISPATCHER_JARS=$2
@@ -65,7 +53,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar --spring.config.location="$CONFIG_SPARQLGRAPH_RESULTS_SERVICE" --server.port=$PORT_SPARQLGRAPH_RESULTS_SERVICE --multipart.maxFileSize=1000Mb --multipart.maxRequestSize=1000Mb > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar --multipart.maxFileSize=1000Mb --multipart.maxRequestSize=1000Mb > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
 
