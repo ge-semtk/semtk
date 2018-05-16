@@ -18,8 +18,6 @@
 #
 # Starts microservices, including the ones needed for SparqlGraph.
 #
-# Usage: ./startServices                          
-# Usage: ./startServices DISPATCHER_JAR_DIR  to add additional dispatcher jars
 
 
 # SEMTK = directory holding this script
@@ -33,13 +31,6 @@ pushd $SEMTK; . .env; popd
 if [ -z "$JAVA_HOME" ]; then
         >&2 echo No JAVA_HOME
         exit 1
-fi
-
-if [ $# -gt 0 ]; then
-	echo ADDING DISPATCHER JARS IN $1
-	LOCATION_ADDITIONAL_DISPATCHER_JARS=$1
-else
-	LOCATION_ADDITIONAL_DISPATCHER_JARS=""
 fi
 
 mkdir -p $LOGS
@@ -56,7 +47,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -Dloader.path="$LOCATION_ADDITIONAL_DISPATCHER_JARS" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar > "$LOGS"/nodeGroupExecutionService.log 2>&1 &
 
