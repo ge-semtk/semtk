@@ -1,0 +1,160 @@
+# Dump of graph <http://iswc/data>, as of 2018-05-15 10:08:08.486172
+@base <> .
+@prefix rdf:	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ns1:	<belmont/generateSparqlInsert#> .
+@prefix ns2:	<http://com.ge.research/sample/testconfig#> .
+ns1:f787abfa-bf40-4ecc-b2a1-39b54e2a21c0	rdf:type	ns2:Layer .
+ns1:dfe1cfa9-f789-48a0-996b-87822d4d25aa	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#9d49c711-51e3-4dcb-9d70-eb31befc3931>	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6>	rdf:type	ns2:Measurement .
+<belmont/generateSparqlInsert#5ffb63ba-e255-4357-85d9-1a4116a62d5e>	rdf:type	ns2:MeasurementValue .
+ns1:ea9a905c-ea05-4bba-ad0e-e9452e488158	rdf:type	ns2:Layer .
+<belmont/generateSparqlInsert#722ecd2b-f7b9-4248-a6f6-b504ae99efd1>	rdf:type	ns2:Table .
+ns1:e0205666-144d-468b-8616-e315f86b4f16	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#03e18f66-b445-483a-b465-d7b3bd9df56a>	rdf:type	ns2:MeasurementValue .
+ns1:d881a1d8-627a-4938-b62b-75b10b78d324	rdf:type	ns2:Layer .
+ns1:c5017735-4722-4fcb-95e5-090d7b850ca8	rdf:type	ns2:Table .
+ns1:d9cf51fe-96aa-4ba7-abd0-1820f034b813	rdf:type	ns2:MeasurementMap .
+ns1:ad525f6c-41b0-43dc-8675-c173aca978a8	rdf:type	ns2:MeasurementValue .
+ns1:a99ec940-ab17-4e7c-8d11-c0a53658c56e	rdf:type	ns2:Layer .
+ns1:baceae1a-997d-4bd8-9573-f678964b3395	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#3ae40db4-b43c-4e09-bff2-0f5ba9a24e0c>	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#716b5248-1831-421d-b5e8-3d82ebb8e952>	rdf:type	ns2:MeasurementValue .
+<belmont/generateSparqlInsert#95d6d1c3-f099-473c-a997-d8c71e89d576>	rdf:type	ns2:Layer .
+ns1:eb4c715e-805d-4e45-b094-d1a1f906896d	rdf:type	ns2:Table .
+ns1:ae3937e5-53db-4bea-a5b2-872b46717832	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#8818aa9c-a284-4e8d-a928-e7d19455acab>	rdf:type	ns2:MeasurementValue .
+ns1:f9383a43-6abf-4238-aa66-cdd5d201c280	rdf:type	ns2:Layer .
+<belmont/generateSparqlInsert#6781dd9b-b827-4984-96b2-135bb6145d3d>	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#673646c5-9282-4f1b-bf26-835a6dfef026>	rdf:type	ns2:MeasurementMap .
+ns1:b5251ca5-d415-4f8c-9db0-a28072b665ff	rdf:type	ns2:MeasurementValue .
+<belmont/generateSparqlInsert#45023cf7-bd3f-4bfd-8034-5af8c70b6994>	rdf:type	ns2:Layer .
+ns1:c877efbb-9f00-4678-9fdd-786b9bb7dcbe	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#13fa59af-ecac-4d84-b365-905887070aa3>	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928>	rdf:type	ns2:Measurement .
+<belmont/generateSparqlInsert#0dc13d54-d60d-4604-8b30-a72920f71543>	rdf:type	ns2:MeasurementValue .
+ns1:c7c7d854-fb3b-441f-bd4b-464f988f15c1	rdf:type	ns2:Layer .
+<belmont/generateSparqlInsert#54050c45-3b0a-447c-8eea-9838b71686a5>	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#89006971-739c-456e-bd58-108fc484172b>	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#1d241339-9f50-4f5d-8adc-94fdc1af39af>	rdf:type	ns2:MeasurementValue .
+<belmont/generateSparqlInsert#86661190-18af-4270-b7e0-f628ee84a0ae>	rdf:type	ns2:Layer .
+ns1:e5268922-444a-45d5-9bcb-197aa820f4b5	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#79420709-fe76-4ad0-8b9d-4affcdda3b34>	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#002686fc-bb67-4ccf-b316-bfb3b1d9801a>	rdf:type	ns2:MeasurementValue .
+<belmont/generateSparqlInsert#087f97ad-04a3-4c5b-ba8c-150c909ac398>	rdf:type	ns2:Layer .
+<belmont/generateSparqlInsert#0a45eb6a-6dee-431e-b7d7-3c0bb62f5f09>	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#60e7cf41-a0e7-488a-a027-cdf216dcf771>	rdf:type	ns2:MeasurementMap .
+<belmont/generateSparqlInsert#13f4fb47-b15a-41bf-8c06-c3ceb8ddba39>	rdf:type	ns2:MeasurementValue .
+ns1:bbc5f7fc-912b-4d29-9ebd-7476146d764d	rdf:type	ns2:Layer .
+<belmont/generateSparqlInsert#7c2ec5ed-6d54-486b-a86f-f4af1f14027d>	rdf:type	ns2:Table .
+ns1:e795740d-fa00-4b5f-b571-7071ffc03028	rdf:type	ns2:MeasurementMap .
+ns1:e0fbb962-e877-42d6-b89e-d998da978603	rdf:type	ns2:MeasurementValue .
+ns1:e78587a6-3295-40dc-b250-e94f98602a38	rdf:type	ns2:Layer .
+<belmont/generateSparqlInsert#5a3c9d75-3693-4d55-8dca-d66369fce985>	rdf:type	ns2:Table .
+<belmont/generateSparqlInsert#51a9ac6c-b4ed-40bf-a583-09f842c0f462>	rdf:type	ns2:MeasurementMap .
+ns1:dd4207b1-efff-4c0d-b45f-2162ba5aa438	rdf:type	ns2:MeasurementValue .
+ns1:Test_4242	rdf:type	ns2:Test .
+ns1:dfe1cfa9-f789-48a0-996b-87822d4d25aa	ns2:hasMap	<belmont/generateSparqlInsert#9d49c711-51e3-4dcb-9d70-eb31befc3931> .
+<belmont/generateSparqlInsert#722ecd2b-f7b9-4248-a6f6-b504ae99efd1>	ns2:hasMap	ns1:e0205666-144d-468b-8616-e315f86b4f16 .
+ns1:c5017735-4722-4fcb-95e5-090d7b850ca8	ns2:hasMap	ns1:d9cf51fe-96aa-4ba7-abd0-1820f034b813 .
+ns1:baceae1a-997d-4bd8-9573-f678964b3395	ns2:hasMap	<belmont/generateSparqlInsert#3ae40db4-b43c-4e09-bff2-0f5ba9a24e0c> .
+ns1:eb4c715e-805d-4e45-b094-d1a1f906896d	ns2:hasMap	ns1:ae3937e5-53db-4bea-a5b2-872b46717832 .
+<belmont/generateSparqlInsert#6781dd9b-b827-4984-96b2-135bb6145d3d>	ns2:hasMap	<belmont/generateSparqlInsert#673646c5-9282-4f1b-bf26-835a6dfef026> .
+ns1:c877efbb-9f00-4678-9fdd-786b9bb7dcbe	ns2:hasMap	<belmont/generateSparqlInsert#13fa59af-ecac-4d84-b365-905887070aa3> .
+<belmont/generateSparqlInsert#54050c45-3b0a-447c-8eea-9838b71686a5>	ns2:hasMap	<belmont/generateSparqlInsert#89006971-739c-456e-bd58-108fc484172b> .
+ns1:e5268922-444a-45d5-9bcb-197aa820f4b5	ns2:hasMap	<belmont/generateSparqlInsert#79420709-fe76-4ad0-8b9d-4affcdda3b34> .
+<belmont/generateSparqlInsert#0a45eb6a-6dee-431e-b7d7-3c0bb62f5f09>	ns2:hasMap	<belmont/generateSparqlInsert#60e7cf41-a0e7-488a-a027-cdf216dcf771> .
+<belmont/generateSparqlInsert#7c2ec5ed-6d54-486b-a86f-f4af1f14027d>	ns2:hasMap	ns1:e795740d-fa00-4b5f-b571-7071ffc03028 .
+<belmont/generateSparqlInsert#5a3c9d75-3693-4d55-8dca-d66369fce985>	ns2:hasMap	<belmont/generateSparqlInsert#51a9ac6c-b4ed-40bf-a583-09f842c0f462> .
+@prefix xsd:	<http://www.w3.org/2001/XMLSchema#> .
+ns1:f787abfa-bf40-4ecc-b2a1-39b54e2a21c0	ns2:code	"layer1"^^xsd:string .
+ns1:ea9a905c-ea05-4bba-ad0e-e9452e488158	ns2:code	"layer1"^^xsd:string .
+ns1:d881a1d8-627a-4938-b62b-75b10b78d324	ns2:code	"layer1"^^xsd:string .
+ns1:a99ec940-ab17-4e7c-8d11-c0a53658c56e	ns2:code	"layer1"^^xsd:string .
+<belmont/generateSparqlInsert#95d6d1c3-f099-473c-a997-d8c71e89d576>	ns2:code	"layer1"^^xsd:string .
+ns1:f9383a43-6abf-4238-aa66-cdd5d201c280	ns2:code	"layer1"^^xsd:string .
+<belmont/generateSparqlInsert#45023cf7-bd3f-4bfd-8034-5af8c70b6994>	ns2:code	"layer1"^^xsd:string .
+ns1:c7c7d854-fb3b-441f-bd4b-464f988f15c1	ns2:code	"layer1"^^xsd:string .
+<belmont/generateSparqlInsert#86661190-18af-4270-b7e0-f628ee84a0ae>	ns2:code	"layer1"^^xsd:string .
+<belmont/generateSparqlInsert#087f97ad-04a3-4c5b-ba8c-150c909ac398>	ns2:code	"layer1"^^xsd:string .
+ns1:bbc5f7fc-912b-4d29-9ebd-7476146d764d	ns2:code	"layer1"^^xsd:string .
+ns1:e78587a6-3295-40dc-b250-e94f98602a38	ns2:code	"layer1"^^xsd:string .
+ns1:f787abfa-bf40-4ecc-b2a1-39b54e2a21c0	ns2:hasDataset	ns1:dfe1cfa9-f789-48a0-996b-87822d4d25aa .
+ns1:ea9a905c-ea05-4bba-ad0e-e9452e488158	ns2:hasDataset	<belmont/generateSparqlInsert#722ecd2b-f7b9-4248-a6f6-b504ae99efd1> .
+ns1:d881a1d8-627a-4938-b62b-75b10b78d324	ns2:hasDataset	ns1:c5017735-4722-4fcb-95e5-090d7b850ca8 .
+ns1:a99ec940-ab17-4e7c-8d11-c0a53658c56e	ns2:hasDataset	ns1:baceae1a-997d-4bd8-9573-f678964b3395 .
+<belmont/generateSparqlInsert#95d6d1c3-f099-473c-a997-d8c71e89d576>	ns2:hasDataset	ns1:eb4c715e-805d-4e45-b094-d1a1f906896d .
+ns1:f9383a43-6abf-4238-aa66-cdd5d201c280	ns2:hasDataset	<belmont/generateSparqlInsert#6781dd9b-b827-4984-96b2-135bb6145d3d> .
+<belmont/generateSparqlInsert#45023cf7-bd3f-4bfd-8034-5af8c70b6994>	ns2:hasDataset	ns1:c877efbb-9f00-4678-9fdd-786b9bb7dcbe .
+ns1:c7c7d854-fb3b-441f-bd4b-464f988f15c1	ns2:hasDataset	<belmont/generateSparqlInsert#54050c45-3b0a-447c-8eea-9838b71686a5> .
+<belmont/generateSparqlInsert#86661190-18af-4270-b7e0-f628ee84a0ae>	ns2:hasDataset	ns1:e5268922-444a-45d5-9bcb-197aa820f4b5 .
+<belmont/generateSparqlInsert#087f97ad-04a3-4c5b-ba8c-150c909ac398>	ns2:hasDataset	<belmont/generateSparqlInsert#0a45eb6a-6dee-431e-b7d7-3c0bb62f5f09> .
+ns1:bbc5f7fc-912b-4d29-9ebd-7476146d764d	ns2:hasDataset	<belmont/generateSparqlInsert#7c2ec5ed-6d54-486b-a86f-f4af1f14027d> .
+ns1:e78587a6-3295-40dc-b250-e94f98602a38	ns2:hasDataset	<belmont/generateSparqlInsert#5a3c9d75-3693-4d55-8dca-d66369fce985> .
+<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6>	ns2:hasUnits	"F"^^xsd:string .
+<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928>	ns2:hasUnits	"%"^^xsd:string .
+<belmont/generateSparqlInsert#5ffb63ba-e255-4357-85d9-1a4116a62d5e>	ns2:hasValue	"200.8000030517578125"^^xsd:float .
+<belmont/generateSparqlInsert#03e18f66-b445-483a-b465-d7b3bd9df56a>	ns2:hasValue	"200.8000030517578125"^^xsd:float .
+ns1:ad525f6c-41b0-43dc-8675-c173aca978a8	ns2:hasValue	"200.5"^^xsd:float .
+<belmont/generateSparqlInsert#716b5248-1831-421d-b5e8-3d82ebb8e952>	ns2:hasValue	"200.8000030517578125"^^xsd:float .
+<belmont/generateSparqlInsert#8818aa9c-a284-4e8d-a928-e7d19455acab>	ns2:hasValue	"200.5"^^xsd:float .
+ns1:b5251ca5-d415-4f8c-9db0-a28072b665ff	ns2:hasValue	"200.5"^^xsd:float .
+<belmont/generateSparqlInsert#0dc13d54-d60d-4604-8b30-a72920f71543>	ns2:hasValue	"0.0099999997764825820923"^^xsd:float .
+<belmont/generateSparqlInsert#1d241339-9f50-4f5d-8adc-94fdc1af39af>	ns2:hasValue	"0.0099999997764825820923"^^xsd:float .
+<belmont/generateSparqlInsert#002686fc-bb67-4ccf-b316-bfb3b1d9801a>	ns2:hasValue	"200.899993896484375"^^xsd:float .
+<belmont/generateSparqlInsert#13f4fb47-b15a-41bf-8c06-c3ceb8ddba39>	ns2:hasValue	"0.0099999997764825820923"^^xsd:float .
+ns1:e0fbb962-e877-42d6-b89e-d998da978603	ns2:hasValue	"0.050000000745058059692"^^xsd:float .
+ns1:dd4207b1-efff-4c0d-b45f-2162ba5aa438	ns2:hasValue	"0.72000002861022949219"^^xsd:float .
+<belmont/generateSparqlInsert#9d49c711-51e3-4dcb-9d70-eb31befc3931>	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+ns1:e0205666-144d-468b-8616-e315f86b4f16	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+ns1:d9cf51fe-96aa-4ba7-abd0-1820f034b813	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+<belmont/generateSparqlInsert#3ae40db4-b43c-4e09-bff2-0f5ba9a24e0c>	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+ns1:ae3937e5-53db-4bea-a5b2-872b46717832	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+<belmont/generateSparqlInsert#673646c5-9282-4f1b-bf26-835a6dfef026>	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+<belmont/generateSparqlInsert#13fa59af-ecac-4d84-b365-905887070aa3>	ns2:measurement	<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928> .
+<belmont/generateSparqlInsert#89006971-739c-456e-bd58-108fc484172b>	ns2:measurement	<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928> .
+<belmont/generateSparqlInsert#79420709-fe76-4ad0-8b9d-4affcdda3b34>	ns2:measurement	<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6> .
+<belmont/generateSparqlInsert#60e7cf41-a0e7-488a-a027-cdf216dcf771>	ns2:measurement	<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928> .
+ns1:e795740d-fa00-4b5f-b571-7071ffc03028	ns2:measurement	<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928> .
+<belmont/generateSparqlInsert#51a9ac6c-b4ed-40bf-a583-09f842c0f462>	ns2:measurement	<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928> .
+<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6>	ns2:measurementValue	<belmont/generateSparqlInsert#5ffb63ba-e255-4357-85d9-1a4116a62d5e> ,
+		<belmont/generateSparqlInsert#03e18f66-b445-483a-b465-d7b3bd9df56a> ,
+		ns1:ad525f6c-41b0-43dc-8675-c173aca978a8 ,
+		<belmont/generateSparqlInsert#716b5248-1831-421d-b5e8-3d82ebb8e952> ,
+		<belmont/generateSparqlInsert#8818aa9c-a284-4e8d-a928-e7d19455acab> ,
+		ns1:b5251ca5-d415-4f8c-9db0-a28072b665ff ,
+		<belmont/generateSparqlInsert#002686fc-bb67-4ccf-b316-bfb3b1d9801a> .
+<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928>	ns2:measurementValue	<belmont/generateSparqlInsert#0dc13d54-d60d-4604-8b30-a72920f71543> ,
+		<belmont/generateSparqlInsert#1d241339-9f50-4f5d-8adc-94fdc1af39af> ,
+		<belmont/generateSparqlInsert#13f4fb47-b15a-41bf-8c06-c3ceb8ddba39> ,
+		ns1:e0fbb962-e877-42d6-b89e-d998da978603 ,
+		ns1:dd4207b1-efff-4c0d-b45f-2162ba5aa438 .
+<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6>	ns2:tag	"temp"^^xsd:string .
+<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928>	ns2:tag	"st1"^^xsd:string .
+ns1:Test_4242	ns2:testNum	"4242"^^xsd:int .
+<belmont/generateSparqlInsert#5ffb63ba-e255-4357-85d9-1a4116a62d5e>	ns2:timestamp	"2017-03-23T10:03:16"^^xsd:dateTime .
+<belmont/generateSparqlInsert#03e18f66-b445-483a-b465-d7b3bd9df56a>	ns2:timestamp	"2017-03-23T10:03:16"^^xsd:dateTime .
+ns1:ad525f6c-41b0-43dc-8675-c173aca978a8	ns2:timestamp	"2017-03-23T10:00:00"^^xsd:dateTime .
+<belmont/generateSparqlInsert#716b5248-1831-421d-b5e8-3d82ebb8e952>	ns2:timestamp	"2017-03-23T10:03:16"^^xsd:dateTime .
+<belmont/generateSparqlInsert#8818aa9c-a284-4e8d-a928-e7d19455acab>	ns2:timestamp	"2017-03-23T10:00:00"^^xsd:dateTime .
+ns1:b5251ca5-d415-4f8c-9db0-a28072b665ff	ns2:timestamp	"2017-03-23T10:00:00"^^xsd:dateTime .
+<belmont/generateSparqlInsert#0dc13d54-d60d-4604-8b30-a72920f71543>	ns2:timestamp	"2017-03-23T10:00:00"^^xsd:dateTime .
+<belmont/generateSparqlInsert#1d241339-9f50-4f5d-8adc-94fdc1af39af>	ns2:timestamp	"2017-03-23T10:00:00"^^xsd:dateTime .
+<belmont/generateSparqlInsert#002686fc-bb67-4ccf-b316-bfb3b1d9801a>	ns2:timestamp	"2017-03-23T10:03:17"^^xsd:dateTime .
+<belmont/generateSparqlInsert#13f4fb47-b15a-41bf-8c06-c3ceb8ddba39>	ns2:timestamp	"2017-03-23T10:00:00"^^xsd:dateTime .
+ns1:e0fbb962-e877-42d6-b89e-d998da978603	ns2:timestamp	"2017-03-23T10:03:16"^^xsd:dateTime .
+ns1:dd4207b1-efff-4c0d-b45f-2162ba5aa438	ns2:timestamp	"2017-03-23T10:03:17"^^xsd:dateTime .
+<belmont/generateSparqlInsert#89da1b7d-bc67-433d-991e-b1c608d3b6a6>	ns2:variableName	"temperature"^^xsd:string .
+<belmont/generateSparqlInsert#092abb05-8073-4c20-9daa-c8bc8862b928>	ns2:variableName	"status1"^^xsd:string .
+ns1:Test_4242	ns2:dataLayer	ns1:f787abfa-bf40-4ecc-b2a1-39b54e2a21c0 ,
+		ns1:ea9a905c-ea05-4bba-ad0e-e9452e488158 ,
+		ns1:d881a1d8-627a-4938-b62b-75b10b78d324 ,
+		ns1:a99ec940-ab17-4e7c-8d11-c0a53658c56e ,
+		<belmont/generateSparqlInsert#95d6d1c3-f099-473c-a997-d8c71e89d576> ,
+		ns1:f9383a43-6abf-4238-aa66-cdd5d201c280 ,
+		<belmont/generateSparqlInsert#45023cf7-bd3f-4bfd-8034-5af8c70b6994> ,
+		ns1:c7c7d854-fb3b-441f-bd4b-464f988f15c1 ,
+		<belmont/generateSparqlInsert#86661190-18af-4270-b7e0-f628ee84a0ae> ,
+		<belmont/generateSparqlInsert#087f97ad-04a3-4c5b-ba8c-150c909ac398> ,
+		ns1:bbc5f7fc-912b-4d29-9ebd-7476146d764d ,
+		ns1:e78587a6-3295-40dc-b250-e94f98602a38 .
