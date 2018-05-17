@@ -179,9 +179,9 @@ services:
       - dispatchEdcSparqlServerAndPort
       - dispatchEdcSparqlServerDataset
       - dispatchEdcSparqlServerType
-      - dispatchResultsServiceProtocol
-      - dispatchResultsServiceServer
-      - dispatchResultsServicePort
+      - RESULTS_SERVICE_PROTOCOL
+      - RESULTS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_RESULTS_SERVICE
       - dispatchStatusServiceProtocol
       - dispatchStatusServiceServer
       - dispatchStatusServicePort
@@ -206,9 +206,9 @@ services:
       - nodeGroupExecutionDispatchProtocol
       - nodeGroupExecutionDispatchServer
       - nodeGroupExecutionDispatchPort
-      - nodeGroupExecutionResultsProtocol
-      - nodeGroupExecutionResultsServer
-      - nodeGroupExecutionResultsPort
+      - RESULTS_SERVICE_PROTOCOL
+      - RESULTS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_RESULTS_SERVICE
       - nodeGroupExecutionStatusProtocol
       - nodeGroupExecutionStatusServer
       - nodeGroupExecutionStatusPort
