@@ -223,6 +223,9 @@ define([	'sparqlgraph/js/msiresultset',
 						success: this.successCallback.bind(this),
 						error:   this.errorCallback.bind(this),
 						statusCode: {
+                           401: function() {
+                              this.userFailureCallback("Authorization failure.<br>(Token may have expired.)");
+                           }.bind(this),
 						   403: function() { 
 							   // never happens
 							   this.statusCodeCallback(403);        
