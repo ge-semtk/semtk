@@ -182,9 +182,9 @@ services:
       - RESULTS_SERVICE_PROTOCOL
       - RESULTS_SERVICE_HOST
       - PORT_SPARQLGRAPH_RESULTS_SERVICE
-      - dispatchStatusServiceProtocol
-      - dispatchStatusServiceServer
-      - dispatchStatusServicePort
+      - STATUS_SERVICE_PROTOCOL
+      - STATUS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_STATUS_SERVICE
       - dispatchDispatcherClassName
     ports:
       - ${PORT_DISPATCH_SERVICE}:8080
@@ -209,9 +209,9 @@ services:
       - RESULTS_SERVICE_PROTOCOL
       - RESULTS_SERVICE_HOST
       - PORT_SPARQLGRAPH_RESULTS_SERVICE
-      - nodeGroupExecutionStatusProtocol
-      - nodeGroupExecutionStatusServer
-      - nodeGroupExecutionStatusPort
+      - STATUS_SERVICE_PROTOCOL
+      - STATUS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_STATUS_SERVICE
       - nodeGroupExecutionIngestProtocol
       - nodeGroupExecutionIngestServer
       - nodeGroupExecutionIngestPort
