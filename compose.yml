@@ -229,8 +229,6 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparql-query${TAG}
     environment:
-      - triplestoreServerType
-      - triplestoreServerAndPort
     ports:
       - ${PORT_SPARQL_QUERY_SERVICE}:8080
     networks:
@@ -278,7 +276,6 @@ services:
       - OINFO_URL
       - NGEXEC_URL
       - NG_URL
-      - triplestoreServerAndPort
     ports:
       - ${PORT_SPARQLGRAPH_WEB}:8080
     networks:
