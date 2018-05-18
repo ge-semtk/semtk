@@ -77,10 +77,10 @@ services:
     image: ${REGISTRY}semtk-ontology-info${TAG}
     environment:
       - oinfoLoggingEnabled
-      - oinfoLoggingProtocol
-      - oinfoLoggingServer
-      - oinfoLoggingPort
-      - oinfoLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - oinfoApplicationLogName
     ports:
       - ${PORT_ONTOLOGYINFO_SERVICE}:8080
@@ -104,10 +104,10 @@ services:
       - statusJobEndpointPassword
       - statusJobMaxWaitMsec
       - statusLoggingEnabled
-      - statusLoggingProtocol
-      - statusLoggingServer
-      - statusLoggingPort
-      - statusLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - statusApplicationLogName
     ports:
       - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080 
@@ -132,10 +132,10 @@ services:
       - resultsJobEndpointUsername
       - resultsJobEndpointPassword
       - resultsLoggingEnabled
-      - resultsLoggingProtocol
-      - resultsLoggingServer
-      - resultsLoggingPort
-      - resultsLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - resultsApplicationLogName
       - resultsBaseURL
       - resultsServiceURL
@@ -247,10 +247,10 @@ services:
       - ingestionSparqlPassword
       - ingestionBatchSize
       - ingestionLoggingEnabled
-      - ingestionLoggingProtocol
-      - ingestionLoggingServer
-      - ingestionLoggingPort
-      - ingestionLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - ingestionApplicationName
     ports:
       - ${PORT_INGESTION_SERVICE}:8080
