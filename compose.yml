@@ -57,11 +57,11 @@ services:
       - PORT_SPARQL_QUERY_SERVICE
       - SPARQLQUERY_SERVICE_PROTOCOL
       - SPARQLQUERY_SERVICE_ENDPOINT_AUTH
-      - storeSparqlServerAndPort
+      - SERVICES_DATASET_SERVER_URL
       - storeSparqlServerDataSet
-      - storeSparqlServerType
-      - storeSparqlServiceUser
-      - storeSparqlServicePass
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
     ports:
       - ${PORT_NODEGROUPSTORE_SERVICE}:8080
     networks:
@@ -96,12 +96,12 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparqlgraph-status${TAG}
     environment:
-      - statusJobEndpointType
-      - statusJobEndpointDomain
-      - statusJobEndpointServerUrl
-      - statusJobEndpointDataset
-      - statusJobEndpointUsername
-      - statusJobEndpointPassword
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SERVICES_DATASET_DOMAIN
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
       - statusJobMaxWaitMsec
       - statusLoggingEnabled
       - LOGGING_SERVICE_PROTOCOL
@@ -125,12 +125,12 @@ services:
     environment:
       - resultsCleanUpThreadsEnabled
       - resultsCleanUpThreadsFrequency
-      - resultsJobEndpointType
-      - resultsJobEndpointDomain
-      - resultsJobEndpointServerUrl
-      - resultsJobEndpointDataset
-      - resultsJobEndpointUsername
-      - resultsJobEndpointPassword
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SERVICES_DATASET_DOMAIN
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
       - resultsLoggingEnabled
       - LOGGING_SERVICE_PROTOCOL
       - LOGGING_SERVICE_HOST
@@ -243,8 +243,8 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-ingestion${TAG}
     environment:
-      - ingestionSparqlUserName
-      - ingestionSparqlPassword
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
       - ingestionBatchSize
       - ingestionLoggingEnabled
       - LOGGING_SERVICE_PROTOCOL
