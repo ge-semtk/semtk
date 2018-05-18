@@ -53,10 +53,10 @@ services:
       - storeIngestorPort
       - storeTemplateLocation
       - storeIngestorProtocol
-      - storeSparqlServiceServer
-      - storeSparqlServicePort
-      - storeSparqlServiceProtocol
-      - storeSparqlServiceEndpoint
+      - SPARQLQUERY_SERVICE_HOST
+      - PORT_SPARQL_QUERY_SERVICE
+      - SPARQLQUERY_SERVICE_PROTOCOL
+      - SPARQLQUERY_SERVICE_ENDPOINT_AUTH
       - storeSparqlServerAndPort
       - storeSparqlServerDataSet
       - storeSparqlServerType
@@ -172,10 +172,10 @@ services:
     image: ${REGISTRY}semtk-dispatch${TAG}
     environment:
       - LOCATION_ADDITIONAL_DISPATCHER_JARS
-      - SPARQL_QUERY_SERVICE_HOST
+      - SPARQLQUERY_SERVICE_HOST
       - PORT_SPARQL_QUERY_SERVICE
-      - SPARQL_QUERY_SERVICE_PROTOCOL
-      - SPARQL_QUERY_SERVICE_ENDPOINT
+      - SPARQLQUERY_SERVICE_PROTOCOL
+      - SPARQLQUERY_SERVICE_ENDPOINT
       - SERVICES_DATASET_SERVER_URL
       - SERVICES_DATASET
       - SERVICES_DATASET_ENDPOINT_TYPE
