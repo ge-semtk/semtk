@@ -200,21 +200,21 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup-execution${TAG}
     environment:
-      - nodeGroupExecutionNgStoreProtocol
-      - nodeGroupExecutionNgStoreServer
-      - nodeGroupExecutionNgStorePort
-      - nodeGroupExecutionDispatchProtocol
-      - nodeGroupExecutionDispatchServer
-      - nodeGroupExecutionDispatchPort
+      - NODEGROUPSTORE_SERVICE_PROTOCOL
+      - NODEGROUPSTORE_SERVICE_HOST
+      - PORT_NODEGROUPSTORE_SERVICE
+      - DISPATCH_SERVICE_PROTOCOL
+      - DISPATCH_SERVICE_HOST
+      - PORT_DISPATCH_SERVICE
       - RESULTS_SERVICE_PROTOCOL
       - RESULTS_SERVICE_HOST
       - PORT_SPARQLGRAPH_RESULTS_SERVICE
       - STATUS_SERVICE_PROTOCOL
       - STATUS_SERVICE_HOST
       - PORT_SPARQLGRAPH_STATUS_SERVICE
-      - nodeGroupExecutionIngestProtocol
-      - nodeGroupExecutionIngestServer
-      - nodeGroupExecutionIngestPort
+      - INGESTION_SERVICE_PROTOCOL
+      - INGESTION_SERVICE_HOST
+      - PORT_INGESTION_SERVICE
     ports:
       - ${PORT_NODEGROUPEXECUTION_SERVICE}:8080
     networks:
