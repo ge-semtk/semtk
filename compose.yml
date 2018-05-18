@@ -172,20 +172,20 @@ services:
     image: ${REGISTRY}semtk-dispatch${TAG}
     environment:
       - LOCATION_ADDITIONAL_DISPATCHER_JARS
-      - dispatchSparqlServiceServer
-      - dispatchSparqlServicePort
-      - dispatchSparqlServiceProtocol
-      - dispatchSparqlServiceEndpoint
-      - dispatchEdcSparqlServerAndPort
-      - dispatchEdcSparqlServerDataset
-      - dispatchEdcSparqlServerType
+      - SPARQL_QUERY_SERVICE_HOST
+      - PORT_SPARQL_QUERY_SERVICE
+      - SPARQL_QUERY_SERVICE_PROTOCOL
+      - SPARQL_QUERY_SERVICE_ENDPOINT
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SERVICES_DATASET_ENDPOINT_TYPE
       - RESULTS_SERVICE_PROTOCOL
       - RESULTS_SERVICE_HOST
       - PORT_SPARQLGRAPH_RESULTS_SERVICE
       - STATUS_SERVICE_PROTOCOL
       - STATUS_SERVICE_HOST
       - PORT_SPARQLGRAPH_STATUS_SERVICE
-      - dispatchDispatcherClassName
+      - DISPATCHER_CLASS_NAME
     ports:
       - ${PORT_DISPATCH_SERVICE}:8080
     networks:
