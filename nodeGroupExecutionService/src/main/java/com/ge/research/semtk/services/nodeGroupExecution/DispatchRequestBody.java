@@ -17,16 +17,44 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 public class DispatchRequestBody extends SparqlConnRequestBody {
 	
 	private String externalDataConnectionConstraints;
 	private String runtimeConstraints;
+	
+	private JSONObject getJson(String prop) throws ParseException {
+		if (prop == null || prop.equals("")) {
+			return null;
+		} else {
+			JSONParser jParse = new JSONParser();
+			return (JSONObject)jParse.parse(prop);
+		}
+	}
+	private JSONArray getJsonArray(String prop) throws ParseException {
+		if (prop == null || prop.equals("")) {
+			return null;
+		} else {
+			JSONParser jParse = new JSONParser();
+			return (JSONArray)jParse.parse(prop);
+		}
+	}
+	public JSONObject getExternalDataConnectionConstraintsJson() throws ParseException {
+		return getJson(this.externalDataConnectionConstraints);
+	}
 	
 	public String getExternalDataConnectionConstraints() {
 		return externalDataConnectionConstraints;
 	}
 	public void setExternalDataConnectionConstraints(String externalDataConnectionConstraints) {
 		this.externalDataConnectionConstraints = externalDataConnectionConstraints;
+	}
+	public JSONArray getRuntimeConstraintsJson() throws ParseException {
+		return this.getJsonArray(this.runtimeConstraints);
 	}
 	public String getRuntimeConstraints(){
 		return(this.runtimeConstraints);
@@ -42,7 +70,7 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 
 		super.validate();
 
-		// we are allowing the constraints objects to be null
+		// all in this class are optional
 	}
 
 }
