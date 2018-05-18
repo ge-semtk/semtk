@@ -31,7 +31,6 @@
 	<modules>
 		<module>sparqlGraphLibrary</module>
 		<module>sparqlGraphIngestionService</module>
-		<module>oracleService</module>
 		<module>hiveService</module>
 		<module>sparqlQueryService</module>
 		<module>sparqlGraphStatusService</module>

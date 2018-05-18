@@ -29,7 +29,7 @@ import java.util.Properties;
 import com.ge.research.semtk.resultSet.Table;
 
 /**
- * A JDBC connector to access an RDB database (e.g. Oracle, Hive)
+ * A JDBC connector to access an RDB database (e.g. Hive)
  */
 public abstract class JdbcConnector extends Connector {
 	

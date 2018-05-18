@@ -105,7 +105,7 @@ public class DataLoader {
 		ArrayList<String> colNamesInDataset = ds.getColumnNamesinOrder();
 		for(String c: colNamesToIngest){
 			if(!colNamesInDataset.contains(c)){
-				ds.close();  // close the dataset (e.g. if Oracle, will close the connection)
+				ds.close();  // close the dataset
 				
 				// log some info on the bad column before throwing the exception.
 				LocalLogger.logToStdErr("column " + c + " not found in the data set. the length of the column name was " + c.length() + " . the character codes are as follows:");

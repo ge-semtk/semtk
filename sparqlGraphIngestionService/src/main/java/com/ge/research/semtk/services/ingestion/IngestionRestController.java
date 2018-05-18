@@ -50,7 +50,6 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
-import com.ge.research.semtk.query.rdb.OracleConnector;
 import com.ge.research.semtk.query.rdb.PostgresConnector;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -262,53 +261,7 @@ public class IngestionRestController {
 		JSONObject retvalJSON = retval.toJson();
 	//	LocalLogger.logToStdErr(retvalJSON.toJSONString());
 		return retvalJSON;
-	}
-			
-
-	@CrossOrigin
-	@RequestMapping(value="/fromOracleODBC", method= RequestMethod.POST)
-	public JSONObject fromOracleODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
-		
-		TableResultSet retval = new TableResultSet();
-		int recordsProcessed = 0;
-
-		
-		try {
-					
-			String sparqlEndpointUser = prop.getSparqlUserName();
-			String sparqlEndpointPassword = prop.getSparqlPassword();
-			
-			// log the attempted credentials
-			LocalLogger.logToStdErr("the user name was: " + sparqlEndpointUser);
-			
-			// get template file content and convert to json object for use. 
-			String templateContent = new String(templateFile.getBytes());
-			JSONParser parser = new JSONParser();
-			JSONObject json = null;
-			json = (JSONObject) parser.parse(templateContent);
-		
-			// get an ODBC data set to use in the load. 
-			String oracleDriver = OracleConnector.getDriver();
-			String dbUrl = OracleConnector.getDatabaseURL(dbHost, Integer.valueOf(dbPort), dbDatabase);
-			Dataset ds = new ODBCDataset(oracleDriver, dbUrl, dbUser, dbPassword, dbQuery);
-			
-			// perform actual load
-			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
-			recordsProcessed = dl.importData(true);	// defaulting to preflight.
-	
-			retval.setSuccess(true);
-			retval.addResultsJSON(dl.getLoadingErrorReport().toJson());
-
-		} catch (Exception e) {
-			// TODO write failure JSONObject to return and return it.
-			LocalLogger.printStackTrace(e);
-			
-			retval.setSuccess(false);
-			retval.addRationaleMessage("ingestion", "fromOracleODBC", e);
-		}
-		
-		return retval.toJson();
-	}		
+	}	
 	
 	
 	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)
