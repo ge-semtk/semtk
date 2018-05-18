@@ -354,7 +354,25 @@ public class TestGraph {
 			System.out.print("Expected:\n--------\n" + StringEscapeUtils.escapeJava(expected) + "\n--------\n");
 			System.out.print("Actual:\n--------\n" + StringEscapeUtils.escapeJava(actual) + "\n--------\n");
 			
-			assertTrue("Results equal expected", actual.equals(expected));
+			// print message if lengths are different
+			int actualLen = actual.length();
+			int expectedLen = expected.length();
+			
+			if (actualLen != expectedLen) {
+				System.out.print(String.format("Expected len: %d.  Actual len: %d\n", expectedLen, actualLen));
+			}
+			
+			// print first 10 differences
+			int found = 0;
+			for (int i=0; found < 10 && i < Math.min(actualLen, expectedLen); i++) {
+				if (actual.charAt(i) != expected.charAt(i)) {
+					found ++;
+					System.out.print(String.format("Char %d: expected: '%c' actual: '%c'\n", i, expected.charAt(i), actual.charAt(i)));
+				}
+			}
+			
+			// fail
+			assertTrue("Results equal expected", false);
 		}
 	}
 }
