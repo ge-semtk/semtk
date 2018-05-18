@@ -49,10 +49,10 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup-store${TAG}
     environment:
-      - storeIngestorLocation
-      - storeIngestorPort
+      - INGESTION_SERVICE_HOST
+      - PORT_INGESTION_SERVICE
+      - INGESTION_SERVICE_PROTOCOL	  
       - storeTemplateLocation
-      - storeIngestorProtocol
       - SPARQLQUERY_SERVICE_HOST
       - PORT_SPARQL_QUERY_SERVICE
       - SPARQLQUERY_SERVICE_PROTOCOL
