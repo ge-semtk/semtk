@@ -39,11 +39,11 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar --http.spring.multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupStoreService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar --multipart.maxFileSize=1444Mb --multipart.maxRequestSize=1555Mb > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar --http.spring.multipart.maxFileSize=1000Mb --http.spring.multipart.maxRequestSize=1000Mb > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
 
@@ -55,9 +55,9 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-*.jar > "$LOGS"/sparqlQueryService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar --multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar --http.spring.multipart.maxFileSize=1000Mb > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar --http.spring.multipart.maxFileSize=1000Mb > "$LOGS"/nodeGroupService.log 2>&1 &
 
 #
 # wait for services
