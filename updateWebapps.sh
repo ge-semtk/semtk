@@ -69,11 +69,13 @@ do
         set -x
         
         rm -rf "${WEBAPPS}/${DIR}"
-		cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
+		cp -rv "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
+		sleep 3
 		
 		# TODO remove - debug only
-		ls -l "${SG_WEB_OSS}/${DIR}"
-		ls -l "${DEST_DIR}"
+		#ls -l "${SG_WEB_OSS}/${DIR}"
+		#ls -l "${DEST_DIR}"
+		ls -R "${WEBAPPS}"
 		
 		set +x        
 done
