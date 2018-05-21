@@ -63,18 +63,17 @@ cd "${SCRIPT_HOME}"
 # process each dir
 for DIR in "${COPYDIRS[@]}"
 do
-        #DEST_DIR=$(dirname "${WEBAPPS}/${DIR}")
+        DEST_DIR=$(dirname "${WEBAPPS}/${DIR}")
         
         # Wipe out and replace other known dirs
         set -x
         
         rm -rf "${WEBAPPS}/${DIR}"
-		mkdir "${WEBAPPS}/${DIR}"
-		cp -r "${SG_WEB_OSS}/${DIR}/*" "${WEBAPPS}/${DIR}/"
+		cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
 		
 		# TODO remove - debug only
 		ls -l "${SG_WEB_OSS}/${DIR}"
-		ls -l "${WEBAPPS}/${DIR}/"
+		ls -l "${DEST_DIR}"
 		
 		set +x        
 done
