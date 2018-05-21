@@ -74,6 +74,7 @@ do
 		# TODO remove - debug only
 		ls -l "${SG_WEB_OSS}/${DIR}"
 		ls -l "${DEST_DIR}"
+		ls -l "${DEST_DIR}/${DIR}"
 		
 		set +x        
 done
