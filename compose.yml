@@ -123,6 +123,8 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparqlgraph-results${TAG}
     environment:
+      - RESULTS_SERVICE_MULTIPART_MAXFILESIZE
+      - RESULTS_SERVICE_MULTIPART_MAXREQUESTSIZE
       - resultsCleanUpThreadsEnabled
       - resultsCleanUpThreadsFrequency
       - SERVICES_DATASET_ENDPOINT_TYPE
