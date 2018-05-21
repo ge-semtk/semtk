@@ -71,6 +71,11 @@ do
         rm -rf "${WEBAPPS}/${DIR}"
 		cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
 		
+		# TODO remove - debug only
+		ls -l "${SG_WEB_OSS}/${DIR}"
+		ls -l "${DEST_DIR}"
+
+		
 		set +x        
 done
 
@@ -90,6 +95,10 @@ set +x
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
+		# TODO remove ls - debug only
+		set -x
+		ls -l "${WEBAPPS}/${v}"
+		set +x
         replace_vars_in_file "${WEBAPPS}/${v}" "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"
 done
 
