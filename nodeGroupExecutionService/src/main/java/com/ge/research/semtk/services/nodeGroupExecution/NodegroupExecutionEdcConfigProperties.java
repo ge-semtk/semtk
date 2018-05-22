@@ -15,18 +15,18 @@
  ** limitations under the License.
  */
 
+
 package com.ge.research.semtk.services.nodeGroupExecution;
 
-// Paul May 2018
-// This is a bad copy of the status service version.
-// It needs to be fixed but somehow without breaking backwards compatibility.
-public class StatusRequestBody {
-	private String jobID;
-	
-	public void setJobID(String jobID){
-		this.jobID = jobID;
-	}
-	public String getJobID(){
-		return this.jobID;
-	}
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import com.ge.research.semtk.edc.JobEndpointProperties;
+
+// subclass simply adds spring annotations including locations
+
+@Configuration
+@ConfigurationProperties(prefix="nodeGroupExecution.edc.services", ignoreUnknownFields = true)
+public class NodegroupExecutionEdcConfigProperties extends JobEndpointProperties {
+
 }

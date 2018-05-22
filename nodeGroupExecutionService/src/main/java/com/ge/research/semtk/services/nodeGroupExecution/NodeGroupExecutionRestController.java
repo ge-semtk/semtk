@@ -33,6 +33,7 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -40,6 +41,7 @@ import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -66,13 +68,15 @@ public class NodeGroupExecutionRestController {
  	
 	@Autowired
 	NodegroupExecutionProperties prop;
+	@Autowired
+	NodegroupExecutionEdcConfigProperties edc_prop;
 	
-	@CrossOrigin
+	@CrossOrigin 
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
 	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody){
 		SimpleResultSet retval = new SimpleResultSet();
 		
-		try{
+		try{ 
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
@@ -163,6 +167,32 @@ public class NodeGroupExecutionRestController {
 		}
 	
 		return retval.toJson();
+	}
+	
+	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
+	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody){
+		// NOTE: May 2018 Paul
+		// Newer / better endpoint
+		// This pass-through has a signature identical to the status service
+		// It uses the JobTracker, avoiding one bounce to the status service
+		// copy-and-pasted the request body, though. Still needs consolodating in sparqlGraphLibrary
+	    String jobId = requestBody.jobId;
+	    
+	    SimpleResultSet retval = new SimpleResultSet();    	
+    	
+	    try {
+	    	JobTracker tracker = new JobTracker(edc_prop); 
+	    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
+	    	retval.addResult("percentComplete", String.valueOf(percentComplete));
+	    	retval.setSuccess(true);
+		    
+	    } catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
+	    }
+	    
+	    return retval.toJson();
 	}
 	
 	@CrossOrigin

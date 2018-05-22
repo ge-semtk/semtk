@@ -48,6 +48,12 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 			  "nodeGroupExecution.statusProtocol",
 			  "nodeGroupExecution.statusServer",
 			  "nodeGroupExecution.statusPort",
+			  "nodeGroupExecution.edc.services.jobEndpointType",
+			  "nodeGroupExecution.edc.services.jobEndpointDomain",
+			  "nodeGroupExecution.edc.services.jobEndpointServerUrl",
+			  "nodeGroupExecution.edc.services.jobEndpointDataset",
+			  "nodeGroupExecution.edc.services.jobEndpointUsername",
+			  "nodeGroupExecution.edc.services.jobEndpointPassword"
 	  };
 	  TreeMap<String,String> properties = new TreeMap<String,String>();
 	  for(String propertyName : propertyNames){
