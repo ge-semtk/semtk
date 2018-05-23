@@ -35,6 +35,8 @@ services:
         http_proxy: $http_proxy
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup${TAG}
+    environment:
+      - NODEGROUP_SERVICE_MULTIPART_MAXFILESIZE
     ports:
       - ${PORT_NODEGROUP_SERVICE}:8080
     networks:
@@ -49,6 +51,7 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup-store${TAG}
     environment:
+      - NODEGROUPSTORE_SERVICE_MULTIPART_MAXFILESIZE
       - INGESTION_SERVICE_HOST
       - PORT_INGESTION_SERVICE
       - INGESTION_SERVICE_PROTOCOL	  
@@ -245,6 +248,7 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-ingestion${TAG}
     environment:
+      - INGESTION_SERVICE_MULTIPART_MAXFILESIZE	
       - SPARQLQUERY_SERVICE_USER
       - SPARQLQUERY_SERVICE_PWD
       - ingestionBatchSize
