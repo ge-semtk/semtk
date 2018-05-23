@@ -69,7 +69,7 @@ do
         set -x
         
         rm -rf "${WEBAPPS}/${DIR}"
-		cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
+        cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
 		
 		set +x        
 done
