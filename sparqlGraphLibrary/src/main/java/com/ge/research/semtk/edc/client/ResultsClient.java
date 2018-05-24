@@ -148,6 +148,31 @@ public class ResultsClient extends RestClient implements Runnable {
 			this.cleanUp();
 		}
 	}
+	
+	/**
+	 * Store a file 
+	 * @param file
+	 * @return Successful SimpleResultSet containing fullUrl and fileId
+	 * @throws Exception
+	 */
+	public SimpleResultSet execStoreBinaryFilePath(String path, String filename) throws Exception{
+
+		this.parametersJSON.clear();
+		this.parametersJSON.put("path", path);
+		this.parametersJSON.put("filename", filename);
+
+		this.conf.setServiceEndpoint("results/storeBinaryFilePath");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		try {
+			JSONObject res = (JSONObject) this.execute(false);
+			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
+			simpleRes.throwExceptionIfUnsuccessful();
+			return simpleRes;
+		} finally {
+			this.fileParameter = null;
+			this.cleanUp();
+		}
+	}
 
 
 	public String execReadBinaryFile(String fileId) throws Exception{

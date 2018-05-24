@@ -37,8 +37,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,9 +59,6 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -167,14 +162,14 @@ public class ResultsServiceRestController {
 	
 
 	private static final String META_SUFFIX = "_meta.json";
-	private static final String FILE_PROP_NAME = "filename";
+	private static final String JSON_PROP_FILENAME = "filename";
+	private static final String JSON_PROP_PATH = "path";
 
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
 	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, HttpServletRequest req, HttpServletResponse resp){
 
-		String reqUri = req.getRequestURI();
-		SimpleResultSet res = new SimpleResultSet();
+		SimpleResultSet res = null;
 		Path rootLocation = Paths.get(prop.getFileLocation());
 
 		// logging
@@ -185,31 +180,18 @@ public class ResultsServiceRestController {
 			if (file != null) {
 				String fileId = UUID.randomUUID().toString();
 				String originalFileName = file.getOriginalFilename();
-				String destinationFile = prop.getFileLocation()+"/"+fileId;
-				LocalLogger.logToStdOut("Saving original file: " + originalFileName+" to: "+destinationFile);
-
+				String destinationFile = prop.getFileLocation() + "/" + fileId;
+				
+				LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + destinationFile);
 				Files.copy(file.getInputStream(), rootLocation.resolve(destinationFile));
 
-				String destinationFileMeta = destinationFile.concat(META_SUFFIX);
-				JSONObject metaInfo = new JSONObject();
-				metaInfo.put(FILE_PROP_NAME, originalFileName);
+				res = this.writeMetaFile(fileId, destinationFile, originalFileName);
 
-				try (FileWriter fw = new FileWriter(destinationFileMeta)) {
-					fw.write(metaInfo.toJSONString());
-					fw.flush();
-				} catch (IOException e) {
-					LocalLogger.printStackTrace(e);
-				}
-
-				String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
-
-				res.setSuccess(true);
-				res.addResult("fullURL", adjustedUrl);
-				res.addResult("fileId", fileId);
 				LocalLogger.logToStdOut("done uploading file");
 			}
 
 		} catch (Exception e) {
+			res = new SimpleResultSet();
 			res.setSuccess(false);
 			res.addRationaleMessage(SERVICE_NAME, "storeBinaryFile", e);
 			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile exception", "message", e.toString());
@@ -218,6 +200,70 @@ public class ResultsServiceRestController {
 		return res.toJson();
 	}
 
+	@CrossOrigin
+	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
+	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody){
+
+		SimpleResultSet res = null;
+
+		// logging
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFilePath start");
+
+		try{
+			// make sure file is readable
+			File f = new File(requestBody.getPath());
+			if(! f.exists() ) { 
+			    throw new Exception("File is not readable from results service: " + requestBody.getPath());
+			}
+			
+			res = this.writeMetaFile(UUID.randomUUID().toString(), requestBody.getPath(), requestBody.getFilename());
+			
+			LocalLogger.logToStdOut("done uploading file");
+
+		} catch (Exception e) {
+			res = new SimpleResultSet();
+			res.setSuccess(false);
+			res.addRationaleMessage(SERVICE_NAME, "storeBinaryFilePath", e);
+			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFilePath exception", "message", e.toString());
+			LocalLogger.printStackTrace(e);
+		}
+		return res.toJson();
+	}
+	
+	/**
+	 * Write a json results meta file
+	 * @param path
+	 * @param filename
+	 * @return success SimpleResultSet
+	 */
+	private SimpleResultSet writeMetaFile(String fileId, String path, String filename) {
+		// get UUID and filenames
+		String destinationFile = prop.getFileLocation() + "/" + fileId;
+		String destinationFileMeta = destinationFile.concat(META_SUFFIX);
+		
+		// create meta json
+		JSONObject metaInfo = new JSONObject();
+		metaInfo.put(JSON_PROP_FILENAME, filename);
+		metaInfo.put(JSON_PROP_PATH, path);
+		
+		try (FileWriter fw = new FileWriter(destinationFileMeta)) {
+			fw.write(metaInfo.toJSONString());
+			fw.flush();
+		} catch (IOException e) {
+			LocalLogger.printStackTrace(e);
+		}
+		
+		String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
+
+		SimpleResultSet res = new SimpleResultSet();
+		res.setSuccess(true);
+		res.addResult("fullURL", adjustedUrl);
+		res.addResult("fileId", fileId);
+		
+		return res;
+	}
+	
     @CrossOrigin
     @RequestMapping(value="/getBinaryFile/{fileId}", method=RequestMethod.GET)
     @ResponseBody
@@ -227,26 +273,36 @@ public class ResultsServiceRestController {
         LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
         LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
 
-        String fileName = prop.getFileLocation()+"/"+fileId;
-        String fileMeta = fileName.concat(META_SUFFIX);
+        String metaFilePath = prop.getFileLocation()+"/"+fileId.concat(META_SUFFIX);
+        String dataFilePath = null;
 
         JSONParser parser = new JSONParser();
         String originalFileName = "unknown";
         try {
-            JSONObject jsonObject = (JSONObject) parser.parse(new FileReader(fileMeta));
-            originalFileName = (String) jsonObject.get(FILE_PROP_NAME);
-        } catch (IOException e) {
-            LocalLogger.printStackTrace(e);
-        } catch (ParseException e) {
-            LocalLogger.printStackTrace(e);
-        }
-
-	    File file = new File(prop.getFileLocation()+"/"+fileId);
-        if (file.exists()) {
-            resp.setHeader("Content-Disposition", "attachment; " + FILE_PROP_NAME + "=\"" + originalFileName + "\"");
+            JSONObject jsonObject = (JSONObject) parser.parse(new FileReader(metaFilePath));
+            originalFileName = (String) jsonObject.get(JSON_PROP_FILENAME);
+            dataFilePath = (String) jsonObject.get(JSON_PROP_PATH);
+       
+            File file = new File(dataFilePath);
+        
+        	// return the file if it exists
+            resp.setHeader("Content-Disposition", "attachment; " + JSON_PROP_FILENAME + "=\"" + originalFileName + "\"");
             return new FileSystemResource(file);
-        } else {
-            return null;
+            
+        } catch (Exception e) {
+		    LocalLogger.printStackTrace(e);
+        	try {
+        		// try to return an error
+        		resp.setHeader("Content-Disposition", "attachment; " + JSON_PROP_FILENAME + "=\"resultExpired.html\"");
+	            File file = Paths.get(ResultsServiceRestController.class.getClassLoader().getResource("resultExpired.html").toURI()).toFile();
+	            return new FileSystemResource(file);
+        	} catch (Exception e1) {
+        		
+        		// failed to return error; return null
+        		LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile exception", "message", e.toString());
+    		    LocalLogger.printStackTrace(e1);
+    		    return null;
+        	}
         }
     }
 
