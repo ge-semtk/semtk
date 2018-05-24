@@ -161,9 +161,7 @@ public class ResultsServiceRestController {
 	
 	
 
-	private static final String META_SUFFIX = "_meta.json";
-	private static final String JSON_PROP_FILENAME = "filename";
-	private static final String JSON_PROP_PATH = "path";
+	
 
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
@@ -236,23 +234,17 @@ public class ResultsServiceRestController {
 	 * @param path
 	 * @param filename
 	 * @return success SimpleResultSet
+	 * @throws IOException 
 	 */
-	private SimpleResultSet writeMetaFile(String fileId, String path, String filename) {
+	private SimpleResultSet writeMetaFile(String fileId, String path, String filename) throws IOException {
 		// get UUID and filenames
 		String destinationFile = prop.getFileLocation() + "/" + fileId;
-		String destinationFileMeta = destinationFile.concat(META_SUFFIX);
+		String destinationFileMeta = destinationFile.concat(ResultsMetaFile.getSuffix());
 		
-		// create meta json
-		JSONObject metaInfo = new JSONObject();
-		metaInfo.put(JSON_PROP_FILENAME, filename);
-		metaInfo.put(JSON_PROP_PATH, path);
-		
-		try (FileWriter fw = new FileWriter(destinationFileMeta)) {
-			fw.write(metaInfo.toJSONString());
-			fw.flush();
-		} catch (IOException e) {
-			LocalLogger.printStackTrace(e);
-		}
+		ResultsMetaFile metaFile = new ResultsMetaFile();
+		metaFile.setFilename(filename);
+		metaFile.setPath(path);
+		metaFile.write(destinationFileMeta);
 		
 		String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
 
@@ -273,27 +265,27 @@ public class ResultsServiceRestController {
         LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
         LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
 
-        String metaFilePath = prop.getFileLocation()+"/"+fileId.concat(META_SUFFIX);
+        String metaFilePath = prop.getFileLocation()+"/"+fileId.concat(ResultsMetaFile.getSuffix());
         String dataFilePath = null;
 
-        JSONParser parser = new JSONParser();
         String originalFileName = "unknown";
         try {
-            JSONObject jsonObject = (JSONObject) parser.parse(new FileReader(metaFilePath));
-            originalFileName = (String) jsonObject.get(JSON_PROP_FILENAME);
-            dataFilePath = (String) jsonObject.get(JSON_PROP_PATH);
+            
+        	ResultsMetaFile metaFile = new ResultsMetaFile(metaFilePath);
+            originalFileName = metaFile.getFilename();
+            dataFilePath = metaFile.getPath();
        
             File file = new File(dataFilePath);
         
         	// return the file if it exists
-            resp.setHeader("Content-Disposition", "attachment; " + JSON_PROP_FILENAME + "=\"" + originalFileName + "\"");
+            resp.setHeader("Content-Disposition", "attachment; filename=" + originalFileName + "\"");
             return new FileSystemResource(file);
             
         } catch (Exception e) {
 		    LocalLogger.printStackTrace(e);
         	try {
         		// try to return an error
-        		resp.setHeader("Content-Disposition", "attachment; " + JSON_PROP_FILENAME + "=\"resultExpired.html\"");
+        		resp.setHeader("Content-Disposition", "attachment; filename=\"resultExpired.html\"");
 	            File file = Paths.get(ResultsServiceRestController.class.getClassLoader().getResource("resultExpired.html").toURI()).toFile();
 	            return new FileSystemResource(file);
         	} catch (Exception e1) {
