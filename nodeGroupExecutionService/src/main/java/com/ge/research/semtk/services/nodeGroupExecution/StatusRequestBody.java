@@ -17,6 +17,9 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution;
 
+// Paul May 2018
+// This is a bad copy of the status service version.
+// It needs to be fixed but somehow without breaking backwards compatibility.
 public class StatusRequestBody {
 	private String jobID;
 	

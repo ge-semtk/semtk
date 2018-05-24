@@ -16,20 +16,17 @@
  */
 
 
-package com.ge.research.semtk.edc.services.oracle;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
+import com.ge.research.semtk.edc.JobEndpointProperties;
 
-@SpringBootApplication
-@EnableSwagger2
-public class ServiceApplication {
+// subclass simply adds spring annotations including locations
 
-	public static void main(String[] args) {
-		SpringApplication.run(ServiceApplication.class, args);
-
-	}
+@Configuration
+@ConfigurationProperties(prefix="nodeGroupExecution.edc.services", ignoreUnknownFields = true)
+public class NodegroupExecutionEdcConfigProperties extends JobEndpointProperties {
 
 }

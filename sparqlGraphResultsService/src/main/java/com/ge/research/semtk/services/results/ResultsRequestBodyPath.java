@@ -16,13 +16,18 @@
  */
 
 
-package com.ge.research.semtk.edc.services.oracle;
+package com.ge.research.semtk.services.results;
 
-public class OracleServiceRequestBody {
-	public String host;
-    public String port;
-    public String database;
-    public String username;
-    public String password;
-    public String query;
+public class ResultsRequestBodyPath {
+	public String path;
+	public String filename;
+	
+	public String getPath() {
+		return path;
+	}
+	public String getFilename() {
+		return filename;
+	}
+	
+	
 }

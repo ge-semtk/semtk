@@ -143,25 +143,6 @@ public class IntegrationTestUtility {
 		return getIntegrationTestProperty("integrationtest.hive.database");
 	}
 	
-	// Oracle
-	public static String getOracleServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.oracle.server");
-	}
-	public static int getOraclePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.oracle.port")).intValue();
-	}
-	public static String getOracleUsername() throws Exception{
-		return getIntegrationTestProperty("integrationtest.oracle.username");
-	}
-	public static String getOraclePassword() throws Exception{
-		return getIntegrationTestProperty("integrationtest.oracle.password");
-	}
-	public static String getOracleDatabase() throws Exception{
-		return getIntegrationTestProperty("integrationtest.oracle.database");
-	}	
-	
-	
-	
 	/**
 	 * Get a ResultsClient using the integration test properties.
 	 */

@@ -667,7 +667,7 @@ PropertyItem.prototype = {
 	},
 	setSparqlID : function(id) {
 		if (this.SparqlID != null && this.hasConstraints()) {
-			this.constraints = this.constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
+			this.Constraints = this.Constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
 		}
 		this.SparqlID = id;
 	},
@@ -1077,8 +1077,8 @@ SemanticNode.prototype = {
 		return f.buildValueConstraint(this, valueList);
 	},
 	setSparqlID : function(id) {
-		if (this.SparqlID != null && this.constraints != null) {
-			this.constraints = this.constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
+		if (this.SparqlID != null && this.hasConstraints()) {
+			this.Constraints = this.Constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);    
 		}
 		this.SparqlID = id;
 	},

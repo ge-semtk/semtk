@@ -18,12 +18,14 @@
 package com.ge.research.semtk.services.results.cleanUp;
 
 import java.io.File;
+import java.io.FileReader;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.services.results.ResultsEdcConfigProperties;
+import com.ge.research.semtk.services.results.ResultsMetaFile;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class DeleteThread extends Thread {
@@ -60,8 +62,20 @@ public class DeleteThread extends Thread {
     			LocalLogger.logToStdErr("Clean up started...");
     			
     			for (File f : locationToDeleteFrom.listFiles()) {
-	                 if (f.lastModified() < cutoff) {
-	                	 f.delete();
+    				 // metaFile.deleteTargetPath() could delete files out of order, 
+    				 //  so check f.exists()
+	                 if (f.exists() && f.lastModified() < cutoff) {
+	                	 try {
+	                		 // if this is a meta file, delete results target file too 
+		                	 if (ResultsMetaFile.fileIsInstanceOf(f.getName())) {
+		                		 ResultsMetaFile metaFile = new ResultsMetaFile(new FileReader(f));
+		                		 metaFile.deleteTargetPath();
+		                	 }
+	                	 
+	                		 f.delete();
+	                	 } catch (Exception e1) {
+	                		 LocalLogger.printStackTrace(e1);
+	                	 }
 	                 }
                 }
     			

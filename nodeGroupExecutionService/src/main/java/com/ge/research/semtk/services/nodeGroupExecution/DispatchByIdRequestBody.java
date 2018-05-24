@@ -20,7 +20,21 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 public class DispatchByIdRequestBody extends DispatchRequestBody {
 	
 	private String nodeGroupId;
-
+	private int limitOverride = -1;
+	private int offsetOverride = -1;
+	
+	public int getLimitOverride() {
+		return limitOverride;
+	}
+	public void setLimitOverride(int limitOverride) {
+		this.limitOverride = limitOverride;
+	}
+	public int getOffsetOverride() {
+		return offsetOverride;
+	}
+	public void setOffsetOverride(int offsetOverride) {
+		this.offsetOverride = offsetOverride;
+	}
 	public void setNodeGroupId(String nodeGroupId){
 		this.nodeGroupId = nodeGroupId;
 	}

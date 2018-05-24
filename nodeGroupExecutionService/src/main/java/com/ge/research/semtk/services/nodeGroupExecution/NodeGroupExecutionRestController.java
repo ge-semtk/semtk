@@ -33,6 +33,7 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -40,6 +41,7 @@ import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -66,17 +68,19 @@ public class NodeGroupExecutionRestController {
  	
 	@Autowired
 	NodegroupExecutionProperties prop;
+	@Autowired
+	NodegroupExecutionEdcConfigProperties edc_prop;
 	
-	@CrossOrigin
+	@CrossOrigin 
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
 	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody){
 		SimpleResultSet retval = new SimpleResultSet();
 		
-		try{
+		try{ 
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
-			String results = sqe.getJobStatus();
+			String results = ngExecutor.getJobStatus();
 			retval.setSuccess(true);
 			retval.addResult("status", results);
 		}
@@ -97,9 +101,9 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
-			String results = sqe.getJobStatusMessage();
+			String results = ngExecutor.getJobStatusMessage();
 			retval.setSuccess(true);
 			retval.addResult("message", results);
 		}
@@ -120,9 +124,9 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
-			Boolean results = sqe.getJobCompletion();
+			Boolean results = ngExecutor.getJobCompletion();
 			retval.setSuccess(true);
 			if(results){
 				retval.addResult("completed", "true");
@@ -148,9 +152,9 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
-			int results = sqe.getJobPercentCompletion();
+			int results = ngExecutor.getJobPercentCompletion();
 			retval.setSuccess(true);
 			retval.addResult("percent", results);
 
@@ -163,6 +167,32 @@ public class NodeGroupExecutionRestController {
 		}
 	
 		return retval.toJson();
+	}
+	
+	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
+	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody){
+		// NOTE: May 2018 Paul
+		// Newer / better endpoint
+		// This pass-through has a signature identical to the status service
+		// It uses the JobTracker, avoiding one bounce to the status service
+		// copy-and-pasted the request body, though. Still needs consolodating in sparqlGraphLibrary
+	    String jobId = requestBody.jobId;
+	    
+	    SimpleResultSet retval = new SimpleResultSet();    	
+    	
+	    try {
+	    	JobTracker tracker = new JobTracker(edc_prop); 
+	    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
+	    	retval.addResult("percentComplete", String.valueOf(percentComplete));
+	    	retval.setSuccess(true);
+		    
+	    } catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
+	    }
+	    
+	    return retval.toJson();
 	}
 	
 	@CrossOrigin
@@ -215,9 +245,9 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, requestBody.getJobID() );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
 			// try to get a job status
-			URL[] results = sqe.getResultsLocation();
+			URL[] results = ngExecutor.getResultsLocation();
 			retval.setSuccess(true);
 	
 			// a little diagnostic print:
@@ -270,21 +300,11 @@ public class NodeGroupExecutionRestController {
 			requestBody.validate();
 			
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, null );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
 			// try to create a sparql connection
 
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
-			
-			JSONObject edcConstraints = null;
-			if(requestBody.getExternalDataConnectionConstraints() != null && !requestBody.getExternalDataConnectionConstraints().equals("")){
-				// attempt to process the constraints to json.
-				JSONParser jParse = new JSONParser();
-				edcConstraints = (JSONObject)jParse.parse(requestBody.getExternalDataConnectionConstraints());
-			}
-
-			// try to get the runtime constraints
-			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
 			
 			// check if this is actually for a filter query
 			String targetId = null;
@@ -294,8 +314,13 @@ public class NodeGroupExecutionRestController {
 			}
 			
 			// dispatch the job. 
-			sqe.dispatchJob(qt, connection, requestBody.getNodeGroupId(), edcConstraints, runtimeConstraints, targetId);
-			String id = sqe.getJobID();
+			ngExecutor.dispatchJob(qt, connection, requestBody.getNodeGroupId(), 
+					requestBody.getExternalDataConnectionConstraintsJson(), 
+					requestBody.getRuntimeConstraintsJson(), 
+					requestBody.getLimitOverride(),
+					requestBody.getOffsetOverride(),
+					targetId);
+			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
 			retval.addResult("JobId", id); 
@@ -318,17 +343,10 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, null );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
 			// try to create a sparql connection
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
-			
-			JSONObject edcConstraints = null;
-			if(requestBody.getExternalDataConnectionConstraints() != null && !requestBody.getExternalDataConnectionConstraints().equals("")){
-				// attempt to process the constraints to json.
-				JSONParser jParse = new JSONParser();
-				edcConstraints = (JSONObject)jParse.parse(requestBody.getExternalDataConnectionConstraints());
-			}
 			
 			// get the nodegroup. we are assuming that the user should send a node group complete with original connection info, since we 
 			// store them that way. we'll perform a quick check to find out though
@@ -361,10 +379,6 @@ public class NodeGroupExecutionRestController {
 			// retrieve the connection from the nodegroup if needed
 			
 			
-			// try to get the runtime constraints
-			JSONArray runtimeConstraints = this.getRuntimeConstraintsAsJsonArray(requestBody.getRuntimeConstraints());
-			
-			
 			String targetId = null;
 			if(requestBody instanceof FilterDispatchFromNodeGroupRequestBody){
 				// set the target ID
@@ -372,8 +386,13 @@ public class NodeGroupExecutionRestController {
 			}
 			
 			// dispatch the job. 
-			sqe.dispatchJob(qt, connection, ng, edcConstraints, runtimeConstraints, targetId);
-			String id = sqe.getJobID();
+			ngExecutor.dispatchJob(qt, connection, ng, 
+					requestBody.getExternalDataConnectionConstraintsJson(), 
+					requestBody.getRuntimeConstraintsJson(), 
+					-1,
+					-1,
+					targetId);
+			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
 			retval.addResult("JobId", id);
@@ -492,13 +511,13 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor sqe = this.getExecutor(prop, null );
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
 			// try to create a sparql connection
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 
 			// dispatch the job. 
-			sqe.dispatchRawSparql(connection, requestBody.getSparql());
-			String id = sqe.getJobID();
+			ngExecutor.dispatchRawSparql(connection, requestBody.getSparql());
+			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
 			retval.addResult("JobId", id);

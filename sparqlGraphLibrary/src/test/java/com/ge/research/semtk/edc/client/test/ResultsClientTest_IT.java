@@ -218,6 +218,7 @@ public class ResultsClientTest_IT {
 	@Test
 	public void delete_me() throws Exception {
 		// --- private experiment ---
+		/*
 		System.out.println("Notice how JSON simple parser treats these the same");
 		String s1 = "{\"str\": \"Tor likes blue\\purple jello	\n\u0001\"}";    // illegal
 		String s2 = "{\"str\": \"Tor likes blue\\\\purple jello	\n\u0001\"}";
@@ -226,6 +227,7 @@ public class ResultsClientTest_IT {
 		JSONObject j2 = (JSONObject) parser.parse(s2);
 		System.out.println(j1.toJSONString());
 		System.out.println(j2.toJSONString());
+		*/
 	}
 	/**
 	 * Test a row with quotes but no commas (in the past this triggered different logic in the ResultsClient)
@@ -482,15 +484,44 @@ public class ResultsClientTest_IT {
 		assertNotNull(s);
 		assertNotNull(fileContent);
 
-		// Error case
-		try {
-			fileContent = client.execReadBinaryFile("wrongId");
-			fail();
-		} catch (Exception e) {
-			System.out.println("Exception: "+e.toString());
-			assertTrue(true);
-		}
 
+	}
+	
+	@Test
+	public void testStoreAndRetrieveBinaryFilePath() throws Exception {
+
+		
+		String pathOfFileAccessibleToServer = "????";
+		pathOfFileAccessibleToServer = "C:\\Users\\200001934\\Desktop\\Temp\\working.txt";
+		
+		/*
+		 * I don't know how to test with a file name that's guaranteed to be on the results server.
+		 * So this test is commented out.
+		 */
+		
+		/*
+		SimpleResultSet res = client.execStoreBinaryFilePath(pathOfFileAccessibleToServer, "test.txt");
+		
+		String fileId = (String) res.getResult("fileId");
+		String fullUrl = (String) res.getResult("fullURL");
+		
+		String s = Utility.getURLContentsAsString(new URL(fullUrl));
+		String fileContent = client.execReadBinaryFile(fileId);
+		
+		assertNotNull(s);
+		assertNotNull(fileContent);
+		*/
+
+
+	}
+	
+	@Test
+	public void testStoreAndRetrieveWrongId() throws Exception {
+
+		// Error case
+		
+		String fileContent = client.execReadBinaryFile("wrongId");
+		assert(fileContent.contains("not found"));
 	}
 
 

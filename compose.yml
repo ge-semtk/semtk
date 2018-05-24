@@ -35,6 +35,8 @@ services:
         http_proxy: $http_proxy
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup${TAG}
+    environment:
+      - NODEGROUP_SERVICE_MULTIPART_MAXFILESIZE
     ports:
       - ${PORT_NODEGROUP_SERVICE}:8080
     networks:
@@ -49,20 +51,20 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup-store${TAG}
     environment:
-      - CONFIG_NODEGROUPSTORE_SERVICE
-      - storeIngestorLocation
-      - storeIngestorPort
+      - NODEGROUPSTORE_SERVICE_MULTIPART_MAXFILESIZE
+      - INGESTION_SERVICE_HOST
+      - PORT_INGESTION_SERVICE
+      - INGESTION_SERVICE_PROTOCOL	  
       - storeTemplateLocation
-      - storeIngestorProtocol
-      - storeSparqlServiceServer
-      - storeSparqlServicePort
-      - storeSparqlServiceProtocol
-      - storeSparqlServiceEndpoint
-      - storeSparqlServerAndPort
+      - SPARQLQUERY_SERVICE_HOST
+      - PORT_SPARQL_QUERY_SERVICE
+      - SPARQLQUERY_SERVICE_PROTOCOL
+      - SPARQLQUERY_SERVICE_ENDPOINT_AUTH
+      - SERVICES_DATASET_SERVER_URL
       - storeSparqlServerDataSet
-      - storeSparqlServerType
-      - storeSparqlServiceUser
-      - storeSparqlServicePass
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
     ports:
       - ${PORT_NODEGROUPSTORE_SERVICE}:8080
     networks:
@@ -77,12 +79,11 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-ontology-info${TAG}
     environment:
-      - CONFIG_ONTOLOGYINFO_SERVICE
       - oinfoLoggingEnabled
-      - oinfoLoggingProtocol
-      - oinfoLoggingServer
-      - oinfoLoggingPort
-      - oinfoLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - oinfoApplicationLogName
     ports:
       - ${PORT_ONTOLOGYINFO_SERVICE}:8080
@@ -98,19 +99,18 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparqlgraph-status${TAG}
     environment:
-      - CONFIG_SPARQLGRAPH_STATUS_SERVICE
-      - statusJobEndpointType
-      - statusJobEndpointDomain
-      - statusJobEndpointServerUrl
-      - statusJobEndpointDataset
-      - statusJobEndpointUsername
-      - statusJobEndpointPassword
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SERVICES_DATASET_DOMAIN
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
       - statusJobMaxWaitMsec
       - statusLoggingEnabled
-      - statusLoggingProtocol
-      - statusLoggingServer
-      - statusLoggingPort
-      - statusLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - statusApplicationLogName
     ports:
       - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080 
@@ -126,20 +126,21 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparqlgraph-results${TAG}
     environment:
-      - CONFIG_SPARQLGRAPH_RESULTS_SERVICE
+      - RESULTS_SERVICE_MULTIPART_MAXFILESIZE
+      - RESULTS_SERVICE_MULTIPART_MAXREQUESTSIZE
       - resultsCleanUpThreadsEnabled
       - resultsCleanUpThreadsFrequency
-      - resultsJobEndpointType
-      - resultsJobEndpointDomain
-      - resultsJobEndpointServerUrl
-      - resultsJobEndpointDataset
-      - resultsJobEndpointUsername
-      - resultsJobEndpointPassword
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SERVICES_DATASET_DOMAIN
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
       - resultsLoggingEnabled
-      - resultsLoggingProtocol
-      - resultsLoggingServer
-      - resultsLoggingPort
-      - resultsLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - resultsApplicationLogName
       - resultsBaseURL
       - resultsServiceURL
@@ -159,7 +160,6 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-hive${TAG}
     environment:
-      - CONFIG_HIVE_SERVICE
       - hiveUsername
       - hivePassword
     ports:
@@ -176,22 +176,21 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-dispatch${TAG}
     environment:
-      - CONFIG_DISPATCH_SERVICE
       - LOCATION_ADDITIONAL_DISPATCHER_JARS
-      - dispatchSparqlServiceServer
-      - dispatchSparqlServicePort
-      - dispatchSparqlServiceProtocol
-      - dispatchSparqlServiceEndpoint
-      - dispatchEdcSparqlServerAndPort
-      - dispatchEdcSparqlServerDataset
-      - dispatchEdcSparqlServerType
-      - dispatchResultsServiceProtocol
-      - dispatchResultsServiceServer
-      - dispatchResultsServicePort
-      - dispatchStatusServiceProtocol
-      - dispatchStatusServiceServer
-      - dispatchStatusServicePort
-      - dispatchDispatcherClassName
+      - SPARQLQUERY_SERVICE_HOST
+      - PORT_SPARQL_QUERY_SERVICE
+      - SPARQLQUERY_SERVICE_PROTOCOL
+      - SPARQLQUERY_SERVICE_ENDPOINT
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - RESULTS_SERVICE_PROTOCOL
+      - RESULTS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_RESULTS_SERVICE
+      - STATUS_SERVICE_PROTOCOL
+      - STATUS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_STATUS_SERVICE
+      - DISPATCHER_CLASS_NAME
     ports:
       - ${PORT_DISPATCH_SERVICE}:8080
     networks:
@@ -206,22 +205,21 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-nodegroup-execution${TAG}
     environment:
-      - CONFIG_EXEC_SERVICE
-      - nodeGroupExecutionNgStoreProtocol
-      - nodeGroupExecutionNgStoreServer
-      - nodeGroupExecutionNgStorePort
-      - nodeGroupExecutionDispatchProtocol
-      - nodeGroupExecutionDispatchServer
-      - nodeGroupExecutionDispatchPort
-      - nodeGroupExecutionResultsProtocol
-      - nodeGroupExecutionResultsServer
-      - nodeGroupExecutionResultsPort
-      - nodeGroupExecutionStatusProtocol
-      - nodeGroupExecutionStatusServer
-      - nodeGroupExecutionStatusPort
-      - nodeGroupExecutionIngestProtocol
-      - nodeGroupExecutionIngestServer
-      - nodeGroupExecutionIngestPort
+      - NODEGROUPSTORE_SERVICE_PROTOCOL
+      - NODEGROUPSTORE_SERVICE_HOST
+      - PORT_NODEGROUPSTORE_SERVICE
+      - DISPATCH_SERVICE_PROTOCOL
+      - DISPATCH_SERVICE_HOST
+      - PORT_DISPATCH_SERVICE
+      - RESULTS_SERVICE_PROTOCOL
+      - RESULTS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_RESULTS_SERVICE
+      - STATUS_SERVICE_PROTOCOL
+      - STATUS_SERVICE_HOST
+      - PORT_SPARQLGRAPH_STATUS_SERVICE
+      - INGESTION_SERVICE_PROTOCOL
+      - INGESTION_SERVICE_HOST
+      - PORT_INGESTION_SERVICE
     ports:
       - ${PORT_NODEGROUPEXECUTION_SERVICE}:8080
     networks:
@@ -236,9 +234,6 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparql-query${TAG}
     environment:
-      - CONFIG_SPARQL_QUERY_SERVICE
-      - triplestoreServerType
-      - triplestoreServerAndPort
     ports:
       - ${PORT_SPARQL_QUERY_SERVICE}:8080
     networks:
@@ -253,15 +248,15 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-ingestion${TAG}
     environment:
-      - CONFIG_INGESTION_SERVICE
-      - ingestionSparqlUserName
-      - ingestionSparqlPassword
+      - INGESTION_SERVICE_MULTIPART_MAXFILESIZE	
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
       - ingestionBatchSize
       - ingestionLoggingEnabled
-      - ingestionLoggingProtocol
-      - ingestionLoggingServer
-      - ingestionLoggingPort
-      - ingestionLoggingServiceLocation
+      - LOGGING_SERVICE_PROTOCOL
+      - LOGGING_SERVICE_HOST
+      - LOGGING_SERVICE_PORT
+      - LOGGING_SERVICE_ENDPOINT
       - ingestionApplicationName
     ports:
       - ${PORT_INGESTION_SERVICE}:8080
@@ -287,7 +282,6 @@ services:
       - OINFO_URL
       - NGEXEC_URL
       - NG_URL
-      - triplestoreServerAndPort
     ports:
       - ${PORT_SPARQLGRAPH_WEB}:8080
     networks:
