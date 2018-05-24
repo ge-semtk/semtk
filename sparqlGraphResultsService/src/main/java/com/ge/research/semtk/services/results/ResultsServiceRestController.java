@@ -278,7 +278,7 @@ public class ResultsServiceRestController {
             File file = new File(dataFilePath);
         
         	// return the file if it exists
-            resp.setHeader("Content-Disposition", "attachment; filename=" + originalFileName + "\"");
+            resp.setHeader("Content-Disposition", "attachment; filename=\"" + originalFileName + "\"");
             return new FileSystemResource(file);
             
         } catch (Exception e) {
@@ -286,8 +286,8 @@ public class ResultsServiceRestController {
         	try {
         		// try to return an error
         		resp.setHeader("Content-Disposition", "attachment; filename=\"resultExpired.html\"");
-	            File file = Paths.get(ResultsServiceRestController.class.getClassLoader().getResource("resultExpired.html").toURI()).toFile();
-	            return new FileSystemResource(file);
+	            File f = new File(getClass().getClassLoader().getResource("resultExpired.html").getFile());
+	            return new FileSystemResource(f);
         	} catch (Exception e1) {
         		
         		// failed to return error; return null
