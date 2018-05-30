@@ -21,8 +21,10 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,6 +55,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -71,9 +74,34 @@ public class NodeGroupExecutionRestController {
 	@Autowired
 	NodegroupExecutionEdcConfigProperties edc_prop;
 	
+	@CrossOrigin
+	@RequestMapping(value="/stest", method=RequestMethod.GET)
+	public JSONObject stest(@RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet();
+		
+		try{ 
+			// create a new StoredQueryExecutor
+			NodeGroupExecutor ngExecutor = this.getExecutor(prop, "job-1" );
+			// try to get a job status
+			String results = ngExecutor.getJobStatus();
+			retval.setSuccess(true);
+			retval.addResult("status", results);
+		}
+		catch(Exception e){
+			LocalLogger.printStackTrace(e);
+			retval = new SimpleResultSet();
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
+		}
+	
+		return retval.toJson();
+	} 
+	
 	@CrossOrigin 
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
-	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody){
+	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{ 
@@ -96,7 +124,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/jobStatusMessage", method=RequestMethod.POST)
-	public JSONObject getJobStatusMessage(@RequestBody StatusRequestBody requestBody){
+	public JSONObject getJobStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
@@ -119,7 +148,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionCheck", method=RequestMethod.POST)
-	public JSONObject getJobCompletion(@RequestBody StatusRequestBody requestBody ){
+	public JSONObject getJobCompletion(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
@@ -147,7 +177,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionPercentage", method=RequestMethod.POST)
-	public JSONObject getJobCompletionPercent(@RequestBody StatusRequestBody requestBody ){
+	public JSONObject getJobCompletionPercent(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
@@ -170,7 +201,7 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
-	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody){
+	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		// NOTE: May 2018 Paul
 		// Newer / better endpoint
 		// This pass-through has a signature identical to the status service
@@ -178,6 +209,7 @@ public class NodeGroupExecutionRestController {
 		// copy-and-pasted the request body, though. Still needs consolodating in sparqlGraphLibrary
 	    String jobId = requestBody.jobId;
 	    
+		HeadersManager.setHeaders(headers);
 	    SimpleResultSet retval = new SimpleResultSet();    	
     	
 	    try {
@@ -197,7 +229,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getResultsTable", method=RequestMethod.POST)
-	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody ){
+	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = new TableResultSet();
 		
 		try{
@@ -218,7 +251,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getResultsJsonLd", method=RequestMethod.POST)
-	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody ){
+	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		NodeGroupResultSet retval = new NodeGroupResultSet();
 		
 		try{
@@ -238,7 +272,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getResultsLocation", method=RequestMethod.POST)
-	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody ){
+	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = new TableResultSet();
 		
 		// note: make sure the response is sane when results do not yet exist. the failure should be as graceful as we can make them.
@@ -413,86 +448,99 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
-	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody){
+	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
-	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody){
+	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructById", method=RequestMethod.POST)
-	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody){
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
+	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
 
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructForInstanceManipulationById", method=RequestMethod.POST)
-	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody){
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructForInstanceManipulationFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
 
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
-	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody){
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
+	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
+	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
 
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterById", method=RequestMethod.POST)
-	public JSONObject dispatchFilterJobById(@RequestBody FilterDispatchByIdRequestBody requestBody){
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+	public JSONObject dispatchFilterJobById(@RequestBody FilterDispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody FilterDispatchFromNodeGroupRequestBody requestBody ){	
+	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody FilterDispatchFromNodeGroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
 
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteById", method=RequestMethod.POST)
-	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody){
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
+	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
 	}
 	
 	@CrossOrigin
@@ -505,7 +553,8 @@ public class NodeGroupExecutionRestController {
 	// direct Sparql Execution
 	@CrossOrigin
 	@RequestMapping(value="/dispatchRawSparql", method=RequestMethod.POST)
-	public JSONObject dispatchRawSparql(@RequestBody DispatchRawSparqlRequestBody requestBody){
+	public JSONObject dispatchRawSparql(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 
 		SimpleResultSet retval = new SimpleResultSet();
 		
@@ -539,7 +588,8 @@ public class NodeGroupExecutionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
-	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody) throws Exception{
+	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		RecordProcessResults retval = null;
 		try{
 			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
@@ -557,7 +607,8 @@ public class NodeGroupExecutionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
-	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody) throws Exception{
+	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		RecordProcessResults retval = null;
 		try{
 			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
@@ -575,7 +626,8 @@ public class NodeGroupExecutionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
-	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody) throws Exception{
+	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		RecordProcessResults retval = null;
 		try{
 			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
@@ -590,7 +642,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroupID", method=RequestMethod.POST)
-	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody){
+	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
 		try {
@@ -608,7 +661,8 @@ public class NodeGroupExecutionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroup", method=RequestMethod.POST)
-	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody){
+	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
 		try {

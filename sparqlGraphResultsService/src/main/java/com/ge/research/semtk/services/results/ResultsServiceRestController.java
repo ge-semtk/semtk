@@ -33,6 +33,7 @@ import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -57,9 +59,11 @@ import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 import org.springframework.web.multipart.MultipartFile;
+
 
 /**
  * Service to get query results.
@@ -76,11 +80,11 @@ public class ResultsServiceRestController {
 	ResultsEdcConfigProperties edc_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
-	
-	
+		
 	@CrossOrigin
 	@RequestMapping(value="/storeJsonLdResults", method=RequestMethod.POST)
-	public JSONObject storeJsonLdResults(@RequestBody JsonLdStoreRequestBody requestBody){
+	public JSONObject storeJsonLdResults(@RequestBody JsonLdStoreRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
@@ -103,7 +107,8 @@ public class ResultsServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/getJsonLdResults", method= RequestMethod.POST)
-	public void getJsonLdResults(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp){
+	public void getJsonLdResults(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -121,7 +126,8 @@ public class ResultsServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/storeJsonBlobResults", method=RequestMethod.POST)
-	public JSONObject storeJsonBlobResults(@RequestBody JsonBlobRequestBody requestBody){
+	public JSONObject storeJsonBlobResults(@RequestBody JsonBlobRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
@@ -144,7 +150,8 @@ public class ResultsServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getJsonBlobResults", method=RequestMethod.POST)
-	public void getJsonBlobResults(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp){
+	public void getJsonBlobResults(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 			GenericJsonBlobResultsSerializer retval = getJsonBlobResultsStorage().getJsonBlob(url);
@@ -165,7 +172,8 @@ public class ResultsServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
-	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, HttpServletRequest req, HttpServletResponse resp){
+	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, HttpServletRequest req, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 
 		SimpleResultSet res = null;
 		Path rootLocation = Paths.get(prop.getFileLocation());
@@ -183,7 +191,7 @@ public class ResultsServiceRestController {
 				LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + destinationFile);
 				Files.copy(file.getInputStream(), rootLocation.resolve(destinationFile));
 
-				res = this.writeMetaFile(fileId, destinationFile, originalFileName);
+				res = this.writeMetaFile(fileId, destinationFile, originalFileName, HeadersManager.getPrincipalUserName());
 
 				LocalLogger.logToStdOut("done uploading file");
 			}
@@ -200,8 +208,9 @@ public class ResultsServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
-	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody){
-
+	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		LocalLogger.logToStdOut("storeBinaryFilePath as " + HeadersManager.getPrincipalUserName());
 		SimpleResultSet res = null;
 
 		// logging
@@ -215,7 +224,7 @@ public class ResultsServiceRestController {
 			    throw new Exception("File is not readable from results service: " + requestBody.getPath());
 			}
 			
-			res = this.writeMetaFile(UUID.randomUUID().toString(), requestBody.getPath(), requestBody.getFilename());
+			res = this.writeMetaFile(UUID.randomUUID().toString(), requestBody.getPath(), requestBody.getFilename(), HeadersManager.getPrincipalUserName());
 			
 			LocalLogger.logToStdOut("done uploading file");
 
@@ -236,14 +245,15 @@ public class ResultsServiceRestController {
 	 * @return success SimpleResultSet
 	 * @throws IOException 
 	 */
-	private SimpleResultSet writeMetaFile(String fileId, String path, String filename) throws IOException {
+	private SimpleResultSet writeMetaFile(String fileId, String path, String filename, String principalUserName) throws IOException {
 		// get UUID and filenames
 		String destinationFile = prop.getFileLocation() + "/" + fileId;
 		String destinationFileMeta = destinationFile.concat(ResultsMetaFile.getSuffix());
 		
 		ResultsMetaFile metaFile = new ResultsMetaFile();
-		metaFile.setFilename(filename);
+		metaFile.setFileName(filename);
 		metaFile.setPath(path);
+		metaFile.setUserName(principalUserName);
 		metaFile.write(destinationFileMeta);
 		
 		String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
@@ -259,8 +269,10 @@ public class ResultsServiceRestController {
     @CrossOrigin
     @RequestMapping(value="/getBinaryFile/{fileId}", method=RequestMethod.GET)
     @ResponseBody
-    public FileSystemResource getBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp){
-
+    public FileSystemResource getBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		LocalLogger.logToStdOut("getBinaryFile as " + HeadersManager.getPrincipalUserName());
+		
         // logging
         LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
         LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
@@ -272,9 +284,16 @@ public class ResultsServiceRestController {
         try {
             
         	ResultsMetaFile metaFile = new ResultsMetaFile(metaFilePath);
-            originalFileName = metaFile.getFilename();
+            originalFileName = metaFile.getFileName();
             dataFilePath = metaFile.getPath();
        
+            // Testing only.  Non-binary endpoints will use the JobTracker for matching Principal.
+            if (HeadersManager.getPrincipalUserName().equals(metaFile.getUserName())) {
+            	LocalLogger.logToStdOut("getBinaryFile users match: " + metaFile.getUserName());
+            } else {
+            	LocalLogger.logToStdOut("getBinaryFile file username: " + metaFile.getUserName() + " DOES NOT MATCH CALLER: " + HeadersManager.getPrincipalUserName());
+            } 
+            	
             File file = new File(dataFilePath);
         
         	// return the file if it exists
@@ -306,7 +325,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonInitialize", method=RequestMethod.POST)
-	public JSONObject storeTableResultsJsonInitialize(@RequestBody ResultsRequestBodyInitializeTableResultsJson requestBody){
+	public JSONObject storeTableResultsJsonInitialize(@RequestBody ResultsRequestBodyInitializeTableResultsJson requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
@@ -341,7 +361,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonAddIncremental", method=RequestMethod.POST)
-	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody){
+	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
@@ -368,7 +389,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonFinalize", method=RequestMethod.POST)
-	public JSONObject storeTableResultsJsonFinalize(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody){
+	public JSONObject storeTableResultsJsonFinalize(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		
 		// logging
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
@@ -394,7 +416,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
-	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp){
+	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -418,7 +441,8 @@ public class ResultsServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJsonForWebClient", method= RequestMethod.GET)
-	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp){
+	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
@@ -440,7 +464,8 @@ public class ResultsServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
-	public void getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp){
+	public void getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
@@ -460,7 +485,8 @@ public class ResultsServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsRowCount", method= RequestMethod.POST)
-	public JSONObject getTableResultsRowCount(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp){
+	public JSONObject getTableResultsRowCount(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	
 		SimpleResultSet retTrue = null;
 		
@@ -484,7 +510,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
-	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp){
+	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -521,7 +548,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getResults", method= RequestMethod.POST)
-	public JSONObject getResults(@RequestBody ResultsRequestBody requestBody){
+	public JSONObject getResults(@RequestBody ResultsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
@@ -556,7 +584,8 @@ public class ResultsServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStorage", method= RequestMethod.POST)
-	public JSONObject deleteStorage(@RequestBody ResultsRequestBody requestBody){
+	public JSONObject deleteStorage(@RequestBody ResultsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		LocalLogger.logToStdOut("Results Service deleteStorage start JobId=" + requestBody.jobId);
 
 	    SimpleResultSet res = new SimpleResultSet();

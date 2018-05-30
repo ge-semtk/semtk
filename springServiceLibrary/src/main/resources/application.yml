@@ -1,0 +1,78 @@
+# ===================================================================
+# APPLICATION PROPERTIES
+#
+# List of Common Application Properties:
+#   - http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+#
+# ===================================================================
+
+# EMBEDDED SERVER CONFIGURATION
+# *** REVIEW https://www.predix.io/support/article/KB0011758 for server config settings
+server:
+  #port: 8080  # in application.properties
+  use-forward-headers: true
+  tomcat:
+    remote-ip-header: x-forwarded-for
+    protocol-header: x-forwarded-proto    
+    protocol-header-https-value: http    
+  session:
+    cookie:
+      http-only: true # only allows http requests not JavaScript
+      secure: true # only sends via https   
+
+# COMMON SPRING CONFIGURATION  
+spring:  
+  profiles:    
+    active: local, us-west
+
+  resources:
+    chain:
+      enabled: true
+  main:
+    banner-mode: "off"
+
+---
+
+# Predix Basic PROFILE CONFIGURATION
+spring:
+  profiles: us-west
+
+security:  
+  oauth2:
+    client:
+      client-id: energymanagement_semtk-vesuvius_dev
+      client-secret: Fxzg6HEJEeCE7aJn
+    resource:      
+       token-info-uri: https://a8a2ffc4-b04e-4ec1-bfed-7a51dd408725.predix-uaa.run.aws-usw02-pr.ice.predix.io/check_token
+      
+
+---
+
+# LOCAL PROFILE CONFIGURATION    
+spring:
+  profiles: local
+
+# Require no resourceIds
+#credentials:
+#  resourceId: sse
+
+local:
+  network:
+    proxy-host: PITC-Zscaler-Americas-Cincinnati3PR.proxy.corporate.ge.com
+    proxy-port: 80
+    non-proxy-hosts: localhost|127.0.0.1|*.ge.com|10.0.2.2|github.build.ge.com
+    
+server:
+  session:
+    cookie:
+      secure: false
+              
+logging:  
+  level:
+    org.springframework.security: debug   
+
+
+---   
+spring:
+  profiles: unitTest
+    

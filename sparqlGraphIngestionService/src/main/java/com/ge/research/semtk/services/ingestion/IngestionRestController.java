@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,6 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -69,24 +72,28 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFile", method= RequestMethod.POST)
-	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile ){
+	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.fromAnyCsv(templateFile, dataFile, null, true, false);
 	}
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection){
+	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile ){
+	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection){
+	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
 	}
 	
@@ -98,7 +105,8 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsv", method= RequestMethod.POST)
-	public JSONObject fromCsv(@RequestBody String requestBody) throws JsonParseException, JsonMappingException, IOException{
+	public JSONObject fromCsv(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+		HeadersManager.setHeaders(headers);
 		// LocalLogger.logToStdErr("the request: " + requestBody);
 		IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
 		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
@@ -106,7 +114,8 @@ public class IngestionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody) throws JsonParseException, JsonMappingException, IOException{
+	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+		HeadersManager.setHeaders(headers);
 		// LocalLogger.logToStdErr("the request: " + requestBody);
 		IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
 		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
@@ -114,13 +123,15 @@ public class IngestionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvPrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody){
+	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnectionPrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody){
+	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
 	}
 	

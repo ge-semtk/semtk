@@ -63,6 +63,7 @@ import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.security.PrincipalAwareClass;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -72,7 +73,7 @@ import com.ge.research.semtk.utility.LocalLogger;
  * This is an abstract class - create a subclass per implementation (Virtuoso, etc)
  */
 @SuppressWarnings("deprecation")
-public abstract class SparqlEndpointInterface {
+public abstract class SparqlEndpointInterface extends PrincipalAwareClass {
 
 	// NOTE: more than one thread cannot safely share a SparqlEndpointInterface.
 	// this is because of the state maintained for the results vars and connection 
@@ -330,6 +331,7 @@ public abstract class SparqlEndpointInterface {
 		while (true) {
 			tryCount++;
 			try {
+				LocalLogger.logToStdOut("Executing query as user_name: " + SparqlEndpointInterface.getPrincipalUserName());
 				if(this.userName !=null && this.password != null){
 					return executeQueryAuthPost(query, resultType);
 				}else{

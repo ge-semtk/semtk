@@ -1,12 +1,19 @@
 package com.ge.research.semtk.springsvclib.security.props;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
 /**
  * proxy properties
  *
  */
-//@Configuration 
-//@EnableConfigurationProperties 
-//@ConfigurationProperties(prefix="local.network") 
+
+// Your service needs a class that extends this with annotations like:
+// @Configuration 
+// @EnableConfigurationProperties 
+// @ConfigurationProperties(prefix="local.network") 
+
 public class LocalNetworkProperties {
 	private String proxyHost; 
 	private String proxyPort;	

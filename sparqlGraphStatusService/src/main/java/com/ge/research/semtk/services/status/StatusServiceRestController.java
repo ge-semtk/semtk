@@ -20,8 +20,10 @@ package com.ge.research.semtk.services.status;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +32,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 
 
@@ -53,7 +56,8 @@ public class StatusServiceRestController {
 	 * Get percentComplete
 	 */
 	@RequestMapping(value="/getPercentComplete", method= RequestMethod.POST)
-	public JSONObject getPercentComplete(@RequestBody StatusRequestBody requestBody){
+	public JSONObject getPercentComplete(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		String jobId = requestBody.jobId;
 		    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -85,7 +89,9 @@ public class StatusServiceRestController {
 	 * @return status
 	 */
 	@RequestMapping(value="/getStatus", method= RequestMethod.POST)
-	public JSONObject getStatus(@RequestBody StatusRequestBody requestBody){
+	public JSONObject getStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		
 		String jobId = requestBody.jobId;
 		    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -117,7 +123,8 @@ public class StatusServiceRestController {
 	 * @return statusMessage
 	 */
 	@RequestMapping(value="/getStatusMessage", method= RequestMethod.POST)
-	public JSONObject getStatusMessage(@RequestBody StatusRequestBody requestBody){
+	public JSONObject getStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		String jobId = requestBody.jobId;
 		    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -146,7 +153,8 @@ public class StatusServiceRestController {
 	 * Block until status is percent complete is reached
 	 */
 	@RequestMapping(value="/waitForPercentComplete", method= RequestMethod.POST)
-	public JSONObject waitForPercentComplete(@RequestBody StatusRequestBodyPercentMsec requestBody){
+	public JSONObject waitForPercentComplete(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -176,7 +184,8 @@ public class StatusServiceRestController {
 	 * Block until status is percent complete is reached or Msec have elapsed
 	 */
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
-	public JSONObject waitForPercentOrMsec(@RequestBody StatusRequestBodyPercentMsec requestBody){
+	public JSONObject waitForPercentOrMsec(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -206,7 +215,8 @@ public class StatusServiceRestController {
 	 * @return
 	 */
 	@RequestMapping(value="/setPercentComplete", method= RequestMethod.POST)
-	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercent requestBody){
+	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercent requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -234,7 +244,8 @@ public class StatusServiceRestController {
 	 * @return
 	 */
 	@RequestMapping(value="/setSuccess", method= RequestMethod.POST)
-	public JSONObject setSuccess(@RequestBody StatusRequestBodyMessage requestBody){
+	public JSONObject setSuccess(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -263,7 +274,8 @@ public class StatusServiceRestController {
 	 * @return
 	 */
 	@RequestMapping(value="/setFailure", method= RequestMethod.POST)
-	public JSONObject setFailure(@RequestBody StatusRequestBodyMessage requestBody){
+	public JSONObject setFailure(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
 	    SimpleResultSet res = new SimpleResultSet();
@@ -293,7 +305,8 @@ public class StatusServiceRestController {
 	 * @return
 	 */
 	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)
-	public JSONObject deleteJob(@RequestBody StatusRequestBodyMessage requestBody){
+	public JSONObject deleteJob(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
 	    SimpleResultSet res = new SimpleResultSet();

@@ -20,12 +20,15 @@ package com.ge.research.semtk.services.client;
 
 import java.io.File;
 import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -33,6 +36,8 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -54,8 +59,26 @@ public abstract class RestClient extends Client implements Runnable {
 	Exception runException = null;
 
 	protected File fileParameter = null;
+	
+	// default headers for only this thread
+	private static ThreadLocal<ArrayList<BasicHeader>> defaultHeaders = new ThreadLocal<ArrayList<BasicHeader>>();
 
-
+	public static void setDefaultHeaders(Hashtable<String,List<String>> headerTable) {
+		
+		ArrayList<BasicHeader> headerList = new ArrayList<BasicHeader>();
+		// loop through hashtable and build default headers
+		for (String key : headerTable.keySet()) {
+			String value = headerTable.get(key).get(0);
+			for (int i=1; i < headerTable.get(key).size(); i++) {
+				value = value + "," + headerTable.get(key).get(i);
+			}
+			
+			BasicHeader header = new BasicHeader(key, value);
+			headerList.add(header);
+		}
+		
+		defaultHeaders.set(headerList);
+	}
 	/**
 	 * Constructor
 	 */
@@ -163,7 +186,7 @@ public abstract class RestClient extends Client implements Runnable {
 			throw new Exception("Service parameters not set");
 		}
 		
-		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.defaultHeaders.get()).build();
 	
 		// immediate line below removed to perform htmml encoding in stream
 		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
@@ -208,7 +231,7 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// handle the output			
 		String responseTxt = EntityUtils.toString(httpresponse.getEntity(), "UTF-8");
-		httpclient.close();
+		
 		if(responseTxt == null){ 
 			throw new Exception("Received null response text"); 
 		}

@@ -26,8 +26,59 @@ import com.ge.research.semtk.utility.LocalLogger;
  * ...and call these functions
  *
  */
+// your service needs a class that extends this with annotations like:
 //@Configuration
 //@EnableResourceServer
+
+/*-------------- sample extension----------------
+ 
+@Configuration
+@EnableResourceServer
+public class My_SecurityConfig extends SecurityConfig {
+
+	//@Autowired
+	//private Environment environment; 
+
+	@Autowired(required = false)
+	private My_LocalNetworkProperties localNetworkProperties;
+	
+	@Autowired
+	private My_CredentialsProperties credentialsProperties;
+
+	@Autowired 
+	private My_Properties utilityProperties;
+	
+	@Override
+	public void configure(HttpSecurity http) throws Exception {
+		
+		this.configureProxy(http, localNetworkProperties);
+		this.httpRequiresChannel(http);
+
+		
+		if (utilityProperties.useSecurity()) {
+			LocalLogger.logToStdOut("Launching with security");
+			http.authorizeRequests()
+				.antMatchers(HttpMethod.POST, "/serviceInfo/**").permitAll()
+				.antMatchers(HttpMethod.POST, "/utility/serviceInfo/**").permitAll()
+				.antMatchers(HttpMethod.GET, "/utility/**").authenticated()
+				.antMatchers(HttpMethod.POST, "/utility/**").authenticated()
+				;
+		} else {
+			this.noSecurity(http);
+		}
+
+	}
+	
+	@Override
+	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
+		this.configureResources(resources, credentialsProperties);
+	}
+
+}
+
+------------------------------------------*/
+
+
 public class SecurityConfig extends ResourceServerConfigurerAdapter {
 	
 	@Autowired

@@ -25,8 +25,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -70,7 +73,8 @@ public class NodeGroupStoreRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeNodeGroup", method=RequestMethod.POST)
-	public JSONObject storeNodeGroup(@RequestBody StoreNodeGroupRequest requestBody){
+	public JSONObject storeNodeGroup(@RequestBody StoreNodeGroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 			
 		try{
@@ -123,7 +127,8 @@ public class NodeGroupStoreRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupById", method=RequestMethod.POST)
-	public JSONObject getNodeGroupById(@RequestBody NodeGroupByIdRequest requestBody){
+	public JSONObject getNodeGroupById(@RequestBody NodeGroupByIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
 		try{
@@ -145,7 +150,8 @@ public class NodeGroupStoreRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupList", method=RequestMethod.POST)
-	public JSONObject getNodeGroupList(){
+	public JSONObject getNodeGroupList(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
 		try{
@@ -167,7 +173,8 @@ public class NodeGroupStoreRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupMetadata", method=RequestMethod.POST)
-	public JSONObject getNodeGroupMetadata(){
+	public JSONObject getNodeGroupMetadata(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;		
 		try{
 			String qry = SparqlQueries.getNodeGroupMetadata();
@@ -185,7 +192,8 @@ public class NodeGroupStoreRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupRuntimeConstraints", method=RequestMethod.POST)
-	public JSONObject getRuntimeConstraints(@RequestBody NodeGroupByIdRequest requestBody){
+	public JSONObject getRuntimeConstraints(@RequestBody NodeGroupByIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
 		try{
@@ -254,7 +262,8 @@ public class NodeGroupStoreRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStoredNodeGroup", method=RequestMethod.POST)
-	public JSONObject deleteStoredNodeGroup(@RequestBody DeleteByIdRequest requestBody){
+	public JSONObject deleteStoredNodeGroup(@RequestBody DeleteByIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		// NOTE:

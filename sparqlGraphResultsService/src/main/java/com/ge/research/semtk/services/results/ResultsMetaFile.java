@@ -8,6 +8,7 @@ import java.io.IOException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.security.PrincipalAwareClass;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class ResultsMetaFile {
@@ -17,6 +18,7 @@ public class ResultsMetaFile {
 	
 	private String path = null;
 	private String filename = null;
+	private String username = PrincipalAwareClass.ANONYMOUS;
 	
 	/**
 	 * Create a file for writing
@@ -56,11 +58,19 @@ public class ResultsMetaFile {
 		this.path = path;
 	}
 
-	public String getFilename() {
+	public String getUserName() {
+		return username;
+	}
+
+	public void setUserName(String username) {
+		this.username = username;
+	}
+	
+	public String getFileName() {
 		return filename;
 	}
 
-	public void setFilename(String filename) {
+	public void setFileName(String filename) {
 		this.filename = filename;
 	}
 	

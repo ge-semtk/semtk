@@ -26,8 +26,10 @@ import java.util.UUID;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +54,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
@@ -67,49 +70,57 @@ public class DispatcherServiceRestController {
 	// select uses the original endpoint name for BC
 	@CrossOrigin
 	@RequestMapping(value="/queryFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject querySelectFromNodeGroup_BC(@RequestBody QueryRequestBody requestBody){
+	public JSONObject querySelectFromNodeGroup_BC(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/querySelectFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject querySelectFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+	public JSONObject querySelectFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/queryCountFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject queryCounttFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+	public JSONObject queryCounttFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, true);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryDeleteFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject queryDeleteFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+	public JSONObject queryDeleteFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.DELETE, true);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/queryFilterFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject queryFilterFromNodeGroup(@RequestBody FilterConstraintsRequestBody requestBody){
+	public JSONObject queryFilterFromNodeGroup(@RequestBody FilterConstraintsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, true);
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/asynchronousDirectQuery", method=RequestMethod.POST)
-	public JSONObject asynchronousDirectQuery(@RequestBody SparqlRequestBody requestBody){
+	public JSONObject asynchronousDirectQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroup", method=RequestMethod.POST)
-	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody){
+	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, true);
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroupForInstanceManipulation", method=RequestMethod.POST)
-	public JSONObject queryConstructFromNodeGroupForInstanceManipulation(@RequestBody QueryRequestBody requestBody){
+	public JSONObject queryConstructFromNodeGroupForInstanceManipulation(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, true);
 	}
 		
@@ -236,7 +247,8 @@ public class DispatcherServiceRestController {
 
 	@CrossOrigin
 	@RequestMapping(value="/getConstraintInfo", method=RequestMethod.POST)
-	public JSONObject getConstraintInfo(@RequestBody NodegroupRequestBody requestBody){
+	public JSONObject getConstraintInfo(@RequestBody NodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(true);
 		
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;

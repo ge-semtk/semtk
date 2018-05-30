@@ -19,8 +19,10 @@
 package com.ge.research.semtk.services.sparql;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,6 +39,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -79,7 +82,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/query", method= RequestMethod.POST)
-	public JSONObject query(@RequestBody SparqlQueryRequestBody requestBody){	
+	public JSONObject query(@RequestBody SparqlQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
 		
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
@@ -135,7 +139,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/queryAuth", method= RequestMethod.POST)
-	public JSONObject queryAuth(@RequestBody SparqlQueryAuthRequestBody requestBody){
+	public JSONObject queryAuth(@RequestBody SparqlQueryAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		
 		
 		GeneralResultSet resultSet = null;
@@ -175,7 +180,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/dropGraph", method= RequestMethod.POST)
-	public JSONObject dropGraph(@RequestBody SparqlAuthRequestBody requestBody){
+	public JSONObject dropGraph(@RequestBody SparqlAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start dropGraph");
@@ -216,7 +222,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/parallelQuery", method= RequestMethod.POST)
-	public JSONObject parallelQuery(@RequestBody SparqlParallelQueryRequestBody requestBody) {	
+	public JSONObject parallelQuery(@RequestBody SparqlParallelQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 
 		LocalLogger.logToStdOut("Sparql Query Service start parallelQuery");
 
@@ -268,7 +275,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/clearPrefix", method= RequestMethod.POST)
-	public JSONObject clearPrefix(@RequestBody SparqlPrefixAuthRequestBody requestBody){
+	public JSONObject clearPrefix(@RequestBody SparqlPrefixAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		
 		
 		GeneralResultSet resultSet = null;
@@ -310,7 +318,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/clearModelPartial", method= RequestMethod.POST)
-	public JSONObject clearModelPartial(@RequestBody SparqlPrefixesAuthRequestBody requestBody){
+	public JSONObject clearModelPartial(@RequestBody SparqlPrefixesAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.clearModel(requestBody, "clearModelPartial", false);
 	}
 	
@@ -323,7 +332,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/clearModelFull", method= RequestMethod.POST)
-	public JSONObject clearModelFull(@RequestBody SparqlPrefixesAuthRequestBody requestBody){
+	public JSONObject clearModelFull(@RequestBody SparqlPrefixesAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		return this.clearModel(requestBody, "clearModelPartial", true);
 	}
 	
@@ -364,7 +374,8 @@ public class SparqlQueryServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/clearAll", method= RequestMethod.POST)
-	public JSONObject clearAll(@RequestBody SparqlAuthRequestBody requestBody){
+	public JSONObject clearAll(@RequestBody SparqlAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start clearAll");
@@ -408,7 +419,9 @@ public class SparqlQueryServiceRestController {
 								@RequestParam("dataset") String dataset, 
 								@RequestParam("user") String user, 
 								@RequestParam("password") String password, 
-								@RequestParam("owlFile") MultipartFile owlFile){
+								@RequestParam("owlFile") MultipartFile owlFile, 
+								@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 
 		if(serverAndPort == null || serverAndPort.isEmpty()) {
 			serverAndPort = serviceProps.getServerAndPort(); }

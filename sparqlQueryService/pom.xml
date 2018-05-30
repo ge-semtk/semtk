@@ -24,6 +24,11 @@
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
 			<version>2.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.ge.research.semtk</groupId>
+			<artifactId>springUtilLibrary</artifactId>
+			<version>2.0.1-SNAPSHOT</version>
 		</dependency>		
 		<dependency>
 			<groupId>io.springfox</groupId>
