@@ -44,6 +44,10 @@ public class ExecuteClientConfig extends RestClientConfig {
 		configJson.put(key, value);
 	}
 	
+	public boolean hasConfigParam(String key){
+		return configJson.containsKey(key);
+	}
+	
 	public String getConfigParam(String key) throws Exception{
 		try{
 			return (String) configJson.get(key);
