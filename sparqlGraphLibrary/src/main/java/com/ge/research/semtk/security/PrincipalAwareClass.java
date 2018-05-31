@@ -7,7 +7,7 @@ package com.ge.research.semtk.security;
  */
 public abstract class PrincipalAwareClass {
 	public static final String ANONYMOUS = "anonymous";
-	private static ThreadLocal<String> userName;
+	private static ThreadLocal<String> userName = new ThreadLocal<String>();
 	
 	/**
 	 * Default to anonymous user
