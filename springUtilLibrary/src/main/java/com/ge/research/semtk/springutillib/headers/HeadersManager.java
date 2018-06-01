@@ -32,30 +32,34 @@ public class HeadersManager extends PrincipalAwareClass {
 	 * 
 	 * @param headers
 	 */
-	public static void setHeaders(HttpHeaders headers) {
-		
+	public static void setHeaders(HttpHeaders headers) {		
 		// change headers into a non-spring type: 
 		//      Hashtable<String,List<String> - hash of name to value list
 		Hashtable<String,List<String>> headerTable = new Hashtable<String,List<String>>();	
+		
+		// default user is anon
+		String userName = PrincipalAwareClass.ANONYMOUS;
+		
+		// grab only principal-related headers
 		for (String key : headers.keySet()) {
-			headerTable.put(key, headers.get(key));
+			
+			// grab user_name if there is exactly one
+			if (key.equals("user_name") && headers.get(key).size() == 1) {
+				headerTable.put(key, headers.get(key));
+				userName = headers.get(key).get(0);
+			
+			// grab other principal-related tokens
+			} else if (key.equals("authorization")) {
+				headerTable.put(key, headers.get(key));
+			}
 		}
 		
 		// send headers to RestClient
 		RestClient.setDefaultHeaders(headerTable);
 		
 		// send userName to PrincipalAware classes
-		String userName = HeadersManager.getUserName(headers);
-		
 		HeadersManager.setPrincipalUserName(userName);
 		SparqlEndpointInterface.setPrincipalUserName(userName);
 	}
 	
-	private static String getUserName(HttpHeaders headers) {
-		if (headers != null && headers.containsKey("user_name") && headers.get("user_name").size() == 1) {
-			return headers.get("user_name").get(0);
-		} else {
-			return "anonymous";
-		}
-	}
 }

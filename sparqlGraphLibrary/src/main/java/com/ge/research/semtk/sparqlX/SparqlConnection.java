@@ -143,6 +143,20 @@ public class SparqlConnection {
 		// no deprecated field-handling
 	}
 
+	/**
+	 * Override server in all data and model interfaces
+	 * @param serverAndPort
+	 * @throws Exception
+	 */
+	public void overrideSparqlServer(String serverAndPort) throws Exception {
+		for (SparqlEndpointInterface sei : this.dataInterfaces) {
+			sei.setServerAndPort(serverAndPort);
+		}
+		for (SparqlEndpointInterface sei : this.modelInterfaces) {
+			sei.setServerAndPort(serverAndPort);
+		}
+	}
+	
 	public static SparqlConnection deepCopy(SparqlConnection other) throws Exception {
 		return new SparqlConnection(other.toJson().toString());
 	}

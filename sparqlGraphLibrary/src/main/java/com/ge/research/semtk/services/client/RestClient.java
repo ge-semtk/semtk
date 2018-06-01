@@ -32,6 +32,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
@@ -78,6 +79,14 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 		
 		defaultHeaders.set(headerList);
+	}
+	
+	public static ArrayList<BasicHeader> getDefaultHeaders() {
+		ArrayList<BasicHeader> ret = defaultHeaders.get();
+		if (ret == null) {
+			ret = new ArrayList<BasicHeader>();
+		}
+		return ret;
 	}
 	/**
 	 * Constructor
@@ -186,8 +195,9 @@ public abstract class RestClient extends Client implements Runnable {
 			throw new Exception("Service parameters not set");
 		}
 		
-		HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.defaultHeaders.get()).build();
-	
+		HttpClient httpclient = HttpClients.custom().build();
+		//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
+
 		// immediate line below removed to perform htmml encoding in stream
 		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
 		
@@ -203,6 +213,7 @@ public abstract class RestClient extends Client implements Runnable {
 			entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
 		}
 
+		
 		HttpRequestBase httpreq = null;
 		if (conf.method == RestClientConfig.Methods.GET) {
 			HttpGet httpget = new HttpGet(this.conf.getServiceURL());
@@ -219,6 +230,11 @@ public abstract class RestClient extends Client implements Runnable {
 			httpreq = httppost;
 		}
 
+		// add default headers
+		for (BasicHeader header : RestClient.getDefaultHeaders()) {
+			httpreq.addHeader(header);
+		}
+		
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
 		

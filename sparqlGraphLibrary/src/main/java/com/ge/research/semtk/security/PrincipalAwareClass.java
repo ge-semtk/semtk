@@ -10,18 +10,15 @@ public abstract class PrincipalAwareClass {
 	private static ThreadLocal<String> userName = new ThreadLocal<String>();
 	
 	/**
-	 * Default to anonymous user
-	 */
-	public PrincipalAwareClass() {
-		setPrincipalUserName(ANONYMOUS);
-	}
-	
-	/**
 	 * Get username on this thread
 	 * @return
 	 */
 	public static String getPrincipalUserName() {
-		return userName.get();
+		if (userName.get() == null) {
+			return ANONYMOUS;
+		} else {
+			return userName.get();
+		}
 	}
 	
 	/**

@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Configuration;
 public class StoreProperties {
 
 	// for write operations. 
-	private String templateLocation = "";
 	private String ingestorLocation = "";
 	private String ingestorProtocol = "";
 	private String ingestorPort     = "";
@@ -41,16 +40,10 @@ public class StoreProperties {
 	
 	// sparql server and named graph info
 	private String sparqlServerAndPort = "";
-	private String sparqlServerDataSet = "";
+	private String sparqlServerDataDataset = "";
+	private String sparqlServerModelDataset = "";
+	private String sparqlServerDomain = "";
 	private String sparqlServerType = "";
-	
-	// template info.
-	public String getTemplateLocation() {
-		return templateLocation;
-	}
-	public void setTemplateLocation(String templateLocation) {
-		this.templateLocation = templateLocation;
-	}
 	
 	// info on our ingestion server
 	public String getIngestorLocation() {
@@ -105,11 +98,23 @@ public class StoreProperties {
 	public void setSparqlServerAndPort(String sparqlServerAndPort) {
 		this.sparqlServerAndPort = sparqlServerAndPort;
 	}
-	public String getSparqlServerDataSet() {
-		return sparqlServerDataSet;
+	public String getSparqlServerDataDataset() {
+		return sparqlServerDataDataset;
 	}
-	public void setSparqlServerDataSet(String sparqlServerDataSet) {
-		this.sparqlServerDataSet = sparqlServerDataSet;
+	public void setSparqlServerDataDataset(String sparqlServerDataDataset) {
+		this.sparqlServerDataDataset = sparqlServerDataDataset;
+	}
+	public String getSparqlServerModelDataset() {
+		return sparqlServerModelDataset;
+	}
+	public void setSparqlServerModelDataset(String sparqlServerModelDataset) {
+		this.sparqlServerModelDataset = sparqlServerModelDataset;
+	}
+	public String getSparqlServerDomain() {
+		return sparqlServerDomain;
+	}
+	public void setSparqlServerDomain(String sparqlServerDomain) {
+		this.sparqlServerDomain = sparqlServerDomain;
 	}
 	public String getSparqlServerType() {
 		return sparqlServerType;

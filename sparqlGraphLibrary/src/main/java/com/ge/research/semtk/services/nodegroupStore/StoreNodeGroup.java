@@ -25,6 +25,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -36,7 +37,7 @@ import com.ge.research.semtk.utility.Utility;
 public class StoreNodeGroup {
 
 	
-	public static boolean storeNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator, String insertTemplate, String ingestorLocation, String ingestorProtocol, String ingestorPort) throws Exception{
+	public static boolean storeNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator, SparqlConnection overrideConn, String ingestorLocation, String ingestorProtocol, String ingestorPort) throws Exception{
 		boolean retval = true;
 		
 		// generate creation date string, format MM/DD/YYYY
@@ -58,7 +59,11 @@ public class StoreNodeGroup {
 			IngestorClientConfig icc = new IngestorClientConfig(ingestorProtocol, ingestorLocation, Integer.parseInt(ingestorPort));
 			IngestorRestClient irc   = new IngestorRestClient(icc);
 			
-			irc.execIngestionFromCsv(insertTemplate, data);
+			// get store.json
+			String templateStr = Utility.getResourceAsString(icc, "/nodegroups/store.json");
+			
+			// ingest
+			irc.execIngestionFromCsv(templateStr, data, overrideConn.toString());
 			RecordProcessResults tbl = irc.getLastResult();			
 			LocalLogger.logToStdErr("does the return believes the run was a succes?" + tbl.getSuccess() );
 			tbl.throwExceptionIfUnsuccessful();

@@ -52,6 +52,13 @@ public class StatusServiceRestController {
 	@Autowired
 	StatusLoggingProperties log_prop;
 	
+	@RequestMapping(value="/headers", method=RequestMethod.GET)
+	public String getPercentComplete(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		
+		return headers.toString();
+	}
+		
 	/**
 	 * Get percentComplete
 	 */

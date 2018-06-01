@@ -46,6 +46,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 @RestController
@@ -107,12 +108,10 @@ public class NodeGroupStoreRestController {
 			throw new Exception("storeNodeGroup :: sparqlgraph jason serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
 		}
 		
-		// get the template information
-		JSONObject inputTemplateContents  = Utility.getJSONObjectFromFile(new File("/" + this.prop.getTemplateLocation()));
 		
 		// try to store the values.
 		boolean retBool = StoreNodeGroup.storeNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
-				inputTemplateContents.toString(), prop.getIngestorLocation(), prop.getIngestorProtocol(), prop.getIngestorPort());
+				createOverrideConnection(prop), prop.getIngestorLocation(), prop.getIngestorProtocol(), prop.getIngestorPort());
 		
 		retval = new SimpleResultSet(retBool);
 		
@@ -327,11 +326,22 @@ public class NodeGroupStoreRestController {
 				props.getSparqlServiceEndpoint(),
                 props.getSparqlServerAndPort(), 
                 props.getSparqlServerType(), 
-                props.getSparqlServerDataSet(),
+                props.getSparqlServerDataDataset(),
 				props.getSparqlServiceUser(),
 				props.getSparqlServicePass())
 				));
 		
 		return retval;
 	}
+	
+	private static SparqlConnection createOverrideConnection(StoreProperties props) throws Exception {
+		SparqlConnection retval = new SparqlConnection();
+		retval.setName("store override");
+		retval.setDomain(props.getSparqlServerDomain());
+		retval.addDataInterface(props.getSparqlServerType(), props.getSparqlServerAndPort(), props.getSparqlServerDataDataset());
+		retval.addModelInterface(props.getSparqlServerType(), props.getSparqlServerAndPort(), props.getSparqlServerModelDataset());
+		
+		return retval;
+	}
+	
 }

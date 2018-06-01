@@ -36,7 +36,6 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
-			  "store.templateLocation",
 			  "store.ingestorLocation",
 			  "store.ingestorProtocol",
 			  "store.ingestorPort",
@@ -45,7 +44,9 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 			  "store.sparqlServiceProtocol",
 			  "store.sparqlServiceEndpoint",
 			  "store.sparqlServerAndPort",
-			  "store.sparqlServerDataSet",
+			  "store.sparqlServerDataDataset",
+			  "store.sparqlServerModelDataset",
+			  "store.sparqlServerDomain",
 			  "store.sparqlServerType",
 			  "store.sparqlServiceUser"
 	  };
