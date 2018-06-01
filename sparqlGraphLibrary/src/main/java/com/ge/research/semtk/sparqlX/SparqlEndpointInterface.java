@@ -331,7 +331,13 @@ public abstract class SparqlEndpointInterface extends PrincipalAwareClass {
 		while (true) {
 			tryCount++;
 			try {
-				LocalLogger.logToStdOut("Executing query as user_name: " + SparqlEndpointInterface.getPrincipalUserName());
+				// TEMPORARY: remove
+				LocalLogger.logToStdOut(
+						"User: " + SparqlEndpointInterface.getPrincipalUserName() + "\n" +
+						"Query: " + query
+						);
+				///////////////////////
+				
 				if(this.userName !=null && this.password != null){
 					return executeQueryAuthPost(query, resultType);
 				}else{
