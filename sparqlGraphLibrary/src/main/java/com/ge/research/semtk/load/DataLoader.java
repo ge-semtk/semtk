@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataSetExhaustedException;
@@ -258,7 +259,7 @@ public class DataLoader {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
+				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest, ThreadAuthenticator.getThreadHeaderTable());
 				startingRow += nextRecords.size();
 				wrkrs.add(worker);
 				worker.start();

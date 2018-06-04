@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsStorage;
@@ -191,7 +192,7 @@ public class ResultsServiceRestController {
 				LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + destinationFile);
 				Files.copy(file.getInputStream(), rootLocation.resolve(destinationFile));
 
-				res = this.writeMetaFile(fileId, destinationFile, originalFileName, HeadersManager.getPrincipalUserName());
+				res = this.writeMetaFile(fileId, destinationFile, originalFileName, ThreadAuthenticator.getThreadUserName());
 
 				LocalLogger.logToStdOut("done uploading file");
 			}
@@ -210,7 +211,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
 	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LocalLogger.logToStdOut("storeBinaryFilePath as " + HeadersManager.getPrincipalUserName());
+		LocalLogger.logToStdOut("storeBinaryFilePath as " + ThreadAuthenticator.getThreadUserName());
 		SimpleResultSet res = null;
 
 		// logging
@@ -224,7 +225,7 @@ public class ResultsServiceRestController {
 			    throw new Exception("File is not readable from results service: " + requestBody.getPath());
 			}
 			
-			res = this.writeMetaFile(UUID.randomUUID().toString(), requestBody.getPath(), requestBody.getFilename(), HeadersManager.getPrincipalUserName());
+			res = this.writeMetaFile(UUID.randomUUID().toString(), requestBody.getPath(), requestBody.getFilename(), ThreadAuthenticator.getThreadUserName());
 			
 			LocalLogger.logToStdOut("done uploading file");
 
@@ -271,7 +272,7 @@ public class ResultsServiceRestController {
     @ResponseBody
     public FileSystemResource getBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LocalLogger.logToStdOut("getBinaryFile as " + HeadersManager.getPrincipalUserName());
+		LocalLogger.logToStdOut("getBinaryFile as " + ThreadAuthenticator.getThreadUserName());
 		
         // logging
         LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
@@ -288,10 +289,10 @@ public class ResultsServiceRestController {
             dataFilePath = metaFile.getPath();
        
             // Testing only.  Non-binary endpoints will use the JobTracker for matching Principal.
-            if (HeadersManager.getPrincipalUserName().equals(metaFile.getUserName())) {
+            if (ThreadAuthenticator.getThreadUserName().equals(metaFile.getUserName())) {
             	LocalLogger.logToStdOut("getBinaryFile users match: " + metaFile.getUserName());
             } else {
-            	LocalLogger.logToStdOut("getBinaryFile file username: " + metaFile.getUserName() + " DOES NOT MATCH CALLER: " + HeadersManager.getPrincipalUserName());
+            	LocalLogger.logToStdOut("getBinaryFile file username: " + metaFile.getUserName() + " DOES NOT MATCH CALLER: " + ThreadAuthenticator.getThreadUserName());
             } 
             	
             File file = new File(dataFilePath);

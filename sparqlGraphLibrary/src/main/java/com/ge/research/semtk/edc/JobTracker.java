@@ -27,11 +27,11 @@ import java.util.UUID;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.security.PrincipalAwareClass;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -43,7 +43,7 @@ import com.ge.research.semtk.utility.Utility;
  *   and uses it to fulfill requests for info about a jobId.
  *
  */
-public class JobTracker extends PrincipalAwareClass {
+public class JobTracker {
 	JobEndpointProperties prop = null;
 	SparqlEndpointInterface endpoint = null;
 	
@@ -454,7 +454,7 @@ public class JobTracker extends PrincipalAwareClass {
 	public void createJob(String jobId) throws Exception {	    
 	    
 		// Testing only
-		LocalLogger.logToStdOut("creating job " + jobId + " principal.user_name=" + JobTracker.getPrincipalUserName());
+		LocalLogger.logToStdOut("creating job " + jobId + " principal.user_name=" + ThreadAuthenticator.getThreadUserName());
 		
 		// get the current date and time...
 		DateFormat xsdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");

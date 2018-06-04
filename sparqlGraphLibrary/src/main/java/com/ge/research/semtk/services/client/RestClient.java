@@ -43,6 +43,8 @@ import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import com.ge.research.semtk.auth.HeaderTable;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -61,33 +63,29 @@ public abstract class RestClient extends Client implements Runnable {
 
 	protected File fileParameter = null;
 	
-	// default headers for only this thread
-	private static ThreadLocal<ArrayList<BasicHeader>> defaultHeaders = new ThreadLocal<ArrayList<BasicHeader>>();
-
-	public static void setDefaultHeaders(Hashtable<String,List<String>> headerTable) {
-		
-		ArrayList<BasicHeader> headerList = new ArrayList<BasicHeader>();
-		// loop through hashtable and build default headers
-		for (String key : headerTable.keySet()) {
-			String value = headerTable.get(key).get(0);
-			for (int i=1; i < headerTable.get(key).size(); i++) {
-				value = value + "," + headerTable.get(key).get(i);
-			}
-			
-			BasicHeader header = new BasicHeader(key, value);
-			headerList.add(header);
-		}
-		
-		defaultHeaders.set(headerList);
-	}
-	
 	public static ArrayList<BasicHeader> getDefaultHeaders() {
-		ArrayList<BasicHeader> ret = defaultHeaders.get();
-		if (ret == null) {
-			ret = new ArrayList<BasicHeader>();
+		
+		HeaderTable headerTable = ThreadAuthenticator.getThreadHeaderTable();
+		ArrayList<BasicHeader> ret = new ArrayList<BasicHeader>();
+		
+		if (headerTable != null) {
+			// loop through hashtable and build default headers
+			for (String key : headerTable.keySet()) {
+				String value = headerTable.get(key).get(0);
+				for (int i=1; i < headerTable.get(key).size(); i++) {
+					value = value + "," + headerTable.get(key).get(i);
+				}
+				
+				BasicHeader header = new BasicHeader(key, value);
+				ret.add(header);
+			}
 		}
+		
 		return ret;
 	}
+	
+	
+	
 	/**
 	 * Constructor
 	 */
