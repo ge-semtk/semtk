@@ -42,7 +42,6 @@ multikill sparqlGraphStatusService
 multikill sparqlGraphResultsService
 multikill hiveService
 multikill sparqlExtDispatchService
-multikill rdbTimeCoherentTimeSeriesQueryGenService
 multikill nodeGroupExecutionService
 multikill nodeGroupService
 
