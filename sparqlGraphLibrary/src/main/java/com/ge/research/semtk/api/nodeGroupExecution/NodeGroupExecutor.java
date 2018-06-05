@@ -242,30 +242,36 @@ public class NodeGroupExecutor {
 	 * @param targetObjectSparqlID
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
 		// externalConstraints as used by executeQueryFromNodeGroup
 
+		LocalLogger.logToStdOut("Sending a " + qt + " query to the dispatcher...");
+		
+		if(externalConstraints != null){
+			LocalLogger.logToStdOut("Setting external constraints: " + externalConstraints.toJSONString());
+		}
+		
 		// apply the runtimeConstraints
 		if(runtimeConstraints != null){
+			LocalLogger.logToStdOut("Setting runtime constraints: " + runtimeConstraints.toJSONString());
 			RuntimeConstrainedItems rtci = new RuntimeConstrainedItems(ng);
 			rtci.applyConstraintJson(runtimeConstraints);
 		}
 		
 		if (limitOverride > 0) {
+			LocalLogger.logToStdOut("Setting limitOverride: " + limitOverride);
 			ng.setLimit(limitOverride);
 		}
 		if (offsetOverride > -1) {
+			LocalLogger.logToStdOut("Setting offsetOverride: " + offsetOverride);
 			ng.setOffset(offsetOverride);
-		}
-		// serialize the nodeGroup and connection info to JSON...
-		JSONObject serializedNodeGroup  = ng.toJson();
-		JSONObject serializedConnection = sc.toJson();
+		}		
 		
 		// assemble the nodeGroup and the connection into a nodegroup as the services want them.
-		JSONObject sendable = new JSONObject();
-		
-		sendable.put("sparqlConn", serializedConnection);
-		sendable.put("sNodeGroup", serializedNodeGroup);
+		JSONObject sendable = new JSONObject();		
+		sendable.put("sparqlConn", sc.toJson());  	// serialized connection
+		sendable.put("sNodeGroup", ng.toJson());	// serialized nodegroup
 		
 		SimpleResultSet simpleRes = null;
 		
@@ -276,26 +282,20 @@ public class NodeGroupExecutor {
 		else if(qt.equals(DispatcherSupportedQueryTypes.COUNT)){
 			simpleRes = this.drc.executeCountQueryFromNodeGroup(sendable, externalConstraints);			
 		}
-		else if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
-			
-			sendable.put("targetObjectSparqlID", targetObjectSparqlID);
-			
+		else if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){			
+			LocalLogger.logToStdOut("Setting targetObjectSparqlID: " + targetObjectSparqlID);
+			sendable.put("targetObjectSparqlID", targetObjectSparqlID);			
 			simpleRes = this.drc.executeFilterQueryFromNodeGroup(sendable, targetObjectSparqlID, externalConstraints);			
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.DELETE)){
 			simpleRes = this.drc.executeDeleteQueryFromNodeGroup(sendable, externalConstraints);			
 		}	
-		
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT)){
 			simpleRes = this.drc.executeConstructQueryFromNodeGroup(sendable, externalConstraints);
 		}
-
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION)){
 			simpleRes = this.drc.executeConstructQueryForInstanceManipulationFromNodeGroup(sendable, externalConstraints);
-		
 		}
-		
-		
 		else{
 			throw new Exception("NodeGroupExecutor:dispatchJob :: DispatcherSupportedQueryTypes type " + qt.name() + " is not currently supported.");
 		}
