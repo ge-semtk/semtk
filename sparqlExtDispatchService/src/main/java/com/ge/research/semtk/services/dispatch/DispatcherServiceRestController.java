@@ -34,29 +34,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.dispatch.DispatchProperties;
 import com.ge.research.semtk.services.dispatch.NodegroupRequestBody;
 import com.ge.research.semtk.services.dispatch.WorkThread;
 import com.ge.research.semtk.sparqlX.BadQueryException;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
-import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 
 @RestController
@@ -143,7 +137,7 @@ public class DispatcherServiceRestController {
 			
 			dsp = getDispatcher(props, requestId, ngrb, true, true);
 			
-			WorkThread doIt = new WorkThread(dsp, null, qt);
+			WorkThread doIt = new WorkThread(dsp, null, qt,  ThreadAuthenticator.getThreadHeaderTable());
 
 			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL)){
 				// we are going to launch straight from the raw sparql
@@ -204,7 +198,7 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
-			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), qt);
+			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), qt, ThreadAuthenticator.getThreadHeaderTable());
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				

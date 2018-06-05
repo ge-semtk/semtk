@@ -16,6 +16,8 @@
  */
 package com.ge.research.semtk.api.client.test;
 
+import org.json.simple.JSONObject;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -23,22 +25,40 @@ import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.Utility;
 
 import static org.junit.Assert.*;
+
+import java.util.UUID;
 
 public class NodeGroupExecutionClientTest_IT {
 		
 		private static NodeGroupExecutionClient nodeGroupExecutionClient = null;
+		private static NodeGroupStoreRestClient nodeGroupStoreClient = null;
+		private final static String ID = "test" + UUID.randomUUID();
 		
 		@BeforeClass
 		public static void setup() throws Exception {
 			// instantiate a client
 			nodeGroupExecutionClient = new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupExecutionServiceServer(), IntegrationTestUtility.getNodegroupExecutionServicePort()));
+			nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
 		}
+		
+		@AfterClass
+	    public static void teardown() throws Exception {
+	        // delete stored nodegroup when done with all tests
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+	    } 
 				
 		/**
 		 * Test ingesting data.
@@ -120,6 +140,26 @@ public class NodeGroupExecutionClientTest_IT {
 			assertEquals(TestGraph.getNumTriples(),123);	// confirm nothing loaded
 		}
 		
+		@Test
+		public void testSelectByNodegroupId() throws Exception {		
+			
+			// store a nodegroup (modified with the test graph)
+			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", "creator", ngJson);
+			
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			
+			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+			
+			// TestGraph already added the correct connection to the nodegroup
+			JSONObject defaultConn = NodeGroupExecutor.get_USE_NODEGROUP_CONN().toJson();
+			
+			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, defaultConn);
+			Table tab = nodeGroupExecutionClient.executeDispatchSelectByIdToTable(ID, defaultConn, null, null);
+			
+			assert(true);
+		}
 		
 	}
 

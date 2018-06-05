@@ -8,8 +8,7 @@ import java.io.IOException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.security.PrincipalAwareClass;
-import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 
 public class ResultsMetaFile {
 	private static final String META_SUFFIX = "_meta.json";
@@ -18,7 +17,7 @@ public class ResultsMetaFile {
 	
 	private String path = null;
 	private String filename = null;
-	private String username = PrincipalAwareClass.ANONYMOUS;
+	private String username = ThreadAuthenticator.ANONYMOUS;
 	
 	/**
 	 * Create a file for writing

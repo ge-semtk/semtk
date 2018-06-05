@@ -57,13 +57,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.security.PrincipalAwareClass;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -73,7 +73,7 @@ import com.ge.research.semtk.utility.LocalLogger;
  * This is an abstract class - create a subclass per implementation (Virtuoso, etc)
  */
 @SuppressWarnings("deprecation")
-public abstract class SparqlEndpointInterface extends PrincipalAwareClass {
+public abstract class SparqlEndpointInterface {
 
 	// NOTE: more than one thread cannot safely share a SparqlEndpointInterface.
 	// this is because of the state maintained for the results vars and connection 
@@ -333,11 +333,11 @@ public abstract class SparqlEndpointInterface extends PrincipalAwareClass {
 			try {
 				// TEMPORARY: remove
 				LocalLogger.logToStdOut(
-						"User: " + SparqlEndpointInterface.getPrincipalUserName() + "\n" +
-						"Query: " + query
+						"---------------------\nUser_name: " + 
+						ThreadAuthenticator.getThreadUserName() + "\n" +
+						"Query: " + query + 
+						"\n----------------------"
 						);
-				///////////////////////
-				
 				if(this.userName !=null && this.password != null){
 					return executeQueryAuthPost(query, resultType);
 				}else{
