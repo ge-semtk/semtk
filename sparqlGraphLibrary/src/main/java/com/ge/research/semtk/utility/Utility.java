@@ -142,10 +142,20 @@ public abstract class Utility {
 		
 	}
 	
+	/**
+	 * Create a JSONArray from a string
+	 */
 	public static JSONArray getJsonArrayFromString(String s) throws Exception{
-		return (JSONArray) (new JSONParser()).parse(s);
+		try{
+			return (JSONArray) (new JSONParser()).parse(s);
+		}catch(Exception e){
+			throw new Exception("Error parsing JSONArray from string '" + s + "': " + e.getMessage());
+		}
 	}
 	
+	/**
+	 * Create a JSONArray from a string array
+	 */
 	public static JSONArray getJsonArray(String[] arr) throws Exception{
 		JSONArray ret = new JSONArray();
 		for(String s : arr){
@@ -154,8 +164,15 @@ public abstract class Utility {
 		return ret;
 	}
 	
+	/**
+	 * Create a JSONObject from a string
+	 */
 	public static JSONObject getJsonObjectFromString(String s) throws Exception{
-		return (JSONObject) (new JSONParser()).parse(s);
+		try{
+			return (JSONObject) (new JSONParser()).parse(s);
+		}catch(Exception e){
+			throw new Exception("Error parsing JSONObject from string '" + s + "': " + e.getMessage());
+		}
    	}
 	
 	/**
