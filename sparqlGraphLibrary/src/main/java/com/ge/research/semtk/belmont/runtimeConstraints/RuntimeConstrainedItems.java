@@ -105,13 +105,10 @@ public class RuntimeConstrainedItems {
 		//       day if multiple primitive types become supported in ranges for properties.
 		
 		if(this.parentNodeGroup == null){
-			throw new Exception("RuntimConstrainedItems.applyConstraintJson :: the parent node group was null. unable to apply contraints to a null node group.");
+			throw new Exception("Node group is null. unable to apply runtime constraints.");
 		}
 		if(this.parentNodeGroup.getNodeCount() == 0){
-			throw new Exception("RuntimConstrainedItems.applyConstraintJson :: the parent node group was empty. unable to apply contraints to an empty node group.");
-		}
-		if(this.members.isEmpty() ){
-			return;
+			throw new Exception("Node group is empty. unable to apply runtime constraints.");
 		}
 		if(runtimeConstraints == null || runtimeConstraints.isEmpty()){
 			return; // nothing to do
@@ -128,7 +125,7 @@ public class RuntimeConstrainedItems {
 			
 			// get the object referenced by this sparql ID.
 			if(this.members.get(sparqlId) == null){
-				throw new Exception("Cannot apply runtime constraint for " + sparqlId);
+				throw new Exception("Cannot find runtime-constrainable item in nodegroup.  sparqlID: " + sparqlId);
 			}
 			if( this.members.get(sparqlId).getObjectType().equals(SupportedTypes.NODE) ){
 				// this was a node and the type should be URI.
@@ -139,7 +136,7 @@ public class RuntimeConstrainedItems {
 				operandType = this.members.get(sparqlId).getValueType();  // this should return the expected XSD type with no prefix. 
 			}
 			else{
-				throw new Exception("RuntimeConstrainedItems.applyConstraintJson :: " + this.members.get(sparqlId).getObjectType() + " was not understood for " + sparqlId);
+				throw new Exception("Can't apply runtime constraints to object type " + this.members.get(sparqlId).getObjectType() + " for sparqlID: " + sparqlId);
 			}
 			
 			JSONArray opers = (JSONArray) c1.get("Operands");
@@ -154,7 +151,7 @@ public class RuntimeConstrainedItems {
 				}
 			} catch(Exception eee){
 				// we were passed a bad value that could not be cast to the suggested type.
-				throw new Exception("RuntimConstrainedItems.applyConstraintJson :: for " + sparqlId + " one of the input values could not be cast to " + operandType);
+				throw new Exception("Runtime constraint value for " + sparqlId + " one of the input values could not be cast to " + operandType);
 			}
 			
 			SupportedOperations operationValue = null;
@@ -163,12 +160,9 @@ public class RuntimeConstrainedItems {
 			try{
 				operationValue = SupportedOperations.valueOf(operator);
 					// do nothing. we just needed this check to make it all work
-					
-				
 			}
 			catch(Exception eee){
-				// we were passed a bad value that could not be cast to the suggested type.
-				throw new Exception("RuntimConstrainedItems.applyConstraintJson :: for " + sparqlId + " the operator " + operator + " was not found in the ");
+				throw new Exception("Runtime constraint operator " + operator + " for sparqlID " + sparqlId +  " is not supported");
 			}
 			
 			// create the appropriate constraint and apply it.
