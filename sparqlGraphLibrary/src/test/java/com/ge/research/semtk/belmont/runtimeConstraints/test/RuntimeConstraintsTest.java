@@ -139,7 +139,7 @@ public class RuntimeConstraintsTest {
 			rtci.applyConstraintJson(invalidRuntimeConstraintJSON);
 		}catch(Exception e){
 			exceptionThrown = true;
-			assertTrue(e.getMessage().contains("Cannot apply runtime constraint for ?durationInYears"));
+			assertTrue(e.getMessage().contains("Cannot find runtime-constrainable item in nodegroup.  sparqlID: ?durationInYears"));
 		}
 		assertTrue(exceptionThrown);
 	}
