@@ -521,7 +521,7 @@ public class ResultsClientTest_IT {
 		// Error case
 		
 		String fileContent = client.execReadBinaryFile("wrongId");
-		assert(fileContent.contains("not found"));
+		assertTrue(fileContent.contains("not found"));
 	}
 
 

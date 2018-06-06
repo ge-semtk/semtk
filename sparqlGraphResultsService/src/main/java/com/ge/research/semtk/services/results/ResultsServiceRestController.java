@@ -306,8 +306,14 @@ public class ResultsServiceRestController {
         	try {
         		// try to return an error
         		resp.setHeader("Content-Disposition", "attachment; filename=\"resultExpired.html\"");
-	            File f = new File(getClass().getClassLoader().getResource("resultExpired.html").getFile());
-	            return new FileSystemResource(f);
+	           
+        		File f = File.createTempFile("error", ".html");
+	            f.deleteOnExit();
+	            BufferedWriter bw = new BufferedWriter(new FileWriter(f ));
+	    	    bw.write("<html><body>Result was not found. It is incorrect or it has expired.</body></html>\n");
+	    	    bw.close();
+	            
+	            return new FileSystemResource(f); 
         	} catch (Exception e1) {
         		
         		// failed to return error; return null
