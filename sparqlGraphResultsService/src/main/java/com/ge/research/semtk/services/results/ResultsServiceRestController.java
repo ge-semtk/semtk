@@ -306,7 +306,7 @@ public class ResultsServiceRestController {
         	try {
         		// try to return an error
         		resp.setHeader("Content-Disposition", "attachment; filename=\"resultExpired.html\"");
-	            File f = new File(getClass().getClassLoader().getResource("resultExpired.html").getFile());
+	            File f = new File("src/main/resources/resultExpired.html");
 	            return new FileSystemResource(f);
         	} catch (Exception e1) {
         		
