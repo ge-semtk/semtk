@@ -132,7 +132,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		return this.jobID;
 	}
 	
-	public abstract TableResultSet execute(Object ExecutionSpecificConfigObject, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception;
+	public abstract TableResultSet execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception;
 	
 	protected int updateRunStatus(float increment, int last, int ceiling) throws UnableToSetStatusException{
 		int retval = ceiling;

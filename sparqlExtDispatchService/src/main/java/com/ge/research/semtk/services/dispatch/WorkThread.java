@@ -19,6 +19,7 @@ package com.ge.research.semtk.services.dispatch;
 
 import java.net.ConnectException;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.HeaderTable;
@@ -32,6 +33,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class WorkThread extends Thread {
 	AsynchronousNodeGroupBasedQueryDispatcher dsp;
 	JSONObject constraintJson;
+	JSONArray flagsJsonArray;
 
 	DispatcherSupportedQueryTypes myQT;
 	String targetObjectSparqlID;
@@ -39,14 +41,15 @@ public class WorkThread extends Thread {
 	HeaderTable headerTable = null;
 	
 	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, DispatcherSupportedQueryTypes qt){
-		this(dsp, constraintJson, qt, null);
+	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, JSONArray flagsJsonArray, DispatcherSupportedQueryTypes qt){
+		this(dsp, constraintJson, flagsJsonArray, qt, null);
 	}
 	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, DispatcherSupportedQueryTypes qt, HeaderTable headerTable){
+	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, JSONArray flagsJsonArray, DispatcherSupportedQueryTypes qt, HeaderTable headerTable){
 		this.dsp = dsp;
 		this.myQT = qt;
 		this.constraintJson = constraintJson;
+		this.flagsJsonArray = flagsJsonArray;
 		this.headerTable = headerTable;
 	}
 	
@@ -74,7 +77,7 @@ public class WorkThread extends Thread {
 			
 			else{
 				// query from the node group itself. 
-				TableResultSet trs = this.dsp.execute(constraintJson, this.myQT, targetObjectSparqlID);
+				TableResultSet trs = this.dsp.execute(constraintJson, flagsJsonArray, this.myQT, targetObjectSparqlID);
 			}	
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);		
