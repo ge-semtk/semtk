@@ -310,7 +310,7 @@ public class ResultsServiceRestController {
         		File f = File.createTempFile("error", ".html");
 	            f.deleteOnExit();
 	            BufferedWriter bw = new BufferedWriter(new FileWriter(f ));
-	    	    bw.write("<html><body>Requested result is incorrect, or has expired.</body></html>\n");
+	    	    bw.write("<html><body>Result was not found. It is incorrect or it has expired.</body></html>\n");
 	    	    bw.close();
 	            
 	            return new FileSystemResource(f); 
