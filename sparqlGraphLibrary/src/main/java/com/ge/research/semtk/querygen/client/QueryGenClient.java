@@ -26,8 +26,6 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
 public abstract class QueryGenClient extends RestClient {
-
-	public abstract TableResultSet execute(Table locationAndValueInfoTable, JSONObject constraintsJson) throws Exception;
 	
 	public abstract TableResultSet execute(Table locationAndValueInfoTable, JSONObject constraintsJson, JSONArray flagsJsonArray) throws Exception;
 	
