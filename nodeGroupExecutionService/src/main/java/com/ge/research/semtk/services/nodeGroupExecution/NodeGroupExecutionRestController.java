@@ -351,6 +351,7 @@ public class NodeGroupExecutionRestController {
 			// dispatch the job. 
 			ngExecutor.dispatchJob(qt, connection, requestBody.getNodeGroupId(), 
 					requestBody.getExternalDataConnectionConstraintsJson(), 
+					requestBody.getFlagsJson(),
 					requestBody.getRuntimeConstraintsJson(), 
 					requestBody.getLimitOverride(),
 					requestBody.getOffsetOverride(),
@@ -423,6 +424,7 @@ public class NodeGroupExecutionRestController {
 			// dispatch the job. 
 			ngExecutor.dispatchJob(qt, connection, ng, 
 					requestBody.getExternalDataConnectionConstraintsJson(), 
+					null,
 					requestBody.getRuntimeConstraintsJson(), 
 					-1,
 					-1,

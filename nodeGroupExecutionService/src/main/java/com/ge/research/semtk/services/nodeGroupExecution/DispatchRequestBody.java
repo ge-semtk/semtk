@@ -22,9 +22,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.ge.research.semtk.utility.Utility;
+
 public class DispatchRequestBody extends SparqlConnRequestBody {
 	
 	private String externalDataConnectionConstraints;
+	private String flags; // json array
 	private String runtimeConstraints;
 	
 	private JSONObject getJson(String prop) throws ParseException {
@@ -46,13 +49,14 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	public JSONObject getExternalDataConnectionConstraintsJson() throws ParseException {
 		return getJson(this.externalDataConnectionConstraints);
 	}
-	
 	public String getExternalDataConnectionConstraints() {
 		return externalDataConnectionConstraints;
 	}
 	public void setExternalDataConnectionConstraints(String externalDataConnectionConstraints) {
 		this.externalDataConnectionConstraints = externalDataConnectionConstraints;
 	}
+	
+	
 	public JSONArray getRuntimeConstraintsJson() throws ParseException {
 		return this.getJsonArray(this.runtimeConstraints);
 	}
@@ -61,6 +65,17 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	}
 	public void setRuntimeConstraints(String runtimeConstraints){
 		this.runtimeConstraints = runtimeConstraints;
+	}
+	
+	
+	public JSONArray getFlagsJson() throws Exception {
+		return Utility.getJsonArrayFromString(this.runtimeConstraints);
+	}
+	public String getFlags() {
+		return flags;
+	}
+	public void setFlags(String flags) {
+		this.flags = flags;
 	}
 	
 	/**
@@ -72,6 +87,7 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 
 		// all in this class are optional
 	}
+
 
 }
 
