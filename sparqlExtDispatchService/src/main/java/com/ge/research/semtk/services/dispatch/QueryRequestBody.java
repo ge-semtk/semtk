@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +17,22 @@
 
 package com.ge.research.semtk.services.dispatch;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 public class QueryRequestBody extends NodegroupRequestBody {
 
 	// revisit this later to determine the best way to insert user information in case we want to
 	// to bolt security to it . 
 	
-	private String constraintSet;
+	private String constraintSet;	
+	private String flags;			// a string parseable to a JSONArray
 
 	public void setConstraintSet(String constraintSet){
 		this.constraintSet = constraintSet;
@@ -37,6 +40,14 @@ public class QueryRequestBody extends NodegroupRequestBody {
 	
 	public String getConstraintSet(){
 		return this.constraintSet;
+	}
+	
+	public String getFlags() {
+		return flags;
+	}
+	
+	public void setFlags(String flagsJsonArrayStr) {
+		this.flags = flagsJsonArrayStr;
 	}
 	
 	public JSONObject getConstraintSetJson(){
@@ -51,4 +62,12 @@ public class QueryRequestBody extends NodegroupRequestBody {
 		}
 		return retval;
 	}
+
+	public JSONArray getFlagsJsonArray() throws Exception{
+		if(this.flags != null && !this.flags.trim().isEmpty()){
+			return Utility.getJsonArrayFromString(this.flags);
+		}
+		return null;
+	}
+	
 }

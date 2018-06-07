@@ -277,7 +277,7 @@ public class NodeGroupExecutor {
 		
 		// select the appropriate type and try to dispatch the job.
 		if(qt.equals(DispatcherSupportedQueryTypes.SELECT_DISTINCT)){
-			simpleRes = this.drc.executeSelectQueryFromNodeGroup(sendable, externalConstraints);
+			simpleRes = this.drc.executeSelectQueryFromNodeGroup(sendable, externalConstraints, null); // TODO make 3rd arg flags
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.COUNT)){
 			simpleRes = this.drc.executeCountQueryFromNodeGroup(sendable, externalConstraints);			

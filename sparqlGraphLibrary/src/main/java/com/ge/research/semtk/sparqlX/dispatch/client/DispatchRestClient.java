@@ -17,6 +17,7 @@
 
 package com.ge.research.semtk.sparqlX.dispatch.client;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -48,7 +49,7 @@ public class DispatchRestClient extends RestClient{
 	}
 	
 	
-	public SimpleResultSet executeSelectQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject constraints) throws Exception{
+	public SimpleResultSet executeSelectQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject constraints, JSONArray flags) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -64,6 +65,7 @@ public class DispatchRestClient extends RestClient{
 		conf.setServiceEndpoint("dispatcher/querySelectFromNodeGroup");
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
 		this.parametersJSON.put("constraintSet", constraints.toJSONString());
+		this.parametersJSON.put("flags", flags.toJSONString());
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
@@ -74,6 +76,7 @@ public class DispatchRestClient extends RestClient{
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("jsonRenderedNodeGroup");
 			this.parametersJSON.remove("constraintSet");
+			this.parametersJSON.remove("flags");
 		}
 		
 		return retval;

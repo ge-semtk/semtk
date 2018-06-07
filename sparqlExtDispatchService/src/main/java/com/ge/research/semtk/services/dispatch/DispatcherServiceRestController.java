@@ -198,7 +198,7 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
-			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), null, qt, ThreadAuthenticator.getThreadHeaderTable()); // TODO change 3rd arg to flags
+			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), requestBody.getFlagsJsonArray(), qt, ThreadAuthenticator.getThreadHeaderTable());
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				
