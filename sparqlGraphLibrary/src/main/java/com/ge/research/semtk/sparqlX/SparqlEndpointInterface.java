@@ -332,12 +332,12 @@ public abstract class SparqlEndpointInterface {
 			tryCount++;
 			try {
 				// TEMPORARY: remove
-				LocalLogger.logToStdOut(
-						"---------------------\nUser_name: " + 
-						ThreadAuthenticator.getThreadUserName() + "\n" +
-						"Query: " + query + 
-						"\n----------------------"
-						);
+//				LocalLogger.logToStdOut(
+//						"---------------------\nUser_name: " + 
+//						ThreadAuthenticator.getThreadUserName() + "\n" +
+//						"Query: " + query + 
+//						"\n----------------------"
+//						);
 				if(this.userName !=null && this.password != null){
 					return executeQueryAuthPost(query, resultType);
 				}else{
