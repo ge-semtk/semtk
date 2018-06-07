@@ -41,6 +41,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String JSON_KEY_SPARQL_CONNECTION = "sparqlConnection";
 	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
 	private static final String JSON_KEY_EDC_CONSTRAINTS = "externalDataConnectionConstraints";
+	private static final String JSON_KEY_FLAGS = "flags";
 	
 	// service mapping
 	private static final String mappingPrefix = "/nodeGroupExecution";
@@ -411,7 +412,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	public SimpleResultSet executeDispatchConstructById(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
-		return this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson, -1, -1);
+		return this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, null, runtimeConstraintsJson, -1, -1);
 	}
 		
 	@SuppressWarnings("unchecked")
@@ -863,14 +864,15 @@ public class NodeGroupExecutionClient extends RestClient {
  * @param nodegroupID    -- string ID for the nodegroup to be executed. this assumes that the node group resides in a nodegroup store that was config'd on the far end (service)
  * @param sparqlConnectionJson -- the sparql connection rendered to JSON. please see com.ge.research.semtk.sparqlX.SparqlConnection for details.
  * @param edcConstraintsJson -- the EDC Constraints rendered as JSON. expected format {\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[]}} . these will be better documented in the future.
+ * @param flagsJson -- an array of flag strings rendered as a JSON array (e.g. ["RDB_QUERYGEN_OMIT_ALIASES"])
  * @param runtimeConstraintsJson -- the runtime constraints rendered as JSON. this is an array of JSON objects of the format 
  * 									{"SparqlID" : "<value>", "Operator" : "<operator>", "Operands" : [<operands>] }
  * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
  * @return
  */
 
-	public String executeDispatchByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
-		SimpleResultSet ret =  this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson, limitOverride, offsetOverride);
+	public String executeDispatchByIdWithSimpleReturn(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
+		SimpleResultSet ret =  this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, flagsJson, runtimeConstraintsJson, limitOverride, offsetOverride);
 		return ret.getResult("JobId");
 	}
 	
@@ -880,11 +882,11 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	public SimpleResultSet executeDispatchById(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
-		return this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson, -1, -1);
+		return this.executeDispatchById(nodegroupID, sparqlConnectionJson, edcConstraintsJson, null, runtimeConstraintsJson, -1, -1);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public SimpleResultSet executeDispatchById(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
+	public SimpleResultSet executeDispatchById(String nodegroupID, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchByIdEndpoint);
@@ -894,6 +896,7 @@ public class NodeGroupExecutionClient extends RestClient {
 
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlConnectionJson.toJSONString());
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_FLAGS, flagsJson == null ? null : flagsJson.toJSONString());
 		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
