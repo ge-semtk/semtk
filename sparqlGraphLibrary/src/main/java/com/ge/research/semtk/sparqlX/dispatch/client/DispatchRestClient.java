@@ -65,7 +65,7 @@ public class DispatchRestClient extends RestClient{
 		conf.setServiceEndpoint("dispatcher/querySelectFromNodeGroup");
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
 		this.parametersJSON.put("constraintSet", constraints.toJSONString());
-		this.parametersJSON.put("flags", flags.toJSONString());
+		this.parametersJSON.put("flags", (flags == null) ? null : flags.toJSONString());
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
