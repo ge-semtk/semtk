@@ -16,9 +16,9 @@
  */
 
 
-package com.ge.research.semtk.services.nodeGroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-public class FilterDispatchByIdRequestBody extends DispatchByIdRequestBody{
+public class FilterDispatchFromNodeGroupRequestBody extends DispatchFromNodegroupRequestBody {
 	private String targetObjectSparqlId;
 
 	public String getTargetObjectSparqlId() {

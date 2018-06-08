@@ -15,29 +15,25 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class SparqlConnRequestBody {
+public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
+
+	private String templateId = "";
+	private String csvContent = "";
 	
-	private String sparqlConnection;
-	
-	public SparqlConnection getSparqlConnection() throws Exception {
-		return new SparqlConnection(this.sparqlConnection);
+	public String getTemplateId() {
+		return templateId;
 	}
-	
-	public void setSparqlConnection(String sparqlConnection) {
-		this.sparqlConnection = sparqlConnection;
+	public void setTemplateId(String templateId) {
+		this.templateId = templateId;
 	}
-	
-	/**
-	 * Validate request contents.  Throws an exception if validation fails.
-	 */
-	public void validate() throws Exception{
-		if(sparqlConnection == null || sparqlConnection.trim().isEmpty()){
-			throw new Exception("Request is missing 'sparqlConnection'");
-		}
+	public String getCsvContent() {
+		return csvContent;
+	}
+	public void setCsvContent(String csvContent) {
+		this.csvContent = csvContent;
 	}
 }
-

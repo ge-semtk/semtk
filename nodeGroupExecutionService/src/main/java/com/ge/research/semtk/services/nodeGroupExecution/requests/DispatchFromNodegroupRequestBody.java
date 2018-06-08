@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

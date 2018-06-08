@@ -15,32 +15,32 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class IngestByNodegroupCsvStrRequestBody {
-
-	private String template = "";
-	private String sparqlConnection = "";
-	private String csvContent = "";
+public class DispatchRawSparqlRequestBody {
+	private String sparqlConnection;
+	private String sparql;
 	
-	public String getTemplate() {
-		return template;
-	}
-	public void setTemplate(String template) {
-		this.template = template;
-	}
 	public SparqlConnection getSparqlConnection() throws Exception {
 		return new SparqlConnection(sparqlConnection);
 	}
 	public void setSparqlConnection(String sparqlConnection) {
 		this.sparqlConnection = sparqlConnection;
 	}
-	public String getCsvContent() {
-		return csvContent;
+
+	public String getSparql() {
+		return sparql;
 	}
-	public void setCsvContent(String csvContent) {
-		this.csvContent = csvContent;
+
+	public void setSparql(String sparql) {
+		this.sparql = sparql;
 	}
+
+	
 }

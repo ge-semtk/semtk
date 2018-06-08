@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2016 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,32 +15,29 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class DispatchRawSparqlRequestBody {
+public class SparqlConnRequestBody {
+	
 	private String sparqlConnection;
-	private String sparql;
 	
 	public SparqlConnection getSparqlConnection() throws Exception {
-		return new SparqlConnection(sparqlConnection);
+		return new SparqlConnection(this.sparqlConnection);
 	}
+	
 	public void setSparqlConnection(String sparqlConnection) {
 		this.sparqlConnection = sparqlConnection;
 	}
-
-	public String getSparql() {
-		return sparql;
-	}
-
-	public void setSparql(String sparql) {
-		this.sparql = sparql;
-	}
-
 	
+	/**
+	 * Validate request contents.  Throws an exception if validation fails.
+	 */
+	public void validate() throws Exception{
+		if(sparqlConnection == null || sparqlConnection.trim().isEmpty()){
+			throw new Exception("Request is missing 'sparqlConnection'");
+		}
+	}
 }
+

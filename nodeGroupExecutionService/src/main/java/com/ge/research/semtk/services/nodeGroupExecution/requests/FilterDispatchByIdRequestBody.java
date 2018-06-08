@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2017 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +15,19 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
 
-import com.ge.research.semtk.sparqlX.SparqlConnection;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
+public class FilterDispatchByIdRequestBody extends DispatchByIdRequestBody{
+	private String targetObjectSparqlId;
 
-	private String templateId = "";
-	private String csvContent = "";
+	public String getTargetObjectSparqlId() {
+		return targetObjectSparqlId;
+	}
+
+	public void setTargetObjectSparqlId(String targetObjectSparqlId) {
+		this.targetObjectSparqlId = targetObjectSparqlId;
+	}
 	
-	public String getTemplateId() {
-		return templateId;
-	}
-	public void setTemplateId(String templateId) {
-		this.templateId = templateId;
-	}
-	public String getCsvContent() {
-		return csvContent;
-	}
-	public void setCsvContent(String csvContent) {
-		this.csvContent = csvContent;
-	}
+	
 }

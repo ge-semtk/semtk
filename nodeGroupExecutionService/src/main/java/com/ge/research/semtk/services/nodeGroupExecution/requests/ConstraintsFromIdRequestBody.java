@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2017 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +15,18 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-// Paul May 2018
-// This is a bad copy of the status service version.
-// It needs to be fixed but somehow without breaking backwards compatibility.
-public class StatusRequestBody {
-	private String jobID;
+public class ConstraintsFromIdRequestBody {
+	private String NodegroupId;
+
+	public String getNodegroupId() {
+		return NodegroupId;
+	}
+
+	public void setNodegroupId(String nodegroupId) {
+		NodegroupId = nodegroupId;
+	}
 	
-	public void setJobID(String jobID){
-		this.jobID = jobID;
-	}
-	public String getJobID(){
-		return this.jobID;
-	}
+	
 }

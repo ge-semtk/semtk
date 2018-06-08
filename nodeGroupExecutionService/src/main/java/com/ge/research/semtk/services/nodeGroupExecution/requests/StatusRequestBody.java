@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2016 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,18 @@
  ** limitations under the License.
  */
 
+package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-package com.ge.research.semtk.services.nodeGroupExecution;
-
-public class FilterDispatchFromNodeGroupRequestBody extends DispatchFromNodegroupRequestBody {
-	private String targetObjectSparqlId;
-
-	public String getTargetObjectSparqlId() {
-		return targetObjectSparqlId;
-	}
-
-	public void setTargetObjectSparqlId(String targetObjectSparqlId) {
-		this.targetObjectSparqlId = targetObjectSparqlId;
-	}
+// Paul May 2018
+// This is a bad copy of the status service version.
+// It needs to be fixed but somehow without breaking backwards compatibility.
+public class StatusRequestBody {
+	private String jobID;
 	
-	
+	public void setJobID(String jobID){
+		this.jobID = jobID;
+	}
+	public String getJobID(){
+		return this.jobID;
+	}
 }
