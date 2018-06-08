@@ -229,7 +229,7 @@ public class NodeGroupExecutor {
 	}
 	
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception{
-		this.dispatchJob(qt, sc, ng, externalConstraints, runtimeConstraints, -1, -1, targetObjectSparqlID);
+		this.dispatchJob(qt, sc, ng, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
 	
 	/**
@@ -243,7 +243,7 @@ public class NodeGroupExecutor {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
+	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
 		// externalConstraints as used by executeQueryFromNodeGroup
 
 		LocalLogger.logToStdOut("Sending a " + qt + " query to the dispatcher...");
@@ -277,7 +277,7 @@ public class NodeGroupExecutor {
 		
 		// select the appropriate type and try to dispatch the job.
 		if(qt.equals(DispatcherSupportedQueryTypes.SELECT_DISTINCT)){
-			simpleRes = this.drc.executeSelectQueryFromNodeGroup(sendable, externalConstraints);
+			simpleRes = this.drc.executeSelectQueryFromNodeGroup(sendable, externalConstraints, flags);
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.COUNT)){
 			simpleRes = this.drc.executeCountQueryFromNodeGroup(sendable, externalConstraints);			
@@ -305,7 +305,7 @@ public class NodeGroupExecutor {
 	}
 	
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception{
-		this.dispatchJob(qt, sc, storedNodeGroupId, externalConstraints, runtimeConstraints, -1, -1, targetObjectSparqlID);
+		this.dispatchJob(qt, sc, storedNodeGroupId, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
 	/**
 	 * 
@@ -317,7 +317,7 @@ public class NodeGroupExecutor {
 	 * @param targetObjectSparqlID
 	 * @throws Exception
 	 */
-	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
+	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
 		
 		// get the node group from the remote store
 		TableResultSet trs = this.ngsrc.executeGetNodeGroupById(storedNodeGroupId);
@@ -341,14 +341,11 @@ public class NodeGroupExecutor {
 		if (SparqlGraphJson.isSparqlGraphJson(encodedNodeGroup)) {
 			
 			// SparqlGraphJson
-			SparqlGraphJson sgJson = new SparqlGraphJson(encodedNodeGroup);
-			
-			ng.addJsonEncodedNodeGroup(sgJson.getSNodeGroupJson());
-			
+			SparqlGraphJson sgJson = new SparqlGraphJson(encodedNodeGroup);			
+			ng.addJsonEncodedNodeGroup(sgJson.getSNodeGroupJson());			
 			if (NodeGroupExecutor.isUseNodegroupConn(sc)) {
 				conn = sgJson.getSparqlConn();
-			}
-			
+			}		
 		
 		} else if (NodeGroup.isNodeGroup(encodedNodeGroup)) {
 			
@@ -365,17 +362,17 @@ public class NodeGroupExecutor {
 		}
 		
 		// dispatch the job itself
-		this.dispatchJob(qt, conn, ng, externalConstraints, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID);
+		this.dispatchJob(qt, conn, ng, externalConstraints, flags, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID);
 	}
 	
 	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception {
-		return dispatchJobSynchronous(qt, sc, storedNodeGroupId, externalConstraints, runtimeConstraints, -1, -1, targetObjectSparqlID);
+		return dispatchJobSynchronous(qt, sc, storedNodeGroupId, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
 		
-	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
+	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
 		
 		// dispatch the job
-		this.dispatchJob(qt, sc, storedNodeGroupId, externalConstraints, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID) ;
+		this.dispatchJob(qt, sc, storedNodeGroupId, externalConstraints, flags, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID) ;
 		
 		// wait on the job to complete
 		this.waitOnJobCompletion();
@@ -390,13 +387,13 @@ public class NodeGroupExecutor {
 	}
 	
 	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception {
-		return this.dispatchJobSynchronous(qt, sc, ng, externalConstraints, runtimeConstraints, -1, -1, targetObjectSparqlID);
+		return this.dispatchJobSynchronous(qt, sc, ng, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
 	
-	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
+	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
 		
 		// dispatch the job
-		this.dispatchJob(qt, sc, ng, externalConstraints, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID) ;
+		this.dispatchJob(qt, sc, ng, externalConstraints, flags, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID) ;
 		
 		// wait on the job to complete
 		this.waitOnJobCompletion();

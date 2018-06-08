@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.querygen.client;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.Table;
@@ -25,7 +26,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
 public abstract class QueryGenClient extends RestClient {
-
-	public abstract TableResultSet execute(Table locationAndValueInfoTable, JSONObject constraintsJson) throws Exception;
+	
+	public abstract TableResultSet execute(Table locationAndValueInfoTable, JSONObject constraintsJson, JSONArray flagsJsonArray) throws Exception;
 	
 }

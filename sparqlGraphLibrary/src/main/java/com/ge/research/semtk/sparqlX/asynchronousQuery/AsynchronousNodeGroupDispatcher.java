@@ -90,7 +90,7 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 	 * Simplest form of dispatcher execute:  get SPARQL and execute it.
 	 */
 	@Override
-	public TableResultSet execute(Object ExecutionSpecificConfigObject, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception {
+	public TableResultSet execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception {
 	TableResultSet retval = null; // expect this to get instantiated with the appropriate subclass.		
 		
 		try{
