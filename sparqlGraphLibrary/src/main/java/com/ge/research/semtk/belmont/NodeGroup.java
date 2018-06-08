@@ -1787,21 +1787,9 @@ public class NodeGroup {
 		return  ret;
 	}
 	
-	public String changeSparqlID(PropertyItem obj, String requestID) {
-		// API call for any object with get/setSparqlID:
-		// set an object's sparqlID, making sure it is legal, unique, nameHash,
-		// etc...
-		// return the new id, which may be slightly different than the requested
-		// id.
-
-		this.freeSparqlID(obj.getSparqlID());
-		String newID = BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
-		this.reserveSparqlID(newID);
-		obj.setSparqlID(newID);
-		return newID;
-	}
 	
-	public String changeSparqlID(Node obj, String requestID) {
+
+	public String changeSparqlID(Returnable obj, String requestID) {
 		// API call for any object with get/setSparqlID:
 		// set an object's sparqlID, making sure it is legal, unique, nameHash,
 		// etc...

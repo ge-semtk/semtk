@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.services.nodeGroupService;
 
+import java.util.ArrayList;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONArray;
@@ -34,8 +36,13 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest;
+import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdReturnedRequest;
+import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdTupleRequest;
+import com.ge.research.semtk.services.nodeGroupService.requests.SparqlIdReturnedTuple;
+import com.ge.research.semtk.services.nodeGroupService.requests.SparqlIdTuple;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdRequest;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -262,6 +269,94 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	@CrossOrigin
+	@RequestMapping(value="/setIsReturned", method=RequestMethod.POST)
+	public JSONObject setReturnsBySparqlId(@RequestBody NodegroupSparqlIdReturnedRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			requestBody.validate();
+			NodeGroup ng = requestBody.getNodeGroup();
+			
+			for (SparqlIdReturnedTuple tuple : requestBody.getSparqlIdBooleanTuples()) {
+				Returnable item = ng.getItemBySparqlID(tuple.getSparqlId());
+				if (item == null) {
+					throw new Exception("sparqlId was not found: " + tuple.getSparqlId());
+				}
+				item.setIsReturned(tuple.isReturned());
+			}
+			
+			retval.addResult("nodegroup", ng.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "setIsReturned", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/changeSparqlIds", method=RequestMethod.POST)
+	public JSONObject renameItems(@RequestBody NodegroupSparqlIdTupleRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			requestBody.validate();
+			NodeGroup ng = requestBody.getNodeGroup();
+			
+			for (SparqlIdTuple tuple : requestBody.getSparqlIdTuples()) {
+				Returnable itemFrom = ng.getItemBySparqlID(tuple.getSparqlIdFrom());
+				if (itemFrom == null) {
+					throw new Exception("sparqlId was not found: " + tuple.getSparqlIdFrom());
+				}
+				String newId = ng.changeSparqlID(itemFrom, tuple.getSparqlIdTo());
+				if (!newId.equals(tuple.getSparqlIdTo())) {
+					throw new Exception("sparqlId is already in use: " + tuple.getSparqlIdTo());
+				}
+			}
+			
+			retval.addResult("nodegroup", ng.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "changeSparqlIds", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/getReturnedSparqlIds", method=RequestMethod.POST)
+	public JSONObject getReturns(@RequestBody NodegroupRequest requestBody){
+		TableResultSet retval = new TableResultSet(false);
+
+		try {
+			requestBody.validate();
+			
+			NodeGroup ng = this.getNodeGroupFromJson(requestBody.getJsonNodeGroup());
+			ArrayList<Returnable> items = ng.getReturnedItems();
+			
+			// create a new table of sparqlId strings
+			Table table = new Table(new String[]{"sparqlId"}, new String[]{"string"});
+			for (Returnable item : items) {
+				table.addRow(new String[] { item.getSparqlID() } );
+			}
+			retval.addResults(table);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getReturnedSparqlIds", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
 	
 	// helper method to figure out if we are looking at a nodegroup alone or a sparqlgraphJSON
 	// and return a nodegroup from it.

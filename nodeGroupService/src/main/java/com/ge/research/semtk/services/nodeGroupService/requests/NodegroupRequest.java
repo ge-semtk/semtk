@@ -21,13 +21,17 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.belmont.NodeGroup;
 
 public class NodegroupRequest {
 
 	private String jsonRenderedNodeGroup;
 	
-	public JSONObject getJsonNodeGroup(){
+	public NodeGroup getNodeGroup() throws Exception {
+		return NodeGroup.getInstanceFromJson(this.getJsonNodeGroup());
+	}
+	
+	public JSONObject getJsonNodeGroup() throws Exception {
 		
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
@@ -35,8 +39,7 @@ public class NodegroupRequest {
 		try {
 			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			LocalLogger.printStackTrace(e);
+			throw new Exception("Error parsing nodegroup json", e);
 		}
 		return retval;
 	}
@@ -45,4 +48,7 @@ public class NodegroupRequest {
 		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
 	}
 	
+	public void validate() throws Exception {
+		// all validation happens in getJsonNodeGroup
+	}
 }
