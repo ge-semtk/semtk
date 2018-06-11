@@ -1,11 +1,14 @@
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 
 public class NodegroupSparqlIdTupleRequest extends NodegroupRequest {
-	ArrayList<SparqlIdTuple> sparqlIdTuples = null;
+	List<SparqlIdTuple> sparqlIdTuples = null;
 
-	public ArrayList<SparqlIdTuple> getSparqlIdTuples() {
+	public List<SparqlIdTuple> getSparqlIdTuples() {
 		return sparqlIdTuples;
 	}
 

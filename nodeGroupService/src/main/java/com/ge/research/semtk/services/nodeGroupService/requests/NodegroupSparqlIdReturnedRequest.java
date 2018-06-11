@@ -2,14 +2,16 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import java.util.ArrayList;
 
+import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
+
 public class NodegroupSparqlIdReturnedRequest extends NodegroupRequest {
 	ArrayList<SparqlIdReturnedTuple> sparqlIdReturnedTuples = null;
 
-	public ArrayList<SparqlIdReturnedTuple> getSparqlIdBooleanTuples() {
+	public ArrayList<SparqlIdReturnedTuple> getSparqlIdReturnedTuples() {
 		return sparqlIdReturnedTuples;
 	}
 
-	public void setSparqlIdBooleanTuples(ArrayList<SparqlIdReturnedTuple> sparqlIdBooleanTuples) {
+	public void setSparqlIdReturnedTuples(ArrayList<SparqlIdReturnedTuple> sparqlIdBooleanTuples) {
 		this.sparqlIdReturnedTuples = sparqlIdBooleanTuples;
 	}
 

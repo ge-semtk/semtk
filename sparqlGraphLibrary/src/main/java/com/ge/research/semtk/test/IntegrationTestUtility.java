@@ -109,7 +109,13 @@ public class IntegrationTestUtility {
 	public static int getHiveServicePort() throws Exception{
 		return Integer.valueOf(getIntegrationTestProperty("integrationtest.hiveservice.port")).intValue();
 	}
-	
+	// nodegroup store service
+	public static String getNodegroupServiceServer() throws Exception{
+		return getIntegrationTestProperty("integrationtest.nodegroupservice.server");
+	}
+	public static int getNodegroupServicePort() throws Exception{
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupservice.port")).intValue();
+	}
 	// nodegroup store service
 	public static String getNodegroupStoreServiceServer() throws Exception{
 		return getIntegrationTestProperty("integrationtest.nodegroupstoreservice.server");

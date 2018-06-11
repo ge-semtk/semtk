@@ -218,12 +218,13 @@ public class NodeGroupExecutionRestController {
 		// This pass-through has a signature identical to the status service
 		// It uses the JobTracker, avoiding one bounce to the status service
 		// copy-and-pasted the request body, though. Still needs consolodating in sparqlGraphLibrary
-	    String jobId = requestBody.jobId;
+	    String jobId = requestBody.jobID;
 	    
 		HeadersManager.setHeaders(headers);
 	    SimpleResultSet retval = new SimpleResultSet();    	
     	
 	    try {
+	    	requestBody.validate();
 	    	JobTracker tracker = new JobTracker(edc_prop); 
 	    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
 	    	retval.addResult("percentComplete", String.valueOf(percentComplete));

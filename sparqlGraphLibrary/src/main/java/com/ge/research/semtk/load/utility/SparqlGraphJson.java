@@ -79,16 +79,27 @@ public class SparqlGraphJson {
 		// nothing
 	}
 	
+	/**
+	 * Instantiate from full SparqlGraphJson or NodeGroup json
+	 * @param jsonObj
+	 */
 	public SparqlGraphJson(JSONObject jsonObj) {
 		this.jObj = jsonObj;
 	}
 	
+	/**
+	 * Instantiate from full SparqlGraphJson or NodeGroup json string
+	 * @param jsonObj
+	 */
 	public SparqlGraphJson(String s) throws ParseException {
 		this((JSONObject) (new JSONParser()).parse(s));		
 	}
 	
-	/*
-	 * Basic check that jsonObj looks like a sparqlGraphJson
+	/**
+	 * Check if Json is a full SparqlGraphJson.
+	 * Note that SparqlGraphJson can also be just a nodegroup.
+	 * @param jsonObj
+	 * @return
 	 */
 	public static boolean isSparqlGraphJson(JSONObject jsonObj) {
 		return 	(	jsonObj.containsKey(JKEY_NODEGROUP) );
@@ -111,10 +122,33 @@ public class SparqlGraphJson {
 		return this.conn;
 	}
 	
+	/**
+	 * Returns either full SparqlGraphJson or NodeGroup json
+	 * @return
+	 */
 	public JSONObject getJson(){
 		return jObj;
 	}
+	public JSONObject toJson() {
+		return this.jObj;
+	}
 	
+	/**
+	 * Replace a NodeGroup into an existing object
+	 * @param ng
+	 */
+	public void setNodeGroup(NodeGroup ng) {
+		JSONObject ngJson = ng.toJson();
+		if (NodeGroup.isNodeGroup(this.jObj)) {
+			this.jObj = ngJson;
+		} else {
+			jObj.put(JKEY_NODEGROUP, ngJson);
+		}
+	}
+	
+	/**
+	 * @return connection json or null
+	 */
 	public JSONObject getSparqlConnJson() throws Exception {
 		if (jObj.containsKey(JKEY_SPARQLCONN)) {
 			return (JSONObject)jObj.get(JKEY_SPARQLCONN);
@@ -124,14 +158,23 @@ public class SparqlGraphJson {
 		}
 	}
 	
+	/**
+	 * @return nodegroup json or null
+	 */
 	public JSONObject getSNodeGroupJson() {
 		if (jObj.containsKey(JKEY_NODEGROUP)) {
 			return (JSONObject) jObj.get(JKEY_NODEGROUP);
+			
+		} else if (NodeGroup.isNodeGroup(jObj)) {
+			return jObj;
+			
 		} else {
 			return null;
 		}
 	}
-	
+	/**
+	 * @return importSpec json or null
+	 */
 	public JSONObject getImportSpecJson() {
 		if (jObj.containsKey(JKEY_IMPORTSPEC)) {
 			return (JSONObject) jObj.get(JKEY_IMPORTSPEC);
@@ -139,7 +182,9 @@ public class SparqlGraphJson {
 			return null;
 		}
 	}
-	
+	/**
+	 * @return runtime constraints json or null
+	 */
 	public JSONArray getRuntimeConstraintsJson(){
 		if (jObj.containsKey(JKEY_RUNTIMECONST)) {
 			return (JSONArray) jObj.get(JKEY_RUNTIMECONST);
@@ -159,6 +204,12 @@ public class SparqlGraphJson {
 		return this.getNodeGroup(null);
 	}
 	
+	/**
+	 * 
+	 * @param uncompressOInfo
+	 * @return
+	 * @throws Exception
+	 */
 	public NodeGroup getNodeGroup(OntologyInfo uncompressOInfo) throws Exception {
 		JSONObject json = getSNodeGroupJson();
 		if (json == null) {
@@ -167,7 +218,9 @@ public class SparqlGraphJson {
 			return (new NodeGroup() );
 		} else {
 			NodeGroup ng = NodeGroup.getInstanceFromJson(json, uncompressOInfo);
-			ng.setSparqlConnection(this.getSparqlConn());
+			if (jObj.containsKey(JKEY_SPARQLCONN)) {
+				ng.setSparqlConnection(this.getSparqlConn());
+			}
 			return ng;
 		}
 	}

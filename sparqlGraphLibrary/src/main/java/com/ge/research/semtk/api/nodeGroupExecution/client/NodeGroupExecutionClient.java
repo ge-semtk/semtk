@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.api.nodeGroupExecution.client;
 
+import java.net.ConnectException;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -37,7 +39,9 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String JSON_KEY_NODEGROUP_ID = "nodeGroupId";
 	private static final String JSON_KEY_LIMIT_OVERRIDE = "limitOverride";
 	private static final String JSON_KEY_OFFSET_OVERRIDE = "offsetOverride";
+	private static final String JSON_KEY_MAX_WAIT_MSEC = "maxWaitMsec";
 	private static final String JSON_KEY_NODEGROUP  = "jsonRenderedNodeGroup";
+	private static final String JSON_KEY_PERCENT_COMPLETE  = "percentComplete";
 	private static final String JSON_KEY_SPARQL_CONNECTION = "sparqlConnection";
 	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
 	private static final String JSON_KEY_EDC_CONSTRAINTS = "externalDataConnectionConstraints";
@@ -51,6 +55,8 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String jobStatusMessageEndpoint = "/jobStatusMessage";
 	private static final String jobCompletionCheckEndpoint = "/getJobCompletionCheck";
 	private static final String jobCompletionPercentEndpoint = "/getJobCompletionPercentage";
+	private static final String waitForPercentOrMsecEndpoint = "/waitForPercentOrMsec";
+
 	private static final String resultsLocationEndpoint = "/getResultsLocation";
 	private static final String dispatchByIdEndpoint = "/dispatchById";
 	private static final String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
@@ -245,6 +251,27 @@ public class NodeGroupExecutionClient extends RestClient {
 		return retval;
 	}
 
+	public SimpleResultSet executeWaitForPercentOrMsec(String jobId, int maxWaitMsec, int percentComplete) throws Exception {
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + waitForPercentOrMsecEndpoint);
+		this.parametersJSON.put(JSON_KEY_JOB_ID, jobId);
+		this.parametersJSON.put(JSON_KEY_MAX_WAIT_MSEC, maxWaitMsec);
+		this.parametersJSON.put(JSON_KEY_PERCENT_COMPLETE, percentComplete);
+		try {
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
+			retval.throwExceptionIfUnsuccessful();
+		} finally{
+			this.reset();
+		}
+		return retval;
+	}
+	
+	public int executeWaitForPercentOrMsecToInt(String jobId, int maxWaitMsec, int percentComplete) throws Exception {
+		SimpleResultSet ret = this.executeWaitForPercentOrMsec(jobId, maxWaitMsec, percentComplete);
+		return ret.getResultInt("percentComplete");
+	}
+	
 // action-specific endpoints for ID-based executions
 	
 	/**
@@ -345,6 +372,28 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	/**
+	 * Preferred way to wait for a job to complete
+	 * @param jobId
+	 * @param freqMsec - a ping freq such as 10,000.  Will return sooner if job finishes
+	 * @param maxTries - throw exception after this many tries
+	 * @throws Exception
+	 */
+	private void waitForCompletion(String jobId, int freqMsec, int maxTries ) throws Exception {
+		int percent = 0;
+		
+		for (int i=0; i < maxTries; i++) {
+			percent = this.executeWaitForPercentOrMsecToInt(jobId, freqMsec, 100);
+			if (percent == 100) {
+				return;
+			}
+		}
+		throw new Exception("Job " + jobId + " is only " + String.valueOf(percent) + "% complete after " + String.valueOf(maxTries) + " tries.");
+	}
+	// try for 6 minutes
+	private void waitForCompletion(String jobId) throws Exception {
+		this.waitForCompletion(jobId, 9000, 40);
+	}
+	/**
 	 * Given jobId, check til job is done, check for success, get table
 	 * @param jobId
 	 * @return
@@ -352,10 +401,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 */
 	private Table waitForJobAndGetTable(String jobId) throws Exception {
 		// wait for completion
-		while(! this.executeGetJobCompletionCheckWithSimpleReturn(jobId)) {
-			// wait a while
-			Thread.sleep(100);
-		}
+		this.waitForCompletion(jobId);
 		
 		// check for success
 		if (this.executeGetJobStatusIsSuccess(jobId)) {
@@ -367,11 +413,8 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 
 	private JSONObject waitForJobAndGetJsonLd(String jobId) throws Exception {
-		// wait for completion
-		while(! this.executeGetJobCompletionCheckWithSimpleReturn(jobId)) {
-			// wait a while
-			Thread.sleep(100);
-		}
+		
+		waitForCompletion(jobId);
 		
 		// check for success
 		if (this.executeGetJobStatusIsSuccess(jobId)) {

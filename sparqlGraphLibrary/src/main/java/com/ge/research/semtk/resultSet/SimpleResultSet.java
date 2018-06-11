@@ -131,6 +131,14 @@ public class SimpleResultSet extends GeneralResultSet{
 		}
 	}
 	
+	public JSONObject getResultJSON(String name) throws Exception {
+		if (this.resultsContents.containsKey(name)) {
+			return (JSONObject) this.resultsContents.get(name);
+		} else {
+			throw new Exception(String.format("Can't find result field '%s'", name));
+		}
+	}
+	
 	public String [] getResultStringArray(String name) throws Exception {
 		JSONObject arr = null;
 		if (this.resultsContents.containsKey(name)) {

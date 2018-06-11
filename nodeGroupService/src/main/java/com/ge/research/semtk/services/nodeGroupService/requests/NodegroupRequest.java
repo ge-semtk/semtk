@@ -17,31 +17,37 @@
 
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 
 public class NodegroupRequest {
 
 	private String jsonRenderedNodeGroup;
 	
+	/**
+	 * Get just the nodegroup out of the json
+	 * @return
+	 * @throws Exception
+	 */
 	public NodeGroup getNodeGroup() throws Exception {
-		return NodeGroup.getInstanceFromJson(this.getJsonNodeGroup());
+		return this.getSparqlGraphJson().getNodeGroup();
 	}
 	
-	public JSONObject getJsonNodeGroup() throws Exception {
+	/**
+	 * 
+	 * @return SparqlGraphJson which might contain just a NodeGroup or a full SGJson
+	 * @throws Exception
+	 */
+	public SparqlGraphJson getSparqlGraphJson() throws Exception {
 		
-		JSONParser prsr = new JSONParser();
-		JSONObject retval = null;
+		SparqlGraphJson ret = null;
 			
 		try {
-			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
-		} catch (ParseException e) {
+			ret = new SparqlGraphJson(this.jsonRenderedNodeGroup);
+		} catch (Exception e) {
 			throw new Exception("Error parsing nodegroup json", e);
 		}
-		return retval;
+		return ret;
 	}
 
 	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {

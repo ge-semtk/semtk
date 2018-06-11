@@ -33,7 +33,7 @@ public abstract class GeneralResultSet {
 	
 	private final static String SuccessMessage = "operations succeeded.";
 	private final static String FailureMessage = "operations failed.";
-	private final static String AmbiguousMessage = "operations state unknown.";
+	private final static String AmbiguousMessage = "operations success/failure unknown.";
 	
 	protected JSONObject resultsContents; // this is what will, ultimately be returned
 	protected Boolean success;			// this indicates whether the operation was successful or not

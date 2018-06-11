@@ -26,7 +26,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class BelmontUtil {
-
+	private final static String ILLEGAL_CHAR = "[^A-Za-z_0-9]";
+	
 	public static String generateSparqlID(String proposedName, HashMap<String, String> reservedNameHash){
 		// accepts a suggested sparqlID and outputs either that ID or one based off it.
 		String retval = proposedName; 	// assume the proposed name is fine. 
@@ -66,11 +67,33 @@ public class BelmontUtil {
 		return retval;
 	}
 	
+	/**
+	 * Make sure a sparqlID is legal and add "?" if needed
+	 * @param proposedName
+	 * @return sparqlID guaranteed to start with "?" and have no illegal characters
+	 * @throws Exception - contains illegal characters
+	 */
+	public static String formatSparqlId(String proposedName) throws Exception {
+		String noPrefixName;
+		if (proposedName.startsWith("?")) {
+			noPrefixName = proposedName.substring(1);
+		} else {
+			noPrefixName = proposedName;
+		}
+		
+		Pattern p = Pattern.compile(ILLEGAL_CHAR);
+		Matcher m = p.matcher(noPrefixName);
+		if (m.find()) {
+			throw new Exception("SparqlId \"" + proposedName + "\" contains unsupported character: " + m.group(0));
+		}
+		
+		return "?" + noPrefixName;
+		
+	}
+	
 	public static String legalizeSparqlID(String proposedName){
 		// removes illeagal characters from the sparqlID and then 
 		// adds a proper "?" as a prefix. 
-		
-		String ILLEGAL_CHAR = "[^A-Za-z_0-9]";
 		
 		String retval = proposedName.replaceAll(ILLEGAL_CHAR, "_");
 		if(!retval.startsWith("?")){

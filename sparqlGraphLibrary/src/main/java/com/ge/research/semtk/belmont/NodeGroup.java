@@ -842,12 +842,16 @@ public class NodeGroup {
 	 * @return
 	 */
 	public Returnable getItemBySparqlID(String id) {
+		String search = id;
+		if (!search.startsWith("?"))
+			search = "?" + search;
+		
         for (Node n : this.nodes) {
-            if (n.getSparqlID().equals(id)) {
+            if (n.getSparqlID().equals(search)) {
                 return n;
             }
             
-            Returnable item = n.getPropertyItemBySparqlID(id);
+            Returnable item = n.getPropertyItemBySparqlID(search);
             if (item != null) {
                 return item;
             }
