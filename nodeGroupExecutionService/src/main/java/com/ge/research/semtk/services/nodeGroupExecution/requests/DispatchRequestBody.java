@@ -19,8 +19,6 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.utility.Utility;
 
@@ -29,25 +27,13 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	private String externalDataConnectionConstraints;
 	private String flags; // json array
 	private String runtimeConstraints;
+
 	
-	private JSONObject getJson(String prop) throws ParseException {
-		if (prop == null || prop.equals("")) {
+	public JSONObject getExternalDataConnectionConstraintsJson() throws Exception {
+		if(this.externalDataConnectionConstraints == null || this.externalDataConnectionConstraints.trim().isEmpty()){
 			return null;
-		} else {
-			JSONParser jParse = new JSONParser();
-			return (JSONObject)jParse.parse(prop);
 		}
-	}
-	private JSONArray getJsonArray(String prop) throws ParseException {
-		if (prop == null || prop.equals("")) {
-			return null;
-		} else {
-			JSONParser jParse = new JSONParser();
-			return (JSONArray)jParse.parse(prop);
-		}
-	}
-	public JSONObject getExternalDataConnectionConstraintsJson() throws ParseException {
-		return getJson(this.externalDataConnectionConstraints);
+		return Utility.getJsonObjectFromString(this.externalDataConnectionConstraints);
 	}
 	public String getExternalDataConnectionConstraints() {
 		return externalDataConnectionConstraints;
@@ -57,8 +43,11 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	}
 	
 	
-	public JSONArray getRuntimeConstraintsJson() throws ParseException {
-		return this.getJsonArray(this.runtimeConstraints);
+	public JSONArray getRuntimeConstraintsJson() throws Exception {
+		if(this.runtimeConstraints == null || this.runtimeConstraints.trim().isEmpty()){
+			return null;
+		}
+		return Utility.getJsonArrayFromString(this.runtimeConstraints);
 	}
 	public String getRuntimeConstraints(){
 		return(this.runtimeConstraints);
@@ -85,12 +74,9 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	 * Validate request contents.  Throws an exception if validation fails.
 	 */
 	public void validate() throws Exception{
-
 		super.validate();
-
 		// all in this class are optional
 	}
-
 
 }
 
