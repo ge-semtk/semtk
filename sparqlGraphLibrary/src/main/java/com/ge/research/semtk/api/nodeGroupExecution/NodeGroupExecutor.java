@@ -155,24 +155,35 @@ public class NodeGroupExecutor {
 		return retval;
 	}
 	
+	/**
+	 * WARNING: never returns if job somehow fails and doesn't tell status service
+	 * @throws Exception
+	 */
 	public void waitOnJobCompletion() throws Exception{
-		// keeps polling the status until it reaches 100%
-		// default wait interval is one second.
 		
-		this.waitOnJobCompletion(1000);
+		this.waitOnJobCompletion(10000, 0);
 	}
 	
-	public void waitOnJobCompletion(int sleepInterval) throws Exception{
-		// this would be used to simulate a synchronous call.
-		// warning: this sleeps between invocations to avoid just constantly polling the service and giving it a headache.
-		// if the sleep interval is less than a half second, it is reset to a half second.
-		if(sleepInterval < 10){ sleepInterval = 10; }
+	/**
+	 * Wait for job to complete in an efficient manner
+	 * @param sleepMsec - how often to query.  Note job will return if it finishes sooner.
+	 * @param maxMinutes - ignored if < 1
+	 * @throws Exception - failure or job does not complete in maxMinutes
+	 */
+	public void waitOnJobCompletion(int sleepMsec, int maxMinutes) throws Exception{
+		
+		if(sleepMsec < 10){ sleepMsec = 10; }
 		
 		int percentComplete = 0;
+		int elapsedMsec = 0;
+		int maxMsec = maxMinutes * 60 * 1000;
 		
-		while(percentComplete < 100){
-			percentComplete = this.getJobPercentCompletion();
-			Thread.sleep(sleepInterval);
+		while(percentComplete < 100) {
+			if (maxMsec > 0 && elapsedMsec > maxMsec) {
+				throw new Exception("Job did not complete within " + maxMinutes + " minutes");
+			}
+			percentComplete = this.sc.execWaitForPercentOrMsec(100, sleepMsec);
+			elapsedMsec += sleepMsec;
 		}
 		
 		return;
