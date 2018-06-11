@@ -179,7 +179,7 @@ define([	'sparqlgraph/js/msiresultset',
                     
                     var saveUrl = this.url;
                     // change the service name to serviceInfo
-                    this.url = this.url + '/serviceInfo/';
+                    this.url = this.url + 'serviceInfo/';
                     this.postToEndpoint("ping", "", "application/json", success, optFailureCallback, optTimeout);
                     this.url = saveUrl;
                 },
