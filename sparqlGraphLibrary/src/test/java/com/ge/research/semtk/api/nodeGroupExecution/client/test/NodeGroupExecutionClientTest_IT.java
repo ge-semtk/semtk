@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.api.client.test;
+package com.ge.research.semtk.api.nodeGroupExecution.client.test;
 
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
