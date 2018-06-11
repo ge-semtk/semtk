@@ -17,11 +17,7 @@
 
 package com.ge.research.semtk.services.dispatch;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
-import java.net.ConnectException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
@@ -137,19 +133,18 @@ public class DispatcherServiceRestController {
 			
 			dsp = getDispatcher(props, requestId, ngrb, true, true);
 			
-			WorkThread doIt = new WorkThread(dsp, null, null, qt,  ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, null, null, qt,  ThreadAuthenticator.getThreadHeaderTable());
 
 			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL)){
 				// we are going to launch straight from the raw sparql
 				String qry = ((SparqlRequestBody)requestBody).getRawSparqlQuery();
-				doIt.setRawSparqlSquery(qry);
+				thread.setRawSparqlSquery(qry);
 			}
 			
 			// set up a thread for the actual processing of the request
-			doIt.start();
+			thread.start();
 			 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			LocalLogger.printStackTrace(e);
 
 			retval.setSuccess(false);
@@ -160,14 +155,12 @@ public class DispatcherServiceRestController {
 			try {
 				sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 			} catch (Exception e2) {
-				// TODO Auto-generated catch block
 				LocalLogger.printStackTrace(e2);
 			}
 			if(sClient != null){ 
 				try {
 					sClient.execSetFailure(e.getMessage());
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					LocalLogger.printStackTrace(e1);
 				}
 			}
@@ -198,21 +191,19 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
-			WorkThread doIt = new WorkThread(dsp, requestBody.getConstraintSetJson(), requestBody.getFlagsJsonArray(), qt, ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, requestBody.getConstraintSetJson(), requestBody.getFlagsJsonArray(), qt, ThreadAuthenticator.getThreadHeaderTable());
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				
 				String target = ((FilterConstraintsRequestBody)requestBody).getTargetObjectSparqlID();
-				doIt.setTargetObjectSparqlID(target);
+				thread.setTargetObjectSparqlID(target);
 			}
 		
 			// set up a thread for the actual processing of the request
-			doIt.start();
+			thread.start();
 			 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			LocalLogger.printStackTrace(e);
-
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromNodegroup()", e);
 			
@@ -221,14 +212,12 @@ public class DispatcherServiceRestController {
 			try {
 				sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 			} catch (Exception e2) {
-				// TODO Auto-generated catch block
 				LocalLogger.printStackTrace(e2);
 			}
 			if(sClient != null){ 
 				try {
 					sClient.execSetFailure(e.getMessage());
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					LocalLogger.printStackTrace(e1);
 				}
 			}
@@ -254,7 +243,6 @@ public class DispatcherServiceRestController {
 			
 			retval.addResult("constraintType", dsp.getConstraintType());
 			retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
-		
 			 
 		} catch (BadQueryException bqe) {
 			// handle this exception by showing the user the simplified message.
@@ -262,12 +250,9 @@ public class DispatcherServiceRestController {
 			retval.addRationaleMessage(bqe.getMessage());
 		}
 		catch (Exception e) {
-			// TODO Auto-generated catch block
 			LocalLogger.printStackTrace(e);
-
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getConstraintInfo", e);
-			
 		}
 		// send back the request ID.
 		// the request is not finished but that is okay
@@ -278,28 +263,20 @@ public class DispatcherServiceRestController {
 		return "req_" + UUID.randomUUID();
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody, Boolean useAuth, Boolean heedRestrictions) throws Exception{
 		
-		// get the sgJson...
-		SparqlGraphJson sgJson = null;
-		
+		// get the sgJson
+		SparqlGraphJson sgJson = null;		
 		try{
 			sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup()) ;
-			if(sgJson == null){ throw new Exception("sgJson was null."); } 
+		}catch(Exception sg){
+			throw new Exception("Dispatcher cannot get sparqlgraphJson from request: " + sg.getMessage());
 		}
-		catch(Exception sg){
-			throw new Exception("getDispatcher :: unable to get sparqlgraphJson from request. failure was reported as: " + sg.getMessage());
-		}
-		
-		// check the qry request body.		
-		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 
-		LocalLogger.logToStdErr("Dispatcher type in use: " + props.getDispatcherClassName() );
-	
-	
+		// get clients needed to instantiate the Dispatcher
 		SparqlQueryClientConfig queryConf = null;
 		SparqlQueryClient queryClient = null;
-		
 		if(useAuth){
 			queryConf = new SparqlQueryAuthClientConfig(	
 					props.getSparqlServiceProtocol(),
@@ -311,12 +288,9 @@ public class DispatcherServiceRestController {
 	                props.getEdcSparqlServerDataset(),
 					props.getSparqlServiceUser(),
 					props.getSparqlServicePass());
-			
 			queryClient = new SparqlQueryClient(queryConf);
-			
 		}
 		else{
-
 			queryConf = new SparqlQueryClientConfig(	
 					props.getSparqlServiceProtocol(),
 					props.getSparqlServiceServer(), 
@@ -325,42 +299,26 @@ public class DispatcherServiceRestController {
 	                props.getEdcSparqlServerAndPort(), 
 	                props.getEdcSparqlServerType(), 
 	                props.getEdcSparqlServerDataset());
-	
 			queryClient = new SparqlQueryClient(queryConf);
-		}
-		
-		if(queryClient == null){
-			LocalLogger.logToStdErr("!!!!!!! QUERY CLIENT IS NULL !!!!!!!");
-			throw new Exception("getDispatcher :: the attempt to create a query client failed.");
-		}
-		
-		StatusClient sClient = null;
-		ResultsClient rClient = null;
-				
-		rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
-		sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
+		}				
+		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
+		StatusClient sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 		sClient.execSetPercentComplete(0, "Job Initialized");
 
-		// try to get the class we care about. 
+		// instantiate the dispatcher from the class name 
+		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 		try{
-			Class<?> dspType = null;
+			LocalLogger.logToStdOut("Dispatcher class: " + props.getDispatcherClassName() );
+			Class<?> dspClass = Class.forName(props.getDispatcherClassName());			
+			if(dspClass == null) { 
+				throw new Exception("Dispatcher class is null");
+			}
+			LocalLogger.logToStdOut("Dispatcher class name is " + dspClass.getCanonicalName());
 
-			dspType = Class.forName(props.getDispatcherClassName());
-			
-			if(dspType == null) { LocalLogger.logToStdErr("DSPTYPE IS NULL!"); }
-			else{ LocalLogger.logToStdErr( "configured dispatcher type is " + dspType.getCanonicalName() ); }
-			LocalLogger.logToStdErr("attempting to get constructor for dispatcher subtype:");
-			// build it.
-
-			Constructor ctor = null ; //dspType.getConstructor(String.class, JSONObject.class, ResultsClient.class, StatusClient.class, SparqlQueryClient.class);	
-		
-			for (Constructor c : dspType.getConstructors() ){
-				// try to find the right constructor?
+			Constructor ctor = null ; 	
+			for (Constructor c : dspClass.getConstructors() ){
 				Class[] params = c.getParameterTypes();
-				for(Class p : params){
-				}
 				// this is not a great way to get the constructor but the more traditional single call was failing pretty badly.
-				// it has proved easier to look for each arg by type in order as it never mysteriously fails.
 				if(params[0].isAssignableFrom( String.class )) {
 					if(params[1].isAssignableFrom( SparqlGraphJson.class )) {
 						if(params[2].isAssignableFrom( ResultsClient.class )){
@@ -369,22 +327,15 @@ public class DispatcherServiceRestController {
 									ctor = c;
 								}}}}
 				}
-				else{
-				}
 			}
 			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions);
 			
-		}
-		catch(Exception failedToFindClass){
-			LocalLogger.logToStdErr("retrieval of external dispatcher class failed:");
-			LocalLogger.logToStdErr( failedToFindClass.getMessage() );
-			LocalLogger.printStackTrace(failedToFindClass);
-			throw new Exception("getDispatcher :: unable to instantiate dispatcher of type " + props.getDispatcherClassName() + ".  Please check dispatch.externalDispatchJar property, additional jars directory, or dispatcher error log");
+		}catch(Exception e){
+			LocalLogger.printStackTrace(e);
+			throw new Exception("Cannot instantiate dispatcher: " + e.getMessage());
 		}
 		
-		
-		LocalLogger.logToStdErr("initialized job: " + requestId);
-	
+		LocalLogger.logToStdOut("initialized job: " + requestId);	
 		return dsp;
 	}
 
