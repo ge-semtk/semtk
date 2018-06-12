@@ -39,7 +39,12 @@ mkdir $DIR_TO_TAR/$SEMTK_OPENSOURCE
 
 # copy in all jars and needed scripts
 cp --parents */target/*.jar $DIR_TO_TAR/$SEMTK_OPENSOURCE
+cp --parents sparqlGraphWeb $DIR_TO_TAR/$SEMTK_OPENSOURCE
 cp --parents startServices.sh $DIR_TO_TAR/$SEMTK_OPENSOURCE
+cp --parents stopServices.sh $DIR_TO_TAR/$SEMTK_OPENSOURCE
+cp --parents updateWebapps.sh $DIR_TO_TAR/$SEMTK_OPENSOURCE
+cp --parents .env $DIR_TO_TAR/$SEMTK_OPENSOURCE
+cp --parents .fun $DIR_TO_TAR/$SEMTK_OPENSOURCE
 
 # remove unneeded jars
 rm -rf $DIR_TO_TAR/$SEMTK_OPENSOURCE/standaloneExecutables/ 
