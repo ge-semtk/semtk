@@ -625,22 +625,29 @@ public class JobTracker {
 	 * @throws Exception on error
 	 */
 	public int waitForPercentOrMsec(String jobId, int percentComplete, int maxWaitMsec) throws Exception {
-		int totalMsec = 0;
 		long sleepMsec = 200;
 		int actualPercent = 0;
+		long now = System.currentTimeMillis();
+		long endTime = now + maxWaitMsec;
 		
-		// wait maximum of this.prop.jobMaxWatiMsec
-		while (totalMsec < maxWaitMsec) {
+		now -= 1; // make sure we run the loop at least once
+		
+		while (now < endTime) {
 			actualPercent = this.getJobPercentComplete(jobId);
 			if (actualPercent >= percentComplete) {
 				break;
 			}
+			now = System.currentTimeMillis();
+			
 			// wait 1.3x seconds longer each time until 3 seconds
 			if (sleepMsec < 3000) {
 				sleepMsec = Math.round(sleepMsec * 1.3);
+				sleepMsec = Math.min(sleepMsec, (endTime - now) );
 			}
-			Thread.sleep(sleepMsec);
-			totalMsec += sleepMsec;
+			if (sleepMsec > 0) {
+				Thread.sleep(sleepMsec);
+				now = System.currentTimeMillis();
+			}
 		}
 		return actualPercent;
 	}
