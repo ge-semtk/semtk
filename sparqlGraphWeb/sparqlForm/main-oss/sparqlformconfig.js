@@ -23,25 +23,25 @@ define([], function() {
 	var Config = {
 		"services" : { 
 			"query" : {
-				url : "http://${WEB_SPARQL_QUERY_HOST}:${WEB_SPARQL_QUERY_PORT}/sparqlQueryService/",
+				url : "${WEB_PROTOCOL}://${WEB_SPARQL_QUERY_HOST}:${WEB_SPARQL_QUERY_PORT}/sparqlQueryService/",
 			},
 			"status" : {
-				"url" : "http://${WEB_STATUS_HOST}:${WEB_STATUS_PORT}/status/",  // window.location.origin + "/status/",    
+				"url" : "${WEB_PROTOCOL}://${WEB_STATUS_HOST}:${WEB_STATUS_PORT}/status/",  // window.location.origin + "/status/",    
 			},
 			"results" : {
-				"url" : "http://${WEB_RESULTS_HOST}:${WEB_RESULTS_PORT}/results/",     
+				"url" : "${WEB_PROTOCOL}://${WEB_RESULTS_HOST}:${WEB_RESULTS_PORT}/results/",     
 			},
 			"dispatcher" : {
-				"url" : "http://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",     
+				"url" : "${WEB_PROTOCOL}://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",     
 			},
             nodeGroup:{
-				url : "http://${WEB_NODEGROUP_HOST}:${WEB_NODEGROUP_PORT}/nodeGroup/",
+				url : "${WEB_PROTOCOL}://${WEB_NODEGROUP_HOST}:${WEB_NODEGROUP_PORT}/nodeGroup/",
             },
             "nodeGroupExec" : {
-				url : "http://${WEB_NODEGROUPEXECUTION_HOST}:${WEB_NODEGROUPEXECUTION_PORT}/nodeGroupExecution/",
+				url : "${WEB_PROTOCOL}://${WEB_NODEGROUPEXECUTION_HOST}:${WEB_NODEGROUPEXECUTION_PORT}/nodeGroupExecution/",
             },
             nodeGroupStore:{
-				url : "http://${WEB_NODEGROUPSTORE_HOST}:${WEB_NODEGROUPSTORE_PORT}/nodeGroupStore/",
+				url : "${WEB_PROTOCOL}://${WEB_NODEGROUPSTORE_HOST}:${WEB_NODEGROUPSTORE_PORT}/nodeGroupStore/",
             },
 		},
 		"help" : {
