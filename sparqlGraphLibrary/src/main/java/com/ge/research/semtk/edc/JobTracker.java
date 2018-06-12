@@ -637,13 +637,16 @@ public class JobTracker {
 			if (actualPercent >= percentComplete) {
 				break;
 			}
-			now = System.currentTimeMillis();
 			
 			// wait 1.3x seconds longer each time until 3 seconds
 			if (sleepMsec < 3000) {
 				sleepMsec = Math.round(sleepMsec * 1.3);
-				sleepMsec = Math.min(sleepMsec, (endTime - now) );
 			}
+			
+			// don't wait past projected end time
+			now = System.currentTimeMillis();
+			sleepMsec = Math.min(sleepMsec, (endTime - now) );
+			
 			if (sleepMsec > 0) {
 				Thread.sleep(sleepMsec);
 				now = System.currentTimeMillis();
