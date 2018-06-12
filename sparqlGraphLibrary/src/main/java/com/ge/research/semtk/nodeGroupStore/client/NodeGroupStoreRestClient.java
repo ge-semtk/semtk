@@ -124,11 +124,8 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			JSONObject tblWrapper = (JSONObject)jobj.get("table");
-			
-			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
-			retval.addResults(tbl);
 			retval.readJson(jobj);
+
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
@@ -180,6 +177,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 		try{
 		
 			TableResultSet ret = new TableResultSet((JSONObject) this.execute());
+			ret.throwExceptionIfUnsuccessful();
 			if(ret.getTable().getNumRows() >= 1){
 				// this is a problem as this already exists. 
 				throw new Exception ("executeStoreNodeGroup :: nodegroup with ID (" + proposedId + ") already exists. Exiting without adding.");
