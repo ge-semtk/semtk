@@ -469,7 +469,7 @@ require([	'local/sparqlformconfig',
 		};
 
 		doRetrieveFromNGStore = function() {
-            if (gNodeGroup.getNodeCount() == 0
+            if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0
 					|| confirm("Clearing current form\nbefore loading a new one.\n\n")) {
                 
                 gModalStoreDialog.launchRetrieveDialog(restoreQueryFromJsonStr);

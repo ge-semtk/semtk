@@ -188,7 +188,7 @@ define([	// properly require.config'ed   bootstrap-modal
               */
             execAsyncWaitUntilDone : function (jobSuccessCallback, checkForCancelCallback, statusBarCallback) {
    
-                this.execWaitForPercentOrMsecInt(5, g.longTimeoutMsec, this.execAsyncWaitUntilDoneCallback.bind( this,
+                this.execWaitForPercentOrMsecInt(5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
                                                                                 statusBarCallback,
                                                                                 checkForCancelCallback
@@ -212,7 +212,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                     statusBarCallback(thisPercent);
                     
-                    this.execWaitForPercentOrMsecInt(thisPercent + 5, g.longTimeoutMsec, this.execAsyncWaitUntilDoneCallback.bind( this,
+                    this.execWaitForPercentOrMsecInt(thisPercent + 5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
                                                                                 statusBarCallback,
                                                                                 checkForCancelCallback
