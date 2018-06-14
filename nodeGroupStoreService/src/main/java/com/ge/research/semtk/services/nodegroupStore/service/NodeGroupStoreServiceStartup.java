@@ -43,11 +43,11 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 			  "store.sparqlServicePort",
 			  "store.sparqlServiceProtocol",
 			  "store.sparqlServiceEndpoint",
-			  "store.sparqlServerAndPort",
-			  "store.sparqlServerDataDataset",
-			  "store.sparqlServerModelDataset",
-			  "store.sparqlServerDomain",
-			  "store.sparqlServerType",
+			  "store.sparqlConnServerAndPort",
+			  "store.sparqlConnDataDataset",
+			  "store.sparqlConnModelDataset",
+			  "store.sparqlConnDomain",
+			  "store.sparqlConnType",
 			  "store.sparqlServiceUser"
 	  };
 	  TreeMap<String,String> properties = new TreeMap<String,String>();

@@ -688,7 +688,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public SimpleResultSet executeDispatchSelectFromNodeGroup(JSONObject ngJson, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+	private SimpleResultSet executeDispatchSelectFromNodeGroup(JSONObject ngJson, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectFromNodegroupEndpoint);
@@ -775,10 +775,11 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	public Table executeDispatchSelectFromNodeGroupToTable(NodeGroup ng, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
-		
-		SimpleResultSet ret = this.executeDispatchSelectFromNodeGroup(ng, sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
-		
-		return this.waitForJobAndGetTable(ret.getResult("JobId"));
+		return this.executeDispatchSelectFromNodeGroupToTable(ng.toJson(), sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
+	}
+	
+	public Table executeDispatchSelectFromNodeGroupToTable(SparqlGraphJson sgjson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+		return this.executeDispatchSelectFromNodeGroupToTable(sgjson.getSNodeGroupJson(), sgjson.getSparqlConnJson(), edcConstraintsJson, runtimeConstraintsJson);
 	}
 	
 	public Table executeDispatchSelectFromNodeGroupToTable(JSONObject ngJson, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
@@ -787,6 +788,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		return this.waitForJobAndGetTable(ret.getResult("JobId"));
 	}
+	
 	
 	/**
 	 * 	

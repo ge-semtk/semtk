@@ -17,7 +17,6 @@
 
 package com.ge.research.semtk.services.nodegroupStore.service;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
@@ -40,12 +39,15 @@ import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
+import com.ge.research.semtk.services.nodegroupStore.service.StoreNodeGroupRequest;
+import com.ge.research.semtk.services.nodegroupStore.service.DeleteByIdRequest;
+import com.ge.research.semtk.services.nodegroupStore.service.NodeGroupByIdRequest;
+
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
@@ -198,7 +200,7 @@ public class NodeGroupStoreRestController {
 		try{
 			// get the nodegroup
 			String qry = SparqlQueries.getNodeGroupByID(requestBody.getId());
-			SparqlQueryClient clnt = createClient(prop);
+			SparqlQueryClient clnt = createClient(prop); 
 			
 			TableResultSet temp = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
 			
@@ -324,9 +326,9 @@ public class NodeGroupStoreRestController {
 				props.getSparqlServiceServer(), 
 				props.getSparqlServicePort(), 
 				props.getSparqlServiceEndpoint(),
-                props.getSparqlServerAndPort(), 
-                props.getSparqlServerType(), 
-                props.getSparqlServerDataDataset(),
+                props.getSparqlConnServerAndPort(), 
+                props.getSparqlConnType(), 
+                props.getSparqlConnDataDataset(),
 				props.getSparqlServiceUser(),
 				props.getSparqlServicePass())
 				));
@@ -337,9 +339,9 @@ public class NodeGroupStoreRestController {
 	private static SparqlConnection createOverrideConnection(StoreProperties props) throws Exception {
 		SparqlConnection retval = new SparqlConnection();
 		retval.setName("store override");
-		retval.setDomain(props.getSparqlServerDomain());
-		retval.addDataInterface(props.getSparqlServerType(), props.getSparqlServerAndPort(), props.getSparqlServerDataDataset());
-		retval.addModelInterface(props.getSparqlServerType(), props.getSparqlServerAndPort(), props.getSparqlServerModelDataset());
+		retval.setDomain(props.getSparqlConnDomain());
+		retval.addDataInterface(props.getSparqlConnType(), props.getSparqlConnServerAndPort(), props.getSparqlConnDataDataset());
+		retval.addModelInterface(props.getSparqlConnType(), props.getSparqlConnServerAndPort(), props.getSparqlConnModelDataset());
 		
 		return retval;
 	}

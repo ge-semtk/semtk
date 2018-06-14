@@ -39,11 +39,11 @@ public class StoreProperties {
 	private String sparqlServicePass = "";
 	
 	// sparql server and named graph info
-	private String sparqlServerAndPort = "";
-	private String sparqlServerDataDataset = "";
-	private String sparqlServerModelDataset = "";
-	private String sparqlServerDomain = "";
-	private String sparqlServerType = "";
+	private String sparqlConnServerAndPort = "";
+	private String sparqlConnDataDataset = "";
+	private String sparqlConnModelDataset = "";
+	private String sparqlConnDomain = "";
+	private String sparqlConnType = "";
 	
 	// info on our ingestion server
 	public String getIngestorLocation() {
@@ -92,35 +92,35 @@ public class StoreProperties {
 	}
 	
 	// info on our sparql endpoint itself
-	public String getSparqlServerAndPort() {
-		return sparqlServerAndPort;
+	public String getSparqlConnServerAndPort() {
+		return sparqlConnServerAndPort;
 	}
-	public void setSparqlServerAndPort(String sparqlServerAndPort) {
-		this.sparqlServerAndPort = sparqlServerAndPort;
+	public void setSparqlConnServerAndPort(String sparqlServerAndPort) {
+		this.sparqlConnServerAndPort = sparqlServerAndPort;
 	}
-	public String getSparqlServerDataDataset() {
-		return sparqlServerDataDataset;
+	public String getSparqlConnDataDataset() {
+		return sparqlConnDataDataset;
 	}
-	public void setSparqlServerDataDataset(String sparqlServerDataDataset) {
-		this.sparqlServerDataDataset = sparqlServerDataDataset;
+	public void setSparqlConnDataDataset(String sparqlServerDataDataset) {
+		this.sparqlConnDataDataset = sparqlServerDataDataset;
 	}
-	public String getSparqlServerModelDataset() {
-		return sparqlServerModelDataset;
+	public String getSparqlConnModelDataset() {
+		return sparqlConnModelDataset;
 	}
-	public void setSparqlServerModelDataset(String sparqlServerModelDataset) {
-		this.sparqlServerModelDataset = sparqlServerModelDataset;
+	public void setSparqlConnModelDataset(String sparqlServerModelDataset) {
+		this.sparqlConnModelDataset = sparqlServerModelDataset;
 	}
-	public String getSparqlServerDomain() {
-		return sparqlServerDomain;
+	public String getSparqlConnDomain() {
+		return sparqlConnDomain;
 	}
-	public void setSparqlServerDomain(String sparqlServerDomain) {
-		this.sparqlServerDomain = sparqlServerDomain;
+	public void setSparqlConnDomain(String sparqlServerDomain) {
+		this.sparqlConnDomain = sparqlServerDomain;
 	}
-	public String getSparqlServerType() {
-		return sparqlServerType;
+	public String getSparqlConnType() {
+		return sparqlConnType;
 	}
-	public void setSparqlServerType(String sparqlServerType) {
-		this.sparqlServerType = sparqlServerType;
+	public void setSparqlConnType(String sparqlServerType) {
+		this.sparqlConnType = sparqlServerType;
 	}
 	
 	
