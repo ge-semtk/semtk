@@ -30,7 +30,7 @@ import com.ge.research.semtk.belmont.NoValidSparqlException;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.utility.Utility;

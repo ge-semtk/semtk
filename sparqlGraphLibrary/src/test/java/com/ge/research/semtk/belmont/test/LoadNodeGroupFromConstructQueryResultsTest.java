@@ -29,6 +29,7 @@ import org.junit.Test;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.belmont.XSDSupportedType;
 
 
 public class LoadNodeGroupFromConstructQueryResultsTest {
@@ -82,7 +83,7 @@ public class LoadNodeGroupFromConstructQueryResultsTest {
 		pi = TShirtPrintingNode.getPropertyByKeyname("mouseLot");
 		assertEquals(pi.getUriRelationship(),"http://research.ge.com/soft/testconfig#mouseLot");
 		assertEquals(pi.getInstanceValues().get(0),"50416-1");
-		assertEquals(pi.getValueType(),"string");
+		assertEquals(pi.getValueType(),XSDSupportedType.STRING);
 		assertTrue(pi.getIsReturned());
 		assertEquals(TShirtPrintingNode.getConnectedNodes().size(), 0);
 		

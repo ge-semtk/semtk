@@ -37,6 +37,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.ValuesConstraint;
+import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
 import com.ge.research.semtk.load.utility.UriResolver;
@@ -840,7 +841,7 @@ public class ImportSpecHandler {
 			} else {
 				PropertyItem prop = node.getPropertyItem(mapping.getPropItemIndex());
 				if (builtString == null || builtString.isEmpty()) {
-					String t = prop.getValueType();
+					XSDSupportedType t = prop.getValueType();
 					
 					// --- leave properties unconstrained ---
 					//ValuesConstraint v = new ValuesConstraint(prop, builtString);
@@ -1018,20 +1019,20 @@ public class ImportSpecHandler {
 		return false;
 	}
 
-	public static String validateDataType(String input, String expectedSparqlGraphType) throws Exception{
-		return validateDataType(input, expectedSparqlGraphType, false);
+	public static String validateDataType(String input,  XSDSupportedType expectedType) throws Exception{
+		return validateDataType(input, expectedType, false);
 	}
 	
 	/**
 	 * Validates and in some cases modifies/reformats an input based on type
 	 * @param input
-	 * @param expectedSparqlGraphType - last part of the type, e.g. "float"
+	 * @param expectedType - last part of the type, e.g. "float"
 	 * @param skipValidation - if True, perform modifications but no validations
 	 * @return - valid value
 	 * @throws Exception - if invalid
 	 */
 	@SuppressWarnings("deprecation")
-	public static String validateDataType(String input, String expectedSparqlGraphType, Boolean skipValidation) throws Exception{
+	public static String validateDataType(String input, XSDSupportedType expectedType, Boolean skipValidation) throws Exception{
 		 
 		 //   from the XSD data types:
 		 //   string | boolean | decimal | int | integer | negativeInteger | nonNegativeInteger | 
@@ -1047,25 +1048,24 @@ public class ImportSpecHandler {
 		 *  https://github.com/ge-semtk/semtk/wiki/Ingestion-type-handling
 		 */
 		
-		String myType = expectedSparqlGraphType.toLowerCase();
 		
 		// perform validations that change the input
-		switch (myType) {
-		case "string":
+		switch (expectedType) {
+		case STRING:
 			return SparqlToXUtils.safeSparqlString(input);
-		case "datetime":
+		case DATETIME:
 			try{				 
 				return Utility.getSPARQLDateTimeString(input);				 				 
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}	
-		case "date":
+		case DATE:
 			try{
 				return Utility.getSPARQLDateString(input);				 
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 		}
 		
@@ -1075,81 +1075,81 @@ public class ImportSpecHandler {
 		}
 		
 		// perform plain old validations
-		switch(myType) {
-		case "node_uri":
+		switch(expectedType) {
+		case NODE_URI:
 			try {
 			// check that this looks like a URI
 				new URI(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause: " + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause: " + e.getMessage());
 			}
 			break;		
-		case "boolean":
+		case BOOLEAN:
 			try{
 				Boolean.parseBoolean(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "decimal":
+		case DECIMAL:
 			try{
 				Double.parseDouble(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "int":
+		case INT:
 			try{
 				Integer.parseInt(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "integer":
+		case INTEGER:
 			try {
 				Integer.parseInt(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "long":
+		case LONG:
 			try {
 				Long.parseLong(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "float":
+		case FLOAT:
 			try{
 				Float.parseFloat(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "double":
+		case DOUBLE:
 			try {
 				Double.parseDouble(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "time":
+		case TIME:
 			try{
 				Time.parse(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "negativeinteger":
+		case NEGATIVEINTEGER:
 			try{
 				int test = Integer.parseInt(input);
 				if(test >= 0){
@@ -1157,10 +1157,10 @@ public class ImportSpecHandler {
 					}
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "nonNegativeinteger":
+		case NONNEGATIVEINTEGER:
 			try{
 				int test = Integer.parseInt(input);
 				if(test < 0){
@@ -1168,10 +1168,10 @@ public class ImportSpecHandler {
 				}
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "positiveinteger":
+		case POSITIVEINTEGER:
 			try{
 				int test = Integer.parseInt(input);
 				if(test <= 0){
@@ -1179,10 +1179,10 @@ public class ImportSpecHandler {
 				} 
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "nonpositiveinteger":
+		case NONPOSISITIVEINTEGER:
 			try{
 				int test = Integer.parseInt(input);
 				if(test > 0){
@@ -1190,39 +1190,39 @@ public class ImportSpecHandler {
 				}
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
 
-		case "duration":
+		case DURATION:
 			// not sure how to check this one. this might not match the expectation from SADL
 			try{
 				Duration.parse(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "unsignedbyte":
+		case UNSIGNEDBYTE:
 			try{
 				Byte.parseByte(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "unsignedint":
+		case UNSIGNEDINT:
 			try{
 				Integer.parseUnsignedInt(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "anySimpleType":
+		case ANYSIMPLETYPE:
 			// do nothing. 
 			break;
-		case "gyearmonth":
+		case GYEARMONTH:
 			try{
 				String[] all = input.split("-");
 				// check them all
@@ -1230,18 +1230,10 @@ public class ImportSpecHandler {
 				if(all[0].length() != 4 && all[1].length() != 2){ throw new Exception("year-month format was wrong. " + input + " given was not YYYY-MM"); }
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
-		case "gyear":
-			try{
-				if(input.length() != 4){ throw new Exception("year-month format was wrong. " + input + " given was not YYYY-MM"); }
-			}
-			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
-			}
-			break;
-		case "gmonthday":
+		case GMONTHDAY:
 			try {
 				String[] all = input.split("-");
 				// check them all
@@ -1249,7 +1241,7 @@ public class ImportSpecHandler {
 				if(all[0].length() != 2 && all[1].length() != 2){ throw new Exception("month-day format was wrong. " + input + " given was not MM-dd"); }
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedSparqlGraphType + "\" failed. assumed cause:" + e.getMessage());
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
 			}
 			break;
 

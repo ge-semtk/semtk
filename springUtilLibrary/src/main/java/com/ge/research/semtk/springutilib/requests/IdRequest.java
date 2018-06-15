@@ -15,10 +15,15 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodegroupStore.service;
+package com.ge.research.semtk.springutilib.requests;
 
-public class DeleteByIdRequest {
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+
+public class IdRequest {
 	
+	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
 	private String id;
 
 	public String getId() {

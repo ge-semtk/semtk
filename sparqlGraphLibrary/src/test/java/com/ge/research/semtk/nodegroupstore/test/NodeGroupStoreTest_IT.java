@@ -96,14 +96,24 @@ public class NodeGroupStoreTest_IT {
 	@Test
 	public void testStoreNodegroup_NullOrEmptyId() throws Exception{
 		// null id
-		result = nodeGroupStoreClient.executeStoreNodeGroup(null, COMMENTS, CREATOR, NG_JSON);
-		assertFalse(result.getSuccess());
-		assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: ID is not provided, or is empty");		
+		try {
+			result = nodeGroupStoreClient.executeStoreNodeGroup(null, COMMENTS, CREATOR, NG_JSON);
+			fail("Expected exception did not occur");
+		} catch (Exception e) {
+		}
+		// old 
+		// assertFalse(result.getSuccess());
+		// assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: ID is not provided, or is empty");		
 
 		// empty id
-		result = nodeGroupStoreClient.executeStoreNodeGroup("  ", COMMENTS, CREATOR, NG_JSON);
-		assertFalse(result.getSuccess());
-		assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: ID is not provided, or is empty");		
+		try {
+			result = nodeGroupStoreClient.executeStoreNodeGroup("  ", COMMENTS, CREATOR, NG_JSON);
+			fail("Expected exception did not occur");
+		} catch (Exception e) {
+		}
+		// old 
+		// assertFalse(result.getSuccess());
+		//assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: ID is not provided, or is empty");		
 	}
 	
 	
@@ -181,9 +191,9 @@ public class NodeGroupStoreTest_IT {
 			nodeGroupStoreClient.executeStoreNodeGroup(ID2, COMMENTS, CREATOR, NG_JSON); 
 			
 			Table res = nodeGroupStoreClient.executeGetNodeGroupById(ID).getTable();
-			assertEquals(res.getNumRows(), 1);  	// ensure 1 nodegroup returned (we're getting an exact match, not a regex match)
+			assertEquals(1, res.getNumRows());  	// ensure 1 nodegroup returned (we're getting an exact match, not a regex match)
 			Table res2 = nodeGroupStoreClient.executeGetNodeGroupById(ID2).getTable();
-			assertEquals(res2.getNumRows(), 1);  	// ensure 1 nodegroup returned
+			assertEquals(1, res2.getNumRows());  	// ensure 1 nodegroup returned
 		}finally{
 			// clean up
 			nodeGroupStoreClient.deleteStoredNodeGroup(ID);

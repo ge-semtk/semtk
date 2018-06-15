@@ -17,7 +17,7 @@
 
 package com.ge.research.semtk.belmont;
 
-
+/**  DEPRECATED
 public class XSDSupportUtil {
 
 	private static String xmlSchemaRawPrefix = "http://www.w3.org/2001/XMLSchema";
@@ -166,3 +166,4 @@ public class XSDSupportUtil {
 	
 	
 }
+**/

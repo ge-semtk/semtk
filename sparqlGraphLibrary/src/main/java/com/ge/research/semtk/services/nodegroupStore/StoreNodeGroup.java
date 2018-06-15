@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -156,7 +156,7 @@ public class StoreNodeGroup {
 	
 		
 		// get the constrained values from the NodeGroup.
-		RuntimeConstrainedItems rtci = new RuntimeConstrainedItems(temp);
+		RuntimeConstraints rtci = new RuntimeConstraints(temp);
 		
 		retval = rtci.getConstrainedItemsDescription();
 		

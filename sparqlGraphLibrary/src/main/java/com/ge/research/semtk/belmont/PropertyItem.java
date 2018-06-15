@@ -26,11 +26,12 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class PropertyItem extends Returnable {
 	
 	private String keyName = null;
-	private String valueType = null;
+	private XSDSupportedType valueType = null;
 	private String valueTypeURI = null;  
 	private String uriRelationship = null; // the full URI of the relationship
 	
@@ -48,18 +49,28 @@ public class PropertyItem extends Returnable {
 	 * @param valueTypeURI (e.g. http://www.w3.org/2001/XMLSchema#string)
 	 * @param uriRelationship (e.g. http://research.ge.com/print/testconfig#material)
 	 */
-	public PropertyItem(String nome, String valueType, String valueTypeURI, String uriRelationship){
+	public PropertyItem(String nome, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
 		this.keyName = nome;
 		this.valueType = valueType;
 		this.valueTypeURI = valueTypeURI;
 		this.uriRelationship = uriRelationship;
 	}
+	
+	public PropertyItem(String nome, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
+		this(nome, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
+		LocalLogger.logToStdOut("Using Deprecated PropertyItem constructor");
+	}
+
 		
-	public PropertyItem(JSONObject next) {
+	public PropertyItem(JSONObject next) throws Exception {
 		// keeps track of the properties who are in the domain of a given node.
 		
 		this.keyName = next.get("KeyName").toString();
-		this.valueType = next.get("ValueType").toString();
+		
+		int i=1;
+		String typeStr = (String) (next.get("ValueType"));
+		XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
+		this.valueType = typeVal;
 		this.valueTypeURI = next.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
 		this.uriRelationship = next.get("UriRelationship").toString();
 		
@@ -106,7 +117,7 @@ public class PropertyItem extends Returnable {
 
 		JSONObject ret = new JSONObject();
 		ret.put("KeyName", this.keyName);		
-		ret.put("ValueType", this.valueType);
+		ret.put("ValueType", this.valueType.getSimpleName());
 		ret.put("relationship", this.valueTypeURI);
 		ret.put("UriRelationship", this.uriRelationship);
 		ret.put("Constraints", this.constraints != null ? this.constraints.toString() : "");
@@ -167,7 +178,7 @@ public class PropertyItem extends Returnable {
 		return this.instanceValues;
 	}
 
-	public String getValueType() {
+	public XSDSupportedType getValueType() {
 		return this.valueType;
 	}
 	

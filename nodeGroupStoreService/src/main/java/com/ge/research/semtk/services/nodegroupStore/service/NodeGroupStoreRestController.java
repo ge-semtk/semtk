@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.nodegroupStore.service;
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -44,9 +46,6 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
-import com.ge.research.semtk.services.nodegroupStore.service.StoreNodeGroupRequest;
-import com.ge.research.semtk.services.nodegroupStore.service.DeleteByIdRequest;
-import com.ge.research.semtk.services.nodegroupStore.service.NodeGroupByIdRequest;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -128,7 +127,7 @@ public class NodeGroupStoreRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupById", method=RequestMethod.POST)
-	public JSONObject getNodeGroupById(@RequestBody NodeGroupByIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject getNodeGroupById(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
@@ -193,7 +192,7 @@ public class NodeGroupStoreRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupRuntimeConstraints", method=RequestMethod.POST)
-	public JSONObject getRuntimeConstraints(@RequestBody NodeGroupByIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject getRuntimeConstraints(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
@@ -263,7 +262,7 @@ public class NodeGroupStoreRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStoredNodeGroup", method=RequestMethod.POST)
-	public JSONObject deleteStoredNodeGroup(@RequestBody DeleteByIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject deleteStoredNodeGroup(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		

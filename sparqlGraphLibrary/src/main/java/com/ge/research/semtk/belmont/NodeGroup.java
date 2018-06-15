@@ -33,7 +33,7 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedObject;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
@@ -188,7 +188,7 @@ public class NodeGroup {
 		        		String propertyValueType = valueJSONObject.get("@type").toString();	// e.g. http://www.w3.org/2001/XMLSchema#string
 		        		String relationshipLocal = new OntologyName(relationship).getLocalName();   // e.g. pasteMaterial
 		        		String propertyValueTypeLocal = new OntologyName(propertyValueType).getLocalName();	// e.g. string
-		        		property = new PropertyItem(relationshipLocal, propertyValueTypeLocal, propertyValueType, relationship); 		        		
+		        		property = new PropertyItem(relationshipLocal, XSDSupportedType.getMatchingValue(propertyValueTypeLocal), propertyValueType, relationship); 		        		
 		        	}
 		        	String propertyValue = valueJSONObject.get("@value").toString();  // e.g. Ce0.8Sm0.2 Oxide Paste
 		        	property.addInstanceValue(propertyValue);		        
@@ -907,7 +907,7 @@ public class NodeGroup {
 			// Virtuoso bug or hard-to-understand equality of floating point.
 			// Solution is from: https://stackoverflow.com/questions/38371049/sparql-distinct-gives-duplicates-in-virtuoso
 			// -Paul 11/3/2017
-			if (targetObj.getValueType().endsWith("float")) {
+			if (targetObj.getValueType() == XSDSupportedType.FLOAT) {
 				sparql.append(" ").append(" xsd:float(str(" + targetObj.getSparqlID() + "))");
 			} else {
 				sparql.append(" ").append(targetObj.getSparqlID());
@@ -1681,7 +1681,7 @@ public class NodeGroup {
 
 	}
 	
-	public Node returnBelmontSemanticNode(String classUri, OntologyInfo oInfo) {
+	public Node returnBelmontSemanticNode(String classUri, OntologyInfo oInfo) throws Exception {
 		// return a belmont semantic node represented by the class passed from
 		// oInfo.
 		// PAUL NOTE: this used to be in graphGlue.js
@@ -1714,7 +1714,7 @@ public class NodeGroup {
 			else {
 
 				// create a new belmont property object and add it to the list.
-				PropertyItem p = new PropertyItem(propNameLocal, propRangeNameLocal, propRangeNameFull, propNameFull);
+				PropertyItem p = new PropertyItem(propNameLocal, XSDSupportedType.getMatchingValue(propRangeNameLocal), propRangeNameFull, propNameFull);
 				belprops.add(p);
 			}
 		}
@@ -2351,7 +2351,7 @@ public class NodeGroup {
 				// insert each property we know of. 
 				for(PropertyItem prop : curr.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + sparqlID + " " + this.getPrefixedUri(prop.getUriRelationship()) + " \"" + inst + "\"^^" + this.getPrefixedUri("http://www.w3.org/2001/XMLSchema#" + prop.getValueType()) + " .\n";  
+						retval += "\t" + sparqlID + " " + this.getPrefixedUri(prop.getUriRelationship()) + " \"" + inst + "\"^^" + this.getPrefixedUri("http://www.w3.org/2001/XMLSchema#" + prop.getValueType().getSimpleName()) + " .\n";  
 					}
 				}
 				
@@ -2500,7 +2500,7 @@ public class NodeGroup {
 			if(curr.getIsRuntimeConstrained()){ 
 				// this one is constrained. add it to the list. 
 				
-				RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)curr, RuntimeConstrainedItems.SupportedTypes.NODE);
+				RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)curr, RuntimeConstraints.SupportedTypes.NODE);
 				retval.put(curr.sparqlID, currConst);
 			}
 			else{
@@ -2510,7 +2510,7 @@ public class NodeGroup {
 			// check the properties to make sure that we get them all. 
 			for(PropertyItem pi : curr.getPropertyItems()){
 				if(pi.getIsRuntimeConstrained()){
-					RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)pi, RuntimeConstrainedItems.SupportedTypes.PROPERTYITEM);
+					RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)pi, RuntimeConstraints.SupportedTypes.PROPERTYITEM);
 					retval.put(pi.sparqlID, currConst);
 				}
 				else{

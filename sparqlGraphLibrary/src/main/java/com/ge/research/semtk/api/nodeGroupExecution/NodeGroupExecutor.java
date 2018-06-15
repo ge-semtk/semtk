@@ -24,7 +24,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedItems;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
@@ -266,7 +266,7 @@ public class NodeGroupExecutor {
 		// apply the runtimeConstraints
 		if(runtimeConstraints != null){
 			LocalLogger.logToStdOut("Setting runtime constraints: " + runtimeConstraints.toJSONString());
-			RuntimeConstrainedItems rtci = new RuntimeConstrainedItems(ng);
+			RuntimeConstraints rtci = new RuntimeConstraints(ng);
 			rtci.applyConstraintJson(runtimeConstraints);
 		}
 		

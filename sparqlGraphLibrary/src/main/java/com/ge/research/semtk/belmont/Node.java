@@ -42,7 +42,7 @@ import com.ge.research.semtk.ontologyTools.OntologyRange;
 
 public class Node extends Returnable {
 	
-	private String nodeType = "node_uri";
+	private XSDSupportedType nodeType = XSDSupportedType.NODE_URI;
 	
 	// keeps track of our properties and collection 	
 	private ArrayList<PropertyItem> props = new ArrayList<PropertyItem>();
@@ -821,7 +821,7 @@ public class Node extends Returnable {
 		
 		return constrainedProperties;
 	}
-	public String getValueType(){
+	public XSDSupportedType getValueType(){
 		return this.nodeType;
 	}
 	

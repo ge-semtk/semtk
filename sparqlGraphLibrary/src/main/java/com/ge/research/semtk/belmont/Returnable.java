@@ -65,7 +65,7 @@ public abstract class Returnable {
 		return this.constraints;
 	}
 	
-	public abstract String getValueType();
+	public abstract XSDSupportedType getValueType();
 	
 
 	
