@@ -125,7 +125,7 @@ public class NodeGroupStoreTest_IT {
 		// null comments - should fail
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, null, CREATOR, NG_JSON);
 		assertFalse(result.getSuccess());
-		assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: comments are not provided");		
+		assertTrue(result.getRationaleAsString("").contains("Invalid request to store node group: comments are not provided"));		
 
 		// empty comments - should succeed
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, "", CREATOR, NG_JSON);
@@ -149,7 +149,7 @@ public class NodeGroupStoreTest_IT {
 		// null creator
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, null, NG_JSON);
 		assertFalse(result.getSuccess());
-		assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: creator is not provided");		
+		assertTrue(result.getRationaleAsString("").contains("Invalid request to store node group: creator is not provided"));		
 
 		// empty creator
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, "", NG_JSON);
