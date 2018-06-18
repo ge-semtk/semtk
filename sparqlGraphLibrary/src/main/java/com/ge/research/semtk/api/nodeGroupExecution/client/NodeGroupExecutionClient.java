@@ -20,8 +20,7 @@ package com.ge.research.semtk.api.nodeGroupExecution.client;
 import java.net.ConnectException;
 
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
+import org.json.simple.JSONObject;import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
@@ -771,6 +770,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	public Table executeDispatchSelectFromNodeGroupToTable(NodeGroup ng, JSONObject sparqlConnectionJson, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
+		
 		return this.executeDispatchSelectFromNodeGroupToTable(ng.toJson(), sparqlConnectionJson, edcConstraintsJson, runtimeConstraintsJson);
 	}
 	

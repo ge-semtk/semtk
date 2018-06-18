@@ -396,36 +396,14 @@ public class NodeGroupExecutionRestController {
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
-			// get the nodegroup. we are assuming that the user should send a node group complete with original connection info, since we 
-			// store them that way. we'll perform a quick check to find out though
-			JSONObject encodedNodeGroup = requestBody.getJsonNodeGroup();
-			NodeGroup ng = new NodeGroup();
+			// decode the endcodedNodeGroup
+			SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
 			
-			// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.			
-			if (SparqlGraphJson.isSparqlGraphJson(encodedNodeGroup)) {
-				SparqlGraphJson sgJson = new SparqlGraphJson(encodedNodeGroup);
-				ng.addJsonEncodedNodeGroup(sgJson.getSNodeGroupJson());
-				
-				if (connection == null) {
-					connection = sgJson.getSparqlConn();
-				}
-			}
-			
-			// otherwise, check for a truncated one that is only the nodegroup proper.
-			else if(NodeGroup.isNodeGroup(encodedNodeGroup)) {
-				ng.addJsonEncodedNodeGroup(encodedNodeGroup);
-				
-				if (connection == null) {
-						throw new Exception("No sparql connection is specified");
-				}
-			}
-			else{
-				// no idea what this is...
-				throw new Exception("Value given for encoded node group is neither SparqlGraphJson nor NodeGroup");
-			}
-		
-			// retrieve the connection from the nodegroup if needed
-			
+			// swap in the connection if requested
+			// "connection == null" is included for legacy.  Not sure this is correct -Paul 6/2018
+			if (connection == null || NodeGroupExecutor.isUseNodegroupConn(connection)) {
+				connection = sgJson.getSparqlConn();
+			}			
 			
 			String targetId = null;
 			if(requestBody instanceof FilterDispatchFromNodeGroupRequestBody){
@@ -434,7 +412,7 @@ public class NodeGroupExecutionRestController {
 			}
 			
 			// dispatch the job. 
-			ngExecutor.dispatchJob(qt, connection, ng, 
+			ngExecutor.dispatchJob(qt, connection, sgJson.getNodeGroup(), 
 					requestBody.getExternalDataConnectionConstraintsJson(), 
 					null,
 					requestBody.getRuntimeConstraintsJson(), 
