@@ -68,6 +68,8 @@ public class NodeGroupStoreRestController {
 	@Autowired
 	StoreProperties prop;
 	
+	private static final String SERVICE_NAME="nodeGroupStore";
+	
 	/**
 	 * Store a new nodegroup to the nodegroup store.
 	 * @param requestBody
@@ -77,6 +79,7 @@ public class NodeGroupStoreRestController {
 	@RequestMapping(value="/storeNodeGroup", method=RequestMethod.POST)
 	public JSONObject storeNodeGroup(@RequestBody StoreNodeGroupRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/storeNodeGroup";
 		SimpleResultSet retval = null;
 			
 		try{
@@ -118,7 +121,8 @@ public class NodeGroupStoreRestController {
 		
 		}
 		catch(Exception e){
-			retval = new SimpleResultSet(false, e.getMessage());
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
 			LocalLogger.printStackTrace(e);
 		}
 		
@@ -129,6 +133,7 @@ public class NodeGroupStoreRestController {
 	@RequestMapping(value="/getNodeGroupById", method=RequestMethod.POST)
 	public JSONObject getNodeGroupById(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupById";
 		TableResultSet retval = null;
 		
 		try{
@@ -140,9 +145,8 @@ public class NodeGroupStoreRestController {
 		catch(Exception e){
 			// something went wrong. report and exit. 
 			
-			retval = new TableResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
 		}
 		
 		return retval.toJson();  // whatever we have... send it out. 
@@ -152,6 +156,7 @@ public class NodeGroupStoreRestController {
 	@RequestMapping(value="/getNodeGroupList", method=RequestMethod.POST)
 	public JSONObject getNodeGroupList(@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupList";
 		TableResultSet retval = null;
 		
 		try{
@@ -162,10 +167,8 @@ public class NodeGroupStoreRestController {
 		}
 		catch(Exception e){
 			// something went wrong. report and exit. 
-			
-			retval = new TableResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
 		}
 		
 		return retval.toJson();  // whatever we have... send it out. 
@@ -175,6 +178,7 @@ public class NodeGroupStoreRestController {
 	@RequestMapping(value="/getNodeGroupMetadata", method=RequestMethod.POST)
 	public JSONObject getNodeGroupMetadata(@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupMetadata";
 		TableResultSet retval = null;		
 		try{
 			String qry = SparqlQueries.getNodeGroupMetadata();
@@ -183,9 +187,8 @@ public class NodeGroupStoreRestController {
 		}
 		catch(Exception e){
 			// something went wrong. report and exit. 
-			retval = new TableResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
 		}
 		return retval.toJson();   
 	}
@@ -194,6 +197,7 @@ public class NodeGroupStoreRestController {
 	@RequestMapping(value="/getNodeGroupRuntimeConstraints", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraints(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupRuntimeConstraints";
 		TableResultSet retval = null;
 		
 		try{
@@ -224,12 +228,9 @@ public class NodeGroupStoreRestController {
 				}
 				
 				// otherwise, check for a truncated one that is only the nodegroup proper.
-				else if(NodeGroup.isNodeGroup(json)) {
-					// do nothing
-				}
-				else{
-					// no idea what this is...
-					throw new Exception("Value given for encoded node group does not seem to be a SparqlGraphJson nor a NodeGroup");
+				else if(! NodeGroup.isNodeGroup(json)) {
+				
+					throw new Exception("Value given for encoded node group can't be parsed");
 				}
 				
 				
@@ -237,6 +238,9 @@ public class NodeGroupStoreRestController {
 			
 				retval = new TableResultSet(true); 
 				retval.addResults(StoreNodeGroup.getConstrainedItems(json));
+			} else {
+				retval = new TableResultSet(false);
+				retval.addRationaleMessage(SVC_ENDPOINT_NAME, "Nodegroup was not found: " + requestBody.getId());
 			}
 			
 		}
@@ -246,9 +250,8 @@ public class NodeGroupStoreRestController {
 			LocalLogger.logToStdErr("a failure was encountered during the retrieval of runtime constraints: " + 
 					e.getMessage());
 			
-			retval = new TableResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(e.getMessage());
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(SVC_ENDPOINT_NAME, "Nodegroup was not found: " + requestBody.getId());
 		}
 		
 		
@@ -306,8 +309,7 @@ public class NodeGroupStoreRestController {
 			LocalLogger.logToStdErr("a failure was encountered during the deletion of " +  requestBody.getId() + ": " + 
 					e.getMessage());
 			
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
+			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(e.getMessage());
 		}
 		

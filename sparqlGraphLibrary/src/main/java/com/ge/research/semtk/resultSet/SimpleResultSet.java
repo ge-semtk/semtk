@@ -154,7 +154,7 @@ public class SimpleResultSet extends GeneralResultSet{
 	}
 	
 	@Override
-	public void readJson(JSONObject jsonObj) throws EndpointNotFoundException {
+	public void readJson(JSONObject jsonObj) {
 		super.readJson(jsonObj);
 	}
 	

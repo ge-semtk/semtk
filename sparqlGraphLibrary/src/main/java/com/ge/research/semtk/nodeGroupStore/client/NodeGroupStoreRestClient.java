@@ -59,12 +59,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			JSONObject tblWrapper = (JSONObject)jobj.get("table");
-			
-			LocalLogger.logToStdErr(tblWrapper.toString());
-						
-			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
-			retval.addResults(tbl);
 			retval.readJson(jobj);
 			retval.throwExceptionIfUnsuccessful();
 		}
@@ -101,10 +95,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			JSONObject tblWrapper = (JSONObject)jobj.get("table");
-			
-			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
-			retval.addResults(tbl);
 			retval.readJson(jobj);
 			retval.throwExceptionIfUnsuccessful();
 		}
@@ -125,7 +115,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
 			retval.readJson(jobj);
-
 			retval.throwExceptionIfUnsuccessful();
 		}
 		finally{
@@ -143,10 +132,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			JSONObject tblWrapper = (JSONObject)jobj.get("table");
-			
-			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
-			retval.addResults(tbl);
 			retval.readJson(jobj);
 			retval.throwExceptionIfUnsuccessful();
 		}

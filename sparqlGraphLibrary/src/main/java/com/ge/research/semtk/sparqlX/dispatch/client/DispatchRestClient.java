@@ -276,10 +276,6 @@ public class DispatchRestClient extends RestClient{
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			JSONObject tblWrapper = (JSONObject)jobj.get("table");
-			
-			Table tbl = Table.fromJson((JSONObject)tblWrapper.get("@table"));
-			retval.addResults(tbl);
 			retval.readJson(jobj);
 			retval.throwExceptionIfUnsuccessful();
 		}

@@ -157,9 +157,7 @@ public class TestGraph {
 		// return the table
 		SparqlEndpointInterface sei = getSei();
 		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-		if (! res.getSuccess()) {
-			throw new Exception("Sparql query failed: " + res.getRationaleAsString("\n"));
-		}
+		res.throwExceptionIfUnsuccessful();
 		
 		return res.getResults();
 	}

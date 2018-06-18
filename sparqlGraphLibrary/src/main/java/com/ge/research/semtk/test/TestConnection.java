@@ -114,9 +114,7 @@ public class TestConnection {
 		// return the table
 		SparqlEndpointInterface sei = this.conn.getDefaultQueryInterface();
 		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-		if (! res.getSuccess()) {
-			throw new Exception("Sparql query failed: " + res.getRationaleAsString("\n"));
-		}
+		res.throwExceptionIfUnsuccessful();
 		
 		return res.getResults();
 	}

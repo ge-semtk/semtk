@@ -108,6 +108,9 @@ public class RuntimeConstraints {
 			
 			// check that the sparqlID exists skipped because it will be checked when a direct assignment is made.
 			String sparqlId = c1.get("SparqlID").toString();
+			if (!sparqlId.startsWith("?")) {
+				sparqlId = "?" + sparqlId;
+			}
 			String operator = c1.get("Operator").toString();
 			XSDSupportedType operandType;
 			ArrayList<String> operands = new ArrayList<String>();   // however obvious, the operands will go here. 

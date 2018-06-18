@@ -666,6 +666,7 @@ public class NodeGroupExecutionRestController {
 			retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
 		}
 		catch(Exception e){
+			LocalLogger.printStackTrace(e);
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroupID", e);
 		}
