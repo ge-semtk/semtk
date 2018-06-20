@@ -74,7 +74,7 @@ public class NodeGroupExecutionClientTest_IT {
 			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
-			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
 		
@@ -92,7 +92,7 @@ public class NodeGroupExecutionClientTest_IT {
 			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
-			nodeGroupExecutionClient.execIngestionFromCsvStrNewConnection(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
 		
@@ -110,7 +110,7 @@ public class NodeGroupExecutionClientTest_IT {
 			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
-			nodeGroupExecutionClient.execIngestionFromCsvStrNewConnection(sgJson_TestGraph, DATA, NodeGroupExecutor.get_USE_NODEGROUP_CONN().toJson());
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
 		
@@ -131,7 +131,7 @@ public class NodeGroupExecutionClientTest_IT {
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 			boolean exceptionThrown = false;
 			try{
-				RecordProcessResults res = nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA, sgJson_TestGraph.getSparqlConn().toJson());
+				nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
 				fail(); // should not get here...we expect an exception
 			}catch(Exception e){
 				exceptionThrown = true;
@@ -152,11 +152,8 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 			
-			// TestGraph already added the correct connection to the nodegroup
-			JSONObject defaultConn = NodeGroupExecutor.get_USE_NODEGROUP_CONN().toJson();
-			
-			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, defaultConn);
-			Table tab = nodeGroupExecutionClient.executeDispatchSelectByIdToTable(ID, defaultConn, null, null);
+			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			
 			assert(true);
 		}
