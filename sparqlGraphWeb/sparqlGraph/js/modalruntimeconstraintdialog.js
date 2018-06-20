@@ -208,7 +208,7 @@ define([	// properly require.config'ed
                 var valStr = val.toString().trim();                
                 
                 if(isNumericType(valueType)){ 
-                    if(isNaN(valStr){    
+                    if(isNaN(valStr)){    
                         return "Error: invalid entry for " + sparqlId + ": entry must be numeric: " + valStr; 
                     }
                     if(valueType.indexOf("INT") >= 0 && valStr && !isInteger(valStr){
