@@ -178,7 +178,7 @@ define([	// properly require.config'ed
             
             validateList : function (valueType, val, sparqlId) {
                 // null or empty: passes
-                if (val == null || val.toString.trim() == "") {
+                if (val == null || val.toString().trim() == "") {
                     return null;
                 }
                 
