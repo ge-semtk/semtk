@@ -201,7 +201,7 @@ define([	// properly require.config'ed
                     this.validateValue(valList[i]);
                 }
                 return null;
-            }
+            },
             
             // validate a value 
             validateValue : function (valueType, val, sparqlId) {
@@ -221,7 +221,7 @@ define([	// properly require.config'ed
                 }
                
                 return null;
-            }
+            },
             
             buildRuntimeConstraints : function (optSkipSparqlId) {
                 var skipSparqlId = typeof optSkipSparqlId != "undefined" ? optSkipSparqlId : "";
