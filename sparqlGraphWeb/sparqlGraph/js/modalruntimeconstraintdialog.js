@@ -197,7 +197,7 @@ define([	// properly require.config'ed
                 }
                 
                 // loop through and validate
-                for (var i=0; i < length(valList); i++) {
+                for (var i=0; i < valList.length; i++) {
                     this.validateValue(valList[i]);
                 }
                 return null;
