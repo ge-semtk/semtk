@@ -148,6 +148,7 @@ define([	// properly require.config'ed
             validateCallback : function() {
                       
                 // validate each constraint item
+
                 for(i = 0; i < this.sparqlIds.length; i++){
                     
                     var sparqlId = this.sparqlIds[i];
@@ -157,42 +158,70 @@ define([	// properly require.config'ed
                     var operator2Element = document.getElementById("operator2" + sparqlId);
                     var operand2Element = document.getElementById("operand2" + sparqlId);    
                     
-                    if(valueType == "NODE_URI"){                        
-                        if(operand1Element.value.trim().indexOf(" ") > -1){
-                            return "Error: invalid entry for " + sparqlId + ": uri cannot contain spaces";
-                        }  
-                    }else if(isNumericType(valueType)){ 
-                        if(isNaN(operand1Element.value.trim())){    
-                            return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be numeric"; 
-                        }
-                        if(valueType.indexOf("INT") >= 0 && operand1Element.value && !isInteger(operand1Element.value.trim())){
-                            return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be an integer"
-                        }
-                        
-                        // if a second operand was entererd
-                        if(operand2Element.value){
-                            if(isNaN(operand2Element.value)){  
-                                return "Error: invalid entry for " + sparqlId.substring(1) + ": " + operand2Element.value; 
-                            }
-                            if(valueType.indexOf("INT") >= 0 && !isInteger(operand2Element.value.trim())){
-                                return "Error: invalid entry for " + sparqlId.substring(1) + ": entry must be an integer"
-                            }
-                            if(!operand1Element.value){
-                                // user entered the second operand, but not the first
-                                return "Error: invalid entry for " + sparqlId.substring(1) + ": second operand entered without first operand";
-                            }
-                            var operatorCombination = operator1Element.value + operator2Element.value;  // quick way to check 
-                            if(operatorCombination != "<>" && operatorCombination != "><" && operatorCombination != "<=>=" && operatorCombination != ">=<="){
-                                // disallow any combos other than < > or <= >=
-                                return "Error: unsupported combination of operators for " + sparqlId;
-                            }
-                        }
-                    }          
+                    if (operator1Element.value.trim() == "=") {
+                        this.validateList(valueType, operator1Element.value, sparqlId);
+                    } else {
+                        this.validateValue(valueType, operator1Element.value, sparqlId);
+                    }
                     
-                }                
+                    if (operator2Element.value.trim() == "=") {
+                        this.validateList(valueType, operator2Element.value, sparqlId);
+                    } else {
+                        this.validateValue(valueType, operator2Element.value, sparqlId);
+                    }
+                }   
+
 				return null;    // all checks passed
 			},
             
+            // validate a value or every value in list
+            
+            validateList : function (valueType, val, sparqlId) {
+                // null or empty: passes
+                if (val == null || val.toString.trim() == "") {
+                    return null;
+                }
+                
+                var valStr = val.toString().trim();
+                var valList = [];
+                
+                // see if it's a list.  If not make it one anyway.
+                if (valStr.charAt(0) == '[') {
+                    try {
+                        valList = JSON.parse(valStr);
+                    } catch (err) {
+                        return "Error: invalid entry for " + sparqlId + ": failed trying to parse list: " + valStr;
+                    }
+                } else {
+                    valList.push(valStr);
+                }
+                
+                // loop through and validate
+                for (var i=0; i < length(valList); i++) {
+                    this.validateValue(valList[i]);
+                }
+                return null;
+            }
+            
+            // validate a value 
+            validateValue : function (valueType, val, sparqlId) {
+                var valStr = val.toString().trim();                
+                
+                if(isNumericType(valueType)){ 
+                    if(isNaN(valStr){    
+                        return "Error: invalid entry for " + sparqlId + ": entry must be numeric: " + valStr; 
+                    }
+                    if(valueType.indexOf("INT") >= 0 && valStr && !isInteger(valStr){
+                        return "Error: invalid entry for " + sparqlId + ": entry must be an integer: " + valStr;
+                    }
+                } else if(valueType == "NODE_URI"){                        
+                    if(valStr.indexOf(" ") > -1){
+                        return "Error: invalid entry for " + sparqlId + ": uri cannot contain spaces: " + valStr;
+                    }  
+                }
+               
+                return null;
+            }
             
             buildRuntimeConstraints : function (optSkipSparqlId) {
                 var skipSparqlId = typeof optSkipSparqlId != "undefined" ? optSkipSparqlId : "";
