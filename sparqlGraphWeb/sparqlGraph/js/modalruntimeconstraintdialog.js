@@ -207,15 +207,15 @@ define([	// properly require.config'ed
             validateValue : function (valueType, val, sparqlId) {
                 var valStr = val.toString().trim();                
                 
-                if(isNumericType(valueType)){ 
+                if (isNumericType(valueType)) { 
                     if(isNaN(valStr)){    
                         return "Error: invalid entry for " + sparqlId + ": entry must be numeric: " + valStr; 
                     }
-                    if(valueType.indexOf("INT") >= 0 && valStr && !isInteger(valStr){
+                    if (valueType.indexOf("INT") >= 0 && valStr && !isInteger(valStr)) {
                         return "Error: invalid entry for " + sparqlId + ": entry must be an integer: " + valStr;
                     }
-                } else if(valueType == "NODE_URI"){                        
-                    if(valStr.indexOf(" ") > -1){
+                } else if (valueType == "NODE_URI") {                        
+                    if (valStr.indexOf(" ") > -1) {
                         return "Error: invalid entry for " + sparqlId + ": uri cannot contain spaces: " + valStr;
                     }  
                 }
