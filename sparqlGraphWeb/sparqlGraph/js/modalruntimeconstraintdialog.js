@@ -164,10 +164,12 @@ define([	// properly require.config'ed
                         this.validateValue(valueType, operator1Element.value, sparqlId);
                     }
                     
-                    if (operator2Element.value.trim() == "=") {
-                        this.validateList(valueType, operator2Element.value, sparqlId);
-                    } else {
-                        this.validateValue(valueType, operator2Element.value, sparqlId);
+                    if (operator2Element) {
+                        if (operator2Element.value.trim() == "=") {
+                            this.validateList(valueType, operator2Element.value, sparqlId);
+                        } else {
+                            this.validateValue(valueType, operator2Element.value, sparqlId);
+                        }
                     }
                 }   
 
@@ -198,7 +200,7 @@ define([	// properly require.config'ed
                 
                 // loop through and validate
                 for (var i=0; i < valList.length; i++) {
-                    this.validateValue(valList[i]);
+                    this.validateValue(valueType, valList[i], sparqlId);
                 }
                 return null;
             },
