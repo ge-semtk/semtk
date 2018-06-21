@@ -992,7 +992,7 @@
     var getUser = function (callback) {
         var success = function(x) {
             if (x.hasOwnProperty("name")) {
-                callback(x.user_name);
+                callback(x.name);
             } else {
                 console.log("/user did not return a name: \n" + x);
                 callback(null);
