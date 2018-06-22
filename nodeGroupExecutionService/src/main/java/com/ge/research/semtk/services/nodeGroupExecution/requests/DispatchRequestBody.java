@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.Utility;
 
 public class DispatchRequestBody extends SparqlConnRequestBody {
@@ -57,15 +58,10 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	}
 	
 	
-	public JSONArray getFlagsJson() throws Exception {
-		if(this.flags == null || this.flags.trim().isEmpty()){
-			return null;
-		}
-		return Utility.getJsonArrayFromString(this.flags);
+	public QueryFlags getFlags() throws Exception {
+		return new QueryFlags(this.flags);
 	}
-	public String getFlags() {
-		return flags;
-	}
+
 	public void setFlags(String flags) {
 		this.flags = flags;
 	}

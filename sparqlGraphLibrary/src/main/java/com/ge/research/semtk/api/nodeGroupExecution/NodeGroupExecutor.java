@@ -36,6 +36,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -254,7 +255,7 @@ public class NodeGroupExecutor {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
+	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, QueryFlags flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
 		// externalConstraints as used by executeQueryFromNodeGroup
 
 		LocalLogger.logToStdOut("Sending a " + qt + " query to the dispatcher...");
@@ -328,7 +329,7 @@ public class NodeGroupExecutor {
 	 * @param targetObjectSparqlID
 	 * @throws Exception
 	 */
-	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
+	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, QueryFlags flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
 		
 		// get the node group from the remote store
 		TableResultSet trs = this.ngsrc.executeGetNodeGroupById(storedNodeGroupId);
@@ -380,7 +381,7 @@ public class NodeGroupExecutor {
 		return dispatchJobSynchronous(qt, sc, storedNodeGroupId, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
 		
-	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
+	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, QueryFlags flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
 		
 		// dispatch the job
 		this.dispatchJob(qt, sc, storedNodeGroupId, externalConstraints, flags, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID) ;
@@ -401,7 +402,7 @@ public class NodeGroupExecutor {
 		return this.dispatchJobSynchronous(qt, sc, ng, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
 	
-	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
+	public URL[] dispatchJobSynchronous(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, QueryFlags flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception {
 		
 		// dispatch the job
 		this.dispatchJob(qt, sc, ng, externalConstraints, flags, runtimeConstraints, limitOverride, offsetOverride, targetObjectSparqlID) ;

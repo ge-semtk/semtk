@@ -18,6 +18,8 @@
 package com.ge.research.semtk.test;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -175,6 +177,13 @@ public class IntegrationTestUtility {
 	 */
 	public static NodeGroupStoreRestClient getNodeGroupStoreRestClient() throws Exception{
 		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(getServiceProtocol(), getNodegroupStoreServiceServer(),  getNodegroupStoreServicePort()));
+	}
+	
+	/**
+	 * Get a NodeGroupStoreRestClient using the integration test properties.
+	 */
+	public static NodeGroupExecutionClient getNodeGroupExecutionRestClient() throws Exception{
+		return new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(getServiceProtocol(), getNodegroupExecutionServiceServer(), getNodegroupExecutionServicePort()));
 	}
 	
 	/**

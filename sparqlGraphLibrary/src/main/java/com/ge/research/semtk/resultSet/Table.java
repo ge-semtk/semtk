@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -87,13 +88,56 @@ public class Table {
 		this.columnNames = cols;
 		this.columnTypes = colTypes;
 		
+		this.hashColumnPositions();
+		
+	}
+	
+	private void hashColumnPositions() {
 		int colNum = 0;
 		// add all of the columns to the hash so we can make lookups faster.
-		for(String c : cols){
+		for(String c : this.columnNames){
 			columnPositionInfo.put(c, colNum);
 			colNum++;
 		}
+	}
+	
+	public void removeColumn(String colName) throws Exception {
+		// find colName's pos
+		int pos = this.getColumnIndex(colName);
+		if (pos < 0) {
+			throw new Exception("Column doesn't exist in table: " + colName);
+		}
 		
+		// delete and rehash column header
+		this.columnNames = (String[])ArrayUtils.remove(this.columnNames, pos);
+		this.columnTypes = (String[])ArrayUtils.remove(this.columnTypes, pos);
+		this.hashColumnPositions();
+
+		// delete data
+		for (ArrayList<String> row : this.rows) {
+			row.remove(pos);
+		}
+	}
+	
+	/**
+	 * insert a column of data at given pos
+	 * @param colName
+	 * @param colType
+	 * @param pos
+	 * @param defaultValue
+	 * @throws Exception
+	 */
+	public void insertColumn(String colName, String colType, int pos, String defaultValue) {
+		
+		// delete and rehash column header
+		this.columnNames = (String[])ArrayUtils.add(this.columnNames, pos, colName);
+		this.columnTypes = (String[])ArrayUtils.add(this.columnTypes, pos, colType);
+		this.hashColumnPositions();
+
+		// add data
+		for (ArrayList<String> row : this.rows) {
+			row.add(pos, defaultValue);
+		}
 	}
 	
 	/**

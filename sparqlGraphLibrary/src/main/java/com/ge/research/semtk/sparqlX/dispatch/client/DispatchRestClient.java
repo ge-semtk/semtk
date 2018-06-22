@@ -28,6 +28,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class DispatchRestClient extends RestClient{
@@ -49,7 +50,7 @@ public class DispatchRestClient extends RestClient{
 	}
 	
 	
-	public SimpleResultSet executeSelectQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject externalConstraints, JSONArray flags) throws Exception{
+	public SimpleResultSet executeSelectQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject externalConstraints, QueryFlags flags) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -65,7 +66,9 @@ public class DispatchRestClient extends RestClient{
 		conf.setServiceEndpoint("dispatcher/querySelectFromNodeGroup");
 		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
 		this.parametersJSON.put("constraintSet", externalConstraints.toJSONString());
-		this.parametersJSON.put("flags", (flags == null) ? null : flags.toJSONString());
+		if (flags != null) {
+			this.parametersJSON.put("flags", flags.toJSONString());
+		}
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());

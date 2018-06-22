@@ -28,6 +28,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroupExecutionClient extends RestClient {
@@ -282,7 +283,10 @@ public class NodeGroupExecutionClient extends RestClient {
 	 */
 
 	public String dispatchSelectByIdToJobId(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception{
-		SimpleResultSet ret =  this.execDispatchSelectById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints);
+		return this.dispatchSelectByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, -1, -1, null);
+	}
+	public String dispatchSelectByIdToJobId(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, int limitOverride, int offsetOverride, QueryFlags flags) throws Exception{
+		SimpleResultSet ret =  this.execDispatchSelectById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, limitOverride, offsetOverride, flags);
 		return ret.getResult("JobId");
 	}
 
@@ -308,9 +312,13 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * @throws Exception
 	 */
 	public Table execDispatchSelectByIdToTable(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception {
+		return this.execDispatchSelectByIdToTable(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, -1, -1, null);
+	}
+
+	public Table execDispatchSelectByIdToTable(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, int limitOverride, int offsetOverride, QueryFlags flags) throws Exception {
 		
 		// dispatch the job
-		String jobId = this.dispatchSelectByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints);
+		String jobId = this.dispatchSelectByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, limitOverride, offsetOverride, flags);
 		
 		try {
 			return this.waitForJobAndGetTable(jobId);
@@ -400,12 +408,12 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 	}
 	
-	public SimpleResultSet execDispatchSelectById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception{
-		return this.execDispatchSelectById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, -1, -1);
+	public SimpleResultSet execDispatchSelectById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, QueryFlags flags) throws Exception{
+		return this.execDispatchSelectById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, -1, -1, null);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public SimpleResultSet execDispatchSelectById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, int limitOverride, int offsetOverride) throws Exception{
+	public SimpleResultSet execDispatchSelectById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, int limitOverride, int offsetOverride, QueryFlags flags) throws Exception{
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectByIdEndpoint);
@@ -415,7 +423,9 @@ public class NodeGroupExecutionClient extends RestClient {
 
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
-		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraints == null ? null : runtimeConstraints.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS, runtimeConstraints == null ? null : runtimeConstraints.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_FLAGS, flags == null ? null : flags.toJSONString());		
+
 		
 		try{
 			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
@@ -651,14 +661,20 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * 									for more details, please the package com.ge.research.semtk.belmont.runtimeConstraints .
 	 * @return
 	 */
-	
 	public String dispatchSelectFromNodeGroupToJobId(NodeGroup ng, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception{
-		SimpleResultSet ret = this.execDispatchSelectFromNodeGroup(ng, overrideConn, edcConstraintsJson, runtimeConstraints);
+		return this.dispatchSelectFromNodeGroupToJobId(ng, overrideConn, edcConstraintsJson, runtimeConstraints, null);
+	}
+	
+	public String dispatchSelectFromNodeGroupToJobId(NodeGroup ng, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, QueryFlags flags) throws Exception{
+		SimpleResultSet ret = this.execDispatchSelectFromNodeGroup(ng, overrideConn, edcConstraintsJson, runtimeConstraints, flags);
 		return ret.getResult("JobId");
 	}
 	
+	public SimpleResultSet execDispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception {
+		return this.execDispatchSelectFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints, null);
+	}
 	
-	public SimpleResultSet execDispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception{
+	public SimpleResultSet execDispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, QueryFlags flags) throws Exception{
 	
 		SimpleResultSet retval = null;
 		
@@ -667,6 +683,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, conn.toJson().toJSONString());
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
 		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraints == null ? null : runtimeConstraints.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_FLAGS,            flags == null ? null : flags.toJSONString());		
 		
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
@@ -747,12 +764,22 @@ public class NodeGroupExecutionClient extends RestClient {
 	
 	public Table dispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception{
 		
-		SimpleResultSet ret = this.execDispatchSelectFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints);
+		SimpleResultSet ret = this.execDispatchSelectFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints, null);
+		return this.waitForJobAndGetTable(ret.getResult("JobId"));
+	}
+	
+	public Table dispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, QueryFlags flags) throws Exception{
+		
+		SimpleResultSet ret = this.execDispatchSelectFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints, flags);
 		return this.waitForJobAndGetTable(ret.getResult("JobId"));
 	}
 	
 	public Table dispatchSelectFromNodeGroup(SparqlGraphJson sgjson, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints) throws Exception{
-		return this.dispatchSelectFromNodeGroup(sgjson.getNodeGroup(), sgjson.getSparqlConn(), edcConstraintsJson, runtimeConstraints);
+		return this.dispatchSelectFromNodeGroup(sgjson.getNodeGroup(), sgjson.getSparqlConn(), edcConstraintsJson, runtimeConstraints, null);
+	}
+	
+	public Table dispatchSelectFromNodeGroup(SparqlGraphJson sgjson, JSONObject edcConstraintsJson, RuntimeConstraints runtimeConstraints, QueryFlags flags) throws Exception{
+		return this.dispatchSelectFromNodeGroup(sgjson.getNodeGroup(), sgjson.getSparqlConn(), edcConstraintsJson, runtimeConstraints, flags);
 	}
 	
 	/**
