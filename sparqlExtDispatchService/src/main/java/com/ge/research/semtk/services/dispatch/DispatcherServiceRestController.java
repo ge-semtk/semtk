@@ -191,7 +191,7 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
-			WorkThread thread = new WorkThread(dsp, requestBody.getConstraintSetJson(), requestBody.getFlagsJsonArray(), qt, ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt, ThreadAuthenticator.getThreadHeaderTable());
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				
@@ -332,7 +332,16 @@ public class DispatcherServiceRestController {
 			
 		}catch(Exception e){
 			LocalLogger.printStackTrace(e);
-			throw new Exception("Cannot instantiate dispatcher: " + e.getMessage());
+			// Strange case I can't figure out.  Unpack exceptions. -Paul
+			String message = "";
+			Throwable t = e;
+			while (t != null) {
+				if (t.getMessage() != null) {
+					message += t.getMessage() + ";";
+					t = t.getCause();
+				}
+			}
+			throw new Exception("Error instantiating dispatcher:" + message);
 		}
 		
 		LocalLogger.logToStdOut("initialized job: " + requestId);	

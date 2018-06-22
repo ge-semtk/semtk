@@ -25,6 +25,7 @@ import java.util.HashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.BelmontUtil;
 import com.ge.research.semtk.belmont.NodeGroup;
@@ -51,6 +52,15 @@ public class RuntimeConstraints {
 		
 		// set up the constraint items
 		this.rtcObjectHash = parent.getConstrainedItems();
+	}
+	
+	public RuntimeConstraints(JSONArray rtConstraintsJson) throws Exception {
+		this.applyConstraintJson(rtConstraintsJson);
+	}
+	
+	public RuntimeConstraints(String rtConstraintsJsonStr) throws Exception {
+		JSONArray constraintsJson = (JSONArray) (new JSONParser()).parse(rtConstraintsJsonStr);
+		this.applyConstraintJson(constraintsJson);
 	}
 	
 	public ArrayList<String> getConstrainedItemIds(){
@@ -88,6 +98,10 @@ public class RuntimeConstraints {
 		
 		// ship it out
 		return retval;
+	}
+	
+	public String toJSONString() {
+		return this.toJson().toString();
 	}
 	
 	// acccept a json describing the runtime constraints and apply them.	

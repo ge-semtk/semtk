@@ -148,7 +148,12 @@ public class ResultsServiceRestController {
 		}    	
 		return res.toJson();	
 	}
-	
+	/**
+	 * Given a jobId, write back the raw json.  Empty if bad jobId.
+	 * @param requestBody
+	 * @param resp
+	 * @param headers
+	 */
 	@CrossOrigin
 	@RequestMapping(value="/getJsonBlobResults", method=RequestMethod.POST)
 	public void getJsonBlobResults(@RequestBody ResultsRequestBody requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -170,7 +175,12 @@ public class ResultsServiceRestController {
 	
 
 	
-
+	/**
+	 * Given multipartFile, save a copy, assign a fileId and URL  (stores a metafile)
+	 * @param requestBody
+	 * @param headers
+	 * @return  res.fullURL  res.fileId
+	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
 	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, HttpServletRequest req, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -207,6 +217,12 @@ public class ResultsServiceRestController {
 		return res.toJson();
 	}
 
+	/**
+	 * Given path, assign a fileId and URL  (stores a metafile)
+	 * @param requestBody
+	 * @param headers
+	 * @return  res.fullURL  res.fileId
+	 */
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
 	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody, @RequestHeader HttpHeaders headers) {

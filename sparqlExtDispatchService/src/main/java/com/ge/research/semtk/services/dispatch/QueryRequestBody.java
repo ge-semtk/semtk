@@ -19,7 +19,9 @@ package com.ge.research.semtk.services.dispatch;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.Utility;
 
 public class QueryRequestBody extends NodegroupRequestBody {
@@ -34,25 +36,19 @@ public class QueryRequestBody extends NodegroupRequestBody {
 		return this.constraintSet;
 	}
 	
-	public String getFlags() {
-		return this.flags;
-	}
 	public void setFlags(String flagsJsonArrayStr) {
 		this.flags = flagsJsonArrayStr;
 	}
 	
-	public JSONObject getConstraintSetJson() throws Exception{
+	public JSONObject getExternalConstraints() throws Exception {
 		if(this.constraintSet != null && !this.constraintSet.trim().isEmpty()){
 			return Utility.getJsonObjectFromString(this.constraintSet);
 		}
 		return null;
 	}
 
-	public JSONArray getFlagsJsonArray() throws Exception{
-		if(this.flags != null && !this.flags.trim().isEmpty()){
-			return Utility.getJsonArrayFromString(this.flags);
-		}
-		return null;
+	public QueryFlags getFlags() throws Exception{
+		return new QueryFlags(this.flags);
 	}
 	
 }

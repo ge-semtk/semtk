@@ -18,15 +18,15 @@
 
 package com.ge.research.semtk.querygen.client;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 
-public abstract class QueryGenClient extends RestClient {
+public abstract class QueryGenClient extends RestClient { 
 	
-	public abstract TableResultSet execute(Table locationAndValueInfoTable, JSONObject constraintsJson, JSONArray flagsJsonArray) throws Exception;
+	public abstract TableResultSet execute(Table locationAndValueInfoTable, JSONObject constraintsJson, QueryFlags queryFlags) throws Exception;
 	
 }

@@ -27,13 +27,14 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.LocalLogger;
 
 
 public class WorkThread extends Thread {
 	AsynchronousNodeGroupBasedQueryDispatcher dsp;
-	JSONObject constraintJson;
-	JSONArray flagsJsonArray;
+	JSONObject externalConstraintsJson;
+	QueryFlags queryFlags;
 
 	DispatcherSupportedQueryTypes myQT;
 	String targetObjectSparqlID;
@@ -41,15 +42,15 @@ public class WorkThread extends Thread {
 	HeaderTable headerTable = null;
 	
 	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, JSONArray flagsJsonArray, DispatcherSupportedQueryTypes qt){
-		this(dsp, constraintJson, flagsJsonArray, qt, null);
+	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt){
+		this(dsp, constraintJson, flags, qt, null);
 	}
 	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, JSONArray flagsJsonArray, DispatcherSupportedQueryTypes qt, HeaderTable headerTable){
+	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt, HeaderTable headerTable){
 		this.dsp = dsp;
 		this.myQT = qt;
-		this.constraintJson = constraintJson;
-		this.flagsJsonArray = flagsJsonArray;
+		this.externalConstraintsJson = constraintJson;
+		this.queryFlags = flags;
 		this.headerTable = headerTable;
 	}
 	
@@ -77,7 +78,7 @@ public class WorkThread extends Thread {
 			
 			else{
 				// query from the node group itself. 
-				TableResultSet trs = this.dsp.execute(constraintJson, flagsJsonArray, this.myQT, targetObjectSparqlID);
+				TableResultSet trs = this.dsp.execute(externalConstraintsJson, queryFlags, this.myQT, targetObjectSparqlID);
 			}	
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);		
