@@ -63,7 +63,6 @@ public class ResultsClient extends RestClient implements Runnable {
 		conf.setServiceEndpoint(null);
 		this.parametersJSON.clear();
 	}
-	
 
 	// graph result support
 	public void execStoreGraphResults(String jobID, JSONObject resJSON) throws Exception {
