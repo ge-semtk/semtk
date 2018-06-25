@@ -3,9 +3,6 @@ package com.ge.research.semtk.sparqlX.dispatch;
 import java.util.HashSet;
 
 import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-
-import com.ge.research.semtk.utility.Utility;
 
 public class QueryFlags {
 	HashSet<String> flags = new HashSet<String>();
@@ -13,14 +10,13 @@ public class QueryFlags {
 	public QueryFlags() {
 	}
 	
-	public QueryFlags(String jsonStr) throws Exception {
-		try {
-			if (jsonStr != null) {
-				JSONArray jsonArr = Utility.getJsonArrayFromString(jsonStr);
-				this.addFlags(jsonArr);
-			}
-		} catch (Exception e) {
-			throw new Exception("Invalid QueryFlags json array string: " + jsonStr, e);
+	public QueryFlags(String flag) throws Exception {
+		this.set(flag);
+	}
+	
+	public QueryFlags(String [] flags) throws Exception {
+		for (String f : flags) {
+			this.set(f);
 		}
 	}
 	
@@ -45,15 +41,11 @@ public class QueryFlags {
 		return this.flags.isEmpty();
 	}
 	
-	public void set (Enum flagVal) {
-		this.flags.add(flagVal.name());
+	public void set (String flagVal) {
+		this.flags.add(flagVal);
 	}
-	public boolean isSet(Enum flagVal) {
-		return this.isSet(flagVal.name());
-	}
-	
-	public boolean isSet(String flag) {
-		return this.flags.contains(flag);
+	public boolean isSet(String flagVal) {
+		return this.flags.contains(flagVal);
 	}
 	
 	public JSONArray toJson() {

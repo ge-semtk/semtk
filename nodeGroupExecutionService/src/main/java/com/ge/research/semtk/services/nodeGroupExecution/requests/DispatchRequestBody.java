@@ -59,7 +59,10 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	
 	
 	public QueryFlags getFlags() throws Exception {
-		return new QueryFlags(this.flags);
+		if(this.flags == null || this.flags.trim().isEmpty()){
+			return null;
+		}
+		return new QueryFlags(Utility.getJsonArrayFromString(this.flags));
 	}
 
 	public void setFlags(String flags) {

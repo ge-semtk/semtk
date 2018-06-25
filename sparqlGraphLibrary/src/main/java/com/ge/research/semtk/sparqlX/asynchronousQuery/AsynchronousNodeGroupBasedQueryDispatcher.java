@@ -65,6 +65,8 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected OntologyInfo oInfo;
 	protected String domain;
 	
+	public final static String FLAG_DISPATCH_RETURN_QUERIES = "DISPATCH_RETURN_QUERIES";
+	
 	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, StatusClient sClient, SparqlQueryClient queryClient, Boolean unusedFlag) throws Exception{
 		this.jobID = jobId;
 		

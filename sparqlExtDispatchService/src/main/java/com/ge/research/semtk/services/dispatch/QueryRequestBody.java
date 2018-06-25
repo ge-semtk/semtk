@@ -41,14 +41,17 @@ public class QueryRequestBody extends NodegroupRequestBody {
 	}
 	
 	public JSONObject getExternalConstraints() throws Exception {
-		if(this.constraintSet != null && !this.constraintSet.trim().isEmpty()){
+		if (this.constraintSet != null && !this.constraintSet.trim().isEmpty()) {
 			return Utility.getJsonObjectFromString(this.constraintSet);
 		}
 		return null;
 	}
 
 	public QueryFlags getFlags() throws Exception{
-		return new QueryFlags(this.flags);
+		if (this.flags == null || this.flags.trim().isEmpty()) {
+			return null;
+		}
+		return new QueryFlags(Utility.getJsonArrayFromString(this.flags));
 	}
 	
 }
