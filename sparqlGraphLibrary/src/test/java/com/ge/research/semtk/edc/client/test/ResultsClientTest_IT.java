@@ -473,7 +473,7 @@ public class ResultsClientTest_IT {
 		// Happy path
 		File testFile = new File("src/test/resources/test.csv");
 
-		SimpleResultSet res = client.execStoreBinaryFile(testFile);
+		SimpleResultSet res = client.execStoreBinaryFile("test_job_id", testFile);
 		
 		String fileId = (String) res.getResult("fileId");
 		String fullUrl = (String) res.getResult("fullURL");

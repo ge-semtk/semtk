@@ -16,9 +16,12 @@
  */
 
 
-package com.ge.research.semtk.services.results;
+package com.ge.research.semtk.services.results.requests;
 
-public class ResultsRequestBodyCsvContents extends ResultsRequestBody {
+import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.JobIdRequest;
+
+public class ResultsRequestBodyCsvContents extends JobIdRequest {
 	private String contents;
 
 	public String getContents() {

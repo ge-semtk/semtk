@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2016 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +15,20 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.results;
 
-public class ResultsRequestBodyIncrementalFileContents extends ResultsRequestBodyFileExtContents {
-	public int segmentNumber;
+package com.ge.research.semtk.services.results.requests;
+
+import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.JobIdRequest;
+
+public class ResultsRequestBodyPath extends JobIdRequest {
+	public String path;
+	public String filename;
 	
-	public void setSegmentNumber(int segmentNumber){ this.segmentNumber = segmentNumber;}
-	public int  getSegmentNumber(){ return this.segmentNumber; }
-
+	public String getPath() {
+		return path;
+	}
+	public String getFilename() {
+		return filename;
+	}
 }

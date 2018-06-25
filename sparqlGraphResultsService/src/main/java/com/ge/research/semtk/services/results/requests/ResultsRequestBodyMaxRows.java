@@ -15,11 +15,13 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.results;
+package com.ge.research.semtk.services.results.requests;
 
+import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.utility.LocalLogger;
 
-public class ResultsRequestBodyMaxRows extends ResultsRequestBody {
+public class ResultsRequestBodyMaxRows extends JobIdRequest {
 	
 	public Integer maxRows;
 	public Integer startRow = 0;	

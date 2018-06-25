@@ -36,6 +36,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
@@ -203,11 +204,19 @@ public abstract class RestClient extends Client implements Runnable {
 
 		HttpEntity entity = null;
 		if (fileParameter != null) {
+			// add the file
 			FileBody bin = new FileBody(fileParameter);
-			entity = MultipartEntityBuilder.create()
-					.addPart("file", bin)
-					.build();
+			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+			builder.addPart("file", bin);
+			
+			// add parametersJSON as StringBody
+			for (Object k : parametersJSON.keySet()) {
+				builder.addPart((String) k, new StringBody((String)parametersJSON.get(k)));
+			}
+			entity = builder.build();
+			
 		} else {
+			// add just parametersJSON
 			entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
 		}
 

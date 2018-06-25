@@ -64,6 +64,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.clear();
 	}
 	
+
 	// graph result support
 	public void execStoreGraphResults(String jobID, JSONObject resJSON) throws Exception {
 		// store the graph results. this is currently done as a single operation because the JSON-LD is less intuitive to split than the table results.
@@ -131,12 +132,13 @@ public class ResultsClient extends RestClient implements Runnable {
 	 * @return Successful SimpleResultSet containing fullUrl and fileId
 	 * @throws Exception
 	 */
-	public SimpleResultSet execStoreBinaryFile(File file) throws Exception{
+	public SimpleResultSet execStoreBinaryFile(String jobID, File file) throws Exception{
 
 		this.parametersJSON.clear();
 		this.fileParameter = file;
 
 		this.conf.setServiceEndpoint("results/storeBinaryFile");
+		this.parametersJSON.put("jobId", jobID);
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {
 			JSONObject res = (JSONObject)execute(false);
@@ -155,12 +157,13 @@ public class ResultsClient extends RestClient implements Runnable {
 	 * @return Successful SimpleResultSet containing fullUrl and fileId
 	 * @throws Exception
 	 */
-	public SimpleResultSet execStoreBinaryFilePath(String path, String filename) throws Exception{
+	public SimpleResultSet execStoreBinaryFilePath(String jobID, String path, String filename) throws Exception{
 
 		this.parametersJSON.clear();
+		this.parametersJSON.put("jobId", jobID);
 		this.parametersJSON.put("path", path);
 		this.parametersJSON.put("filename", filename);
-
+		
 		this.conf.setServiceEndpoint("results/storeBinaryFilePath");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {

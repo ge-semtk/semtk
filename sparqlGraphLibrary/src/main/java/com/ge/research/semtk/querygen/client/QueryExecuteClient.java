@@ -26,10 +26,20 @@ import com.ge.research.semtk.services.client.RestClient;
  * Client to execute queries
  */
 public abstract class QueryExecuteClient extends RestClient {
+	private String jobId = null;
 	
 	public QueryExecuteClient(ExecuteClientConfig conf){
 		this.conf = conf;
 	}
 	
-	public abstract TableResultSet execute(String query) throws Exception;	
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
+	}
+	
+	public String getJobId() {
+		return this.jobId;
+	}
+	
+	public abstract TableResultSet execute(String query) throws Exception;
+	
 }

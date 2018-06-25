@@ -56,6 +56,10 @@ public class JobTracker {
 																this.prop.getJobEndpointPassword());
 	}
 	
+	public static String generateJobId() {
+		return "job_" + UUID.randomUUID().toString();
+	}
+	
 	/**
 	 * Return percent complete as a string, or throw exception
 	 * @param jobId

@@ -292,6 +292,16 @@ public class Table {
 		return retval;
 	}
 	
+	private int getColumnIndexOrError(String colName) throws Exception {
+		if(this.columnPositionInfo.get(colName) != null){
+			return this.columnPositionInfo.get(colName);
+			
+		} else {
+			throw new Exception ("Can't find column in table: " + colName);
+		}
+		
+	}
+	
 	/**
 	 * Get the table rows
 	 */
@@ -337,6 +347,26 @@ public class Table {
 	
 	public float getCellAsFloat(int row, int col) {
 		return Float.parseFloat(getCell(row, col));
+	}
+	
+	public String getCell(int row, String colName) throws Exception {
+		return this.rows.get(row).get(this.getColumnIndexOrError(colName));
+	}
+	
+	public String getCellAsString(int row, String colName) throws Exception {
+		return getCell(row, colName);
+	}
+	
+	public int getCellAsInt(int row, String colName) throws Exception {
+		return Integer.parseInt(getCell(row, colName));
+	}
+	
+	public long getCellAsLong(int row, String colName) throws Exception {
+		return Long.parseLong(getCell(row, colName));
+	}
+	
+	public float getCellAsFloat(int row, String colName) throws Exception {
+		return Float.parseFloat(getCell(row, colName));
 	}
 	
 	/**

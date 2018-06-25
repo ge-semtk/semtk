@@ -15,33 +15,21 @@
  ** limitations under the License.
  */
 
+package com.ge.research.semtk.services.results.requests;
 
-package com.ge.research.semtk.services.results;
+import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 
-public class ResultsRequestBodyFileContents extends ResultsRequestBody {
-	private String contents;
-	private String extension;
-	
-	public String getContents() {
-		String retval = "";
+public class ResultsRequestBodyFinalizeTableResultsJson extends JobIdRequest {
+
+	private int rowCount;
+
+	public int getRowCount() {
+		return rowCount;
+	}
+
+	public void setRowCount(int rowCount) {
+		this.rowCount = rowCount;
+	}
 		
-		if(this.contents != null){ retval = this.contents; }
-		
-		return retval;
-	}
-
-	public void setContents(String contents) {
-		this.contents = contents;
-	}
-	
-	public String getExtension() {
-		return extension;
-	}
-
-	public void setExtension(String extension) {
-		this.extension = extension;
-	}
-
-	
 }
-

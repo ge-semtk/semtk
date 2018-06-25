@@ -1,12 +1,14 @@
-package com.ge.research.semtk.services.results;
+package com.ge.research.semtk.services.results.requests;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
+import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 
-public class JsonLdStoreRequestBody extends ResultsRequestBody {
+public class JsonLdStoreRequestBody extends JobIdRequest {
 
 	private String jsonRenderedGraph;
 	private String jsonRenderedHeader;

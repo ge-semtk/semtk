@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2017 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,16 @@
  ** limitations under the License.
  */
 
+package com.ge.research.semtk.services.results.requests;
 
-package com.ge.research.semtk.services.results;
+public class ResultsRequestBodyCsvMaxRows extends ResultsRequestBodyMaxRows {
 
-public class ResultsRequestBodyPath {
-	public String path;
-	public String filename;
-	
-	public String getPath() {
-		return path;
+	public boolean appendDownloadHeaders = false;
+	public boolean getAppendDownloadHeaders() {
+		return appendDownloadHeaders;
 	}
-	public String getFilename() {
-		return filename;
+
+	public void setAppendDownloadHeaders(boolean appendDownloadHeaders) {
+		this.appendDownloadHeaders = appendDownloadHeaders;
 	}
-	
-	
 }

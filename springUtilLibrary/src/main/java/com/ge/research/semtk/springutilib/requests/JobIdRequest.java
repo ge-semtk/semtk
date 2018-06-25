@@ -16,8 +16,14 @@
  */
 
 
-package com.ge.research.semtk.services.results;
+package com.ge.research.semtk.springutilib.requests;
 
-public class ResultsRequestBody {
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+public class JobIdRequest {
+	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
 	public String jobId;
+	
+	
 }
