@@ -118,14 +118,14 @@ public class RuntimeConstraints {
 		}
 		
 		for(Object curr : runtimeConstraints){
-			JSONObject c1 = (JSONObject) curr; 	// just a shortcut to avoid a multitude of casts.
+			JSONObject constraintJson = (JSONObject) curr; 	// just a shortcut to avoid a multitude of casts.
 			
 			// check that the sparqlID exists skipped because it will be checked when a direct assignment is made.
-			String sparqlId = c1.get("SparqlID").toString();
+			String sparqlId = constraintJson.get("SparqlID").toString();
 			if (!sparqlId.startsWith("?")) {
 				sparqlId = "?" + sparqlId;
 			}
-			String operator = c1.get("Operator").toString();
+			String operator = constraintJson.get("Operator").toString();
 			XSDSupportedType operandType;
 			ArrayList<String> operands = new ArrayList<String>();   // however obvious, the operands will go here. 
 			
@@ -145,7 +145,7 @@ public class RuntimeConstraints {
 				throw new Exception("Can't apply runtime constraints to object type " + this.rtcObjectHash.get(sparqlId).getObjectType() + " for sparqlID: " + sparqlId);
 			}
 			
-			JSONArray opers = (JSONArray) c1.get("Operands");
+			JSONArray opers = (JSONArray) constraintJson.get("Operands");
 			
 			// step through the array and get the operands.
 			try{

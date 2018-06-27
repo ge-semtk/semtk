@@ -31,18 +31,18 @@ public class RuntimeConstrainedObject{
 	// it has to work flexibly with all and any of the above. 		
 	
 	
-	private RuntimeConstraints.SupportedTypes objectType;
-	private Returnable constrainedObject; 
+	private RuntimeConstraints.SupportedTypes itemType;
+	private Returnable ngItem; 
 	private SupportedOperations operation;
 	private ArrayList<String> operands;
 	
-	public RuntimeConstrainedObject(Returnable obj, RuntimeConstraints.SupportedTypes objType){
-		this.objectType = objType;
-		this.constrainedObject = obj;
+	public RuntimeConstrainedObject(Returnable item, RuntimeConstraints.SupportedTypes itemType){
+		this.itemType = itemType;
+		this.ngItem = item;
 	}
 	
 	public String getObjectName(){
-		String retval = this.constrainedObject.getRuntimeConstraintID();
+		String retval = this.ngItem.getRuntimeConstraintID();
 		return retval;
 	}
 	
@@ -50,8 +50,7 @@ public class RuntimeConstrainedObject{
 		this.operation = operation;
 		this.operands = operands;
 		
-		this.selectAndSetConstraint(this.constrainedObject.getSparqlID(), operation.name(), this.constrainedObject.getValueType(), operands);
-		// this.constrainedObject.setValueConstraint(new ValueConstraint(constraint));
+		this.selectAndSetConstraint(this.ngItem.getSparqlID(), operation.name(), this.ngItem.getValueType(), operands);
 	}
 	
 	public String getOperationName(){ return this.operation.name(); }
@@ -60,19 +59,19 @@ public class RuntimeConstrainedObject{
 	public ValueConstraint getValueConstraint(){
 		
 		// create the VC and return it.	
-		return this.constrainedObject.getValueConstraint();
+		return this.ngItem.getValueConstraint();
 	}
 	
 	public XSDSupportedType getValueType(){
-		return this.constrainedObject.getValueType();
+		return this.ngItem.getValueType();
 	}
 	
 	public SupportedTypes getObjectType(){
-		return this.objectType;
+		return this.itemType;
 	}
 	
 	private void setValueConstraint(String vcString){
-		this.constrainedObject.setValueConstraint(new ValueConstraint(vcString));
+		this.ngItem.setValueConstraint(new ValueConstraint(vcString));
 	}
 	
 	
@@ -257,7 +256,7 @@ public class RuntimeConstrainedObject{
 	// get the value type of the constraint based on the sparqlId
 	private XSDSupportedType getType(String sparqlId) throws Exception{
 		
-		return this.constrainedObject.getValueType();
+		return this.ngItem.getValueType();
 	}
 	
 

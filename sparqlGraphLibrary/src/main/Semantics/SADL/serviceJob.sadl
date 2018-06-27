@@ -14,4 +14,11 @@ Job is a class,
 	described by percentComplete with a single value of type int,
 	described by fullResultsURL with a single value of type URL,
 	described by creationTime with a single value of type dateTime,
-	described by sampleResultsURL with a single value of type URL.
+	described by sampleResultsURL with a single value of type URL,
+	described by userName with a single value of type string,
+	described by file with values of type BinaryFile.
+	
+BinaryFile is a class,
+	described by fileID with a single value of type string,
+	described by filename with a single value of type string,
+	described by path with a single value of type string.

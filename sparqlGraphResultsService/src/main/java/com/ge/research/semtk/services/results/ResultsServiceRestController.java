@@ -52,6 +52,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.JobFileInfo;
 import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsStorage;
 import com.ge.research.semtk.edc.resultsStorage.JsonLdResultsSerializer;
@@ -207,15 +208,15 @@ public class ResultsServiceRestController {
 
 		try{
 			if (file != null) {
-				String fileId = UUID.randomUUID().toString();
+				String fileId = this.generateFileId();
 				String originalFileName = file.getOriginalFilename();
-				String destinationFile = prop.getFileLocation() + "/" + fileId;
+				String storageFileName = prop.getFileLocation() + "/" + fileId;
 				
-				LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + destinationFile);
-				Files.copy(file.getInputStream(), rootLocation.resolve(destinationFile));
+				LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + storageFileName);
+				Files.copy(file.getInputStream(), rootLocation.resolve(storageFileName));
 
-				res = this.writeMetaFile(fileId, destinationFile, originalFileName, ThreadAuthenticator.getThreadUserName());
-
+				res = this.addBinaryFile(jobId, fileId, originalFileName, storageFileName);
+				
 				LocalLogger.logToStdOut("done uploading file");
 			}
 
@@ -253,8 +254,9 @@ public class ResultsServiceRestController {
 			    throw new Exception("File is not readable from results service: " + requestBody.getPath());
 			}
 			
-			res = this.writeMetaFile(UUID.randomUUID().toString(), requestBody.getPath(), requestBody.getFilename(), ThreadAuthenticator.getThreadUserName());
-			
+			String fileId = this.generateFileId();
+			res = this.addBinaryFile(requestBody.getJobId(), fileId, requestBody.getFilename(), requestBody.getPath());
+						
 			LocalLogger.logToStdOut("done uploading file");
 
 		} catch (Exception e) {
@@ -267,31 +269,14 @@ public class ResultsServiceRestController {
 		return res.toJson();
 	}
 	
-	/**
-	 * Write a json results meta file
-	 * @param path
-	 * @param filename
-	 * @return success SimpleResultSet
-	 * @throws IOException 
-	 */
-	private SimpleResultSet writeMetaFile(String fileId, String path, String filename, String principalUserName) throws IOException {
-		// get UUID and filenames
-		String destinationFile = prop.getFileLocation() + "/" + fileId;
-		String destinationFileMeta = destinationFile.concat(ResultsMetaFile.getSuffix());
-		
-		ResultsMetaFile metaFile = new ResultsMetaFile();
-		metaFile.setFileName(filename);
-		metaFile.setPath(path);
-		metaFile.setUserName(principalUserName);
-		metaFile.write(destinationFileMeta);
-		
-		String adjustedUrl = prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
-
-		SimpleResultSet res = new SimpleResultSet();
-		res.setSuccess(true);
-		res.addResult("fullURL", adjustedUrl);
+	
+	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String storageFileName) throws Exception {
+		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, storageFileName);
+		String userUrl = this.getUserURL(fileId);
+	
+		SimpleResultSet res = new SimpleResultSet(true);
+		res.addResult("fullURL", userUrl);
 		res.addResult("fileId", fileId);
-		
 		return res;
 	}
 	
@@ -305,16 +290,11 @@ public class ResultsServiceRestController {
         // logging
         LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
         LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
-
-        String metaFilePath = prop.getFileLocation()+"/"+fileId.concat(ResultsMetaFile.getSuffix());
-        String dataFilePath = null;
-
-        String originalFileName = "unknown";
+        
         try {
-            
-        	ResultsMetaFile metaFile = new ResultsMetaFile(metaFilePath);
-            originalFileName = metaFile.getFileName();
-            dataFilePath = metaFile.getPath();
+        	JobFileInfo metaFile = this.getJobTracker().getFile(fileId);
+            String originalFileName = metaFile.getFileName();
+            String dataFilePath = metaFile.getPath();
        
             // Testing only.  Non-binary endpoints will use the JobTracker for matching Principal.
             if (ThreadAuthenticator.getThreadUserName().equals(metaFile.getUserName())) {
@@ -657,6 +637,14 @@ public class ResultsServiceRestController {
 	
 	private JobTracker getJobTracker() throws Exception{
 		return new JobTracker(edc_prop);
+	}
+	
+	private String getUserURL(String fileId) {
+		return prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
+	}
+	
+	private String generateFileId() {
+		return UUID.randomUUID().toString();
 	}
 	
 }

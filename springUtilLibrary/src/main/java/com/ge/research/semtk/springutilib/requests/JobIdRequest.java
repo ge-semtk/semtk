@@ -24,6 +24,12 @@ import javax.validation.constraints.Size;
 public class JobIdRequest {
 	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
 	public String jobId;
-	
-	
+
+	public String getJobId() {
+		return jobId;
+	}
+
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
+	}
 }
