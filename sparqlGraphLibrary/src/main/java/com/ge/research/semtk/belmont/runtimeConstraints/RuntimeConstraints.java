@@ -20,21 +20,22 @@ package com.ge.research.semtk.belmont.runtimeConstraints;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.BelmontUtil;
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.resultSet.Table;
 
+/**
+ * @author Justin, then 200001934
+ *
+ */
 public class RuntimeConstraints {
 
 	// date formats are supposed to look like this: 2014-05-23T10:20:13
@@ -44,23 +45,10 @@ public class RuntimeConstraints {
 	
 	private HashMap<String, RuntimeConstrainedObject> rtcObjectHash;
 	
-	public RuntimeConstraints() {
-		this.rtcObjectHash = new HashMap<String, RuntimeConstrainedObject>();
-	}
-	
 	public RuntimeConstraints(NodeGroup parent){
 		
 		// set up the constraint items
-		this.rtcObjectHash = parent.getConstrainedItems();
-	}
-	
-	public RuntimeConstraints(JSONArray rtConstraintsJson) throws Exception {
-		this.applyConstraintJson(rtConstraintsJson);
-	}
-	
-	public RuntimeConstraints(String rtConstraintsJsonStr) throws Exception {
-		JSONArray constraintsJson = (JSONArray) (new JSONParser()).parse(rtConstraintsJsonStr);
-		this.applyConstraintJson(constraintsJson);
+		this.rtcObjectHash = parent.getRuntimeConstrainedItems();
 	}
 	
 	public ArrayList<String> getConstrainedItemIds(){
@@ -71,6 +59,11 @@ public class RuntimeConstraints {
 		}
 		return retval;
 	}
+	/**
+	 * Create json of all runtime-constraints in the nodegroup.
+	 * NOTE if you've already applied constraints to a nodegroup you probably don't need this json
+	 * @return
+	 */
 	public JSONArray toJson(){
 		JSONArray retval = new JSONArray();
 		
@@ -104,7 +97,11 @@ public class RuntimeConstraints {
 		return this.toJson().toString();
 	}
 	
-	// acccept a json describing the runtime constraints and apply them.	
+	/**
+	 * Apply runtimeConstraints as value constraints to the nodegroup
+	 * @param runtimeConstraints
+	 * @throws Exception
+	 */
 	public void applyConstraintJson(JSONArray runtimeConstraints) throws Exception {
 		// read out and apply the various RT constraints from the JSON. 
 		// Throw an exception if anything seems amiss.
@@ -178,17 +175,17 @@ public class RuntimeConstraints {
 		
 	}
 	
+	/**
+	 * Apply a constraint to the nodegroup
+	 * @param sparqlId
+	 * @param operation
+	 * @param operands
+	 * @throws Exception
+	 */
 	public void applyConstraint(String sparqlId, SupportedOperations operation, ArrayList<String> operands) throws Exception{
 		String id = BelmontUtil.formatSparqlId(sparqlId);
 		// find the appropriate constrained object and then pass along the work
 		this.rtcObjectHash.get(id).applyConstraint(operation, operands);
-		
-	}
-	
-	public void selectAndSetConstraint(String sparqlId, String operationID, XSDSupportedType xsdType, ArrayList<String> operands) throws Exception{
-		String id = BelmontUtil.formatSparqlId(sparqlId);
-		// find the appropriate constrained object and then pass along the work
-		this.rtcObjectHash.get(id).selectAndSetConstraint(id, operationID, xsdType, operands);
 		
 	}
 	

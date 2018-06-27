@@ -2492,7 +2492,13 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	public HashMap<String, RuntimeConstrainedObject> getConstrainedItems(){
+	/**
+	 * For every runtime constrainable object that isRuntimeConstrained 
+	 * (flag is set, regardless of whether there is a constraint), 
+	 * build RuntimeConstrainedObject
+	 * @return
+	 */
+	public HashMap<String, RuntimeConstrainedObject> getRuntimeConstrainedItems(){
 		HashMap<String, RuntimeConstrainedObject> retval = new HashMap<String, RuntimeConstrainedObject>();
 		
 		// go through all of the nodegroup contents and send back the collection.

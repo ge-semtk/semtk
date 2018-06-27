@@ -4,8 +4,11 @@ conf/maven/settings.xml
 .classpath
 .settings
 .gitignore
+*.iml
 target
 sparqlGraphLibrary/src/test/resources/datacleanertest-output.csv
 logs/
 *.swp
 DOT_SETTINGS
+.idea/
+.vscode/
