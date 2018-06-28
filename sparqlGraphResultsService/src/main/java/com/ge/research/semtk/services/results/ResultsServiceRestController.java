@@ -38,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,6 +62,8 @@ import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.results.requests.JsonBlobRequestBody;
 import com.ge.research.semtk.services.results.requests.JsonLdStoreRequestBody;
 import com.ge.research.semtk.services.results.requests.ResultsRequestBodyCsvMaxRows;
@@ -185,7 +188,41 @@ public class ResultsServiceRestController {
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
-	
+	@CrossOrigin
+	@RequestMapping(value="/getResultsUrls", method=RequestMethod.POST)
+	public void getResultsUrls(@RequestBody JobIdRequest requestBody,  @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getResultsUrls";
+		final String STRING_TYPE = "http://www.w3.org/2001/XMLSchema#string";  // TODO create an enum in Belmont and start using it everywhere
+		final String URL_TYPE = "url";  // TODO create an enum in Belmont and start using it everywhere
+
+		try{
+			JobTracker tracker = getJobTracker();
+	    	URL fullResultsUrl = tracker.getFullResultsURL(requestBody.jobId);  
+			ArrayList<JobFileInfo> fileInfoList = tracker.getJobFiles(requestBody.jobId);
+			
+			// create table of fullResults (max 1 value) and files (many values)
+			Table table = new Table(new String[] {"fileName", "fileUrl"}, new String[] {STRING_TYPE, URL_TYPE});
+			
+			// if there is a "fullResult"
+			if (fullResultsUrl != null) {
+				table.addRow(new String[] {	"full_results.csv",  this.getFullCsvUserURL(requestBody.jobId) });
+			}
+			
+			// add rest of rows
+			for (JobFileInfo info : fileInfoList) {
+				table.addRow(new String[] {	info.getFileName(), this.getBinaryFileUserURL(info.getFileId()) });
+			}
+			
+			// PEC HERE continue;  // adding results and returning
+			           // and handling exceptions
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    LocalLogger.printStackTrace(e);
+	    }
+
+		LocalLogger.logToStdErr("done writing output");
+	}
 
 	
 	/**
@@ -272,7 +309,7 @@ public class ResultsServiceRestController {
 	
 	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String storageFileName) throws Exception {
 		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, storageFileName);
-		String userUrl = this.getUserURL(fileId);
+		String userUrl = this.getBinaryFileUserURL(fileId);
 	
 		SimpleResultSet res = new SimpleResultSet(true);
 		res.addResult("fullURL", userUrl);
@@ -331,7 +368,6 @@ public class ResultsServiceRestController {
         	}
         }
     }
-
 
 
     /**
@@ -578,12 +614,11 @@ public class ResultsServiceRestController {
 	    		throw new Exception("No job exists with id " + requestBody.jobId);
 	    	}
 	    	
-	    	URL json = new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + requestBody.jobId + "&maxRows=200");
-	    	URL csv  =  new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + requestBody.jobId);
-	    	
-	    	res.addResult("fullURL", csv.toString());  	// csv  - retain bad label for backward compatibility
-		    res.addResult("sampleURL", json.toString());	// json - retain bad label for backward compatibility
-		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", "sampleURL", json.toString(), "fullURL", csv.toString());
+	    	res.addResult("fullURL", this.getFullCsvUserURL(requestBody.jobId));  	// csv  - retain bad label for backward compatibility
+		    res.addResult("sampleURL", this.getSampleJsonUserURL(requestBody.jobId));	// json - retain bad label for backward compatibility
+		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults URLs", 
+		    		"sampleURL", this.getSampleJsonUserURL(requestBody.jobId), 
+		    		"fullURL", this.getFullCsvUserURL(requestBody.jobId));
 		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);
@@ -639,8 +674,16 @@ public class ResultsServiceRestController {
 		return new JobTracker(edc_prop);
 	}
 	
-	private String getUserURL(String fileId) {
+	private String getBinaryFileUserURL(String fileId) {
 		return prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
+	}
+	
+	private String getSampleJsonUserURL(String jobId) throws MalformedURLException {
+		return new URL(prop.getBaseURL() + "/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200").toString();
+	}
+	
+	private String getFullCsvUserURL(String jobId) throws MalformedURLException {
+		return new URL(prop.getBaseURL() + "/results/getTableResultsCsvForWebClient?jobId=" + jobId).toString();
 	}
 	
 	private String generateFileId() {
