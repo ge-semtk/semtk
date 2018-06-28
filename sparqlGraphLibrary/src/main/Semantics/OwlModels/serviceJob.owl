@@ -1,20 +1,27 @@
 <rdf:RDF
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel"
     xmlns:owl="http://www.w3.org/2002/07/owl#"
-    xmlns="http://research.ge.com/semtk/services/job#"
+    xmlns:job="http://research.ge.com/semtk/services/job#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
   xml:base="http://research.ge.com/semtk/services/job">
-  <owl:Ontology rdf:about="http://research.ge.com/semtk/services/job">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
     <owl:versionInfo>$Revision:$ Last modified on   $Date:$</owl:versionInfo>
-    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'serviceJob.sadl' and should not be edited.</rdfs:comment>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'serviceJob.sadl' and should not be directly edited.</rdfs:comment>
   </owl:Ontology>
   <owl:Class rdf:ID="Status">
     <owl:equivalentClass>
       <owl:Class>
         <owl:oneOf rdf:parseType="Collection">
-          <Status rdf:ID="Success"/>
-          <Status rdf:ID="Failure"/>
-          <Status rdf:ID="InProgress"/>
+          <job:Status rdf:ID="Success"/>
+          <job:Status rdf:ID="Failure"/>
+          <job:Status rdf:ID="InProgress"/>
         </owl:oneOf>
       </owl:Class>
     </owl:equivalentClass>
@@ -22,10 +29,39 @@
   <owl:Class rdf:ID="URL">
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="full"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="BinaryFile">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="path"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="filename"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="fileID"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -33,18 +69,17 @@
   <owl:Class rdf:ID="Job">
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:ID="percentComplete"/>
+          <owl:DatatypeProperty rdf:ID="userName"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:onClass rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
-        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxQualifiedCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
           <owl:ObjectProperty rdf:ID="sampleResultsURL"/>
         </owl:onProperty>
@@ -52,8 +87,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="creationTime"/>
         </owl:onProperty>
@@ -61,9 +96,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:onClass rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
-        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxQualifiedCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
           <owl:ObjectProperty rdf:ID="fullResultsURL"/>
         </owl:onProperty>
@@ -71,27 +105,17 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:onClass rdf:resource="http://research.ge.com/semtk/services/job#Status"/>
-        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxQualifiedCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:ID="status"/>
+          <owl:DatatypeProperty rdf:ID="percentComplete"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxCardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:ID="id"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="statusMessage"/>
         </owl:onProperty>
@@ -99,65 +123,73 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:onClass rdf:resource="http://research.ge.com/semtk/services/job#Status"/>
-        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxQualifiedCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/services/job#status"/>
+          <owl:ObjectProperty rdf:ID="status"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:onClass rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
-        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxQualifiedCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/services/job#fullResultsURL"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onClass rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
-        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:maxQualifiedCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/services/job#sampleResultsURL"/>
+          <owl:DatatypeProperty rdf:ID="id"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
-  <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/services/job#fullResultsURL">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
-    <rdfs:range rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
+  <owl:ObjectProperty rdf:about="#fullResultsURL">
+    <rdfs:domain rdf:resource="#Job"/>
+    <rdfs:range rdf:resource="#URL"/>
   </owl:ObjectProperty>
-  <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/services/job#sampleResultsURL">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
-    <rdfs:range rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
+  <owl:ObjectProperty rdf:about="#sampleResultsURL">
+    <rdfs:domain rdf:resource="#Job"/>
+    <rdfs:range rdf:resource="#URL"/>
   </owl:ObjectProperty>
-  <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/services/job#status">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
-    <rdfs:range rdf:resource="http://research.ge.com/semtk/services/job#Status"/>
+  <owl:ObjectProperty rdf:about="#status">
+    <rdfs:domain rdf:resource="#Job"/>
+    <rdfs:range rdf:resource="#Status"/>
   </owl:ObjectProperty>
-  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/services/job#id">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
+  <owl:ObjectProperty rdf:ID="file">
+    <rdfs:domain rdf:resource="#Job"/>
+    <rdfs:range rdf:resource="#BinaryFile"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="#id">
+    <rdfs:domain rdf:resource="#Job"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/services/job#percentComplete">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
+  <owl:DatatypeProperty rdf:about="#filename">
+    <rdfs:domain rdf:resource="#BinaryFile"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#percentComplete">
+    <rdfs:domain rdf:resource="#Job"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/services/job#full">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#URL"/>
+  <owl:DatatypeProperty rdf:about="#full">
+    <rdfs:domain rdf:resource="#URL"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/services/job#statusMessage">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
+  <owl:DatatypeProperty rdf:about="#path">
+    <rdfs:domain rdf:resource="#BinaryFile"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/services/job#creationTime">
-    <rdfs:domain rdf:resource="http://research.ge.com/semtk/services/job#Job"/>
+  <owl:DatatypeProperty rdf:about="#fileID">
+    <rdfs:domain rdf:resource="#BinaryFile"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#userName">
+    <rdfs:domain rdf:resource="#Job"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#statusMessage">
+    <rdfs:domain rdf:resource="#Job"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#creationTime">
+    <rdfs:domain rdf:resource="#Job"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
   </owl:DatatypeProperty>
 </rdf:RDF>

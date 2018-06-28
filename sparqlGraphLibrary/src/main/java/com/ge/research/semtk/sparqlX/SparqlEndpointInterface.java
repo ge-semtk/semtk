@@ -307,6 +307,16 @@ public abstract class SparqlEndpointInterface {
 		return resultSet;
 	}	
 	
+	public Table executeQueryToTable(String query) throws Exception {
+		TableResultSet res = (TableResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+		res.throwExceptionIfUnsuccessful();
+		return res.getTable();
+	}
+	
+	public void executeQueryAndConfirm(String query) throws Exception {
+		GeneralResultSet res = this.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+	}
 	
 	/**
 	 * Execute a query. Uses http POST.  

@@ -18,14 +18,14 @@
 package com.ge.research.semtk.services.results.cleanUp;
 
 import java.io.File;
-import java.io.FileReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.services.results.ResultsEdcConfigProperties;
-import com.ge.research.semtk.services.results.ResultsMetaFile;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class DeleteThread extends Thread {
@@ -65,13 +65,7 @@ public class DeleteThread extends Thread {
     				 // metaFile.deleteTargetPath() could delete files out of order, 
     				 //  so check f.exists()
 	                 if (f.exists() && f.lastModified() < cutoff) {
-	                	 try {
-	                		 // if this is a meta file, delete results target file too 
-		                	 if (ResultsMetaFile.fileIsInstanceOf(f.getName())) {
-		                		 ResultsMetaFile metaFile = new ResultsMetaFile(new FileReader(f));
-		                		 metaFile.deleteTargetPath();
-		                	 }
-	                	 
+	                	 try {	                	 
 	                		 f.delete();
 	                	 } catch (Exception e1) {
 	                		 LocalLogger.printStackTrace(e1);
@@ -80,7 +74,10 @@ public class DeleteThread extends Thread {
                 }
     			
     			// cleanup meta data.
-    			this.jTracker.deleteJobsBeforeGivenMinutesAgo(frequencyInMinutes);
+    			// get the current date and time...
+    			Calendar cal = Calendar.getInstance();
+    			cal.add(Calendar.MINUTE, (-1 * frequencyInMinutes) );
+    			this.jTracker.deleteJobsAndFiles(cal.getTime());
     			
     		}
     		catch(Exception iei){

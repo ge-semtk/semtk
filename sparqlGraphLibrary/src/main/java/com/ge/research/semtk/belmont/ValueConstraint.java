@@ -19,6 +19,7 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class ValueConstraint {
 
@@ -100,6 +101,31 @@ public class ValueConstraint {
 		} else 	{
 			// leftovers
 			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
+		} 
+		return ret;
+	}
+	
+	public static String buildFilterConstraint(Returnable item, String oper, Date pred)  throws Exception {
+		String ret;
+		
+		if (!(	oper.equals("=") || 
+				oper.equals("!=") ||
+				oper.equals(">") ||
+				oper.equals(">=") ||
+				oper.equals("<") ||
+				oper.equals("<=")) ) {
+			throw new Exception("Unknown operator for constraint: " + oper);
+		}
+		
+		XSDSupportedType t = item.getValueType();
+		
+
+		String dateStr = BelmontUtil.buildSparqlDate(pred);
+		if (t.dateOperationAvailable()) {
+			// date
+			ret = String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, dateStr, t.getXsdSparqlTrailer());
+		} else {
+			throw new Exception("Can't apply date value constraint to non-date item: " + item.getSparqlID());
 		} 
 		return ret;
 	}

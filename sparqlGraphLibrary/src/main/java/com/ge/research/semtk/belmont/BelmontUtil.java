@@ -18,6 +18,9 @@
 
 package com.ge.research.semtk.belmont;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +31,10 @@ import org.json.simple.JSONObject;
 public class BelmontUtil {
 	private final static String ILLEGAL_CHAR = "[^A-Za-z_0-9]";
 	
+	public static String buildSparqlDate(Date d) {
+		DateFormat xsdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		return xsdFormat.format(d);
+	}
 	public static String generateSparqlID(String proposedName, HashMap<String, String> reservedNameHash){
 		// accepts a suggested sparqlID and outputs either that ID or one based off it.
 		String retval = proposedName; 	// assume the proposed name is fine. 

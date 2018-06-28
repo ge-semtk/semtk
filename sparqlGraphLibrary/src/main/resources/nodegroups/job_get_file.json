@@ -1,0 +1,152 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "edc semtk services",
+		"domain": "http://research.ge.com",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 8,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "fileID",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#fileID",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?fileID",
+						"isReturned": false,
+						"isOptional": false,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "filename",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#filename",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?filename",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "path",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#path",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?path",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "BinaryFile",
+				"fullURIName": "http://research.ge.com/semtk/services/job#BinaryFile",
+				"subClassNames": [],
+				"SparqlID": "?BinaryFile",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "userName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#userName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?userName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?BinaryFile"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "file",
+						"ValueType": "BinaryFile",
+						"UriValueType": "http://research.ge.com/semtk/services/job#BinaryFile",
+						"ConnectBy": "file",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/services/job#file"
+					}
+				],
+				"NodeName": "Job",
+				"fullURIName": "http://research.ge.com/semtk/services/job#Job",
+				"subClassNames": [],
+				"SparqlID": "?Job",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Job",
+				"type": "http://research.ge.com/semtk/services/job#Job",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?BinaryFile",
+				"type": "http://research.ge.com/semtk/services/job#BinaryFile",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}
