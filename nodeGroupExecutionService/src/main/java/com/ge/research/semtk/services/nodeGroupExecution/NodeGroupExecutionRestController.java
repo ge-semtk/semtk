@@ -34,7 +34,7 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
@@ -660,7 +660,7 @@ public class NodeGroupExecutionRestController {
 		
 		try {
 			NodeGroup ng = this.getNodeGroupFromJson(requestBody.getJsonNodeGroup());
-			RuntimeConstraints rtci = new RuntimeConstraints(ng);
+			RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
 			
 			retval = new TableResultSet(true);
 			retval.addResults( rtci.getConstrainedItemsDescription() );

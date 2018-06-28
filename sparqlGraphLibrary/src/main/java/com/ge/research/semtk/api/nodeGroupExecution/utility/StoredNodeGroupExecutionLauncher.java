@@ -25,7 +25,7 @@ import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionCli
 import com.ge.research.semtk.api.storedQueryExecution.utility.insert.ColumnToRequestMapping;
 import com.ge.research.semtk.api.storedQueryExecution.utility.insert.GenericInsertionRequestBody;
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -40,7 +40,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}
 	// by ID
 	// select functionality
-	public TableResultSet launchSelectJob(String id, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchSelectJob(String id, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -81,7 +81,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 	
 	// Delete functionality
-	public TableResultSet launchDeleteJob(String id, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchDeleteJob(String id, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -122,7 +122,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 
 	// Count functionality
-	public TableResultSet launchCountJob(String id, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchCountJob(String id, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -163,7 +163,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 	
 	// select functionality
-	public TableResultSet launchFilterJob(String id, String targetObjectSparqlId, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchFilterJob(String id, String targetObjectSparqlId, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -205,7 +205,7 @@ public class StoredNodeGroupExecutionLauncher {
 	
 	// by NodeGroup			
 	// select functionality
-	public TableResultSet launchSelectJob(NodeGroup ng, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchSelectJob(NodeGroup ng, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -247,7 +247,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 		
 	// count functionality
-	public TableResultSet launchCounctJob(NodeGroup ng, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchCounctJob(NodeGroup ng, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -289,7 +289,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 		
 	// delete functionality
-	public TableResultSet launchDeleteJob(NodeGroup ng, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchDeleteJob(NodeGroup ng, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -331,7 +331,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 
 	// Filter functionality
-	public TableResultSet launchFilterJob(NodeGroup ng, String targetObjectSparqlId, RuntimeConstraints runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	public TableResultSet launchFilterJob(NodeGroup ng, String targetObjectSparqlId, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
 		// create the executor we will be using

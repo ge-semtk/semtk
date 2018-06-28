@@ -19,24 +19,23 @@ package com.ge.research.semtk.belmont.runtimeConstraints;
 
 import java.util.ArrayList;
 
-import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints.SupportedTypes;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager.SupportedTypes;
 import com.ge.research.semtk.utility.LocalLogger;
 
-public class RuntimeConstrainedObject{
-	// this is used to store Nodes, PropertyItems which might be runtime constrained. 
-	// it has to work flexibly with all and any of the above. 		
+public class RuntimeConstraintMetaData{
+	// Meta data about operators, operands, and items involved in each constraint
+	// and the translation code to apply this info to the nodegroup as a ValueConstraint
 	
 	
-	private RuntimeConstraints.SupportedTypes itemType;
+	private RuntimeConstraintManager.SupportedTypes itemType;
 	private Returnable ngItem; 
 	private SupportedOperations operation;
 	private ArrayList<String> operands;
 	
-	public RuntimeConstrainedObject(Returnable item, RuntimeConstraints.SupportedTypes itemType){
+	public RuntimeConstraintMetaData(Returnable item, RuntimeConstraintManager.SupportedTypes itemType){
 		this.itemType = itemType;
 		this.ngItem = item;
 	}
@@ -46,7 +45,7 @@ public class RuntimeConstrainedObject{
 		return retval;
 	}
 	
-	public boolean isConstrained() {
+	public boolean constraintIsApplied() {
 		return this.operation != null;
 	}
 	

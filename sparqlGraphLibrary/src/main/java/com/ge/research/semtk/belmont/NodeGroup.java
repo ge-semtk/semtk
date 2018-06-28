@@ -33,8 +33,8 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraints;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstrainedObject;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintMetaData;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -2498,15 +2498,15 @@ public class NodeGroup {
 	 * build RuntimeConstrainedObject
 	 * @return
 	 */
-	public HashMap<String, RuntimeConstrainedObject> getRuntimeConstrainedItems(){
-		HashMap<String, RuntimeConstrainedObject> retval = new HashMap<String, RuntimeConstrainedObject>();
+	public HashMap<String, RuntimeConstraintMetaData> getRuntimeConstrainedItems(){
+		HashMap<String, RuntimeConstraintMetaData> retval = new HashMap<String, RuntimeConstraintMetaData>();
 		
 		// go through all of the nodegroup contents and send back the collection.
 		for(Node curr : this.nodes){
 			if(curr.getIsRuntimeConstrained()){ 
 				// this one is constrained. add it to the list. 
 				
-				RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)curr, RuntimeConstraints.SupportedTypes.NODE);
+				RuntimeConstraintMetaData currConst = new RuntimeConstraintMetaData((Returnable)curr, RuntimeConstraintManager.SupportedTypes.NODE);
 				retval.put(curr.sparqlID, currConst);
 			}
 			else{
@@ -2516,7 +2516,7 @@ public class NodeGroup {
 			// check the properties to make sure that we get them all. 
 			for(PropertyItem pi : curr.getPropertyItems()){
 				if(pi.getIsRuntimeConstrained()){
-					RuntimeConstrainedObject currConst = new RuntimeConstrainedObject((Returnable)pi, RuntimeConstraints.SupportedTypes.PROPERTYITEM);
+					RuntimeConstraintMetaData currConst = new RuntimeConstraintMetaData((Returnable)pi, RuntimeConstraintManager.SupportedTypes.PROPERTYITEM);
 					retval.put(pi.sparqlID, currConst);
 				}
 				else{

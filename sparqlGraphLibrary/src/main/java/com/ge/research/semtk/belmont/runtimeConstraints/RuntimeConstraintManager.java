@@ -36,21 +36,26 @@ import com.ge.research.semtk.resultSet.Table;
  * @author Justin, then 200001934
  *
  */
-public class RuntimeConstraints {
+public class RuntimeConstraintManager {
 
 	// date formats are supposed to look like this: 2014-05-23T10:20:13
 	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 	
 	public static enum SupportedTypes { NODE , PROPERTYITEM };
 	
-	private HashMap<String, RuntimeConstrainedObject> rtcObjectHash;
+	private HashMap<String, RuntimeConstraintMetaData> rtcObjectHash;
 	
-	public RuntimeConstraints(NodeGroup parent){
+	public RuntimeConstraintManager(NodeGroup ng){
 		
 		// set up the constraint items
-		this.rtcObjectHash = parent.getRuntimeConstrainedItems();
+		this.rtcObjectHash = ng.getRuntimeConstrainedItems();
 	}
 	
+	/**
+	 * Get items tagged as runtimeConstrained
+	 * This does NOT mean a constraint has been applied.
+	 * @return
+	 */
 	public ArrayList<String> getConstrainedItemIds(){
 		ArrayList<String> retval = new ArrayList<String>();
 		
@@ -68,9 +73,9 @@ public class RuntimeConstraints {
 		JSONArray retval = new JSONArray();
 		
 		// loop through all runtime-constrainable
-		for(RuntimeConstrainedObject rco : this.rtcObjectHash.values()){
+		for(RuntimeConstraintMetaData rco : this.rtcObjectHash.values()){
 			
-			if (rco.isConstrained()) {
+			if (rco.constraintIsApplied()) {
 				// create a new JSONObject
 				JSONObject curr = new JSONObject();
 				
@@ -195,19 +200,7 @@ public class RuntimeConstraints {
 		
 	}
 	
-	public ValueConstraint getValueConstraint(String itemSparqlId) throws Exception{
-		ValueConstraint retval = null;
-		String id = BelmontUtil.formatSparqlId(itemSparqlId);
-		
-		// check to see if this item is in our list.
-		if(rtcObjectHash.containsKey(id)){
-			retval = rtcObjectHash.get(id).getValueConstraint();
-		}
-		
-		return retval;
-	}
-	
-	public XSDSupportedType getValueType(String itemSparqlId) throws Exception{
+	private XSDSupportedType getValueType(String itemSparqlId) throws Exception{
 		XSDSupportedType retval = null;
 		String id = BelmontUtil.formatSparqlId(itemSparqlId);
 		// check to see if this item is in our list.
@@ -221,7 +214,7 @@ public class RuntimeConstraints {
 		return retval;
 	}
 		
-	public String getItemType(String itemSparqlId) throws Exception{
+	private String getItemType(String itemSparqlId) throws Exception{
 		String retval = "";
 		String id = BelmontUtil.formatSparqlId(itemSparqlId);
 		
@@ -236,6 +229,12 @@ public class RuntimeConstraints {
 		return retval;
 	}
 	
+	/**
+	 * Describe all items in nodegroup that are runtime constrained
+	 * This does NOT mean a constraint has been applied, just that they are tagged as runtime constrained
+	 * @return
+	 * @throws Exception
+	 */
 	public Table getConstrainedItemsDescription() throws Exception{
 		Table retval = null;
 		
