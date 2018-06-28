@@ -13,7 +13,7 @@
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
- */
+ */ 
 
 package com.ge.research.semtk.belmont.runtimeConstraints.test;
 
@@ -399,5 +399,22 @@ public class RuntimeConstraintsTest {
 			else { fail(); }
 	}
 	
+	@Test
+	public void generateJson() throws Exception{
+		// apply constraint to only one constrainable
+		// and generate json string without exception
+		this.setup();
+		
+		RuntimeConstraints constraints = new RuntimeConstraints(ng);
+		ArrayList<String> names = new ArrayList<String>();
+		names.add("music:decemberunderground");
+		constraints.applyConstraint("?name", SupportedOperations.MATCHES, names);
+		
+		String str = constraints.toJSONString();
+		assertTrue(str.contains("name"));
+		assertTrue(str.contains("MATCHES"));
+		assertTrue(str.contains("december"));
+		assertFalse(str.contains("Album"));
+	}
 	
 }

@@ -13,7 +13,7 @@
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
- */
+ */ 
 
 package com.ge.research.semtk.belmont.runtimeConstraints;
 
@@ -62,35 +62,41 @@ public class RuntimeConstraints {
 	/**
 	 * Create json of all runtime-constraints in the nodegroup.
 	 * NOTE if you've already applied constraints to a nodegroup you probably don't need this json
-	 * @return
+	 * @return Null if none
 	 */
 	public JSONArray toJson(){
 		JSONArray retval = new JSONArray();
 		
+		// loop through all runtime-constrainable
 		for(RuntimeConstrainedObject rco : this.rtcObjectHash.values()){
-			// create a new JSONObject
-			JSONObject curr = new JSONObject();
 			
-			// add the basics:
-			curr.put("SparqlID", rco.getObjectName());
-			curr.put("Operator", rco.getOperationName());
-			
-			// get the operands.
-			JSONArray operandArr = new JSONArray();
-			
-			for(String op : rco.getOperands()){
-				operandArr.add(op);
+			if (rco.isConstrained()) {
+				// create a new JSONObject
+				JSONObject curr = new JSONObject();
+				
+				// add the basics:
+				curr.put("SparqlID", rco.getObjectName());
+				curr.put("Operator", rco.getOperationName());
+				
+				// get the operands.
+				JSONArray operandArr = new JSONArray();
+				
+				for(String op : rco.getOperands()){
+					operandArr.add(op);
+				}
+				
+				curr.put("Operands", operandArr);
+	
+				// add the last "current" entry to the outgoing array.
+				retval.add(curr);
 			}
-			
-			curr.put("Operands", operandArr);
-
-			// add the last "current" entry to the outgoing array.
-			retval.add(curr);
 		}
 
-		
-		// ship it out
-		return retval;
+		if (retval.size() == 0) {
+			return null;
+		} else {
+			return retval;
+		}
 	}
 	
 	public String toJSONString() {
@@ -115,14 +121,14 @@ public class RuntimeConstraints {
 		}
 		
 		for(Object curr : runtimeConstraints){
-			JSONObject c1 = (JSONObject) curr; 	// just a shortcut to avoid a multitude of casts.
+			JSONObject constraintJson = (JSONObject) curr; 	// just a shortcut to avoid a multitude of casts.
 			
 			// check that the sparqlID exists skipped because it will be checked when a direct assignment is made.
-			String sparqlId = c1.get("SparqlID").toString();
+			String sparqlId = constraintJson.get("SparqlID").toString();
 			if (!sparqlId.startsWith("?")) {
 				sparqlId = "?" + sparqlId;
 			}
-			String operator = c1.get("Operator").toString();
+			String operator = constraintJson.get("Operator").toString();
 			XSDSupportedType operandType;
 			ArrayList<String> operands = new ArrayList<String>();   // however obvious, the operands will go here. 
 			
@@ -142,7 +148,7 @@ public class RuntimeConstraints {
 				throw new Exception("Can't apply runtime constraints to object type " + this.rtcObjectHash.get(sparqlId).getObjectType() + " for sparqlID: " + sparqlId);
 			}
 			
-			JSONArray opers = (JSONArray) c1.get("Operands");
+			JSONArray opers = (JSONArray) constraintJson.get("Operands");
 			
 			// step through the array and get the operands.
 			try{

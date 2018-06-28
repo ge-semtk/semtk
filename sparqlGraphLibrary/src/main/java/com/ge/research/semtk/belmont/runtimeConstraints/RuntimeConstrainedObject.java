@@ -13,7 +13,7 @@
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
- */
+ */ 
 
 package com.ge.research.semtk.belmont.runtimeConstraints;
 
@@ -31,27 +31,31 @@ public class RuntimeConstrainedObject{
 	// it has to work flexibly with all and any of the above. 		
 	
 	
-	private RuntimeConstraints.SupportedTypes objectType;
-	private Returnable constrainedObject; 
+	private RuntimeConstraints.SupportedTypes itemType;
+	private Returnable ngItem; 
 	private SupportedOperations operation;
 	private ArrayList<String> operands;
 	
-	public RuntimeConstrainedObject(Returnable obj, RuntimeConstraints.SupportedTypes objType){
-		this.objectType = objType;
-		this.constrainedObject = obj;
+	public RuntimeConstrainedObject(Returnable item, RuntimeConstraints.SupportedTypes itemType){
+		this.itemType = itemType;
+		this.ngItem = item;
 	}
 	
 	public String getObjectName(){
-		String retval = this.constrainedObject.getRuntimeConstraintID();
+		String retval = this.ngItem.getRuntimeConstraintID();
 		return retval;
+	}
+	
+	public boolean isConstrained() {
+		return this.operation != null;
 	}
 	
 	public void applyConstraint(SupportedOperations operation, ArrayList<String> operands) throws Exception{
 		this.operation = operation;
 		this.operands = operands;
 		
-		XSDSupportedType xsdType = this.constrainedObject.getValueType();
-		String sparqlId = this.constrainedObject.getSparqlID();
+		XSDSupportedType xsdType = this.ngItem.getValueType();
+		String sparqlId = this.ngItem.getSparqlID();
 		
 				
 		if(operation == SupportedOperations.GREATERTHAN && xsdType.numericOperationAvailable()){
@@ -159,19 +163,19 @@ public class RuntimeConstrainedObject{
 	public ValueConstraint getValueConstraint(){
 		
 		// create the VC and return it.	
-		return this.constrainedObject.getValueConstraint();
+		return this.ngItem.getValueConstraint();
 	}
 	
 	public XSDSupportedType getValueType(){
-		return this.constrainedObject.getValueType();
+		return this.ngItem.getValueType();
 	}
 	
 	public SupportedTypes getObjectType(){
-		return this.objectType;
+		return this.itemType;
 	}
 	
 	private void setValueConstraint(String vcString){
-		this.constrainedObject.setValueConstraint(new ValueConstraint(vcString));
+		this.ngItem.setValueConstraint(new ValueConstraint(vcString));
 	}
 	
 	//_____________________end runtime constraint applications.
@@ -234,7 +238,7 @@ public class RuntimeConstrainedObject{
 	// get the value type of the constraint based on the sparqlId
 	private XSDSupportedType getType(String sparqlId) throws Exception{
 		
-		return this.constrainedObject.getValueType();
+		return this.ngItem.getValueType();
 	}
 	
 
