@@ -187,22 +187,25 @@ public class ResultsServiceRestController {
 
 		LocalLogger.logToStdErr("done writing output");
 	}
-	
+	@ApiOperation(
+			value="Get URLs of all files in job",
+			notes="full_results.csv plus all binary files are returned in a table with columns 'name' and 'fileURL'"
+			)
 	@CrossOrigin
-	@RequestMapping(value="/getResultsUrls", method=RequestMethod.POST)
-	public void getResultsUrls(@RequestBody JobIdRequest requestBody,  @RequestHeader HttpHeaders headers) {
+	@RequestMapping(value="/getResultsURLs", method=RequestMethod.POST)
+	public JSONObject getResultsURLs(@RequestBody JobIdRequest requestBody,  @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		final String ENDPOINT_NAME = "getResultsUrls";
+		final String ENDPOINT_NAME = "getResultsURLs";
 		final String STRING_TYPE = "http://www.w3.org/2001/XMLSchema#string";  // TODO create an enum in Belmont and start using it everywhere
 		final String URL_TYPE = "url";  // TODO create an enum in Belmont and start using it everywhere
-
+		TableResultSet res = null;
 		try{
 			JobTracker tracker = getJobTracker();
-	    	URL fullResultsUrl = tracker.getFullResultsURL(requestBody.jobId);  
-			ArrayList<JobFileInfo> fileInfoList = tracker.getJobFiles(requestBody.jobId);
+	    	URL fullResultsUrl = tracker.getOptionalFullResultsURL(requestBody.jobId);  
+			ArrayList<JobFileInfo> fileInfoList = tracker.getJobBinaryFiles(requestBody.jobId);
 			
 			// create table of fullResults (max 1 value) and files (many values)
-			Table table = new Table(new String[] {"fileName", "fileUrl"}, new String[] {STRING_TYPE, URL_TYPE});
+			Table table = new Table(new String[] {"name", "URL"}, new String[] {STRING_TYPE, URL_TYPE});
 			
 			// if there is a "fullResult"
 			if (fullResultsUrl != null) {
@@ -214,14 +217,44 @@ public class ResultsServiceRestController {
 				table.addRow(new String[] {	info.getFileName(), this.getBinaryFileUserURL(info.getFileId()) });
 			}
 			
-			// PEC HERE continue;  // adding results and returning
-			           // and handling exceptions
+			res = new TableResultSet(true);
+			res.addResults(table);
+			
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
+		    res = new TableResultSet(false);
+		    res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 	    }
 
-		LocalLogger.logToStdErr("done writing output");
+		return res.toJson();
+	}
+	
+	@ApiOperation(
+			value="Get table of information about my (header's userName) jobs",
+			notes="Returns table of: creationTime, id, percentcomplete, statusMessage, userName, status"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getJobsInfo", method=RequestMethod.POST)
+	public JSONObject getResultsURLs(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getJobsInfo";
+		TableResultSet res = null;
+		try{
+			JobTracker tracker = getJobTracker();
+	    	Table jobInfoTable = tracker.getJobsInfo();
+			
+			res = new TableResultSet(true);
+			res.addResults(jobInfoTable);
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    LocalLogger.printStackTrace(e);
+		    res = new TableResultSet(false);
+		    res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+	    }
+
+		return res.toJson();
 	}
 
 	
@@ -273,6 +306,10 @@ public class ResultsServiceRestController {
 	 * @param headers
 	 * @return  res.fullURL  res.fileId
 	 */
+	@ApiOperation(
+			value="Associate a file with a jobId by path",
+			notes="The path must be accessible by results service.  The file will be removed during results service cleanup."
+			)
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
 	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody, @RequestHeader HttpHeaders headers) {
@@ -329,7 +366,7 @@ public class ResultsServiceRestController {
         LoggerRestClient.easyLog(logger, "ResultsService", "getBinaryFile start");
         
         try {
-        	JobFileInfo metaFile = this.getJobTracker().getFile(fileId);
+        	JobFileInfo metaFile = this.getJobTracker().getBinaryFile(fileId);
             String originalFileName = metaFile.getFileName();
             String dataFilePath = metaFile.getPath();
        
@@ -633,7 +670,7 @@ public class ResultsServiceRestController {
 	 * Delete file and metadata associated with this jobId
 	 */
 	@CrossOrigin
-	@RequestMapping(value="/deleteStorage", method= RequestMethod.POST)
+	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)
 	public JSONObject deleteStorage(@RequestBody JobIdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LocalLogger.logToStdOut("Results Service deleteStorage start JobId=" + requestBody.jobId);
@@ -643,12 +680,7 @@ public class ResultsServiceRestController {
     	LoggerRestClient.easyLog(logger, "Results Service", "deleteStorage start", "JobId", requestBody.jobId);
     	
 	    try {   	
-	    	URL fullURL = getJobTracker().getFullResultsURL(requestBody.jobId);
-	    	if (fullURL != null) {
-	    		getTableResultsStorage().deleteStoredFile(fullURL);
-	    		getJobTracker().deleteJob(requestBody.jobId); 
-	    		LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage URLs", "fullURL", fullURL.toString());
-	    	}		    
+	    	getJobTracker().deleteJob(requestBody.jobId, getTableResultsStorage()); 
 		    res.setSuccess(true);		    
 	    } catch (Exception e) {
 	    	res.setSuccess(false);

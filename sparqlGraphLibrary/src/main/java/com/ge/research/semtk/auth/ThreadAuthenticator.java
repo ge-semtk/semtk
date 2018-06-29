@@ -8,6 +8,7 @@ public class ThreadAuthenticator {
 	public static final String ANONYMOUS = "anonymous";
 	public static final String USERNAME_KEY = "user_name";
 	
+	private static boolean admin = false;
 	private static ThreadLocal<HeaderTable> threadHeaderTable = null;
 	
 	/**
@@ -20,6 +21,13 @@ public class ThreadAuthenticator {
 		threadHeaderTable.set(headerTable);
 	}
 	
+	public static void setAdmin() {
+		admin = true;
+	}
+	
+	public static boolean isAdmin() {
+		return admin;
+	}
 	/**
 	 * Get username on this thread
 	 * @return

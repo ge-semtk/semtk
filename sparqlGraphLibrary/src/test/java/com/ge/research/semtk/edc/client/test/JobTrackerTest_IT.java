@@ -21,17 +21,31 @@ package com.ge.research.semtk.edc.client.test;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.UUID;
 
+import org.json.simple.JSONObject;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
+import com.google.common.io.Files;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.edc.JobEndpointProperties;
 
 public class JobTrackerTest_IT {
 
+	static TableResultsStorage trstore = null;
+	static File tempFolder = null;
+	
 	/**
 	 * Before any tests run, load the Jobs model into TestGraph
 	 */
@@ -39,6 +53,14 @@ public class JobTrackerTest_IT {
 	public static void loadTestGraph() throws Exception{
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/serviceJob.owl");
+		
+		tempFolder = Files.createTempDir();
+		trstore = new TableResultsStorage(tempFolder.getPath());
+	}
+	
+	@AfterClass
+	public static void done() {
+		tempFolder.delete();
 	}
 	
 	private JobEndpointProperties getProp() throws Exception {
@@ -60,12 +82,12 @@ public class JobTrackerTest_IT {
 		int percent = 10;
 		
 		JobTracker tracker = new JobTracker(getProp());
-		tracker.deleteJob(jobId);   // clean up mess of any previously failed test
+		tracker.deleteJob(jobId, trstore);   // clean up mess of any previously failed test
 		tracker.createJob(jobId);
 		tracker.setJobPercentComplete(jobId, percent);
 		String status = tracker.getJobStatus(jobId);
 		int ret = tracker.getJobPercentComplete(jobId);
-		tracker.deleteJob(jobId);
+		tracker.deleteJob(jobId, trstore);
 			
 		assertTrue(ret == percent);
 		assertTrue(status.equals("InProgress"));
@@ -80,7 +102,7 @@ public class JobTrackerTest_IT {
 		JobTracker tracker = new JobTracker(getProp());
 		tracker.setJobPercentComplete(jobId, percent);
 		int ret = tracker.getJobPercentComplete(jobId);
-		tracker.deleteJob(jobId);
+		tracker.deleteJob(jobId, trstore);
 		assertTrue(ret == percent);
 
 	}
@@ -92,7 +114,7 @@ public class JobTrackerTest_IT {
 		JobTracker tracker = null;
 		
 		tracker = new JobTracker(getProp());
-		tracker.deleteJob(jobId);
+		tracker.deleteJob(jobId, trstore);
 		
 		try {
 			// this should throw and exception
@@ -187,6 +209,60 @@ public class JobTrackerTest_IT {
 		assertTrue(statusMessage.equals(""));
 		
 	}
+	
+	@Test
+	public void test_with_trstore() throws Exception {
+		// test setting URLs
+		String jobId = "test8" + UUID.randomUUID().toString();
+		JobTracker tracker = null;
+		
+		tracker = new JobTracker(getProp());
+		tracker.deleteJob(jobId);
+		
+		JSONObject data = new JSONObject();
+		data.put("test_with_trstore", "test value");
+		
+		this.trstore.storeTableResultsJsonInitialize(jobId, data);
+		this.trstore.storeTableResultsJsonAddIncremental(jobId, "contents");
+		URL fullURL = this.trstore.storeTableResultsJsonFinalize(jobId);
+		tracker.setJobResultsURL(jobId, fullURL);
+		tracker.setJobSuccess(jobId);
+		
+		assertTrue(tempFolder.list().length > 0);
+		assertTrue(tracker.getFullResultsURL(jobId).toString().equals(fullURL.toString()));
+		assertTrue(tracker.getJobPercentComplete(jobId) == 100);
+		assertTrue(tracker.getJobStatus(jobId).equals(JobTracker.STATUS_SUCCESS));
+		
+		// delete job and make sure table results files disappear too
+		tracker.deleteJob(jobId, this.trstore);
+		assertTrue(tempFolder.list().length == 0);
+		assertTrue(! tracker.jobExists(jobId));
+
+		
+	}
+	
+	@Test
+	public void test_get_jobs_info() throws Exception {
+		String jobId = "test9" + UUID.randomUUID().toString();
+		JobTracker tracker =  new JobTracker(getProp());
+		tracker.deleteJob(jobId);
+		tracker.createJob(jobId);
+		
+		Table t = tracker.getJobsInfo();
+		
+		// delete job and make sure table results files disappear too
+		tracker.deleteJob(jobId, this.trstore);
+		assertTrue(t.getNumRows() > 0);
+		ArrayList<String> colNames = new ArrayList<String>();
+		colNames.addAll(Arrays.asList(t.getColumnNames()));
+		assertTrue(colNames.contains("creationTime"));
+		assertTrue(colNames.contains("id"));
+		assertTrue(colNames.contains("percentComplete"));
+		assertTrue(colNames.contains("statusMessage"));
+		assertTrue(colNames.contains("userName"));
+		assertTrue(colNames.contains("status"));
+		
+	}
 
 	@Test
 	public void test_set_urls_blank_sample() throws Exception {
@@ -235,6 +311,7 @@ public class JobTrackerTest_IT {
 		String status = tracker.getJobStatus(jobId);
 		String message = tracker.getJobStatusMessage(jobId);
 			
+		tracker.deleteJob(jobId);
 		assertTrue(percent == 100);
 		assertTrue(status.equals("Failure"));
 		assertTrue(message.equals(STATUS_MESSAGE));

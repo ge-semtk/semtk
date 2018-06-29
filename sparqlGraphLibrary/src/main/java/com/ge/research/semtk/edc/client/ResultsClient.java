@@ -151,7 +151,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 	/**
-	 * Store a file 
+	 * Store a file.  Note that it becomes subject to clean-up (removal by results service)
 	 * @param file
 	 * @return Successful SimpleResultSet containing fullUrl and fileId
 	 * @throws Exception
@@ -176,6 +176,65 @@ public class ResultsClient extends RestClient implements Runnable {
 		}
 	}
 
+
+	public TableResultSet execGetResultsURLs(String jobID) throws Exception {
+		this.parametersJSON.clear();
+		this.parametersJSON.put("jobId", jobID);
+		
+		this.conf.setServiceEndpoint("results/getResultsURLs");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		try {
+			JSONObject jObj = (JSONObject) this.execute(false);
+			TableResultSet res = new TableResultSet(jObj);
+			res.throwExceptionIfUnsuccessful();
+			return res;
+		} finally {
+			this.fileParameter = null;
+			this.cleanUp();
+		}
+	}
+
+	
+	/**
+	 * Returns a table of name, URL for all files
+	 * Full results file is named full_results.csv
+	 * BinaryFiles use their names
+	 * @param jobID
+	 * @return
+	 * @throws Exception
+	 */
+	public Table getResultsURLs(String jobID) throws Exception {
+		Table t = this.execGetResultsURLs(jobID).getTable();
+		return t;
+	}
+	
+	public TableResultSet execGetJobsInfo() throws Exception {
+		this.parametersJSON.clear();
+		
+		this.conf.setServiceEndpoint("results/getJobsInfo");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		try {
+			JSONObject jObj = (JSONObject) this.execute(false);
+			TableResultSet res = new TableResultSet(jObj);
+			res.throwExceptionIfUnsuccessful();
+			return res;
+		} finally {
+			this.fileParameter = null;
+			this.cleanUp();
+		}
+	}
+
+	
+	/**
+	 * Returns a table of creationTime, id, percentComplete, statusMessage, userName, status
+	 * Note userName used to retrieve results is set in the ThreadAuthenticator.
+	 * @return
+	 * @throws Exception
+	 */
+	public Table getJobsInfo() throws Exception {
+		Table t = this.execGetJobsInfo().getTable();
+		return t;
+	}
 
 	public String execReadBinaryFile(String fileId) throws Exception{
 
@@ -462,8 +521,8 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void execDeleteStorage(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
-		this.conf.setServiceEndpoint("results/deleteStorage");
+	public void execDeleteJob(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
+		this.conf.setServiceEndpoint("results/deleteJob");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		
@@ -476,7 +535,6 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 	/**
-	 * Iterate through each table element, and format: 1) escape internal quotes
 	 */
 	private void formatTableElements(Table table) throws InterruptedException{
 		

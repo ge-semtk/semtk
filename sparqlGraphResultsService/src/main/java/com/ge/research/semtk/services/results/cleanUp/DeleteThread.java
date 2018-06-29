@@ -25,6 +25,7 @@ import java.util.Date;
 
 
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.services.results.ResultsEdcConfigProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -34,11 +35,13 @@ public class DeleteThread extends Thread {
 	private int frequencyInMinutes;
 	private File locationToDeleteFrom;	
 	private JobTracker jTracker;
+	private TableResultsStorage trstore;
 	
 	public DeleteThread(String fileStorageLocation, int frequencyInMinutes, ResultsEdcConfigProperties edcProp){
 		this.locationToDeleteFrom = new File(fileStorageLocation);
 		this.runFrequencyInMilliseconds = frequencyInMinutes * 60 * 1000;
 		this.frequencyInMinutes = frequencyInMinutes;
+		this.trstore = new TableResultsStorage(fileStorageLocation);
 		try {
 			this.jTracker = new JobTracker(edcProp);
 		} catch (Exception e) {
@@ -54,17 +57,24 @@ public class DeleteThread extends Thread {
     	
     	while(true){
     		try{
+    			Calendar cal = Calendar.getInstance();
+    			cal.add(Calendar.MILLISECOND, -1 * this.runFrequencyInMilliseconds);
+    			Date cutoff = cal.getTime();
+    			long cutoffMsec = cutoff.getTime();
     			
     			// cleanup files.
     	    	
-    			long now = new Date().getTime();
-    			long cutoff = now - this.runFrequencyInMilliseconds;
+    			
     			LocalLogger.logToStdErr("Clean up started...");
     			
+    			// clean up the official way
+    			this.jTracker.deleteJobsAndFiles(cutoff, this.trstore);
+    			
+    			// look for leftovers
     			for (File f : locationToDeleteFrom.listFiles()) {
     				 // metaFile.deleteTargetPath() could delete files out of order, 
     				 //  so check f.exists()
-	                 if (f.exists() && f.lastModified() < cutoff) {
+	                 if (f.exists() && f.lastModified() < cutoffMsec) {
 	                	 try {	                	 
 	                		 f.delete();
 	                	 } catch (Exception e1) {
@@ -73,11 +83,7 @@ public class DeleteThread extends Thread {
 	                 }
                 }
     			
-    			// cleanup meta data.
-    			// get the current date and time...
-    			Calendar cal = Calendar.getInstance();
-    			cal.add(Calendar.MINUTE, (-1 * frequencyInMinutes) );
-    			this.jTracker.deleteJobsAndFiles(cal.getTime());
+    			
     			
     		}
     		catch(Exception iei){

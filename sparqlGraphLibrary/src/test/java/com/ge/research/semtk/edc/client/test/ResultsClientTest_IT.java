@@ -121,6 +121,12 @@ public class ResultsClientTest_IT {
 			assertEquals(resCsvRows.get(1).get(0), "three");
 			assertEquals(resCsvRows.get(1).get(1), "four");
 			
+			// check getting resultsURLs
+			Table urlTab = client.getResultsURLs(jobId);
+			assertEquals(1, urlTab.getNumRows());
+			assertEquals("full_results.csv", urlTab.getCell(0, "name"));
+			new URL(urlTab.getCell(0, "URL"));   // column URL exists, and is not malformed
+			
 		} finally {
 			cleanup(client, jobId);
 		}
@@ -451,10 +457,10 @@ public class ResultsClientTest_IT {
 			table.addRow(row);
 			
 			client.execStoreTableResults(jobId, table);
-			client.execGetResults(jobId);				// this should succeed
+			URL urls[] = client.execGetResults(jobId);				// this should succeed
 			retrievedResultsAfterStoring = true;
-			client.execDeleteStorage(jobId);
-			client.execGetResults(jobId); 	// this should throw an exception, because the results are deleted
+			client.execDeleteJob(jobId);
+			urls = client.execGetResults(jobId); 	// this should throw an exception, because the results are deleted
 			fail();  // expect it to not get here
 		} catch (Exception e) {
 			// success			
@@ -472,8 +478,9 @@ public class ResultsClientTest_IT {
 
 		// Happy path
 		File testFile = new File("src/test/resources/test.csv");
-
-		SimpleResultSet res = client.execStoreBinaryFile("test_job_id", testFile);
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		final String fileName = "test.csv";
+		SimpleResultSet res = client.execStoreBinaryFile(jobId, testFile);
 		
 		String fileId = (String) res.getResult("fileId");
 		String fullUrl = (String) res.getResult("fullURL");
@@ -483,7 +490,22 @@ public class ResultsClientTest_IT {
 		
 		assertNotNull(s);
 		assertNotNull(fileContent);
+		
+		// check getting resultsURLs
+		Table urlTab = client.getResultsURLs(jobId);
+		assertEquals(1, urlTab.getNumRows());
+		assertEquals(fileName, urlTab.getCell(0, "name"));
+		new URL(urlTab.getCell(0, "URL"));   // column URL exists, and is not malformed
 
+
+	}
+	
+	@Test
+	public void testGetJobsInfo() throws Exception {
+
+		Table infoTable = client.getJobsInfo();
+		
+		assertTrue(infoTable != null);
 
 	}
 	
@@ -526,7 +548,7 @@ public class ResultsClientTest_IT {
 
 
 	private void cleanup(ResultsClient client, String jobId) throws Exception {
-		client.execDeleteStorage(jobId);
+		client.execDeleteJob(jobId);
 	}
 
 }

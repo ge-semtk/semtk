@@ -329,6 +329,16 @@ public class Table {
 		return (Utility.getCSVString(headers));
 	}
 	
+	/**
+	 * Replace an existing cell value with no checking
+	 * @param row
+	 * @param col
+	 * @param val
+	 */
+	public void setCell(int row, int col, String val) {
+		this.rows.get(row).set(col, val);
+	}
+	
 	public String getCell(int row, int col) {
 		return this.rows.get(row).get(col);
 	}

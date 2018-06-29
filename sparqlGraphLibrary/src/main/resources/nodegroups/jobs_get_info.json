@@ -1,0 +1,165 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "edc semtk services",
+		"domain": "http://research.ge.com",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 8,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Status",
+				"fullURIName": "http://research.ge.com/semtk/services/job#Status",
+				"subClassNames": [],
+				"SparqlID": "?status",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "creationTime",
+						"ValueType": "dateTime",
+						"relationship": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#creationTime",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?creationTime",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "id",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#id",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?id",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "percentComplete",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#percentComplete",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?percentComplete",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "statusMessage",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#statusMessage",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?statusMessage",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "userName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#userName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?userName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?status"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "status",
+						"ValueType": "Status",
+						"UriValueType": "http://research.ge.com/semtk/services/job#Status",
+						"ConnectBy": "status",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/services/job#status"
+					}
+				],
+				"NodeName": "Job",
+				"fullURIName": "http://research.ge.com/semtk/services/job#Job",
+				"subClassNames": [],
+				"SparqlID": "?Job",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "FULL_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Job",
+				"type": "http://research.ge.com/semtk/services/job#Job",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?status",
+				"type": "http://research.ge.com/semtk/services/job#Status",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

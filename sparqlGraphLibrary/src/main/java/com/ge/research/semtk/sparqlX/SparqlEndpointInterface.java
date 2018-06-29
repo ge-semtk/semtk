@@ -285,6 +285,8 @@ public abstract class SparqlEndpointInterface {
 	 * 	  TableResultSet for a select query (success or failure)
 	 * 	  NodeGroupResultSet for a construct query (success or failure)
 	 *    SimpleResultSet for an auth query (success or failure)
+	 * 
+	 * @throws - exception if not successful
 	 */
 	public GeneralResultSet executeQueryAndBuildResultSet(String query, SparqlResultTypes resultType) throws Exception {
 		
