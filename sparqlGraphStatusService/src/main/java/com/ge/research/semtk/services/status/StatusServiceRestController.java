@@ -32,8 +32,12 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
+
+import io.swagger.annotations.ApiOperation;
 
 
 /**
@@ -156,6 +160,32 @@ public class StatusServiceRestController {
 	    return res.toJson();
 	}
 	
+	@ApiOperation(
+			value="Get table of information about my (header's userName) jobs",
+			notes="Returns table of: creationTime, id, percentcomplete, statusMessage, userName, status"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getJobsInfo", method=RequestMethod.POST)
+	public JSONObject getResultsURLs(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getJobsInfo";
+		TableResultSet res = null;
+		try{
+			JobTracker tracker = new JobTracker(edc_prop);
+	    	Table jobInfoTable = tracker.getJobsInfo();
+			
+			res = new TableResultSet(true);
+			res.addResults(jobInfoTable);
+			
+	    } catch (Exception e) {
+	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+		    LocalLogger.printStackTrace(e);
+		    res = new TableResultSet(false);
+		    res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+	    }
+
+		return res.toJson();
+	}
 	/**
 	 * Block until status is percent complete is reached
 	 */

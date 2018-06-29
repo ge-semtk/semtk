@@ -20,8 +20,13 @@ package com.ge.research.semtk.edc.client;
 
 import java.net.ConnectException;
 
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.services.client.RestClientConfig;
 
 public class StatusClient extends RestClient {
 
@@ -96,6 +101,33 @@ public class StatusClient extends RestClient {
 		}
 	}
 	
+	public TableResultSet execGetJobsInfo() throws Exception {
+		this.parametersJSON.clear();
+		
+		this.conf.setServiceEndpoint("status/getJobsInfo");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		try {
+			JSONObject jObj = (JSONObject) this.execute(false);
+			TableResultSet res = new TableResultSet(jObj);
+			res.throwExceptionIfUnsuccessful();
+			return res;
+		} finally {
+			conf.setServiceEndpoint(null);
+		}
+	}
+
+	
+	/**
+	 * Returns a table of creationTime, id, percentComplete, statusMessage, userName, status
+	 * Note userName used to retrieve results is set in the ThreadAuthenticator.
+	 * @return
+	 * @throws Exception
+	 */
+	public Table getJobsInfo() throws Exception {
+		Table t = this.execGetJobsInfo().getTable();
+		return t;
+	}
+
 	/**
 	 * 
 	 * @param percentComplete

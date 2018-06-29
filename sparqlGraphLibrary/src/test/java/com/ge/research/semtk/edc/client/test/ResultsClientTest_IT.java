@@ -501,15 +501,6 @@ public class ResultsClientTest_IT {
 	}
 	
 	@Test
-	public void testGetJobsInfo() throws Exception {
-
-		Table infoTable = client.getJobsInfo();
-		
-		assertTrue(infoTable != null);
-
-	}
-	
-	@Test
 	public void testStoreAndRetrieveBinaryFilePath() throws Exception {
 
 		

@@ -28,6 +28,7 @@ import org.junit.Test;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
@@ -49,15 +50,11 @@ public class StatusClientTest_IT {
 	
 	@Test
 	public void testSetSuccess() {
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		
 		try {	
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, 
-											JOB_ID1);
-			client = new StatusClient(config);
-			
+			client = this.getClient();
+
 			// set the status
 			client.execSetSuccess();
 			
@@ -85,15 +82,11 @@ public class StatusClientTest_IT {
 	@Test
 	public void testSetSuccessMsg() {
 		final String MESSAGE = "Success message.";
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		
 		try {	
-			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, 
-											JOB_ID1);
-			client = new StatusClient(config);
+			client = this.getClient();
+
 			
 			// set the status
 			client.execSetSuccess(MESSAGE);
@@ -124,16 +117,11 @@ public class StatusClientTest_IT {
 	@Test
 	public void testSetFailureTricky() {
 		final String MESSAGE = "Failure message. with 'quoted' and \"double-quoted\" and new\nlines\n";
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		
 		try {
-			
-			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, 
-											JOB_ID1);
-			client = new StatusClient(config);
+			client = this.getClient();
+
 			
 			// set the status
 			client.execSetFailure(MESSAGE);
@@ -164,16 +152,12 @@ public class StatusClientTest_IT {
 	@Test
 	public void testSetFailure() {
 		final String MESSAGE = "Failure message.";
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		
 		try {
 			
-			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, 
-											JOB_ID1);
-			client = new StatusClient(config);
+			client = this.getClient();
+
 			
 			// set the status
 			client.execSetFailure(MESSAGE);
@@ -207,14 +191,12 @@ public class StatusClientTest_IT {
 		final int PERC2 = 88;
 		final int PERC_ERR = 100;
 		
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		int percent;
 
 		try {			
 			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
-			client = new StatusClient(config);
+			client = this.getClient();
 			
 			// set and check
 			client.execSetPercentComplete(PERC1);
@@ -265,14 +247,12 @@ public class StatusClientTest_IT {
 		final int PERC_ERR = 100;
 		final String MESSAGE = "Message";
 		
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		int percent;
 
 		try {			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
-			client = new StatusClient(config);
+			client = this.getClient();
+
 			
 			// set and check
 			client.execSetPercentComplete(PERC1);
@@ -318,18 +298,24 @@ public class StatusClientTest_IT {
 			cleanup(client);
 		}
 	}
-	
+	@Test
+	public void testGetJobsInfo() throws Exception {
+		StatusClient client = this.getClient();
+		
+		Table infoTable = client.getJobsInfo();
+		
+		assertTrue(infoTable != null);
+
+	}
 	@Test
 	public void testCreateDeleteJob() {
 		
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		int percent;
 
 		try {			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
-			client = new StatusClient(config);
+			client = this.getClient();
+
 			
 			// set and check
 			client.execSetPercentComplete(50);
@@ -370,14 +356,11 @@ public class StatusClientTest_IT {
 	public void testWaitForPercentCompleteTimeout() {
 		final int PERCENT = 5;
 		
-		StatusClientConfig config = null;
 		StatusClient client = null;
 		
 		try {			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
-			client = new StatusClient(config);
-			
+			client = this.getClient();
+
 			// set and check
 			client.execSetPercentComplete(PERCENT);
 			client.execWaitForPercentComplete(PERCENT + 1, 100);
@@ -402,14 +385,11 @@ public class StatusClientTest_IT {
 	public void testWaitForPercentCompleteImmediate() {
 		final int PERCENT = 5;
 		
-		StatusClientConfig config = null;
 		StatusClient client = null;
 
 		try {			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
-			client = new StatusClient(config);
-			
+			client = this.getClient();
+
 			// set and wait
 			client.execSetPercentComplete(PERCENT);
 			client.execWaitForPercentComplete(PERCENT - 1, 100);
@@ -433,14 +413,11 @@ public class StatusClientTest_IT {
 	public void testWaitForPercentOrMsec_Msec() {
 		final int PERCENT = 5;
 		
-		StatusClientConfig config = null;
 		StatusClient client = null;
 
 		try {			
-			// create
-			config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
-			client = new StatusClient(config);
-			
+			client = this.getClient();
+
 			// set and wait for timeout.   Get back original percent
 			client.execSetPercentComplete(PERCENT);
 			int percent = client.execWaitForPercentOrMsec(PERCENT + 5, 500);
@@ -472,6 +449,10 @@ public class StatusClientTest_IT {
 		// TODO - get time and gumption to write multi-threaded wait test 
 	}
 	
+	private StatusClient getClient() throws Exception {
+		StatusClientConfig config = new StatusClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, JOB_ID1);
+		return new StatusClient(config);
+	}
 	
 	private void cleanup(StatusClient client) {
 		try {	

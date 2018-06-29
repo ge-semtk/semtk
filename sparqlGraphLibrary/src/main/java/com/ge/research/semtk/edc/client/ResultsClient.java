@@ -208,34 +208,6 @@ public class ResultsClient extends RestClient implements Runnable {
 		return t;
 	}
 	
-	public TableResultSet execGetJobsInfo() throws Exception {
-		this.parametersJSON.clear();
-		
-		this.conf.setServiceEndpoint("results/getJobsInfo");
-		this.conf.setMethod(RestClientConfig.Methods.POST);
-		try {
-			JSONObject jObj = (JSONObject) this.execute(false);
-			TableResultSet res = new TableResultSet(jObj);
-			res.throwExceptionIfUnsuccessful();
-			return res;
-		} finally {
-			this.fileParameter = null;
-			this.cleanUp();
-		}
-	}
-
-	
-	/**
-	 * Returns a table of creationTime, id, percentComplete, statusMessage, userName, status
-	 * Note userName used to retrieve results is set in the ThreadAuthenticator.
-	 * @return
-	 * @throws Exception
-	 */
-	public Table getJobsInfo() throws Exception {
-		Table t = this.execGetJobsInfo().getTable();
-		return t;
-	}
-
 	public String execReadBinaryFile(String fileId) throws Exception{
 
 		this.parametersJSON.clear();
