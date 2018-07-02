@@ -47,7 +47,7 @@ echo "=== START MICROSERVICES... ==="
 
 "$JAVA_HOME"/bin/java "$JVM_OPTIONS" -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
 
-"$JAVA_HOME"/bin/java '$JVM_OPTIONS_LARGE_MEMORY" -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
+"$JAVA_HOME"/bin/java "$JVM_OPTIONS_LARGE_MEMORY" -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 
 "$JAVA_HOME"/bin/java "$JVM_OPTIONS" -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar > "$LOGS"/nodeGroupExecutionService.log 2>&1 &
 
