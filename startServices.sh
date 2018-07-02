@@ -36,7 +36,6 @@ fi
 mkdir -p $LOGS
 
 echo "=== START MICROSERVICES... ==="
-echo "=== JVM OPTIONS: === " $JVM_OPTIONS  $JVM_OPTIONS_LARGE_MEMORY
 
 "$JAVA_HOME"/bin/java "$JVM_OPTIONS" -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
 
