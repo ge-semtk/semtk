@@ -302,11 +302,31 @@ public class StatusClientTest_IT {
 	public void testGetJobsInfo() throws Exception {
 		StatusClient client = this.getClient();
 		
-		Table infoTable = client.getJobsInfo();
-		
-		assertTrue(infoTable != null);
+		try {
+			Table infoTable = client.getJobsInfo();
+			
+			assertTrue(infoTable != null);
+		} finally {
+			cleanup(client);
+		}
 
 	}
+	
+	@Test
+	public void testSetName() throws Exception {
+		StatusClient client = this.getClient();
+		try {
+			client.execSetName("myNewName");
+			Table infoTable = client.getJobsInfo();
+
+			assertTrue(infoTable != null);
+			assertTrue(infoTable.toCSVString().contains("myNewName"));
+		} finally {
+			cleanup(client);
+		}
+
+	}
+	
 	@Test
 	public void testCreateDeleteJob() {
 		

@@ -1,19 +1,19 @@
 {
 	"version": 2,
 	"sparqlConn": {
-		"name": "edc semtk services",
-		"domain": "http://research.ge.com",
+		"name": "SemTK Services",
+		"domain": "http://",
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		]
@@ -67,6 +67,20 @@
 						"isMarkedForDeletion": false
 					},
 					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
 						"KeyName": "percentComplete",
 						"ValueType": "int",
 						"relationship": "http://www.w3.org/2001/XMLSchema#int",
@@ -75,7 +89,7 @@
 						"fullURIName": "",
 						"SparqlID": "?percentComplete",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -103,7 +117,7 @@
 						"fullURIName": "",
 						"SparqlID": "?userName",
 						"isReturned": true,
-						"isOptional": false,
+						"isOptional": true,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false

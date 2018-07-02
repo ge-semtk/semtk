@@ -52,7 +52,7 @@ public class JobTrackerTest_IT {
 	@BeforeClass
 	public static void loadTestGraph() throws Exception{
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/serviceJob.owl");
+		TestGraph.uploadOwl("src/main/Semantics/OwlModels/serviceJob.owl");
 		
 		tempFolder = Files.createTempDir();
 		trstore = new TableResultsStorage(tempFolder.getPath());
@@ -261,6 +261,23 @@ public class JobTrackerTest_IT {
 		assertTrue(colNames.contains("statusMessage"));
 		assertTrue(colNames.contains("userName"));
 		assertTrue(colNames.contains("status"));
+		
+	}
+	
+	@Test
+	public void test_set_name() throws Exception {
+		String jobId = "test_get_jobs_info" + UUID.randomUUID().toString();
+		JobTracker tracker =  new JobTracker(getProp());
+		tracker.deleteJob(jobId);
+		
+		tracker.setJobName(jobId, "test name");
+		Table t = tracker.getJobsInfo();
+		
+		// delete job and make sure table results files disappear too
+		tracker.deleteJob(jobId, this.trstore);
+		
+		// simple test that the name made it somewhere into the jobs info
+		assertTrue(t.toCSVString().contains("test name")); 
 		
 	}
 

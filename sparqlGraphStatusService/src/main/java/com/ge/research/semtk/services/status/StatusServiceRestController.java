@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.JobTracker;
@@ -162,7 +165,7 @@ public class StatusServiceRestController {
 	
 	@ApiOperation(
 			value="Get table of information about my (header's userName) jobs",
-			notes="Returns table of: creationTime, id, percentcomplete, statusMessage, userName, status"
+			notes="Returns table of: creationTime, id, name, percentcomplete, statusMessage, userName, status"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobsInfo", method=RequestMethod.POST)
@@ -246,6 +249,36 @@ public class StatusServiceRestController {
 	    
 	    return res.toJson();
 	}
+	/**
+	 * set job to a given percent complete
+	 * @param requestBody
+	 * @return
+	 */
+	@RequestMapping(value="/setName", method= RequestMethod.POST)
+	public JSONObject setName(@RequestBody @Valid StatusRequestBodyName requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "setName";
+	    String jobId = requestBody.jobId;
+	    
+	    SimpleResultSet res = new SimpleResultSet();
+	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+	    LocalLogger.logToStdOut("Status Service setName: " + requestBody.name );
+
+	    try {
+	    	JobTracker tracker = new JobTracker(edc_prop);
+	    	tracker.setJobName(jobId, requestBody.name);
+		    res.setSuccess(true);
+		    
+	    } catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		    LoggerRestClient.easyLog(logger, "Status Service", ENDPOINT_NAME + " exception", "message", e.toString());
+		    LocalLogger.logToStdOut("Status Service " + ENDPOINT_NAME + " exception message=" + e.toString());
+	    }
+	    
+	    return res.toJson();
+	}
+	
 	/**
 	 * set job to a given percent complete
 	 * @param requestBody

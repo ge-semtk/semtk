@@ -512,7 +512,6 @@ public class JobTracker {
 	        "DELETE  {\n" +
             "<%s> job:creationTime ?x. \n" +
 	        "<%s> job:percentComplete ?y. \n" +
-	        "<%s> job:userName ?z. \n" +
 	        "<%s> job:status ?w. \n" +
 	        "} \n" +
 	        "INSERT  {\n" +
@@ -525,7 +524,7 @@ public class JobTracker {
 	        "}",
 	        jobUri,
 	        jobUri, 
-	        jobUri,userName,
+	        jobUri,
 	        
 	        jobUri, 
 	        jobUri, SparqlToXUtils.safeSparqlString(jobId), 
@@ -541,6 +540,33 @@ public class JobTracker {
 	    }
 	}
 
+	public void setJobName(String jobId, String name) throws Exception {
+		if (! this.jobExists(jobId)) {
+	    	this.createJob(jobId);
+	    }
+		String jobUri = this.getJobUri(jobId);
+		String safeName = SparqlToXUtils.safeSparqlString(name);
+		
+		String query = String.format("  \n" +
+		        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
+		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
+		        " \n" +
+		        "DELETE  {\n" +
+	            "<%s> job:name ?x. \n" +
+		        "} \n" +
+		        "INSERT  {\n" +
+		        "<%s> job:name '%s'^^XMLSchema:string. \n" +
+		        "}",
+		        jobUri,
+		        jobUri,safeName
+		       );
+	    try {
+	    	endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
+	    } catch (Exception e) {
+	    	throw new Exception(e.getMessage());
+	    }
+
+	}
 	public void addBinaryFile(String jobId, String fileId, String filename, String path) throws Exception {
 		if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
@@ -615,7 +641,7 @@ public class JobTracker {
 	/**
 	 * Get table of jobs info for current thread userName
 	 * Note that status is modified to match STATUS_ values
-	 * @return table of "creationTime" "id" "percentComplete" "userName" "status"  "statusMessage"
+	 * @return table of "creationTime" "id" "name" "percentComplete" "userName" "status"  "statusMessage"
 	 * @throws Exception
 	 */
 	public Table getJobsInfo() throws Exception {

@@ -246,6 +246,22 @@ public class StatusClient extends RestClient {
 			this.parametersJSON.remove("message");
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+	public void execSetName(String name) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("status/setName");
+		this.parametersJSON.put("name", name);
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return;
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("name");
+		}
+	}
 	/**
 	 * 
 	 * @throws Exception
