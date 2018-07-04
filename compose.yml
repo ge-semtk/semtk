@@ -39,7 +39,7 @@ services:
       - NODEGROUP_SERVICE_MULTIPART_MAXFILESIZE
       - PORT_NODEGROUP_SERVICE
     ports:
-      - ${PORT_NODEGROUP_SERVICE}:8080
+      - ${PORT_NODEGROUP_SERVICE}:${PORT_NODEGROUP_SERVICE}
     networks:
       - semtknet
 
@@ -70,7 +70,7 @@ services:
       - SPARQLQUERY_SERVICE_PWD
       - PORT_NODEGROUPSTORE_SERVICE
     ports:
-      - ${PORT_NODEGROUPSTORE_SERVICE}:8080
+      - ${PORT_NODEGROUPSTORE_SERVICE}:${PORT_NODEGROUPSTORE_SERVICE}
     networks:
       - semtknet
 
@@ -91,7 +91,7 @@ services:
       - oinfoApplicationLogName
       - PORT_ONTOLOGYINFO_SERVICE
     ports:
-      - ${PORT_ONTOLOGYINFO_SERVICE}:8080
+      - ${PORT_ONTOLOGYINFO_SERVICE}:${PORT_ONTOLOGYINFO_SERVICE}
     networks:
       - semtknet
 
@@ -119,7 +119,7 @@ services:
       - statusApplicationLogName
       - PORT_SPARQLGRAPH_STATUS_SERVICE
     ports:
-      - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080
+      - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:${PORT_SPARQLGRAPH_STATUS_SERVICE}
     networks:
       - semtknet
 
@@ -154,7 +154,7 @@ services:
       - resultsSampleLines
       - PORT_SPARQLGRAPH_RESULTS_SERVICE
     ports:
-      - ${PORT_SPARQLGRAPH_RESULTS_SERVICE}:8080
+      - ${PORT_SPARQLGRAPH_RESULTS_SERVICE}:${PORT_SPARQLGRAPH_RESULTS_SERVICE}
     networks:
       - semtknet
 
@@ -171,7 +171,7 @@ services:
       - hivePassword
       - PORT_HIVE_SERVICE
     ports:
-      - ${PORT_HIVE_SERVICE}:8080
+      - ${PORT_HIVE_SERVICE}:${PORT_HIVE_SERVICE}
     networks:
       - semtknet
 
@@ -204,7 +204,7 @@ services:
       - SPARQLQUERY_SERVICE_USER
       - SPARQLQUERY_SERVICE_PWD
     ports:
-      - ${PORT_DISPATCH_SERVICE}:8080
+      - ${PORT_DISPATCH_SERVICE}:${PORT_DISPATCH_SERVICE}
     networks:
       - semtknet
 
@@ -240,7 +240,7 @@ services:
       - SPARQLQUERY_SERVICE_USER
       - SPARQLQUERY_SERVICE_PWD
     ports:
-      - ${PORT_NODEGROUPEXECUTION_SERVICE}:8080
+      - ${PORT_NODEGROUPEXECUTION_SERVICE}:${PORT_NODEGROUPEXECUTION_SERVICE}
     networks:
       - semtknet
 
@@ -255,7 +255,7 @@ services:
     environment:
       - PORT_SPARQL_QUERY_SERVICE
     ports:
-      - ${PORT_SPARQL_QUERY_SERVICE}:8080
+      - ${PORT_SPARQL_QUERY_SERVICE}:${PORT_SPARQL_QUERY_SERVICE}
     networks:
       - semtknet
 
@@ -280,7 +280,7 @@ services:
       - ingestionApplicationName
       - PORT_INGESTION_SERVICE
     ports:
-      - ${PORT_INGESTION_SERVICE}:8080
+      - ${PORT_INGESTION_SERVICE}:${PORT_INGESTION_SERVICE}
     networks:
       - semtknet
 
@@ -303,6 +303,27 @@ services:
       - OINFO_URL
       - NGEXEC_URL
       - NG_URL
+      - WEB_PROTOCOL
+      - WEB_INGESTION_HOST
+      - WEB_INGESTION_PORT
+      - WEB_SPARQL_QUERY_HOST
+      - WEB_SPARQL_QUERY_PORT
+      - WEB_STATUS_HOST
+      - WEB_STATUS_PORT
+      - WEB_RESULTS_HOST
+      - WEB_RESULTS_PORT
+      - WEB_DISPATCH_HOST
+      - WEB_DISPATCH_PORT
+      - WEB_HIVE_HOST
+      - WEB_HIVE_PORT
+      - WEB_NODEGROUPSTORE_HOST
+      - WEB_NODEGROUPSTORE_PORT
+      - WEB_ONTOLOGYINFO_HOST
+      - WEB_ONTOLOGYINFO_PORT
+      - WEB_NODEGROUPEXECUTION_HOST
+      - WEB_NODEGROUPEXECUTION_PORT
+      - WEB_NODEGROUP_HOST
+      - WEB_NODEGROUP_PORT
     ports:
       - ${PORT_SPARQLGRAPH_WEB}:8080
     networks:
