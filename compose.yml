@@ -37,6 +37,7 @@ services:
     image: ${REGISTRY}semtk-nodegroup${TAG}
     environment:
       - NODEGROUP_SERVICE_MULTIPART_MAXFILESIZE
+      - PORT_NODEGROUP_SERVICE
     ports:
       - ${PORT_NODEGROUP_SERVICE}:8080
     networks:
@@ -54,22 +55,25 @@ services:
       - NODEGROUPSTORE_SERVICE_MULTIPART_MAXFILESIZE
       - INGESTION_SERVICE_HOST
       - PORT_INGESTION_SERVICE
-      - INGESTION_SERVICE_PROTOCOL	  
+      - INGESTION_SERVICE_PROTOCOL
       - storeTemplateLocation
       - SPARQLQUERY_SERVICE_HOST
       - PORT_SPARQL_QUERY_SERVICE
       - SPARQLQUERY_SERVICE_PROTOCOL
       - SPARQLQUERY_SERVICE_ENDPOINT_AUTH
       - SERVICES_DATASET_SERVER_URL
-      - storeSparqlServerDataSet
+      - storeSparqlServerDataDataset
+      - storeSparqlServerModelDataset
+      - storeSparqlServerDomain
       - SERVICES_DATASET_ENDPOINT_TYPE
       - SPARQLQUERY_SERVICE_USER
       - SPARQLQUERY_SERVICE_PWD
+      - PORT_NODEGROUPSTORE_SERVICE
     ports:
       - ${PORT_NODEGROUPSTORE_SERVICE}:8080
     networks:
       - semtknet
-  
+
   semtk-ontology-info:
     build:
       context: ./ontologyInfoService
@@ -85,6 +89,7 @@ services:
       - LOGGING_SERVICE_PORT
       - LOGGING_SERVICE_ENDPOINT
       - oinfoApplicationLogName
+      - PORT_ONTOLOGYINFO_SERVICE
     ports:
       - ${PORT_ONTOLOGYINFO_SERVICE}:8080
     networks:
@@ -112,8 +117,9 @@ services:
       - LOGGING_SERVICE_PORT
       - LOGGING_SERVICE_ENDPOINT
       - statusApplicationLogName
+      - PORT_SPARQLGRAPH_STATUS_SERVICE
     ports:
-      - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080 
+      - ${PORT_SPARQLGRAPH_STATUS_SERVICE}:8080
     networks:
       - semtknet
 
@@ -146,6 +152,7 @@ services:
       - resultsServiceURL
       - resultsFileLocation
       - resultsSampleLines
+      - PORT_SPARQLGRAPH_RESULTS_SERVICE
     ports:
       - ${PORT_SPARQLGRAPH_RESULTS_SERVICE}:8080
     networks:
@@ -162,6 +169,7 @@ services:
     environment:
       - hiveUsername
       - hivePassword
+      - PORT_HIVE_SERVICE
     ports:
       - ${PORT_HIVE_SERVICE}:8080
     networks:
@@ -191,6 +199,10 @@ services:
       - STATUS_SERVICE_HOST
       - PORT_SPARQLGRAPH_STATUS_SERVICE
       - DISPATCHER_CLASS_NAME
+      - PORT_DISPATCH_SERVICE
+      - SPARQLQUERY_SERVICE_ENDPOINT_AUTH
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
     ports:
       - ${PORT_DISPATCH_SERVICE}:8080
     networks:
@@ -220,6 +232,13 @@ services:
       - INGESTION_SERVICE_PROTOCOL
       - INGESTION_SERVICE_HOST
       - PORT_INGESTION_SERVICE
+      - PORT_NODEGROUPEXECUTION_SERVICE
+      - SERVICES_DATASET_ENDPOINT_TYPE
+      - SERVICES_DATASET_DOMAIN
+      - SERVICES_DATASET_SERVER_URL
+      - SERVICES_DATASET
+      - SPARQLQUERY_SERVICE_USER
+      - SPARQLQUERY_SERVICE_PWD
     ports:
       - ${PORT_NODEGROUPEXECUTION_SERVICE}:8080
     networks:
@@ -234,6 +253,7 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-sparql-query${TAG}
     environment:
+      - PORT_SPARQL_QUERY_SERVICE
     ports:
       - ${PORT_SPARQL_QUERY_SERVICE}:8080
     networks:
@@ -248,7 +268,7 @@ services:
         https_proxy: $https_proxy
     image: ${REGISTRY}semtk-ingestion${TAG}
     environment:
-      - INGESTION_SERVICE_MULTIPART_MAXFILESIZE	
+      - INGESTION_SERVICE_MULTIPART_MAXFILESIZE
       - SPARQLQUERY_SERVICE_USER
       - SPARQLQUERY_SERVICE_PWD
       - ingestionBatchSize
@@ -258,6 +278,7 @@ services:
       - LOGGING_SERVICE_PORT
       - LOGGING_SERVICE_ENDPOINT
       - ingestionApplicationName
+      - PORT_INGESTION_SERVICE
     ports:
       - ${PORT_INGESTION_SERVICE}:8080
     networks:
