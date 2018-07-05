@@ -101,6 +101,10 @@ EOF
 
 update-ca-certificates
 
+# Fix some errors
+chmod 1777 /tmp
+chown -R man:root /var/cache/man
+
 # Install basic tools
 apt-get update
 apt-get install -y dos2unix
