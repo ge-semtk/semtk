@@ -1,5 +1,7 @@
 #!/bin/bash
-SETTINGS_DIR=/settings
+SETTINGS_DIR=/tmp/settings
+LOAD_DATA_SQL=/tmp/load_data.sql
+
 mkdir -p $SETTINGS_DIR
 
 cd /data
@@ -11,8 +13,8 @@ then
   mv /virtuoso.ini . 2>/dev/null
 fi
 
-chmod +x /clean-logs.sh
 mv /clean-logs.sh . 2>/dev/null
+chmod +x ./clean-logs.sh
 
 original_port=`crudini --get virtuoso.ini HTTPServer ServerPort`
 # NOTE: prevents virtuoso to expose on port 8890 before we actually run
@@ -56,15 +58,15 @@ then
         dir_name=$(dirname "$file_path")
         subgraph=${dir_name:7}
         file_name=$(basename "$file_path")
-	echo "Loading file: $file_path to graph $graph/$subgraph ..."
-    	echo "ld_dir('$dir_name', '$file_name', '$graph/$subgraph');" > /load_data.sql
-        echo "rdf_loader_run();" >> /load_data.sql
-        echo "exec('checkpoint');" >> /load_data.sql
-        echo "WAIT_FOR_CHILDREN; " >> /load_data.sql
-        echo "$(cat /load_data.sql)"
-        virtuoso-t +wait && isql-v -U dba -P "$passwd" < /load_data.sql
+    echo "Loading file: $file_path to graph $graph/$subgraph ..."
+        echo "ld_dir('$dir_name', '$file_name', '$graph/$subgraph');" > $LOAD_DATA_SQL
+        echo "rdf_loader_run();" >> $LOAD_DATA_SQL
+        echo "exec('checkpoint');" >> $LOAD_DATA_SQL
+        echo "WAIT_FOR_CHILDREN; " >> $LOAD_DATA_SQL
+        echo "$(cat $LOAD_DATA_SQL)"
+        virtuoso-t +wait && isql-v -U dba -P "$passwd" < $LOAD_DATA_SQL
         kill $(ps aux | grep '[v]irtuoso-t' | awk '{print $2}')
-        rm -f /load_data.sql
+        rm -f $LOAD_DATA_SQL
     done
     echo "`date +%Y-%m-%dT%H:%M:%S%:z`" > .data_loaded
 else
