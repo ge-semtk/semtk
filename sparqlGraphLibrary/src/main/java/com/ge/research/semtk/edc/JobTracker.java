@@ -218,6 +218,10 @@ public class JobTracker {
 	    }
 	}
 	
+	public boolean jobSucceeded(String jobId) throws Exception {
+		return this.getJobStatus(jobId).equals(STATUS_SUCCESS);
+	}
+	
 	/**
 	 * Get job status local fragment as a string
 	 * @param jobId

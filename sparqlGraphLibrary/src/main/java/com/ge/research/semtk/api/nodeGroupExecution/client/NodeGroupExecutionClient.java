@@ -66,6 +66,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String getResultsTableEndpoint = "/getResultsTable";
 	private static final String getResultsJsonLdEndpoint = "/getResultsJsonLd";
 	private static final String dispatchSelectByIdEndpoint = "/dispatchSelectById";
+	private static final String dispatchSelectByIdSyncEndpoint = "/dispatchSelectByIdSync";
 	private static final String dispatchSelectFromNodegroupEndpoint = "/dispatchSelectFromNodegroup";
 	private static final String dispatchCountByIdEndpoint = "/dispatchCountById";
 	private static final String dispatchCountFromNodegroupEndpoint = "/dispatchCountFromNodegroup";
@@ -436,6 +437,37 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.reset();
 		}
 		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
+		return retval;
+	}
+	
+	public TableResultSet execDispatchSelectByIdSync(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, QueryFlags flags) throws Exception{
+		return this.execDispatchSelectByIdSync(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints, -1, -1, null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public TableResultSet execDispatchSelectByIdSync(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, int limitOverride, int offsetOverride, QueryFlags flags) throws Exception{
+		TableResultSet retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + dispatchSelectByIdSyncEndpoint);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
+		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
+
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS, runtimeConstraints == null ? null : runtimeConstraints.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_FLAGS, flags == null ? null : flags.toJSONString());		
+
+		
+		try{
+			LocalLogger.logToStdErr("sending executeDispatchSelectByIdSync request");
+			retval = new TableResultSet((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
+		}
+		finally{
+			this.reset();
+		}
+		LocalLogger.logToStdErr("executeDispatchSelectByIdSync request finished without exception");
 		return retval;
 	}
 	

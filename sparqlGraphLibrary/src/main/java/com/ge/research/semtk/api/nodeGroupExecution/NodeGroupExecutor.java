@@ -48,6 +48,7 @@ public class NodeGroupExecutor {
 			+ "\"domain\" : \"%NODEGROUP%\","
 			+ "\"model\" : [], " 
 			+ "\"data\" : []        } ";
+	public static final String USE_NODEGROUP_CONN_STR_SHORT = "NODEGROUP_DEFAULT";
 		
 	// all the internal instances needed to manage external communications
 	private NodeGroupStoreRestClient ngsrc = null;
@@ -336,10 +337,10 @@ public class NodeGroupExecutor {
 		Table t = trs.getResults();
 		
 		if(t.getNumRows() < 1){ 
-			throw new Exception("StoredQueryExecutor::dispatchJob -- the ID passed to look up a remote node group (" + storedNodeGroupId + ") did not return any results.");
+			throw new Exception("Could not find nodegroup with id: " + storedNodeGroupId);
 		}
 		if(t.getNumRows() > 1){
-			throw new Exception("StoredQueryExecutor::dispatchJob -- the ID passed to look up a remote node group (" + storedNodeGroupId + ") returned more than one result. this is likely not good.");
+			throw new Exception("Nodegroup lookup returned multiple results.  id: " + storedNodeGroupId);
 		}
 		
 		String serializedNodeGroup = t.getRow(0).get( t.getColumnIndex("NodeGroup") );

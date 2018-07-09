@@ -17,10 +17,26 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class DispatchByIdRequestBody extends DispatchRequestBody {
 	
+	@ApiModelProperty(
+			value = "Nodegroup ID",
+			required = true,
+			example = "demoNodegroup")
 	private String nodeGroupId;
+	
+	@ApiModelProperty(
+			value = "Maximum number of results to return.<br>Overrides LIMIT stored in nodegroup.",
+			required = false,
+			example = "-1")
 	private int limitOverride = -1;
+	
+	@ApiModelProperty(
+			value = "Query offset.<br>Overrides OFFSET stored in nodegroup.",
+			required = false,
+			example = "-1")
 	private int offsetOverride = -1;
 	
 	public int getLimitOverride() {

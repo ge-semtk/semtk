@@ -23,10 +23,25 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.Utility;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class DispatchRequestBody extends SparqlConnRequestBody {
-	
+	@ApiModelProperty(
+			value = "EDC query constraints json",
+			required = false,
+			example = "{ optional complex json }")
 	private String externalDataConnectionConstraints;
+	
+	@ApiModelProperty(
+			value = "Query flags array",
+			required = false,
+			example = "[\"FLAG1\", \"FLAG2\"]")
 	private String flags; // json array
+	
+	@ApiModelProperty(
+			value = "Runtime constraints json",
+			required = false,
+			example = "{ optional complex json }")
 	private String runtimeConstraints;
 
 	

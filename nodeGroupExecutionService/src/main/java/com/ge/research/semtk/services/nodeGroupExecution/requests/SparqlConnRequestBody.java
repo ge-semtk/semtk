@@ -17,14 +17,25 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
+import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+
+import io.swagger.annotations.ApiModelProperty;
 
 public class SparqlConnRequestBody {
 	
+	@ApiModelProperty(
+			value = "Connection json or \"NODEGROUP_DEFAULT\" flag",
+			required = true,
+			example = "NODEGROUP_DEFAULT")
 	private String sparqlConnection;
 	
 	public SparqlConnection getSparqlConnection() throws Exception {
-		return new SparqlConnection(this.sparqlConnection);
+		if (sparqlConnection.equals(NodeGroupExecutor.USE_NODEGROUP_CONN_STR_SHORT)) {
+			return NodeGroupExecutor.get_USE_NODEGROUP_CONN();
+		} else {
+			return new SparqlConnection(this.sparqlConnection);
+		}
 	}
 	
 	public void setSparqlConnection(String sparqlConnection) {

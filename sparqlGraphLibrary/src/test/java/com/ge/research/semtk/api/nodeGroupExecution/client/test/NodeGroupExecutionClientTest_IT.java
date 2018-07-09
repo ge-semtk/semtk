@@ -145,6 +145,10 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			// store a nodegroup (modified with the test graph)
 			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
+			try {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			} catch (Exception e) {
+			}
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", "creator", ngJson);
 			
 			TestGraph.clearGraph();
@@ -155,6 +159,29 @@ public class NodeGroupExecutionClientTest_IT {
 			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			
+			assert(true);
+		}
+		
+		@Test
+		public void testSelectByNodegroupIdSync() throws Exception {		
+			
+			// store a nodegroup (modified with the test graph)
+			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
+			
+			try {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			} catch (Exception e) {
+			}
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", "creator", ngJson);
+			
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			
+			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+			
+			TableResultSet res = nodeGroupExecutionClient.execDispatchSelectByIdSync(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null, null);
+			Table tab = res.getTable();
 			assert(true);
 		}
 		

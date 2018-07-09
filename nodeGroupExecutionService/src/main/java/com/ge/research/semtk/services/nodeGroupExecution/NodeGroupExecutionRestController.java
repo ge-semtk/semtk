@@ -69,6 +69,8 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 
+import io.swagger.annotations.ApiOperation;
+
 /**
  * service to run stored nodegroups. 
  * @author 200018594
@@ -79,6 +81,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class NodeGroupExecutionRestController {
 	
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
+ 	static final String JOB_ID_RESULT_KEY = "JobId";
  	
 	@Autowired
 	NodegroupExecutionProperties prop;
@@ -371,7 +374,7 @@ public class NodeGroupExecutionRestController {
 			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
-			retval.addResult("JobId", id); 
+			retval.addResult(JOB_ID_RESULT_KEY, id); 
 
 		}
 		catch(Exception e){
@@ -422,7 +425,7 @@ public class NodeGroupExecutionRestController {
 			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
-			retval.addResult("JobId", id);
+			retval.addResult(JOB_ID_RESULT_KEY, id);
 
 		}
 		catch(Exception e){
@@ -457,7 +460,56 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+	}
+	
+	@ApiOperation(
+			value="Run SELECT query by nodegroup id synchronously.",
+			notes="Returns a table or times out.<br>Use only for simple queries or tests.<br><b>Preferred endpoint is /dispatchSelectById.</b>"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchSelectByIdSync", method=RequestMethod.POST)
+	public JSONObject dispatchSelectByIdSync(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "/dispatchSelectByIdSync";
+		final int TIMEOUT_SEC = 55;
+		TableResultSet ret = null;
+		try {
+			// dispatch the job
+			JSONObject simpleJson = dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+			SimpleResultSet jobIdRes = SimpleResultSet.fromJson(simpleJson);
+			
+			if (! jobIdRes.getSuccess()) {
+				// send along failure
+				ret = new TableResultSet(simpleJson);
+			} else {
+				// wait for job to complete
+				String jobId = jobIdRes.getResult(JOB_ID_RESULT_KEY);
+				JobTracker tracker = new JobTracker(edc_prop); 
+		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, 100, TIMEOUT_SEC * 1000);
+		    	if (percentComplete < 100) {
+		    		throw new Exception("Job is only " + percentComplete + "% complete after" + TIMEOUT_SEC + "seconds.  Use /dispatchSelectById instead.");
+		    	}
+		    	
+		    	// check that job succeeded
+		    	if (!tracker.jobSucceeded(jobId)) {
+		    		throw new Exception("Query failed: " + tracker.getJobStatusMessage(jobId));
+		    	}
+		    	
+		    	// get table
+		    	NodeGroupExecutor nge = this.getExecutor(prop, jobId);
+				Table retTable = nge.getTableResults();
+				ret = new TableResultSet(true);
+				ret.addResults(retTable);
+		    	
+			}
+		} catch (Exception e) {
+				LocalLogger.printStackTrace(e);
+				ret = new TableResultSet(false);
+				ret.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		}
+		
+		return ret.toJson();
 	}
 	
 	@CrossOrigin
@@ -561,7 +613,7 @@ public class NodeGroupExecutionRestController {
 			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
-			retval.addResult("JobId", id);
+			retval.addResult(JOB_ID_RESULT_KEY, id);
 
 		}
 		catch(Exception e){
