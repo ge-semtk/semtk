@@ -55,7 +55,19 @@ define([	'sparqlgraph/js/msiresultset',
 				},
 				
 				errorCallback : function (xhr, status, err) { 
-					this.userFailureCallback(this.generatePostFailureHtml(xhr, status, err));
+                    if (xhr.hasOwnProperty("status") && xhr.status == 401) {
+                        // attempt to reauthenticate, presuming the window.location.origin has a /login
+                        window.open(window.location.origin + '/login', "_blank", "location=yes");
+                        var html = "<h3>403 Forbidden: token may have expired" + 
+                                  "<p>Re-authentication is being attempted in another tab." +
+                                  "<br>(if pop-ups are not blocked)"
+                                  "<br><br>After re-authenticating, click 'OK' and try again."
+                        this.userFailureCallback(html);
+                        
+                    } else  {
+                        // normal error
+                        this.userFailureCallback(this.generatePostFailureHtml(xhr, status, err));
+                    }
 				},
 				
 				statusCodeCallback : function (statusCode, object) {
@@ -223,9 +235,10 @@ define([	'sparqlgraph/js/msiresultset',
 						success: this.successCallback.bind(this),
 						error:   this.errorCallback.bind(this),
 						statusCode: {
-                           401: function() {
-                              this.userFailureCallback("Authorization failure.<br>(Token may have expired.)");
-                           }.bind(this),
+                          // Moved this into userFailureCallback to avoid double callbacks
+                          // 401: function() {
+                          //    this.userFailureCallback("Authorization failure.<br>(Token may have expired.)");
+                          // }.bind(this),
 						   403: function() { 
 							   // never happens
 							   this.statusCodeCallback(403);        
