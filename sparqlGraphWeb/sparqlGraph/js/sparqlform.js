@@ -938,8 +938,17 @@ require([	'local/sparqlformconfig',
         };
 		
 		//***********  save and restore *************//
+    
+        /**
+         **  Get a sparqlGraphJson with 
+         **       - expand optional subgraphs
+         **       - formRows added
+         **/
 		getSGJson = function() {
-            var sgJson = new SparqlGraphJson(gConn, gNodeGroup);
+            var tmpNodegroup = gNodeGroup.deepCopy();
+            tmpNodegroup.expandOptionalSubgraphs();
+            
+            var sgJson = new SparqlGraphJson(gConn, tmpNodegroup);
 			sgJson.setExtra("formRows", getFormRowsArray());
 				
 			if (formConstraintsGet() != null) {
