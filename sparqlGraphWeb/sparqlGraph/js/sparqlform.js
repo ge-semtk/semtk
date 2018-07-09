@@ -860,6 +860,9 @@ require([	'local/sparqlformconfig',
 		};
     
         doQuery = function() {
+            // Paul 7/9/18 - always expand optionals in UI
+            var tmpNodeGroup = gNodeGroup.deepCopy();
+            tmpNodeGroup.expandOptionalSubgraphs();
             
             // DIRECT
             if (typeof gAvoidQueryMicroserviceFlag != "undefined" && gAvoidQueryMicroserviceFlag) {
@@ -874,7 +877,7 @@ require([	'local/sparqlformconfig',
                 // generate sparql and send to sparqlCallback
                 setStatusProgressBar("Running direct query", 5);
                 var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
-                ngClient.execAsyncGenerateSelect(gNodeGroup, gConn, sparqlCallback, guiEndQuery);
+                ngClient.execAsyncGenerateSelect(tmpNodeGroup, gConn, sparqlCallback, guiEndQuery);
              
             // Microservices
             } else {
@@ -890,7 +893,7 @@ require([	'local/sparqlformconfig',
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
                setStatusProgressBar("Running Query", 1);
-               client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, 
+               client.execAsyncDispatchSelectFromNodeGroup(tmpNodeGroup, 
                                                            gConn, 
                                                            gFormConstraint ? gFormConstraint.getConstraintSet() : null, 
                                                            null, 
