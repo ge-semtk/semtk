@@ -38,8 +38,8 @@ define([	'sparqlgraph/js/msiresultset',
 			}
 			this.lastUrl = "";
 			this.timeout = 45000;
-			this.userFailureCallback = function (msg) {
-											ModalIidx.alert("Microservice Failure", msg, ModalIidx.HTML_ALLOW);
+			this.userFailureCallback = function (msg, optCallback) {
+											ModalIidx.alert("Microservice Failure", msg, ModalIidx.HTML_ALLOW, optCallback);
 											if (typeof kdlLogEvent != "undefined") {
 												kdlLogEvent("SG Microservice Failure", "message", msg);
 											}
@@ -57,12 +57,14 @@ define([	'sparqlgraph/js/msiresultset',
 				errorCallback : function (xhr, status, err) { 
                     if (xhr.hasOwnProperty("status") && xhr.status == 401) {
                         // attempt to reauthenticate, presuming the window.location.origin has a /login
-                        window.open(window.location.origin + '/login', "_blank", "location=yes");
+                        var alertCallback = function () {
+                             window.open(window.location.origin + '/login', "_blank", "location=yes");
+                        };
                         var html = "<h3>403 Forbidden: token may have expired" + 
-                                  "<p>Re-authentication is being attempted in another tab." +
-                                  "<br>(if pop-ups are not blocked)"
-                                  "<br><br>After re-authenticating, click 'OK' and try again."
-                        this.userFailureCallback(html);
+                                  "<p>Click OK to attempt re-authentication in another tab." +
+                                  "<br>(if pop-ups are not blocked)" +
+                                  "<br><br>After re-authenticating, return and try again."
+                        this.userFailureCallback(html, alertCallback);
                         
                     } else  {
                         // normal error
