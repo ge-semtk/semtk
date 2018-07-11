@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2016 General Electric Company
+# Copyright 2018 General Electric Company
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,17 +15,32 @@
 # limitations under the License.
 #
 #
+
 #
 # Starts microservices, including the ones needed for SparqlGraph.
-#
+# Optional argument:  full path of dir with alternate versions of:
+#                       .env, .fun, logs/ ENV_OVERRIDE
 
 
 # SEMTK = directory holding this script
 SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-LOGS=$SEMTK/logs
 echo $SEMTK
 
-pushd $SEMTK; . .env; popd
+# Handle $1 optional arg of alternate semtk dir that contains
+#    ENV_OVERRIDE 
+if [ $# -eq 1 ]; then
+	LOGS=${1}/logs  
+	cp ./.env ${1}
+	cp ./.fun ${1}
+	pushd ${1}; . .env; popd
+
+elif [ $# -eq 0 ]; then
+	LOGS=${SEMTK}/logs
+	pushd ${SEMTK}; . .env; popd
+
+else 
+	echo Usage: startServices.sh [alt_env_dir]
+fi
 
 # JAVA_HOME
 if [ -z "$JAVA_HOME" ]; then
@@ -33,6 +48,7 @@ if [ -z "$JAVA_HOME" ]; then
         exit 1
 fi
 
+# logs/
 mkdir -p $LOGS
 
 echo "=== START MICROSERVICES... ==="

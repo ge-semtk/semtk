@@ -12,3 +12,4 @@ logs/
 DOT_SETTINGS
 .idea/
 .vscode/
+ENV_OVERRIDE
