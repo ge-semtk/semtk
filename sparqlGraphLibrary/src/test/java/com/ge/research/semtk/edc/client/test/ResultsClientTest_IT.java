@@ -121,12 +121,6 @@ public class ResultsClientTest_IT {
 			assertEquals(resCsvRows.get(1).get(0), "three");
 			assertEquals(resCsvRows.get(1).get(1), "four");
 			
-			// check getting resultsURLs
-			Table urlTab = client.getResultsFiles(jobId);
-			assertEquals(1, urlTab.getNumRows());
-			assertEquals("full_results.csv", urlTab.getCell(0, "name"));
-			new URL(urlTab.getCell(0, "URL"));   // column URL exists, and is not malformed
-			
 		} finally {
 			cleanup(client, jobId);
 		}
@@ -483,12 +477,9 @@ public class ResultsClientTest_IT {
 		SimpleResultSet res = client.execStoreBinaryFile(jobId, testFile);
 		
 		String fileId = (String) res.getResult("fileId");
-		String fullUrl = (String) res.getResult("fullURL");
-		
-		String s = Utility.getURLContentsAsString(new URL(fullUrl));
+ 		
 		String fileContent = client.execReadBinaryFile(fileId);
 		
-		assertNotNull(s);
 		assertNotNull(fileContent);
 		
 		// check getting resultsURLs
