@@ -64,6 +64,7 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.services.results.requests.JsonBlobRequestBody;
 import com.ge.research.semtk.services.results.requests.JsonLdStoreRequestBody;
 import com.ge.research.semtk.services.results.requests.ResultsRequestBodyCsvMaxRows;
@@ -187,17 +188,17 @@ public class ResultsServiceRestController {
 
 		LocalLogger.logToStdErr("done writing output");
 	}
+	
 	@ApiOperation(
 			value="Get URLs of all files in job",
-			notes="full_results.csv plus all binary files are returned in a table with columns 'name' and 'fileURL'"
+			notes="binary files are returned in a table with columns 'name' and 'fileId'"
 			)
 	@CrossOrigin
-	@RequestMapping(value="/getResultsURLs", method=RequestMethod.POST)
-	public JSONObject getResultsURLs(@RequestBody JobIdRequest requestBody,  @RequestHeader HttpHeaders headers) {
+	@RequestMapping(value="/getResultsFiles", method=RequestMethod.POST)
+	public JSONObject getResultsFiles(@RequestBody JobIdRequest requestBody,  @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		final String ENDPOINT_NAME = "getResultsURLs";
+		final String ENDPOINT_NAME = "getResultsFiles";
 		final String STRING_TYPE = "http://www.w3.org/2001/XMLSchema#string";  // TODO create an enum in Belmont and start using it everywhere
-		final String URL_TYPE = "url";  // TODO create an enum in Belmont and start using it everywhere
 		TableResultSet res = null;
 		try{
 			JobTracker tracker = getJobTracker();
@@ -205,16 +206,13 @@ public class ResultsServiceRestController {
 			ArrayList<JobFileInfo> fileInfoList = tracker.getJobBinaryFiles(requestBody.jobId);
 			
 			// create table of fullResults (max 1 value) and files (many values)
-			Table table = new Table(new String[] {"name", "URL"}, new String[] {STRING_TYPE, URL_TYPE});
+			Table table = new Table(new String[] {"name",      "fileId"}, 
+					                new String[] {STRING_TYPE, ResultType.BINARY_FILE_ID.getPrefixedName()});
 			
-			// if there is a "fullResult"
-			if (fullResultsUrl != null) {
-				table.addRow(new String[] {	"full_results.csv",  this.getFullCsvUserURL(requestBody.jobId) });
-			}
 			
 			// add rest of rows
 			for (JobFileInfo info : fileInfoList) {
-				table.addRow(new String[] {	info.getFileName(), this.getBinaryFileUserURL(info.getFileId()) });
+				table.addRow(new String[] {	info.getFileName(), info.getFileId() });
 			}
 			
 			res = new TableResultSet(true);
@@ -229,7 +227,7 @@ public class ResultsServiceRestController {
 
 		return res.toJson();
 	}
-
+    
 	
 	/**
 	 * Given multipartFile, save a copy, assign a fileId and URL  (stores a metafile)
@@ -319,10 +317,8 @@ public class ResultsServiceRestController {
 	
 	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String storageFileName) throws Exception {
 		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, storageFileName);
-		String userUrl = this.getBinaryFileUserURL(fileId);
 	
 		SimpleResultSet res = new SimpleResultSet(true);
-		res.addResult("fullURL", userUrl);
 		res.addResult("fileId", fileId);
 		return res;
 	}
@@ -677,10 +673,6 @@ public class ResultsServiceRestController {
 	
 	private JobTracker getJobTracker() throws Exception{
 		return new JobTracker(edc_prop);
-	}
-	
-	private String getBinaryFileUserURL(String fileId) {
-		return prop.getBaseURL() + "/results/getBinaryFile/" + fileId;
 	}
 	
 	private String getSampleJsonUserURL(String jobId) throws MalformedURLException {

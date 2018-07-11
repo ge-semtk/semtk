@@ -153,7 +153,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	/**
 	 * Store a file.  Note that it becomes subject to clean-up (removal by results service)
 	 * @param file
-	 * @return Successful SimpleResultSet containing fullUrl and fileId
+	 * @return Successful SimpleResultSet containing fileId
 	 * @throws Exception
 	 */
 	public SimpleResultSet execStoreBinaryFilePath(String jobID, String path, String filename) throws Exception{
@@ -175,13 +175,19 @@ public class ResultsClient extends RestClient implements Runnable {
 			this.cleanUp();
 		}
 	}
+	
+	public String storeBinaryFilePath(String jobID, String path, String filename) throws Exception{
+		SimpleResultSet res = this.execStoreBinaryFilePath(jobID, path, filename);
+		res.throwExceptionIfUnsuccessful();
+		return res.getResult("fileId");
+	}
 
 
-	public TableResultSet execGetResultsURLs(String jobID) throws Exception {
+	public TableResultSet execGetResultsFiles(String jobID) throws Exception {
 		this.parametersJSON.clear();
 		this.parametersJSON.put("jobId", jobID);
 		
-		this.conf.setServiceEndpoint("results/getResultsURLs");
+		this.conf.setServiceEndpoint("results/getResultsFiles");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {
 			JSONObject jObj = (JSONObject) this.execute(false);
@@ -203,8 +209,8 @@ public class ResultsClient extends RestClient implements Runnable {
 	 * @return
 	 * @throws Exception
 	 */
-	public Table getResultsURLs(String jobID) throws Exception {
-		Table t = this.execGetResultsURLs(jobID).getTable();
+	public Table getResultsFiles(String jobID) throws Exception {
+		Table t = this.execGetResultsFiles(jobID).getTable();
 		return t;
 	}
 	

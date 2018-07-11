@@ -122,7 +122,7 @@ public class ResultsClientTest_IT {
 			assertEquals(resCsvRows.get(1).get(1), "four");
 			
 			// check getting resultsURLs
-			Table urlTab = client.getResultsURLs(jobId);
+			Table urlTab = client.getResultsFiles(jobId);
 			assertEquals(1, urlTab.getNumRows());
 			assertEquals("full_results.csv", urlTab.getCell(0, "name"));
 			new URL(urlTab.getCell(0, "URL"));   // column URL exists, and is not malformed
@@ -492,10 +492,10 @@ public class ResultsClientTest_IT {
 		assertNotNull(fileContent);
 		
 		// check getting resultsURLs
-		Table urlTab = client.getResultsURLs(jobId);
+		Table urlTab = client.getResultsFiles(jobId);
 		assertEquals(1, urlTab.getNumRows());
 		assertEquals(fileName, urlTab.getCell(0, "name"));
-		new URL(urlTab.getCell(0, "URL"));   // column URL exists, and is not malformed
+		urlTab.getCell(0, "fileId");
 
 
 	}
@@ -512,20 +512,7 @@ public class ResultsClientTest_IT {
 		 * So this test is commented out.
 		 */
 		
-		/*
-		SimpleResultSet res = client.execStoreBinaryFilePath(pathOfFileAccessibleToServer, "test.txt");
 		
-		String fileId = (String) res.getResult("fileId");
-		String fullUrl = (String) res.getResult("fullURL");
-		
-		String s = Utility.getURLContentsAsString(new URL(fullUrl));
-		String fileContent = client.execReadBinaryFile(fileId);
-		
-		assertNotNull(s);
-		assertNotNull(fileContent);
-		*/
-
-
 	}
 	
 	@Test
