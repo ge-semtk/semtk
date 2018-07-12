@@ -190,7 +190,7 @@ public class RuntimeConstraintManager {
 	 * Apply a constraint to the nodegroup
 	 * @param sparqlId
 	 * @param operation
-	 * @param operands
+	 * @param operands  ArrayList
 	 * @throws Exception
 	 */
 	public void applyConstraint(String sparqlId, SupportedOperations operation, ArrayList<String> operands) throws Exception{
@@ -199,6 +199,21 @@ public class RuntimeConstraintManager {
 		this.rtcObjectHash.get(id).applyConstraint(operation, operands);
 		
 	}
+	
+	/**
+	 * Apply a constraint to the nodegroup
+	 * @param sparqlId
+	 * @param operation
+	 * @param operands String Array
+	 * @throws Exception
+	 */
+	public void applyConstraint(String sparqlId, SupportedOperations operation, String [] operands) throws Exception{
+		ArrayList<String> operandList = new ArrayList<String>();
+		for (String s : operands) {
+			operandList.add(s);
+		}
+		this.applyConstraint(sparqlId, operation, operandList);
+	} 
 	
 	private XSDSupportedType getValueType(String itemSparqlId) throws Exception{
 		XSDSupportedType retval = null;
