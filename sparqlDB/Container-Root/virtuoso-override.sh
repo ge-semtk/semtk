@@ -49,15 +49,15 @@ fi
 if [ ! -f ".data_loaded" -a -d "toLoad" ] ;
 then
     echo "Start data loading from toLoad folder"
-    graph="http://localhost:8890/DAV"
+    graph="http://"
     passwd="dba"
     if [ "$DBA_PASSWORD" ]; then passwd="$DBA_PASSWORD" ; fi
-    if [ "$DEFAULT_GRAPH" ]; then graph="$DEFAULT_GRAPH" ; fi
     # Load each file path from toLoad dir into its own graph
     for file_path in $(find toLoad -type f); do
         dir_name=$(dirname "$file_path")
         subgraph=${dir_name:7}
         file_name=$(basename "$file_path")
+
     echo "Loading file: $file_path to graph $graph/$subgraph ..."
         echo "ld_dir('$dir_name', '$file_name', '$graph/$subgraph');" > $LOAD_DATA_SQL
         echo "rdf_loader_run();" >> $LOAD_DATA_SQL
@@ -65,6 +65,7 @@ then
         echo "WAIT_FOR_CHILDREN; " >> $LOAD_DATA_SQL
         echo "$(cat $LOAD_DATA_SQL)"
         virtuoso-t +wait && isql-v -U dba -P "$passwd" < $LOAD_DATA_SQL
+
         kill $(ps aux | grep '[v]irtuoso-t' | awk '{print $2}')
         rm -f $LOAD_DATA_SQL
     done
