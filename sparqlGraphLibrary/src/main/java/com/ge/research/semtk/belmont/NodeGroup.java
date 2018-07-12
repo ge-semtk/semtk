@@ -836,6 +836,15 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	public ArrayList<String> getReturnedItemsSparqlIDs() {
+		ArrayList<Returnable> items = this.getReturnedItems();
+		ArrayList<String> ret = new ArrayList<String>();
+		for (Returnable i : items) {
+			ret.add(i.getSparqlID());
+		}
+		return ret;
+	}
+	
 	/**
 	 * Find Node or PropertyItem with sparqlID==id anywhere in nodegroup, otherwise null
 	 * @param id
