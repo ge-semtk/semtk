@@ -301,7 +301,20 @@ define([	// properly require.config'ed   bootstrap-modal
             setAnchorFlag : function (val) {
 				this.anchorFlag = val;
 			},
-			
+            
+            // apply funcHash[type] to column if the type matches
+			tableApplyTransformFunctions : function (funcHash) {
+                var table = this.getTable();
+				for (var col=0; col < table.col_type.length; col++) {
+                    if (table.col_type[col] in funcHash ) {
+                        var transformFunc = funcHash[table.col_type[col]];
+                        for (var row=0; row < table.row_count; row++) {
+                            table.rows[row][col] = transformFunc(table.rows[row][col]);
+                        }
+                    }
+                }
+            },
+            
 			tableGetCols : function () {
 				var ret = [];
 				var colNames;
@@ -371,15 +384,16 @@ define([	// properly require.config'ed   bootstrap-modal
                     // create anchors amd escapeHtml (non-URI columns)
 					if (this.anchorFlag || this.escapeHtmlFlag) {
 						for (var j=0; j < nonUriCols.length; j++) {
-                            
-                            if (this.escapeHtmlFlag) {
-                                row[nonUriCols[j]] = IIDXHelper.htmlSafe(row[nonUriCols[j]]);
+                            // all of this only applies to strings
+                            if (table.col_type[j].endsWith("string")) {
+                                if (this.escapeHtmlFlag) {
+                                    row[nonUriCols[j]] = IIDXHelper.htmlSafe(row[nonUriCols[j]]);
+                                }
+
+                                if (this.anchorFlag) {
+                                    row[nonUriCols[j]] = IIDXHelper.urlToAnchor(row[nonUriCols[j]]);
+                                }
                             }
-                        
-                            if (this.anchorFlag) {
-                                row[nonUriCols[j]] = IIDXHelper.urlToAnchor(row[nonUriCols[j]]);
-                            }
-                        
                         }
                     }
 					

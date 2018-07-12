@@ -59,6 +59,7 @@ require([	'local/sparqlformconfig',
          	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/msiclientnodegroupexec',
             'sparqlgraph/js/msiclientnodegroupservice',
+            'sparqlgraph/js/msiclientresults',
             'sparqlgraph/js/modalstoredialog',
             'sparqlgraph/js/sparqlgraphjson',
          	
@@ -72,7 +73,7 @@ require([	'local/sparqlformconfig',
 			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
 		],
 
-	function(Config, BackwardCompatibleUtil, ModalIidx, ModalItemDialog, IIDXHelper, MsiClientNodeGroupExec, MsiClientNodeGroupService, ModalStoreDialog, SparqlGraphJson, $) {
+	function(Config, BackwardCompatibleUtil, ModalIidx, ModalItemDialog, IIDXHelper, MsiClientNodeGroupExec, MsiClientNodeGroupService, MsiClientResults, ModalStoreDialog, SparqlGraphJson, $) {
 		
 		gConnSetup = function() {
 			// Establish Sparql Connection in gConn, using g		
@@ -932,6 +933,9 @@ require([	'local/sparqlformconfig',
                 headerHTML += " <span class='label label-warning'>Showing first " + String(Config.resultsTable.sampleSize) + " rows. </span> "
             }
             results.setAnchorFlag(true);
+            var resultsClient = new MsiClientResults(Config.services.results.url, "no_job");
+            results.tableApplyTransformFunctions(resultsClient.getResultTransformFunctions());
+
 			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), headerHTML);
 											
 			guiEndQuery();

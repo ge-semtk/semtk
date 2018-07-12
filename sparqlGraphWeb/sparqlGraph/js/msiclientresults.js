@@ -35,10 +35,23 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.optTimeout = optTimeout;
 			
 		};
-		
-		
+
+        
 		MsiClientResults.prototype = {
-				
+            /*
+             * Return a hash table of return[type] = cell_tranform_func(x)
+             */
+            getResultTransformFunctions : function () {
+                var funcHash = {};
+
+                funcHash["http://semtk.ge.com/resulttype#binaryFileId"] = function (prefix, rawValue) {
+                    var targetUrl = prefix + rawValue;
+                    return "<a href=\"" + targetUrl + "\"> fileId:" + rawValue + "</a>";
+                }.bind(this, this.msi.url + "getBinaryFile/");
+
+                return funcHash;
+            },
+    
 			getJobIdDataStr : function () {
 				return JSON.stringify ({
 					"jobId" : this.jobId,
@@ -144,7 +157,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			
 			getResultsFullUrl : function (resultSet) {
 				return resultSet.getSimpleResultField("fullURL");
-			},
+			}
             
 			
 		};

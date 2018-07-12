@@ -1096,7 +1096,6 @@
     };
 
     var runGraphByQueryType = function (optRtConstraints) {
-        // PEC HERE
         var rtConstraints = (typeof optRtConstraints == "undefined") ? null : optRtConstraints;
         
     	require(['sparqlgraph/js/msiclientnodegroupexec',
@@ -1189,20 +1188,24 @@
      * @private
      */
     var queryTableResCallback = function (csvFilename, fullURL, tableResults) { 
-        var headerHtml = "";
-        if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
-            headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
-        }
-        headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
-        tableResults.setLocalUriFlag(! getQueryShowNamespace());
-        tableResults.setEscapeHtmlFlag(true);
-        tableResults.setAnchorFlag(true);
-        var noSort = [];
-        tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml, undefined, undefined, undefined, noSort);
-        
-        guiUnDisableAll();
-        guiResultsNonEmpty();
-        setStatus("");
+        require(['sparqlgraph/js/msiclientresults'], function(MsiClientResults) {
+            var headerHtml = "";
+            if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
+                headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
+            }
+            headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
+            tableResults.setLocalUriFlag(! getQueryShowNamespace());
+            tableResults.setEscapeHtmlFlag(true);
+            tableResults.setAnchorFlag(true);
+            var resultsClient = new MsiClientResults(g.service.results.url, "no_job");
+            tableResults.tableApplyTransformFunctions(resultsClient.getResultTransformFunctions());
+            var noSort = [];
+            tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml, undefined, undefined, undefined, noSort);
+
+            guiUnDisableAll();
+            guiResultsNonEmpty();
+            setStatus("");
+         });
     };
 
    	var doRetrieveFromNGStore = function() {
