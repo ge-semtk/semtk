@@ -88,30 +88,10 @@ public class NodeGroupExecutionRestController {
 	@Autowired
 	NodegroupExecutionEdcConfigProperties edc_prop;
 	
-	@CrossOrigin
-	@RequestMapping(value="/stest", method=RequestMethod.GET)
-	public JSONObject stest(@RequestHeader HttpHeaders headers){
-		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = new SimpleResultSet();
-		
-		try{ 
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, "job-1" );
-			// try to get a job status
-			String results = ngExecutor.getJobStatus();
-			retval.setSuccess(true);
-			retval.addResult("status", results);
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
-		}
-	
-		return retval.toJson();
-	} 
-	
+	@ApiOperation(
+			value="Get job status",
+			notes="results json contains 'status' string"
+			)
 	@CrossOrigin 
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
 	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
@@ -136,6 +116,10 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 	} 
 	
+	@ApiOperation(
+			value="Get job status message",
+			notes="results json contains 'message'"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/jobStatusMessage", method=RequestMethod.POST)
 	public JSONObject getJobStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -160,6 +144,10 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 	} 
 	
+	@ApiOperation(
+			value="Get job completed",
+			notes="results json contains 'completed' field: true or false"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionCheck", method=RequestMethod.POST)
 	public JSONObject getJobCompletion(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -189,6 +177,10 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 	}
 	
+	@ApiOperation(
+			value="Get job percent complete",
+			notes="results json contains 'percent' integer string"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionPercentage", method=RequestMethod.POST)
 	public JSONObject getJobCompletionPercent(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -213,7 +205,11 @@ public class NodeGroupExecutionRestController {
 	
 		return retval.toJson();
 	}
-	
+	@ApiOperation(
+			value="Wait for percent or msec",
+			notes="Returns as soon as the requested Msec elapses or percent complete is reached<br>" +
+			      "whichever comes first."
+			)
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
 	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		// NOTE: May 2018 Paul
@@ -242,6 +238,11 @@ public class NodeGroupExecutionRestController {
 	    return retval.toJson();
 	}
 	
+	@ApiOperation(
+			value="get results table",
+			notes="Can fail if table is too big.<br>" +
+			      "Results service /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient are safer "
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getResultsTable", method=RequestMethod.POST)
 	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -285,6 +286,12 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 	}
 	
+	@ApiOperation(
+			value=	"get results URLs",
+			notes=	"DEPRECATED: URLS may not work in secure deployment of SemTK<br>" +
+					"result json has 'sample' URL of sample JSON, and 'full' URL of entire CSV<br>" +
+					"Results service /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient are safer<br> "
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getResultsLocation", method=RequestMethod.POST)
 	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -441,6 +448,10 @@ public class NodeGroupExecutionRestController {
 
 	// end base methods
 	
+	@ApiOperation(
+			value=	"SELECT query on nodegroupID",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
 	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -448,6 +459,10 @@ public class NodeGroupExecutionRestController {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 	}
 	
+	@ApiOperation(
+			value=	"SELECT query on nodegroup",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -456,6 +471,10 @@ public class NodeGroupExecutionRestController {
 
 	}
 
+	@ApiOperation(
+			value=	"SELECT query on nodegroupID",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -512,6 +531,10 @@ public class NodeGroupExecutionRestController {
 		return ret.toJson();
 	}
 	
+	@ApiOperation(
+			value=	"SELECT query on nodegroup json",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -520,6 +543,10 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
+	@ApiOperation(
+			value=	"CONSTRUCT query on nodegroup id",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructById", method=RequestMethod.POST)
 	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -527,6 +554,10 @@ public class NodeGroupExecutionRestController {
 		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
 	}
 	
+	@ApiOperation(
+			value=	"CONSTRUCT query on nodegroup json",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -550,6 +581,10 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
+	@ApiOperation(
+			value=	"COUNT query on nodegroup id",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -557,6 +592,10 @@ public class NodeGroupExecutionRestController {
 		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
 	}
 	
+	@ApiOperation(
+			value=	"COUNT query on nodegroup json",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -565,6 +604,10 @@ public class NodeGroupExecutionRestController {
 
 	}
 
+	@ApiOperation(
+			value=	"FILTER query nodegroup id",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterById", method=RequestMethod.POST)
 	public JSONObject dispatchFilterJobById(@RequestBody FilterDispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -572,6 +615,10 @@ public class NodeGroupExecutionRestController {
 		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
 	}
 	
+	@ApiOperation(
+			value=	"FILTER query nodegroup json",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody FilterDispatchFromNodeGroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -580,6 +627,10 @@ public class NodeGroupExecutionRestController {
 
 	}
 
+	@ApiOperation(
+			value=	"DELETE query nodegroup id",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteById", method=RequestMethod.POST)
 	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -587,6 +638,10 @@ public class NodeGroupExecutionRestController {
 		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
 	}
 	
+	@ApiOperation(
+			value=	"DELETE query nodegroup json",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchDeleteJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
@@ -594,7 +649,10 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	// direct Sparql Execution
+	@ApiOperation(
+			value=	"raw SPARQL query",
+			notes=	"result has 'JobId' field"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchRawSparql", method=RequestMethod.POST)
 	public JSONObject dispatchRawSparql(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -630,6 +688,10 @@ public class NodeGroupExecutionRestController {
 	 * Perform ingestion using a stored nodegroup ID.
 	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
+	@ApiOperation(
+			value=	"ingest CSV data given nodegroup id",
+			notes=	""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -649,6 +711,10 @@ public class NodeGroupExecutionRestController {
 	 * Perform ingestion by passing in a nodegroup.
 	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
+	@ApiOperation(
+			value=	"ingest CSV data given nodegroup json",
+			notes=	""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -668,6 +734,10 @@ public class NodeGroupExecutionRestController {
 	/**
 	 * Perform ingestion using a stored nodegroup ID.
 	 */
+	@ApiOperation(
+			value=	"ingest CSV data given nodegroup id",
+			notes=	""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
 	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -683,7 +753,10 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 	}
 
-	
+	@ApiOperation(
+			value=	"get runtime constraint sparqlIDs given nodegroup id",
+			notes=	"returns table of 'valueId', 'itemType', 'valueType'"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroupID", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -704,6 +777,10 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();
 	}
 	
+	@ApiOperation(
+			value=	"get runtime constraint sparqlIDs given nodegroup json",
+			notes=	"returns table of 'valueId', 'itemType', 'valueType'"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroup", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {

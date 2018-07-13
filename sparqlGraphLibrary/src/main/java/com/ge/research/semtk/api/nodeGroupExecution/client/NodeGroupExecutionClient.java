@@ -225,11 +225,27 @@ public class NodeGroupExecutionClient extends RestClient {
 		return retval;
 	}
 	
+	/**
+	 * get results URLs",
+	 * DEPRECATED: URLS may not work in secure deployment of SemTK
+	 * Results service /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient are safer
+	 * @param jobId
+	 * @return
+	 * @throws Exception
+	 */
 	public Table getResultsLocation(String jobId) throws Exception{
 		TableResultSet ret = this.execGetResultsLocation(jobId);
 		return ret.getTable();
 	}
 	
+	/**
+	 * get results URLs",
+	 * DEPRECATED: URLS may not work in secure deployment of SemTK
+	 * Results service /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient are safer
+	 * @param jobId
+	 * @return
+	 * @throws Exception
+	 */
 	@SuppressWarnings("unchecked")
 	public TableResultSet execGetResultsLocation(String jobId) throws Exception{
 		TableResultSet retval = new TableResultSet();

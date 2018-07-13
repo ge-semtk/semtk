@@ -202,9 +202,8 @@ public class ResultsClient extends RestClient implements Runnable {
 
 	
 	/**
-	 * Returns a table of name, URL for all files
-	 * Full results file is named full_results.csv
-	 * BinaryFiles use their names
+	 * Returns a table of name, URL for all binary files 
+	 * binary files are returned in a table with columns 'name' and 'fileId'
 	 * @param jobID
 	 * @return
 	 * @throws Exception
@@ -213,6 +212,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		Table t = this.execGetResultsFiles(jobID).getTable();
 		return t;
 	}
+	
 	
 	public String execReadBinaryFile(String fileId) throws Exception{
 
@@ -379,6 +379,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	
 	/**
 	 * Get results (possibly truncated) in JSON format for a job
+	 * @param maxRows - to prevent string buffer overflow in Java.  
 	 * @return a TableResultSet object
 	 */
 	@SuppressWarnings("unchecked")
@@ -454,6 +455,7 @@ public class ResultsClient extends RestClient implements Runnable {
 
 	/**
 	 * Get results (possibly truncated) in CSV format for a job
+	 * @param maxRows - to prevent string buffer overflow in Java.  
 	 * @return a CSVDataset object
 	 */
 	@SuppressWarnings("unchecked")
@@ -475,7 +477,12 @@ public class ResultsClient extends RestClient implements Runnable {
 	}	
 	
 	/**
-	 * This is for backwards compatibility only.
+	 * DEPRECATED - returns URLs that might not work in a secure deployment
+	 * @param jobId
+	 * @return
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
 	public URL [] execGetResults(String jobId) throws ConnectException, EndpointNotFoundException, Exception {

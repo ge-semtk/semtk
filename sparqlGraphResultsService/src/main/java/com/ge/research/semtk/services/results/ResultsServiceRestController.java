@@ -190,7 +190,7 @@ public class ResultsServiceRestController {
 	}
 	
 	@ApiOperation(
-			value="Get URLs of all files in job",
+			value="Get fileIDs of all files in job",
 			notes="binary files are returned in a table with columns 'name' and 'fileId'"
 			)
 	@CrossOrigin
@@ -471,6 +471,10 @@ public class ResultsServiceRestController {
 	/**
 	 * Return a CSV file containing results (possibly truncated) for job
 	 */
+	@ApiOperation(
+			value="Get CSV table",
+			notes="Too large a file can fail.  GET /getTableResultsCsvForWebClient is safer."
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
 	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -496,8 +500,12 @@ public class ResultsServiceRestController {
 		LocalLogger.logToStdErr("done writing output");
 	}
 
+	@ApiOperation(
+			value="Get JSON table results",
+			notes=""
+			)
 	@CrossOrigin
-	@RequestMapping(value="/getTableResultsJsonForWebClient", method= RequestMethod.GET)
+	@RequestMapping(value= "/getTableResultsJsonForWebClient" , method= RequestMethod.GET)
 	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 	
@@ -518,7 +526,10 @@ public class ResultsServiceRestController {
 		return null;
 	}
 
-	
+	@ApiOperation(
+			value="Get CSV table results",
+			notes=""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
 	public void getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -540,6 +551,10 @@ public class ResultsServiceRestController {
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
+	@ApiOperation(
+			value="Get table results row count",
+			notes=""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsRowCount", method= RequestMethod.POST)
 	public JSONObject getTableResultsRowCount(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -562,9 +577,10 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	/**
-	 * Return a JSON object containing results (possibly truncated) for job
-	 */
+	@ApiOperation(
+			value="Get JSON table",
+			notes="Too large a file can fail.  GET /getTableResultsJsonForWebClient is safer."
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
 	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -603,6 +619,12 @@ public class ResultsServiceRestController {
 	 * "fullURL"   is the CSV  file (retaining bad label for backward compatibility)
 	 * "sampleURL" is the JSON file (retaining bad label for backward compatibility)
 	 */
+	@ApiOperation(
+			value="Get fullURL (csv) and sampleURL (JSON)",
+			notes="DEPRECATED<br>" +
+			      "Use /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient instead <br>" +
+				  "URL's may not work in a secure deployment of SemTK"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getResults", method= RequestMethod.POST)
 	public JSONObject getResults(@RequestBody JobIdRequest requestBody, @RequestHeader HttpHeaders headers) {
@@ -638,6 +660,10 @@ public class ResultsServiceRestController {
 	/**
 	 * Delete file and metadata associated with this jobId
 	 */
+	@ApiOperation(
+			value="delete job",
+			notes=""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)
 	public JSONObject deleteStorage(@RequestBody JobIdRequest requestBody, @RequestHeader HttpHeaders headers) {
