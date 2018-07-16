@@ -117,7 +117,7 @@ public class UriResolver {
 		} else {
 			
 			// already contains #
-			if(localFragment.contains("#")){
+			if(localFragment.contains("#") || localFragment.contains("://")) {
 				retval = localFragment;
 			
 			// else prepend the prefix if there is one
