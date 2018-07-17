@@ -399,6 +399,18 @@ public class NodeGroup {
 	}
 	
 	/**
+	 * Apply < > if this URI contains a protocol (http://uri) instead of a prefix (prefix:uri)
+	 * @param originalUri
+	 * @return
+	 */
+	private String applyAngleBrackets(String originalUri) {
+		if (originalUri.contains("://")) {
+			return "<" + originalUri + ">";
+		} else {
+			return originalUri;
+		}
+	}
+	/**
 	 * Apply prefixHash to a URI if it contains '#'
 	 * @param originalUri
 	 * @return
@@ -412,7 +424,7 @@ public class NodeGroup {
 		}
 		
 		else if (!originalUri.contains("#")) {
-			return '<' + originalUri + '>';
+			return originalUri;
 			
 		} else {
 			// get the chunks and build the prefixed string.
@@ -2422,8 +2434,9 @@ public class NodeGroup {
 				// URI was specified
 				
 				String nodeVal = this.applyBaseURI(node.getInstanceValue());
-				// VARISH's URI's with no '#'
-				sparql.append("\tBIND (").append(this.applyPrefixing(nodeVal)).append(" AS ").append(sparqlId).append(").\n");
+				nodeVal = this.applyPrefixing(nodeVal);
+				nodeVal = this.applyAngleBrackets(nodeVal);  // VARISH's unusual URI's with no '#'
+				sparql.append("\tBIND (").append(nodeVal).append(" AS ").append(sparqlId).append(").\n");
 			
 			} else if(instanceIsBlank && !nodeIsEnum){
 				ArrayList<PropertyItem> constrainedProps = node.getConstrainedPropertyObjects();
