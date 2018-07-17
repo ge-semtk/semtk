@@ -75,8 +75,9 @@ public class DeleteThread extends Thread {
     				 // metaFile.deleteTargetPath() could delete files out of order, 
     				 //  so check f.exists()
 	                 if (f.exists() && f.lastModified() < cutoffMsec) {
-	                	 try {	                	 
+	                	 try {	       
 	                		 f.delete();
+	                		 LocalLogger.logToStdOut("Deleted leftover: " + f.getAbsolutePath());
 	                	 } catch (Exception e1) {
 	                		 LocalLogger.printStackTrace(e1);
 	                	 }
@@ -87,7 +88,7 @@ public class DeleteThread extends Thread {
     			
     		}
     		catch(Exception iei){
-    			LocalLogger.logToStdErr(iei.getMessage());
+    			LocalLogger.printStackTrace(iei);
     		}
     		try {
     			LocalLogger.logToStdErr("Clean up about to sleep for " + (double)runFrequencyInMilliseconds/(60 * 1000) + " minutes. ");

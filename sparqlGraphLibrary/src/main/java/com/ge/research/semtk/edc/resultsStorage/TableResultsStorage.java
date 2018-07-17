@@ -100,6 +100,7 @@ public class TableResultsStorage extends GeneralResultsStorage{
 	 *
 	 * @param jobID the job id
 	 * @param rowCount the number of rows written
+	 * @returns meta file URL
 	 */
 	public URL storeTableResultsJsonFinalize(String jobID) throws Exception {				
 		String fileName = writeToFile(jobID, null, false);
@@ -109,54 +110,54 @@ public class TableResultsStorage extends GeneralResultsStorage{
 	
 	/**
 	 * Get the full result set as json.
-	 * @param metaFileShortUrl the url of the full json result
+	 * @param metaFileUrl the url of the full json result
 	 * @return byte array containing json result
 	 */
-	public TableResultsSerializer getJsonTable(URL metaFileShortUrl) throws Exception{
-		return getTable(metaFileShortUrl, null, 0, TableResultsStorageTypes.JSON);
+	public TableResultsSerializer getJsonTable(URL metaFileUrl) throws Exception{
+		return getTable(metaFileUrl, null, 0, TableResultsStorageTypes.JSON);
 	}
 	
 	/**
 	 * Get a subset of the result as json.
- 	 * @param metaFileShortUrl the url of the full json result
+ 	 * @param metaFileUrl the url of the full json result
 	 * @param maxRows limit to this number of rows
 	 * @return byte array containing json result
 	 */
-	public TableResultsSerializer getJsonTable(URL metaFileShortUrl, Integer maxRows, Integer startRow) throws Exception{
-		return getTable(metaFileShortUrl, maxRows, startRow, TableResultsStorageTypes.JSON);
+	public TableResultsSerializer getJsonTable(URL metaFileUrl, Integer maxRows, Integer startRow) throws Exception{
+		return getTable(metaFileUrl, maxRows, startRow, TableResultsStorageTypes.JSON);
 	}
 	
 	/**
 	 * Get the full result set as csv.
-	 * @param metaFileShortUrl the url of the full json result
+	 * @param metaFileUrl the url of the full json result
 	 * @return byte array containing csv result
 	 */
-	public TableResultsSerializer getCsvTable(URL metaFileShortUrl) throws Exception{
-		return getTable(metaFileShortUrl, null, 0, TableResultsStorageTypes.CSV);
+	public TableResultsSerializer getCsvTable(URL metaFileUrl) throws Exception{
+		return getTable(metaFileUrl, null, 0, TableResultsStorageTypes.CSV);
 	}
 	
 	/**
 	 * Get a subset of the result as csv. 
-	 * @param metaFileShortUrl the url of the full json result
+	 * @param metaFileUrl the url of the full json result
 	 * @param maxRows limit to this number of rows
 	 * @return byte array containing csv result
 	 */
-	public TableResultsSerializer getCsvTable(URL metaFileShortUrl, Integer maxRows, Integer startRow) throws Exception{
-		return getTable(metaFileShortUrl, maxRows, startRow, TableResultsStorageTypes.CSV);
+	public TableResultsSerializer getCsvTable(URL metaFileUrl, Integer maxRows, Integer startRow) throws Exception{
+		return getTable(metaFileUrl, maxRows, startRow, TableResultsStorageTypes.CSV);
 	}
 	
 
 	// TODO PERFORMANCE CONCERNS - what if the result set is huge
 	/**
 	 * For a given full json result table, generate CSV or JSON (possibly truncated)
-	 * @param metaFileShortUrl the url of the full json result
+	 * @param metaFileUrl the url of the full json result
 	 * @param maxRows limit to this number of rows
 	 * @return storageType indicates CSV or JSON
 	 */
-	private TableResultsSerializer getTable(URL metaFileShortUrl, Integer maxRows, Integer startRow, TableResultsStorageTypes storageType) throws Exception{
+	private TableResultsSerializer getTable(URL metaFileUrl, Integer maxRows, Integer startRow, TableResultsStorageTypes storageType) throws Exception{
 		
 		try{
-			String metaFilePath = urlToPath(metaFileShortUrl).toString();
+			String metaFilePath = urlToPath(metaFileUrl).toString();
 			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(metaFilePath);	// read json from url
 			
 			String dataFileLocation = (String) jsonObj.get(DATARESULTSFILELOCATION);
@@ -172,33 +173,55 @@ public class TableResultsStorage extends GeneralResultsStorage{
 			
 		}catch(Exception e){
 			LocalLogger.printStackTrace(e);
-			throw new Exception("Could not read results from store for " + metaFileShortUrl + ": " + e.toString());
+			throw new Exception("Could not read results from store for " + metaFileUrl + ": " + e.toString());
 		}
 		
 	}
 	
-	public void fullDelete(URL metaFileShortUrl) throws Exception {
-		String metaFilePath = urlToPath(metaFileShortUrl).toString();
-		JSONObject jsonObj = Utility.getJSONObjectFromFilePath(metaFilePath);
-		String dataFilePath = (String) jsonObj.get(DATARESULTSFILELOCATION);
+	/**
+	 * Delete a metafile and the results file its JSON points to.
+	 * @param metaFileUrl
+	 */
+	public void fullDelete(URL metaFileUrl) {
+		String metaFilePath = null;
 		
-		if (dataFilePath != null) {
-			File f = new File(dataFilePath);
-			f.delete();
+		// get path of meta file
+		try {
+			metaFilePath = urlToPath(metaFileUrl).toString();
+		} catch (Exception e) {
+			LocalLogger.logToStdErr("Skipping fullDelete of poorly formed metaFileUrl: " + metaFileUrl.toString());
+			return;
+		}
+		
+		// get meta file contents and delete data file
+		try {
+			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(metaFilePath);
+			String dataFilePath = (String) jsonObj.get(DATARESULTSFILELOCATION);
+			
+			if (dataFilePath != null) {
+				File f = new File(dataFilePath);
+				f.delete();
+				LocalLogger.logToStdOut("Deleted data file: " + dataFilePath);
+			}
+		} catch (Exception e) {
+			LocalLogger.logToStdErr("Error reading json datafile from metaFile: " + metaFilePath);
+			LocalLogger.printStackTrace(e);
 		}
 		
 		File f = new File(metaFilePath);
 		f.delete();
+		LocalLogger.logToStdOut("Deleted meta file: " + metaFilePath);
+
 	}
 
 	/**
 	  * Get the size of the results table.
 	 * @throws Exception 
 	  */
-	public int getResultsRowCount(URL metaFileShortUrl) throws Exception{
+	public int getResultsRowCount(URL metaFileUrl) throws Exception{
 		
 		try{
-			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(metaFileShortUrl).toString());	// read json from url
+			JSONObject jsonObj = Utility.getJSONObjectFromFilePath(urlToPath(metaFileUrl).toString());	// read json from url
 			Long val = (Long) jsonObj.get(Table.JSON_KEY_ROW_COUNT);
 			int retval = val.intValue();
 			return retval;

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
@@ -182,6 +183,11 @@ public class TableResultsStorageTest {
 			
 			assertEquals(rowsFromCsv2.get(0).get(0), "apple");
 			
+			assertEquals("Files were not created", 2, tempFolder.getRoot().listFiles().length);
+
+			rs.fullDelete(fullJsonUrl);
+			
+			assertEquals("Files were not deleted", 0, tempFolder.getRoot().listFiles().length);
 		} catch(Exception e){
 			e.printStackTrace();
 			fail();			

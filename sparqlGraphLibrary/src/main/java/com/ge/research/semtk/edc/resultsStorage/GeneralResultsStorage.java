@@ -56,7 +56,6 @@ public abstract class GeneralResultsStorage {
 			Files.write(path, contents.getBytes(), StandardOpenOption.APPEND);
 		} catch(NoSuchFileException nosuchfile){
 			
-			
 			if(contents == null ||  contents.isEmpty()){
 				
 				(path.toFile()).createNewFile();
@@ -65,8 +64,7 @@ public abstract class GeneralResultsStorage {
 				Files.write(path, contents.getBytes(), StandardOpenOption.CREATE);
 				
 			}
-			
-			
+		
 		}
 		if(!writeToResultsFile){ return filename; }
 		else{ return path.toString(); }
@@ -91,11 +89,7 @@ public abstract class GeneralResultsStorage {
 	 * @throws Exception if the url didn't come from this ResultsStorage
 	 */
 	protected Path urlToPath(URL url) throws Exception {
-	//	if (! url.toString().startsWith("file:////" + this.fileLocation.toString())) {
-	//		throw new Exception (String.format("Invalid URL wasn't created by this ResultsStorage: %s", url.toString()));
-	//	}
 		String fullURL = url.toString();
-	//	return Paths.get(this.fileLocation, fullURL.substring( this.baseURL.toString().length() + 1, fullURL.length()));
 		
 		if(fullURL.contains("file:")){
 			fullURL = fullURL.substring(5, fullURL.length());
