@@ -71,10 +71,12 @@ public class NodeGroupExecutorTest_IT {
 		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 		
 		// do the insert (using full nodegroup)
-		nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA);
+		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA);
+		assertTrue("Ingest failed", res.getSuccess());
+		assertEquals("Ingest has failures", 0, res.getFailuresEncountered());
 		
 		// check number of triples after insert
-		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+		assertEquals(131, TestGraph.getNumTriples());	// confirm loaded some triples
 	}
 	
 	/**
@@ -94,10 +96,12 @@ public class NodeGroupExecutorTest_IT {
 		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 		
 		// do the insert (using nodegroup ID)
-		nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, DATA);
+		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, DATA);
 		
+		assertTrue("Ingest failed", res.getSuccess());
+		assertEquals("Ingest has failures", 0, res.getFailuresEncountered());
 		// check number of triples after insert
-		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
+		assertEquals(131, TestGraph.getNumTriples());	// confirm loaded some triples
 	}
 	
 	@Test

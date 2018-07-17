@@ -112,5 +112,16 @@ public class RecordProcessResults extends GeneralResultSet{
 		}
 	}
 
-
+	/**
+	 * get error table
+	 * @return table or null
+	 * @throws Exception
+	 */
+	public Table getErrorTable() throws Exception {
+		if (this.resultsContents != null && this.resultsContents.containsKey("errorTable")) {
+			return Table.fromJson((JSONObject) this.resultsContents.get("errorTable"));
+		} else {
+			return null;
+		}
+	}
 }
