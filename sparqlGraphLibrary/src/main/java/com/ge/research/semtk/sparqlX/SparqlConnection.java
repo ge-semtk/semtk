@@ -36,6 +36,7 @@ public class SparqlConnection {
 	private final static String QUERY_SERVER = "kdl";
 	private final static String FUSEKI_SERVER = "fuseki";
 	private final static String VIRTUOSO_SERVER = "virtuoso";
+	private final static String NEPTUNE_SERVER = "neptune";
 	
 	private String name = null;
 	private String domain = null;
@@ -357,6 +358,8 @@ public class SparqlConnection {
 			return new FusekiSparqlEndpointInterface(url, dataset);
 		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
 			return new VirtuosoSparqlEndpointInterface(url, dataset);
+		} else if (stype.equals(SparqlConnection.NEPTUNE_SERVER)) {
+			return new NeptuneSparqlEndpointInterface(url, dataset);
 		} else {
 			throw new Error("Unsupported SparqlConnection server type: " + stype);
 		}
@@ -367,6 +370,8 @@ public class SparqlConnection {
 			return new FusekiSparqlEndpointInterface(url, dataset, user, passwd);
 		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
 			return new VirtuosoSparqlEndpointInterface(url, dataset, user, passwd);
+		} else if (stype.equals(SparqlConnection.NEPTUNE_SERVER)) {
+			return new NeptuneSparqlEndpointInterface(url, dataset, user, passwd);
 		} else {
 			throw new Error("Unsupported SparqlConnection server type: " + stype);
 		}
