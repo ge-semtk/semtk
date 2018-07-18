@@ -119,7 +119,7 @@ public class RuntimeConstraintsTest {
 		}
 		else{ fail(); }
 		
-		if( c1.equals("FILTER (?durationInSeconds >= 300.0)")){
+		if( c1.equals("FILTER (?durationInSeconds >= '300'^^<http://www.w3.org/2001/XMLSchema#int>)")){
 			System.err.println("attemptOverrideUsingRuntimeConstraints() :: constraint for ?durationInSeconds was as expected") ;
 		}
 		else{ fail(); }
@@ -162,7 +162,7 @@ public class RuntimeConstraintsTest {
 		}
 		else{ fail(); }
 		
-		if(sparql.contains("FILTER (?durationInSeconds >= 300.0)")){
+		if(sparql.contains("FILTER (?durationInSeconds >= '300'")){
 			System.err.println("getSparqlUsingRuntimeConstraints() :: constraint for ?durationInSeconds was as expected") ;
 				
 		}
@@ -220,7 +220,7 @@ public class RuntimeConstraintsTest {
 			constraints.applyConstraint("?durationInSeconds", SupportedOperations.GREATERTHAN, names);
 		
 			// check gt
-			if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER (?durationInSeconds > 23.0)")){
+			if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().contains("FILTER (?durationInSeconds > '23'")){
 				System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with GreaterThan clause") ;
 			}
 			else{ 
@@ -231,7 +231,7 @@ public class RuntimeConstraintsTest {
 			constraints.applyConstraint("?durationInSeconds", SupportedOperations.LESSTHAN, names);
 					
 			// check lt
-			if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER (?durationInSeconds < 23.0)")){
+			if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().contains("FILTER (?durationInSeconds < '23'")){
 				System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with LessThan clause") ;
 			}
 			else{ 
@@ -242,7 +242,7 @@ public class RuntimeConstraintsTest {
 				constraints.applyConstraint("?durationInSeconds", SupportedOperations.GREATERTHANOREQUALS, names);
 					
 			// check gte
-				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER (?durationInSeconds >= 23.0)")){
+				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().contains("FILTER (?durationInSeconds >= '23'")){
 					System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with GreaterThanOrEquals clause") ;
 				}
 				else{ 
@@ -253,7 +253,7 @@ public class RuntimeConstraintsTest {
 				constraints.applyConstraint("?durationInSeconds", SupportedOperations.LESSTHANOREQUALS, names);
 						
 			// check lte
-				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER (?durationInSeconds <= 23.0)")){
+				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().contains("FILTER (?durationInSeconds <= '23'")){
 					System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with LessThanOrEquals clause") ;
 				}
 				else{ 
@@ -264,7 +264,7 @@ public class RuntimeConstraintsTest {
 				constraints.applyConstraint("?durationInSeconds", SupportedOperations.VALUEBETWEEN, names);
 				
 			// check value between
-				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER ( ?durationInSeconds >= 23.0  &&  ?durationInSeconds <= 37.0 )")){
+				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER ( ?durationInSeconds > '23'^^<http://www.w3.org/2001/XMLSchema#int>  &&  ?durationInSeconds < '37'^^<http://www.w3.org/2001/XMLSchema#int> )")){
 					System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with ValueBetween clause") ;
 				}
 				else{ 
@@ -275,7 +275,7 @@ public class RuntimeConstraintsTest {
 				constraints.applyConstraint("?durationInSeconds", SupportedOperations.VALUEBETWEENUNINCLUSIVE, names);
 		
 			// check value between uniclusive
-				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER ( ?durationInSeconds > 23.0  &&  ?durationInSeconds < 37.0 )")){
+				if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().getConstraint().equals("FILTER ( ?durationInSeconds >= '23'^^<http://www.w3.org/2001/XMLSchema#int>  &&  ?durationInSeconds <= '37'^^<http://www.w3.org/2001/XMLSchema#int> )")){
 					System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with ValueBetweenUninclusive clause") ;
 				}
 				else{ 
@@ -298,7 +298,7 @@ public class RuntimeConstraintsTest {
 					fail(); }
 			// check greater than
 				constraints.applyConstraint("?releaseDate", SupportedOperations.GREATERTHAN, names);
-				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER (?releaseDate > 2017-01-17T00:00^^<http://www.w3.org/2001/XMLSchema#date>)")){
+				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER (?releaseDate > '2017-01-17T00:00'^^<http://www.w3.org/2001/XMLSchema#date>)")){
 					System.err.println("testContraintsSetByType() :: expected value for ?releaseDate uri with greater than clause") ;
 				}
 				else{ 
@@ -306,7 +306,7 @@ public class RuntimeConstraintsTest {
 					fail(); }
 			// check less than
 				constraints.applyConstraint("?releaseDate", SupportedOperations.LESSTHAN, names);
-				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER (?releaseDate < 2017-01-17T00:00^^<http://www.w3.org/2001/XMLSchema#date>)")){
+				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER (?releaseDate < '2017-01-17T00:00'^^<http://www.w3.org/2001/XMLSchema#date>)")){
 					System.err.println("testContraintsSetByType() :: expected value for ?releaseDate uri with less than clause") ;
 				}
 				else{ 
@@ -314,14 +314,14 @@ public class RuntimeConstraintsTest {
 					fail(); }
 			// check interval
 				constraints.applyConstraint("?releaseDate", SupportedOperations.VALUEBETWEEN, names);
-				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER ( ?releaseDate >= 2017-01-17T00:00^^<http://www.w3.org/2001/XMLSchema#date>  &&  ?releaseDate <= 1955-11-05T22:04^^<http://www.w3.org/2001/XMLSchema#date> )")){
+				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER ( ?releaseDate > '2017-01-17T00:00'^^<http://www.w3.org/2001/XMLSchema#date>  &&  ?releaseDate < '1955-11-05T22:04'^^<http://www.w3.org/2001/XMLSchema#date> )")){
 					System.err.println("testContraintsSetByType() :: expected value for ?releaseDate uri with interval clause") ;
 				}
 				else{ 
 					System.err.println("between : "  + ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint());
 					fail(); }
 				constraints.applyConstraint("?releaseDate", SupportedOperations.VALUEBETWEENUNINCLUSIVE, names);
-				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER ( ?releaseDate > 2017-01-17T00:00^^<http://www.w3.org/2001/XMLSchema#date>  &&  ?releaseDate < 1955-11-05T22:04^^<http://www.w3.org/2001/XMLSchema#date> )")){
+				if(ng.getNodeBySparqlID("?Album").getPropertyByKeyname("releaseDate").getValueConstraint().getConstraint().equals("FILTER ( ?releaseDate >= '2017-01-17T00:00'^^<http://www.w3.org/2001/XMLSchema#date>  &&  ?releaseDate <= '1955-11-05T22:04'^^<http://www.w3.org/2001/XMLSchema#date> )")){
 					System.err.println("testContraintsSetByType() :: expected value for ?releaseDate uri with interval clause") ;
 				}
 				else{ 
@@ -369,7 +369,7 @@ public class RuntimeConstraintsTest {
 			// set matches
 			constraints.applyConstraint("?Album", SupportedOperations.MATCHES, names);
 			// check matches
-			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { <test://music#decemberunderground>  }")){
+			if(ng.getNodeBySparqlID("?Album").getValueConstraintStr().equals("VALUES ?Album { <test://music#decemberunderground>   }")){
 				System.err.println("testContraintsSetByType() :: expected value for ?Album uri with Matches clause (no angle brackets)") ;
 			}
 			else { fail(); }

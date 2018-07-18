@@ -53,103 +53,40 @@ public class RuntimeConstraintMetaData{
 		this.operation = operation;
 		this.operands = operands;
 		
-		XSDSupportedType xsdType = this.ngItem.getValueType();
 		String sparqlId = this.ngItem.getSparqlID();
 		
-				
-		if(operation == SupportedOperations.GREATERTHAN && xsdType.numericOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-			
-			this.setNumberGreaterThan(sparqlId, val, false);
+		if(operation == SupportedOperations.GREATERTHAN ){
+			this.setGreaterThan(sparqlId, operands.get(0), false);
 		}
-		else if(operation == SupportedOperations.GREATERTHAN && xsdType.dateOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-			
-			this.setDateAfter(sparqlId, val, false);
-		}
-		else if(operation == SupportedOperations.GREATERTHANOREQUALS && xsdType.numericOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-						
-			this.setNumberGreaterThan(sparqlId, val, true);
-		}
-		else if(operation == SupportedOperations.GREATERTHANOREQUALS && xsdType.dateOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-						
-			this.setDateAfter(sparqlId, val, true);
-		}
-		else if(operation == SupportedOperations.LESSTHAN && xsdType.numericOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-						
-			this.setNumberLessThan(sparqlId, val, false);
-		}
-		else if(operation == SupportedOperations.LESSTHAN && xsdType.dateOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-						
-			this.setDateBefore(sparqlId, val, false);
-		}
-		else if(operation == SupportedOperations.LESSTHANOREQUALS && xsdType.numericOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			Double val = Double.parseDouble(operands.get(0));
-						
-			this.setNumberLessThan(sparqlId, val, true);
-		}
-		else if(operation == SupportedOperations.LESSTHANOREQUALS && xsdType.dateOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			String val = operands.get(0);
-						
-			this.setDateBefore(sparqlId, val, true);
-		}
-		else if(operation == SupportedOperations.MATCHES && xsdType.dateOperationAvailable()){
-			// create a constraint to match the provided
-			this.setDateMatchesConstraint(sparqlId, operands);
 		
+		else if(operation == SupportedOperations.GREATERTHANOREQUALS){
+			this.setGreaterThan(sparqlId, operands.get(0), true);
 		}
+		
+		else if(operation == SupportedOperations.LESSTHAN ){
+			this.setLessThan(sparqlId, operands.get(0), false);
+		}
+		
+		else if(operation == SupportedOperations.LESSTHANOREQUALS){
+			this.setLessThan(sparqlId, operands.get(0), true);
+		}
+		
 		else if(operation == SupportedOperations.MATCHES){
-			// create a constraint to match the provided
 			this.setMatchesConstraint(sparqlId, operands);
-		
 		}
+		
 		else if(operation == SupportedOperations.REGEX){
-			// create a regex entry
 			this.setRegexConstraint(sparqlId, operands.get(0));
+		}
 		
+		else if(operation == SupportedOperations.VALUEBETWEEN){
+			this.setRange(sparqlId, operands.get(0), operands.get(1), false, false);
 		}
-		else if(operation == SupportedOperations.VALUEBETWEEN && xsdType.numericOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			Double valLow  = Double.parseDouble(operands.get(0));
-			Double valHigh = Double.parseDouble(operands.get(1));
-			
-			this.setNumberInInterval(sparqlId, valLow, valHigh, true, true);
 		
+		else if(operation == SupportedOperations.VALUEBETWEENUNINCLUSIVE){
+			this.setRange(sparqlId, operands.get(0), operands.get(1), true, true);
 		}
-		else if(operation == SupportedOperations.VALUEBETWEEN && xsdType.dateOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			String valLow  = operands.get(0);
-			String valHigh = operands.get(1);
-			
-			this.setDateInInterval(sparqlId, valLow, valHigh, true, true);
 		
-		}
-		else if(operation == SupportedOperations.VALUEBETWEENUNINCLUSIVE && xsdType.numericOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			Double valLow  = Double.parseDouble(operands.get(0));
-			Double valHigh = Double.parseDouble(operands.get(1));
-						
-			this.setNumberInInterval(sparqlId, valLow, valHigh, false, false);			
-		}
-		else if(operation == SupportedOperations.VALUEBETWEENUNINCLUSIVE && xsdType.dateOperationAvailable()){
-			// this only handles numeric types right now. dates will likely break.
-			String valLow  = operands.get(0);
-			String valHigh = operands.get(1);
-						
-			this.setDateInInterval(sparqlId, valLow, valHigh, false, false);			
-		}
 		else{
 			throw new Exception("RuntimConstrainedItems.selectAndSetConstraint :: Operation " + operation.name() + " has no mapped operations.");
 		}
@@ -183,56 +120,34 @@ public class RuntimeConstraintMetaData{
 	// matching constraints.
 	private void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
-		String constraintStr = ConstraintUtil.getMatchesOneOfConstraint(sparqlId, inputs, getType(sparqlId));
+		String constraintStr = ValueConstraint.buildValuesConstraint(sparqlId, inputs, getType(sparqlId));
 		LocalLogger.logToStdOut("======= setMatchesConstraint for " + sparqlId + " to " + constraintStr);
-		this.setValueConstraint(constraintStr);
-	}
-
-	private void setDateMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
-		// create the constraint string. 
-		String constraintStr = ConstraintUtil.getDateMatchesOneOfConstraint(sparqlId, inputs, getType(sparqlId));
 		this.setValueConstraint(constraintStr);
 	}
 	
 	// regex
 	private void setRegexConstraint(String sparqlId, String regexFragment) throws Exception{
-		String constraintStr = ConstraintUtil.getRegexConstraint(sparqlId, regexFragment, getType(sparqlId));
+		String constraintStr = ValueConstraint.buildRegexConstraint(sparqlId, regexFragment, getType(sparqlId));
 		this.setValueConstraint(constraintStr);
 	}
 	
 	// intervals.
-	private void setNumberInInterval(String sparqlId, Double lowerBound, Double upperBound, Boolean greaterThanOrEqualToLower, Boolean lessThanOrEqualToUpper) throws Exception{
-		String constraintStr = ConstraintUtil.getNumberBetweenConstraint(sparqlId, lowerBound.toString(), upperBound.toString(), getType(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
-		this.setValueConstraint(constraintStr);
-	}
-	
-	private void setDateInInterval(String sparqlId, String lowerBound, String upperBound, Boolean greaterThanOrEqualToLower, Boolean lessThanOrEqualToUpper) throws Exception{
-		String constraintStr = ConstraintUtil.getTimePeriodBetweenConstraint(sparqlId, lowerBound, upperBound, getType(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
+	private void setRange(String sparqlId, String lowerBound, String upperBound, Boolean greaterThanOrEqualToLower, Boolean lessThanOrEqualToUpper) throws Exception{
+		String constraintStr = ValueConstraint.buildRangeConstraint(sparqlId, lowerBound.toString(), upperBound.toString(), getType(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
 		this.setValueConstraint(constraintStr);
 	}
 	
 	
 	// greater or less than.
-	private void setNumberLessThan(String sparqlId, Double upperBound, Boolean lessThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getLessThanConstraint(sparqlId, upperBound.toString(), getType(sparqlId), lessThanOrEqualTo);
+	private void setLessThan(String sparqlId, String upperBound, Boolean lessThanOrEqualTo) throws Exception{
+		String constraintStr = ValueConstraint.buildLessThanConstraint(sparqlId, upperBound.toString(), getType(sparqlId), lessThanOrEqualTo);
 		this.setValueConstraint(constraintStr);
 	}
 	
-	private void setDateBefore(String sparqlId, String upperBound, Boolean lessThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getTimePeriodBeforeConstraint(sparqlId, upperBound, getType(sparqlId), lessThanOrEqualTo);
+	private void setGreaterThan(String sparqlId, String lowerBound, Boolean greaterThanOrEqualTo) throws Exception{
+		String constraintStr = ValueConstraint.buildGreaterThanConstraint(sparqlId, lowerBound, getType(sparqlId), greaterThanOrEqualTo);
 		this.setValueConstraint(constraintStr);
 	}
-	
-	private void setNumberGreaterThan(String sparqlId, Double lowerBound, Boolean greaterThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getGreaterThanConstraint(sparqlId, lowerBound.toString(), getType(sparqlId), greaterThanOrEqualTo);
-		this.setValueConstraint(constraintStr);
-	}
-	
-	private void setDateAfter(String sparqlId, String lowerBound, Boolean greaterThanOrEqualTo) throws Exception{
-		String constraintStr = ConstraintUtil.getTimePeriodAfterConstraint(sparqlId, lowerBound, getType(sparqlId), greaterThanOrEqualTo);
-		this.setValueConstraint(constraintStr);
-	}
-	
 	
 	// get the value type of the constraint based on the sparqlId
 	private XSDSupportedType getType(String sparqlId) throws Exception{
@@ -240,6 +155,6 @@ public class RuntimeConstraintMetaData{
 		return this.ngItem.getValueType();
 	}
 	
-
+	
 }
 

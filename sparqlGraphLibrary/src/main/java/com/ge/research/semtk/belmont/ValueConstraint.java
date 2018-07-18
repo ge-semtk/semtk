@@ -130,4 +130,110 @@ public class ValueConstraint {
 		return ret;
 	}
 	
+	//------- formerly runtime constraints functions ----------  PEC HERE
+	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+		
+		
+		// VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> '1279'^^<http://www.w3.org/2001/XMLSchema#int> } 
+	
+		String retval = "VALUES " + sparqlId + " { ";
+		// go through each passed value and add them.
+		for(String v : valList){		
+			valType.parse(v);
+			retval += valType.buildTypedValueString(v) + " ";
+		}
+		
+		retval += " }";
+		
+		return retval;
+	}
+	
+	public static String buildRegexConstraint(String sparqlId, String regexp, XSDSupportedType valType) throws Exception{
+		
+		String retval = "";
+		
+		valType.parse(regexp);
+		
+		if(valType.regexIsAvailable()){
+			retval = "FILTER regex(" + sparqlId + " ,\"" + regexp + "\")";
+		}
+		else{
+			// regex is not considered supported here.
+			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support regex constraints");
+		}
+		return retval;
+	}
+	
+	public static String buildGreaterThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean greaterOrEqual) throws Exception{
+		valType.parse(val);
+		String retval = "";
+		
+		if(valType.rangeOperationsAvailable()) {
+		
+			if(!greaterOrEqual){
+				retval = "FILTER (" + sparqlId + " > " + valType.buildTypedValueString(val) + ")";
+			}
+			else{
+				retval = "FILTER (" + sparqlId + " >= " + valType.buildTypedValueString(val) + ")";
+			}
+		}
+		else{
+			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
+		}
+		return retval;
+	}
+	
+	public static String buildLessThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean lessOrEqual) throws Exception{
+		valType.parse(val);
+
+		String retval = "";
+		
+		if(valType.rangeOperationsAvailable()) {
+			if(!lessOrEqual){
+				retval = "FILTER (" + sparqlId + " < " + valType.buildTypedValueString(val) + ")";
+			}
+			else{
+				retval = "FILTER (" + sparqlId + " <= " + valType.buildTypedValueString(val) + ")";
+			}
+		}
+		else{
+			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
+		}
+		return retval;
+	}
+	
+	public static String buildRangeConstraint(String sparqlId, String valLow, String valHigh, XSDSupportedType valType, boolean greaterOrEqual, boolean lessThanOrEqual) throws Exception{
+		valType.parse(valHigh);
+		valType.parse(valLow);
+
+		String retval = "";
+		
+		if(valType.rangeOperationsAvailable()) {
+			
+			StringBuilder ret = new StringBuilder("FILTER (");
+			
+			if(greaterOrEqual){
+				ret.append(" " + sparqlId + " >= " + valType.buildTypedValueString(valLow) + " ");
+			}
+			else{
+				ret.append(" " + sparqlId + " > " + valType.buildTypedValueString(valLow) + " ");
+			}
+			
+			// add a conjunction
+			ret.append(" && ");
+			
+			if(lessThanOrEqual){
+				ret.append(" " + sparqlId + " <= " + valType.buildTypedValueString(valHigh) + " ");
+			}
+			else{
+				ret.append(" " + sparqlId + " < " + valType.buildTypedValueString(valHigh) + " ");
+			}
+			ret.append(")");
+			retval = ret.toString();
+		}
+		else{
+			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
+		}
+		return retval;
+	}
 }
