@@ -48,6 +48,18 @@ public class ValueConstraint {
 		return this.constraint == null ? "" : this.constraint;
 	}
 	
+	//
+	//  Original ValueConstraint functions ported from javascript for use with NodegGroup items
+	//
+	//
+	
+	/**
+	 * Build VALUES clause
+	 * @param item
+	 * @param valList
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList) throws Exception {
 		// build a value constraint for an "item" (see item interface comment)
 		
@@ -73,6 +85,14 @@ public class ValueConstraint {
 		return ret.toString();
 	}
 	
+	/**
+	 * Build a FILTER clause with one operation
+	 * @param item
+	 * @param oper
+	 * @param pred
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildFilterConstraint(Returnable item, String oper, String pred)  throws Exception {
 		String ret;
 		
@@ -105,6 +125,14 @@ public class ValueConstraint {
 		return ret;
 	}
 	
+	/**
+	 * Build filter clause for dates only
+	 * @param item
+	 * @param oper
+	 * @param pred
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildFilterConstraint(Returnable item, String oper, Date pred)  throws Exception {
 		String ret;
 		
@@ -130,7 +158,20 @@ public class ValueConstraint {
 		return ret;
 	}
 	
-	//------- formerly runtime constraints functions ----------  PEC HERE
+	//
+	// Originally only RuntimeConstraint functions
+	// These build value constraints using sparqlID and valType instead of a Returnable
+	// These could be reconciled with above, but at some risk and little value. -PEC 7/2018
+	// 
+	
+	/**
+	 * Build a VALUES clause
+	 * @param sparqlId
+	 * @param valList
+	 * @param valType
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
 		
 		
@@ -148,6 +189,14 @@ public class ValueConstraint {
 		return retval;
 	}
 	
+	/**
+	 * Build a FILTER REGEX
+	 * @param sparqlId
+	 * @param regexp
+	 * @param valType
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildRegexConstraint(String sparqlId, String regexp, XSDSupportedType valType) throws Exception{
 		
 		String retval = "";
@@ -164,6 +213,15 @@ public class ValueConstraint {
 		return retval;
 	}
 	
+	/**
+	 * Build a FILTER greater than
+	 * @param sparqlId
+	 * @param val
+	 * @param valType
+	 * @param greaterOrEqual
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildGreaterThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean greaterOrEqual) throws Exception{
 		valType.parse(val);
 		String retval = "";
@@ -183,6 +241,15 @@ public class ValueConstraint {
 		return retval;
 	}
 	
+	/** 
+	 * Build a FILTER less than
+	 * @param sparqlId
+	 * @param val
+	 * @param valType
+	 * @param lessOrEqual
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildLessThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean lessOrEqual) throws Exception{
 		valType.parse(val);
 
@@ -202,6 +269,17 @@ public class ValueConstraint {
 		return retval;
 	}
 	
+	/**
+	 * Build a FILTER y1 < ?x < y2
+	 * @param sparqlId
+	 * @param valLow
+	 * @param valHigh
+	 * @param valType
+	 * @param greaterOrEqual - inclusive flag for >
+	 * @param lessThanOrEqual - inclusive flag for <
+	 * @return
+	 * @throws Exception
+	 */
 	public static String buildRangeConstraint(String sparqlId, String valLow, String valHigh, XSDSupportedType valType, boolean greaterOrEqual, boolean lessThanOrEqual) throws Exception{
 		valType.parse(valHigh);
 		valType.parse(valLow);
