@@ -374,9 +374,9 @@ public abstract class SparqlEndpointInterface {
 				if(this.userName !=null && this.password != null){
 					return executeQueryAuthPost(query, resultType);
 				}else{
-					if(resultType == SparqlResultTypes.CONFIRM){ 
-						throw new Exception("Username and password are required to execute a query with resultType " + resultType.toString());
-					}
+//					if(resultType == SparqlResultTypes.CONFIRM){ 
+//						throw new Exception("Username and password are required to execute a query with resultType " + resultType.toString());
+//					}
 					return executeQueryPost(query, resultType);
 				}
 			} catch (Exception e) {
