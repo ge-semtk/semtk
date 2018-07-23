@@ -238,19 +238,19 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String graph, String user, String password) throws Exception{
 		if(serverTypeString.equalsIgnoreCase(VIRTUOSO_SERVER)){
-			if(user != null && password != null){
+			if(user != null && ! user.isEmpty() && password != null && ! password.isEmpty()){
 				return new VirtuosoSparqlEndpointInterface(server, graph, user, password);				
 			}else{
 				return new VirtuosoSparqlEndpointInterface(server, graph);
 			}
 		}else if(serverTypeString.equalsIgnoreCase(FUSEKI_SERVER)){
-			if(user != null && password != null){
+			if(user != null && ! user.isEmpty() && password != null && ! password.isEmpty()){
 				return new FusekiSparqlEndpointInterface(server, graph, user, password);				
 			}else{			
 				return new FusekiSparqlEndpointInterface(server, graph);
 			}
 		}else if(serverTypeString.equalsIgnoreCase(NEPTUNE_SERVER)){
-			if(user != null && password != null){
+			if(user != null && ! user.isEmpty() && password != null && ! password.isEmpty()){
 				return new NeptuneSparqlEndpointInterface(server, graph, user, password);				
 			}else{			
 				return new NeptuneSparqlEndpointInterface(server, graph);
