@@ -77,7 +77,7 @@ public class SparqlConnection {
 			JSONObject inner = new JSONObject();
 			inner.put("type", mi.getServerType());
 			inner.put("url", mi.getServerAndPort());
-			inner.put("dataset", mi.getDataset());
+			inner.put("dataset", mi.getGraph());
 			model.add(inner);
 		}
 		
@@ -86,7 +86,7 @@ public class SparqlConnection {
 			JSONObject inner = new JSONObject();
 			inner.put("type", di.getServerType());
 			inner.put("url", di.getServerAndPort());
-			inner.put("dataset", di.getDataset());
+			inner.put("dataset", di.getGraph());
 			data.add(inner);
 		}
 		
@@ -326,8 +326,8 @@ public class SparqlConnection {
 		
 		for (int i=0; i < this.dataInterfaces.size(); i++) {
 			SparqlEndpointInterface e =  this.dataInterfaces.get(i);
-			if (e.getServerAndPort().equals(serverURL)  &&  ret.indexOf(e.getDataset()) == -1) {
-				ret.add(e.getDataset());
+			if (e.getServerAndPort().equals(serverURL)  &&  ret.indexOf(e.getGraph()) == -1) {
+				ret.add(e.getGraph());
 			}
 		}
 		
@@ -340,8 +340,8 @@ public class SparqlConnection {
 		
 		for (int i=0; i < this.modelInterfaces.size(); i++) {
 			SparqlEndpointInterface e =  this.modelInterfaces.get(i);
-			if (e.getServerAndPort().equals(serverURL) &&  ret.indexOf(e.getDataset()) == -1) {
-				ret.add(e.getDataset());
+			if (e.getServerAndPort().equals(serverURL) &&  ret.indexOf(e.getGraph()) == -1) {
+				ret.add(e.getGraph());
 			}
 		}
 		

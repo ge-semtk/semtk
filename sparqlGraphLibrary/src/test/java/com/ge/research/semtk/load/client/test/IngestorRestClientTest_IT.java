@@ -90,9 +90,9 @@ public class IngestorRestClientTest_IT {
 		JSONObject sparqlConnJson = sgJson_TestGraph.getSparqlConn().toJson();  // original TestGraph sparql conn 
 				
 		SparqlConnection sparqlConnectionOverride = new SparqlConnection(sparqlConnJson.toJSONString()); // get the connection object
-		String otherDataset = sparqlConnectionOverride.getDefaultQueryInterface().getDataset() + "OTHER";
-		sparqlConnectionOverride.getDataInterface(0).setDataset(otherDataset);
-		sparqlConnectionOverride.getModelInterface(0).setDataset(otherDataset);
+		String otherDataset = sparqlConnectionOverride.getDefaultQueryInterface().getGraph() + "OTHER";
+		sparqlConnectionOverride.getDataInterface(0).setGraph(otherDataset);
+		sparqlConnectionOverride.getModelInterface(0).setGraph(otherDataset);
 		
 		// clear the override graph and upload OWL to it (else the test load will fail)
 		SparqlEndpointInterface seiOverride = new VirtuosoSparqlEndpointInterface(TestGraph.getSparqlServer(), otherDataset, TestGraph.getUsername(), TestGraph.getPassword());

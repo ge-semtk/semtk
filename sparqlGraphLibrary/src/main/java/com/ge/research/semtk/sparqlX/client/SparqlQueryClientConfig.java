@@ -51,7 +51,7 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 	public void setEndpointInterfaceFields(SparqlEndpointInterface sei) {
 		this.sparqlServerAndPort = sei.getServerAndPort();
 		this.sparqlServerType = sei.getServerType();
-		this.sparqlDataset = sei.getDataset();
+		this.sparqlDataset = sei.getGraph();
 	}
 	
 	/**

@@ -30,16 +30,16 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	/**
 	 * Constructor
 	 */
-	public VirtuosoSparqlEndpointInterface(String server, String dataset)	throws Exception {
-		super(server, dataset);
+	public VirtuosoSparqlEndpointInterface(String server, String graph)	throws Exception {
+		super(server, graph);
 		// TODO Auto-generated constructor stub
 	}
  
 	/**
 	 * Constructor used for authenticated connections... like insert/update/delete/clear
 	 */
-	public VirtuosoSparqlEndpointInterface(String server, String dataset, String user, String pass)	throws Exception {
-		super(server, dataset, user, pass);
+	public VirtuosoSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
+		super(server, graph, user, pass);
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -52,9 +52,9 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public String getGetURL(){
 		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
-			return String.format("%s:%s/sparql-auth/?default-graph-uri=%s&format=json&query=", server, this.port, this.dataset);  
+			return String.format("%s:%s/sparql-auth/?default-graph-uri=%s&format=json&query=", server, this.port, this.graph);  
 		}else{
-			return String.format("%s:%s/sparql/?default-graph-uri=%s&format=json&query=", this.server, this.port, this.dataset); 
+			return String.format("%s:%s/sparql/?default-graph-uri=%s&format=json&query=", this.server, this.port, this.graph); 
 		}
 	}
 	
@@ -104,7 +104,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	public SparqlEndpointInterface copy() throws Exception {
 		VirtuosoSparqlEndpointInterface retval = null;
 		
-		retval = new VirtuosoSparqlEndpointInterface(this.getServerAndPort(), this.dataset, this.userName, this.password);
+		retval = new VirtuosoSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
 		
 		return (SparqlEndpointInterface) retval;
 	}

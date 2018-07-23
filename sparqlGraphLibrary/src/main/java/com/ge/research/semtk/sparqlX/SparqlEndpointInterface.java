@@ -99,7 +99,7 @@ public abstract class SparqlEndpointInterface {
 	protected String password = null;
 	protected String server = null;
 	protected String port = null;
-	protected String dataset = "";
+	protected String graph = "";
 
 
 	/**
@@ -108,16 +108,16 @@ public abstract class SparqlEndpointInterface {
 	 * @param dataset e.g. "http://research.ge.com/energy/dataset"
 	 * @throws Exception
 	 */
-	public SparqlEndpointInterface(String serverAndPort, String dataset) throws Exception {
-		this(serverAndPort, dataset, null, null);
+	public SparqlEndpointInterface(String serverAndPort, String graph) throws Exception {
+		this(serverAndPort, graph, null, null);
 	}
 
 
 	/**
 	 * Constructor used for authenticated connections... like insert/update/delete/clear
 	 */
-	public SparqlEndpointInterface(String serverAndPort, String dataset, String user, String pass) throws Exception {
-		this.dataset = dataset;		
+	public SparqlEndpointInterface(String serverAndPort, String graph, String user, String pass) throws Exception {
+		this.graph = graph;		
 		this.userName = user;
 		this.password = pass;
 		
@@ -152,8 +152,13 @@ public abstract class SparqlEndpointInterface {
 		return (int) Integer.parseInt(port);
 	}
 
+	public String getGraph() {
+		return this.graph;
+	}
+	
+	// deprecated
 	public String getDataset() {
-		return this.dataset;
+		return this.graph;
 	}
 	
 	public String getUserName() {
@@ -165,10 +170,15 @@ public abstract class SparqlEndpointInterface {
 		return password;
 	}
 
-	public void setDataset(String dataset) {
-		this.dataset = dataset;
+	public void setGraph(String graph) {
+		this.graph = graph;
 	}
-
+	
+	// deprecated
+	public void setDataset(String graph) {
+		this.graph = graph;
+	}
+	
 	public abstract String getServerType();
 	
 	/**
@@ -219,31 +229,31 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Static method to get an instance of this abstract class
 	 */
-	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String dataset) throws Exception{
-		return getInstance(serverTypeString, server, dataset, null, null);
+	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String graph) throws Exception{
+		return getInstance(serverTypeString, server, graph, null, null);
 	}	
 	
 	/**
 	 * Static method to get an instance of this abstract class
 	 */
-	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String dataset, String user, String password) throws Exception{
+	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String graph, String user, String password) throws Exception{
 		if(serverTypeString.equalsIgnoreCase(VIRTUOSO_SERVER)){
 			if(user != null && password != null){
-				return new VirtuosoSparqlEndpointInterface(server, dataset, user, password);				
+				return new VirtuosoSparqlEndpointInterface(server, graph, user, password);				
 			}else{
-				return new VirtuosoSparqlEndpointInterface(server, dataset);
+				return new VirtuosoSparqlEndpointInterface(server, graph);
 			}
 		}else if(serverTypeString.equalsIgnoreCase(FUSEKI_SERVER)){
 			if(user != null && password != null){
-				return new FusekiSparqlEndpointInterface(server, dataset, user, password);				
+				return new FusekiSparqlEndpointInterface(server, graph, user, password);				
 			}else{			
-				return new FusekiSparqlEndpointInterface(server, dataset);
+				return new FusekiSparqlEndpointInterface(server, graph);
 			}
 		}else if(serverTypeString.equalsIgnoreCase(NEPTUNE_SERVER)){
 			if(user != null && password != null){
-				return new NeptuneSparqlEndpointInterface(server, dataset, user, password);				
+				return new NeptuneSparqlEndpointInterface(server, graph, user, password);				
 			}else{			
-				return new NeptuneSparqlEndpointInterface(server, dataset);
+				return new NeptuneSparqlEndpointInterface(server, graph);
 			}
 		}else{
 			throw new Exception("Invalid SPARQL server type : " + serverTypeString);
@@ -265,20 +275,20 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Static method to create an endpoint and execute a query
 	 */
-	public static SparqlEndpointInterface executeQuery(String server, String dataset, String serverTypeString, String query, SparqlResultTypes resultType) throws Exception {
-		return executeQuery(server, dataset, serverTypeString, query, null, null, resultType);
+	public static SparqlEndpointInterface executeQuery(String server, String graph, String serverTypeString, String query, SparqlResultTypes resultType) throws Exception {
+		return executeQuery(server, graph, serverTypeString, query, null, null, resultType);
 	}
   
 	/**
 	 * Static method to create an endpoint and execute a query
 	 */
-	public static SparqlEndpointInterface executeQuery(String server, String dataset, String serverTypeString, String query, String user, String pass, SparqlResultTypes resultType) throws Exception {
+	public static SparqlEndpointInterface executeQuery(String server, String graph, String serverTypeString, String query, String user, String pass, SparqlResultTypes resultType) throws Exception {
 		try {
 			SparqlEndpointInterface endpoint;
 			if(user != null && pass != null){
-				endpoint = SparqlEndpointInterface.getInstance(serverTypeString, server, dataset, user, pass);
+				endpoint = SparqlEndpointInterface.getInstance(serverTypeString, server, graph, user, pass);
 			}else{
-				endpoint = SparqlEndpointInterface.getInstance(serverTypeString, server, dataset);
+				endpoint = SparqlEndpointInterface.getInstance(serverTypeString, server, graph);
 			}
 			endpoint.executeQuery(query, resultType);
 			return endpoint;
@@ -340,7 +350,7 @@ public abstract class SparqlEndpointInterface {
 	 * Sample result from a CONSTRUCT query:
 	 * 
 	 * Sample results from an AUTH query:
-	 * {"@message":"Insert into <http://research.ge.com/dataset>, 1 (or less) triples -- done"}
+	 * {"@message":"Insert into <http://research.ge.com/graph>, 1 (or less) triples -- done"}
 	 * 
 	 * @param query
 	 * @return a JSONObject wrapping the results
@@ -422,13 +432,13 @@ public abstract class SparqlEndpointInterface {
 		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
 		HttpPost httppost = new HttpPost(getPostURL());
 		httppost.addHeader("Accept", resultsFormat);
-		httppost.addHeader("X-Sparql-default-graph", this.dataset);
+		httppost.addHeader("X-Sparql-default-graph", this.graph);
 
 		// add params
 		List<NameValuePair> params = new ArrayList<>(3);
 		params.add(new BasicNameValuePair("query", query));
 		params.add(new BasicNameValuePair("format", resultsFormat));
-		params.add(new BasicNameValuePair("default-graph-uri", this.dataset));
+		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);
@@ -491,13 +501,13 @@ public abstract class SparqlEndpointInterface {
 		HttpPost httppost = new HttpPost(getPostURL());
 		String resultsFormat = this.getContentType(resultType);
 		httppost.addHeader("Accept",resultsFormat);
-		httppost.addHeader("X-Sparql-default-graph", this.dataset);
+		httppost.addHeader("X-Sparql-default-graph", this.graph);
 
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		params.add(new BasicNameValuePair("query", query));
 		params.add(new BasicNameValuePair("format", resultsFormat));
-		params.add(new BasicNameValuePair("default-graph-uri", this.dataset));
+		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
 
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 
@@ -586,12 +596,12 @@ public abstract class SparqlEndpointInterface {
 		HttpPost httppost = new HttpPost(getUploadURL());
 		String resultsFormat = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 		httppost.addHeader("Accept",resultsFormat);
-		httppost.addHeader("X-Sparql-default-graph", this.dataset);
+		httppost.addHeader("X-Sparql-default-graph", this.graph);
 
 		 
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();    
 	
-		builder.addTextBody("graph-uri", this.dataset);
+		builder.addTextBody("graph-uri", this.graph);
 		builder.addBinaryBody("res-file", owl);
 		HttpEntity entity = builder.build();
 		httppost.setEntity(entity);
@@ -1093,7 +1103,7 @@ LocalLogger.logToStdOut ("URL: " + url);
 		
 		String message = "";
 		for(int i = 0; i < rowsJsonArray.size(); i++){
-			JSONObject row = (JSONObject) rowsJsonArray.get(i); // e.g. {"callret-0":{"type":"literal","value":"Insert into <http:\/\/research.ge.com\/dataset>, 1 (or less) triples -- done"}}
+			JSONObject row = (JSONObject) rowsJsonArray.get(i); // e.g. {"callret-0":{"type":"literal","value":"Insert into <http:\/\/research.ge.com\/graph>, 1 (or less) triples -- done"}}
 			JSONObject value;
 			String key, valueValue;
 			

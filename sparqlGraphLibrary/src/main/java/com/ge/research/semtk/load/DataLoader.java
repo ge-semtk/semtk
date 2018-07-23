@@ -68,7 +68,7 @@ public class DataLoader {
 		
 		this.endpoint = sgJson.getSparqlConn().getInsertInterface();
 		
-		LocalLogger.logToStdOut("Load to graph " + endpoint.getDataset() + " on " + endpoint.getServerAndPort());
+		LocalLogger.logToStdOut("Load to graph " + endpoint.getGraph() + " on " + endpoint.getServerAndPort());
 		
 		this.oInfo = sgJson.getOntologyInfo();				
 		this.master = sgJson.getNodeGroup(this.oInfo);
@@ -93,7 +93,7 @@ public class DataLoader {
 	}
 	
 	public String getDatasetGraphName(){
-		return this.endpoint.getDataset();
+		return this.endpoint.getGraph();
 	}
 	
 	public int getTotalRecordsProcessed(){

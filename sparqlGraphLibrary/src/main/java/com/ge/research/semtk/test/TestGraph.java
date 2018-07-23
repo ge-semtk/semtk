@@ -76,8 +76,8 @@ public class TestGraph {
 		conn.setDomain(domain);
 		
 		SparqlEndpointInterface sei = getSei();
-		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getDataset());
-		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getDataset());
+		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
+		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
 		return conn;
 	}
 	
@@ -93,7 +93,7 @@ public class TestGraph {
 	 * Get the test dataset name.
 	 */
 	public static String getDataset() throws Exception {
-		return getSei().getDataset();
+		return getSei().getGraph();
 	}
 	
 	/**
@@ -259,11 +259,11 @@ public class TestGraph {
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
 		SparqlConnection conn = s.getSparqlConn();
 		for (int i=0; i < conn.getDataInterfaceCount(); i++) {
-			conn.getDataInterface(i).setDataset(generateDatasetName("both"));
+			conn.getDataInterface(i).setGraph(generateDatasetName("both"));
 			conn.getDataInterface(i).setServerAndPort(getSparqlServer());
 		}
 		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-			conn.getModelInterface(i).setDataset(generateDatasetName("both"));
+			conn.getModelInterface(i).setGraph(generateDatasetName("both"));
 			conn.getModelInterface(i).setServerAndPort(getSparqlServer());
 		}
 		s.setSparqlConn(conn);

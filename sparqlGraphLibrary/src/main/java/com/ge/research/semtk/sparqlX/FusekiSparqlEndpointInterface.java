@@ -26,13 +26,13 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
  */
 public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
-	public FusekiSparqlEndpointInterface(String server, String dataset)	throws Exception {
-		super(server, dataset);
+	public FusekiSparqlEndpointInterface(String server, String graph)	throws Exception {
+		super(server, graph);
 		// TODO Auto-generated constructor stub
 	}
 
-	public FusekiSparqlEndpointInterface(String server, String dataset, String user, String pass)	throws Exception {
-		super(server, dataset, user, pass);
+	public FusekiSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
+		super(server, graph, user, pass);
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -40,7 +40,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a GET URL
 	 */
 	public String getGetURL(){
-		return String.format("%s:%s/%s/query?output=json&query=", this.server, this.port, this.dataset);
+		return String.format("%s:%s/%s/query?output=json&query=", this.server, this.port, this.graph);
 	}
 
 
@@ -48,7 +48,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a POST URL
 	 */
 	public String getPostURL(){
-		return String.format("%s:%s/%s/update?update=", this.server, this.port, this.dataset);	
+		return String.format("%s:%s/%s/update?update=", this.server, this.port, this.graph);	
 	}	
 	
 	/**
@@ -76,7 +76,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	public SparqlEndpointInterface copy() throws Exception {
 		FusekiSparqlEndpointInterface retval = null;
 		
-		retval = new FusekiSparqlEndpointInterface(this.getServerAndPort(), this.dataset, this.userName, this.password);
+		retval = new FusekiSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
 		
 		return (SparqlEndpointInterface) retval;
 	}

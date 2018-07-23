@@ -123,7 +123,7 @@ public class StoreNodeGroup {
 		// get the Data and Knowledge Service URLS:
 		// the knowledge one can be blank if they are the same. in that case, make sure to use the same value for both, rather than leaving it up to guesswork.
 		SparqlEndpointInterface sei = tempConn.getDefaultQueryInterface();
-		String dsInfo = sei.getDataset();
+		String dsInfo = sei.getGraph();
 		String ksInfo = ""; // tempConn.getDataSourceKnowledgeServiceURL();
 		String datasourceURL = sei.getServerAndPort();
 		String serverType = sei.getServerType();

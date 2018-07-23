@@ -62,7 +62,7 @@ public class OwlLoader {
 				sei = conn.getModelInterface(0);
 				sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
 				
-				LocalLogger.logToStdOut("Ontology Dataset: " + sei.getDataset());
+				LocalLogger.logToStdOut("Ontology Dataset: " + sei.getGraph());
 			}catch(Exception e){
 				throw new Exception("Cannot get SPARQL connection: " + e.getMessage());
 			}

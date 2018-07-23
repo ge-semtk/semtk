@@ -101,7 +101,7 @@ public class TestConnection {
 		seiList.addAll(this.conn.getDataInterfaces());
 		
 		for (SparqlEndpointInterface sei : seiList) {
-			GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet("drop graph <" + sei.getDataset() + ">", SparqlResultTypes.CONFIRM);
+			GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet("drop graph <" + sei.getGraph() + ">", SparqlResultTypes.CONFIRM);
 			if (!resultSet.getSuccess()) {
 				throw new Exception(resultSet.getRationaleAsString(" "));
 			}
@@ -171,24 +171,24 @@ public class TestConnection {
 		String oldDs = null;
 		String newDs = null;
 		for (int i=0; i < conn.getDataInterfaceCount(); i++) {
-			oldDs = conn.getDataInterface(i).getDataset();
+			oldDs = conn.getDataInterface(i).getGraph();
 			if (hash.containsKey(oldDs)) {
 				newDs = hash.get(oldDs);
 			} else {
 				newDs = generateDatasetName(String.format("data%d", i));
 				hash.put(oldDs, newDs);
 			}
-			conn.getDataInterface(i).setDataset(newDs);
+			conn.getDataInterface(i).setGraph(newDs);
 		}
 		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-			oldDs = conn.getModelInterface(i).getDataset();
+			oldDs = conn.getModelInterface(i).getGraph();
 			if (hash.containsKey(oldDs)) {
 				newDs = hash.get(oldDs);
 			} else {
 				newDs = generateDatasetName(String.format("model%d", i));
 				hash.put(oldDs, newDs);
 			}
-			conn.getModelInterface(i).setDataset(newDs);
+			conn.getModelInterface(i).setGraph(newDs);
 		}
 		
 		s.setSparqlConn(conn);

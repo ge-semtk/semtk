@@ -98,7 +98,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 					old.getServiceEndpoint(),
 					sei.getServerAndPort(),
 					sei.getServerType(),
-					sei.getDataset(),
+					sei.getGraph(),
 					old.getSparqlServerUser(),
 					old.getSparqlServerPassword());
 			
@@ -116,7 +116,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				queryClient.getConfig().getServiceEndpoint(),
 				sei.getServerAndPort(),
 				sei.getServerType(),
-				sei.getDataset());
+				sei.getGraph());
 		
 		
 			this.retrievalClient = new SparqlQueryClient(config );

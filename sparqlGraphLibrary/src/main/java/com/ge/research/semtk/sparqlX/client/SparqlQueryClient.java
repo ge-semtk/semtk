@@ -149,7 +149,7 @@ public class SparqlQueryClient extends RestClient {
 		SparqlEndpointInterface sei = conn.getDefaultQueryInterface();
 		String endpointType  = sei.getServerType();
 		String serverAndPort = sei.getGetURL();
-		String dataSet       = sei.getDataset();
+		String dataSet       = sei.getGraph();
 		
 		retval = new SparqlQueryClient(new SparqlQueryClientConfig(serviceProtocol, serviceServer, servicePort, serviceEndpoint, serverAndPort, endpointType, dataSet)); 		
 		
