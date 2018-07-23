@@ -33,10 +33,6 @@ public class SparqlConnection {
  * To match files written by historical javascript, this is mostly a JSON wrangler.
  * 
  */
-	private final static String QUERY_SERVER = "kdl";
-	private final static String FUSEKI_SERVER = "fuseki";
-	private final static String VIRTUOSO_SERVER = "virtuoso";
-	private final static String NEPTUNE_SERVER = "neptune";
 	
 	private String name = null;
 	private String domain = null;
@@ -192,18 +188,18 @@ public class SparqlConnection {
 	}
 	
 	public void addModelInterface(String sType, String url, String dataset) throws Exception {
-		this.modelInterfaces.add(this.createInterface(sType, url, dataset));
+		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset));
 	}
 	
 	public void addDataInterface(String sType, String url, String dataset) throws Exception {
-		this.dataInterfaces.add(this.createInterface(sType, url, dataset));
+		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset));
 	}
 	public void addModelInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
-		this.modelInterfaces.add(this.createInterface(sType, url, dataset, user, passwd));
+		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset, user, passwd));
 	}
 	
 	public void addDataInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
-		this.dataInterfaces.add(this.createInterface(sType, url, dataset, user, passwd));
+		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset, user, passwd));
 	}
 	public int getModelInterfaceCount() {
 		return this.modelInterfaces.size();
@@ -351,29 +347,5 @@ public class SparqlConnection {
 		
 		return ret;
 	}
-
-	//---------- private function
-	private SparqlEndpointInterface createInterface(String stype, String url, String dataset) throws Exception{
-		if (stype.equals(SparqlConnection.FUSEKI_SERVER)) {
-			return new FusekiSparqlEndpointInterface(url, dataset);
-		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
-			return new VirtuosoSparqlEndpointInterface(url, dataset);
-		} else if (stype.equals(SparqlConnection.NEPTUNE_SERVER)) {
-			return new NeptuneSparqlEndpointInterface(url, dataset);
-		} else {
-			throw new Error("Unsupported SparqlConnection server type: " + stype);
-		}
-	}
 	
-	private SparqlEndpointInterface createInterface(String stype, String url, String dataset, String user, String passwd) throws Exception{
-		if (stype.equals(SparqlConnection.FUSEKI_SERVER)) {
-			return new FusekiSparqlEndpointInterface(url, dataset, user, passwd);
-		} else if (stype.equals(SparqlConnection.VIRTUOSO_SERVER)) {
-			return new VirtuosoSparqlEndpointInterface(url, dataset, user, passwd);
-		} else if (stype.equals(SparqlConnection.NEPTUNE_SERVER)) {
-			return new NeptuneSparqlEndpointInterface(url, dataset, user, passwd);
-		} else {
-			throw new Error("Unsupported SparqlConnection server type: " + stype);
-		}
-	}
 }

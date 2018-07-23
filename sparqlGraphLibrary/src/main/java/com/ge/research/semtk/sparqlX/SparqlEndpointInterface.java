@@ -79,6 +79,11 @@ public abstract class SparqlEndpointInterface {
 	// this is because of the state maintained for the results vars and connection 
 	// details. doing so may lead to unexpected results
 
+	private final static String QUERY_SERVER = "kdl";
+	private final static String FUSEKI_SERVER = "fuseki";
+	private final static String VIRTUOSO_SERVER = "virtuoso";
+	private final static String NEPTUNE_SERVER = "neptune";
+	
 	// results types to request
 	private static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	private static final String CONTENTTYPE_JSON_LD = "application/x-json+ld";
@@ -222,17 +227,23 @@ public abstract class SparqlEndpointInterface {
 	 * Static method to get an instance of this abstract class
 	 */
 	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String dataset, String user, String password) throws Exception{
-		if(serverTypeString.equalsIgnoreCase("virtuoso")){
+		if(serverTypeString.equalsIgnoreCase(VIRTUOSO_SERVER)){
 			if(user != null && password != null){
 				return new VirtuosoSparqlEndpointInterface(server, dataset, user, password);				
 			}else{
 				return new VirtuosoSparqlEndpointInterface(server, dataset);
 			}
-		}else if(serverTypeString.equalsIgnoreCase("fuseki")){
+		}else if(serverTypeString.equalsIgnoreCase(FUSEKI_SERVER)){
 			if(user != null && password != null){
 				return new FusekiSparqlEndpointInterface(server, dataset, user, password);				
 			}else{			
 				return new FusekiSparqlEndpointInterface(server, dataset);
+			}
+		}else if(serverTypeString.equalsIgnoreCase(NEPTUNE_SERVER)){
+			if(user != null && password != null){
+				return new NeptuneSparqlEndpointInterface(server, dataset, user, password);				
+			}else{			
+				return new NeptuneSparqlEndpointInterface(server, dataset);
 			}
 		}else{
 			throw new Exception("Invalid SPARQL server type : " + serverTypeString);
