@@ -84,6 +84,8 @@ public abstract class SparqlEndpointInterface {
 	// results types to request
 	private static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	private static final String CONTENTTYPE_JSON_LD = "application/x-json+ld";
+	private static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+	
 	private static final int MAX_QUERY_TRIES = 4;
 
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
@@ -317,6 +319,8 @@ public abstract class SparqlEndpointInterface {
 			resultSet = new SimpleResultSet();		// auth queries produce messages
 		}else if(resultType == SparqlResultTypes.TABLE){	
 			resultSet = new TableResultSet(); // non-construct queries produce tables
+		}else if (resultType == SparqlResultTypes.HTML) {
+			resultSet = new SimpleResultSet();
 		}
 		
 		// execute the query
@@ -419,14 +423,6 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws Exception{
 		
-		// buid resultsFormat
-		String resultsFormat = null;
-		if(resultType == null){
-			resultsFormat = this.getContentType(getDefaultResultType());
-		} else {
-			resultsFormat = this.getContentType(resultType);
-		}
-		
         // get client, adding userName/password credentials if any exist
         CloseableHttpClient httpclient = this.buildHttpClient();
 		HttpHost targetHost = this.buildHttpHost();
@@ -436,8 +432,8 @@ public abstract class SparqlEndpointInterface {
 		// create the HttpPost
 		HttpPost httppost = new HttpPost(this.getPostURL());
 		
-		this.addHeaders(httppost, resultsFormat);
-		this.addParams(httppost, query, resultsFormat);
+		this.addHeaders(httppost, resultType);
+		this.addParams(httppost, query, resultType);
 		
 		// parse the response
 		HttpEntity entity = null;
@@ -495,17 +491,17 @@ public abstract class SparqlEndpointInterface {
 	 * @param resultsFormat
 	 * @return
 	 */
-	protected void addHeaders(HttpPost httppost, String resultsFormat) {
+	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
-		httppost.addHeader("Accept",resultsFormat);
+		httppost.addHeader("Accept", this.getContentType(resultType));
 		httppost.addHeader("X-Sparql-default-graph", this.graph);
 	}
 	
-	protected void addParams(HttpPost httppost, String query, String resultsFormat) throws Exception {
+	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		params.add(new BasicNameValuePair("query", query));
-		params.add(new BasicNameValuePair("format", resultsFormat));
+		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
 		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
 
 		// set entity
@@ -843,14 +839,17 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Get a results content type to be set in the HTTP header.
 	 */
-	private String getContentType(SparqlResultTypes resultType) throws Exception{
-
-		if(resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
+	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+		if (resultType == null) {
+			return this.getContentType(getDefaultResultType());
+			
+		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
-		} 
-		
-		if(resultType == SparqlResultTypes.GRAPH_JSONLD) { 
+			
+		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
 			return CONTENTTYPE_JSON_LD; 
+		} else if (resultType == SparqlResultTypes.HTML) { 
+			return CONTENTTYPE_HTML; 
 		} 
 		
 		// fail and throw an exception if the value was not valid.

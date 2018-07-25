@@ -101,8 +101,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 		HttpPost httppost = new HttpPost(this.getUploadURL());
 		
-		String resultsFormat = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-		this.addHeaders(httppost, resultsFormat);
+		this.addHeaders(httppost, SparqlResultTypes.HTML);
 		 
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();    
 	

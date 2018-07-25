@@ -18,7 +18,13 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -92,9 +98,27 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 
 	@Override
-	protected void addHeaders(HttpPost httppost, String resultsFormat) {
+	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
-		httppost.addHeader("Accept",resultsFormat);
+		httppost.addHeader("Accept", this.getContentType(resultType));
+	}
+	
+	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
+		// add params
+		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
+		
+		// PEC TODO: this might be tenuous: presuming all CONFIRM queries use "update"
+		//           But the fix in line is a re-design that could affect a lot
+		if (resultType == SparqlResultTypes.CONFIRM) {
+			params.add(new BasicNameValuePair("update", query));
+		} else {
+			params.add(new BasicNameValuePair("query", query));
+		}
+		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
+		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
+
+		// set entity
+		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
 	
 	@Override
