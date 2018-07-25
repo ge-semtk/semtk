@@ -33,6 +33,7 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
 
 public class QueryGenerationTest {
@@ -64,19 +65,20 @@ public class QueryGenerationTest {
 		
 		ng.addOneNode(node, null, null, null);		
 		OntologyInfo oInfo = new OntologyInfo();
-		String insertQuery = ng.generateSparqlInsert(oInfo);
+		VirtuosoSparqlEndpointInterface endpoint = new VirtuosoSparqlEndpointInterface("http://server:2420", "http://graph");
+		String insertQuery = ng.generateSparqlInsert(oInfo, endpoint);
 		
 		String expected = "prefix generateSparqlInsert:<belmont/generateSparqlInsert#>\n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>\n" +
 				"prefix bar:<http://knowledge.ge.com/bar#>\n" +
 				"prefix a2bar:<http://knowledge.ge.com/2bar#>\n" +
-				" INSERT {\n" +
+				" INSERT { GRAPH <http://graph> {\n" +
 				" ?testNode a http://knowledge.ge.com/bar .\n" +
 				"        ?testNode bar:foo \"2\"^^XMLSchema:int .\n" +
 				"        ?testNode bar:foo \"123543\"^^XMLSchema:int .\n" +
 				"        ?testNode a2bar:foostr \"testvalue\"^^XMLSchema:string .\n" +
 				"        ?testNode a2bar:foostr \"anothertest\"^^XMLSchema:string .\n" +
-				"} WHERE {       BIND (iri(concat(\"generateSparqlInsert:\"";  // what follows is a unique string that we can't compare
+				"} } WHERE {       BIND (iri(concat(\"generateSparqlInsert:\"";  // what follows is a unique string that we can't compare
 		assertTrue(insertQuery.replaceAll("\\s+","").startsWith(expected.replaceAll("\\s+",""))); // ignore whitespace
 		
 	}
@@ -109,18 +111,19 @@ public class QueryGenerationTest {
 
 		ng.addOneNode(node, null, null, null);
 		OntologyInfo oInfo = new OntologyInfo();
-		
-		String insertQuery = ng.generateSparqlInsert(oInfo);
+		VirtuosoSparqlEndpointInterface endpoint = new VirtuosoSparqlEndpointInterface("http://server:2420", "http://graph");
+
+		String insertQuery = ng.generateSparqlInsert(oInfo, endpoint);
 		String expected = "prefix generateSparqlInsert:<belmont/generateSparqlInsert#>" +
 			"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>" +
 			"prefix bar:<http://knowledge.ge.com/bar#>" +
-			"INSERT {" +
+			"INSERT { GRAPH <http://graph> {\n" +
 			"?testNode a http://knowledge.ge.com/bar ." +
 			"?testNode bar:foo \"2\"^^XMLSchema:int ." +
 			"?testNode bar:foo \"123543\"^^XMLSchema:int ." +
 			"?testNode bar:foostr \"testvalue\"^^XMLSchema:string ." +
 			"?testNode bar:foostr \"anothertest\"^^XMLSchema:string ." +
-			"} WHERE {       BIND (bar:testInstance AS ?testNode)." +
+			"} } WHERE {       BIND (bar:testInstance AS ?testNode)." +
 			"}";
 
 		assertEquals(insertQuery.replaceAll("\\s+",""),(expected.replaceAll("\\s+",""))); // ignore whitespace
@@ -156,18 +159,19 @@ public class QueryGenerationTest {
 		nBattery.setInstanceValue("SomeUriForABattery");
 		
 		// try to generate an insert query:
-		String insertQuery = ng.generateSparqlInsert(oInfo);
+		VirtuosoSparqlEndpointInterface endpoint = new VirtuosoSparqlEndpointInterface("http://server:2420", "http://graph");
+		String insertQuery = ng.generateSparqlInsert(oInfo, endpoint);
 		
 		// compare to the basic output we expect...
 		String expected = 	"prefix generateSparqlInsert:<belmont/generateSparqlInsert#>\r\n" + 
 							"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>\r\n" + 
 							"prefix batterydemo:<http://kdl.ge.com/batterydemo#>\r\n" + 
-							" INSERT {\r\n" + 
+							" INSERT { GRAPH <http://graph> {\n" +
 							"	?Cell a batterydemo:Cell . \r\n" + 
 							"	?Cell batterydemo:color ?Color .\r\n" + 
 							"	?Battery a batterydemo:Battery . \r\n" + 
 							"	?Battery batterydemo:cell ?Cell .\r\n" + 
-							"} WHERE {	BIND (generateSparqlInsert:red AS ?Color).\r\n" + 
+							"} } WHERE {	BIND (generateSparqlInsert:red AS ?Color).\r\n" + 
 							"	BIND (generateSparqlInsert:SomeUriForACell AS ?Cell).\r\n" + 
 							"	BIND (generateSparqlInsert:SomeUriForABattery AS ?Battery).\r\n" + 
 							"}";

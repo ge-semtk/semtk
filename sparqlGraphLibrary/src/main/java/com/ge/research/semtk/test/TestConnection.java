@@ -85,10 +85,7 @@ public class TestConnection {
 		seiList.addAll(this.conn.getDataInterfaces());
 		
 		for (SparqlEndpointInterface sei : seiList) {
-			GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet("clear all", SparqlResultTypes.CONFIRM);
-			if (!resultSet.getSuccess()) {
-				throw new Exception(resultSet.getRationaleAsString(" "));
-			}
+			sei.clearGraph();
 		}
 	}
 	

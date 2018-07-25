@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import org.apache.http.client.methods.HttpPost;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -73,13 +74,13 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a upload URL
 	 */
 	public String getUploadURL() throws Exception{
-		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
 			return this.server + "/sparql-graph-crud-auth";
-		}else{
-			throw new Exception("Virtuoso requires authentication for file upload");	
-		}
 	}
 	
+	public JSONObject executeUpload(byte[] owl) throws Exception {
+		throw new Exception("Unimplmenented");
+	}
+
 	/**
 	 * Handle an empty response
 	 * (if a Virtuoso response is empty, then something is wrong)
@@ -87,19 +88,15 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	@Override
 	public void handleEmptyResponse() throws Exception {
-		throw new Exception("Virtuoso returning empty response (could be wrong username/password)");	
+		throw new Exception("Neptune returned empty response");	
 	}
 
 	@Override
-	public JSONObject executeTestQuery() throws Exception {
-		final String sparql = "select ?Concept where {[] a ?Concept} LIMIT 1";
-		try {
-			return executeQuery(sparql, SparqlResultTypes.TABLE);
-		} catch (Exception e) {
-			throw new Exception("Failure executing test query.  Authentication might have failed.", e);
-		}
+	protected void addHeaders(HttpPost httppost, String resultsFormat) {
+		
+		httppost.addHeader("Accept",resultsFormat);
 	}
-
+	
 	@Override
 	public SparqlEndpointInterface copy() throws Exception {
 		NeptuneSparqlEndpointInterface retval = null;
@@ -107,5 +104,14 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		retval = new NeptuneSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
 		
 		return (SparqlEndpointInterface) retval;
+	}
+	
+	@Override
+	protected String getResposeTextExplanation(String responseTxt) {
+		if ( responseTxt.contains("Some known error from Neptune")) {
+			return "SemTk says: Some known error from Neptune.\n";
+		} else {
+			return "Non-JSON error was returned from Neptune.\n";
+		}
 	}
 }

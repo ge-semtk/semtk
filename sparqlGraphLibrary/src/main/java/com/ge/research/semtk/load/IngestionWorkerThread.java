@@ -82,7 +82,7 @@ public class IngestionWorkerThread extends Thread {
 			if (nodeGroupList.size() > 0 && ! this.skipIngest) {
 				
 				// try to run one efficient query
-				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo);
+				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo, this.endpoint);
 				if (query.length() <= this.optimalQueryChars) {
 					//System.out.println("Query length DEBUG-1: " + query.length());   
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
@@ -139,7 +139,7 @@ public class IngestionWorkerThread extends Thread {
 				}
 				
 				// generate query and check size
-				String subQuery = NodeGroup.generateCombinedSparqlInsert(ngSubList, this.oInfo);
+				String subQuery = NodeGroup.generateCombinedSparqlInsert(ngSubList, this.oInfo, this.endpoint);
 				queryList.add(subQuery);
 				longestQueryLen = Math.max(longestQueryLen, subQuery.length());
 				

@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -50,6 +52,10 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	public String getPostURL(){
 		return String.format("%s:%s/%s/update?update=", this.server, this.port, this.graph);	
 	}	
+	
+	public JSONObject executeUpload(byte[] owl) throws Exception {
+		throw new Exception("Unimplmenented");
+	}
 	
 	/**
 	 * Handle an empty response

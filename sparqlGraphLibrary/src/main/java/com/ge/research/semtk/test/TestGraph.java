@@ -125,11 +125,7 @@ public class TestGraph {
 	 */
 	// PEC TODO:  clear model and data graph
 	public static void clearGraph() throws Exception {
-		SparqlEndpointInterface sei = getSei();
-		GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet("clear all", SparqlResultTypes.CONFIRM);
-		if (!resultSet.getSuccess()) {
-			throw new Exception(resultSet.getRationaleAsString(" "));
-		}
+		getSei().clearGraph();
 	}
 	
 	/**

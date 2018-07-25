@@ -220,10 +220,7 @@ public class SparqlToXUtils {
 	  
   }
   
-  
-  public static String genereateClearAllQuery() {
-	  return "clear all";
-  }
+
 	
 	// check that all required columns are found in the return values from the Sparql endpoint. 
 	public static void validateSparqlResults(SparqlEndpointInterface endpoint, String[] requiredCols) throws IOException {

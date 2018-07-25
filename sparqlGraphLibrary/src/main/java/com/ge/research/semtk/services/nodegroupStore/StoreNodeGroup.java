@@ -49,30 +49,23 @@ public class StoreNodeGroup {
 //		LocalLogger.logToStdErr(":: csv data output ::");	
 //		LocalLogger.logToStdErr(data);
 		
-		// should add better error handling here. 
-		try{
+		
+		// some diagnostic output 
+		LocalLogger.logToStdErr("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
+		
+		// create the rest client
+		IngestorClientConfig icc = new IngestorClientConfig(ingestorProtocol, ingestorLocation, Integer.parseInt(ingestorPort));
+		IngestorRestClient irc   = new IngestorRestClient(icc);
+		
+		// get store.json
+		String templateStr = Utility.getResourceAsString(icc, "/nodegroups/store.json");
+		
+		// ingest
+		irc.execIngestionFromCsv(templateStr, data, overrideConn.toString());
+		RecordProcessResults tbl = irc.getLastResult();			
+		LocalLogger.logToStdErr("does the return believes the run was a succes?" + tbl.getSuccess() );
+		tbl.throwExceptionIfUnsuccessful();
 			
-			// some diagnostic output 
-			LocalLogger.logToStdErr("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
-			
-			// create the rest client
-			IngestorClientConfig icc = new IngestorClientConfig(ingestorProtocol, ingestorLocation, Integer.parseInt(ingestorPort));
-			IngestorRestClient irc   = new IngestorRestClient(icc);
-			
-			// get store.json
-			String templateStr = Utility.getResourceAsString(icc, "/nodegroups/store.json");
-			
-			// ingest
-			irc.execIngestionFromCsv(templateStr, data, overrideConn.toString());
-			RecordProcessResults tbl = irc.getLastResult();			
-			LocalLogger.logToStdErr("does the return believes the run was a succes?" + tbl.getSuccess() );
-			tbl.throwExceptionIfUnsuccessful();
-			
-		}
-		catch(Exception eee){
-			LocalLogger.logToStdErr(eee.getMessage());
-			retval = false;		// set this to false. hopefully this functions as a response. 
-		}
 		
 		return retval;
 	}

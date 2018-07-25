@@ -19,10 +19,7 @@
 
 package com.ge.research.semtk.sparqlX;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
@@ -41,23 +38,24 @@ import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.auth.DigestScheme;
 import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -72,7 +70,6 @@ import com.ge.research.semtk.utility.LocalLogger;
  * Interface to SPARQL endpoint.
  * This is an abstract class - create a subclass per implementation (Virtuoso, etc)
  */
-@SuppressWarnings("deprecation")
 public abstract class SparqlEndpointInterface {
 
 	// NOTE: more than one thread cannot safely share a SparqlEndpointInterface.
@@ -364,15 +361,8 @@ public abstract class SparqlEndpointInterface {
 		while (true) {
 			tryCount++;
 			try {
-				// TEMPORARY: remove
-//				LocalLogger.logToStdOut(
-//						"---------------------\nUser_name: " + 
-//						ThreadAuthenticator.getThreadUserName() + "\n" +
-//						"Query: " + query + 
-//						"\n----------------------"
-//						);
 				if(this.userName !=null && this.password != null){
-					return executeQueryAuthPost(query, resultType);
+					return executeQueryPost(query, resultType);
 				}else{
 //					if(resultType == SparqlResultTypes.CONFIRM){ 
 //						throw new Exception("Username and password are required to execute a query with resultType " + resultType.toString());
@@ -408,249 +398,212 @@ public abstract class SparqlEndpointInterface {
 	}
 
 	/**
-	 * Execute query using POST
-	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
+	 * Deprecated in favor of executeQueryPost
+	 * Uses Authentication iff this.userName is not null.
+	 * @param query
+	 * @param resultType
+	 * @return
 	 * @throws Exception
-	 * 
-	 * Sample table output:
-	 * 
-	 * Sample graph output:
 	 */
-	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws Exception {
-		
-		if(resultType == null){
-			resultType = getDefaultResultType();
-		}
-		
-		// execute a query and return a JsonArray of results.
-		// May throw Exceptions for various simple errors
-		String resultsFormat = this.getContentType(resultType);
-		
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-		String[] serverNoProtocol = this.server.split("://");
-		
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
-		HttpPost httppost = new HttpPost(getPostURL());
-		httppost.addHeader("Accept", resultsFormat);
-		httppost.addHeader("X-Sparql-default-graph", this.graph);
-
-		// add params
-		List<NameValuePair> params = new ArrayList<>(3);
-		params.add(new BasicNameValuePair("query", query));
-		params.add(new BasicNameValuePair("format", resultsFormat));
-		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
-		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-
-		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);
-		HttpEntity entity = httpresponse.getEntity();
-		String responseTxt = EntityUtils.toString(entity, "UTF-8");
-		
-		try{ 
-			this.response = (JSONObject) new JSONParser().parse(responseTxt);
-		}catch(Exception e){
-			entity.getContent().close();
-			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
-		}
-		JSONObject interimObj = new JSONObject(this.response);
-		
-		if (this.response == null) {
-			LocalLogger.logToStdErr("the response could not be transformed into json");
-			entity.getContent().close();
-			return null;
-		}
-		else{
-			JSONObject procResp = getResultsFromResponse(interimObj, resultType);	
-			entity.getContent().close();
-			return procResp;
-		}
+	public JSONObject executeQueryAuthPost(String query, SparqlResultTypes resultType) throws Exception {
+		// deprecated in favor of:
+		return this.executeQueryPost(query, resultType);
 	}	
 	
 
 	/**
-	 * Execute an auth query using POST
+	 * Execute a query using POST
+	 * Adds Auth elements ONLY IF this.userName != null
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
-	private JSONObject executeQueryAuthPost(String query, SparqlResultTypes resultType) throws Exception{
+	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws Exception{
 		
+		// buid resultsFormat
+		String resultsFormat = null;
 		if(resultType == null){
-			resultType = getDefaultResultType();
+			resultsFormat = this.getContentType(getDefaultResultType());
+		} else {
+			resultsFormat = this.getContentType(resultType);
 		}
 		
-		DefaultHttpClient httpclient = new DefaultHttpClient();
+        // get client, adding userName/password credentials if any exist
+        CloseableHttpClient httpclient = this.buildHttpClient();
+		HttpHost targetHost = this.buildHttpHost();
+		// get context with digest auth if there is a userName, else null context
+		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 
-		httpclient.getCredentialsProvider().setCredentials(
-				AuthScope.ANY,
-				new UsernamePasswordCredentials(this.userName, this.password));
-
+		// create the HttpPost
+		HttpPost httppost = new HttpPost(this.getPostURL());
+		
+		this.addHeaders(httppost, resultsFormat);
+		this.addParams(httppost, query, resultsFormat);
+		
+		// parse the response
+		HttpEntity entity = null;
+		try {
+			// execute
+			HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
+			entity = response_http.getEntity();
+			String responseTxt = EntityUtils.toString(entity, "UTF-8");
+		
+			// parse response
+			return this.parseResponse(resultType, responseTxt);
+		} finally {
+			httpclient.close();
+			if (entity != null) {
+				entity.getContent().close();
+			}
+		}
+	}
+	
+	public void clearGraph() throws Exception {
+		this.executeQueryAndConfirm("clear graph <" + this.getGraph() + ">");
+	}
+	
+	/**
+	 * Get an CloseableHttpClient, adding credentials if userName exists
+	 * @return
+	 */
+	protected CloseableHttpClient buildHttpClient() {
+		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+		
+		// add userName and password, if any
+		if (this.userName != null) {
+			CredentialsProvider credsProvider = new BasicCredentialsProvider();
+			credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(this.userName, this.password));
+	        clientBuilder.setDefaultCredentialsProvider(credsProvider);
+	        return clientBuilder.build();
+	        
+		} else {
+			return clientBuilder.build();
+		}
+	}
+	
+	/**
+	 * build the host from this.server and this.port
+	 * @return
+	 */
+	protected HttpHost buildHttpHost() {
 		String[] serverNoProtocol = this.server.split("://");
-		//LocalLogger.logToStdErr("the new server name is: " + serverNoProtocol[1]);
+		return new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
 
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);  //previous version assumes always http.
-
-		DigestScheme digestAuth = new DigestScheme();
-		AuthCache authCache = new BasicAuthCache();
-		digestAuth.overrideParamter("realm", "SPARQL");
-		// Suppose we already know the expected nonce value
-		digestAuth.overrideParamter("nonce", "whatever");
-		authCache.put(targetHost, digestAuth);
-		BasicHttpContext localcontext = new BasicHttpContext();
-		localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
-
-		// add new stuff
-		HttpPost httppost = new HttpPost(getPostURL());
-		String resultsFormat = this.getContentType(resultType);
+	}
+	
+	/**
+	 * build the HttpPost with headers
+	 * @param resultsFormat
+	 * @return
+	 */
+	protected void addHeaders(HttpPost httppost, String resultsFormat) {
+		
 		httppost.addHeader("Accept",resultsFormat);
 		httppost.addHeader("X-Sparql-default-graph", this.graph);
-
+	}
+	
+	protected void addParams(HttpPost httppost, String query, String resultsFormat) throws Exception {
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		params.add(new BasicNameValuePair("query", query));
 		params.add(new BasicNameValuePair("format", resultsFormat));
 		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
 
+		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-
-		// finish new stuff
-
-		HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
-		HttpEntity entity = response_http.getEntity();
-		String responseTxt = EntityUtils.toString(entity, "UTF-8");
-
-		// some diagnostic output
-		if(responseTxt == null){ LocalLogger.logToStdErr("the response text was null!"); }
-
-		if(responseTxt.trim().isEmpty()){
-			handleEmptyResponse();  // implementation-specific behavior
-		}
-
-		JSONObject resp;
-		try{
-			resp = (JSONObject) JSONValue.parse(responseTxt);
-		}catch(Exception e){
-			entity.getContent().close();
-			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
-		}
-		
-		if (resp == null) {
-			LocalLogger.logToStdErr("the response could not be transformed into json: " + responseTxt);
-
-			if(responseTxt.contains("Error")) {
-				entity.getContent().close();
-				String explanation = this.explainResponseTxt(responseTxt);
-				throw new Exception(explanation + responseTxt); 
-			}
-			entity.getContent().close();
+	}
+	
+	/**
+	 * Return a context with digest Auth if there is a userName, otherwise null context
+	 * @param targetHost
+	 * @return
+	 */
+	protected BasicHttpContext buildHttpContext(HttpHost targetHost) {
+		if (this.userName != null) {
+			DigestScheme digestAuth = new DigestScheme();
+			AuthCache authCache = new BasicAuthCache();
+			digestAuth.overrideParamter("realm", "SPARQL");
+			// Suppose we already know the expected nonce value
+			digestAuth.overrideParamter("nonce", "whatever");
+			authCache.put(targetHost, digestAuth);
+			BasicHttpContext ret = new BasicHttpContext();
+			ret.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
+			return ret;
+		} else {
 			return null;
-		}
-		else{
-			JSONObject procResp = getResultsFromResponse(resp, resultType);
-			entity.getContent().close();
-
-			return procResp;
 		}
 	}
 	
 	/**
-	 * Get explanations of known triple store errors
+	 * Get explanations (header \n) of known triple store errors
 	 * @param responseTxt
 	 * @return
 	 */
-	private String explainResponseTxt(String responseTxt) {
-		if (responseTxt.contains("Virtuoso") && responseTxt.contains("Error SP031")) {
-			return "SemTK says: Virtuoso query may be too large or complex.\n";
-		}
+	protected String getResposeTextExplanation(String responseTxt) {
+		return "Non-JSON error was returned from SPARQL endpoint.\n";
+	}
+	
+	/**
+	 * Parse the response to JSON
+	 * @param resultType
+	 * @param responseTxt
+	 * @return
+	 * @throws Exception
+	 */
+	protected JSONObject parseResponse(SparqlResultTypes resultType, String responseTxt) throws Exception {
+		// parse json response
+		JSONObject resp;
 		
-		return "";
+		if(responseTxt == null || responseTxt.trim().isEmpty()) {
+			this.handleEmptyResponse(); 
+		}
+				
+		try {
+			resp = (JSONObject) JSONValue.parse(responseTxt);
+		} catch(Exception e){
+			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
+		}
+
+		if (resp == null) {
+			// null response might be ok?
+			LocalLogger.logToStdErr("the response could not be transformed into json: " + responseTxt);
+
+			if(responseTxt.contains("Error")) {
+				throw new Exception(this.getResposeTextExplanation(responseTxt) + responseTxt); 
+			}
+			return null;
+			
+		} else {
+			// extract results object from non-null response
+			JSONObject procResp = this.getResultsFromResponse(resp, resultType);
+			return procResp;
+		}
 	}
 
 	/**
-	 * Execute an auth query using POST
+	 * Deprecated in favor of executeAuthUpload
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
 
 	public JSONObject executeAuthUploadOwl(byte[] owl) throws Exception{
-		
-		DefaultHttpClient httpclient = new DefaultHttpClient();
+		return this.executeAuthUpload(owl);
+	}
 
-		httpclient.getCredentialsProvider().setCredentials(
-				AuthScope.ANY,
-				new UsernamePasswordCredentials(this.userName, this.password));
+	/**
+	 * Upload an owl file, using Auth if this.userName != null
+	 * @param owl
+	 * @return
+	 * @throws Exception
+	 */
+	public abstract JSONObject executeUpload(byte[] owl) throws Exception;
 
-		String[] serverNoProtocol = this.server.split("://");
-		//LocalLogger.logToStdErr("the new server name is: " + serverNoProtocol[1]);
-
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
-
-		DigestScheme digestAuth = new DigestScheme();
-		AuthCache authCache = new BasicAuthCache();
-		digestAuth.overrideParamter("realm", "SPARQL");
-		// Suppose we already know the expected nonce value
-		digestAuth.overrideParamter("nonce", "whatever");
-		authCache.put(targetHost, digestAuth);
-		BasicHttpContext localcontext = new BasicHttpContext();
-		localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
-
-		// add new stuff
-		HttpPost httppost = new HttpPost(getUploadURL());
-		String resultsFormat = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-		httppost.addHeader("Accept",resultsFormat);
-		httppost.addHeader("X-Sparql-default-graph", this.graph);
-
-		 
-		MultipartEntityBuilder builder = MultipartEntityBuilder.create();    
-	
-		builder.addTextBody("graph-uri", this.graph);
-		builder.addBinaryBody("res-file", owl);
-		HttpEntity entity = builder.build();
-		httppost.setEntity(entity);
-		
-		/*  THIS IS THE MULTIPART FORMAT WE NEED TO SEND.
-		
-		Content-Type: multipart/form-data; boundary=---------------------------32932166721282
-		Content-Length: 234
-		
-		-----------------------------32932166721282
-		Content-Disposition: form-data; name="graph-uri"
-		
-		http://www.kdl.ge.com/changeme
-		-----------------------------32932166721282
-		Content-Disposition: form-data; name="res-file"; filename="employee.owl"
-		Content-Type: application/octet-stream
-		
-		<rdf:RDF
-		    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		    xmlns:owl="http://www.w3.org/2002/07/owl#"
-		    xmlns="http://kdl.ge.com/pd/employee#"
-		    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-		  .
-		  .
-		  .
-		</rdf:RDF>
-		
-		-----------------------------32932166721282--
-
-		 */
-		
-		executeTestQuery();
-
-		HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
-		HttpEntity resp_entity = response_http.getEntity();
-		// get response with HTML tags removed
-		String responseTxt = EntityUtils.toString(resp_entity, "UTF-8").replaceAll("\\<.*?>"," ");
-
-		SimpleResultSet ret = new SimpleResultSet();
-		
-		if(responseTxt.trim().isEmpty()){
-			// success or bad login :-(
-			ret.setSuccess(true);
-		} else {
-			ret.setSuccess(false);
-			ret.addRationaleMessage("SparqlEndpointInterface.executeAuthUploadOwl", responseTxt);
-		}
-		resp_entity.getContent().close();
-		return ret.toJson();
+	/**
+	 * Execute an auth query using POST, and using AUTH if this.userName != null
+	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
+	 * @throws Exception
+	 */
+	public JSONObject executeAuthUpload(byte[] owl) throws Exception{
+        return this.executeUpload(owl);
 	}
 	
 
@@ -659,56 +612,15 @@ public abstract class SparqlEndpointInterface {
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
-	public JSONObject executeQueryGet(String query, SparqlResultTypes resultsType) throws Exception {
-
-		if(resultsType == null){
-			resultsType = getDefaultResultType();
-		}
-		
+	public JSONObject executeQueryGet(String query, SparqlResultTypes resultType) throws Exception {
 		// encode the query and build a real URL
+		// left over from ancient times like 2016
 		URLCodec encoder = new URLCodec();
 		String cleanURL = getGetURL() + encoder.encode(query);
 		URL url = new URL(null, cleanURL, handler);
-LocalLogger.logToStdOut ("URL: " + url);
-
-		// create an http GET connection and make the request
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		String queryAndUrl = url.toString();
 		
-		// set the type of output desired. this might not work....
-		String resultsFormat = this.getContentType(resultsType);
-		conn.setRequestProperty("Accept", resultsFormat);
-		
-		conn.setRequestMethod("GET");
-
-		// read the results
-		BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		String results = "";
-		// get everythign from reader
-		String line;
-	    while ((line = rd.readLine()) != null) {
-	        results += line;
-	    }
-		
-		try{ 
-			this.response = (JSONObject) new JSONParser().parse(results);
-		}catch(Exception e){
-			throw new Exception("Cannot parse query result into JSON: " + results);
-		}
-	    
-		JSONObject interimObj = new JSONObject(this.response);
-		rd.close();   // close the reader
-
-		if (this.response == null) {
-			LocalLogger.logToStdErr("the response could not be transformed into json");
-
-			return null;
-		}
-		else{
-			JSONObject procResp = getResultsFromResponse(interimObj, resultsType);
-
-			return procResp;
-		}
-
+		return this.executeQueryAuthGet(queryAndUrl, resultType);
 	}	
 	
 	/**
@@ -716,85 +628,38 @@ LocalLogger.logToStdOut ("URL: " + url);
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
-	@SuppressWarnings("unused")
 	private JSONObject executeQueryAuthGet(String queryAndUrl, SparqlResultTypes resultType) throws Exception{
 		
+		// buid resultsFormat
+		String resultsFormat = null;
 		if(resultType == null){
-			resultType = getDefaultResultType();
+			resultsFormat = this.getContentType(getDefaultResultType());
+		} else {
+			resultsFormat = this.getContentType(resultType);
 		}
 		
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-
-		//ResponseHandler<String> responseHandler = new BasicResponseHandler();
-
-		LocalLogger.logToStdErr("the server name was " + this.server);
-		LocalLogger.logToStdErr("the port id was " + this.port);
-		LocalLogger.logToStdErr("the user name was " + "SPARQL/" + this.userName);
-		LocalLogger.logToStdErr("the password was " + this.password);
+		CloseableHttpClient httpclient = this.buildHttpClient();
+		HttpHost targetHost = this.buildHttpHost();
+		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 
 		LocalLogger.logToStdErr(queryAndUrl);
-
-		httpclient.getCredentialsProvider().setCredentials(
-				AuthScope.ANY,
-				new UsernamePasswordCredentials(this.userName, this.password));
-
-
-		String[] serverNoProtocol = this.server.split("://");
-		LocalLogger.logToStdErr("the new server name is: " + serverNoProtocol[1]);
-
-		HttpHost targetHost = new HttpHost(serverNoProtocol[1], Integer.valueOf(this.port), serverNoProtocol[0]);
-
-		DigestScheme digestAuth = new DigestScheme();
-		AuthCache authCache = new BasicAuthCache();
-		digestAuth.overrideParamter("realm", "SPARQL");
-		// Suppose we already know the expected nonce value
-		digestAuth.overrideParamter("nonce", "whatever");
-		authCache.put(targetHost, digestAuth);
-		BasicHttpContext localcontext = new BasicHttpContext();
-		localcontext.setAttribute(ClientContext.AUTH_CACHE, authCache);
-
+		
 		HttpGet httpget = new HttpGet(queryAndUrl);
-		String resultsFormat = this.getContentType(resultType);
 		httpget.addHeader("Accept", resultsFormat);
 		
 		LocalLogger.logToStdOut("executing request" + httpget.getRequestLine());
 
 		//        String responseTxt = httpclient.execute(httpget, responseHandler);
 		HttpResponse response_http = httpclient.execute(targetHost, httpget, localcontext);
+		httpclient.close();
 		HttpEntity entity = response_http.getEntity();
 		String responseTxt = EntityUtils.toString(entity, "UTF-8");
 
-		// some diagnostic output
-		if(responseTxt == null){ LocalLogger.logToStdErr("the response text was null!"); }
-
-		if(responseTxt.trim().isEmpty()){
-			handleEmptyResponse();  // implementation-specific behavior
-		}
-
-		if(responseTxt.length() < 100){
-			LocalLogger.logToStdErr("SparqlEndpointInterface received: " + responseTxt);
-		}else{
-			LocalLogger.logToStdErr("SparqlEndpointInterface received: " + responseTxt.substring(0,99) + "... (" + responseTxt.length() + " chars)");
-		}
-		
-		JSONObject resp;
-		try{ 
-			resp = (JSONObject) new JSONParser().parse(responseTxt);
-		}catch(Exception e){
-			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
-		}
-
-		if (resp == null) {
-			LocalLogger.logToStdErr("the response could not be transformed into json");
-
-			if(responseTxt.contains("Error")){
-				throw new Exception(responseTxt); }
-			return null;
-		}
-		else{
-			JSONObject procResp = getResultsFromResponse(resp, resultType);
-
-			return procResp;
+		// parse the response
+		try {
+			return this.parseResponse(resultType, responseTxt);
+		} finally {
+			entity.getContent().close();
 		}
 	}
 	
@@ -814,7 +679,6 @@ LocalLogger.logToStdOut ("URL: " + url);
 	 * @param expectOneResult if true, expect a single row result per column - if zero or multiple results are returned, then error
 	 * @return a hashmap: keys are resultHeaders, values are String arrays with contents
 	 *
-	 * TODO work on this - make it more generic
 	 */
 	public HashMap<String,String[]> executeQuery(String query, String[] resultHeaders, boolean expectOneResult) throws Exception {
 
@@ -975,57 +839,6 @@ LocalLogger.logToStdOut ("URL: " + url);
 		return retval;
 	}
 
-	
-	// TODO this is currently unused - do we want to keep it?	
-	public String[] getColumnNamesNotInInputList(String[] inputList){
-		ArrayList<String> retval = new ArrayList<String>();
-
-		for (int i=0; i < this.resVars.size(); i++) {
-			retval.add((String)(this.resVars.get(i)));
-		}
-		// filter the ones we do not want.
-		for(String i : inputList){
-			retval.remove(i);
-		}
-		String[] retval_array = new String[retval.size()];
-		retval.toArray(retval_array);
-
-		return retval_array;
-	}
-
-	
-	// TODO this is currently unused - do we want to keep it?	It is similar to Table.getSubset()
-	public ArrayList<String[]> getValuesForColsBasedOnCol1Key(String compareColName, String keyValue, String[] gatherCols) throws IOException{
-		// uses the compareColName and searches for the keyValue.
-		// once found, it returns the values of the other columns specified by name in gatherCols
-		ArrayList<String[]> retval = new ArrayList<String[]>();
-		try{
-			// check all exist
-			this.checkResultsCol(compareColName);
-			for(String i : gatherCols){
-				this.checkResultsCol(i);
-			}
-			// do actual work
-			for (int i=0; i < this.resBindings.size(); i++) {
-				// find a row of interest
-				if(((String)((JSONObject)((JSONObject)this.resBindings.get(i)).get(compareColName)).get("value")).equals(keyValue)){
-					//	LocalLogger.logToStdErr(keyValue + " found!");
-
-					String[] line = new String[gatherCols.length +  1]; // we include the key in there as well.
-					line[0] = keyValue;
-					for(int j = 0; j < gatherCols.length; j += 1){
-						// add the columns
-
-						line[j+1] = ((String)((JSONObject)((JSONObject)this.resBindings.get(i)).get(gatherCols[j])).get("value"));
-					}
-					retval.add(line);	// make sure this is in the return set.
-				}
-			}
-			//	LocalLogger.logToStdErr("_____________________________");
-			return retval;
-		}catch (Exception e){ throw new IOException(e.getMessage());}
-	}
-	
 
 	/**
 	 * Get a results content type to be set in the HTTP header.
@@ -1043,7 +856,6 @@ LocalLogger.logToStdOut ("URL: " + url);
 		// fail and throw an exception if the value was not valid.
 		throw new Exception("Cannot get content type for query type " + resultType);
 	}
-	
 	
 	// handle results based on expected type
 	@SuppressWarnings("unchecked")

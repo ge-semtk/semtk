@@ -42,6 +42,7 @@ import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroup {
@@ -2296,11 +2297,11 @@ public class NodeGroup {
 	}
 	
 	
-	public String generateSparqlInsert(OntologyInfo oInfo) throws Exception {
-		return this.generateSparqlInsert(null, oInfo);
+	public String generateSparqlInsert(OntologyInfo oInfo, SparqlEndpointInterface endpoint) throws Exception {
+		return this.generateSparqlInsert(null, oInfo, endpoint);
 	}
 	
-	public String generateSparqlInsert(String sparqlIDSuffix, OntologyInfo oInfo) throws Exception {
+	public String generateSparqlInsert(String sparqlIDSuffix, OntologyInfo oInfo, SparqlEndpointInterface endpoint) throws Exception {
 		this.buildPrefixHash();
 		
 		String retval = "";
@@ -2310,7 +2311,7 @@ public class NodeGroup {
 		// get the where clause body
 		String whereBody = this.getInsertWhereBody(sparqlIDSuffix, oInfo);
 		
-		retval =  this.generateSparqlPrefix() + " INSERT {\n" + primaryBody + "} WHERE {" + whereBody + "}\n";
+		retval =  this.generateSparqlPrefix() + " INSERT { GRAPH <" + endpoint.getGraph() + "> {\n" + primaryBody + "} }\n WHERE {" + whereBody + "}\n";
 		
 		return retval;
 		
@@ -2323,7 +2324,7 @@ public class NodeGroup {
 	 * @return sparql insert statement
 	 * @throws Exception
 	 */
-	public static String generateCombinedSparqlInsert(ArrayList<NodeGroup> ngList, OntologyInfo oInfo) throws Exception {
+	public static String generateCombinedSparqlInsert(ArrayList<NodeGroup> ngList, OntologyInfo oInfo, SparqlEndpointInterface endpoint) throws Exception {
 		
 		HashMap<String, String> prefixHash = new HashMap<String, String>();
 		String totalInsertHead = "";
@@ -2345,11 +2346,10 @@ public class NodeGroup {
 				
 		}
 		
-		
 		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
 		//       this way, we only need to get it's prefixes. 
-		String query =  ng.generateSparqlPrefix() + " INSERT { " + totalInsertHead + " } WHERE { " + totalInsertWhere + " } ";
-		
+		String query =  ng.generateSparqlPrefix() + " INSERT { GRAPH <" + endpoint.getGraph() + "> {\n" + totalInsertHead + "} }\n WHERE {" + totalInsertWhere + " } ";
+
 		return query;
 	}
 

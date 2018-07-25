@@ -93,7 +93,7 @@ public class NodeGroupExecutorTest_IT {
 		insertNodeGroupToStore(sparqlGraphJson.getJson().toJSONString());
 		
 		// check number of triples before insert
-		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+		assertEquals(123, TestGraph.getNumTriples());	// get count before loading
 		
 		// do the insert (using nodegroup ID)
 		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, DATA);

@@ -93,11 +93,11 @@ public class StoreNodeGroupTest_IT {
 		templateSgJson.setSparqlConn(conn);
 		
 		// clear model and data graphs
-		GeneralResultSet resultSet = conn.getModelInterface(0).executeQueryAndBuildResultSet("clear all", SparqlResultTypes.CONFIRM);
+		GeneralResultSet resultSet = conn.getModelInterface(0).clearGraph();
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
-		resultSet = conn.getDataInterface(0).executeQueryAndBuildResultSet("clear all", SparqlResultTypes.CONFIRM);
+		resultSet = conn.getDataInterface(0).clearGraph();
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
