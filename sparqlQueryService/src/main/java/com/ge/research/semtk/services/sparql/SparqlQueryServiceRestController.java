@@ -392,12 +392,12 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
-			String query = SparqlToXUtils.genereateClearAllQuery();
-			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
+			sei.clearGraph();
+			resultSet = new SimpleResultSet(true);
+			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
-			resultSet = new SimpleResultSet();
-			resultSet.setSuccess(false);
+			resultSet = new SimpleResultSet(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearAll", e);
 			return resultSet.toJson();
 		}		
@@ -408,10 +408,7 @@ public class SparqlQueryServiceRestController {
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
     // We can't use a @RequestBody with a @RequestParam,
 	// So the SparqlAuthRequestBody is broken into individual string @RequestParams
-	
-	/**
-	 * Execute clear all query 
-	 */
+
 	@CrossOrigin
 	@RequestMapping(value="/uploadOwl", method= RequestMethod.POST)
 	public JSONObject uploadOwl(@RequestParam("serverAndPort") String serverAndPort, 
