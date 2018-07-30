@@ -302,7 +302,7 @@ public abstract class Utility {
 		try{
 			jsonObject = Utility.getJSONObjectFromFile(jsonFile);	
 		}catch (Exception e){
-			throw new Exception("Could not load JSON from file " + jsonFilePath);
+			throw new Exception("Could not load JSON from file " + jsonFilePath, e);
 		}
 		
 		return jsonObject;

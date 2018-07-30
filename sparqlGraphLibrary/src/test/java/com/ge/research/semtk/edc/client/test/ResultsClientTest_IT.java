@@ -281,7 +281,7 @@ public class ResultsClientTest_IT {
 			
 			
 		} finally {
-			//cleanup(client, jobId);
+			cleanup(client, jobId);
 		}
 	}
 	
@@ -444,7 +444,6 @@ public class ResultsClientTest_IT {
 		row.add("one");
 		row.add("two");
 		
-		boolean retrievedResultsAfterStoring = false;
 		try {			
 			Table table = new Table(cols, types, null);
 			table.addRow(row);
@@ -452,18 +451,15 @@ public class ResultsClientTest_IT {
 			
 			client.execStoreTableResults(jobId, table);
 			URL urls[] = client.execGetResults(jobId);				// this should succeed
-			retrievedResultsAfterStoring = true;
 			client.execDeleteJob(jobId);
 			urls = client.execGetResults(jobId); 	// this should throw an exception, because the results are deleted
+			
 			fail();  // expect it to not get here
 		} catch (Exception e) {
 			// success			
 		} 
 		
-		// confirm that it could retrieve results after storing
-		if(!retrievedResultsAfterStoring){
-			fail();	
-		}
+		
 	}
 
 	@Test
@@ -473,21 +469,26 @@ public class ResultsClientTest_IT {
 		// Happy path
 		File testFile = new File("src/test/resources/test.csv");
 		String jobId = "test_jobid_" + UUID.randomUUID();
-		final String fileName = "test.csv";
-		SimpleResultSet res = client.execStoreBinaryFile(jobId, testFile);
 		
-		String fileId = (String) res.getResult("fileId");
- 		
-		String fileContent = client.execReadBinaryFile(fileId);
+		try {
+			final String fileName = "test.csv";
+			SimpleResultSet res = client.execStoreBinaryFile(jobId, testFile);
+			
+			String fileId = (String) res.getResult("fileId");
+	 		
+			String fileContent = client.execReadBinaryFile(fileId);
+			
+			assertNotNull(fileContent);
+			
+			// check getting resultsURLs
+			Table urlTab = client.getResultsFiles(jobId);
+			assertEquals(1, urlTab.getNumRows());
+			assertEquals(fileName, urlTab.getCell(0, "name"));
+			urlTab.getCell(0, "fileId");
 		
-		assertNotNull(fileContent);
-		
-		// check getting resultsURLs
-		Table urlTab = client.getResultsFiles(jobId);
-		assertEquals(1, urlTab.getNumRows());
-		assertEquals(fileName, urlTab.getCell(0, "name"));
-		urlTab.getCell(0, "fileId");
-
+		} finally {
+			cleanup(client, jobId);
+		}
 
 	}
 	
@@ -516,8 +517,12 @@ public class ResultsClientTest_IT {
 	}
 
 
-	private void cleanup(ResultsClient client, String jobId) throws Exception {
-		client.execDeleteJob(jobId);
+	private void cleanup(ResultsClient client, String jobId) {
+		try {
+			client.execDeleteJob(jobId);
+		} catch (Exception e) {
+			System.err.println("cleanup failed: " + jobId);
+		}
 	}
 
 }
