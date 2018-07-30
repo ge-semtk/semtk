@@ -137,14 +137,14 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		try {
 			JSONArray responseArr = (JSONArray) resp;
 		
-			int msec = 0;
+			Long msec = (long) 0;
 			for(int i = 0; i < responseArr.size(); i++) {
 				JSONObject obj = (JSONObject) responseArr.get(i); 
 				String t = (String) obj.get("type");
 				if (t==null || t.isEmpty()) {
 					throw new Exception("missing 'type' field");
 				}
-				int millis = (int) obj.get("totalElapsedMillis");
+				Long millis = (Long) obj.get("totalElapsedMillis");
 				
 				msec += millis;
 			}
