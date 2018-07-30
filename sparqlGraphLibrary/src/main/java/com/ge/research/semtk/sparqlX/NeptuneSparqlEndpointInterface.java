@@ -117,8 +117,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		} else {
 			params.add(new BasicNameValuePair("query", query));
 		}
-		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
-		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
 
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
