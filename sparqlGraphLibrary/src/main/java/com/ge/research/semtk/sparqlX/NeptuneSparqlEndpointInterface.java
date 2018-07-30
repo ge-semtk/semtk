@@ -105,6 +105,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		httppost.addHeader("Accept", this.getContentType(resultType));
 	}
 	
+	@Override
 	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
