@@ -19,7 +19,6 @@
 
 package com.ge.research.semtk.sparqlX;
 
-import java.io.IOException;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
@@ -43,19 +42,17 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.auth.DigestScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.execchain.RetryExec;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -551,7 +548,7 @@ public abstract class SparqlEndpointInterface {
 	 */
 	protected JSONObject parseResponse(SparqlResultTypes resultType, String responseTxt) throws Exception {
 		
-		JSONObject resp = null;
+		Object responseObj = null;
 		
 		// handle empty text
 		if(responseTxt == null || responseTxt.trim().isEmpty()) {
@@ -560,13 +557,13 @@ public abstract class SparqlEndpointInterface {
 		
 		// parse with error handling
 		try {
-			resp = (JSONObject) JSONValue.parse(responseTxt);
+			responseObj = new JSONParser().parse(responseTxt);
 		} catch(Exception e) {
 			this.handleNonJSONResponse(responseTxt);
 		}
 
 		// handle empty JSON
-		if (resp == null) {
+		if (responseObj == null) {
 			this.handleNonJSONResponse(responseTxt);
 
 			return null;
@@ -574,7 +571,7 @@ public abstract class SparqlEndpointInterface {
 		} else {
 			
 			// Normal path: get results
-			JSONObject procResp = this.getResultsFromResponse(resp, resultType);
+			JSONObject procResp = this.getResultsFromResponse(responseObj, resultType);
 			return procResp;
 		}
 	}
@@ -861,18 +858,25 @@ public abstract class SparqlEndpointInterface {
 		throw new Exception("Cannot get content type for query type " + resultType);
 	}
 	
-	// handle results based on expected type
+	/**
+	 * 
+	 * @param responseObj - JSONObject or JSONArray
+	 * @param resultType
+	 * @return JSONObject with @table, @message, or a jsonld structure
+	 * @throws Exception
+	 */
 	@SuppressWarnings("unchecked")
-	protected JSONObject getResultsFromResponse(JSONObject resp, SparqlResultTypes resultType) throws Exception{
+	protected JSONObject getResultsFromResponse(Object responseObj, SparqlResultTypes resultType) throws Exception{
 		
 		JSONObject retval = null;		
-		this.response = resp;
 		
 		// check for a result type that creates a table.
 		// null is default assumption that one meant a tabular result.
 		if(resultType == SparqlResultTypes.TABLE) {
+			JSONObject resp = (JSONObject) responseObj;
+			this.response = resp;
 			this.resVars = this.getHeadVars(resp);
-			this.resBindings = this.getResultsBindings(resp);
+			this.resBindings = this.getResultsBindings((JSONObject) resp);
 			
 			// put on the results
 			retval = new JSONObject();
@@ -881,10 +885,10 @@ public abstract class SparqlEndpointInterface {
 		} else if (resultType == SparqlResultTypes.CONFIRM) {
 			
 			retval = new JSONObject();
-			retval.put(SimpleResultSet.MESSAGE_JSONKEY, this.getConfirmMessage(resp)); // @message
+			retval.put(SimpleResultSet.MESSAGE_JSONKEY, this.getConfirmMessage(responseObj)); // @message
 
-		} else if(resultType == SparqlResultTypes.GRAPH_JSONLD){
-			retval = new JSONObject(resp);
+		} else if(resultType == SparqlResultTypes.GRAPH_JSONLD) {
+			retval = new JSONObject((JSONObject) responseObj);
 		
 		} else{
 			throw new Exception("an unknown results type was passed to \"getResultsBasedOnExpectedType\". don't know how to handle type: " + resultType);
