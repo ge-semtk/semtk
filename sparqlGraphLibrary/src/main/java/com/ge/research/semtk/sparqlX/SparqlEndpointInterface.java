@@ -49,6 +49,7 @@ import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.execchain.RetryExec;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
@@ -94,6 +95,7 @@ public abstract class SparqlEndpointInterface {
 	private JSONObject response = null;
 	private JSONArray resVars = null;
 	private JSONArray resBindings = null;
+	
 	protected String userName = null;
 	protected String password = null;
 	protected String server = null;
@@ -202,6 +204,16 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public abstract void handleEmptyResponse() throws Exception;
 	
+	/**
+	 * Override in order to separate out DontRetryException from regular ones
+	 * and add in anyknown SemTK explanation
+	 * @param responseTxt
+	 * @throws Exception
+	 */
+	public void handleNonJSONResponse(String responseTxt) throws DontRetryException, Exception {
+		throw new Exception("Cannot parse query result into JSON: " + responseTxt);
+	}
+
 
 	/**
 	 * Get a default result type
@@ -368,17 +380,18 @@ public abstract class SparqlEndpointInterface {
 				if(this.userName !=null && this.password != null){
 					return executeQueryPost(query, resultType);
 				}else{
-//					if(resultType == SparqlResultTypes.CONFIRM){ 
-//						throw new Exception("Username and password are required to execute a query with resultType " + resultType.toString());
-//					}
 					return executeQueryPost(query, resultType);
 				}
+			} catch (DontRetryException e) {
+				LocalLogger.logToStdErr(e.getMessage());
+				throw e;
 			} catch (Exception e) {
 				if (tryCount >= MAX_QUERY_TRIES) {
 					LocalLogger.logToStdOut (String.format("SPARQL query failed after %d tries.  Giving up.", tryCount));
 					LocalLogger.logToStdErr(e.getMessage());
 					throw e;
-				} else {	// else unnecessary, but makes code easier to read
+					
+				} else {	
 					int sleepSec = 2 * tryCount;
 					// if we're overwhelming a server, really throttle
 					if (e.getMessage().contains("Address already in use: connect")) {
@@ -530,46 +543,37 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * Get explanations (header \n) of known triple store errors
-	 * @param responseTxt
-	 * @return
-	 */
-	protected String getResposeTextExplanation(String responseTxt) {
-		return "Non-JSON error was returned from SPARQL endpoint.\n";
-	}
-	
-	/**
-	 * Parse the response to JSON
+	 * Parse the response to JSON and send  for results parsing
 	 * @param resultType
 	 * @param responseTxt
 	 * @return
 	 * @throws Exception
 	 */
 	protected JSONObject parseResponse(SparqlResultTypes resultType, String responseTxt) throws Exception {
-		// parse json response
-		JSONObject resp;
 		
+		JSONObject resp = null;
+		
+		// handle empty text
 		if(responseTxt == null || responseTxt.trim().isEmpty()) {
 			this.handleEmptyResponse(); 
 		}
-				
+		
+		// parse with error handling
 		try {
 			resp = (JSONObject) JSONValue.parse(responseTxt);
-		} catch(Exception e){
-			throw new Exception("Cannot parse query result into JSON: " + responseTxt);
+		} catch(Exception e) {
+			this.handleNonJSONResponse(responseTxt);
 		}
 
+		// handle empty JSON
 		if (resp == null) {
-			// null response might be ok?
-			LocalLogger.logToStdErr("the response could not be transformed into json: " + responseTxt);
+			this.handleNonJSONResponse(responseTxt);
 
-			if(responseTxt.contains("Error")) {
-				throw new Exception(this.getResposeTextExplanation(responseTxt) + responseTxt); 
-			}
 			return null;
 			
 		} else {
-			// extract results object from non-null response
+			
+			// Normal path: get results
 			JSONObject procResp = this.getResultsFromResponse(resp, resultType);
 			return procResp;
 		}
@@ -647,7 +651,7 @@ public abstract class SparqlEndpointInterface {
 
 		//        String responseTxt = httpclient.execute(httpget, responseHandler);
 		HttpResponse response_http = httpclient.execute(targetHost, httpget, localcontext);
-		httpclient.close();
+		
 		HttpEntity entity = response_http.getEntity();
 		String responseTxt = EntityUtils.toString(entity, "UTF-8");
 
@@ -655,6 +659,7 @@ public abstract class SparqlEndpointInterface {
 		try {
 			return this.parseResponse(resultType, responseTxt);
 		} finally {
+			httpclient.close();
 			entity.getContent().close();
 		}
 	}
@@ -858,63 +863,97 @@ public abstract class SparqlEndpointInterface {
 	
 	// handle results based on expected type
 	@SuppressWarnings("unchecked")
-	private JSONObject getResultsFromResponse(JSONObject resp, SparqlResultTypes resultType) throws Exception{
+	protected JSONObject getResultsFromResponse(JSONObject resp, SparqlResultTypes resultType) throws Exception{
 		
 		JSONObject retval = null;		
 		this.response = resp;
-
+		
 		// check for a result type that creates a table.
 		// null is default assumption that one meant a tabular result.
-		if(resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM){
-			JSONObject head = (JSONObject)response.get("head");
-			if (head == null) {
-				throw new Exception("Sparql server did not return a 'head' object");
-			}
-			this.resVars = (JSONArray) head.get("vars");
-			if (this.resVars == null){
-				throw new Exception("Sparql server response 'head' did not include a 'vars' array of column names");
-			}
-			JSONObject results = (JSONObject) response.get("results");
-			if (results == null) {
-				throw new Exception("Sparql server did not return a 'results' object");
-			}
-			this.resBindings = (JSONArray) results.get("bindings");
-			if (this.resBindings == null){
-				throw new Exception("Sparql server response 'results' did not include a 'bindings' array of result rows");
-			}
+		if(resultType == SparqlResultTypes.TABLE) {
+			this.resVars = this.getHeadVars(resp);
+			this.resBindings = this.getResultsBindings(resp);
+			
+			// put on the results
+			retval = new JSONObject();
+			retval.put(TableResultSet.TABLE_JSONKEY, this.getTableJSON(this.resVars, this.resBindings));	// @table		
+			
+		} else if (resultType == SparqlResultTypes.CONFIRM) {
 			
 			retval = new JSONObject();
-			if(this.resBindings == null){
-				this.resBindings = new JSONArray();
-			}
-		
-			if(resultType == SparqlResultTypes.TABLE){
-				retval.put(TableResultSet.TABLE_JSONKEY, getTableJSONFromResponse(this.resVars, this.resBindings));	// @table		
-			}else{
-				retval.put(SimpleResultSet.MESSAGE_JSONKEY, getAuthMessageFromResponse(this.resBindings)); // @message
-			}
-			
-		}
-		else if(resultType == SparqlResultTypes.GRAPH_JSONLD){
+			retval.put(SimpleResultSet.MESSAGE_JSONKEY, this.getConfirmMessage(resp)); // @message
+
+		} else if(resultType == SparqlResultTypes.GRAPH_JSONLD){
 			retval = new JSONObject(resp);
-		}
-		else{
+		
+		} else{
 			throw new Exception("an unknown results type was passed to \"getResultsBasedOnExpectedType\". don't know how to handle type: " + resultType);
 		}
 		return retval;
 	}
 
+	/**
+	 * Get head.vars with some error checking
+	 * @param resp
+	 * @return
+	 * @throws Exception
+	 */
+	protected JSONArray getHeadVars(JSONObject resp) throws Exception {
+		// response.head
+		JSONObject head = (JSONObject)resp.get("head");
+		if (head == null) {
+			throw new Exception("Sparql server did not return a 'head' object");
+		}
+		
+		// response.head.vars
+		JSONArray vars = (JSONArray) head.get("vars");
+		if (vars == null){
+			throw new Exception("Sparql server response 'head' did not include a 'vars' array of column names");
+		}
+		return vars;
+	}
 	
 	/**
-	 * Parse an auth query confirmation.  The message will the first entry in the rows array.
-	 * @param rowsJsonArray
+	 * Get results.bindings with some error checking
+	 * @param resp
+	 * @return
+	 * @throws Exception
+	 */
+	protected JSONArray getResultsBindings(JSONObject resp) throws Exception {
+		// response.results
+		JSONObject results = (JSONObject) resp.get("results");
+		if (results == null) {
+			throw new Exception("Sparql server did not return a 'results' object");
+		}
+		
+		// response.results.bindings
+		JSONArray bindings = (JSONArray) results.get("bindings");
+		if (bindings == null){
+			throw new Exception("Sparql server response 'results' did not include a 'bindings' array of result rows");
+		}
+		return bindings;
+	}
+	
+	/**
+	 * Parse a confirm query return.  The message will the first entry in the rows array.
+	 * @param resp - an Object since it might be JSONObject or JSONArray
 	 * @return
 	 */
-	private static String getAuthMessageFromResponse(JSONArray rowsJsonArray){
+	protected String getConfirmMessage(Object resp) throws Exception {
+		
+		JSONArray bindings = getResultsBindings((JSONObject)resp);
+		
+		try {
+			JSONObject row0 = (JSONObject) bindings.get(0);
+			JSONObject callret0 = (JSONObject) row0.get("callret-0");
+			callret0.get("value");
+		} catch (Exception e) {
+			throw new DontRetryException("Error parsing CONFIRM return: expecting column 'callret-0'");
+		}
 		
 		String message = "";
-		for(int i = 0; i < rowsJsonArray.size(); i++){
-			JSONObject row = (JSONObject) rowsJsonArray.get(i); // e.g. {"callret-0":{"type":"literal","value":"Insert into <http:\/\/research.ge.com\/graph>, 1 (or less) triples -- done"}}
+		for(int i = 0; i < bindings.size(); i++){
+			JSONObject row = (JSONObject) bindings.get(i); // e.g. {"callret-0":{"type":"literal","value":"Insert into <http:\/\/research.ge.com\/graph>, 1 (or less) triples -- done"}}
 			JSONObject value;
 			String key, valueValue;
 			
@@ -954,7 +993,7 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception 
 	 */
-	private static JSONObject getTableJSONFromResponse(JSONArray colNamesJsonArray, JSONArray rowsJsonArray) throws Exception{
+	private JSONObject getTableJSON(JSONArray colNamesJsonArray, JSONArray rowsJsonArray) throws Exception{
 
 		String key, valueValue, valueType, valueDataType;
 		JSONObject jsonCell;

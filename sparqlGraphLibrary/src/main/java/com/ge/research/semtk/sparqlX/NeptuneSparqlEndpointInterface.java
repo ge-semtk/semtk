@@ -19,12 +19,14 @@
 package com.ge.research.semtk.sparqlX;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -131,11 +133,27 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	@Override
-	protected String getResposeTextExplanation(String responseTxt) {
-		if ( responseTxt.contains("Some known error from Neptune")) {
-			return "SemTk says: Some known error from Neptune.\n";
-		} else {
-			return "Non-JSON error was returned from Neptune.\n";
+	protected String getConfirmMessage(Object resp) throws Exception {
+		
+		try {
+			JSONArray responseArr = (JSONArray) resp;
+		
+			int msec = 0;
+			for(int i = 0; i < responseArr.size(); i++) {
+				JSONObject obj = (JSONObject) responseArr.get(i); 
+				String t = (String) obj.get("type");
+				if (t==null || t.isEmpty()) {
+					throw new Exception("missing 'type' field");
+				}
+				int millis = (int) obj.get("totalElapsedMillis");
+				
+				msec += millis;
+			}
+			return "Succeeded in " + msec + " millisec";
+			
+		} catch (Exception e) {
+			throw new Exception("Failed to parse Neptune confirm message", e);
 		}
 	}
+	
 }

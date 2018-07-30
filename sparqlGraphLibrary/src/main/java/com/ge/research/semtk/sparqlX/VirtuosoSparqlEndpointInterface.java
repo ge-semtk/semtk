@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.util.regex.Pattern;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -166,6 +168,23 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		throw new Exception("Virtuoso returning empty response (could be wrong username/password)");	
 	}
 
+	static Pattern pSP031 = Pattern.compile("Error SP031");
+	static Pattern pVirtuosoError = Pattern.compile("Virtuoso [0-9]+ Error ");
+	@Override
+	public void handleNonJSONResponse(String responseTxt) throws DontRetryException, Exception {
+		
+		// explain SP031
+		if ( pSP031.matcher(responseTxt).find()) {
+			throw new DontRetryException("SemTk says: Virtuoso query may be too large or complex.\n" + responseTxt);
+		
+		// avoid retrying if Virtuoso threw a recognizable error
+		} else if (pVirtuosoError.matcher(responseTxt).find()) {
+			throw new DontRetryException(responseTxt);
+			
+		} else {
+			throw new Exception("Virtuoso non-JSON response: " + responseTxt);
+		}
+	}
 	@Override
 	public SparqlEndpointInterface copy() throws Exception {
 		VirtuosoSparqlEndpointInterface retval = null;
@@ -175,17 +194,4 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		return (SparqlEndpointInterface) retval;
 	}
 	
-	/**
-	 * Get explanations of known triple store errors, given responseTxt contains "error"
-	 * @param responseTxt
-	 * @return
-	 */
-	@Override
-	protected String getResposeTextExplanation(String responseTxt) {
-		if ( responseTxt.contains("Error SP031")) {
-			return "SemTk says: Virtuoso query may be too large or complex.\n";
-		} else {
-			return "Non-JSON error was returned from Virtuoso.\n";
-		}
-	}
 }
