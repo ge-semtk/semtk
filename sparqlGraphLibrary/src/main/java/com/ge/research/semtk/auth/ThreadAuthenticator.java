@@ -1,14 +1,17 @@
 package com.ge.research.semtk.auth;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 
 public class ThreadAuthenticator {
 	public static final String ANONYMOUS = "anonymous";
+	public static final String ADMIN = "admin";
+
 	public static final String USERNAME_KEY = "user_name";
 	
-	private static boolean admin = false;
+	private static int admin = 0;
 	private static ThreadLocal<HeaderTable> threadHeaderTable = null;
 	
 	/**
@@ -21,12 +24,23 @@ public class ThreadAuthenticator {
 		threadHeaderTable.set(headerTable);
 	}
 	
+	public static void authenticateThisThread(String userName) {
+		HeaderTable tab = new HeaderTable();
+		ArrayList<String> vals = new ArrayList<String>();
+		vals.add(userName);
+		tab.put(ThreadAuthenticator.USERNAME_KEY, vals);
+		ThreadAuthenticator.authenticateThisThread(tab);
+	}
+	
+	/**
+	 * Allows isAdmin() to return true ONCE before resetting
+	 */
 	public static void setAdmin() {
-		admin = true;
+		admin = 1;
 	}
 	
 	public static boolean isAdmin() {
-		return admin;
+		return admin-- > 0;
 	}
 	/**
 	 * Get username on this thread
@@ -64,4 +78,5 @@ public class ThreadAuthenticator {
 			return threadHeaderTable.get();
 		}
 	}
+	
 }

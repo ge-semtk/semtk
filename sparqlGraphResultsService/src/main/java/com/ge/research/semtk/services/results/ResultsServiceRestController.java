@@ -28,8 +28,6 @@ package com.ge.research.semtk.services.results;
  * What is the best way to use properties in this situation.
  */
 
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
