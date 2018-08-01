@@ -42,6 +42,7 @@ import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -1287,7 +1288,14 @@ public class ImportSpecHandler {
 				String sample = ngItemType.getSampleValue();
 				
 				if (ngItemType == XSDSupportedType.NODE_URI && mapping.getIsEnum()) {
-					sample = "enum";
+					try {
+						// if it's an enum, try to get the local fragment of the first legal value
+						String uriName = this.ng.getNode(mapping.getImportNodeIndex()).getFullUriName();
+						String enumVal = this.oInfo.getEnumerationStrings(uriName).get(0);
+						sample = new OntologyName(enumVal).getLocalName();
+					} catch (Exception e) {
+						sample = "enum";
+					}
 				}
 				
 				// conflicts change to strings

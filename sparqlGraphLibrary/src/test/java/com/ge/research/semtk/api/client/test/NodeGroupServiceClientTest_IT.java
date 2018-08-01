@@ -281,7 +281,7 @@ public class NodeGroupServiceClientTest_IT {
 			
 			String csv = ngServiceClient.getSampleIngestionCSV(sgJson);
 			assertTrue(csv.contains("birthday,color,battery,cell"));
-			assertTrue(csv.contains("2017-03-23T10:03:16,enum,string,string"));
+			assertTrue(csv.contains("2017-03-23T10:03:16,blue,string,string"));
 
 		}
 		
