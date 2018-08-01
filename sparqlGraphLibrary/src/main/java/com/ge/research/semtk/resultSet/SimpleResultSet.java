@@ -93,6 +93,10 @@ public class SimpleResultSet extends GeneralResultSet{
 		this.resultsContents.put(name, jObj);
 	}
 	
+	public void addResult(String name, String [] value) {
+		this.addResultStringArray(name, value);
+	}
+	
 	/**
 	 * 
 	 * @param name
@@ -140,9 +144,9 @@ public class SimpleResultSet extends GeneralResultSet{
 	}
 	
 	public String [] getResultStringArray(String name) throws Exception {
-		JSONObject arr = null;
+		JSONArray arr = null;
 		if (this.resultsContents.containsKey(name)) {
-			arr = (JSONObject) this.resultsContents.get(name);
+			arr = (JSONArray) this.resultsContents.get(name);
 		} else {
 			throw new Exception(String.format("Can't find result field '%s'", name));
 		}

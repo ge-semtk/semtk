@@ -19,6 +19,13 @@ package com.ge.research.semtk.load.utility;
 
 import java.util.ArrayList;
 
+import com.ge.research.semtk.belmont.XSDSupportedType;
+
+/**
+ * One row of items mapping to a particular item in the nodegroup
+ * @author 200001934
+ *
+ */
 public class ImportMapping {
 	private int importNodeIndex = -1;
 	private int propItemIndex = -1;
@@ -130,4 +137,5 @@ public class ImportMapping {
 		// build the return
 		return ret.toString();
 	}
+
 }

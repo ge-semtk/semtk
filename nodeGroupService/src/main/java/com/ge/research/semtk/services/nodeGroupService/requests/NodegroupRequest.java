@@ -20,8 +20,14 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class NodegroupRequest {
 
+	@ApiModelProperty(
+			value = "jsonRenderedNodeGroup",
+			required = true,
+			example = "{ complex json }")	
 	private String jsonRenderedNodeGroup;
 	
 	/**

@@ -89,6 +89,46 @@ public class NodeGroupServiceRestClient extends RestClient {
 		return new SparqlGraphJson(retval.getResultJSON("nodegroup"));
 	}
 	
+	public String[] getIngestionColumns(SparqlGraphJson sgJson) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint("nodeGroup/getIngestionColumns");
+		
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgJson.toJson().toJSONString());
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+		}
+
+		return retval.getResultStringArray("columnNames");
+	}
+	
+	public String getSampleIngestionCSV(SparqlGraphJson sgJson) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint("nodeGroup/getSampleIngestionCSV");
+		
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgJson.toJson().toJSONString());
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+		}
+
+		return retval.getResult("sampleCSV");
+	}
+	
 	public String[] execGetReturnedSparqlIds(SparqlGraphJson sgJson) throws Exception{
 		TableResultSet retval = null;
 		

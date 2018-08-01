@@ -46,6 +46,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 public class NodeGroupServiceClientTest_IT {
@@ -254,6 +255,34 @@ public class NodeGroupServiceClientTest_IT {
 				assertTrue(e.getMessage().contains("DoesnExist"));
 
 			}
+		}
+		
+		@Test
+		public void getImportColumns() throws Exception{				
+			
+			// get a nodegroup
+			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			
+			String colNames[] = ngServiceClient.getIngestionColumns(sgJson);
+			List<String> cols = Arrays.asList(colNames);
+			assertTrue(cols.contains("birthday"));
+			assertTrue(cols.contains("color"));
+			assertTrue(cols.contains("battery"));
+			assertTrue(cols.contains("cell"));
+
+		}
+		
+		@Test
+		public void getSampleImportCSV() throws Exception{				
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			// get a nodegroup
+			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			
+			String csv = ngServiceClient.getSampleIngestionCSV(sgJson);
+			assertTrue(csv.contains("birthday,color,battery,cell"));
+			assertTrue(csv.contains("2017-03-23T10:03:16,enum,string,string"));
+
 		}
 		
 	}

@@ -63,7 +63,8 @@ public class ImportSpecHandler {
 	
 	JSONObject importspec = null; 
 	
-	JSONObject nodegroupJson = null;      
+	JSONObject nodegroupJson = null;    
+	NodeGroup ng = null;
 	HashMap<Integer, JSONObject> lookupNodegroupsJson = new HashMap<Integer, JSONObject>();       // cache of pruned nodegroups ready for lookup
 	HashMap<Integer, String>     lookupMode = new HashMap<Integer, String>();
 	HashMap<Integer, Long>    	 lookupResultCount = new HashMap<Integer, Long>();                // number of URI's in the triple-store to choose from
@@ -90,8 +91,8 @@ public class ImportSpecHandler {
 		this.importspec = importSpecJson; 
 		
 		// reset the nodegroup and store as json (for efficient duplication)
-		NodeGroup ng = NodeGroup.getInstanceFromJson(ngJson);
-		ng.reset();
+		this.ng = NodeGroup.getInstanceFromJson(ngJson);
+		this.ng.reset();
 		this.nodegroupJson = ng.toJson();
 		
 		this.oInfo = oInfo;
@@ -1250,5 +1251,66 @@ public class ImportSpecHandler {
 		}
 		
 		return input;
+	}
+
+	public String getSampleIngestionCSV() {
+		StringBuilder ret = new StringBuilder();
+		String colNames[] = this.getColNamesUsed();
+		HashMap<Integer, String> sampleHash = this.getColumnSampleValues();
+		ret.append(String.join(",", colNames));
+		ret.append("\n");
+		
+		String delim = "";
+		for (String colName : colNames) {
+			Integer colIndex = this.colNameToIndexHash.get(colName);
+			
+			ret.append(delim + sampleHash.get(colIndex));
+			
+			delim = ",";
+		}
+		
+		return ret.toString();
+		
+	}
+	
+	
+	private HashMap<Integer, String> getColumnSampleValues() {
+		HashMap<Integer, String> ret = new HashMap<Integer, String>();
+		
+		for (ImportMapping mapping : this.importMappings) {
+			ArrayList<MappingItem> items = mapping.getItemList();
+			
+			// if it is a single column mapping with no transforms, we can guess type
+			if (items.size() == 1 && items.get(0).isColumnMapping() && items.get(0).getTransformList() == null) {
+				XSDSupportedType ngItemType = this.getNodegroupItemType(mapping);
+				Integer colIndex = items.get(0).getColumnIndex();
+				String sample = ngItemType.getSampleValue();
+				
+				if (ngItemType == XSDSupportedType.NODE_URI && mapping.getIsEnum()) {
+					sample = "enum";
+				}
+				
+				// conflicts change to strings
+				if (ret.containsKey(colIndex) && !ret.get(colIndex).equals(sample)) {
+					ret.put(colIndex, XSDSupportedType.STRING.getSampleValue());
+				} else {
+					ret.put(colIndex, sample);
+				}
+			}  
+		}
+		return ret;
+	}
+	
+	private XSDSupportedType getNodegroupItemType(ImportMapping map) {
+		XSDSupportedType ret = null;
+		
+		if (map.isNode()) {
+			ret = XSDSupportedType.NODE_URI;
+		} else {
+			ret = this.ng.getNode(map.getImportNodeIndex()).getPropertyItem(map.getPropItemIndex()).getValueType();
+		
+		}
+		
+		return ret;
 	}
 }

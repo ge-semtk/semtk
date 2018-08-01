@@ -34,6 +34,7 @@ import com.ge.research.semtk.belmont.NoValidSparqlException;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
@@ -45,6 +46,8 @@ import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlI
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdTupleRequest;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdRequest;
 import com.ge.research.semtk.utility.LocalLogger;
+
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/nodeGroup")
@@ -77,6 +80,10 @@ public class NodeGroupServiceRestController {
 	 *       	SparqlQuery - the SPARQL
 	 *          QueryType - same "SELECT" "COUNT_ALL" "DELETE" "FILTER" "ASK" "CONSTRUCT"
 	 */
+	@ApiOperation(
+			value="Generate a SELECT query",
+			notes="Generic query with no special options."
+			)
 	@CrossOrigin
 	@RequestMapping(value="/generateSelect", method=RequestMethod.POST)
 	public JSONObject generateSelectSparql(@RequestBody NodegroupRequest requestBody){
@@ -101,6 +108,10 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 	
+	@ApiOperation(
+			value="Generate a COUNT query",
+			notes="Generic query with no special options"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/generateCountAll", method=RequestMethod.POST)
 	public JSONObject generateCountAllSparql(@RequestBody NodegroupRequest requestBody){
@@ -124,7 +135,9 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}	
-	
+	@ApiOperation(
+			value="Generate DELETE query"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/generateDelete", method=RequestMethod.POST)
 	public JSONObject generateDeleteSparql(@RequestBody NodegroupRequest requestBody){
@@ -148,7 +161,10 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}
-	
+	@ApiOperation(
+			value="Generate filter query",
+			notes="Returns all values for a given sparqlId"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/generateFilter", method=RequestMethod.POST)
 	public JSONObject generateFilterSparql(@RequestBody NodegroupSparqlIdRequest requestBody){
@@ -176,7 +192,9 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}
-	
+	@ApiOperation(
+			value="Generate ASK query"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/generateAsk", method=RequestMethod.POST)
 	public JSONObject generateAskSparql(@RequestBody NodegroupRequest requestBody){
@@ -248,7 +266,10 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}
-	
+	@ApiOperation(
+			value="Get table of runtime constraints",
+			notes="Returns table of: \"valueId\", \"itemType\", \"valueType\""
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraints", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraints(@RequestBody NodegroupRequest requestBody){
@@ -272,7 +293,9 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();		
 	}
-	
+	@ApiOperation(
+			value="Set isReturned for a sparqlID"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/setIsReturned", method=RequestMethod.POST)
 	public JSONObject setReturnsBySparqlId(@RequestBody NodegroupSparqlIdReturnedRequest requestBody){
@@ -305,7 +328,9 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();		
 	}
-	
+	@ApiOperation(
+			value="Change sparqlIds in nodegroup"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/changeSparqlIds", method=RequestMethod.POST)
 	public JSONObject renameItems(@RequestBody NodegroupSparqlIdTupleRequest requestBody){
@@ -343,6 +368,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	@ApiOperation(
+			value="Get list of nodegroup returns"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getReturnedSparqlIds", method=RequestMethod.POST)
 	public JSONObject getReturns(@RequestBody NodegroupRequest requestBody){
@@ -372,6 +400,61 @@ public class NodeGroupServiceRestController {
 
 		return retval.toJson();		
 	}
+	
+	@ApiOperation(
+			value="Get columns required by import spec",
+			notes="Returns \"columnNames\" array"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getIngestionColumns", method=RequestMethod.POST)
+	public JSONObject  getIngestionColumns(@RequestBody NodegroupRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson sgJson = requestBody.getSparqlGraphJson();
+			ImportSpecHandler handler = sgJson.getImportSpec();
+			String colNames[] = handler.getColNamesUsed();
+			
+			retval.addResult("columnNames", colNames);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getIngestionColumns", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Get a sample CSV that could be ingested",
+			notes="Returns \"sampleCSV\" string"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getSampleIngestionCSV", method=RequestMethod.POST)
+	public JSONObject getSampleIngestionCSV(@RequestBody NodegroupRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson sgJson = requestBody.getSparqlGraphJson();
+			ImportSpecHandler handler = sgJson.getImportSpec();
+			String sampleCSV = handler.getSampleIngestionCSV();
+			
+			retval.addResult("sampleCSV", sampleCSV);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getSampleIngestionCSV", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
 	
 	/*
 	 * SPARQL can't be generated. 

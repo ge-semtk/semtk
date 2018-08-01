@@ -39,6 +39,7 @@ public class MappingItem {
 	String textVal = null;
 	Transform transformList[] = null;
 	
+
 	// copy deep enough for import spec.   Transforms don't need deep copying
 	public static MappingItem importSpecCopy(MappingItem other) {
 		MappingItem ret = new MappingItem();
@@ -64,6 +65,9 @@ public class MappingItem {
 		this.columnIndex = columnIndex;
 	}
 
+	public Transform[] getTransformList() {
+		return transformList;
+	}
 	/**
 	 * Create from JSON with lots of help from hash tables to make this super-efficient
 	 * @param mapItemJson
