@@ -7,12 +7,11 @@ import java.util.List;
 
 public class ThreadAuthenticator {
 	public static final String ANONYMOUS = "anonymous";
-	public static final String ADMIN = "admin";
-
+	
 	public static final String USERNAME_KEY = "user_name";
 	
-	private static int admin = 0;
 	private static ThreadLocal<HeaderTable> threadHeaderTable = null;
+	private static ThreadLocal<Boolean> jobAdmin = null;
 	
 	/**
 	 * Authenticate this thread with headers
@@ -22,6 +21,9 @@ public class ThreadAuthenticator {
 		
 		threadHeaderTable = new ThreadLocal<>();
 		threadHeaderTable.set(headerTable);
+		
+		jobAdmin = new ThreadLocal<Boolean>();
+		jobAdmin.set(false);
 	}
 	
 	public static void authenticateThisThread(String userName) {
@@ -32,16 +34,35 @@ public class ThreadAuthenticator {
 		ThreadAuthenticator.authenticateThisThread(tab);
 	}
 	
-	/**
-	 * Allows isAdmin() to return true ONCE before resetting
-	 */
-	public static void setAdmin() {
-		admin = 1;
+	public static void unAuthenticateThisThread() {
+		threadHeaderTable = null;
+		jobAdmin = null;
 	}
 	
-	public static boolean isAdmin() {
-		return admin-- > 0;
+	/**
+	 * Makes this thread admin.
+	 * 
+	 *    // When you're not entirely sure the thread should alwasy be ADMIN, best usage is:
+	 * 	  setAdmin(true);
+	 *    try {
+	 *        do stuff;
+	 *    } finally {
+	 *    	setAdmin(false);
+	 *    }
+	 */
+	public static void setJobAdmin(boolean a) {
+		jobAdmin = new ThreadLocal<Boolean>();
+		jobAdmin.set(a);
 	}
+	
+	public static boolean isJobAdmin() {
+		if (jobAdmin != null) {
+			return jobAdmin.get();
+		} else {
+			return false;
+		}
+	}
+	
 	/**
 	 * Get username on this thread
 	 * @return

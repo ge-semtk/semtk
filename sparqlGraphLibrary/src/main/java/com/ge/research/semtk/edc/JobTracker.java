@@ -88,22 +88,25 @@ public class JobTracker {
 	 * @return
 	 * @throws Exception if jobId doesn't exist or job has no percentComplete
 	 */
-	public int getJobPercentComplete(String jobId) throws Exception {	    
+	public int getJobPercentComplete(String jobId) throws AuthorizationException, Exception {	    
 		   
 	    String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?Job ?percentComplete where {  \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
+	    	"	select distinct ?Job ?percentComplete ?userName where {  \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 	    	"	   ?Job job:percentComplete ?percentComplete .  \n" +
+	    	"	   ?Job job:userName ?userName .  \n" +
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 	    
 	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
+	    
+	    this.checkEndpointUserNames(jobId);
 	    
 	    if (trList.length > 1) {
 	    	LocalLogger.logToStdErr("getJobPercentComplete found multiple percentComplete entries:\n%s" + endpoint.getResponse());
@@ -132,11 +135,11 @@ public class JobTracker {
 	 * @throws Exception
 	 */
 	
-	public void setJobPercentComplete(String jobId, int percentComplete) throws Exception {	    
+	public void setJobPercentComplete(String jobId, int percentComplete) throws AuthorizationException, Exception {	    
 		setJobPercentComplete(jobId, percentComplete, "");
 	}
 	
-	public void setJobPercentComplete(String jobId, int percentComplete, String message) throws Exception {	    
+	public void setJobPercentComplete(String jobId, int percentComplete, String message) throws AuthorizationException, Exception {	    
 	   
 	    if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
@@ -185,7 +188,7 @@ public class JobTracker {
 	 * @param jobId
 	 * @param statusMessage
 	 */
-	public void setJobFailure(String jobId, String statusMessage) throws Exception {
+	public void setJobFailure(String jobId, String statusMessage) throws AuthorizationException, Exception {
 		
 		if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
@@ -222,7 +225,7 @@ public class JobTracker {
 	    }
 	}
 	
-	public boolean jobSucceeded(String jobId) throws Exception {
+	public boolean jobSucceeded(String jobId) throws AuthorizationException, Exception {
 		return this.getJobStatus(jobId).equals(STATUS_SUCCESS);
 	}
 	
@@ -232,20 +235,23 @@ public class JobTracker {
 	 * @return InProgress, Success, Failure
 	 * @throws Exception if jobId can't be found or has not status
 	 */
-	public String getJobStatus(String jobId) throws Exception {
+	public String getJobStatus(String jobId) throws AuthorizationException, Exception {
 		String query = String.format("  \n" +
 				"prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
-				"	select distinct ?status where {  \n" +
+				"	select distinct ?status ?userName where {  \n" +
 				"	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:status ?status .  \n" +
+				"	   ?Job job:userName ?userName .  \n" +
 				"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
 		endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 
+		this.checkEndpointUserNames(jobId);
+		
 		String trList[] = endpoint.getStringResultsColumn("status");
 
 		if (trList.length > 1) {
@@ -267,19 +273,22 @@ public class JobTracker {
 	 * @return message string
 	 * @throws Exception if jobId can't be found 
 	 */
-	public String getJobStatusMessage(String jobId) throws Exception {
+	public String getJobStatusMessage(String jobId) throws AuthorizationException, Exception {
+		this.checkJobExistAndAuth(jobId);
 		String query = String.format("  \n" +
 				"prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
-				"	select distinct ?statusMessage where {  \n" +
+				"	select distinct ?statusMessage ?userName where {  \n" +
 				"	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:statusMessage ?statusMessage .  \n" +
-				"	}",
+				"	   ?Job job:userName ?userName .  \n" +
+		    	"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
 		endpoint.executeQuery(query, SparqlResultTypes.TABLE);
+		this.checkEndpointUserNames(jobId);
 
 		String trList[] = endpoint.getStringResultsColumn("statusMessage");
 
@@ -302,11 +311,11 @@ public class JobTracker {
 	 * @param jobId
 	 * @throws Exception
 	 */
-	public void setJobSuccess(String jobId) throws Exception {
+	public void setJobSuccess(String jobId) throws AuthorizationException, Exception {
 		setJobSuccess(jobId, "");
 	}
 		
-	public void setJobSuccess(String jobId, String statusMessage) throws Exception {
+	public void setJobSuccess(String jobId, String statusMessage) throws AuthorizationException, Exception {
 		
 		if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
@@ -351,7 +360,7 @@ public class JobTracker {
 	 * @param fullResultsURL
 	 * @throws Exception
 	 */
-	public void setJobResultsURL(String jobId, URL fullResultsURL) throws Exception {
+	public void setJobResultsURL(String jobId, URL fullResultsURL) throws AuthorizationException, Exception {
 		
 		if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
@@ -406,31 +415,30 @@ public class JobTracker {
 	 * @return URL which could be null if none exist
 	 * @throws Exception if jobId can't be found full URL is malformed or multiples exist, etc.
 	 */
-	public URL getOptionalFullResultsURL(String jobId) throws Exception {	 
+	public URL getOptionalFullResultsURL(String jobId) throws AuthorizationException, Exception {	 
+		
 		String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?fullUrl where {  \n" +
+	    	"	select distinct ?fullUrl ?userName where {  \n" +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:fullResultsURL ?URL.  \n" +
-	    	"      ?URL job:full ?fullUrl . \n" +
+			"	   ?Job job:userName ?userName .  \n" +
+			"      ?URL job:full ?fullUrl . \n" +
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-	    
+		this.checkEndpointUserNames(jobId);
+
 	    String trList[] = endpoint.getStringResultsColumn("fullUrl");
 	    
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full results URL entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
-	    	if (! this.jobExists(jobId) ) {
-	    		throw new Exception(String.format("Can't find Job %s", jobId));
-	    	} else {
-	    		return null;
-	    	}
+	    	return null;
 	    } else if (trList[0].equals("")) {
     		throw new Exception(String.format("Empty full results URL for Job %s", jobId));
 	    } else {
@@ -444,7 +452,7 @@ public class JobTracker {
 	 * @return
 	 * @throws Exception unless exactly one properly formed full URL is found
 	 */
-	public URL getFullResultsURL(String jobId) throws Exception {	 
+	public URL getFullResultsURL(String jobId) throws AuthorizationException, Exception {	 
 		URL ret = this.getOptionalFullResultsURL(jobId);
 		if (ret == null) {
 			throw new Exception(String.format("Can't find full URL for Job %s",  jobId));
@@ -458,21 +466,23 @@ public class JobTracker {
 	 * @return URL which could be null
 	 * @throws Exception if jobID can't be found or it doesn't have exactly one sample URL
 	 */
-	public URL getSampleResultsURL(String jobId) throws Exception {	 
+	public URL getSampleResultsURL(String jobId) throws AuthorizationException, Exception {	 
 		String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?sampleUrl where {  \n" +
+	    	"	select distinct ?sampleUrl ?userName where {  \n" +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:sampleResultsURL ?URL.  \n" +
+			"	   ?Job job:userName ?userName .  \n" +
 	    	"      ?URL job:full ?sampleUrl . \n" +
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-	    
+		this.checkEndpointUserNames(jobId);
+
 	    String trList[] = endpoint.getStringResultsColumn("sampleUrl");
 	    
 	    if (trList.length > 1) {
@@ -481,7 +491,7 @@ public class JobTracker {
 	    	if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
-	    		throw new Exception(String.format("Can't find sample URL for Job %s",  jobId));
+		    	throw new Exception(String.format("Can't find sample URL for Job %s",  jobId));
 	    	}
 	    } else if (trList[0].equals("")) {
 	    	return null;
@@ -546,7 +556,7 @@ public class JobTracker {
 	    }
 	}
 
-	public void setJobName(String jobId, String name) throws Exception {
+	public void setJobName(String jobId, String name) throws AuthorizationException, Exception {
 		if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
 	    }
@@ -573,7 +583,7 @@ public class JobTracker {
 	    }
 
 	}
-	public void addBinaryFile(String jobId, String fileId, String filename, String path) throws Exception {
+	public void addBinaryFile(String jobId, String fileId, String filename, String path) throws AuthorizationException, Exception {
 		if (! this.jobExists(jobId)) {
 	    	this.createJob(jobId);
 	    }
@@ -610,8 +620,10 @@ public class JobTracker {
 	 * @param jobId
 	 * @return
 	 * @throws Exception
+	 * @throws AuthorizationException, Exception
 	 */
-	public JobFileInfo getBinaryFile(String fileId) throws Exception {
+	public JobFileInfo getBinaryFile(String fileId) throws AuthorizationException, Exception {
+		
 		// get nodegroup
 		JSONObject jObj = Utility.getResourceAsJson(this, "/nodegroups/job_get_file.json");
 		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
@@ -641,6 +653,8 @@ public class JobTracker {
 		ret.setFileName(table.getCell(0, "filename"));
 		ret.setUserName(table.getCell(0, "userName"));
 		ret.setPath(table.getCell(0, "path"));
+		
+		AuthorizationManager.throwExceptionIfNotJobOwner(ret.getUserName(), "fileId=" + fileId);
 		return ret;
 	}
 	
@@ -657,7 +671,7 @@ public class JobTracker {
 		NodeGroup ng = sgj.getNodeGroup();
 		
 		// set constraint unless administrator
-		if (! ThreadAuthenticator.isAdmin()) {
+		if (!AuthorizationManager.threadIsJobAdmin()) {
 			PropertyItem prop = ng.getPropertyItemBySparqlID("userName");
 			ArrayList<String> valList = new ArrayList<String>();
 			valList.add(ThreadAuthenticator.getThreadUserName());
@@ -691,7 +705,7 @@ public class JobTracker {
 	// PEC TODO
 	// next two functions should have a TableResultsStorage so they can do a fullDelete on the jobId
 	// DeleteThread could then clean up any leftover files ??
-	public void deleteJobsAndFiles(Date boundaryDate) throws Exception {
+	public void deleteJobsAndFiles(Date boundaryDate) throws AuthorizationException, Exception {
 		this.deleteJobsAndFiles(boundaryDate, null);
 	}
 	
@@ -701,7 +715,8 @@ public class JobTracker {
 	 * @param trstore - may be null
 	 * @throws Exception
 	 */
-	public void deleteJobsAndFiles(Date boundaryDate, TableResultsStorage trstore) throws Exception {
+	public void deleteJobsAndFiles(Date boundaryDate, TableResultsStorage trstore) throws AuthorizationException, Exception {
+		AuthorizationManager.throwExceptionIfNotJobAdmin();
 		
 		// --- delete binary files --- 
 		SparqlGraphJson sgjGetPaths = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_get_file_info.json"));
@@ -778,11 +793,11 @@ public class JobTracker {
 	 * @param boundaryDate
 	 * @throws Exception
 	 */
-	public void deleteJob(String jobId) throws Exception {
+	public void deleteJob(String jobId) throws AuthorizationException, Exception {
 		this.deleteJob(jobId, null);
 	}
 
-	public void deleteJob(String jobId, TableResultsStorage trstore) throws Exception {
+	public void deleteJob(String jobId, TableResultsStorage trstore) throws AuthorizationException, Exception {
 		
 		// delete binary files
 		ArrayList<JobFileInfo> fileInfoList = this.getJobBinaryFiles(jobId);
@@ -808,6 +823,7 @@ public class JobTracker {
 			}
 		}
 
+		this.checkJobAuthIfExists(jobId);
 		
 		// get job deletion nodegroup
 		SparqlGraphJson sgjJobDeletion = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_deletion.json"));
@@ -826,7 +842,7 @@ public class JobTracker {
 		
 	}
 	
-	public ArrayList<JobFileInfo> getJobBinaryFiles(String jobId) throws Exception {
+	public ArrayList<JobFileInfo> getJobBinaryFiles(String jobId) throws AuthorizationException, Exception {
 		ArrayList<JobFileInfo> ret = new ArrayList<JobFileInfo>();
 		
 		// get nodegroup
@@ -851,6 +867,7 @@ public class JobTracker {
 			info.setFileName(pathTable.getCell(i, "filename"));
 			info.setPath(pathTable.getCell(i, "path"));
 			info.setUserName(pathTable.getCell(i, "userName"));
+			AuthorizationManager.throwExceptionIfNotJobOwner(info.getUserName(), "fileId="+info.getFileId());
 			ret.add(info);
 		}
 		
@@ -863,7 +880,9 @@ public class JobTracker {
 	 * @return
 	 * @throws Exception
 	 */
-	public ArrayList<URL> getResultsUrls(Date boundaryDate) throws Exception {
+	public ArrayList<URL> getResultsUrls(Date boundaryDate) throws AuthorizationException, Exception {
+		AuthorizationManager.throwExceptionIfNotJobAdmin();
+
 		ArrayList<URL> ret = new ArrayList<URL>();
 		
 		// get nodegroup
@@ -907,7 +926,8 @@ public class JobTracker {
 	 * @return
 	 * @throws Exception - multiple rows of results, REST errors
 	 */
-	public URL[] getOptionalResultsUrls(String jobId) throws Exception {
+	public URL[] getOptionalResultsUrls(String jobId) throws AuthorizationException, Exception {
+		this.jobExists(jobId);
 		URL ret[] = new URL[2];
 		
 		// get nodegroup
@@ -929,17 +949,46 @@ public class JobTracker {
 			ret[0] = null;
 			ret[1] = null;
 
-		} else if (urlTable.getNumRows() > 1) {
-			throw new Exception ("Job has multiple results URLs: " + jobId);
-			
 		} else {
-			String sample = urlTable.getCell(0, "sampleResultsURL");
-			String full = urlTable.getCell(0, "fullResultsURL");
-			ret[0] = sample.isEmpty() ? null : new URL(sample);
-			ret[1] = full.isEmpty() ? null : new URL(full);
+			String user = urlTable.getCell(0, "userName");
+			AuthorizationManager.throwExceptionIfNotJobOwner(user, "jobId=" + jobId);   
+			
+			if (urlTable.getNumRows() > 1) {
+				throw new Exception ("Job has multiple results URLs: " + jobId);
+
+			} else {
+				String sample = urlTable.getCell(0, "sampleResultsURL");
+				String full = urlTable.getCell(0, "fullResultsURL");
+				ret[0] = sample.isEmpty() ? null : new URL(sample);
+				ret[1] = full.isEmpty() ? null : new URL(full);
+			}
 		}
 		
 		return ret;
+	}
+	
+	private void checkJobExistAndAuth(String jobId) throws AuthorizationException, Exception {
+		if (!this.jobExists(jobId)) {
+			throw new Exception("Job does not exsit: " + jobId);
+		}
+	}
+	private void checkJobAuthIfExists(String jobId) throws AuthorizationException, Exception {
+		this.jobExists(jobId);
+	}
+	/**
+	 * Make sure every row returned from previous query has an authorized userName
+	 * @param jobId
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	private void checkEndpointUserNames(String jobId) throws AuthorizationException, Exception {
+		// security
+	    String userList[] = this.endpoint.getStringResultsColumn("userName");
+	    if (userList.length > 0) {
+	    	for (String user : userList) {
+	    		AuthorizationManager.throwExceptionIfNotJobOwner(user, "jobId=" + jobId);
+	    	}
+	    }
 	}
 	
 	/**
@@ -974,7 +1023,7 @@ public class JobTracker {
 	    } else if (rows == 1) {
 	    	// is user authorized
 	    	String jobUserName = jobTable.getCell(0, "userName");
-	    	AuthorizationManager.checkJobOwnership(jobUserName, "job " + jobId);
+	    	AuthorizationManager.throwExceptionIfNotJobOwner(jobUserName, "job " + jobId);
 	    	
 	    	// yes: one job and authorized
 	    	return true;
@@ -993,7 +1042,7 @@ public class JobTracker {
 	 * @param maxWaitMsec
 	 * @throws Exception if maxWaitMsec milliseconds pass without a return
 	 */
-	public void waitForPercentComplete(String jobId, int percentComplete, int maxWaitMsec) throws Exception {
+	public void waitForPercentComplete(String jobId, int percentComplete, int maxWaitMsec) throws AuthorizationException, Exception {
 		int totalMsec = 0;
 		int sleepMsec = 0;
 		
@@ -1020,7 +1069,7 @@ public class JobTracker {
 	 * @returns percent complete
 	 * @throws Exception on error
 	 */
-	public int waitForPercentOrMsec(String jobId, int percentComplete, int maxWaitMsec) throws Exception {
+	public int waitForPercentOrMsec(String jobId, int percentComplete, int maxWaitMsec) throws AuthorizationException, Exception {
 		long sleepMsec = 200;
 		int actualPercent = 0;
 		long now = System.currentTimeMillis();

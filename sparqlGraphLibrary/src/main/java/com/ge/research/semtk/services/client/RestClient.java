@@ -61,6 +61,7 @@ public abstract class RestClient extends Client implements Runnable {
 	Object runRes = null;
 	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
+	private HeaderTable headerTable = null;
 
 	protected File fileParameter = null;
 	
@@ -100,6 +101,10 @@ public abstract class RestClient extends Client implements Runnable {
 		this.conf = conf;
 	}
 	
+	public void authenticateSubThreads() {
+		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
+	}
+	
 	public RestClientConfig getConfig() {
 		return this.conf;
 	}
@@ -121,6 +126,7 @@ public abstract class RestClient extends Client implements Runnable {
 	 *    and any exception into runException
 	 */
 	public void run() {
+		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		try {
 			this.runException = null;
 			this.runRes = this.execute();

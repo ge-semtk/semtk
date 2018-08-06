@@ -127,7 +127,7 @@ public abstract class SparqlEndpointInterface {
 	public void setServerAndPort(String serverAndPort) throws Exception {
 		String[] serverAndPortSplit = serverAndPort.split(":");  // protocol:server:port
 		if(serverAndPortSplit.length < 2){
-			throw new Exception("Error: must provide connection in format protocol:server:port (e.g. http://localhost:2420)");
+			throw new Exception("Error: poorly formatted serverAndPort (e.g. http://localhost:2420): " + serverAndPort);
 		}
 		this.server = serverAndPortSplit[0] + ":" + serverAndPortSplit[1]; // e.g. http://localhost
 		

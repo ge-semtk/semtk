@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 
 public abstract class GeneralResultSet {
@@ -121,15 +122,20 @@ public abstract class GeneralResultSet {
 		else{ return GeneralResultSet.FailureMessage; }
 	}
 	
-	public void throwExceptionIfUnsuccessful () throws Exception {
-		if (success != true) {
-			throw new Exception(this.getRationaleAsString("\n"));
-		}
+	public void throwExceptionIfUnsuccessful () throws AuthorizationException, Exception {
+		this.throwExceptionIfUnsuccessful("");
 	}
 	
-	public void throwExceptionIfUnsuccessful (String msg) throws Exception {
+	public void throwExceptionIfUnsuccessful (String msg) throws AuthorizationException, Exception {
 		if (success != true) {
-			throw new Exception(msg + "\n" + this.getRationaleAsString("\n"));
+			String rationale = this.getRationaleAsString("\n");
+			String fullMessage = (msg != null && !msg.isEmpty()) ? msg + "\n" + rationale : rationale;
+			
+			if (rationale.contains("threw com.ge.research.semtk.auth.AuthorizationException")) {
+				throw new AuthorizationException(fullMessage);
+			} else {
+				throw new Exception(fullMessage);
+			}
 		}
 	}
 	

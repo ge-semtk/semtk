@@ -49,6 +49,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.JobFileInfo;
@@ -478,19 +479,26 @@ public class ResultsServiceRestController {
 	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 	
-		try{
-	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows, requestBody.getStartRow()); 			
+		try{			
 			
-			if(requestBody.getAppendDownloadHeaders()){
-			
+			try {
 				resp.setHeader("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
-				retval.writeToStream(resp.getWriter());
+
+				URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
+	    	
+				TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows, requestBody.getStartRow()); 			
+				
+				if(requestBody.getAppendDownloadHeaders()){
+				
+					retval.writeToStream(resp.getWriter());
+				}
+				else{
+					retval.writeToStream(resp.getWriter());
+				}
+			} catch (AuthorizationException ae) {
+				resp.getWriter().println("AuthorizationException\n" + ae.getMessage());
 			}
-			else{
-				retval.writeToStream(resp.getWriter());
-			}
-	    } catch (Exception e) {
+		} catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
 	    }
@@ -532,16 +540,19 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
 	public void getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-	
+		TableResultsSerializer retval = null;
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
-			
-	    	URL url = getJobTracker().getFullResultsURL(jobId);  
-			TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, maxRows, 0); 			
-
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
-			retval.writeToStream(resp.getWriter());
-			
+
+	    	URL url = getJobTracker().getFullResultsURL(jobId);  
+
+	    	try {
+	    		retval = getTableResultsStorage().getCsvTable(url, maxRows, 0); 			
+				retval.writeToStream(resp.getWriter());
+	    	} catch (AuthorizationException ae) {
+				resp.getWriter().println("AuthorizationException\n" + ae.getMessage());
+			}
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);

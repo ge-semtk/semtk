@@ -1,0 +1,137 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "edc semtk services",
+		"domain": "http://research.ge.com",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 8,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/authorization#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "User",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/authorization#User",
+				"subClassNames": [],
+				"SparqlID": "?User",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?User"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "member",
+						"ValueType": "User",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/authorization#User",
+						"ConnectBy": "member",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/authorization#member"
+					}
+				],
+				"NodeName": "UserGroup",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/authorization#UserGroup",
+				"subClassNames": [],
+				"SparqlID": "?UserGroup",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "VALUES ?UserGroup { <http://research.ge.com/kdl/sparqlgraph/authorization#JobAdminGroup> } ",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "user_name"
+			}
+		],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "http://research.ge.com/kdl/sparqlgraph/authorization#JobAdminGroup"
+			}
+		],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?UserGroup",
+				"type": "http://research.ge.com/kdl/sparqlgraph/authorization#UserGroup",
+				"mapping": [
+					{
+						"textId": "text_0",
+						"text": "http://research.ge.com/kdl/sparqlgraph/authorization#JobAdminGroup"
+					}
+				],
+				"props": []
+			},
+			{
+				"sparqlID": "?User",
+				"type": "http://research.ge.com/kdl/sparqlgraph/authorization#User",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/kdl/sparqlgraph/authorization#name",
+						"URILookup": [
+							"?User"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

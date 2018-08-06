@@ -29,6 +29,9 @@ import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.HeaderTable;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -47,6 +50,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	
 	public ResultsClient (ResultsClientConfig config) {
 		this.conf = config;
+		
 	}
 	
 	@Override
@@ -277,6 +281,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		this.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
+		this.authenticateSubThreads();
 		thread = new Thread(this);
 		thread.start();
 		
@@ -378,13 +383,14 @@ public class ResultsClient extends RestClient implements Runnable {
 	
 	
 	/**
-	 * Get results (possibly truncated) in JSON format for a job
+	 * Get results in JSON format for a job
 	 * @param maxRows - to prevent string buffer overflow in Java.  
 	 * @return a TableResultSet object
 	 */
 	@SuppressWarnings("unchecked")
-	public TableResultSet execTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
+	public Table getTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
 
+		
 		ArrayList<Thread> threads = new ArrayList<Thread>();	
 		ArrayList<ResultsClient> clients = new ArrayList<ResultsClient>();
 		try {
@@ -447,7 +453,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				thread = null;
 			}
 			
-			return ret;			
+			return ret.getTable();			
 		} finally {
 			this.cleanUp();
 		}
@@ -459,7 +465,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	 * @return a CSVDataset object
 	 */
 	@SuppressWarnings("unchecked")
-	public CSVDataset execTableResultsCsv(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
+	public CSVDataset getTableResultsCSV(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
 		this.conf.setServiceEndpoint("results/getTableResultsCsv");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
@@ -470,7 +476,11 @@ public class ResultsClient extends RestClient implements Runnable {
 
 		try {
 			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
-			return new CSVDataset(s, true);
+			CSVDataset dataset = new CSVDataset(s, true);
+			if (dataset.getColumnNamesinOrder().get(0).contains("authorizationexception")) {
+				throw new AuthorizationException(dataset.getNextRecords(1).get(0).get(0));
+			}
+			return dataset;
 		} finally {
 			this.cleanUp();
 		}
@@ -489,7 +499,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/getResults");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
-
+		
+		LocalLogger.logToStdErr("Using DEPRECATED semTK function ResultsClient.execGetResults().\nUse getTableResultsCSV() and getTableResultsJson() instead.");
 		try {
 			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();

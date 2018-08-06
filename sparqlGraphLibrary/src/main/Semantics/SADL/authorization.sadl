@@ -1,0 +1,19 @@
+uri "http://research.ge.com/kdl/sparqlgraph/authorization" alias auth version "$Revision:$ Last modified on   $Date:$". 
+// v8-27-2015 9:00
+ 
+User is a class,
+	described by name with a single value of type string.
+	
+UserGroup is a class,
+	described by name with a single value of type string,
+	described by member with values of type User.
+
+JobAdminGroup is a UserGroup.
+	
+GraphSpec is a class,
+	described by name with a single value of type string.
+	
+GraphAuthorization is a class,
+	described by graph with values of type GraphSpec,
+	described by readGroup with values of type UserGroup,
+	described by writeGroup with values of type UserGroup.

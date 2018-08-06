@@ -20,6 +20,9 @@ package com.ge.research.semtk.test;
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
+import com.ge.research.semtk.auth.AuthorizationProperties;
+import com.ge.research.semtk.edc.EndpointProperties;
+import com.ge.research.semtk.edc.JobEndpointProperties;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -62,6 +65,32 @@ public class IntegrationTestUtility {
 	}
 	public static String getSparqlServerPassword() throws Exception{
 		return getIntegrationTestProperty("integrationtest.sparqlendpoint.password");
+	}
+	
+	/**
+	 * Get JobEndpointProperties without domain or dataset
+	 * @return
+	 * @throws Exception
+	 */
+	public static EndpointProperties getEndpointProperties() throws Exception {
+		EndpointProperties ret = new EndpointProperties();
+		
+		ret.setJobEndpointType(getSparqlServerType());
+		ret.setJobEndpointServerUrl(getSparqlServer());
+		ret.setJobEndpointUsername(getSparqlServerUsername());
+		ret.setJobEndpointPassword(getSparqlServerPassword());
+		
+		return ret;
+	}
+	
+	public static AuthorizationProperties getAuthorizationProperties() {
+		AuthorizationProperties ret = new AuthorizationProperties();
+		try {
+			ret.setRefreshFreqSeconds(Integer.parseInt(getIntegrationTestProperty("auth.refreshFreqSeconds")));
+		} catch (Exception e) {
+			// ok. optional property
+		}
+		return ret;
 	}
 	
 	// sparql query service

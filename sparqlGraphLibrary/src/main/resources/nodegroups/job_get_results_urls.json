@@ -108,6 +108,20 @@
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "userName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/services/job#userName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?userName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
 					}
 				],
 				"nodeList": [
