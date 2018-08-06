@@ -20,7 +20,6 @@ import com.ge.research.semtk.utility.Utility;
 public class AuthorizationManager {
 	public static final String ADMIN = "admin";
 	
-	private static final String GRAPH_NAME = "http://research.ge.com/semtk/services";
 	private static EndpointProperties endpointProps = null;
 	private static AuthorizationProperties authProps = null;
 	private static long lastUpdate = 0;
@@ -75,7 +74,7 @@ public class AuthorizationManager {
 			SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(
 					endpointProps.getJobEndpointType(),
 					endpointProps.getJobEndpointServerUrl(), 
-					GRAPH_NAME,
+					authProps.getGraphName(),
 					endpointProps.getJobEndpointUsername(),
 					endpointProps.getJobEndpointPassword());
 			

@@ -6,7 +6,7 @@
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		],
