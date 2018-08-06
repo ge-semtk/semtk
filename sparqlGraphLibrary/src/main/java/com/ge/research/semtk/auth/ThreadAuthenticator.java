@@ -56,7 +56,7 @@ public class ThreadAuthenticator {
 	}
 	
 	public static boolean isJobAdmin() {
-		if (jobAdmin != null) {
+		if (jobAdmin != null && jobAdmin.get() != null) {
 			return jobAdmin.get();
 		} else {
 			return false;
@@ -68,7 +68,7 @@ public class ThreadAuthenticator {
 	 * @return
 	 */
 	public static String getThreadUserName() {
-		if (threadHeaderTable != null) {
+		if (threadHeaderTable != null && threadHeaderTable.get() != null) {
 			HeaderTable headerTable = threadHeaderTable.get();
 			if (headerTable != null) {
 				List<String> vals = headerTable.get(USERNAME_KEY);
