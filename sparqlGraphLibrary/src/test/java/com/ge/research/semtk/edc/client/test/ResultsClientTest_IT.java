@@ -482,61 +482,17 @@ public class ResultsClientTest_IT {
 	
 	@Test
 	public void testAuthenticationFailures() throws Exception {
-		ThreadAuthenticator.authenticateThisThread("test_user_1");
-		String jobId = "test_jobid_" + UUID.randomUUID();
-		
-		try {
-			client.execStoreTableResults(jobId, new Table(new String [] {"one", "two"}, new String [] {"string", "string"}));
-			
-			ThreadAuthenticator.authenticateThisThread("test_user_2");
-			
-			try {
-				client.execStoreTableResults(jobId, new Table(new String [] {"one", "two"}, new String [] {"string", "string"}));
-				fail("Missing AuthenticationException");
-			} catch (AuthorizationException e) {
-			}
-			
-			try {
-				CSVDataset dataset = client.getTableResultsCSV(jobId, 9999);
-				fail("Missing AuthenticationException");
-			} catch (AuthorizationException e) {
-			}
-			
-			try {
-				client.getTableResultsJson(jobId, 9999);
-				fail("Missing AuthenticationException");
-			} catch (AuthorizationException e) {
-			}
-			
-			try {
-				client.execDeleteJob(jobId);
-				fail("Missing AuthenticationException");
-			} catch (AuthorizationException e) {
-			}
-			
-			try {
-				client.execGetResultsFiles(jobId);
-				fail("Missing AuthenticationException");
-			} catch (AuthorizationException e) {
-			}
-		
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("unexpected exception");
-		} finally {
-			ThreadAuthenticator.authenticateThisThread("test_user_1");
-			client.execDeleteJob(jobId);
-			ThreadAuthenticator.unAuthenticateThisThread();
-			
-		}
+		// moved to AuthorizationTest_IT
 	}
 	@Test
 	public void testStoreAndRetrieveWrongId() throws Exception {
 
 		// Error case
-		
-		String fileContent = client.execReadBinaryFile("wrongId");
-		assertTrue(fileContent.contains("not found"));
+		try {
+			String fileContent = client.execReadBinaryFile("wrongId");
+			fail("Missing exception for bad fileId");
+		} catch (Exception e) {
+		}
 	}
 
 

@@ -155,8 +155,10 @@ public class DataLoader {
 	
 	/**
 	 * Performs one or two pass ingestion.
+	 * Note: Check the error report if you don't know the expected number of records ingested
+	 *       Or use a flavor of this function that returns the error table.
 	 * @param twoPassPrecheck
-	 * @return
+	 * @return number of records ingested
 	 * @throws Exception
 	 */
 	public int importData(Boolean twoPassPrecheck) throws Exception{
@@ -336,5 +338,38 @@ public class DataLoader {
 		return s;
 	}
 	
+	/**
+	 * import data and get the error string (or null if successful)
+	 * @param twoPassPrecheck
+	 * @return error report string or null
+	 * @throws Exception
+	 */
+	public String importDataGetBriefError(boolean twoPassPrecheck) throws Exception {
+		this.importData(twoPassPrecheck);
+		
+		String ret = this.getLoadingErrorReportBrief();
+		if (ret.isEmpty()) {
+			return null;
+		} else {
+			return ret;
+		}
+	}
+	
+	/**
+	 * import data and get the error table (or null if successful)
+	 * @param twoPassPrecheck
+	 * @return error report string or null
+	 * @throws Exception
+	 */
+	public Table importDataGetErrorTable(boolean twoPassPrecheck) throws Exception {
+		this.importData(twoPassPrecheck);
+		
+		Table ret = this.getLoadingErrorReport();
+		if (ret.getNumRows() == 0) {
+			return null;
+		} else {
+			return ret;
+		}
+	}
 
 }

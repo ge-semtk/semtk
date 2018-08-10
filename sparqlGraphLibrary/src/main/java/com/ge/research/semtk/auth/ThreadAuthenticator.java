@@ -1,9 +1,35 @@
+/**
+ ** Copyright 2018 General Electric Company
+ **
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
 package com.ge.research.semtk.auth;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import com.ge.research.semtk.utility.LocalLogger;
 
+
+/**
+ * IMPORTANT:  strange behavior has been observed in sub-threads.
+ *             Best strategy is to instantiate any RestClients and send them into sub-thread constructor.
+ *             That way they know their authentication.
+ * @author 200001934
+ *
+ */
 
 public class ThreadAuthenticator {
 	public static final String ANONYMOUS = "anonymous";
@@ -19,6 +45,20 @@ public class ThreadAuthenticator {
 	 */
 	public static void authenticateThisThread(HeaderTable headerTable) {
 		
+		/******* logging ********/
+		String prevUser = "null";
+		String newUser = "null";
+		try {
+			prevUser = threadHeaderTable.get().get("user_name").get(0);
+		} catch (Exception e) {
+		}
+		try {
+			newUser = headerTable.get("user_name").get(0);
+		} catch (Exception e) {
+		}
+		LocalLogger.logToStdErr(Thread.currentThread().getName() + " is authenticating from: " + prevUser + " to: " + newUser);
+		
+		/****** real work ********/
 		threadHeaderTable = new ThreadLocal<>();
 		threadHeaderTable.set(headerTable);
 		
@@ -68,12 +108,14 @@ public class ThreadAuthenticator {
 	 * @return
 	 */
 	public static String getThreadUserName() {
-		if (threadHeaderTable != null && threadHeaderTable.get() != null) {
-			HeaderTable headerTable = threadHeaderTable.get();
-			if (headerTable != null) {
-				List<String> vals = headerTable.get(USERNAME_KEY);
-				if (vals != null && vals.size() == 1) {
-					return vals.get(0);
+		if (threadHeaderTable != null) {
+			if (threadHeaderTable.get() != null) {
+				HeaderTable headerTable = threadHeaderTable.get();
+				if (headerTable != null) {
+					List<String> vals = headerTable.get(USERNAME_KEY);
+					if (vals != null && vals.size() == 1) {
+						return vals.get(0);
+					} 
 				}
 			}
 		}
@@ -82,14 +124,6 @@ public class ThreadAuthenticator {
 	
 	/**
 	 * Get entire headerTable. Could be null.  
-	 * Used to authenticate a sub-thread like this:
-	 * 
-	 * MyThread thread = new MyThread(..., ..,  ThreadAuthenticator.getThreadHeaderTable());
-	 * 
-	 * MyThread 
-	 *    - constructor has:     this.headerTable = headerTableParam;
-	 *    - first line of run(): ThreadAuthenticator.aurthenticateThisThread(this.headerTable)
-	 *    
 	 * @return
 	 */
 	public static HeaderTable getThreadHeaderTable() {

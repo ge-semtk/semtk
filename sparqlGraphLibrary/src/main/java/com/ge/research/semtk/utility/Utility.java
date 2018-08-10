@@ -302,7 +302,7 @@ public abstract class Utility {
 		try{
 			jsonObject = Utility.getJSONObjectFromFile(jsonFile);	
 		}catch (Exception e){
-			throw new Exception("Could not load JSON from file " + jsonFilePath);
+			throw new Exception("Could not load JSON from file " + jsonFilePath, e);
 		}
 		
 		return jsonObject;
@@ -328,7 +328,7 @@ public abstract class Utility {
 		try{
 			jsonArr = Utility.getJSONArrayFromFile(jsonFile);	
 		}catch (Exception e){
-			throw new Exception("Could not load JSON from file " + jsonFilePath);
+			throw new Exception("Could not load JSON from file " + jsonFilePath, e);
 		}
 		
 		return jsonArr;
@@ -628,6 +628,18 @@ public abstract class Utility {
 		try{
 			InputStream in = obj.getClass().getResourceAsStream(fileName);
 			ret = IOUtils.toString(in, StandardCharsets.UTF_8);
+		}catch(Exception e){
+			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
+			LocalLogger.printStackTrace(e);
+		}
+		return ret;
+	}
+	
+	public static File getResourceAsFile(Object obj, String fileName) {
+		File ret = null;
+		try{
+			URL url = obj.getClass().getResource(fileName);
+			ret = new File(url.getPath());
 		}catch(Exception e){
 			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
 			LocalLogger.printStackTrace(e);

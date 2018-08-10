@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
@@ -58,7 +59,9 @@ public class StatusServiceStartup implements ApplicationListener<ApplicationRead
 		Utility.validatePropertiesAndExitOnFailure(properties); 
 
 		// start AuthorizationManager for all threads
+		
 		AuthorizationManager.authorize(edc_prop, auth_prop);
+		
 		return;
 	}
 

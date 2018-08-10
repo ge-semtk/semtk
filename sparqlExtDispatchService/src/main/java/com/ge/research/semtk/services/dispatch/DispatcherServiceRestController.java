@@ -133,7 +133,7 @@ public class DispatcherServiceRestController {
 			
 			dsp = getDispatcher(props, requestId, ngrb, true, true);
 			
-			WorkThread thread = new WorkThread(dsp, null, null, qt,  ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, null, null, qt);
 
 			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL)){
 				// we are going to launch straight from the raw sparql
@@ -191,7 +191,7 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
-			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt, ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt);
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				

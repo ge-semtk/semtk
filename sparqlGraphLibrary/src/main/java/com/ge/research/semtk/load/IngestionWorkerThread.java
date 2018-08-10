@@ -74,7 +74,6 @@ public class IngestionWorkerThread extends Thread {
 	 * It is more efficient to use this value when sizing future threads.
 	 */
 	public void run(){
-		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		
 		try {
 			ArrayList<NodeGroup> nodeGroupList = this.batchHandler.convertToNodeGroups(this.dataSetRecords, this.startingRowNum, this.skipChecks);

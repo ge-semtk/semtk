@@ -1,5 +1,4 @@
-uri "http://research.ge.com/kdl/sparqlgraph/authorization" alias auth version "$Revision:$ Last modified on   $Date:$". 
-// v8-27-2015 9:00
+uri "http://research.ge.com/semtk/authorization" alias auth version "$Revision:$ Last modified on   $Date:$". 
  
 User is a class,
 	described by name with a single value of type string.
@@ -9,6 +8,7 @@ UserGroup is a class,
 	described by member with values of type User.
 
 JobAdminGroup is a UserGroup.
+JobAdminGroup has name "JobAdmin".
 	
 GraphSpec is a class,
 	described by name with a single value of type string.

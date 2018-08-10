@@ -43,6 +43,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
@@ -61,21 +62,20 @@ public abstract class RestClient extends Client implements Runnable {
 	Object runRes = null;
 	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
-	private HeaderTable headerTable = null;
+	protected HeaderTable headerTable = null;
 
 	protected File fileParameter = null;
 	
-	public static ArrayList<BasicHeader> getDefaultHeaders() {
+	public ArrayList<BasicHeader> getDefaultHeaders() {
 		
-		HeaderTable headerTable = ThreadAuthenticator.getThreadHeaderTable();
 		ArrayList<BasicHeader> ret = new ArrayList<BasicHeader>();
 		
-		if (headerTable != null) {
+		if (this.headerTable != null) {
 			// loop through hashtable and build default headers
-			for (String key : headerTable.keySet()) {
-				String value = headerTable.get(key).get(0);
-				for (int i=1; i < headerTable.get(key).size(); i++) {
-					value = value + "," + headerTable.get(key).get(i);
+			for (String key : this.headerTable.keySet()) {
+				String value = this.headerTable.get(key).get(0);
+				for (int i=1; i < this.headerTable.get(key).size(); i++) {
+					value = value + "," + this.headerTable.get(key).get(i);
 				}
 				
 				BasicHeader header = new BasicHeader(key, value);
@@ -91,18 +91,16 @@ public abstract class RestClient extends Client implements Runnable {
 	/**
 	 * Constructor
 	 */
-	public RestClient(){
+	public RestClient() {
+		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 	}
 	
 	/**
 	 * Constructor
 	 */
 	public RestClient(RestClientConfig conf){
-		this.conf = conf;
-	}
-	
-	public void authenticateSubThreads() {
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
+		this.conf = conf;
 	}
 	
 	public RestClientConfig getConfig() {
@@ -126,7 +124,6 @@ public abstract class RestClient extends Client implements Runnable {
 	 *    and any exception into runException
 	 */
 	public void run() {
-		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		try {
 			this.runException = null;
 			this.runRes = this.execute();
@@ -244,7 +241,7 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 
 		// add default headers
-		for (BasicHeader header : RestClient.getDefaultHeaders()) {
+		for (BasicHeader header : this.getDefaultHeaders()) {
 			httpreq.addHeader(header);
 		}
 		
@@ -267,14 +264,19 @@ public abstract class RestClient extends Client implements Runnable {
 		if(responseTxt.trim().isEmpty()){
 			handleEmptyResponse();  // implementation-specific behavior
 		}
-
-		if(responseTxt.length() < 500){
-			LocalLogger.logToStdErr("RestClient received from " + this.conf.getServiceEndpoint() + ": " + responseTxt);
-		}else{
-			LocalLogger.logToStdErr("RestClient received from " + this.conf.getServiceEndpoint() + ": " + responseTxt.substring(0,200) + "... (" + responseTxt.length() + " chars)");
-		}
 		
 		if(returnRawResponse){
+			// check raw response for HTTP errors, which should be json with status!=200
+			try {
+				JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
+				if (responseParsed.containsKey("status") && (long)responseParsed.get("status") != 200) {
+					throw new Exception(responseTxt);
+				}
+			} catch (NullPointerException e) {
+			} catch (ClassCastException e) {
+			} catch (ParseException e) {
+			}
+
 			return responseTxt;		// return the raw string
 		}else{
 			JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);

@@ -1,13 +1,40 @@
+/**
+ ** Copyright 2018 General Electric Company
+ **
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
+
 package com.ge.research.semtk.auth;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 import com.ge.research.semtk.edc.EndpointProperties;
-import com.ge.research.semtk.edc.JobEndpointProperties;
+import com.ge.research.semtk.load.DataLoader;
+import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -18,15 +45,24 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class AuthorizationManager {
-	public static final String ADMIN = "admin";
 	
-	private static EndpointProperties endpointProps = null;
-	private static AuthorizationProperties authProps = null;
 	private static long lastUpdate = 0;
 
-	// list of usernames that can access jobs
-	// in addition to ADMIN and the job owner
-	private static ArrayList<String> jobAdmins = new ArrayList<String>();
+	private static final String JOB_ADMIN_GROUP = "JobAdmin";
+	private static final String USER_GROUPS_NODEGROUP = "/nodegroups/auth_user_groups.json";
+	private static final String GRAPH_NODEGROUP = "/nodegroups/auth_graph.json";
+	private static final String DOMAIN = "http://research.ge.com/semtk/authorization";
+
+	private static SparqlEndpointInterface sei = null;
+	private static int refreshFreqSeconds = 301;
+	
+	// userGroup.get(name) = ArrayList of user names
+	private static HashMap<String, ArrayList<String>> userGroups = new HashMap<String, ArrayList<String>>();
+	
+	// graphXers(graph_name) = ArrayList of group names
+	private static HashMap<String, ArrayList<String>> graphReaders = new HashMap<String, ArrayList<String>>();
+	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
+
 
 	/**
 	 * Turn on Authorization by providing a SPARQL endpoint and frequency
@@ -34,18 +70,35 @@ public class AuthorizationManager {
 	 * @param authorizProps
 	 * @throws Exception
 	 */
-	public static void authorize(EndpointProperties jeProps, AuthorizationProperties authorizProps) {
-		AuthorizationManager.endpointProps = jeProps;
-		AuthorizationManager.authProps = authorizProps;
-		updateAuthorization();
+	public static void authorize(EndpointProperties endpointProps, AuthorizationProperties authProps) {
+		refreshFreqSeconds = authProps.getRefreshFreqSeconds();
+		
+		try {
+			sei = SparqlEndpointInterface.getInstance(
+					endpointProps.getJobEndpointType(),
+					endpointProps.getJobEndpointServerUrl(), 
+					authProps.getGraphName(),
+					endpointProps.getJobEndpointUsername(),
+					endpointProps.getJobEndpointPassword());
+			
+			updateAuthorization();
+			
+		} catch (Exception e) {
+			LocalLogger.logToStdErr("Failed to load authorization info");
+			LocalLogger.printStackTrace(e);
+		}
 	}
 	
 	/** 
-	 * Exposed for testing
-	 * @return
+	 * Exposed for testing.
+	 * @return - never null
 	 */
 	public static ArrayList<String> getJobAdmins() {
-		return jobAdmins;
+		if (userGroups.containsKey(JOB_ADMIN_GROUP)) {
+			return userGroups.get(JOB_ADMIN_GROUP);
+		} else {
+			return new ArrayList<String>();
+		}
 	}
 	
 	/**
@@ -57,55 +110,132 @@ public class AuthorizationManager {
 	 */
 	private static void updateAuthorization() {
 		// bail if authorize() has not been called
-		if (endpointProps == null) return;
+		if (sei == null) return;
 		
 		long now = Calendar.getInstance().getTime().getTime();
 		
 		// return if authorization is up-to-date
-		if (now - lastUpdate < authProps.getRefreshFreqSeconds() * 1000  ) {
+		if (now - lastUpdate < refreshFreqSeconds * 1000  ) {
 			return;
 		}
 		
 		LocalLogger.logToStdOut("Authorization Manager: refreshing authorization.");
+		lastUpdate = now;
 		
+		refresh();
+	}
+	
+	/**
+	 * Force refresh of Authorization info from triplestore.
+	 */
+	public static void refresh() {
 		try {
 			// update
-			lastUpdate = now;
-			SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(
-					endpointProps.getJobEndpointType(),
-					endpointProps.getJobEndpointServerUrl(), 
-					authProps.getGraphName(),
-					endpointProps.getJobEndpointUsername(),
-					endpointProps.getJobEndpointPassword());
-			
-			updateJobAdmins(sei);
+			updateUserGroups(sei);
+			updateGraphAuthorization(sei);
 			
 		} catch (Exception e) {
-			// Some kind of exception occurred while reading authorization.
-			// Clear all permissions.
-			LocalLogger.printStackTrace(e);
-			jobAdmins.clear();
+			clear();
+			LocalLogger.logToStdErr("Failure reading authorization data");
+			LocalLogger.printStackTrace(e);;
+		}
+	}
+	
+	
+	/**
+	 * clear local cache of Authorization
+	 */
+	private static void clear() {
+		userGroups.clear();
+		graphReaders.clear();
+		graphWriters.clear();
+	}
+	
+	/**
+	 * Read user groups from triplestore
+	 * @param sei
+	 * @throws Exception
+	 */
+	private static void updateUserGroups(SparqlEndpointInterface sei) throws Exception {
+		userGroups.clear();
+		
+		// read nodegroup and query
+		SparqlGraphJson sgjAuthJobs = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), USER_GROUPS_NODEGROUP));
+		Table userGroupsTable = sei.executeQueryToTable(sgjAuthJobs.getNodeGroup().generateSparqlSelect());
+		
+		// loop through table
+		for (int i=0; i < userGroupsTable.getNumRows(); i++) {
+			String group = userGroupsTable.getCell(i, "groupName");
+			String user = userGroupsTable.getCell(i, "userName");
+			
+			// create new group userList or find the hashed one
+			ArrayList<String> userList = null;
+			if (userGroups.containsKey(group)) {
+				userList = userGroups.get(group);
+			} else {
+				userList = new ArrayList<String>();
+				userGroups.put(group, userList);
+			}
+			
+			// add the user
+			if (!userList.contains(user)) {
+				userList.add(user);
+			}
 		}
 	}
 	
 	/**
-	 * Read job admins from triplestore
+	 * Read graph admin from triplestore
 	 * @param sei
 	 * @throws Exception
 	 */
-	private static void updateJobAdmins(SparqlEndpointInterface sei) throws Exception {
-		jobAdmins.clear();
+	private static void updateGraphAuthorization(SparqlEndpointInterface sei) throws Exception {
+		graphReaders.clear();
+		graphWriters.clear();
 		
 		// read nodegroup and query
-		SparqlGraphJson sgjAuthJobs = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), "/nodegroups/auth_job_admin.json"));
-		Table jobAdminTable = sei.executeQueryToTable(sgjAuthJobs.getNodeGroup().generateSparqlSelect());
+		SparqlGraphJson sgjGraphAdmin = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), GRAPH_NODEGROUP));
+		Table graphAdminTable = sei.executeQueryToTable(sgjGraphAdmin.getNodeGroup().generateSparqlSelect());
 		
-		// save into jobAdmins
-		for (String user : jobAdminTable.getColumn("name")) {
-			jobAdmins.add(user);
+		// loop through table
+		for (int i=0; i < graphAdminTable.getNumRows(); i++) {
+			String graph = graphAdminTable.getCell(i, "graphName");
+			String readGroup = graphAdminTable.getCell(i, "readGroupName");
+			String writeGroup = graphAdminTable.getCell(i, "writeGroupName");
+			
+			// add readGroupName to graphReaders
+			if (readGroup != null && ! readGroup.isEmpty()) {
+				ArrayList<String> groupList = null;
+				if (graphReaders.containsKey(graph)) {
+					groupList = graphReaders.get(graph);
+				} else {
+					groupList = new ArrayList<String>();
+					graphReaders.put(graph, groupList);
+				}
+				
+				// add the user
+				if (!groupList.contains(readGroup)) {
+					groupList.add(readGroup);
+				}
+			}
+			
+			// add writeGroupName to graphWriters
+			if (writeGroup != null && ! writeGroup.isEmpty()) {
+				ArrayList<String> groupList = null;
+				if (graphWriters.containsKey(graph)) {
+					groupList = graphWriters.get(graph);
+				} else {
+					groupList = new ArrayList<String>();
+					graphWriters.put(graph, groupList);
+				}
+				
+				// add the user
+				if (!groupList.contains(writeGroup)) {
+					groupList.add(writeGroup);
+				}
+			}
 		}
 	}
-	
 	/**
 	 * check if this thread's user owns an item with:
 	 * @param owner - user_name of item to be checked
@@ -113,7 +243,7 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException - if not
 	 * @throws Exception - if there's trouble reading auth info from triplestore
 	 */
-	public static void throwExceptionIfNotJobOwner(String owner, String itemName) throws AuthorizationException {
+	public static void throwExceptionIfNotJobOwner(String owner, String itemName) throws AuthorizationException, Exception {
 		updateAuthorization();
 		String user = ThreadAuthenticator.getThreadUserName();
 		
@@ -122,7 +252,7 @@ public class AuthorizationManager {
 			throw new AuthorizationException("Permission denied: " + user + " may not access " + itemName + " owned by " + owner);
 		}
 	}
-	
+		
 	/**
 	 * Throw exception if thread is not job admin
 	 * note: uses up the one check of ThreadAuthenticator.isAdmin()
@@ -144,7 +274,52 @@ public class AuthorizationManager {
 			return true;
 		} else {
 			String user = ThreadAuthenticator.getThreadUserName();
-			return (jobAdmins.contains(user));
+			return (userGroups.containsKey(JOB_ADMIN_GROUP) && userGroups.get(JOB_ADMIN_GROUP).contains(user));
+		}
+	}
+	
+	public static boolean isAuthorizationOwlLoaded() throws Exception {
+
+		OntologyInfo oInfo = new OntologyInfo(getConnection());
+		return oInfo.getNumberOfClasses() > 0;
+	}
+	
+	private static SparqlConnection getConnection() {
+		SparqlConnection conn = new SparqlConnection();
+		conn.setDomain(DOMAIN);
+		conn.addModelInterface(sei);
+		conn.addDataInterface(sei);
+		return conn;
+	}
+	public static void uploadAuthorizationOwl(String owl) throws Exception {
+		
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl.getBytes()));
+		if (!resultSet.getSuccess()) {
+			throw new Exception(resultSet.getRationaleAsString(" "));
+		}
+	}
+	
+	public static void ingestUserGroups(CSVDataset ds) throws Exception {
+		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), USER_GROUPS_NODEGROUP)); 
+		sgJson.setSparqlConn(getConnection());
+		// load the data
+		DataLoader dl = new DataLoader(sgJson, 2, ds, sei.getUserName(), sei.getPassword());
+		String err = dl.importDataGetBriefError(true);
+		if (err != null) {
+			LocalLogger.logToStdErr(err);
+			throw new Exception("ingestion failed");
+		}
+	}
+	
+	public static void ingestGraphs(CSVDataset ds) throws Exception {
+		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), GRAPH_NODEGROUP)); 
+		sgJson.setSparqlConn(getConnection());
+		// load the data
+		DataLoader dl = new DataLoader(sgJson, 2, ds, sei.getUserName(), sei.getPassword());
+		String err = dl.importDataGetBriefError(true);
+		if (err != null) {
+			LocalLogger.logToStdErr(err);
+			throw new Exception("ingestion failed");
 		}
 	}
 }

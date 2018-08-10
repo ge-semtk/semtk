@@ -201,7 +201,6 @@ public class ResultsServiceRestController {
 		TableResultSet res = null;
 		try{
 			JobTracker tracker = getJobTracker();
-	    	URL fullResultsUrl = tracker.getOptionalFullResultsURL(requestBody.jobId);  
 			ArrayList<JobFileInfo> fileInfoList = tracker.getJobBinaryFiles(requestBody.jobId);
 			
 			// create table of fullResults (max 1 value) and files (many values)
@@ -234,6 +233,10 @@ public class ResultsServiceRestController {
 	 * @param headers
 	 * @return  res.fullURL  res.fileId
 	 */
+	@ApiOperation(
+			value="Store binary file to jobId",
+			notes="Return has fileId <br>"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
 	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, @RequestParam("jobId") String jobId, HttpServletRequest req, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -278,7 +281,9 @@ public class ResultsServiceRestController {
 	 */
 	@ApiOperation(
 			value="Associate a file with a jobId by path",
-			notes="The path must be accessible by results service.  The file will be removed during results service cleanup."
+			notes="Return has fileId <br>" + 
+					"The path must be accessible by results service.  <br>" +
+					"The file will be removed during results service cleanup."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
@@ -321,7 +326,10 @@ public class ResultsServiceRestController {
 		res.addResult("fileId", fileId);
 		return res;
 	}
-	
+	@ApiOperation(
+			value="Get binary file",
+			notes="On error, filename will be authorizationError.html or resultsExpired.html, with message inside."
+			)
     @CrossOrigin
     @RequestMapping(value="/getBinaryFile/{fileId}", method=RequestMethod.GET)
     @ResponseBody
@@ -355,15 +363,25 @@ public class ResultsServiceRestController {
 		    LocalLogger.printStackTrace(e);
         	try {
         		// try to return an error
-        		resp.setHeader("Content-Disposition", "attachment; filename=\"resultExpired.html\"");
-	           
+        		
+        		String filename = "";
+        		String message = "";
+        		if (e instanceof AuthorizationException) {
+        			filename = "authorizationError.html";
+        			message = "<html><body>AuthorizationException - " + e.getMessage() + "</body></html>\n";
+        		} else {
+        			filename = "resultExpired.html";
+        			message = 	"<html><body>Exception - Result was not found. It is incorrect or it has expired.<br><br>\n" +
+        						"message: " + e.getMessage() + 
+        						"</body></html>\n";
+        		}
+        		resp.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
         		File f = File.createTempFile("error", ".html");
 	            f.deleteOnExit();
 	            BufferedWriter bw = new BufferedWriter(new FileWriter(f ));
-	    	    bw.write("<html><body>Result was not found. It is incorrect or it has expired.</body></html>\n");
+	    	    bw.write(message);
 	    	    bw.close();
-	            
-	            return new FileSystemResource(f); 
+	            return new FileSystemResource(f);
         	} catch (Exception e1) {
         		
         		// failed to return error; return null
@@ -379,6 +397,10 @@ public class ResultsServiceRestController {
 	 * Call 1 of 3 for storing JSON results.
 	 * Writes JSON start, column names, and column types.
 	 */
+	@ApiOperation(
+			value="initialize json table storage",
+			notes="Use this before storeTableResultsJsonAddIncremental"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonInitialize", method=RequestMethod.POST)
 	public JSONObject storeTableResultsJsonInitialize(@RequestBody ResultsRequestBodyInitializeTableResultsJson requestBody, @RequestHeader HttpHeaders headers) {
@@ -415,6 +437,11 @@ public class ResultsServiceRestController {
 	 * ["a2","b2","c2"],
 	 * ["a3","b3","c3"]
 	 */
+	@ApiOperation(
+			value="store chunk of json table storage",
+			notes="Use this after storeTableResultsJsonInitialize<br>" +
+					"Call storeTableResultsJsonFinalize when done. "
+			)
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonAddIncremental", method=RequestMethod.POST)
 	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody, @RequestHeader HttpHeaders headers) {
@@ -443,6 +470,10 @@ public class ResultsServiceRestController {
 	 * Call 3 of 3 for storing JSON results.
 	 * Writes row count and JSON end.
 	 */
+	@ApiOperation(
+			value="finish json table storage",
+			notes="Use this after storeTableResultsJsonAddIncremental<br>" 
+			)
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonFinalize", method=RequestMethod.POST)
 	public JSONObject storeTableResultsJsonFinalize(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody, @RequestHeader HttpHeaders headers) {

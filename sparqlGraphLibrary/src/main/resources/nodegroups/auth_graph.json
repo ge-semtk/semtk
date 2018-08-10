@@ -1,0 +1,263 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "edc semtk services",
+		"domain": "http://research.ge.com",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"dataset": "http://research.ge.com/semtk/services"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 8,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/authorization#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?writeGroupName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "UserGroup",
+				"fullURIName": "http://research.ge.com/semtk/authorization#UserGroup",
+				"subClassNames": [],
+				"SparqlID": "?WriteGroup",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/authorization#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?readGroupName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "UserGroup",
+				"fullURIName": "http://research.ge.com/semtk/authorization#UserGroup",
+				"subClassNames": [],
+				"SparqlID": "?ReadGroup",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/authorization#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?graphName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "GraphSpec",
+				"fullURIName": "http://research.ge.com/semtk/authorization#GraphSpec",
+				"subClassNames": [],
+				"SparqlID": "?GraphSpec",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?GraphSpec"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "graph",
+						"ValueType": "GraphSpec",
+						"UriValueType": "http://research.ge.com/semtk/authorization#GraphSpec",
+						"ConnectBy": "graph",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/authorization#graph"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?ReadGroup"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "readGroup",
+						"ValueType": "UserGroup",
+						"UriValueType": "http://research.ge.com/semtk/authorization#UserGroup",
+						"ConnectBy": "readGroup",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/authorization#readGroup"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?WriteGroup"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "writeGroup",
+						"ValueType": "UserGroup",
+						"UriValueType": "http://research.ge.com/semtk/authorization#UserGroup",
+						"ConnectBy": "writeGroup",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/authorization#writeGroup"
+					}
+				],
+				"NodeName": "GraphAuthorization",
+				"fullURIName": "http://research.ge.com/semtk/authorization#GraphAuthorization",
+				"subClassNames": [],
+				"SparqlID": "?GraphAuthorization",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "http://research.ge.com/semtk/authdata",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "graph"
+			},
+			{
+				"colId": "col_1",
+				"colName": "read_group"
+			},
+			{
+				"colId": "col_2",
+				"colName": "write_group"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?GraphAuthorization",
+				"type": "http://research.ge.com/semtk/authorization#GraphAuthorization",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?GraphSpec",
+				"type": "http://research.ge.com/semtk/authorization#GraphSpec",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/authorization#name",
+						"URILookup": [
+							"?GraphSpec"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?ReadGroup",
+				"type": "http://research.ge.com/semtk/authorization#UserGroup",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/authorization#name",
+						"URILookup": [
+							"?ReadGroup"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?WriteGroup",
+				"type": "http://research.ge.com/semtk/authorization#UserGroup",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/authorization#name",
+						"URILookup": [
+							"?WriteGroup"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

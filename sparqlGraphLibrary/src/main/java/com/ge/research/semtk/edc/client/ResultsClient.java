@@ -129,6 +129,11 @@ public class ResultsClient extends RestClient implements Runnable {
 		
 	}
 
+	public String storeBinaryFile(String jobID, File file) throws Exception {
+		SimpleResultSet res = this.execStoreBinaryFile(jobID, file);
+		return res.getResult("fileId");
+	}
+	
 	/**
 	 * Store a file 
 	 * @param file
@@ -218,6 +223,8 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 	
+	// NOTE: can't return a binary file as a string.
+	//       this will need to be fixed before anyone other than junit uses it
 	public String execReadBinaryFile(String fileId) throws Exception{
 
 		this.parametersJSON.clear();
@@ -225,7 +232,12 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setMethod(RestClientConfig.Methods.GET);
 		try {
 			String res = (String) execute(true);
-
+			
+			if (res.startsWith("<html><body>AuthorizationException")) {
+				throw new AuthorizationException(res.replaceAll("<[^>]+>", ""));
+			} else if (res.startsWith("<html><body>Exception")) {
+				throw new Exception(res.replaceAll("<[^>]+>", ""));
+			}
 			return res;
 		} finally {
 			this.cleanUp();
@@ -281,8 +293,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
 		this.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
-		this.authenticateSubThreads();
-		thread = new Thread(this);
+		thread = new Thread(this, "execStoreTableResults_initialize");
 		thread.start();
 		
 		// do formatting tasks in parallel
@@ -349,9 +360,9 @@ public class ResultsClient extends RestClient implements Runnable {
 			this.conf.setMethod(RestClientConfig.Methods.POST);
 			this.parametersJSON.put("contents", Utility.compress(resultsSoFar.toString())); 
 			this.parametersJSON.put("jobId", jobId);
-			thread = new Thread(this);
+			thread = new Thread(this, "execStoreTableResults_jsonIncremental_"+tableRowsDone);
 			thread.start();
-
+			
 			if (timerFlag) { 
 				endTime = System.nanoTime();
 				sendSec += ((endTime - startTime) / 1000000000.0);
@@ -367,8 +378,9 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
-		thread = new Thread(this);
+		thread = new Thread(this, "execStoreTableResults_finalize");
 		thread.start();
+		
 		// wait for the finalize run to finish
 		waitForThreadToFinish(thread);
 
@@ -424,7 +436,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				// kick off a thread using a "copy" of the client (necessary to avoid overwrites)  TODO find a cleaner way
 				ResultsClient client = new ResultsClient((ResultsClientConfig) conf); 
 				client.parametersJSON = (JSONObject) this.parametersJSON.clone(); 
-				Thread thread = new Thread(client);
+				Thread thread = new Thread(client, "getTableResultsJson_batch_" + i);
 				clients.add(client);
 				threads.add(thread);
 				thread.start();						// execute

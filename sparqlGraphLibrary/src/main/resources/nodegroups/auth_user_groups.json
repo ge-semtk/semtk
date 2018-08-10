@@ -13,7 +13,7 @@
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://vesuvius-test:2420",
+				"url": "http://localhost:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		]
@@ -29,10 +29,10 @@
 						"KeyName": "name",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/authorization#name",
+						"UriRelationship": "http://research.ge.com/semtk/authorization#name",
 						"Constraints": "",
 						"fullURIName": "",
-						"SparqlID": "?name",
+						"SparqlID": "?userName",
 						"isReturned": true,
 						"isOptional": false,
 						"isRuntimeConstrained": false,
@@ -42,7 +42,7 @@
 				],
 				"nodeList": [],
 				"NodeName": "User",
-				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/authorization#User",
+				"fullURIName": "http://research.ge.com/semtk/authorization#User",
 				"subClassNames": [],
 				"SparqlID": "?User",
 				"isReturned": false,
@@ -52,7 +52,22 @@
 				"deletionMode": "NO_DELETE"
 			},
 			{
-				"propList": [],
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/authorization#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?groupName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
 				"nodeList": [
 					{
 						"SnodeSparqlIDs": [
@@ -66,19 +81,19 @@
 						],
 						"KeyName": "member",
 						"ValueType": "User",
-						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/authorization#User",
+						"UriValueType": "http://research.ge.com/semtk/authorization#User",
 						"ConnectBy": "member",
 						"Connected": true,
-						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/authorization#member"
+						"UriConnectBy": "http://research.ge.com/semtk/authorization#member"
 					}
 				],
 				"NodeName": "UserGroup",
-				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/authorization#UserGroup",
+				"fullURIName": "http://research.ge.com/semtk/authorization#UserGroup",
 				"subClassNames": [],
 				"SparqlID": "?UserGroup",
-				"isReturned": true,
+				"isReturned": false,
 				"isRuntimeConstrained": false,
-				"valueConstraint": "VALUES ?UserGroup { <http://research.ge.com/kdl/sparqlgraph/authorization#JobAdminGroup> } ",
+				"valueConstraint": "",
 				"instanceValue": null,
 				"deletionMode": "NO_DELETE"
 			}
@@ -87,46 +102,53 @@
 	},
 	"importSpec": {
 		"version": "1",
-		"baseURI": "",
+		"baseURI": "http://research.ge.com/semtk/authdata",
 		"columns": [
 			{
 				"colId": "col_0",
-				"colName": "user_name"
-			}
-		],
-		"texts": [
+				"colName": "group"
+			},
 			{
-				"textId": "text_0",
-				"text": "http://research.ge.com/kdl/sparqlgraph/authorization#JobAdminGroup"
+				"colId": "col_1",
+				"colName": "user"
 			}
 		],
+		"texts": [],
 		"transforms": [],
 		"nodes": [
 			{
 				"sparqlID": "?UserGroup",
-				"type": "http://research.ge.com/kdl/sparqlgraph/authorization#UserGroup",
-				"mapping": [
-					{
-						"textId": "text_0",
-						"text": "http://research.ge.com/kdl/sparqlgraph/authorization#JobAdminGroup"
-					}
-				],
-				"props": []
-			},
-			{
-				"sparqlID": "?User",
-				"type": "http://research.ge.com/kdl/sparqlgraph/authorization#User",
+				"type": "http://research.ge.com/semtk/authorization#UserGroup",
 				"URILookupMode": "createIfMissing",
 				"mapping": [],
 				"props": [
 					{
-						"URIRelation": "http://research.ge.com/kdl/sparqlgraph/authorization#name",
+						"URIRelation": "http://research.ge.com/semtk/authorization#name",
+						"URILookup": [
+							"?UserGroup"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?User",
+				"type": "http://research.ge.com/semtk/authorization#User",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/authorization#name",
 						"URILookup": [
 							"?User"
 						],
 						"mapping": [
 							{
-								"colId": "col_0"
+								"colId": "col_1"
 							}
 						]
 					}

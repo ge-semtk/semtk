@@ -17,12 +17,15 @@
 
 package com.ge.research.semtk.test;
 
+import java.io.File;
+
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationProperties;
 import com.ge.research.semtk.edc.EndpointProperties;
 import com.ge.research.semtk.edc.JobEndpointProperties;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -31,6 +34,7 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
@@ -229,5 +233,19 @@ public class IntegrationTestUtility {
 	
 	public static String getIntegrationTestProperty(String key) throws Exception{
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
+	}
+	
+	public static File getSampleFile(Object caller) throws Exception {
+		return Utility.getResourceAsFile(caller, "/annotationBattery.owl");
+	}
+	
+	public static String getSampleJsonBlob(Object caller) throws Exception {
+		return Utility.getResourceAsString(caller, "/annotationBatteryOInfo.json");
+	}
+	
+	public static Table getSampleTable() throws Exception {
+		Table table = new Table(new String [] {"col1", "col2"}, new String [] {"string", "int"});
+		table.addRow(new String [] {"value1", "2"});
+		return table;
 	}
 }

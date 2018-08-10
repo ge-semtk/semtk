@@ -39,19 +39,13 @@ public class WorkThread extends Thread {
 	DispatcherSupportedQueryTypes myQT;
 	String targetObjectSparqlID;
 	String rawSparqlQuery;
-	HeaderTable headerTable = null;
 	
 	
 	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt){
-		this(dsp, constraintJson, flags, qt, null);
-	}
-	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt, HeaderTable headerTable){
 		this.dsp = dsp;
 		this.myQT = qt;
 		this.externalConstraintsJson = constraintJson;
 		this.queryFlags = flags;
-		this.headerTable = headerTable;
 	}
 	
 	public void setTargetObjectSparqlID(String targetObjectSparqlID) throws Exception{
@@ -69,7 +63,6 @@ public class WorkThread extends Thread {
 	}
 	
     public void run() {
-    	ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		try {
 			if(this.rawSparqlQuery != null){
 				// a query was passed. use it.
