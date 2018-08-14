@@ -45,18 +45,10 @@ public class ThreadAuthenticator {
 	 */
 	public static void authenticateThisThread(HeaderTable headerTable) {
 		
-		/******* logging ********/
-		String prevUser = "null";
-		String newUser = "null";
-		try {
-			prevUser = threadHeaderTable.get().get("user_name").get(0);
-		} catch (Exception e) {
-		}
-		try {
-			newUser = headerTable.get("user_name").get(0);
-		} catch (Exception e) {
-		}
-		LocalLogger.logToStdErr(Thread.currentThread().getName() + " is authenticating from: " + prevUser + " to: " + newUser);
+		/******* logging ********/		
+		LocalLogger.logToStdErr(Thread.currentThread().getName() + 
+								" is authenticating from: " + getThreadUserName() + 
+								" to: " + getUserName(headerTable));
 		
 		/****** real work ********/
 		threadHeaderTable = new ThreadLocal<>();
@@ -109,15 +101,17 @@ public class ThreadAuthenticator {
 	 */
 	public static String getThreadUserName() {
 		if (threadHeaderTable != null) {
-			if (threadHeaderTable.get() != null) {
-				HeaderTable headerTable = threadHeaderTable.get();
-				if (headerTable != null) {
-					List<String> vals = headerTable.get(USERNAME_KEY);
-					if (vals != null && vals.size() == 1) {
-						return vals.get(0);
-					} 
-				}
-			}
+			return getUserName(threadHeaderTable.get());
+		}
+		return ANONYMOUS;
+	}
+	
+	public static String getUserName(HeaderTable headerTable) {
+		if (headerTable != null) {
+			List<String> vals = headerTable.get(USERNAME_KEY);
+			if (vals != null && vals.size() == 1) {
+				return vals.get(0);
+			} 
 		}
 		return ANONYMOUS;
 	}
