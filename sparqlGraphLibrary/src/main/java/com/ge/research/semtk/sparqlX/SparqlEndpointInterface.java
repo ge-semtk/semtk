@@ -362,8 +362,8 @@ public abstract class SparqlEndpointInterface {
 				if (tryCount >= MAX_QUERY_TRIES) {
 					LocalLogger.logToStdOut (String.format("SPARQL query failed after %d tries.  Giving up.", tryCount));
 					LocalLogger.logToStdErr(e.getMessage());
-					throw e;
-				} else {	// else unnecessary, but makes code easier to read
+					throw new Exception("Error connectiong to triplestore at " +  this.getPostURL(), e);
+				} else {	
 					int sleepSec = 2 * tryCount;
 					// if we're overwhelming a server, really throttle
 					if (e.getMessage().contains("Address already in use: connect")) {

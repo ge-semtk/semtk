@@ -1255,26 +1255,104 @@ public class ImportSpecHandler {
 	}
 
 	public String getSampleIngestionCSV() {
+		
+		HashMap<String,String> sampleHash = addSampleIngestionValues(null);
+		
+		// return "" if there's apparently no import spec
+		if (sampleHash.isEmpty()) {
+			return "";
+		}
+				
 		StringBuilder ret = new StringBuilder();
 		String colNames[] = this.getColNamesUsed();
-		HashMap<Integer, String> sampleHash = this.getColumnSampleValues();
 		ret.append(String.join(",", colNames));
 		ret.append("\n");
 		
 		String delim = "";
 		for (String colName : colNames) {
-			Integer colIndex = this.colNameToIndexHash.get(colName);
-			
-			ret.append(delim + sampleHash.get(colIndex));
-			
+			ret.append(delim + sampleHash.get(colName));
 			delim = ",";
 		}
-		
+		ret.append("\n");
+
 		return ret.toString();
 		
 	}
 	
+	/**
+	 * Add sample values to a hash <col_name, sample_value>
+	 * Conflicts and too-complicated columns will be "value"
+	 * @param hash - can be null
+	 * @return
+	 */
+	public HashMap<String,String> addSampleIngestionValues(HashMap<String,String> hash) {
+		if (hash == null) {
+			hash = new HashMap<String,String>();
+		}
+		
+		// get columns and any discernable sample values
+		String colNames[] = this.getColNamesUsed();
+		HashMap<Integer, String> sampleHash = this.getColumnSampleValues();
+
+		// build a hash of sample values
+		for (String colName : colNames) {
+			
+			// get sample, setting to "value" if unknown/too-complicated
+			String sample = sampleHash.get(this.colNameToIndexHash.get(colName));
+			if (sample == null || sample.isEmpty()) {
+				sample = "value";
+			}
+			
+			// default all conflicts to "value"
+			if (hash.containsKey(colName)) {
+				if (! hash.get(colName).equals(sample)) {
+					hash.put(colName, "value");
+				}
+			} else {
+				hash.put(colName,  sample);
+			}
+		}
+		
+		return hash;
+	}
 	
+	public static String getSampleIngestionCSV(ArrayList<ImportSpecHandler> specList) {
+		// get samples
+		HashMap<String,String> sampleHash = null;
+		for (ImportSpecHandler spec : specList) {
+			sampleHash = spec.addSampleIngestionValues(sampleHash);
+		}
+		
+		// return "" if there's apparently no import spec
+		if (sampleHash.isEmpty()) {
+			return "";
+		}
+		
+		// add column names
+		StringBuilder ret = new StringBuilder();
+		String delim = "";
+		for (String colName : sampleHash.keySet()) {
+			ret.append(delim + colName);
+			delim = ",";	
+		}
+		ret.append("\n");
+
+		// add values
+		delim = "";
+		for (String colName : sampleHash.keySet()) {
+			ret.append(delim + sampleHash.get(colName));
+			delim = ",";
+		}
+		ret.append("\n");
+		
+		return ret.toString();
+	}
+	
+	/**
+	 * Build a hashmap of <int_mapping_index, type_string> columns where we can figure out the type
+	 * EMPTY for complicated columns
+	 * @return
+	 */
 	private HashMap<Integer, String> getColumnSampleValues() {
 		HashMap<Integer, String> ret = new HashMap<Integer, String>();
 		
@@ -1304,7 +1382,9 @@ public class ImportSpecHandler {
 				} else {
 					ret.put(colIndex, sample);
 				}
-			}  
+			} 
+			
+
 		}
 		return ret;
 	}

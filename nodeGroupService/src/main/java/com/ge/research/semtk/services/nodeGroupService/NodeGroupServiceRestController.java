@@ -41,6 +41,7 @@ import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupListRequest;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdReturnedRequest;
 import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdTupleRequest;
@@ -430,7 +431,7 @@ public class NodeGroupServiceRestController {
 	
 	@ApiOperation(
 			value="Get a sample CSV that could be ingested",
-			notes="Returns \"sampleCSV\" string"
+			notes="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getSampleIngestionCSV", method=RequestMethod.POST)
@@ -455,6 +456,37 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	
+	@ApiOperation(
+			value="Get a sample CSV that could be ingested",
+			notes="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getSampleIngestionCSVMulti", method=RequestMethod.POST)
+	public JSONObject getSampleIngestionCSVMulti(@RequestBody NodegroupListRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson [] sgJsonArr = requestBody.getSparqlGraphJsonArray();
+			ArrayList<ImportSpecHandler> specList = new ArrayList<>();
+			for (int i=0; i < sgJsonArr.length; i++) {
+				specList.add(sgJsonArr[i].getImportSpec());
+			}
+			
+			String sampleCSV = ImportSpecHandler.getSampleIngestionCSV(specList);
+			
+			retval.addResult("sampleCSV", sampleCSV);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getSampleIngestionCSVMulti", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
 	
 	/*
 	 * SPARQL can't be generated. 
