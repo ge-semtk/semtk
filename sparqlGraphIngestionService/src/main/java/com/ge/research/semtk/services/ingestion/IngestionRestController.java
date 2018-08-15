@@ -141,9 +141,9 @@ public class IngestionRestController {
 	 * @param dataFile the data file (File if fromFiles=true, else String)
 	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
 	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
-	 * @param safeLoad
+	 * @param precheck check that the ingest will succeed before starting it
 	 */
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean safeLoad){
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck){
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 		int recordsProcessed = 0;
@@ -227,7 +227,7 @@ public class IngestionRestController {
 						
 			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
 			
-			recordsProcessed = dl.importData(safeLoad); 	// defaulting to preflight.
+			recordsProcessed = dl.importData(precheck); 	// defaulting to precheck
 	
 			String endTime = dateFormat.format(cal.getTime());
 			if(logger != null) { 
@@ -236,13 +236,13 @@ public class IngestionRestController {
 			}
 			
 			// set success values
-			if(safeLoad && dl.getLoadingErrorReport().getRows().size() == 0){
+			if(precheck && dl.getLoadingErrorReport().getRows().size() == 0){
 				retval.setSuccess(true);
 			}
-			else if(safeLoad && dl.getLoadingErrorReport().getRows().size() != 0){
+			else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
 				retval.setSuccess(false);
 			}
-			else if(!safeLoad && recordsProcessed > 0){
+			else if(!precheck && recordsProcessed > 0){
 				retval.setSuccess(true);
 			}
 			else {
@@ -304,7 +304,7 @@ public class IngestionRestController {
 			
 			// perform actual load
 			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
-			recordsProcessed = dl.importData(true);	// defaulting to preflight.
+			recordsProcessed = dl.importData(true);	// defaulting to precheck
 	
 			retval.setSuccess(true);
 			retval.addResultsJSON(dl.getLoadingErrorReport().toJson());
