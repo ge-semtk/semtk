@@ -157,16 +157,14 @@ public class DataLoader {
 	 * Performs one or two pass ingestion.
 	 * Note: Check the error report if you don't know the expected number of records ingested
 	 *       Or use a flavor of this function that returns the error table.
-	 * @param twoPassPrecheck
+	 * @param precheck check that the ingest will succeed before starting it
 	 * @return number of records ingested
 	 * @throws Exception
 	 */
-	public int importData(Boolean twoPassPrecheck) throws Exception{
+	public int importData(Boolean precheck) throws Exception{
 
-		// check the nodegroup for consistency before continuing.
-		
-		LocalLogger.logToStdErr("about to validate against model.");
-		
+		// check the nodegroup for consistency before continuing.		
+		LocalLogger.logToStdErr("about to validate against model.");		
 		this.master.validateAgainstModel(this.oInfo);
 		LocalLogger.logToStdErr("validation completed.");
 		
@@ -175,7 +173,7 @@ public class DataLoader {
 		this.batchHandler.resetDataSet();
 		
 		// PASS 1
-		if(twoPassPrecheck){
+		if(precheck){
 			// perform "pre-check"
 			String exceptionHeader = "Error during ingest pre-check.  At least one thread threw exception.  e.g.: ";
 			Boolean skipCheck = false;
@@ -208,13 +206,13 @@ public class DataLoader {
 		// PASS 2
 		if (! precheckFailed) {
 			String exceptionHeader = null;
-			if (twoPassPrecheck) 
+			if (precheck) 
 				exceptionHeader = "Error in ingestion after successful pre-check.\nPartial ingestion may have occurred.  At least one thread threw exception.  e.g.: ";
 			else
 				exceptionHeader = "Error during one-pass ingestion.\nParial ingestion may have occurred.  At least one thread threw exception.  e.g.:";
 			
 			this.batchHandler.resetDataSet();
-			Boolean skipCheck = twoPassPrecheck;
+			Boolean skipCheck = precheck;
 			Boolean skipIngest = false;
 			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
 			
