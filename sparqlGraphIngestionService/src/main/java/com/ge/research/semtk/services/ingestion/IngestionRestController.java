@@ -45,6 +45,7 @@ import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -167,99 +168,72 @@ public class IngestionRestController {
 
 		int recordsProcessed = 0;
 		
-		LoggerRestClient logger = null;	// we may want to log.
-		LoggerClientConfig lcc = null;
-		ArrayList<DetailsTuple> deets = null;	// details to be logged
-		
-		logger = loggerConfigInitialization(logger, lcc);	// set up the logger. 
+		// set up the logger
+		LoggerRestClient logger = null;
+		logger = loggerConfigInitialization(logger, null);	
+		ArrayList<DetailsTuple> detailsToLog = null;	
 		
 		RecordProcessResults retval = new RecordProcessResults();
 		
 		try {
-			if(logger != null){	// always checking if we are actually logging. 
-				deets = LoggerRestClient.addDetails("Ingestion Type", "From CSV", null);
+			if(logger != null){ 
+				detailsToLog = LoggerRestClient.addDetails("Ingestion Type", "From CSV", null);
 			}
 			
-			// get ingestion sparql credentials
-			String sparqlEndpointUser = prop.getSparqlUserName();
-			String sparqlEndpointPassword = prop.getSparqlPassword();
-			
-			// get template file content and convert to json object for use. 			
-			String templateContent = null;			
-			if(fromFiles) { templateContent = new String( ((MultipartFile)templateFile).getBytes() ); }
-			else{ templateContent = (String)templateFile ; }
-			JSONParser parser = new JSONParser();
-			JSONObject json = null;			
+			// get SparqlGraphJson from template
+			String templateContent = fromFiles ? new String(((MultipartFile)templateFile).getBytes()) : (String)templateFile;
 			if(templateContent != null){
 				LocalLogger.logToStdErr("template size: "  + templateContent.length());
-			}
-			else{
+			}else{
 				LocalLogger.logToStdErr("template content was null");
 			}			
-			json = (JSONObject) parser.parse(templateContent);
-			SparqlGraphJson sgJson = new SparqlGraphJson(json);
+			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJsonObjectFromString(templateContent));			
 			
-		
-			String dataFileContent = null;
-			if(fromFiles) { dataFileContent = new String( ((MultipartFile)dataFile).getBytes() ); }
-			else{ 
-				dataFileContent = (String)dataFile ; 
-			}			
+			// get data file content
+			String dataFileContent = fromFiles ? new String(((MultipartFile)dataFile).getBytes()) : (String)dataFile; 
 			if(dataFileContent != null){
 				LocalLogger.logToStdErr("data size: "  + dataFileContent.length());
-			}
-			else{
+			}else{
 				LocalLogger.logToStdErr("data content was null");
 			}
 					
-			// get the connection override, if any
+			// override the connection, if needed
 			if(sparqlConnectionOverride != null){
-				String sparqlConnectionString = null;	
-				if(fromFiles){
-					sparqlConnectionString = new String( ((MultipartFile)sparqlConnectionOverride).getBytes() ); // read from file
-				}else{
-					sparqlConnectionString = (String)sparqlConnectionOverride;
-				}
-				// override the connection
-				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));				
+				String sparqlConnectionString = fromFiles ? new String(((MultipartFile)sparqlConnectionOverride).getBytes()) : (String)sparqlConnectionOverride;				
+				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));   				
 			}
-			
-			
-			if(logger != null){ // always checking if we are actually logging. 
-				deets = LoggerRestClient.addDetails("template", templateContent, deets);
+						
+			if(logger != null){  
+				detailsToLog = LoggerRestClient.addDetails("template", templateContent, detailsToLog);
 			}
 					
 			// get a CSV data set to use in the load. 
 			Dataset ds = new CSVDataset(dataFileContent, true);
 
 			// perform actual load
-			Calendar cal = Calendar.getInstance();
-			String startTime = dateFormat.format(cal.getTime());
+			String startTime = dateFormat.format(Calendar.getInstance().getTime());
 			if(logger != null) { 
-				deets = LoggerRestClient.addDetails("Start Time", startTime, deets); 				
+				detailsToLog = LoggerRestClient.addDetails("Start Time", startTime, detailsToLog); 				
 			}
 						
-			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			
 			recordsProcessed = dl.importData(precheck, skipIngest);
 	
-			String endTime = dateFormat.format(cal.getTime());
+			String endTime = dateFormat.format(Calendar.getInstance().getTime());
 			if(logger != null) { 
-				deets = LoggerRestClient.addDetails("End Time", endTime, deets); 
-				deets = LoggerRestClient.addDetails("input record size", recordsProcessed + "", deets);	
+				detailsToLog = LoggerRestClient.addDetails("End Time", endTime, detailsToLog); 
+				detailsToLog = LoggerRestClient.addDetails("input record size", recordsProcessed + "", detailsToLog);	
 			}
 			
 			// set success values
 			if(precheck && dl.getLoadingErrorReport().getRows().size() == 0){
 				retval.setSuccess(true);
-			}
-			else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
+			} else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
 				retval.setSuccess(false);
-			}
-			else if(!precheck && recordsProcessed > 0){
+			} else if(!precheck && recordsProcessed > 0){
 				retval.setSuccess(true);
-			}
-			else {
+			} else {
 				retval.setSuccess(false);
 			}			
 			
@@ -268,24 +242,22 @@ public class IngestionRestController {
 			retval.addResults(dl.getLoadingErrorReport());
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
-			LocalLogger.printStackTrace(e);
-			
+			LocalLogger.printStackTrace(e);			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromCsv*", e);
 		}
-		if(logger != null){ // always checking if we are actually logging. 
+		
+		if(logger != null){  
 			// what are we returning
-			deets = LoggerRestClient.addDetails("error code", retval.getResultCodeString(), deets);
-			deets = LoggerRestClient.addDetails("results", retval.toJson().toJSONString(), deets);
-			deets = LoggerRestClient.addDetails("records Processed", recordsProcessed + "", deets);
+			detailsToLog = LoggerRestClient.addDetails("error code", retval.getResultCodeString(), detailsToLog);
+			detailsToLog = LoggerRestClient.addDetails("results", retval.toJson().toJSONString(), detailsToLog);
+			detailsToLog = LoggerRestClient.addDetails("records Processed", recordsProcessed + "", detailsToLog);
 		}
 		
-		if(logger != null){ //log this...
-			logger.logEvent("Data ingestion", deets, "Add Instance Data To Triple Store");
+		if(logger != null){ 
+			logger.logEvent("Data ingestion", detailsToLog, "Add Instance Data To Triple Store");
 		}
-		JSONObject retvalJSON = retval.toJson();
-	//	LocalLogger.logToStdErr(retvalJSON.toJSONString());
-		return retvalJSON;
+		return retval.toJson();
 	}	
 	
 	
@@ -293,9 +265,7 @@ public class IngestionRestController {
 	public JSONObject fromPostgresODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
 		
 		TableResultSet retval = new TableResultSet();
-		int recordsProcessed = 0;
 
-		
 		try {
 					
 			String sparqlEndpointUser = prop.getSparqlUserName();
@@ -318,7 +288,7 @@ public class IngestionRestController {
 			
 			// perform actual load
 			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
-			recordsProcessed = dl.importData(true);	// defaulting to precheck
+			dl.importData(true);	// defaulting to precheck
 	
 			retval.setSuccess(true);
 			retval.addResultsJSON(dl.getLoadingErrorReport().toJson());
@@ -326,10 +296,8 @@ public class IngestionRestController {
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
 			LocalLogger.printStackTrace(e);
-			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
-
 		}
 		
 		return retval.toJson();
