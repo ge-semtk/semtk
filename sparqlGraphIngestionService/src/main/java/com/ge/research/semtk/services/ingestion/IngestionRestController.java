@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -98,6 +98,16 @@ public class IngestionRestController {
 	}
 	
 	/**
+	 * Perform precheck only (no ingest) using a CSV file against the given connection
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheckOnly", method= RequestMethod.POST)
+	public JSONObject fromCsvFilePrecheckOnly(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		return this.fromAnyCsv(templateFile, dataFile, connection, true, true, true);
+	}
+	
+	/**
 	 * Load data from CSV
 	 * @throws IOException 
 	 * @throws JsonMappingException 
@@ -137,13 +147,22 @@ public class IngestionRestController {
 	
 	/**
 	 * Load data from csv.
+	 */
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck){
+		return fromAnyCsv(templateFile, dataFile, sparqlConnectionOverride, fromFiles, precheck, false); // don't skip ingest
+	}
+	
+	/**
+	 * Load data from csv.
 	 * @param templateFile the json template (File if fromFiles=true, else String)
 	 * @param dataFile the data file (File if fromFiles=true, else String)
 	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
 	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
 	 * @param precheck check that the ingest will succeed before starting it
+	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
 	 */
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck){
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
+
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 		int recordsProcessed = 0;
@@ -165,22 +184,18 @@ public class IngestionRestController {
 			String sparqlEndpointUser = prop.getSparqlUserName();
 			String sparqlEndpointPassword = prop.getSparqlPassword();
 			
-			// get template file content and convert to json object for use. 
-			
-			String templateContent = null;
-			
+			// get template file content and convert to json object for use. 			
+			String templateContent = null;			
 			if(fromFiles) { templateContent = new String( ((MultipartFile)templateFile).getBytes() ); }
 			else{ templateContent = (String)templateFile ; }
 			JSONParser parser = new JSONParser();
-			JSONObject json = null;
-			
+			JSONObject json = null;			
 			if(templateContent != null){
 				LocalLogger.logToStdErr("template size: "  + templateContent.length());
 			}
 			else{
 				LocalLogger.logToStdErr("template content was null");
-			}
-			
+			}			
 			json = (JSONObject) parser.parse(templateContent);
 			SparqlGraphJson sgJson = new SparqlGraphJson(json);
 			
@@ -189,8 +204,7 @@ public class IngestionRestController {
 			if(fromFiles) { dataFileContent = new String( ((MultipartFile)dataFile).getBytes() ); }
 			else{ 
 				dataFileContent = (String)dataFile ; 
-			}
-			
+			}			
 			if(dataFileContent != null){
 				LocalLogger.logToStdErr("data size: "  + dataFileContent.length());
 			}
@@ -227,7 +241,7 @@ public class IngestionRestController {
 						
 			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
 			
-			recordsProcessed = dl.importData(precheck); 	// defaulting to precheck
+			recordsProcessed = dl.importData(precheck, skipIngest);
 	
 			String endTime = dateFormat.format(cal.getTime());
 			if(logger != null) { 

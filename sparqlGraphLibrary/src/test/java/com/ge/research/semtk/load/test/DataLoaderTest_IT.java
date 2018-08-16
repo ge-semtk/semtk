@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,6 +53,7 @@ public class DataLoaderTest_IT {
 	private static final String DELETE_URI_FMT = "delete { ?x ?y ?z.} where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";
 	private static final String SELECT_URI_TRIPLES_FMT = "select distinct ?x ?y ?z where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";	
 	private static final int DEFAULT_BATCH_SIZE = 32;
+	
 	@Test
 	public void testOriginal() throws Exception {
 		Dataset ds = new CSVDataset("src/test/resources/testTransforms.csv", false);
@@ -276,8 +277,37 @@ public class DataLoaderTest_IT {
 			fail();
 		}
 
+		assertEquals(dl.getTotalRecordsProcessed(), 1998);
+		
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestResults.csv");
 		
+	}
+	
+	
+	@Test
+	public void testPrecheckOnly() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDataShort.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+
+		// precheck
+		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true, true);  // skip ingest
+		
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		// check that no records were loaded
+		assertEquals(dl.getTotalRecordsProcessed(), 0); 
+		
+		// check that results are empty
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/testPrecheckOnlyResults.csv");
 	}
 	
 	@Test
