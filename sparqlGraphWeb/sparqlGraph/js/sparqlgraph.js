@@ -137,6 +137,9 @@
                                                      g.service.nodeGroupStore.url); 
             
             
+            resizeWindow();
+	        window.onresize = resizeWindow;
+            
             authenticate(document.getElementById("nav-but-span"));
             
             // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
