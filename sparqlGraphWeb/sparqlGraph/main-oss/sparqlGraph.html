@@ -432,7 +432,7 @@
 				    </section>
 					<br>
 				    <section class="module">
-				      <div id="mappingtabdiv" class="module-body" onresize="javascript:resizeToWindow('mappingtabdiv',-1,80)">
+				      <div id="mappingtabdiv" class="module-body">
 					    	<div id="importcanvasdiv" class="importcanvas">
 					    	</div>
 					    	<div id="importcolsdiv" class="importcols">
@@ -466,7 +466,8 @@
 	<script type="text/javascript">
 	// Things that need to be done after HTML is all loaded
 	
-	resizeToWindow('mappingtabdiv',-1,80);
+	resizeWindow();
+	window.onresize = resizeWindow;
 	
     require(['modules'], function() {
     $('.module.collapsible').collapsible();
