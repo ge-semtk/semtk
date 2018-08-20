@@ -519,7 +519,13 @@
         nodeGroupChanged(true);
     };
       
-    var resizeToWindow = function(name, xPercent, yPercent) {
+    // window's onresize event
+    var resizeWindow() = function {
+        resizeElem("mappingtabdiv", -1, 80);
+    };
+
+    var resizeElem = function(name, xPercent, yPercent) {
+        
         var elem = document.getElementById(name);
         if (xPercent > 0) {
             elem.width = window.innerWidth * xPercent;
