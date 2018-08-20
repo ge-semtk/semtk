@@ -519,6 +519,16 @@
         nodeGroupChanged(true);
     };
       
+    var resizeToWindow = function(name, xPercent, yPercent) {
+        var elem = document.getElementById(name);
+        if (xPercent > 0) {
+            elem.width = window.innerWidth * xPercent;
+        }
+        if (yPercent > 0) {
+            elem.height = window.innerHeight * yPercent;
+        }
+    };
+
     var doLoad = function() {
     	logEvent("SG Menu: File->Load");
     	gLoadDialog.loadDialog(gConn, doLoadConnection);

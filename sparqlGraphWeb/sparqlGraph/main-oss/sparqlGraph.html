@@ -279,10 +279,11 @@
 						resize:horizontal;
 						background-color:white;
 						float:left;
+						overflow:auto;
 					}
 					div.importcols {
 						height:100%;
-						overflow: hidden;           
+						overflow: auto;           
 						background-height:700px; 
 					}
 				</style>
@@ -431,7 +432,7 @@
 				    </section>
 					<br>
 				    <section class="module">
-				      <div id="mappingtabdiv" class="module-body">
+				      <div id="mappingtabdiv" class="module-body" onresize="javascript:resizeToWindow('mappingtabdiv',-1,80)">
 					    	<div id="importcanvasdiv" class="importcanvas">
 					    	</div>
 					    	<div id="importcolsdiv" class="importcols">
@@ -465,6 +466,7 @@
 	<script type="text/javascript">
 	// Things that need to be done after HTML is all loaded
 	
+	resizeToWindow('mappingtabdiv',-1,80);
 	
     require(['modules'], function() {
     $('.module.collapsible').collapsible();
