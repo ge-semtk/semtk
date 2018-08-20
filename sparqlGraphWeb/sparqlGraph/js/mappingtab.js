@@ -978,7 +978,7 @@ define([	// properly require.config'ed
 				// create table
 				var table = document.createElement("table");
 				table.id = "canvas-table";
-                table.style.width="98%";
+                table.style.marginRight="1ch";
 				
 				// insert an empty header just to set widths
 				var headerRow = table.insertRow(-1);

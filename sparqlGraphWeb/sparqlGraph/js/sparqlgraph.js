@@ -523,23 +523,24 @@
     };
       
     // window's onresize event
-    var resizeWindow = function {
-        resizeElem("mappingtabdiv", -1, 80);
+    var resizeWindow = function() {
+        resizeElem("importcanvasdiv", -1, 95);
+        resizeElem("importcolsdiv", -1, 95);
     };
 
     var resizeElem = function(name, xPercent, yPercent) {
         
         var elem = document.getElementById(name);
         if (xPercent > 0) {
-            elem.width = window.innerWidth * xPercent;
+            elem.style.width = Math.round((window.innerWidth - elem.getBoundingClientRect().left) * (xPercent / 100)) + "px";
         }
         if (yPercent > 0) {
-            elem.height = window.innerHeight * yPercent;
+            elem.style.height = Math.round((window.innerHeight - elem.getBoundingClientRect().top) * (yPercent / 100)) + "px";
         }
     };
 
     var doLoad = function() {
-    	logEvent("SG Menu: File->Load");
+    	logEvent("SG Menu: File->Load"); 
     	gLoadDialog.loadDialog(gConn, doLoadConnection);
     };
     
@@ -1844,6 +1845,8 @@
 		
 		// PEC TODO: this overwrites everything each time
 		gMappingTab.updateNodegroup(gNodeGroup);
+        
+        resizeWindow();
 	};
 	
 	var tabUploadActivated = function() {
