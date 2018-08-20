@@ -523,7 +523,7 @@
     };
       
     // window's onresize event
-    var resizeWindow() = function {
+    var resizeWindow = function {
         resizeElem("mappingtabdiv", -1, 80);
     };
 
