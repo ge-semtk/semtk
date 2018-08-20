@@ -359,10 +359,15 @@ public abstract class SparqlEndpointInterface {
 					return executeQueryPost(query, resultType);
 				}
 			} catch (Exception e) {
-				if (tryCount >= MAX_QUERY_TRIES) {
+				if (! this.isExceptionRetryAble(e)) {
+					LocalLogger.logToStdErr(e.getMessage());
+					throw e;
+				
+				} else if (tryCount >= MAX_QUERY_TRIES) {
 					LocalLogger.logToStdOut (String.format("SPARQL query failed after %d tries.  Giving up.", tryCount));
 					LocalLogger.logToStdErr(e.getMessage());
-					throw new Exception("Error connecting to triplestore at " +  this.getPostURL(), e);
+					throw e;
+					
 				} else {	
 					int sleepSec = 2 * tryCount;
 					// if we're overwhelming a server, really throttle
@@ -535,14 +540,19 @@ public abstract class SparqlEndpointInterface {
 	 * @param responseTxt
 	 * @return
 	 */
-	private String explainResponseTxt(String responseTxt) {
-		if (responseTxt.contains("Virtuoso") && responseTxt.contains("Error SP031")) {
-			return "SemTK says: Virtuoso query may be too large or complex.\n";
-		}
-		
+	protected String explainResponseTxt(String responseTxt) {
 		return "";
 	}
 
+	/**
+	 * Should system perform the default retry when it receives this exception from the triplestore
+	 * @param e
+	 * @return
+	 */
+	public boolean isExceptionRetryAble(Exception e) {
+		return true;
+	}
+	
 	/**
 	 * Execute an auth query using POST
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
