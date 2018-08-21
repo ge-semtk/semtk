@@ -107,7 +107,7 @@ public class ThreadAuthenticator {
 		if (threadHeaderTable != null) {
 			return getUserName(threadHeaderTable.get());
 		} else {
-			LocalLogger.logToStdErr("ThreadAuthenticator.getThreadUserName() says threadHeaderTable == null");
+			LocalLogger.logToStdErr(Thread.currentThread().getName() +" ThreadAuthenticator.getThreadUserName() says threadHeaderTable == null");
 		}
 		return ANONYMOUS;
 	}
@@ -116,15 +116,15 @@ public class ThreadAuthenticator {
 		if (headerTable != null) {
 			List<String> vals = headerTable.get(USERNAME_KEY);
 			if (vals != null && vals.size() == 1) {
-				LocalLogger.logToStdErr("ThreadAuthenticator.getUserName is " + vals.get(0));
+				LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName is " + vals.get(0));
 				return vals.get(0);
 			} else if (vals == null) {
-				LocalLogger.logToStdErr("ThreadAuthenticator.getUserName() says vals is null");
+				LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName() says vals is null");
 			} else if (vals.size() != 1) {
-				LocalLogger.logToStdErr("ThreadAuthenticator.getUserName() says vals size != 1 It is: " + Integer.toString(vals.size()));
+				LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName() says vals size != 1 It is: " + Integer.toString(vals.size()));
 			}
 		} else {
-			LocalLogger.logToStdErr("ThreadAuthenticator.getUserName() says headerTable == null");
+			LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName() says headerTable == null");
 		}
 		
 		return ANONYMOUS;

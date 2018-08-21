@@ -229,14 +229,15 @@ public class StatusServiceRestController {
 		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
 	    
-	    LocalLogger.logToStdErr("waitForPercentOrMsec sees user: " + ThreadAuthenticator.getThreadUserName());
+	    LocalLogger.logToStdErr(Thread.currentThread().getName() + " PRE-LOG: waitForPercentOrMsec sees user: " + ThreadAuthenticator.getThreadUserName());
 	    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
     	LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete start", "JobId", jobId);
     	LocalLogger.logToStdOut("Status Service waitForPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
     	
-    	
+    	LocalLogger.logToStdErr(Thread.currentThread().getName() + " POST-LOG waitForPercentOrMsec sees user: " + ThreadAuthenticator.getThreadUserName());
+	    
 	    try {
 	    	JobTracker tracker = new JobTracker(edc_prop);
 	    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
