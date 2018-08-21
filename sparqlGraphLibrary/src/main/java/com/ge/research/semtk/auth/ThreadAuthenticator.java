@@ -36,8 +36,8 @@ public class ThreadAuthenticator {
 	
 	public static final String USERNAME_KEY = "user_name";
 	
-	private static ThreadLocal<HeaderTable> threadHeaderTable = null;
-	private static ThreadLocal<Boolean> jobAdmin = null;
+	private static ThreadLocal<HeaderTable> threadHeaderTable = new ThreadLocal<>();
+	private static ThreadLocal<Boolean> jobAdmin = new ThreadLocal<>();
 	
 	/**
 	 * Authenticate this thread with headers
@@ -51,10 +51,8 @@ public class ThreadAuthenticator {
 								" to: " + getUserName(headerTable));
 		
 		/****** real work ********/
-		threadHeaderTable = new ThreadLocal<>();
 		threadHeaderTable.set(headerTable);
 		
-		jobAdmin = new ThreadLocal<Boolean>();
 		jobAdmin.set(false);
 		
 		/******* logging ********/		
