@@ -245,7 +245,8 @@ public class AuthorizationManager {
 		
 		// is user_name equal, or thread is a job admin
 		if (!threadIsJobAdmin() && !user.equals(owner)) {
-			throw new AuthorizationException("Permission denied: " + user + " may not access " + itemName + " owned by " + owner);
+			//throw new AuthorizationException
+			LocalLogger.logToStdErr("Permission denied: " + user + " may not access " + itemName + " owned by " + owner);
 		}
 	}
 		
