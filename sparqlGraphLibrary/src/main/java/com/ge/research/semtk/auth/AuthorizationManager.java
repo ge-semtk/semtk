@@ -243,10 +243,14 @@ public class AuthorizationManager {
 		updateAuthorization();
 		String user = ThreadAuthenticator.getThreadUserName();
 		
-		// is user_name equal, or thread is a job admin
-		if (!threadIsJobAdmin() && !user.equals(owner)) {
-			//throw new AuthorizationException
-			LocalLogger.logToStdErr("Permission denied: " + user + " may not access " + itemName + " owned by " + owner);
+		try {
+			// is user_name equal, or thread is a job admin
+			if (!threadIsJobAdmin() && !user.equals(owner)) {
+				throw new AuthorizationException("Permission denied: " + user + " may not access " + itemName + " owned by " + owner);
+			}
+		} catch (AuthorizationException e) {
+			LocalLogger.logToStdErr("FORGIVING EXCEPTION DURING DEBUGGING: ");
+			LocalLogger.printStackTrace(e);
 		}
 	}
 		

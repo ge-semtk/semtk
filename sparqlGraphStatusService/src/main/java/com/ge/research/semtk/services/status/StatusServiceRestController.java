@@ -32,6 +32,7 @@ import javax.validation.Valid;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -227,6 +228,8 @@ public class StatusServiceRestController {
 	public JSONObject waitForPercentOrMsec(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 	    String jobId = requestBody.jobId;
+	    
+	    LocalLogger.logToStdErr("waitForPercentOrMsec sees user: " + ThreadAuthenticator.getThreadUserName());
 	    
 	    SimpleResultSet res = new SimpleResultSet();
 	    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
