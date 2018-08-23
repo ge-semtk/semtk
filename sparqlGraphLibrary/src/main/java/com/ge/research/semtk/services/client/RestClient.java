@@ -124,6 +124,7 @@ public abstract class RestClient extends Client implements Runnable {
 	 *    and any exception into runException
 	 */
 	public void run() {
+		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		try {
 			this.runException = null;
 			this.runRes = this.execute();

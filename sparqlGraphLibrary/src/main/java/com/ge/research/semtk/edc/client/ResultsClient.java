@@ -49,8 +49,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	private int BATCH_SIZE_RETRIEVE = 50000;
 	
 	public ResultsClient (ResultsClientConfig config) {
-		this.conf = config;
-		
+		this.conf = config;	
 	}
 	
 	@Override
