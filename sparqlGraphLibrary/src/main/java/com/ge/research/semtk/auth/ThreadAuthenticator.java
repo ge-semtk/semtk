@@ -37,6 +37,17 @@ public class ThreadAuthenticator {
 	
 	/**
 	 * Authenticate this thread with headers
+	 * 
+	 * Code snippet for passing authentication on to sub-threads:
+	 *    - sub thread should have 
+	 *    		private HeaderTable headerTable;
+	 *    - sub thread constructor call:
+	 *    		new SubThread(...., ThreadAuthenticator.getHeaderTable());
+	 *    - sub thread constructor should contain
+	 *          this.headerTable = headerTable
+	 *    - sub thread run() should have
+	 *          ThreadAuthenticator.authenticateThisThread(this.headerTable)
+	 * 
 	 * @param headerTable - can be null (equivalent to un-authenticated)
 	 */
 	public static void authenticateThisThread(HeaderTable headerTable) {
