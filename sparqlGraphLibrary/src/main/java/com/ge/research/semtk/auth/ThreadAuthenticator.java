@@ -17,16 +17,12 @@
 package com.ge.research.semtk.auth;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.ge.research.semtk.utility.LocalLogger;
 
 
 /**
- * IMPORTANT:  strange behavior has been observed in sub-threads.
- *             Best strategy is to instantiate any RestClients and send them into sub-thread constructor.
- *             That way they know their authentication.
  * @author 200001934
  *
  */
@@ -47,8 +43,7 @@ public class ThreadAuthenticator {
 		
 		/******* logging ********/		
 		LocalLogger.logToStdErr(Thread.currentThread().getName() + 
-								" is authenticating from: " + getThreadUserName() + 
-								" to: " + getUserName(headerTable));
+								" is authenticating from: " + getThreadUserName());
 		
 		/****** real work ********/
 		threadHeaderTable.set(headerTable);
@@ -74,7 +69,7 @@ public class ThreadAuthenticator {
 	}
 	
 	/**
-	 * Makes this thread admin.
+	 * Makes this thread a job admin.
 	 * 
 	 *    // When you're not entirely sure the thread should alwasy be ADMIN, best usage is:
 	 * 	  setAdmin(true);
@@ -104,9 +99,7 @@ public class ThreadAuthenticator {
 	public static String getThreadUserName() {
 		if (threadHeaderTable != null) {
 			return getUserName(threadHeaderTable.get());
-		} else {
-			LocalLogger.logToStdErr(Thread.currentThread().getName() +" ThreadAuthenticator.getThreadUserName() says threadHeaderTable == null");
-		}
+		} 
 		return ANONYMOUS;
 	}
 	
@@ -114,16 +107,9 @@ public class ThreadAuthenticator {
 		if (headerTable != null) {
 			List<String> vals = headerTable.get(USERNAME_KEY);
 			if (vals != null && vals.size() == 1) {
-				LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName is " + vals.get(0));
 				return vals.get(0);
-			} else if (vals == null) {
-				LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName() says vals is null");
-			} else if (vals.size() != 1) {
-				LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName() says vals size != 1 It is: " + Integer.toString(vals.size()));
-			}
-		} else {
-			LocalLogger.logToStdErr(Thread.currentThread().getName() + " ThreadAuthenticator.getUserName() says headerTable == null");
-		}
+			} 
+		} 
 		
 		return ANONYMOUS;
 	}
