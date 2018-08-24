@@ -260,7 +260,7 @@ public class DataLoader {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest, ThreadAuthenticator.getThreadHeaderTable());
+				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				startingRow += nextRecords.size();
 				wrkrs.add(worker);
 				worker.start();

@@ -50,7 +50,7 @@ public class IngestionWorkerThread extends Thread {
 									 // TODO: make this configurable instead of batch size 3500
     
 	
-	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest, HeaderTable headerTable) throws Exception{
+	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest) throws Exception{
 		
 		this.endpoint = endpoint.copy();    // endpoint is not thread-safe as it contains query results
 		this.batchHandler = batchHandler;
@@ -60,12 +60,9 @@ public class IngestionWorkerThread extends Thread {
 		this.skipIngest = skipIngest;
 		this.oInfo = oInfo;
 		this.recommendedBatchSize = dataSetRecords.size();   // at first, presume datasetRecords is fine
-		this.headerTable = headerTable;
+		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 	}
 	
-	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest) throws Exception{
-		this(endpoint, batchHandler, dataSetRecords, startingRowNum, oInfo, skipIngest, skipIngest, null);
-	}
 	
 	/**
 	 * Runs a thread.
@@ -83,7 +80,7 @@ public class IngestionWorkerThread extends Thread {
 				// try to run one efficient query
 				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo);
 				if (query.length() <= this.optimalQueryChars) {
-					//System.out.println("Query length DEBUG-1: " + query.length());   
+					System.out.println("Ingest Query\n" + query);   
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 					
 				} else {
@@ -92,7 +89,7 @@ public class IngestionWorkerThread extends Thread {
 					
 					// run queryList
 					for (String q : queryList) {
-						//System.out.println("Query length DEBUG-2: " + q.length());   
+						System.out.println("Ingest Query\n" + q);   
 						this.endpoint.executeQuery(q, SparqlResultTypes.CONFIRM);
 					}
 				}
