@@ -107,7 +107,7 @@ public class IngestionRestController {
 			LocalLogger.logToStdErr(endpoint);
 	
 			LocalLogger.logToStdErr("template file");
-			LocalLogger.logToStdErr(new String(templateFile.getBytes()));
+			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
 			
 			LocalLogger.logToStdErr("data file");
 			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
@@ -122,10 +122,10 @@ public class IngestionRestController {
 			LocalLogger.logToStdErr(endpoint);
 	
 			LocalLogger.logToStdErr("template file");
-			LocalLogger.logToStdErr(new String(templateFile.getBytes()));
+			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
 			
 			LocalLogger.logToStdErr("connection");
-			LocalLogger.logToStdErr(new String(connection.getBytes()));
+			LocalLogger.logToStdErr(new SparqlConnection(new String(connection.getBytes())).toJson().toJSONString());
 			
 			LocalLogger.logToStdErr("data file");
 			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
