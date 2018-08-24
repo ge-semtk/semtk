@@ -75,14 +75,14 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsvFile", method= RequestMethod.POST)
 	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		debug("fromCsvFile", templateFile, dataFile);
+		//debug("fromCsvFile", templateFile, dataFile);
 		return this.fromAnyCsv(templateFile, dataFile, null, true, false);
 	}
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
 	public JSONObject fromCsvFileWithNewConnection(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
+		//debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
 		return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
 	}
 	
@@ -90,7 +90,7 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsvFilePrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		debug("fromCsvFilePrecheck", templateFile, dataFile);
+		//debug("fromCsvFilePrecheck", templateFile, dataFile);
 		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
 	}
 	
@@ -98,42 +98,11 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFileWithNewConnectionPrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
+		//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
 		return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
 	}
 	
-	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile) {
-		try {
-			LocalLogger.logToStdErr(endpoint);
 	
-			LocalLogger.logToStdErr("template file");
-			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
-			
-			LocalLogger.logToStdErr("data file");
-			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
-			
-		} catch (Exception e) {
-			LocalLogger.printStackTrace(e);
-		}
-	}
-	
-	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile, MultipartFile connection) {
-		try {
-			LocalLogger.logToStdErr(endpoint);
-	
-			LocalLogger.logToStdErr("template file");
-			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
-			
-			LocalLogger.logToStdErr("connection");
-			LocalLogger.logToStdErr(new SparqlConnection(new String(connection.getBytes())).toJson().toJSONString());
-			
-			LocalLogger.logToStdErr("data file");
-			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
-			
-		} catch (Exception e) {
-			LocalLogger.printStackTrace(e);
-		}
-	}
 	/**
 	 * Perform precheck only (no ingest) using a CSV file against the given connection
 	 */
@@ -182,6 +151,38 @@ public class IngestionRestController {
 		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
 	}
 	
+	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile) {
+		try {
+			LocalLogger.logToStdErr(endpoint);
+	
+			LocalLogger.logToStdErr("template file");
+			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
+			
+			LocalLogger.logToStdErr("data file");
+			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
+			
+		} catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+		}
+	}
+	
+	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile, MultipartFile connection) {
+		try {
+			LocalLogger.logToStdErr(endpoint);
+	
+			LocalLogger.logToStdErr("template file");
+			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
+			
+			LocalLogger.logToStdErr("connection");
+			LocalLogger.logToStdErr(new SparqlConnection(new String(connection.getBytes())).toJson().toJSONString());
+			
+			LocalLogger.logToStdErr("data file");
+			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
+			
+		} catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+		}
+	}
 	/**
 	 * Load data from csv.
 	 */
