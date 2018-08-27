@@ -119,6 +119,8 @@ public class ResultsServiceRestController {
 	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonLdResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}    	
 		return res.toJson();
 	}
@@ -137,7 +139,9 @@ public class ResultsServiceRestController {
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 
 		LocalLogger.logToStdErr("done writing output");
 	}
@@ -162,6 +166,8 @@ public class ResultsServiceRestController {
 	    	res.addRationaleMessage(SERVICE_NAME, "storeJsonBlobResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}    	
 		return res.toJson();	
 	}
@@ -184,7 +190,9 @@ public class ResultsServiceRestController {
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 
 		LocalLogger.logToStdErr("done writing output");
 	}
@@ -222,7 +230,9 @@ public class ResultsServiceRestController {
 		    LocalLogger.printStackTrace(e);
 		    res = new TableResultSet(false);
 		    res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 
 		return res.toJson();
 	}
@@ -270,7 +280,9 @@ public class ResultsServiceRestController {
 			res.addRationaleMessage(SERVICE_NAME, "storeBinaryFile", e);
 			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFile exception", "message", e.toString());
 			LocalLogger.printStackTrace(e);
-		}
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 		return res.toJson();
 	}
 
@@ -315,7 +327,9 @@ public class ResultsServiceRestController {
 			res.addRationaleMessage(SERVICE_NAME, "storeBinaryFilePath", e);
 			LoggerRestClient.easyLog(logger, "ResultsService", "storeBinaryFilePath exception", "message", e.toString());
 			LocalLogger.printStackTrace(e);
-		}
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 		return res.toJson();
 	}
 	
@@ -390,7 +404,9 @@ public class ResultsServiceRestController {
     		    LocalLogger.printStackTrace(e1);
     		    return null;
         	}
-        }
+        } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
     }
 
 
@@ -465,7 +481,9 @@ public class ResultsServiceRestController {
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonAddIncremental", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-		}    	
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}     	
 		return res.toJson();
 	}
 	
@@ -497,6 +515,8 @@ public class ResultsServiceRestController {
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonFinalize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonFinalize exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}    	
 		return res.toJson();
 	}
@@ -535,7 +555,9 @@ public class ResultsServiceRestController {
 		} catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 
 		LocalLogger.logToStdErr("done writing output");
 	}
@@ -560,7 +582,9 @@ public class ResultsServiceRestController {
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 		// if nothing, return nothing
 		LocalLogger.logToStdErr("done writing output");
 		return null;
@@ -590,7 +614,9 @@ public class ResultsServiceRestController {
 	    } catch (Exception e) {
 	    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
@@ -614,7 +640,9 @@ public class ResultsServiceRestController {
 	    } catch (Exception e) {
 		    retTrue = new SimpleResultSet(false);
 		    retTrue.addRationaleMessage(SERVICE_NAME, "getTableResultsRowCount", e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 		
 		return retTrue.toJson(); 
 	}
@@ -641,7 +669,9 @@ public class ResultsServiceRestController {
 	    	} catch (Exception ee) {}
 	    	
 		    LocalLogger.printStackTrace(e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
@@ -712,7 +742,9 @@ public class ResultsServiceRestController {
 	    	res.addRationaleMessage(SERVICE_NAME, "getResults", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "getResults exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-	    }	    
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 	    
 	    return res.toJson();
 	}
 	
@@ -740,7 +772,9 @@ public class ResultsServiceRestController {
 	    	res.setSuccess(false);
 	    	res.addRationaleMessage(SERVICE_NAME, "deleteStorage", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "deleteStorage exception", "message", e.toString());
-	    }	    
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		} 	    
 	    return res.toJson();
 	}
 	
