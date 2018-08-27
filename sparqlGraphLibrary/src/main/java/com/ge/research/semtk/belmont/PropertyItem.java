@@ -58,7 +58,6 @@ public class PropertyItem extends Returnable {
 	
 	public PropertyItem(String nome, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
 		this(nome, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
-		LocalLogger.logToStdOut("Using Deprecated PropertyItem constructor");
 	}
 
 		
