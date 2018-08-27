@@ -42,6 +42,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -421,7 +422,9 @@ public class ResultsServiceRestController {
 	    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonInitialize", e);
 		    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
-		}    	
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}
 		return res.toJson();
 	}
 	
@@ -625,7 +628,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
 	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-	
+		final String ENDPOINT = "getTableResultsJson";
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows, requestBody.getStartRow());	
@@ -633,11 +636,27 @@ public class ResultsServiceRestController {
 			
 			wrapJsonInTableToSend(retval, resp);
 	    } catch (Exception e) {
+	    	try {
+	    		writeError(e, ENDPOINT, resp);
+	    	} catch (Exception ee) {}
+	    	
 		    LocalLogger.printStackTrace(e);
 	    }
 		LocalLogger.logToStdErr("done writing output");
 	}
 	
+	// PEC TODO: shouldn't this be a TableResultSet.toJson()
+	private void writeError(Exception e, String endpoint, HttpServletResponse resp) throws Exception {
+		TableResultSet res = new TableResultSet();
+		res.setSuccess(false);
+		res.addRationaleMessage(SERVICE_NAME, endpoint, e);
+		PrintWriter outPrint = resp.getWriter();
+		
+		outPrint.write(res.toJson().toJSONString());
+		outPrint.flush();
+		outPrint.close();
+	}
+
 	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception, Exception{
 		
 		PrintWriter outPrint = resp.getWriter();
