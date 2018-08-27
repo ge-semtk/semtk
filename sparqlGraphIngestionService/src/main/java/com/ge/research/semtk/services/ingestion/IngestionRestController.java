@@ -282,6 +282,8 @@ public class IngestionRestController {
 			LocalLogger.printStackTrace(e);			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromCsv*", e);
+		}  finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		
 		if(logger != null){  
@@ -335,6 +337,8 @@ public class IngestionRestController {
 			LocalLogger.printStackTrace(e);
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		
 		return retval.toJson();

@@ -165,6 +165,8 @@ public class DispatcherServiceRestController {
 				}
 			}
 			
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		// send back the request ID.
 		// the request is not finished but that is okay
@@ -222,6 +224,8 @@ public class DispatcherServiceRestController {
 				}
 			}
 			
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		// send back the request ID.
 		// the request is not finished but that is okay
@@ -253,6 +257,8 @@ public class DispatcherServiceRestController {
 			LocalLogger.printStackTrace(e);
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getConstraintInfo", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		// send back the request ID.
 		// the request is not finished but that is okay

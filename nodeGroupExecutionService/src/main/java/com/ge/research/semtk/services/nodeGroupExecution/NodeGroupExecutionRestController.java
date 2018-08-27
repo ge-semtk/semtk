@@ -111,6 +111,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -139,6 +141,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "jobStatusMessage", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -172,6 +176,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionCheck", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -201,6 +207,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionPercentage", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -233,7 +241,9 @@ public class NodeGroupExecutionRestController {
 			LocalLogger.printStackTrace(e);
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
-	    }
+	    } finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}
 	    
 	    return retval.toJson();
 	}
@@ -260,6 +270,8 @@ public class NodeGroupExecutionRestController {
 			retval = new TableResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		return retval.toJson();
 	}
@@ -282,6 +294,8 @@ public class NodeGroupExecutionRestController {
 			retval = new NodeGroupResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		return retval.toJson();
 	}
@@ -340,6 +354,8 @@ public class NodeGroupExecutionRestController {
 			retval = new TableResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getResultsLocation", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -389,6 +405,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage("service: " + SERVICE_NAME + " method: dispatchAnyJobById()", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -440,6 +458,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../dispatchAnyJobById()", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -456,7 +476,7 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
 	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 	}
 	
 	@ApiOperation(
@@ -526,6 +546,8 @@ public class NodeGroupExecutionRestController {
 				LocalLogger.printStackTrace(e);
 				ret = new TableResultSet(false);
 				ret.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		
 		return ret.toJson();
@@ -679,6 +701,8 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	
 		return retval.toJson();
@@ -703,6 +727,8 @@ public class NodeGroupExecutionRestController {
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
 			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		return retval.toJson();
 	}
@@ -727,6 +753,8 @@ public class NodeGroupExecutionRestController {
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
 			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		return retval.toJson();
 	}
@@ -749,6 +777,8 @@ public class NodeGroupExecutionRestController {
 		}catch(Exception e){
 			retval = new RecordProcessResults(false);
 			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		return retval.toJson();
 	}
@@ -772,6 +802,8 @@ public class NodeGroupExecutionRestController {
 			LocalLogger.printStackTrace(e);
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroupID", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		
 		return retval.toJson();
@@ -798,6 +830,8 @@ public class NodeGroupExecutionRestController {
 		catch(Exception e){
 			retval = new TableResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroup", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		
 		return retval.toJson();

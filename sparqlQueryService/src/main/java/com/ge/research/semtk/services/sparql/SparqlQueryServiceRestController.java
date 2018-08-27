@@ -122,6 +122,8 @@ public class SparqlQueryServiceRestController {
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "query", e);
+		}  finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 		
 		// print elapsed time
@@ -169,6 +171,8 @@ public class SparqlQueryServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "queryAuth", e);
 			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		LocalLogger.logToStdOut("Result code:" + resultSet.getResultCodeString());
 		return resultSet.toJson();
@@ -204,6 +208,8 @@ public class SparqlQueryServiceRestController {
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "dropGraph", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
 		return resultSet.toJson();
@@ -244,6 +250,8 @@ public class SparqlQueryServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "parallelQuery", "Throwable: " + e.getMessage());
 			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}
 	}	
 
@@ -304,6 +312,8 @@ public class SparqlQueryServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearPrefix", e);
 			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}	
 		
 		return resultSet.toJson();
@@ -363,6 +373,8 @@ public class SparqlQueryServiceRestController {
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, endpointName, e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}	
 		
 		return resultSet.toJson();
@@ -400,6 +412,8 @@ public class SparqlQueryServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "clearAll", e);
 			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
 		return resultSet.toJson();
@@ -451,6 +465,8 @@ public class SparqlQueryServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "uploadOwl", e);
 			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
 		return simpleResultSetJson;	
