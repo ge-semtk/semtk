@@ -290,9 +290,11 @@ public class ResultsClient extends RestClient implements Runnable {
 		// write the start of the JSON
 		this.conf.setServiceEndpoint("results/storeTableResultsJsonInitialize"); 
 		this.conf.setMethod(RestClientConfig.Methods.POST);
-		this.parametersJSON.put("jobId", jobId);
-		this.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
-		thread = new Thread(this, "execStoreTableResults_initialize");
+		
+		ResultsClient initResultsClient = new ResultsClient((ResultsClientConfig) this.conf);
+		initResultsClient.parametersJSON.put("jobId", jobId);
+		initResultsClient.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
+		thread = new Thread(initResultsClient, "execStoreTableResults_initialize");
 		thread.start();
 		
 		// do formatting tasks in parallel
@@ -357,9 +359,10 @@ public class ResultsClient extends RestClient implements Runnable {
 			// send the current batch  
 			this.conf.setServiceEndpoint("results/storeTableResultsJsonAddIncremental"); 
 			this.conf.setMethod(RestClientConfig.Methods.POST);
-			this.parametersJSON.put("contents", Utility.compress(resultsSoFar.toString())); 
-			this.parametersJSON.put("jobId", jobId);
-			thread = new Thread(this, "execStoreTableResults_jsonIncremental_"+tableRowsDone);
+			ResultsClient incrResultsClient = new ResultsClient((ResultsClientConfig) this.conf);
+			incrResultsClient.parametersJSON.put("contents", Utility.compress(resultsSoFar.toString())); 
+			incrResultsClient.parametersJSON.put("jobId", jobId);
+			thread = new Thread(incrResultsClient, "execStoreTableResults_jsonIncremental_"+tableRowsDone);
 			thread.start();
 			
 			if (timerFlag) { 
@@ -376,8 +379,9 @@ public class ResultsClient extends RestClient implements Runnable {
 		// write the end of the JSON
 		this.conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
 		this.conf.setMethod(RestClientConfig.Methods.POST);
-		this.parametersJSON.put("jobId", jobId);
-		thread = new Thread(this, "execStoreTableResults_finalize");
+		ResultsClient finalResultsClient = new ResultsClient((ResultsClientConfig) this.conf);
+		finalResultsClient.parametersJSON.put("jobId", jobId);
+		thread = new Thread(finalResultsClient, "execStoreTableResults_finalize");
 		thread.start();
 		
 		// wait for the finalize run to finish
