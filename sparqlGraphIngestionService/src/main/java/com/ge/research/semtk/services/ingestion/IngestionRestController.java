@@ -75,31 +75,51 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsvFile", method= RequestMethod.POST)
 	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		//debug("fromCsvFile", templateFile, dataFile);
-		return this.fromAnyCsv(templateFile, dataFile, null, true, false);
+		try {
+			//debug("fromCsvFile", templateFile, dataFile);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
 	public JSONObject fromCsvFileWithNewConnection(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		//debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
-		return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
+		try {
+			//debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		//debug("fromCsvFilePrecheck", templateFile, dataFile);
-		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+		try {
+			//debug("fromCsvFilePrecheck", templateFile, dataFile);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFileWithNewConnectionPrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
-		return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
+		try {
+			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	
@@ -110,7 +130,12 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheckOnly", method= RequestMethod.POST)
 	public JSONObject fromCsvFilePrecheckOnly(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(templateFile, dataFile, connection, true, true, true);
+		try {
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	/**
@@ -123,32 +148,52 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsv", method= RequestMethod.POST)
 	public JSONObject fromCsv(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
 		HeadersManager.setHeaders(headers);
-		// LocalLogger.logToStdErr("the request: " + requestBody);
-		IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
-		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
+		try {
+			// LocalLogger.logToStdErr("the request: " + requestBody);
+			IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
+			return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnection", method= RequestMethod.POST)
 	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
 		HeadersManager.setHeaders(headers);
-		// LocalLogger.logToStdErr("the request: " + requestBody);
-		IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
-		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
+		try {
+			// LocalLogger.logToStdErr("the request: " + requestBody);
+			IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
+			return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
+		try {
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnectionPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
+		try {
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile) {
@@ -282,9 +327,7 @@ public class IngestionRestController {
 			LocalLogger.printStackTrace(e);			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromCsv*", e);
-		}  finally {
-			HeadersManager.setHeaders(new HttpHeaders());
-		}
+		}  
 		
 		if(logger != null){  
 			// what are we returning
@@ -337,9 +380,7 @@ public class IngestionRestController {
 			LocalLogger.printStackTrace(e);
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
-		} finally {
-			HeadersManager.setHeaders(new HttpHeaders());
-		}
+		} 
 		
 		return retval.toJson();
 	}	

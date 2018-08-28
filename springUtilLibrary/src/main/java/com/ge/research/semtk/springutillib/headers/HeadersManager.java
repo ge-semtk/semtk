@@ -57,4 +57,8 @@ public class HeadersManager {
 		
 	}
 	
+	public static void clearHeaders() {
+		ThreadAuthenticator.unAuthenticateThisThread();	
+	}
+	
 }

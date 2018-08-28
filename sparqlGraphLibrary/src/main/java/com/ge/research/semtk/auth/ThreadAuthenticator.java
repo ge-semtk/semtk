@@ -32,8 +32,8 @@ public class ThreadAuthenticator {
 	
 	public static final String USERNAME_KEY = "user_name";
 	
-	private static ThreadLocal<HeaderTable> threadHeaderTable = new ThreadLocal<>();
-	private static ThreadLocal<Boolean> jobAdmin = new ThreadLocal<>();
+	private static ThreadLocal<HeaderTable> threadHeaderTables = new ThreadLocal<>();
+	private static ThreadLocal<Boolean> threadJobAdmins = new ThreadLocal<>();
 	
 	/**
 	 * Authenticate this thread with headers
@@ -51,17 +51,15 @@ public class ThreadAuthenticator {
 	public static void authenticateThisThread(HeaderTable headerTable) {
 		
 		/******* logging ********/		
-		LocalLogger.logToStdErr(Thread.currentThread().getName() + 
-								" is authenticating from: " + getThreadUserName());
+		String oldName = getThreadUserName();
 		
 		/****** real work ********/
-		threadHeaderTable.set(headerTable);
-		
-		jobAdmin.set(false);
+		threadHeaderTables.set(headerTable);
+		threadJobAdmins.set(false);
 		
 		/******* logging ********/		
 		LocalLogger.logToStdErr(Thread.currentThread().getName() + 
-								" is authenticated to: " + getThreadUserName());
+								" has authenticated  from: " + oldName + "  to: " + getThreadUserName());
 	}
 	
 	public static void authenticateThisThread(String userName) {
@@ -73,8 +71,8 @@ public class ThreadAuthenticator {
 	}
 	
 	public static void unAuthenticateThisThread() {
-		threadHeaderTable = null;
-		jobAdmin = null;
+		threadHeaderTables.set(null);;
+		threadJobAdmins.set(null);
 	}
 	
 	/**
@@ -89,13 +87,12 @@ public class ThreadAuthenticator {
 	 *    }
 	 */
 	public static void setJobAdmin(boolean a) {
-		jobAdmin = new ThreadLocal<Boolean>();
-		jobAdmin.set(a);
+		threadJobAdmins.set(a);
 	}
 	
 	public static boolean isJobAdmin() {
-		if (jobAdmin != null && jobAdmin.get() != null) {
-			return jobAdmin.get();
+		if (threadJobAdmins != null && threadJobAdmins.get() != null) {
+			return threadJobAdmins.get();
 		} else {
 			return false;
 		}
@@ -106,8 +103,8 @@ public class ThreadAuthenticator {
 	 * @return
 	 */
 	public static String getThreadUserName() {
-		if (threadHeaderTable != null) {
-			return getUserName(threadHeaderTable.get());
+		if (threadHeaderTables != null) {
+			return getUserName(threadHeaderTables.get());
 		} 
 		return ANONYMOUS;
 	}
@@ -128,10 +125,10 @@ public class ThreadAuthenticator {
 	 * @return
 	 */
 	public static HeaderTable getThreadHeaderTable() {
-		if (threadHeaderTable == null) {
+		if (threadHeaderTables == null) {
 			return null;
 		} else {
-			return threadHeaderTable.get();
+			return threadHeaderTables.get();
 		}
 	}
 	
