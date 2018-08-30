@@ -232,6 +232,9 @@ public class IntegrationTestUtility {
 	}
 	
 	public static String getIntegrationTestProperty(String key) throws Exception{
+		if (!Utility.ENV_TEST) {
+			throw new Exception(Utility.ENV_TEST_EXCEPTION_STRING);
+		}
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
 	}
 	
