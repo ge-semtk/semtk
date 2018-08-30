@@ -19,12 +19,28 @@ package com.ge.research.semtk.belmont.runtimeConstraints;
 
 public enum SupportedOperations {
 
-	MATCHES, 				// value matches one of the operands (accepts collections)
-	REGEX, 					// value matches the string indicated by the given operand
-	GREATERTHAN, 			// value is greater than the operand
-	GREATERTHANOREQUALS, 	// value is greater than or equal to the operand
-	LESSTHAN, 				// value is less than the operand
-	LESSTHANOREQUALS, 		// value is less than or equal to the operand
-	VALUEBETWEEN,			// value is between the given operands, including both endpoints
-	VALUEBETWEENUNINCLUSIVE // value is between the given operands, not including endpoints
+	MATCHES(1,1000), 		        // value matches one of the operands (accepts collections)
+	REGEX(1,1), 			        // value matches the string indicated by the given operand
+	GREATERTHAN(1,1), 			    // value is greater than the operand
+	GREATERTHANOREQUALS(1,1), 	    // value is greater than or equal to the operand
+	LESSTHAN(1,1), 				    // value is less than the operand
+	LESSTHANOREQUALS(1,1), 		    // value is less than or equal to the operand
+	VALUEBETWEEN(2,2),			    // value is between the given operands, including both endpoints
+	VALUEBETWEENUNINCLUSIVE(2,2);    // value is between the given operands, not including endpoints
+	
+	private int minOperands = -1;
+	private int maxOperands = -1;
+	
+	private SupportedOperations(int minOpnds, int maxOpnds) {
+		this.minOperands = minOpnds;
+		this.maxOperands = maxOpnds;
+	}
+
+	public int getMinOperands() {
+		return minOperands;
+	}
+
+	public int getMaxOperands() {
+		return maxOperands;
+	}
 }

@@ -69,7 +69,7 @@ public class RuntimeConstraintManager {
 	 * NOTE if you've already applied constraints to a nodegroup you probably don't need this json
 	 * @return Null if none
 	 */
-	public JSONArray toJson(){
+	public JSONArray toJson() throws Exception {
 		JSONArray retval = new JSONArray();
 		
 		// loop through all runtime-constrainable
@@ -77,23 +77,9 @@ public class RuntimeConstraintManager {
 			
 			if (rco.constraintIsApplied()) {
 				// create a new JSONObject
-				JSONObject curr = new JSONObject();
-				
-				// add the basics:
-				curr.put("SparqlID", rco.getObjectName());
-				curr.put("Operator", rco.getOperationName());
-				
-				// get the operands.
-				JSONArray operandArr = new JSONArray();
-				
-				for(String op : rco.getOperands()){
-					operandArr.add(op);
-				}
-				
-				curr.put("Operands", operandArr);
-	
-				// add the last "current" entry to the outgoing array.
-				retval.add(curr);
+				JSONObject constraintJson = buildRuntimeConstraintJson(rco.getObjectName(),rco.getOperation(),rco.getOperands());
+						
+				retval.add(constraintJson);
 			}
 		}
 
@@ -104,7 +90,32 @@ public class RuntimeConstraintManager {
 		}
 	}
 	
-	public String toJSONString() {
+	/**
+	 * Build runtime constraint json with no checking
+	 * @param sparqlID
+	 * @param operation
+	 * @param operandList
+	 * @return JSONObject
+	 */
+	public static JSONObject buildRuntimeConstraintJson(String sparqlID, SupportedOperations operation, ArrayList<String> operandList ) throws Exception {
+		JSONObject ret = new JSONObject();
+		
+		ret.put("SparqlID", sparqlID);
+		ret.put("Operator", operation.name());
+		
+		if (operandList.size() < operation.getMinOperands() || operandList.size() > operation.getMaxOperands()) {
+			throw new Exception(operation.name() + " does not support list of " + operandList.size() + " operands");
+		}
+		JSONArray operandArr = new JSONArray();
+		for(String op : operandList){
+			operandArr.add(op);
+		}
+		ret.put("Operands", operandArr);
+		
+		return ret;
+	}
+	
+	public String toJSONString() throws Exception {
 		return this.toJson().toString();
 	}
 	
