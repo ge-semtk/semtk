@@ -125,7 +125,8 @@ public class NodeGroupTest {
 		// drag the json into SparqlGraph to see
 		String jsonPath = "src/test/resources/sampleBattery Optional Props.json";
 
-		NodeGroup nodegroup = TestGraph.getNodeGroup(jsonPath);
+		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(jsonPath));
+		NodeGroup nodegroup = sgJson.getNodeGroup();
 		
 		Node battery = nodegroup.getNodeBySparqlID("?Battery");
 		Node battery_0 = nodegroup.getNodeBySparqlID("?Battery_0");
@@ -180,7 +181,8 @@ public class NodeGroupTest {
 		// drag the json into SparqlGraph to see
 		String jsonPath = "src/test/resources/sampleBattery Triple Optional.json";
 
-		NodeGroup nodegroup = TestGraph.getNodeGroup(jsonPath);
+        SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(jsonPath));
+		NodeGroup nodegroup = sgJson.getNodeGroup();
 		
 		Node battery = nodegroup.getNodeBySparqlID("?Battery");
 		Node battery_0 = nodegroup.getNodeBySparqlID("?Battery_0");
