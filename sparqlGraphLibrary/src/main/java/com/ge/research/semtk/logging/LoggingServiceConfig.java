@@ -27,12 +27,24 @@ public class LoggingServiceConfig {
 	// used in all logging
 	private String loggingType;
 	private String prefixPath;
+	private String mainRegex = null;
+	private String secondaryType = null;
+	private String cloudConnection = null;
 	
 	public LoggingServiceConfig(String logOption, String prefix){
 		this.loggingType = logOption;
 		this.prefixPath = prefix;
 	}
 	
+	public LoggingServiceConfig(String logOption, String prefix, String mainRegex, String secondaryType, String cloudConnection){
+		this.loggingType = logOption;
+		this.prefixPath = prefix;
+		this.mainRegex = mainRegex;
+		this.secondaryType = secondaryType;
+		this.cloudConnection = cloudConnection;
+	}
+	
+	// "abnormal" getters
 	public String returnPrefix(){
 		return this.prefixPath;
 	}
@@ -41,5 +53,25 @@ public class LoggingServiceConfig {
 		return this.loggingType;
 	}
 	
+	// "normal" getters
+	public String getLoggingType() {
+		return loggingType;
+	}
+
+	public String getPrefixPath() {
+		return prefixPath;
+	}
+
+	public String getMainRegex() {
+		return mainRegex;
+	}
+
+	public String getSecondaryType() {
+		return secondaryType;
+	}
+
+	public String getCloudConnection() {
+		return cloudConnection;
+	}
 	
 }

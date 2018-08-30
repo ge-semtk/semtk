@@ -28,9 +28,9 @@ public class SparqlLoggingConfig extends LoggingServiceConfig {
 	private String userName;
 	private String password;
 	
-	public SparqlLoggingConfig(String logOption, String prefix, String sparqlServerUrl, String sparqlServerType,
-			String uName, String pass) {
-		super(logOption, prefix);
+	public SparqlLoggingConfig(String logOption, String prefix,  String mainRegex, String secondaryType, String cloudConnection,
+			String sparqlServerUrl, String sparqlServerType, String uName, String pass) {
+		super(logOption, prefix, mainRegex, secondaryType, cloudConnection);
 		this.sparqlServerUrl = sparqlServerUrl;
 		this.sparqlServerType = sparqlServerType;
 		this.userName = uName;
