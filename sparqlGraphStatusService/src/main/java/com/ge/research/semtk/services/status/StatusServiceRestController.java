@@ -184,7 +184,7 @@ public class StatusServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobsInfo", method=RequestMethod.POST)
-	public JSONObject getResultsURLs(@RequestHeader HttpHeaders headers) {
+	public JSONObject getJobsInfo(@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
 			final String ENDPOINT_NAME = "getJobsInfo";
