@@ -603,8 +603,25 @@ require([	'local/sparqlformconfig',
 					alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add the child node " + nodeItem.getUriValueType());
 					return;
 				}
+                
+                // test special case: change "Measurement" to measuredValue
+                
+                if (childSNode.getURI() == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement") {
+                    item = childSNode.getPropertyByKeyname("measuredValue");
+                    filterItem = item;
+                    itemKeyName = "measuredValue";
+                    itemSNode = childSNode;
+                    childSNode = null;
+                    
+                // end test
+                    
+                } else {
+                    filterItem = childSNode;   
+                }
+                
+               
 				
-				filterItem = childSNode;
+				
 			} else {
 				childSNode = null;
 				filterItem = item;
