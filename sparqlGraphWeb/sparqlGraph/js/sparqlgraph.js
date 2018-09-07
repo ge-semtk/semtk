@@ -988,8 +988,20 @@
    	};
 
     var doTest = function () {            
-        //activateOntologyEditor();
-        getUser();
+        require(['sparqlgraph/js/msiclientontologyinfo'], function(MsiClientOntologyInfo) {
+            success = function(results){
+                if (results.isSuccess()) {
+                    var oJson = results.getSimpleResultField("ontologyInfo");
+                    var o = new OntologyInfo(oJson);
+                    var a = 1;
+                }
+            };
+            
+            var client = new MsiClientOntologyInfo(g.service.ontologyInfo.url);
+            var res = client.execGetOntologyInfoJson(gConn, success);
+            
+            
+        });
         
     };
 
