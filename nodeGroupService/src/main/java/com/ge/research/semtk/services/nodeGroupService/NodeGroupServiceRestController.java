@@ -21,8 +21,10 @@ import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.simple.JSONArray;
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import org.json.simple.JSONObject;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,11 +43,6 @@ import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupListRequest;
-import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupRequest;
-import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdReturnedRequest;
-import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdTupleRequest;
-import com.ge.research.semtk.services.nodeGroupService.requests.NodegroupSparqlIdRequest;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -135,7 +132,8 @@ public class NodeGroupServiceRestController {
 		}
 		
 		return retval.toJson();
-	}	
+	}
+
 	@ApiOperation(
 			value="Generate DELETE query"
 			)
@@ -162,6 +160,7 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}
+
 	@ApiOperation(
 			value="Generate filter query",
 			notes="Returns all values for a given sparqlId"
@@ -193,6 +192,7 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}
+
 	@ApiOperation(
 			value="Generate ASK query"
 			)
@@ -455,7 +455,40 @@ public class NodeGroupServiceRestController {
 
 		return retval.toJson();		
 	}
-	
+
+	@ApiOperation(
+			value="Build a valid nodegroup constrain, with the provided parameters, to be used in nodegroup queries",
+			notes="Returns \"sampleOBJ\" with a JSON constrain populated with the the provided request parameters: \n" +
+					"sparqlId, operation and operandsList. \n It also validates the parameters producing 400 Bad Request exceptions" +
+					" including error explanations"
+	)
+	@CrossOrigin
+	@RequestMapping(value="/buildRuntimeConstraintJSON", method=RequestMethod.POST,
+			consumes= MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public JSONObject buildRuntimeConstraintJSON(@RequestBody RuntimeConstraintRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+
+			// the buildRuntimeConstraintJson() method below will validate the parameters for this method, producing
+			// an exception
+
+			String sparqlID = requestBody.getSparqlID();
+			SupportedOperations operation = requestBody.getOperation();
+			ArrayList<String> operandList = requestBody.getOperandList();
+			JSONObject sampleOBJ = RuntimeConstraintManager.buildRuntimeConstraintJson(sparqlID, operation, operandList);
+
+			retval.addResult("sampleOBJ", sampleOBJ);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "buildRuntimeConstraintJSON", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();
+	}
 	
 	@ApiOperation(
 			value="Get a sample CSV that could be ingested",

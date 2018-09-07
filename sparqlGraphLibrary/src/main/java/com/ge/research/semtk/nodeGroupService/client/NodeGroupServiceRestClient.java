@@ -19,6 +19,7 @@ package com.ge.research.semtk.nodeGroupService.client;
 
 import java.util.ArrayList;
 
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -128,7 +129,33 @@ public class NodeGroupServiceRestClient extends RestClient {
 
 		return retval.getResult("sampleCSV");
 	}
-	
+
+	public JSONObject buldRuntimeConstraintJSON(String sparqlID, SupportedOperations operation, ArrayList<String> operandList) throws Exception{
+		SimpleResultSet retval = null;
+
+		conf.setServiceEndpoint("nodeGroup/buildRuntimeConstraintJSON");
+
+		this.parametersJSON.put("sparqlID", sparqlID);
+		this.parametersJSON.put("operation", operation);
+		this.parametersJSON.put("operandList", operandList);
+
+
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("sparqlID");
+			this.parametersJSON.remove("operation");
+			this.parametersJSON.remove("operandList");
+		}
+
+		return retval.getResultJSON("sampleOBJ");
+	}
+
+
 	public String[] execGetReturnedSparqlIds(SparqlGraphJson sgJson) throws Exception{
 		TableResultSet retval = null;
 		

@@ -16,6 +16,7 @@
  */
 package com.ge.research.semtk.api.client.test;
 
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -284,6 +285,22 @@ public class NodeGroupServiceClientTest_IT {
 			assertTrue(csv.contains("2017-03-23T10:03:16,blue,string,string"));
 
 		}
-		
+
+
+		@Test
+		public void getSampleRuntimeConstraintJSON() throws Exception{
+
+			String sparqlID = "something";
+			SupportedOperations operation = SupportedOperations.GREATERTHAN;
+			ArrayList<String> operandList = new ArrayList<>();
+			operandList.add("operation");
+
+			JSONObject obj = ngServiceClient.buldRuntimeConstraintJSON(sparqlID, operation, operandList);
+			String objString = obj.toJSONString();
+			assertTrue(objString.contains(sparqlID));
+			assertTrue(objString.contains(operation.toString()));
+			assertTrue(objString.contains(operandList.get(0)));
+
+		}
 	}
 
