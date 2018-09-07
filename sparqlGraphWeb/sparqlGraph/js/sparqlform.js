@@ -269,7 +269,7 @@ require([	'local/sparqlformconfig',
 
 			// ========= visible stuff =========
 			// label for user
-			var cellStr = (parentSNode.getURI(true) + ((itemKeyName != "") ? ("->" + itemKeyName) : "")).slice(-48);
+			var cellStr = (parentSNode.getSparqlID() + ((itemKeyName != "") ? ("->" + itemKeyName) : "")).slice(-48);
 			row.insertCell(-1).innerHTML = cellStr;
 			
 			// icon
@@ -598,24 +598,36 @@ require([	'local/sparqlformconfig',
 			// So get the childSNode
 			if (!item) {
 				var nodeItem = itemSNode.getNodeItemByKeyname(itemKeyName);
-				childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getDomain(), true);
-				if (itemSNode == null) {
-					alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add the child node " + nodeItem.getUriValueType());
-					return;
-				}
+				
                 
                 // test special case: change "Measurement" to measuredValue
                 
-                if (childSNode.getURI() == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement") {
+                if (nodeItem.getUriValueType() == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement") {
+                    
+                    // first get class of itemSNode, get the "property" that represents this nodeItem, and get it's URI
+                    var nodeURIStr = gOInfo.getClass(itemSNode.getURI()).getPropertyByKeyname(nodeItem.getKeyName()).getName().getFullName();
+                    // create a new node and connect it
+                    childSNode = gNodeGroup.returnBelmontSemanticNode(nodeItem.getUriValueType(), gOInfo);
+                    nodeItem = gNodeGroup.addOneNode(childSNode, itemSNode, null, nodeURIStr ); 
+                    
                     item = childSNode.getPropertyByKeyname("measuredValue");
                     filterItem = item;
-                    itemKeyName = "measuredValue";
                     itemSNode = childSNode;
                     childSNode = null;
+                    gNodeGroup.changeSparqlID(itemSNode, itemKeyName);
+                    gNodeGroup.changeSparqlID(item, "measuredValue");
                     
                 // end test
+                
+                // normal node Item
+                } else {   
                     
-                } else {
+                    childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getDomain(), true);
+                    if (childSNode == null) {
+                        alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add the child node " + nodeItem.getUriValueType());
+                        return;
+                    }
+                
                     filterItem = childSNode;   
                 }
                 
@@ -639,7 +651,7 @@ require([	'local/sparqlformconfig',
 			}
 			filterItem.setIsReturned(true);
 
-			addFormRow(itemSNode, itemKeyName, childSNode);
+			addFormRow(itemSNode, item.getKeyName(), childSNode);
 		};
 		
 		itemDialogCallback = function(item, sparqlID, returnFlag, optionalFlag, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
