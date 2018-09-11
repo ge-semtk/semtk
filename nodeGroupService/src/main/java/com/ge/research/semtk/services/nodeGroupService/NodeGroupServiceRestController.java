@@ -476,9 +476,9 @@ public class NodeGroupServiceRestController {
 			String sparqlID = requestBody.getSparqlID();
 			SupportedOperations operation = requestBody.getOperation();
 			ArrayList<String> operandList = requestBody.getOperandList();
-			JSONObject sampleOBJ = RuntimeConstraintManager.buildRuntimeConstraintJson(sparqlID, operation, operandList);
+			JSONObject constraintJSON = RuntimeConstraintManager.buildRuntimeConstraintJson(sparqlID, operation, operandList);
 
-			retval.addResult("sampleOBJ", sampleOBJ);
+			retval.addResult("constraintJSON", constraintJSON);
 			retval.setSuccess(true);
 		}
 		catch (Exception e) {

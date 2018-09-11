@@ -136,7 +136,7 @@ public class NodeGroupServiceRestClient extends RestClient {
 		conf.setServiceEndpoint("nodeGroup/buildRuntimeConstraintJSON");
 
 		this.parametersJSON.put("sparqlID", sparqlID);
-		this.parametersJSON.put("operation", operation);
+		this.parametersJSON.put("operation", operation.name());
 		this.parametersJSON.put("operandList", operandList);
 
 
@@ -152,7 +152,7 @@ public class NodeGroupServiceRestClient extends RestClient {
 			this.parametersJSON.remove("operandList");
 		}
 
-		return retval.getResultJSON("sampleOBJ");
+		return retval.getResultJSON("constraintJSON");
 	}
 
 
@@ -215,7 +215,7 @@ public class NodeGroupServiceRestClient extends RestClient {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("jsonRenderedNodeGroup");	
-			this.parametersJSON.remove("sparqlIdTuples");
+			this.parametersJSON.remove("sparqlIdReturnedTuples");
 		}
 
 		return new SparqlGraphJson(retval.getResultJSON("nodegroup"));
