@@ -17,9 +17,6 @@
 
 package com.ge.research.semtk.belmont.runtimeConstraints;
 
-import io.swagger.annotations.ApiModel;
-
-@ApiModel
 public enum SupportedOperations {
 
 	MATCHES(1,1000), 		        // value matches one of the operands (accepts collections)
