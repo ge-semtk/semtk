@@ -1495,6 +1495,9 @@ SemanticNode.prototype = {
 		var nItem = this.getNodeItemByKeyname(nodeKeyname);
 		this.nodeGrp.asyncLinkEditor(this, nItem, targetSNode, edge);
 	},
+    callAsyncRedrawAll : function() {
+        this.nodeGrp.asyncRedrawAll();
+    },
 
 	toggleReturnType : function(lt) {
 		// synchronous since we're only using alert()
@@ -2302,6 +2305,14 @@ SemanticNodeGroup.prototype = {
 		this.renderer.draw();
 
 	},
+    
+    renderNodeCollapsed(snode) {
+        this.renderer.collapseNode(snode.node);
+    },
+    
+    renderNodeUncollapsed(snode) {
+        this.renderer.uncollapseNode(snode.node);
+    },
 
 	reserveNodeSparqlIDs : function(snode) {
 		// reserve all of a node's sparqlID's
@@ -2382,6 +2393,8 @@ SemanticNodeGroup.prototype = {
 		var node0;
 		var node1;
 		var pathLen = path.getLength();
+        var collapseSNodes = [];
+        
 		// loop through path but not the last one
 		for (var i = 0; i < pathLen - 1; i++) {
 			var class0Uri = path.getClass0Name(i);
@@ -2393,12 +2406,13 @@ SemanticNodeGroup.prototype = {
 				node1 = this.returnBelmontSemanticNode(class1Uri, oInfo);
 				this.addOneNode(node1, lastNode, null, attUri);
 				lastNode = node1;
-				
+				collapseSNodes.push(node1);
 			// else this hop in path is class0--hasX-->lastAdded
 			} else {
 				node0 = this.returnBelmontSemanticNode(class0Uri, oInfo);
 				this.addOneNode(node0, lastNode, attUri, null);
 				lastNode = node0;
+                collapseSNodes.push(node0);
 			}
 		}
 
@@ -2425,6 +2439,11 @@ SemanticNodeGroup.prototype = {
 			var nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
 			
 		}
+        
+        this.drawNodes();
+        for (var i=0; i < collapseSNodes.length; i++) {
+            gNodeGroup.renderNodeCollapsed(collapseSNodes[i]);
+        }
 		return retNode;
 
 	},
