@@ -1276,7 +1276,9 @@
    		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, "")); 		
    	};
     
-   	
+   	var doCollapseUnused = function() {
+        gNodeGroup.renderUnusedNodesCollapsed();
+    };
     
     // only used for non-microservice code
     // Almost DEPRECATED
@@ -1680,6 +1682,7 @@
     };
    
     var guiGraphNonEmpty = function () {
+        document.getElementById("btnCollapseUnused").disabled = false;
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
@@ -1687,7 +1690,8 @@
     };
     
     var giuGraphEmpty = function () {
-    	document.getElementById("btnLayout").disabled = true;
+    	document.getElementById("btnCollapseUnused").disabled = true;
+        document.getElementById("btnLayout").disabled = true;
         document.getElementById("SGOrderBy").disabled = true;
     	guiUpdateGraphRunButton();
     };

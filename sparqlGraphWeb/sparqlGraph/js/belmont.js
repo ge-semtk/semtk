@@ -2306,6 +2306,15 @@ SemanticNodeGroup.prototype = {
 
 	},
     
+    // render all unused nodes collapsed
+    renderUnusedNodesCollapsed() {
+        for (var i=0; i < this.SNodeList.length; i++) {
+            if (! this.SNodeList[i].isUsed()) {
+                this.renderNodeCollapsed(this.SNodeList[i]);
+            }
+        }
+    },
+    
     renderNodeCollapsed(snode) {
         this.renderer.collapseNode(snode.node);
     },
@@ -2442,7 +2451,7 @@ SemanticNodeGroup.prototype = {
         
         this.drawNodes();
         for (var i=0; i < collapseSNodes.length; i++) {
-            gNodeGroup.renderNodeCollapsed(collapseSNodes[i]);
+            this.renderNodeCollapsed(collapseSNodes[i]);
         }
 		return retNode;
 
