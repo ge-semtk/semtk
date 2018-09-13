@@ -81,13 +81,12 @@
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
 	    	
 	    	 // set up the node group
-	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
+	        gNodeGroup = new SemanticNodeGroup(2000, 1400, 'canvas');
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
             gNodeGroup.setAsyncSNodeRemover(snodeRemover);
 	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
 	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
-            gNodeGroup.setAsyncRedrawAll(redrawAll);
             
             // edit tab
             gEditTab = new EditTab(document.getElementById("editTreeDiv"),
@@ -458,10 +457,6 @@
         snode.removeFromNodeGroup(false);
         gNodeGroup.drawNodes();
         nodeGroupChanged(true)
-    };
-
-    var redrawAll = function (snode) {
-        gNodeGroup.drawNodes();
     };
 
     /**
