@@ -820,8 +820,10 @@ OntologyInfo.prototype = {
 		
 		// set up targetHash[targetClass] = 1
 		for (var i=0; i < targetClassNames.length; i++) {
+            
             // experiment:  don't connect to an existing measurement
-            if (targetClassNames[i] != "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement") {
+            if (targetClassNames[i] != "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" &&
+                targetClassNames[i] != "http://kdl.ge.com/additiveMeasuresAndUtils#XYZCoordinate") {
 			     targetHash[targetClassNames[i]] = 1;
             }
 		}
