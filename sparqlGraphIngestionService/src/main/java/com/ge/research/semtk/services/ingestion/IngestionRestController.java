@@ -24,6 +24,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -146,12 +149,12 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsv", method= RequestMethod.POST)
-	public JSONObject fromCsv(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+	public JSONObject fromCsv(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
 		HeadersManager.setHeaders(headers);
 		try {
 			// LocalLogger.logToStdErr("the request: " + requestBody);
-			IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
-			return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
+			//IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -160,12 +163,12 @@ public class IngestionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+	public JSONObject fromCsvWithNewConnection(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
 		HeadersManager.setHeaders(headers);
 		try {
 			// LocalLogger.logToStdErr("the request: " + requestBody);
-			IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
-			return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
+			//IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -344,7 +347,14 @@ public class IngestionRestController {
 	
 	
 	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)
-	public JSONObject fromPostgresODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
+	public JSONObject fromPostgresODBC(
+			@RequestParam("template") MultipartFile templateFile, 
+			@RequestParam("dbHost")     @Size(min=4, max=256) @Pattern(regexp="[\\d\\w:/\\?=&-]+", message="string contains invalid characters") String dbHost, 
+			@RequestParam("dbPort")     @Size(min=1, max=5  ) @Pattern(regexp="[\\d]+"           , message="string contains non-numbers"       ) String dbPort, 
+			@RequestParam("dbDatabase") @Size(min=4, max=64 ) @Pattern(regexp="[\\d\\w:/\\?=&-]+", message="string contains invalid characters") String dbDatabase, 
+			@RequestParam("dbUser")     @Size(min=4, max=64 )                                                                                    String dbUser, 
+			@RequestParam("dbPassword") @Size(min=4, max=128)                                                                                    String dbPassword, 
+			@RequestParam("dbQuery") String dbQuery){
 		
 		TableResultSet retval = new TableResultSet();
 

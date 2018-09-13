@@ -87,6 +87,7 @@
             gNodeGroup.setAsyncSNodeRemover(snodeRemover);
 	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
 	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
+            gNodeGroup.setAsyncRedrawAll(redrawAll);
             
             // edit tab
             gEditTab = new EditTab(document.getElementById("editTreeDiv"),
@@ -457,6 +458,10 @@
         snode.removeFromNodeGroup(false);
         gNodeGroup.drawNodes();
         nodeGroupChanged(true)
+    };
+
+    var redrawAll = function (snode) {
+        gNodeGroup.drawNodes();
     };
 
     /**

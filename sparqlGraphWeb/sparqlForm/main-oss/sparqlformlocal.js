@@ -202,7 +202,9 @@ require([	'local/sparqlformconfig',
 			var conn = gLoadDialog.getLastConnectionInvisibly();
 			if (conn) {
 				loadSuccess0(conn);
-			}
+			} else {
+                initServices();
+            }
 			
 			// PEC TODO: load cookie or launch dialog
 			setStatus("");
