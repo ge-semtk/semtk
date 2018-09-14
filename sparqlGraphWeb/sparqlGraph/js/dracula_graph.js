@@ -289,8 +289,8 @@ Graph.Renderer.Raphael.HEADER_SIZE = 3;   // number of non property sub-nodes
 Graph.Renderer.Raphael.VMARGIN = 2;
 Graph.Renderer.Raphael.HMARGIN = 10;
 Graph.Renderer.Raphael.HTAB = 5;
-Graph.Renderer.Raphael.RESTORE_TXT = "\u2589";
-Graph.Renderer.Raphael.COLLAPSE_TXT = "\u2582";
+Graph.Renderer.Raphael.RESTORE_TXT = "\u2B1C";
+Graph.Renderer.Raphael.COLLAPSE_TXT = "\u2581";
 Graph.Renderer.Raphael.DELETE_TXT = "\u2613";
 
 Graph.Renderer.Raphael.prototype = {
@@ -456,7 +456,7 @@ Graph.Renderer.Raphael.prototype = {
                     
                     // ===== 0 for collapsing node
                     var collapseX = r.text(5,5,Graph.Renderer.Raphael.COLLAPSE_TXT)
-                    collapseX.attr({"font-size": 14, "font-family": "Arial, Helvetica, sans-serif", "fill" : "black", "stroke-width": 3, "font-weight": "bold"});
+                    collapseX.attr({"font-size": 14, "font-family": "Arial, Helvetica, sans-serif", "fill" : "black", "stroke-width": 3});
                 	
                 	// collapse callbacks
                 	collapseX.node.onmousedown = function (e) {
