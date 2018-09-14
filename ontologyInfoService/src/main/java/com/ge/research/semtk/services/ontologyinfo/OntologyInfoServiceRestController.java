@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2017-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");

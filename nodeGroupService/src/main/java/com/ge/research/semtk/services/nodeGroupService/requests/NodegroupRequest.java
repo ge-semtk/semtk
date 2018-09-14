@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2017-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,10 @@ public class NodegroupRequest {
 	@ApiModelProperty(
 			value = "jsonRenderedNodeGroup",
 			required = true,
-			example = "{ complex json }")	
+			example = 	"{ \"sparqlConn\": {...}, \"sNodeGroup\": {...}, \"importSpec\": {...} }\n" +
+						"or\n"+
+						"{\"version\": 3, \"limit\": 0, \"offset\": 0, \"sNodeList\": [...], \"orderBy\": []}"
+			           )	
 	private String jsonRenderedNodeGroup;
 	
 	/**
@@ -51,7 +54,25 @@ public class NodegroupRequest {
 		try {
 			ret = new SparqlGraphJson(this.jsonRenderedNodeGroup);
 		} catch (Exception e) {
-			throw new Exception("Error parsing nodegroup json", e);
+			throw new Exception("Error parsing jsonRenderedNodeGroup", e);
+		}
+		return ret;
+	}
+	
+	/**
+	 * Make sure jsonRenderedNodeGroup contains nodegroup and connection, and return
+	 * @return
+	 * @throws Exception
+	 */
+	public SparqlGraphJson getSparqlGraphJsonWithConn() throws Exception {
+		
+		SparqlGraphJson ret = this.getSparqlGraphJson();
+		if (ret.getSparqlConn() == null) {
+			throw new Exception("Missing sparql connection: jsonRenderedNodeGroup param has no sparqlConn");
+		}
+		
+		if (ret.getNodeGroup() == null) {
+			throw new Exception("Missing nodegroup: jsonRenderedNodeGroup param has no sNodeGroup");
 		}
 		return ret;
 	}

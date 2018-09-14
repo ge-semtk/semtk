@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-18 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,10 +23,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.springutilib.requests.ConnectionUriRequest;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
+
 import org.json.simple.JSONObject;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +46,8 @@ import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -57,6 +65,9 @@ public class NodeGroupServiceRestController {
 	public static final String QUERYTYPELABEL = "QueryType";
 	public static final String INVALID_SPARQL_RATIONALE_LABEL = "InvalidSparqlRationale";
 
+	public static final String RET_KEY_NODEGROUP = "nodegroup";
+	
+	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
 
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
@@ -546,4 +557,43 @@ public class NodeGroupServiceRestController {
 		
 		return retval;
 	}
+	
+	//========== nodegroup building / editing endpoints ===========
+	//
+	//  Use 'newer' SparqlConnectionRequest and SNodeGroupRequest, etc. out of SpringUtilLib project
+	//  These don't need Java Client functions since in Java, you'd just call the NodeGroup functions themselves.
+	//  Usually return RET_KEY_NODEGROUP in a SimpleResultSet
+	//  Use the OInfoCache
+	//  JUnit testing is covered by the NodeGroup tests, etc.
+	
+	@ApiOperation(
+			value="Create a node group with given class"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/createNodeGroup", method=RequestMethod.POST)
+	public JSONObject createNodeGroup(@RequestBody ConnectionUriRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "createNodeGroup";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
+			
+			SparqlConnection conn = requestBody.getSparqlConnection();
+			OntologyInfo oInfo = oInfoCache.get(conn);
+			
+			NodeGroup ret = new NodeGroup();
+			ret.addNode(requestBody.getUri(), oInfo);
+			retval.addResult(RET_KEY_NODEGROUP, ret.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
 }

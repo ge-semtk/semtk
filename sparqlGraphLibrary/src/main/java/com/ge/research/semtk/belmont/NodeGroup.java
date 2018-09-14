@@ -1740,6 +1740,9 @@ public class NodeGroup {
 		// But there is no value in keeping oInfo and belmont separate, and
 		// combining is elegant.
 		OntologyClass oClass = oInfo.getClass(classUri);
+		if (oClass == null) {
+			throw new Exception("Can't find class '" + classUri + "' in the ontology");
+		}
 		ArrayList<PropertyItem> belprops = new ArrayList<PropertyItem>();
 		ArrayList<NodeItem> belnodes = new ArrayList<NodeItem>();
 
