@@ -24,11 +24,15 @@ public class CachedOntologyInfo {
 	 * @throws Exception
 	 */
 	public OntologyInfo getOInfo(long maxAgeMillis) throws Exception {
-		Long ageMillis = Calendar.getInstance().getTimeInMillis() - this.retrievedMillis;
-		if (ageMillis > maxAgeMillis) {
+		if (this.isExpired(maxAgeMillis)) {
 			this.oInfo = new OntologyInfo(this.conn);
 		}
 		return oInfo;
+	}
+	
+	public boolean isExpired(long maxAgeMillis) {
+		Long ageMillis = Calendar.getInstance().getTimeInMillis() - this.retrievedMillis;
+		return (ageMillis > maxAgeMillis);
 	}
 
 }

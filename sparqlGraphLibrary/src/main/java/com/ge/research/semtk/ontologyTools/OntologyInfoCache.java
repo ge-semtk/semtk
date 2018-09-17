@@ -26,6 +26,16 @@ public class OntologyInfoCache {
 			hash.put(key, new CachedOntologyInfo(conn));
 		}
 		
+		this.clearExpired();
+		
 		return hash.get(key).getOInfo(this.maxAgeMillis);
+	}
+	
+	private void clearExpired() {
+		for (String key : this.hash.keySet()) {
+			if (this.hash.get(key).isExpired(this.maxAgeMillis)) {
+				this.hash.remove(key);
+			}
+		}
 	}
 }
