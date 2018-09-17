@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.logging;
 
+import java.util.regex.Pattern;
+
 public class LoggingServiceConfig {
 	// basic information needed to initiate the logging. 
 	// this was once gotten from the servlet properties file via the servlet context. 
@@ -27,9 +29,9 @@ public class LoggingServiceConfig {
 	// used in all logging
 	private String loggingType;
 	private String prefixPath;
-	private String mainRegex = null;
 	private String secondaryType = null;
 	private String cloudConnection = null;
+	private Pattern mainPattern = null;
 	
 	public LoggingServiceConfig(String logOption, String prefix){
 		this.loggingType = logOption;
@@ -39,7 +41,9 @@ public class LoggingServiceConfig {
 	public LoggingServiceConfig(String logOption, String prefix, String mainRegex, String secondaryType, String cloudConnection){
 		this.loggingType = logOption;
 		this.prefixPath = prefix;
-		this.mainRegex = mainRegex;
+		if (mainRegex != null && ! mainRegex.isEmpty()) {
+			this.mainPattern = Pattern.compile(mainRegex);
+		}
 		this.secondaryType = secondaryType;
 		this.cloudConnection = cloudConnection;
 	}
@@ -62,10 +66,6 @@ public class LoggingServiceConfig {
 		return prefixPath;
 	}
 
-	public String getMainRegex() {
-		return mainRegex;
-	}
-
 	public String getSecondaryType() {
 		return secondaryType;
 	}
@@ -74,4 +74,8 @@ public class LoggingServiceConfig {
 		return cloudConnection;
 	}
 	
+	public Pattern getMainPattern() {
+		return this.mainPattern;
+	}	
+
 }
