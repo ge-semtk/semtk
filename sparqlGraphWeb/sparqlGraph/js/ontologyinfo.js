@@ -822,8 +822,7 @@ OntologyInfo.prototype = {
 		for (var i=0; i < targetClassNames.length; i++) {
             
             // experiment:  don't connect to an existing measurement
-            if (targetClassNames[i] != "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" &&
-                targetClassNames[i] != "http://kdl.ge.com/additiveMeasuresAndUtils#XYZCoordinate") {
+            if ( !this.experimentIsDataClass(targetClassNames[i]) ) {
 			     targetHash[targetClassNames[i]] = 1;
             }
 		}
@@ -887,7 +886,7 @@ OntologyInfo.prototype = {
 				// if path leads anywhere in domain, store it
 				var name = new OntologyName(newClass);
                 // experiment: don't connect through a measurement
-				if (name.isInDomain(domain) && newClass != "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" ) {
+				if (name.isInDomain(domain) && ! this.experimentIsDataClass(newClass) ) {
 					
 					// if path leads to a target, push onto the ret list
 					if (newClass in targetHash) {
@@ -921,7 +920,11 @@ OntologyInfo.prototype = {
 		return ret;
 	},
 	
-	
+	experimentIsDataClass : function (classStr) {
+        return (classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" ||
+                classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#XYZCoordinate");
+    },
+    
 	classIsA : function (class1, class2) {
 		
 		
