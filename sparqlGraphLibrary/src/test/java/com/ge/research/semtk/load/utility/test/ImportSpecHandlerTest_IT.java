@@ -46,7 +46,7 @@ public class ImportSpecHandlerTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		OntologyInfo oInfo = sgJson.getOntologyInfo();
 		NodeGroup nodegroup = sgJson.getNodeGroup();
-		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), sgJson.getSNodeGroupJson(), oInfo);
+		ImportSpecHandler handler = new ImportSpecHandler(sgJson.getImportSpecJson(), sgJson.getSNodeGroupJson(), sgJson.getSparqlConn(), oInfo);
 		
 		// Try it with no headers
 		ArrayList<PropertyItem> pItems = handler.getUndeflatablePropItems(nodegroup);

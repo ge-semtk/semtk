@@ -252,21 +252,7 @@ public class TestGraph {
 	@SuppressWarnings("unchecked")
 	public static SparqlGraphJson getSparqlGraphJsonFromJson(JSONObject jObj) throws Exception{
 		
-		/*
-		if (  ((JSONObject)jObj.get("sparqlConn")).containsKey("onDataset")) {
-			((JSONObject)jObj.get("sparqlConn")).put("onDataset", generateDatasetName("both"));    // "model"
-			((JSONObject)jObj.get("sparqlConn")).put("onURL", getSparqlServer()); 
-			((JSONObject)jObj.get("sparqlConn")).put("onKsURL", getSparqlServer()); 
-			
-			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDatasetName("both"));   // "data"
-		} else {
-			((JSONObject)jObj.get("sparqlConn")).put("dsDataset", generateDatasetName("both"));   // "both"
-		}
-		
-		// modify dataset and URL
-		((JSONObject)jObj.get("sparqlConn")).put("dsURL", getSparqlServer()); 
-		((JSONObject)jObj.get("sparqlConn")).put("dsKsURL", getSparqlServer()); 
-		*/
+	
 		
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
 		SparqlConnection conn = s.getSparqlConn();

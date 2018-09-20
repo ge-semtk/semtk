@@ -45,6 +45,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -66,6 +67,7 @@ public class ImportSpecHandler {
 	
 	JSONObject nodegroupJson = null;    
 	NodeGroup ng = null;
+	SparqlConnection lookupConn = null;
 	HashMap<Integer, JSONObject> lookupNodegroupsJson = new HashMap<Integer, JSONObject>();       // cache of pruned nodegroups ready for lookup
 	HashMap<Integer, String>     lookupMode = new HashMap<Integer, String>();
 	HashMap<Integer, Long>    	 lookupResultCount = new HashMap<Integer, Long>();                // number of URI's in the triple-store to choose from
@@ -88,7 +90,7 @@ public class ImportSpecHandler {
 	
 	SparqlEndpointInterface nonThreadSafeEndpoint = null;  // Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
 	
-	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
+	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
 		
 		// reset the nodegroup and store as json (for efficient duplication)
@@ -97,6 +99,8 @@ public class ImportSpecHandler {
 		this.nodegroupJson = ng.toJson();
 		
 		this.oInfo = oInfo;
+		
+		this.lookupConn = lookupConn;
 		
 		this.colHashesFromJson(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
 		this.transformsFromJson((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
@@ -110,11 +114,6 @@ public class ImportSpecHandler {
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 		
 		this.errorCheckImportSpec();
-	}
-	
-	public ImportSpecHandler(JSONObject importSpecJson, ArrayList<String> headers, JSONObject ngJson, OntologyInfo oInfo) throws Exception{
-		this(importSpecJson, ngJson, oInfo);
-		this.setHeaders(headers);
 	}
 
 	public void setEndpoint(SparqlEndpointInterface endpoint) {
@@ -417,9 +416,20 @@ public class ImportSpecHandler {
 				map.setLookupNodeIndex(lookupIndex);
 			}
 			
-			// save the lookupNodegroupJson
 			this.lookupNodegroupsJson.put(importNodeIndex, lookupNg.toJson());
 		}
+	}
+	
+	/**
+	 * Create a lookupNodegroup from it's json plus the lookup SparqlConnection
+	 * @param nodeIndex
+	 * @return
+	 * @throws Exception
+	 */
+	private NodeGroup getLookupNodegroup(int nodeIndex) throws Exception {
+		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		lookupNodegroup.setSparqlConnection(this.lookupConn);
+		return lookupNodegroup;
 	}
 	
 	/**
@@ -722,7 +732,7 @@ public class ImportSpecHandler {
 			
 		} else {
 			// get the nodegroup and do the lookup
-			NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+			NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeIndex);
 			
 			// loop through lookupMappings and add constraints to the lookupNodegroup
 			int i = 0;
@@ -813,7 +823,7 @@ public class ImportSpecHandler {
 		}
 		
 		// get the nodegroup 
-		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeIndex);
 		
 		// 0th mapping (all same) lookupNodeIndex has SparqlID of the result URI.  Hash it to -1
 		HashMap<String, Integer> colHash = new HashMap<String,Integer>();
@@ -894,7 +904,7 @@ public class ImportSpecHandler {
 	private long lookupCount(int nodeIndex) throws Exception {
 		
 		// get the nodegroup 
-		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeIndex);
 		
 		// loop through lookupMappings and remove constraints
 		for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
