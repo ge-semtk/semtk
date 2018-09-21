@@ -190,7 +190,11 @@ public class CSVDataLoaderRunner {
 			DataLoader loader = new DataLoader(sgJson.getJson(), batchSize, dataset, sparqlEndpointUser, sparqlEndpointPassword);
 			int recordsAdded = loader.importData(true);
 			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
-			LocalLogger.logToStdOut("Error report:\n " + loader.getLoadingErrorReportBrief());
+			if(loader.getLoadingErrorReport().getNumRows() > 0){
+				// e.g. URI lookup errors may appear here
+				LocalLogger.logToStdOut("Error report:\n" + loader.getLoadingErrorReportBrief());
+				throw new Exception("Could not load data: loading errors");
+			}
 			
 			// if the logger fully qualified name was not null (assuming the port and the logging service location are included), log this attempt:
 			if(lg != null ){
