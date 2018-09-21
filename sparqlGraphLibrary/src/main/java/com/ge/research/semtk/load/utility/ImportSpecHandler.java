@@ -95,8 +95,10 @@ public class ImportSpecHandler {
 		
 		// reset the nodegroup and store as json (for efficient duplication)
 		this.ng = NodeGroup.getInstanceFromJson(ngJson);
+		this.ng.inflateAndValidate(oInfo);
 		this.ng.reset();
 		this.nodegroupJson = ng.toJson();
+		
 		
 		this.oInfo = oInfo;
 		

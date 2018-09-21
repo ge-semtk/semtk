@@ -57,6 +57,7 @@ public class Node extends Returnable {
 	private NodeDeletionTypes deletionMode = NodeDeletionTypes.NO_DELETE;
 	
 	// a collection of our known subclasses. 
+	// PEC 9/21/2018 this is a terrible idea.  Any operation requiring subclasses should have the oInfo.
 	private ArrayList<String> subclassNames = new ArrayList<String>();
 	
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng){
@@ -321,6 +322,8 @@ public class Node extends Returnable {
 		
 		this.props = newProps;
 		this.nodes = newNodes;
+		
+		this.subclassNames = oInfo.getSubclassNames(this.fullURIname);
 	}
 	
 	/**
