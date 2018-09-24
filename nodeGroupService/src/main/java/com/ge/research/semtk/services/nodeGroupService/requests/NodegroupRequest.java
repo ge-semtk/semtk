@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import io.swagger.annotations.ApiModelProperty;
 
 public class NodegroupRequest {
@@ -40,6 +41,11 @@ public class NodegroupRequest {
 	 */
 	public NodeGroup getNodeGroup() throws Exception {
 		return this.getSparqlGraphJson().getNodeGroup();
+	}
+
+
+	public SparqlConnection getConnection() throws Exception {
+		return getSparqlGraphJsonWithConn().getSparqlConn();
 	}
 	
 	/**
