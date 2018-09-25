@@ -26,6 +26,7 @@ import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutilib.requests.ConnectionUriRequest;
+import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 
 import org.json.simple.JSONObject;
@@ -63,6 +64,7 @@ public class NodeGroupServiceRestController {
 	public static final String INVALID_SPARQL_RATIONALE_LABEL = "InvalidSparqlRationale";
 
 	public static final String RET_KEY_NODEGROUP = "nodegroup";
+	public static final String RET_KEY_SPARQLID = "sparqlID";
 	
 	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
 
@@ -302,8 +304,50 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();		
 	}
+	
 	@ApiOperation(
-			value="Set isReturned for a sparqlID"
+			value="Give a property a SparqlID and set isReturned.",
+			notes="If it is illegal or duplicate, SparqlID will be modified to a close match."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/setPropertySparqlId", method=RequestMethod.POST)
+	public JSONObject setAndReturnNewSparqlId(@RequestBody NodegroupPropertyRequest requestBody){
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			requestBody.validate();
+			
+			SparqlGraphJson sgJson = requestBody.getSparqlGraphJson();
+			NodeGroup ng = sgJson.getNodeGroup();
+			
+			
+			Node snode = ng.getNodeBySparqlID(requestBody.getNodeSparqlId());
+			if (snode == null) {
+				throw new Exception("Can't find node with sparqlID: " + requestBody.getNodeSparqlId());
+			}
+			PropertyItem prop = snode.getPropertyByURIRelation(requestBody.getPropertyUri());
+			if (prop == null) {
+				throw new Exception("Can't find property: " + requestBody.getPropertyUri());
+			}
+			ng.changeSparqlID(prop, requestBody.getNewPropSparqlId());
+			prop.setIsReturned(requestBody.isReturned());
+			
+			sgJson.setNodeGroup(ng);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.addResult(RET_KEY_SPARQLID, prop.getSparqlID());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "setIsReturned", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Set isReturned for existing sparqlID(s)"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/setIsReturned", method=RequestMethod.POST)
@@ -326,7 +370,7 @@ public class NodeGroupServiceRestController {
 			
 			// put modified nodegroup back into sgJson and return
 			sgJson.setNodeGroup(ng);
-			retval.addResult("nodegroup", sgJson.toJson());
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
 			retval.setSuccess(true);
 		}
 		catch(Exception e){
@@ -365,7 +409,7 @@ public class NodeGroupServiceRestController {
 			
 			// put modified nodegroup back into sgJson and return
 			sgJson.setNodeGroup(ng);
-			retval.addResult("nodegroup", sgJson.toJson());
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
 			retval.setSuccess(true);
 		}
 		catch(Exception e){
@@ -580,8 +624,9 @@ public class NodeGroupServiceRestController {
 			OntologyInfo oInfo = oInfoCache.get(conn);
 			
 			NodeGroup ret = new NodeGroup();
-			ret.addNode(requestBody.getUri(), oInfo);
+			Node newNode = ret.addNode(requestBody.getNodeUri(), oInfo);
 			retval.addResult(RET_KEY_NODEGROUP, ret.toJson());
+			retval.addResult(RET_KEY_SPARQLID, newNode.getSparqlID());
 			retval.setSuccess(true);
 		}
 		catch (Exception e) {
@@ -594,8 +639,32 @@ public class NodeGroupServiceRestController {
 	}
 
 
-    // =================================================================================================================
-	// test URL: http://localhost:12059/swagger-ui.html#/
+	@ApiOperation(
+			value="Refresh cached ontology"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/clearCachedOntology", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject clearCachedOntology(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "clearCachedOntology";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
+			
+			SparqlConnection conn = requestBody.getSparqlConnection();
+			oInfoCache.remove(conn);
+			
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
 	@ApiOperation(
 			value="Adds a new node to an existing nodeGroup"
 	)

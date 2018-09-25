@@ -22,15 +22,10 @@ import javax.validation.constraints.Size;
 
 public class ConnectionUriRequest extends SparqlConnectionRequest {
 	
-	// Paul: copied-and-pasted from UriRequest.  Any better ideas?
 	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
-	private String uri;
+	private String nodeUri;
 
-	public String getUri() {
-		return uri;
-	}
-
-	public void setUri(String uri) {
-		this.uri = uri;
+	public String getNodeUri() {
+		return nodeUri;
 	}
 }

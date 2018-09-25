@@ -813,19 +813,26 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	public int getNodeIndexBySparqlID(String currId) {
+	/**
+	 * Look up a node by sparqlId
+	 * @param sparqlId - optionally starts with "?"
+	 * @return - index or -1
+	 */
+	public int getNodeIndexBySparqlID(String sparqlId) {
+		String lookupId = (sparqlId.startsWith("?")) ? sparqlId : "?" + sparqlId;
+		
 		// look up a node by ID and return it. 
 		for(int i = 0; i < nodes.size(); i += 1){
 			// can we find it by name?
-			if(this.nodes.get(i).getSparqlID().equals(currId)){   // this was "==" but that failed in some cases...
+			if(this.nodes.get(i).getSparqlID().equals(lookupId)){   // this was "==" but that failed in some cases...
 				return i;
 			}
 		}
 		return -1;
 	}
 	
-	public Node getNodeBySparqlID(String currId) {
-		int i = this.getNodeIndexBySparqlID(currId);
+	public Node getNodeBySparqlID(String sparqlId) {
+		int i = this.getNodeIndexBySparqlID(sparqlId);
 		if (i == -1) 
 			return null;
 		else 
@@ -836,14 +843,14 @@ public class NodeGroup {
 		return this.nodes.get(i);
 	}
 	
-	public PropertyItem getPropertyItemBySparqlID(String currId){
+	public PropertyItem getPropertyItemBySparqlID(String sparqlId){
 		// finds the given propertyItem by assigned sparql ID.
 		// if no matches are found, it returns a null... 
 				
 		PropertyItem retval = null;
 		
 		for(Node nc : this.nodes){
-			PropertyItem candidate = nc.getPropertyItemBySparqlID(currId);
+			PropertyItem candidate = nc.getPropertyItemBySparqlID(sparqlId);
 			if(candidate != null){
 				retval = candidate;
 				break;			// always in the last place we look.
@@ -1862,6 +1869,10 @@ public class NodeGroup {
 		return newID;
 	}
 
+	public String requestSparqlID(String requestID) {
+		return BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
+	}
+	
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, String domain, Boolean optionalFlag) throws Exception  {
 		// attach a classURI using the first path found.
 		// Error if less than one path is found.

@@ -31,6 +31,17 @@ public class OntologyInfoCache {
 		return hash.get(key).getOInfo(this.maxAgeMillis);
 	}
 	
+	/**
+	 * Clear a connection from the cache, presumably because the ontology has changed.
+	 * @param conn
+	 */
+	public synchronized void remove(SparqlConnection conn) {
+		String key = conn.getUniqueModelKey();
+		if (this.hash.containsKey(key)) {
+			this.hash.remove(key);
+		}
+	}
+	
 	private void clearExpired() {
 		for (String key : this.hash.keySet()) {
 			if (this.hash.get(key).isExpired(this.maxAgeMillis)) {
