@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +15,11 @@
  ** limitations under the License.
  */
 
-
 package com.ge.research.semtk.services.client;
 
 import java.io.File;
 import java.net.ConnectException;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -32,12 +29,10 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
@@ -63,9 +58,11 @@ public abstract class RestClient extends Client implements Runnable {
 	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
 	protected HeaderTable headerTable = null;
-
 	protected File fileParameter = null;
 	
+	/** 
+	 * Get default headers
+	 */
 	public ArrayList<BasicHeader> getDefaultHeaders() {
 		
 		ArrayList<BasicHeader> ret = new ArrayList<BasicHeader>();
@@ -76,17 +73,13 @@ public abstract class RestClient extends Client implements Runnable {
 				String value = this.headerTable.get(key).get(0);
 				for (int i=1; i < this.headerTable.get(key).size(); i++) {
 					value = value + "," + this.headerTable.get(key).get(i);
-				}
-				
+				}				
 				BasicHeader header = new BasicHeader(key, value);
 				ret.add(header);
 			}
-		}
-		
+		}		
 		return ret;
 	}
-	
-	
 	
 	/**
 	 * Constructor
@@ -191,21 +184,15 @@ public abstract class RestClient extends Client implements Runnable {
 	 */
 	public Object execute(boolean returnRawResponse) throws ConnectException, Exception {
 		
-		// TODO can we do this before calling execute()?
-		buildParametersJSON();  // set all parameters available upon instantiation
-
+		// set all parameters available upon instantiation
+		buildParametersJSON();  
 		if(parametersJSON == null){
 			throw new Exception("Service parameters not set");
 		}
-		
-		HttpClient httpclient = HttpClients.custom().build();
-		//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
 
-		// immediate line below removed to perform htmml encoding in stream
-		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8"));
-		
+		// create entity
+		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8")); // perform html encoding in stream	
 		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
-
 		HttpEntity entity = null;
 		if (fileParameter != null) {
 			// add the file
@@ -218,20 +205,17 @@ public abstract class RestClient extends Client implements Runnable {
 				builder.addPart((String) k, new StringBody((String)parametersJSON.get(k)));
 			}
 			entity = builder.build();
-			
 		} else {
 			// add just parametersJSON
 			entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
 		}
 
-		
+		// create a request - GET or POST 
 		HttpRequestBase httpreq = null;
 		if (conf.method == RestClientConfig.Methods.GET) {
 			HttpGet httpget = new HttpGet(this.conf.getServiceURL());
 			httpget.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-
 			httpreq = httpget;
-
 		} else {
 			HttpPost httppost = new HttpPost(this.conf.getServiceURL());
 			httppost.setEntity(entity);
@@ -247,22 +231,21 @@ public abstract class RestClient extends Client implements Runnable {
 		}
 		
 		// execute
-		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
-		
+		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());		
 		HttpResponse httpresponse = null;
 		try {
+			HttpClient httpclient = HttpClients.custom().build();
+			//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
 			httpresponse = httpclient.execute(targetHost, httpreq);
 		} catch (Exception e) {
 			throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);
 		}
 		
 		// handle the output			
-		String responseTxt = EntityUtils.toString(httpresponse.getEntity(), "UTF-8");
-		
+		String responseTxt = EntityUtils.toString(httpresponse.getEntity(), "UTF-8");		
 		if(responseTxt == null){ 
 			throw new Exception("Received null response text"); 
-		}
-		if(responseTxt.trim().isEmpty()){
+		}else if(responseTxt.trim().isEmpty()){
 			handleEmptyResponse();  // implementation-specific behavior
 		}
 		
@@ -277,8 +260,8 @@ public abstract class RestClient extends Client implements Runnable {
 			} catch (ClassCastException e) {
 			} catch (ParseException e) {
 			}
-
 			return responseTxt;		// return the raw string
+			
 		}else{
 			JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
 			if (responseParsed == null) {
