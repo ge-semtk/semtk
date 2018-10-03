@@ -20,6 +20,7 @@ package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.UUID;
@@ -1535,6 +1536,21 @@ public class NodeGroup {
 		return ret2;
 	}
 	
+	
+	/**
+	 * Get every nodeItem in the nodegroup that is being used to connect something
+	 * @return
+	 */
+	public ArrayList<NodeItem> getAllNodeItems() {
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+		
+		for (Node node : this.nodes) {
+			ret.addAll( node.getConnectedNodeItems() );
+		}
+		
+		return ret;
+	}
+	
 	public void pruneAllUnused () {
 		this.pruneAllUnused(false);
 	}
@@ -1654,6 +1670,47 @@ public class NodeGroup {
 		this.nodes.remove(node);
 	}
 	
+	
+	public void unOptionalizeConstrained() throws Exception {
+		// loop through each nodeItem
+		System.out.println("unOptionalizeConstrained");
+		for (NodeItem nItem : this.getAllNodeItems()) {
+			Node owningNode = this.getNodeItemParentSNode(nItem);
+			for (Node rangeNode : nItem.getNodeList()) {
+				HashSet<Node> upstream = this.getUpstreamSubGraph(owningNode, nItem, rangeNode);
+				HashSet<Node> downstream = this.getDownstreamSubGraph(owningNode, nItem, rangeNode);
+				int upConstraints = 0;
+				int downConstraints = 0;
+				for (Node n : upstream) {
+					upConstraints += n.countConstraints();
+				}
+				for (Node n : downstream) {
+					downConstraints += n.countConstraints();
+				}
+				
+				if (upConstraints > 0 &&  downConstraints > 0) {
+					nItem.setSNodeOptional(rangeNode, NodeItem.OPTIONAL_FALSE);
+					System.out.println("unoptionalized: " + owningNode.getSparqlID() + "->" + nItem.getKeyName() + "->" + rangeNode.getSparqlID());
+				}
+			}
+		}
+		
+		// now check all propertyItems
+		for (Node snode : this.nodes) {
+			for (PropertyItem pItem : snode.getPropertyItems()) {
+				if (pItem.getValueConstraint() != null) {
+					pItem.setIsOptional(false);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Recursively find a subgraph given a node and a list of nodes who can't be in the subgraph
+	 * @param startNode
+	 * @param stopList
+	 * @return
+	 */
 	private ArrayList<Node> getSubGraph(Node startNode, ArrayList<Node> stopList) {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		
@@ -1665,6 +1722,84 @@ public class NodeGroup {
 				ret.addAll(this.getSubGraph(n, ret));
 			}
 		}
+		return ret;
+	}
+	
+	/**
+	 * Recursively find the subgraph downstream of a node item specified by the params
+	 * @param owningNode
+	 * @param nItem
+	 * @param rangeNode
+	 * @return
+	 */
+	private HashSet<Node> getDownstreamSubGraph(Node owningNode, NodeItem nItem, Node rangeNode) throws Exception {
+		return this.getDownstreamSubGraph(owningNode, nItem, rangeNode, owningNode);
+	}
+	private HashSet<Node> getDownstreamSubGraph(Node owningNode, NodeItem nItem, Node rangeNode, Node circularNode) throws Exception {
+		//System.err.println("Downstream subgraph: " + owningNode.getSparqlID() + " " + nItem.getKeyName() + " " + rangeNode.getSparqlID());
+		HashSet<Node> ret = new HashSet<Node>();
+		ret.add(rangeNode);
+		
+		// downstream
+		for (NodeItem downstreamItem : rangeNode.getNodeItemList()) {
+			for (Node downstreamNode: downstreamItem.getNodeList()) {
+				if (downstreamNode == circularNode) {
+					throw new Exception("Can't perform this operation on nodegroups with circular connections.");
+				}
+				ret.addAll(this.getDownstreamSubGraph(rangeNode, downstreamItem, downstreamNode, circularNode));
+			}
+		}
+		
+		// upstream
+		for (NodeItem upstreamItem : this.getConnectingNodeItems(rangeNode)) {
+			Node upstreamNode = this.getNodeItemParentSNode(upstreamItem);
+			if (upstreamNode != owningNode || upstreamItem != nItem) {
+				if (upstreamNode == circularNode) {
+					throw new Exception("Can't perform this operation on nodegroups with circular connections.");
+				}
+				ret.addAll(this.getUpstreamSubGraph(upstreamNode, upstreamItem, owningNode, circularNode));
+			}
+		}
+		
+		return ret;
+	}
+	
+	/**
+	 * Recursively find the subgraph upstream of a node item specified by the params
+	 * @param owningNode
+	 * @param nItem
+	 * @param rangeNode
+	 * @return
+	 */
+	private HashSet<Node> getUpstreamSubGraph(Node owningNode, NodeItem nItem, Node rangeNode) throws Exception {
+		return this.getUpstreamSubGraph(owningNode, nItem, rangeNode, rangeNode);
+	}
+	private HashSet<Node> getUpstreamSubGraph(Node owningNode, NodeItem nItem, Node rangeNode, Node circularNode) throws Exception {
+		//System.err.println("Upstream subgraph: " + owningNode.getSparqlID() + " " + nItem.getKeyName() + " " + rangeNode.getSparqlID());
+		HashSet<Node> ret = new HashSet<Node>();
+		ret.add(rangeNode);
+		
+		// downstream
+		for (NodeItem downstreamItem : owningNode.getNodeItemList()) {
+			for (Node downstreamNode: downstreamItem.getNodeList()) {
+				if (downstreamItem != nItem || downstreamNode != rangeNode ) {
+					if (downstreamNode == circularNode) {
+						throw new Exception("Can't perform this operation on nodegroups with circular connections.");
+					}
+					ret.addAll(this.getDownstreamSubGraph(owningNode, downstreamItem, downstreamNode, circularNode));
+				}
+			}
+		}
+		
+		// upstream
+		for (NodeItem upstreamItem : this.getConnectingNodeItems(owningNode)) {
+			Node upstreamNode = this.getNodeItemParentSNode(upstreamItem);
+			if (upstreamNode == circularNode) {
+				throw new Exception("Can't perform this operation on nodegroups with circular connections.");
+			}
+			ret.addAll(this.getUpstreamSubGraph(upstreamNode, upstreamItem, owningNode, circularNode));
+		}
+		
 		return ret;
 	}
 	
@@ -1945,6 +2080,11 @@ public class NodeGroup {
 		return null;
 	}
 	
+	/**
+	 * Get all nodes one-hop from given node, regardless of direction
+	 * @param node
+	 * @return
+	 */
 	private ArrayList<Node> getAllConnectedNodes(Node node) {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		ret.addAll(node.getConnectedNodes());
@@ -1973,16 +2113,26 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	private ArrayList<Node> getConnectingNodes(Node node) {
+	/**
+	 * Get all nodes that have nodeItems pointing to node
+	 * @param sNode
+	 * @return
+	 */
+	private ArrayList<Node> getConnectingNodes(Node sNode) {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		for (Node n : this.nodes) {
-			if (n.getConnectingNodeItems(node).size() > 0 ) {
+			if (n.getConnectingNodeItems(sNode).size() > 0 ) {
 				ret.add(n);
 			}
 		}
 		return ret;
 	}
-	
+
+	/**
+	 * Get all nodeItems in the nodegroup that point to sNode
+	 * @param sNode
+	 * @return
+	 */
 	private ArrayList<NodeItem> getConnectingNodeItems(Node sNode) {
 		// get any nodeItem in the nodeGroup that points to sNode
 		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
@@ -1994,29 +2144,30 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	private ArrayList<NodeItem> getAllConnectedNodeItems (Node sNode) {
-		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
-		
-		// SNode knows who it points too
-		ret.addAll(sNode.getNodeItemList());
-		
-		// nodegroup knows which nodes point to startSNode
-		ret.addAll(this.getConnectingNodeItems(sNode));
-
-		return ret;
-	}
-	
-	public ArrayList<NodeItem> getAllConnectedConnectedNodeItems (Node sNode) {
-		// get the connectedNodeItems that are actually in use
-		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
-		ArrayList<NodeItem> temp = this.getAllConnectedNodeItems(sNode);
-		for (NodeItem nItem : temp) {
-			if (nItem.getConnected()) {
-				ret.add(nItem);
-			}
-		}
-		return ret;
-	}
+//	private ArrayList<NodeItem> getAllConnectedNodeItems (Node sNode) {
+//		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+//		
+//		// SNode knows who it points too
+//      // PEC LOOKS BUGGY: no check that nodeItems are connected
+//		ret.addAll(sNode.getNodeItemList());
+//		
+//		// nodegroup knows which nodes point to startSNode
+//		ret.addAll(this.getConnectingNodeItems(sNode));
+//
+//		return ret;
+//	}
+//	
+//	public ArrayList<NodeItem> getAllConnectedConnectedNodeItems (Node sNode) {
+//		// get the connectedNodeItems that are actually in use
+//		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+//		ArrayList<NodeItem> temp = this.getAllConnectedNodeItems(sNode);
+//		for (NodeItem nItem : temp) {
+//			if (nItem.getConnected()) {
+//				ret.add(nItem);
+//			}
+//		}
+//		return ret;
+//	}
 	
 	private ArrayList<Node> getSubNodes(Node topNode) {
 		ArrayList<Node> subNodes = new ArrayList<Node>();

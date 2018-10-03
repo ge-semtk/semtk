@@ -679,22 +679,47 @@ public class Node extends Returnable {
 		}
 	}
 	
+	/**
+	 * Find all nodeItems that connect to otherNode
+	 * @param otherNode
+	 * @return
+	 */
 	public ArrayList<NodeItem> getConnectingNodeItems(Node otherNode) {
-		ArrayList<NodeItem> items = new ArrayList<NodeItem>();
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
 		
-		for (NodeItem item : nodes) {
+		// look through all my nodeItems
+		for (NodeItem item : this.nodes) {
 			if (item.getConnected()) {
 				ArrayList<Node> nodeList = item.getNodeList();
 				
+				// does my connection point to otherNode
 				for (Node node : nodeList) {
 					if (node.getSparqlID().equals(otherNode.getSparqlID())) {
-						items.add(item);
+						ret.add(item);
 					}
 				}
 			}
 		}
 		
-		return items;
+		return ret;
+	}
+
+	/**
+	 * Get all nodeItems that are connected
+	 * @param otherNode
+	 * @return
+	 */
+	public ArrayList<NodeItem> getConnectedNodeItems() {
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+		
+		// look through all my nodeItems
+		for (NodeItem item : this.nodes) {
+			if (item.getConnected()) {
+				ret.add(item);
+			}
+		}
+		
+		return ret;
 	}
 
 	public ArrayList<PropertyItem> getPropertyItems() {
@@ -795,6 +820,20 @@ public class Node extends Returnable {
 		
 		for (PropertyItem p : this.props) {
 			ret += (p.getIsReturned() ? 1 : 0);
+		}
+		
+		return ret;
+	}
+	
+	public int countConstraints () {
+		int ret = 0;
+		
+		if (this.getValueConstraint() != null) {
+			ret ++;
+		}
+		
+		for (PropertyItem p : this.props) {
+			ret += (p.getValueConstraint() != null ? 1 : 0);
 		}
 		
 		return ret;
