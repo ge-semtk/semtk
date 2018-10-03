@@ -909,7 +909,8 @@
         });
     };
     
-    var doNodeGroupDownload = function () {
+    var doNodeGroupDownload = function (optDeflateFlag) {
+        let deflateFlag = (typeof optDeflateFlag != "undefined") ? optDeflateFlag : true;
     	logEvent("SG menu: File->Download");
     	if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0) {
     		logAndAlert("Query canvas is empty.  Nothing to download.");
@@ -921,7 +922,7 @@
     			// make sure importSpec is in sync
     			gMappingTab.updateNodegroup(gNodeGroup);
     			
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, deflateFlag);
 	    		
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
@@ -988,21 +989,7 @@
    	};
 
     var doTest = function () {            
-        require(['sparqlgraph/js/msiclientontologyinfo'], function(MsiClientOntologyInfo) {
-            success = function(results){
-                if (results.isSuccess()) {
-                    var oJson = results.getSimpleResultField("ontologyInfo");
-                    var o = new OntologyInfo(oJson);
-                    var a = 1;
-                }
-            };
-            
-            var client = new MsiClientOntologyInfo(g.service.ontologyInfo.url);
-            var res = client.execGetOntologyInfoJson(gConn, success);
-            
-            
-        });
-        
+        doNodeGroupDownload(false);
     };
 
     // append user button to an elem
