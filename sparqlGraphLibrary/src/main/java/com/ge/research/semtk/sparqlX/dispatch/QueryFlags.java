@@ -5,6 +5,10 @@ import java.util.HashSet;
 import org.json.simple.JSONArray;
 
 public class QueryFlags {
+	// NOTE: query executors and generators and closed-source libraries
+	//       may define additional custom flags.  Use a clever scheme to avoid collisions.
+	public static final String FLAG_UNOPTIONALIZE_CONSTRAINED = "UNOPTIONALIZE_CONSTRAINED";
+	
 	HashSet<String> flags = new HashSet<String>();
 	
 	public QueryFlags() {

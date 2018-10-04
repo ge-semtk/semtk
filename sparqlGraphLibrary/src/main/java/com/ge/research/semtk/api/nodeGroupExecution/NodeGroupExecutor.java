@@ -272,6 +272,10 @@ public class NodeGroupExecutor {
 			rtci.applyConstraintJson(runtimeConstraints);
 		}
 		
+		if (flags.isSet(QueryFlags.FLAG_UNOPTIONALIZE_CONSTRAINED)) {
+			ng.unOptionalizeConstrained();
+		}
+		
 		if (limitOverride > 0) {
 			LocalLogger.logToStdOut("Setting limitOverride: " + limitOverride);
 			ng.setLimit(limitOverride);
