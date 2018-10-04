@@ -45,6 +45,7 @@ public class StatusServiceStartup implements ApplicationListener<ApplicationRead
 
 		// print and validate properties - and exit if invalid
 		String[] propertyNames = {
+				"ssl.enabled",
 				"status.edc.services.jobEndpointType",
 				"status.edc.services.jobEndpointDomain",
 				"status.edc.services.jobEndpointServerUrl",

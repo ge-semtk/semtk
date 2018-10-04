@@ -36,6 +36,7 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
+			  "ssl.enabled",
 			  "nodeGroupExecution.ngStoreProtocol",
 			  "nodeGroupExecution.ngStoreServer",
 			  "nodeGroupExecution.ngStorePort",

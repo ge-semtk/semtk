@@ -36,6 +36,7 @@ public class DispatcherServiceStartup implements ApplicationListener<Application
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
+			  "ssl.enabled",
 			  "dispatch.sparqlServiceServer",
 			  "dispatch.sparqlServicePort",
 			  "dispatch.sparqlServiceEndpoint",

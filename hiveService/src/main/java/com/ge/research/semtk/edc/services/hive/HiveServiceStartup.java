@@ -20,6 +20,7 @@ public class HiveServiceStartup implements ApplicationListener<ApplicationReadyE
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
+			  "ssl.enabled",
 			  "hive.username",
 			  "hive.executionEngine"
 	  };
