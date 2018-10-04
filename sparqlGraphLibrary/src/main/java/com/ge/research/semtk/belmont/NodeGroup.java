@@ -1555,6 +1555,10 @@ public class NodeGroup {
 		this.pruneAllUnused(false);
 	}
 
+	/**
+	 * Prune all unUsed subgraphs off the nodegroup
+	 * @param instanceOnly - use instance data check in node.isUsed
+	 */
 	public void pruneAllUnused (boolean instanceOnly) {
 		// prune all unused subgraphs
 		ArrayList<Node> pruned = new ArrayList<Node>();
@@ -1575,13 +1579,19 @@ public class NodeGroup {
 		} 
 	}
 	
+	/**
+	 * Prune subgraphs of node that don't have any nodes.isUsed()==true
+	 * @param node
+	 * @param instanceOnly
+	 * @return
+	 */
 	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) {
 		
 		if (! node.isUsed(instanceOnly)) {
 			ArrayList<Node> subNodes = this.getAllConnectedNodes(node);
 			ArrayList<ArrayList<Node>> subGraphs = new ArrayList<ArrayList<Node>>();
-			ArrayList<Integer> needSubTree = new ArrayList<Integer>();
-			int needSubTreeCount = 0;
+			ArrayList<Boolean> subGraphIsUsed = new ArrayList<Boolean>();
+			int usedSubGraphCount = 0;
 			
 			ArrayList<Node> stopList = new ArrayList<Node>();
 			stopList.add(node);
@@ -1589,26 +1599,27 @@ public class NodeGroup {
 			// build a subGraph for every connection
 			for (int i = 0; i < subNodes.size(); i++) {
 				subGraphs.add(this.getSubGraph(subNodes.get(i), stopList));
-				needSubTree.add(0);
+				subGraphIsUsed.add(false);
 				
 				for (int j=0; j < subGraphs.get(i).size(); j++) {
 					Node n = subGraphs.get(i).get(j);
 					
+					// if this subGraph isUsed, then note it and break
 					if (n.isUsed(instanceOnly))  {
-						needSubTree.set(i, 1);
-						needSubTreeCount += 1;
+						subGraphIsUsed.set(i, true);
+						usedSubGraphCount += 1;
 						break;
 					}
 				}
-				if (needSubTreeCount > 1) break;
+				if (usedSubGraphCount > 1) break;
 			}
 			
 			// if only one subGraph has nodes that are constrained or returned
-			if (needSubTreeCount < 2) {
+			if (usedSubGraphCount < 2) {
 				
 				// delete any subGraph with no returned or constrained nodes
 				for (int i=0; i < subGraphs.size(); i++) {
-					if (needSubTree.get(i) == 0) {
+					if (subGraphIsUsed.get(i) == false) {
 						for (int j=0; j < subGraphs.get(i).size(); j++) {
 							Node n = subGraphs.get(i).get(j);
 							this.deleteNode(n, false);
@@ -1670,36 +1681,45 @@ public class NodeGroup {
 		this.nodes.remove(node);
 	}
 	
-	
+	/**
+	 * Make sure that any subtrees containing no
+	 * @throws Exception
+	 */
 	public void unOptionalizeConstrained() throws Exception {
 		// loop through each nodeItem
 		System.out.println("unOptionalizeConstrained");
+		
+		// first check that all property items in the nodegroup are NOT optional if they have constraints
+		for (Node n : this.nodes) {
+			for (PropertyItem pItem : n.getPropertyItems()) {
+				if (pItem.getValueConstraint() != null) {
+					pItem.setIsOptional(false);
+				}
+			}
+		}
+		
 		for (NodeItem nItem : this.getAllNodeItems()) {
 			Node owningNode = this.getNodeItemParentSNode(nItem);
 			for (Node rangeNode : nItem.getNodeList()) {
 				HashSet<Node> upstream = this.getUpstreamSubGraph(owningNode, nItem, rangeNode);
 				HashSet<Node> downstream = this.getDownstreamSubGraph(owningNode, nItem, rangeNode);
-				int upConstraints = 0;
-				int downConstraints = 0;
+				int upUnconstrainedReturns = 0;
+				int downUnconstrainedReturns = 0;
+			
 				for (Node n : upstream) {
-					upConstraints += n.countConstraints();
+					upUnconstrainedReturns += n.countUnconstrainedReturns();
 				}
 				for (Node n : downstream) {
-					downConstraints += n.countConstraints();
+					downUnconstrainedReturns += n.countUnconstrainedReturns();
 				}
 				
-				if (upConstraints > 0 &&  downConstraints > 0) {
+				// if subgraph has no unconstrained returns, make sure it is not optional
+				if (upUnconstrainedReturns == 0 &&  nItem.getSNodeOptional(rangeNode) == NodeItem.OPTIONAL_REVERSE) {
 					nItem.setSNodeOptional(rangeNode, NodeItem.OPTIONAL_FALSE);
-					System.out.println("unoptionalized: " + owningNode.getSparqlID() + "->" + nItem.getKeyName() + "->" + rangeNode.getSparqlID());
 				}
-			}
-		}
-		
-		// now check all propertyItems
-		for (Node snode : this.nodes) {
-			for (PropertyItem pItem : snode.getPropertyItems()) {
-				if (pItem.getValueConstraint() != null) {
-					pItem.setIsOptional(false);
+				// repeat in downstream direction
+				if (downUnconstrainedReturns == 0 && nItem.getSNodeOptional(rangeNode) == NodeItem.OPTIONAL_TRUE) {
+					nItem.setSNodeOptional(rangeNode, NodeItem.OPTIONAL_FALSE);
 				}
 			}
 		}
