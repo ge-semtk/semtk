@@ -272,7 +272,7 @@ public class NodeGroupExecutor {
 			rtci.applyConstraintJson(runtimeConstraints);
 		}
 		
-		if (flags.isSet(QueryFlags.FLAG_UNOPTIONALIZE_CONSTRAINED)) {
+		if (flags != null && flags.isSet(QueryFlags.FLAG_UNOPTIONALIZE_CONSTRAINED)) {
 			ng.unOptionalizeConstrained();
 		}
 		
