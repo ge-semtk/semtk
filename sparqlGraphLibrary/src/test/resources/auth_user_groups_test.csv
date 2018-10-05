@@ -1,0 +1,6 @@
+group,user
+JobAdmin,200001934
+JobAdmin,testuser_job_admin
+securityTestRead,testuser_read_only
+securityTestRead,testuser_read_write
+securityTestWrite,testuser_read_write

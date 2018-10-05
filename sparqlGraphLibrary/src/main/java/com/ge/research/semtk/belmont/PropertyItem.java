@@ -58,7 +58,6 @@ public class PropertyItem extends Returnable {
 	
 	public PropertyItem(String nome, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
 		this(nome, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
-		LocalLogger.logToStdOut("Using Deprecated PropertyItem constructor");
 	}
 
 		
@@ -205,11 +204,20 @@ public class PropertyItem extends Returnable {
 		this.constraints = new ValueConstraint(str);
 	}
 	
-	public void setSparqlID(String ID){
+	/**
+	 * Sets the sparqlID field and updates the constraints if needed.
+	 * 
+	 * WARNING: sparqlId must be ok'ed by the nodegroup first.
+	 *          Heartily recommend using NodeGroup.changeSparqlID(), 
+	 *          which will call here.
+	 *          
+	 * @param sparqlId - sparqlId already cleared by the nodegroup as ok
+	 */
+	public void setSparqlID(String sparqlId){
 		if (this.constraints != null) {
-			this.constraints.changeSparqlID(this.sparqlID, ID);
+			this.constraints.changeSparqlID(this.sparqlID, sparqlId);
 		}
-		this.sparqlID = ID;
+		this.sparqlID = sparqlId;
 	}
 	
 	public void setIsMarkedForDeletion(boolean delete){

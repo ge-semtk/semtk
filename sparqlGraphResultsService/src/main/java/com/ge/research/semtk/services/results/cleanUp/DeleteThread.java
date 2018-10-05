@@ -23,7 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.services.results.ResultsEdcConfigProperties;
@@ -63,11 +64,19 @@ public class DeleteThread extends Thread {
     			long cutoffMsec = cutoff.getTime();
     			
     			// cleanup files.
-    	    	
+ 
+    			// HERE
+    			//
+    			// ThreadAuthenticator jobAdmin needs to be separate from graphAdmin
+    			// Plain old isAdmin is too vague.
+    			// Start by changing regular admin to jobAdmin and getting this to work
+    			// by making sure that checkingJobAdmin checks the triples and the jobAdmin flag
+    			
     			
     			LocalLogger.logToStdErr("Clean up started...");
     			
     			// clean up the official way
+    			ThreadAuthenticator.setJobAdmin(true);
     			this.jTracker.deleteJobsAndFiles(cutoff, this.trstore);
     			
     			// look for leftovers

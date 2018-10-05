@@ -130,7 +130,7 @@ public abstract class SparqlEndpointInterface {
 	public void setServerAndPort(String serverAndPort) throws Exception {
 		String[] serverAndPortSplit = serverAndPort.split(":");  // protocol:server:port
 		if(serverAndPortSplit.length < 2){
-			throw new Exception("Error: must provide connection in format protocol:server:port (e.g. http://localhost:2420)");
+			throw new Exception("Error: poorly formatted serverAndPort (e.g. http://localhost:2420): " + serverAndPort);
 		}
 		this.server = serverAndPortSplit[0] + ":" + serverAndPortSplit[1]; // e.g. http://localhost
 		
@@ -383,7 +383,11 @@ public abstract class SparqlEndpointInterface {
 				LocalLogger.logToStdErr(e.getMessage());
 				throw e;
 			} catch (Exception e) {
-				if (tryCount >= MAX_QUERY_TRIES) {
+				if (! this.isExceptionRetryAble(e)) {
+					LocalLogger.logToStdErr(e.getMessage());
+					throw e;
+				
+				} else if (tryCount >= MAX_QUERY_TRIES) {
 					LocalLogger.logToStdOut (String.format("SPARQL query failed after %d tries.  Giving up.", tryCount));
 					LocalLogger.logToStdErr(e.getMessage());
 					throw e;
@@ -577,7 +581,24 @@ public abstract class SparqlEndpointInterface {
 	}
 
 	/**
-	 * Deprecated in favor of executeAuthUpload
+	 * Deprecated in favor of executeAuthUpload 
+	 */
+	@Deprecated
+	protected String explainResponseTxt(String responseTxt) {
+		return "";
+	}
+
+	/**
+	 * Should system perform the default retry when it receives this exception from the triplestore
+	 * @param e
+	 * @return
+	 */
+	public boolean isExceptionRetryAble(Exception e) {
+		return true;
+	}
+	
+	/**
+	 * Execute an auth query using POST
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */

@@ -16,6 +16,7 @@
  */
 package com.ge.research.semtk.api.client.test;
 
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,6 +47,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 public class NodeGroupServiceClientTest_IT {
@@ -256,5 +258,49 @@ public class NodeGroupServiceClientTest_IT {
 			}
 		}
 		
+		@Test
+		public void getImportColumns() throws Exception{				
+			
+			// get a nodegroup
+			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			
+			String colNames[] = ngServiceClient.getIngestionColumns(sgJson);
+			List<String> cols = Arrays.asList(colNames);
+			assertTrue(cols.contains("birthday"));
+			assertTrue(cols.contains("color"));
+			assertTrue(cols.contains("battery"));
+			assertTrue(cols.contains("cell"));
+
+		}
+		
+		@Test
+		public void getSampleImportCSV() throws Exception{				
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			// get a nodegroup
+			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			
+			String csv = ngServiceClient.getSampleIngestionCSV(sgJson);
+			assertTrue(csv.contains("birthday,color,battery,cell"));
+			assertTrue(csv.contains("2017-03-23T10:03:16,blue,string,string"));
+
+		}
+
+
+		@Test
+		public void getSampleRuntimeConstraintJSON() throws Exception{
+
+			String sparqlID = "something";
+			SupportedOperations operation = SupportedOperations.GREATERTHAN;
+			ArrayList<String> operandList = new ArrayList<>();
+			operandList.add("operation");
+
+			JSONObject obj = ngServiceClient.buldRuntimeConstraintJSON(sparqlID, operation, operandList);
+			String objString = obj.toJSONString();
+			assertTrue(objString.contains(sparqlID));
+			assertTrue(objString.contains(operation.toString()));
+			assertTrue(objString.contains(operandList.get(0)));
+
+		}
 	}
 

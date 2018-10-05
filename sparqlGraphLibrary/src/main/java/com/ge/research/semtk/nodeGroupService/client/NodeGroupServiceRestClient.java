@@ -19,6 +19,7 @@ package com.ge.research.semtk.nodeGroupService.client;
 
 import java.util.ArrayList;
 
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -89,6 +90,72 @@ public class NodeGroupServiceRestClient extends RestClient {
 		return new SparqlGraphJson(retval.getResultJSON("nodegroup"));
 	}
 	
+	public String[] getIngestionColumns(SparqlGraphJson sgJson) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint("nodeGroup/getIngestionColumns");
+		
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgJson.toJson().toJSONString());
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+		}
+
+		return retval.getResultStringArray("columnNames");
+	}
+	
+	public String getSampleIngestionCSV(SparqlGraphJson sgJson) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint("nodeGroup/getSampleIngestionCSV");
+		
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgJson.toJson().toJSONString());
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("jsonRenderedNodeGroup");
+		}
+
+		return retval.getResult("sampleCSV");
+	}
+
+	public JSONObject buldRuntimeConstraintJSON(String sparqlID, SupportedOperations operation, ArrayList<String> operandList) throws Exception{
+		SimpleResultSet retval = null;
+
+		conf.setServiceEndpoint("nodeGroup/buildRuntimeConstraintJSON");
+
+		this.parametersJSON.put("sparqlID", sparqlID);
+		this.parametersJSON.put("operation", operation.name());
+		this.parametersJSON.put("operandList", operandList);
+
+
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("sparqlID");
+			this.parametersJSON.remove("operation");
+			this.parametersJSON.remove("operandList");
+		}
+
+		return retval.getResultJSON("constraintJSON");
+	}
+
+
 	public String[] execGetReturnedSparqlIds(SparqlGraphJson sgJson) throws Exception{
 		TableResultSet retval = null;
 		
@@ -148,7 +215,7 @@ public class NodeGroupServiceRestClient extends RestClient {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("jsonRenderedNodeGroup");	
-			this.parametersJSON.remove("sparqlIdTuples");
+			this.parametersJSON.remove("sparqlIdReturnedTuples");
 		}
 
 		return new SparqlGraphJson(retval.getResultJSON("nodegroup"));

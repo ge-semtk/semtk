@@ -50,6 +50,10 @@ public class StatusClient extends RestClient {
 		((StatusClientConfig)this.conf).setJobId(jobId);
 	}
 	
+	public String getJobId() {
+		return ((StatusClientConfig)this.conf).getJobId();	
+	}
+	
 	/**
 	 * 
 	 * @return percent as integer 0 - 100

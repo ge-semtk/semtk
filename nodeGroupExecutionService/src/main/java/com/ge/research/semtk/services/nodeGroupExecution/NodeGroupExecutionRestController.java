@@ -96,24 +96,29 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
 	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = new SimpleResultSet();
-		
-		try{ 
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
-			// try to get a job status
-			String results = ngExecutor.getJobStatus();
-			retval.setSuccess(true);
-			retval.addResult("status", results);
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
-		}
+		try {
+			SimpleResultSet retval = new SimpleResultSet();
+			
+			try{ 
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				// try to get a job status
+				String results = ngExecutor.getJobStatus();
+				retval.setSuccess(true);
+				retval.addResult("status", results);
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
+			} 
 	
-		return retval.toJson();
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	} 
 	
 	@ApiOperation(
@@ -124,24 +129,29 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/jobStatusMessage", method=RequestMethod.POST)
 	public JSONObject getJobStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = new SimpleResultSet();
+		try {
+			SimpleResultSet retval = new SimpleResultSet();
+			
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				// try to get a job status
+				String results = ngExecutor.getJobStatusMessage();
+				retval.setSuccess(true);
+				retval.addResult("message", results);
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "jobStatusMessage", e);
+			} 
 		
-		try{
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
-			// try to get a job status
-			String results = ngExecutor.getJobStatusMessage();
-			retval.setSuccess(true);
-			retval.addResult("message", results);
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "jobStatusMessage", e);
-		}
-	
-		return retval.toJson();
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	} 
 	
 	@ApiOperation(
@@ -152,29 +162,34 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getJobCompletionCheck", method=RequestMethod.POST)
 	public JSONObject getJobCompletion(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = new SimpleResultSet();
+		try {
+			SimpleResultSet retval = new SimpleResultSet();
+			
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				// try to get a job status
+				Boolean results = ngExecutor.getJobCompletion();
+				retval.setSuccess(true);
+				if(results){
+					retval.addResult("completed", "true");
+				}
+				else{
+					retval.addResult("completed", "false");
+				}
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionCheck", e);
+			} 
 		
-		try{
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
-			// try to get a job status
-			Boolean results = ngExecutor.getJobCompletion();
-			retval.setSuccess(true);
-			if(results){
-				retval.addResult("completed", "true");
-			}
-			else{
-				retval.addResult("completed", "false");
-			}
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionCheck", e);
-		}
-	
-		return retval.toJson();
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -185,25 +200,30 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getJobCompletionPercentage", method=RequestMethod.POST)
 	public JSONObject getJobCompletionPercent(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = new SimpleResultSet();
-		
-		try{
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
-			// try to get a job status
-			int results = ngExecutor.getJobPercentCompletion();
-			retval.setSuccess(true);
-			retval.addResult("percent", results);
-
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionPercentage", e);
-		}
+		try {
+			SimpleResultSet retval = new SimpleResultSet();
+			
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				// try to get a job status
+				int results = ngExecutor.getJobPercentCompletion();
+				retval.setSuccess(true);
+				retval.addResult("percent", results);
 	
-		return retval.toJson();
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionPercentage", e);
+			} 
+		
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	@ApiOperation(
 			value="Wait for percent or msec",
@@ -220,22 +240,26 @@ public class NodeGroupExecutionRestController {
 	    String jobId = requestBody.jobID;
 	    
 		HeadersManager.setHeaders(headers);
-	    SimpleResultSet retval = new SimpleResultSet();    	
-    	
 	    try {
-	    	requestBody.validate();
-	    	JobTracker tracker = new JobTracker(edc_prop); 
-	    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
-	    	retval.addResult("percentComplete", String.valueOf(percentComplete));
-	    	retval.setSuccess(true);
+	    	SimpleResultSet retval = new SimpleResultSet();    	
+    	
+		    try {
+		    	requestBody.validate();
+		    	JobTracker tracker = new JobTracker(edc_prop); 
+		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
+		    	retval.addResult("percentComplete", String.valueOf(percentComplete));
+		    	retval.setSuccess(true);
+			    
+		    } catch (Exception e) {
+				LocalLogger.printStackTrace(e);
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
+		    }		    
+		    return retval.toJson();
 		    
-	    } catch (Exception e) {
-			LocalLogger.printStackTrace(e);
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
+		} finally {
+	    	HeadersManager.clearHeaders();
 	    }
-	    
-	    return retval.toJson();
 	}
 	
 	@ApiOperation(
@@ -247,21 +271,26 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getResultsTable", method=RequestMethod.POST)
 	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		TableResultSet retval = new TableResultSet();
-		
-		try{
-			NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
-			Table retTable = nge.getTableResults();
-			retval.setSuccess(true);
-			retval.addResults(retTable);
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new TableResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
-		}
-		return retval.toJson();
+		try {
+			TableResultSet retval = new TableResultSet();
+			
+			try{
+				NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
+				Table retTable = nge.getTableResults();
+				retval.setSuccess(true);
+				retval.addResults(retTable);
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new TableResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	
@@ -269,21 +298,26 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getResultsJsonLd", method=RequestMethod.POST)
 	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		NodeGroupResultSet retval = new NodeGroupResultSet();
-		
-		try{
-			NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
-			JSONObject retLd = nge.getJsonLdResults();
-			retval.setSuccess(true);
-			retval.addResultsJSON(retLd);
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new NodeGroupResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
-		}
-		return retval.toJson();
+		try {
+			NodeGroupResultSet retval = new NodeGroupResultSet();
+			
+			try{
+				NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
+				JSONObject retLd = nge.getJsonLdResults();
+				retval.setSuccess(true);
+				retval.addResultsJSON(retLd);
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new NodeGroupResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -296,53 +330,58 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getResultsLocation", method=RequestMethod.POST)
 	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		TableResultSet retval = new TableResultSet();
+		try {
+			TableResultSet retval = new TableResultSet();
+			
+			// note: make sure the response is sane when results do not yet exist. the failure should be as graceful as we can make them.
+			
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				// try to get a job status
+				URL[] results = ngExecutor.getResultsLocation();
+				retval.setSuccess(true);
 		
-		// note: make sure the response is sane when results do not yet exist. the failure should be as graceful as we can make them.
-		
-		try{
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
-			// try to get a job status
-			URL[] results = ngExecutor.getResultsLocation();
-			retval.setSuccess(true);
+				// a little diagnostic print:
+				LocalLogger.logToStdErr("results info for job (" + requestBody.getJobID() + ") : " + results.length + " records.");
+				for(URL i : results){
+					LocalLogger.logToStdErr("        record: " + i.toString());
+				}
+				
+				
+				// turn this into a table result.
+				String[] cols = {"URL_Location", "Result_Type"};
+				String[] colTypes = {"http://www.w3.org/2001/XMLSchema#string", "http://www.w3.org/2001/XMLSchema#string"};
+				
+				// the first is the sample. the second is the complete result.
+				ArrayList<String> row0 = new ArrayList<String>();
+				row0.add(results[0].toString());
+				row0.add("sample");
+				ArrayList<String> row1 = new ArrayList<String>();
+				row1.add(results[1].toString());
+				row1.add("full");
+				
+				ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+				
+				rows.add(row0);
+				rows.add(row1);
+				
+				Table retTable = new Table(cols, colTypes, rows);
+				retval.addResults(retTable);
 	
-			// a little diagnostic print:
-			LocalLogger.logToStdErr("results info for job (" + requestBody.getJobID() + ") : " + results.length + " records.");
-			for(URL i : results){
-				LocalLogger.logToStdErr("        record: " + i.toString());
 			}
-			
-			
-			// turn this into a table result.
-			String[] cols = {"URL_Location", "Result_Type"};
-			String[] colTypes = {"http://www.w3.org/2001/XMLSchema#string", "http://www.w3.org/2001/XMLSchema#string"};
-			
-			// the first is the sample. the second is the complete result.
-			ArrayList<String> row0 = new ArrayList<String>();
-			row0.add(results[0].toString());
-			row0.add("sample");
-			ArrayList<String> row1 = new ArrayList<String>();
-			row1.add(results[1].toString());
-			row1.add("full");
-			
-			ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-			
-			rows.add(row0);
-			rows.add(row1);
-			
-			Table retTable = new Table(cols, colTypes, rows);
-			retval.addResults(retTable);
-
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new TableResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getResultsLocation", e);
-		}
-	
-		return retval.toJson();
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new TableResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getResultsLocation", e);
+			} 
+		
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	// base methods which others use
@@ -389,7 +428,7 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage("service: " + SERVICE_NAME + " method: dispatchAnyJobById()", e);
-		}
+		} 
 	
 		return retval.toJson();
 
@@ -440,7 +479,7 @@ public class NodeGroupExecutionRestController {
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../dispatchAnyJobById()", e);
-		}
+		} 
 	
 		return retval.toJson();
 
@@ -456,7 +495,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
 	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -467,7 +511,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 
@@ -479,7 +528,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		try {
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -490,45 +544,50 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchSelectByIdSync", method=RequestMethod.POST)
 	public JSONObject dispatchSelectByIdSync(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		final String ENDPOINT_NAME = "/dispatchSelectByIdSync";
-		final int TIMEOUT_SEC = 55;
-		TableResultSet ret = null;
 		try {
-			// dispatch the job
-			JSONObject simpleJson = dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
-			SimpleResultSet jobIdRes = SimpleResultSet.fromJson(simpleJson);
+			final String ENDPOINT_NAME = "/dispatchSelectByIdSync";
+			final int TIMEOUT_SEC = 55;
+			TableResultSet ret = null;
+			try {
+				// dispatch the job
+				JSONObject simpleJson = dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+				SimpleResultSet jobIdRes = SimpleResultSet.fromJson(simpleJson);
+				
+				if (! jobIdRes.getSuccess()) {
+					// send along failure
+					ret = new TableResultSet(simpleJson);
+				} else {
+					// wait for job to complete
+					String jobId = jobIdRes.getResult(JOB_ID_RESULT_KEY);
+					JobTracker tracker = new JobTracker(edc_prop); 
+			    	int percentComplete = tracker.waitForPercentOrMsec(jobId, 100, TIMEOUT_SEC * 1000);
+			    	if (percentComplete < 100) {
+			    		throw new Exception("Job is only " + percentComplete + "% complete after" + TIMEOUT_SEC + "seconds.  Use /dispatchSelectById instead.");
+			    	}
+			    	
+			    	// check that job succeeded
+			    	if (!tracker.jobSucceeded(jobId)) {
+			    		throw new Exception("Query failed: " + tracker.getJobStatusMessage(jobId));
+			    	}
+			    	
+			    	// get table
+			    	NodeGroupExecutor nge = this.getExecutor(prop, jobId);
+					Table retTable = nge.getTableResults();
+					ret = new TableResultSet(true);
+					ret.addResults(retTable);
+			    	
+				}
+			} catch (Exception e) {
+					LocalLogger.printStackTrace(e);
+					ret = new TableResultSet(false);
+					ret.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			} 
 			
-			if (! jobIdRes.getSuccess()) {
-				// send along failure
-				ret = new TableResultSet(simpleJson);
-			} else {
-				// wait for job to complete
-				String jobId = jobIdRes.getResult(JOB_ID_RESULT_KEY);
-				JobTracker tracker = new JobTracker(edc_prop); 
-		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, 100, TIMEOUT_SEC * 1000);
-		    	if (percentComplete < 100) {
-		    		throw new Exception("Job is only " + percentComplete + "% complete after" + TIMEOUT_SEC + "seconds.  Use /dispatchSelectById instead.");
-		    	}
-		    	
-		    	// check that job succeeded
-		    	if (!tracker.jobSucceeded(jobId)) {
-		    		throw new Exception("Query failed: " + tracker.getJobStatusMessage(jobId));
-		    	}
-		    	
-		    	// get table
-		    	NodeGroupExecutor nge = this.getExecutor(prop, jobId);
-				Table retTable = nge.getTableResults();
-				ret = new TableResultSet(true);
-				ret.addResults(retTable);
-		    	
-			}
-		} catch (Exception e) {
-				LocalLogger.printStackTrace(e);
-				ret = new TableResultSet(false);
-				ret.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
-		}
-		
-		return ret.toJson();
+			return ret.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -539,7 +598,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 	
@@ -551,7 +615,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchConstructById", method=RequestMethod.POST)
 	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
+		try {
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -562,7 +631,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchConstructFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 	
@@ -570,14 +644,24 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchConstructForInstanceManipulationById", method=RequestMethod.POST)
 	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+		try {
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructForInstanceManipulationFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 	
@@ -589,7 +673,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
+		try {
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -600,7 +689,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchCountFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 
@@ -612,7 +706,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchFilterById", method=RequestMethod.POST)
 	public JSONObject dispatchFilterJobById(@RequestBody FilterDispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+		try {
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -623,7 +722,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchFilterFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody FilterDispatchFromNodeGroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 
@@ -635,7 +739,12 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchDeleteById", method=RequestMethod.POST)
 	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
+		try {
+			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -644,8 +753,14 @@ public class NodeGroupExecutionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchDeleteJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody ){	
-		return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
+	public JSONObject dispatchDeleteJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers ){	
+		HeadersManager.setHeaders(headers);
+		try {
+			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 	
@@ -657,31 +772,35 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/dispatchRawSparql", method=RequestMethod.POST)
 	public JSONObject dispatchRawSparql(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-
-		SimpleResultSet retval = new SimpleResultSet();
-		
-		try{
-			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
-			// try to create a sparql connection
-			SparqlConnection connection = requestBody.getSparqlConnection();			
-
-			// dispatch the job. 
-			ngExecutor.dispatchRawSparql(connection, requestBody.getSparql());
-			String id = ngExecutor.getJobID();
+		try {
+			SimpleResultSet retval = new SimpleResultSet();
 			
-			retval.setSuccess(true);
-			retval.addResult(JOB_ID_RESULT_KEY, id);
-
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new SimpleResultSet();
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
-		}
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+				// try to create a sparql connection
+				SparqlConnection connection = requestBody.getSparqlConnection();			
 	
-		return retval.toJson();
+				// dispatch the job. 
+				ngExecutor.dispatchRawSparql(connection, requestBody.getSparql());
+				String id = ngExecutor.getJobID();
+				
+				retval.setSuccess(true);
+				retval.addResult(JOB_ID_RESULT_KEY, id);
+	
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
+			} 
+		
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 
 	}
 	/**
@@ -696,15 +815,20 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		RecordProcessResults retval = null;
-		try{
-			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
-		}catch(Exception e){
-			retval = new RecordProcessResults(false);
-			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
-		}
-		return retval.toJson();
+		try {
+			RecordProcessResults retval = null;
+			try{
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+			}catch(Exception e){
+				retval = new RecordProcessResults(false);
+				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	/**
@@ -719,16 +843,21 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		RecordProcessResults retval = null;
-		try{
-			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-			SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
-		}catch(Exception e){
-			retval = new RecordProcessResults(false);
-			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
-		}
-		return retval.toJson();
+		try {
+			RecordProcessResults retval = null;
+			try{
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+			}catch(Exception e){
+				retval = new RecordProcessResults(false);
+				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	/**
@@ -742,15 +871,20 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
 	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		RecordProcessResults retval = null;
-		try{
-			NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
-			retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
-		}catch(Exception e){
-			retval = new RecordProcessResults(false);
-			retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
-		}
-		return retval.toJson();
+		try {
+			RecordProcessResults retval = null;
+			try{
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+			}catch(Exception e){
+				retval = new RecordProcessResults(false);
+				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	@ApiOperation(
@@ -761,20 +895,24 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroupID", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		TableResultSet retval = null;
-		
 		try {
-			NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
-			NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
-			retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
-		}
-		catch(Exception e){
-			LocalLogger.printStackTrace(e);
-			retval = new TableResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroupID", e);
-		}
-		
-		return retval.toJson();
+			TableResultSet retval = null;
+			
+			try {
+				NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
+				NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
+				retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
+			}
+			catch(Exception e){
+				LocalLogger.printStackTrace(e);
+				retval = new TableResultSet(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroupID", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@ApiOperation(
@@ -785,22 +923,26 @@ public class NodeGroupExecutionRestController {
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroup", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		TableResultSet retval = null;
-		
 		try {
-			NodeGroup ng = this.getNodeGroupFromJson(requestBody.getJsonNodeGroup());
-			RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
+			TableResultSet retval = null;
 			
-			retval = new TableResultSet(true);
-			retval.addResults( rtci.getConstrainedItemsDescription() );
-		
-		}
-		catch(Exception e){
-			retval = new TableResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroup", e);
-		}
-		
-		return retval.toJson();
+			try {
+				NodeGroup ng = this.getNodeGroupFromJson(requestBody.getJsonNodeGroup());
+				RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
+				
+				retval = new TableResultSet(true);
+				retval.addResults( rtci.getConstrainedItemsDescription() );
+			
+			}
+			catch(Exception e){
+				retval = new TableResultSet(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroup", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	// get the runtime constraints, if any.

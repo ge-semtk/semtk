@@ -29,6 +29,9 @@ import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.HeaderTable;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -46,7 +49,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	private int BATCH_SIZE_RETRIEVE = 50000;
 	
 	public ResultsClient (ResultsClientConfig config) {
-		this.conf = config;
+		this.conf = config;	
 	}
 	
 	@Override
@@ -125,6 +128,11 @@ public class ResultsClient extends RestClient implements Runnable {
 		
 	}
 
+	public String storeBinaryFile(String jobID, File file) throws Exception {
+		SimpleResultSet res = this.execStoreBinaryFile(jobID, file);
+		return res.getResult("fileId");
+	}
+	
 	/**
 	 * Store a file 
 	 * @param file
@@ -214,6 +222,8 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 	
+	// NOTE: can't return a binary file as a string.
+	//       this will need to be fixed before anyone other than junit uses it
 	public String execReadBinaryFile(String fileId) throws Exception{
 
 		this.parametersJSON.clear();
@@ -221,7 +231,12 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setMethod(RestClientConfig.Methods.GET);
 		try {
 			String res = (String) execute(true);
-
+			
+			if (res.startsWith("<html><body>AuthorizationException")) {
+				throw new AuthorizationException(res.replaceAll("<[^>]+>", ""));
+			} else if (res.startsWith("<html><body>Exception")) {
+				throw new Exception(res.replaceAll("<[^>]+>", ""));
+			}
 			return res;
 		} finally {
 			this.cleanUp();
@@ -275,9 +290,10 @@ public class ResultsClient extends RestClient implements Runnable {
 		// write the start of the JSON
 		this.conf.setServiceEndpoint("results/storeTableResultsJsonInitialize"); 
 		this.conf.setMethod(RestClientConfig.Methods.POST);
+		
 		this.parametersJSON.put("jobId", jobId);
 		this.parametersJSON.put("jsonRenderedHeader", createNewHeaderMap(table).toJSONString());
-		thread = new Thread(this);
+		thread = new Thread(this, "execStoreTableResults_initialize");
 		thread.start();
 		
 		// do formatting tasks in parallel
@@ -344,9 +360,9 @@ public class ResultsClient extends RestClient implements Runnable {
 			this.conf.setMethod(RestClientConfig.Methods.POST);
 			this.parametersJSON.put("contents", Utility.compress(resultsSoFar.toString())); 
 			this.parametersJSON.put("jobId", jobId);
-			thread = new Thread(this);
+			thread = new Thread(this, "execStoreTableResults_jsonIncremental_"+tableRowsDone);
 			thread.start();
-
+			
 			if (timerFlag) { 
 				endTime = System.nanoTime();
 				sendSec += ((endTime - startTime) / 1000000000.0);
@@ -362,8 +378,9 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/storeTableResultsJsonFinalize"); 
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
-		thread = new Thread(this);
+		thread = new Thread(this, "execStoreTableResults_finalize");
 		thread.start();
+		
 		// wait for the finalize run to finish
 		waitForThreadToFinish(thread);
 
@@ -378,13 +395,14 @@ public class ResultsClient extends RestClient implements Runnable {
 	
 	
 	/**
-	 * Get results (possibly truncated) in JSON format for a job
+	 * Get results in JSON format for a job
 	 * @param maxRows - to prevent string buffer overflow in Java.  
 	 * @return a TableResultSet object
 	 */
 	@SuppressWarnings("unchecked")
-	public TableResultSet execTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
+	public Table getTableResultsJson(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
 
+		
 		ArrayList<Thread> threads = new ArrayList<Thread>();	
 		ArrayList<ResultsClient> clients = new ArrayList<ResultsClient>();
 		try {
@@ -418,7 +436,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				// kick off a thread using a "copy" of the client (necessary to avoid overwrites)  TODO find a cleaner way
 				ResultsClient client = new ResultsClient((ResultsClientConfig) conf); 
 				client.parametersJSON = (JSONObject) this.parametersJSON.clone(); 
-				Thread thread = new Thread(client);
+				Thread thread = new Thread(client, "getTableResultsJson_batch_" + i);
 				clients.add(client);
 				threads.add(thread);
 				thread.start();						// execute
@@ -447,7 +465,7 @@ public class ResultsClient extends RestClient implements Runnable {
 				thread = null;
 			}
 			
-			return ret;			
+			return ret.getTable();			
 		} finally {
 			this.cleanUp();
 		}
@@ -459,7 +477,7 @@ public class ResultsClient extends RestClient implements Runnable {
 	 * @return a CSVDataset object
 	 */
 	@SuppressWarnings("unchecked")
-	public CSVDataset execTableResultsCsv(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
+	public CSVDataset getTableResultsCSV(String jobId, Integer maxRows) throws ConnectException, EndpointNotFoundException, Exception {
 		this.conf.setServiceEndpoint("results/getTableResultsCsv");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
@@ -470,7 +488,11 @@ public class ResultsClient extends RestClient implements Runnable {
 
 		try {
 			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
-			return new CSVDataset(s, true);
+			CSVDataset dataset = new CSVDataset(s, true);
+			if (dataset.getColumnNamesinOrder().get(0).contains("authorizationexception")) {
+				throw new AuthorizationException(dataset.getNextRecords(1).get(0).get(0));
+			}
+			return dataset;
 		} finally {
 			this.cleanUp();
 		}
@@ -489,7 +511,8 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/getResults");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobId);
-
+		
+		LocalLogger.logToStdErr("Using DEPRECATED semTK function ResultsClient.execGetResults().\nUse getTableResultsCSV() and getTableResultsJson() instead.");
 		try {
 			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();

@@ -244,7 +244,7 @@ public class SparqlGraphJson {
 	public ImportSpecHandler getImportSpec() throws Exception {
 		JSONObject json = this.getImportSpecJson();
 		if (importSpec == null && json != null) {
-			importSpec =  new ImportSpecHandler(json, this.getSNodeGroupJson(), this.getOntologyInfo());
+			importSpec =  new ImportSpecHandler(json, this.getSNodeGroupJson(), this.getSparqlConn(), this.getOntologyInfo());
 		}
 		return importSpec;
 	}

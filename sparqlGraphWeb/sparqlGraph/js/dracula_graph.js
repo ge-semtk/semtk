@@ -169,6 +169,11 @@ Graph.Node = function(id, SparqlID, node_in){
     node.nodeLabels = [];
     node.subnodes = [];
     node.parentSNode = '';
+    node.collapsed = false;       // is node collapsed
+    node.collapsedItems = [];     // items removed when collapsed (so edges draw properly)
+    node.collapsedItem0Box = {};  // former location of item[0]
+
+    
     node.hide = function() {
         this.hidden = true;
         this.shape && this.shape.hide(); /* FIXME this is representation specific code and should be elsewhere */
@@ -230,7 +235,7 @@ Graph.Renderer.Raphael = function(element, graph, width, height) {
     this.radius = 100; /* max dimension of a node */
     this.graph = graph;
     this.mouse_in = false;
-
+    
     /* TODO default node rendering function */
     if(!this.graph.render) {
         this.graph.render = function() {
@@ -261,7 +266,9 @@ Graph.Renderer.Raphael = function(element, graph, width, height) {
             /* prevent shapes from being dragged out of the canvas */
             var clientX = e.clientX - (newX < 20 ? newX - 20 : newX > selfRef.width - 20 ? newX - selfRef.width + 20 : 0);
             var clientY = e.clientY - (newY < 20 ? newY - 20 : newY > selfRef.height - 20 ? newY - selfRef.height + 20 : 0);
+            
             selfRef.isDrag.set.translate(clientX - Math.round(selfRef.isDrag.dx), clientY - Math.round(selfRef.isDrag.dy));
+            
             //            console.log(clientX - Math.round(selfRef.isDrag.dx), clientY - Math.round(selfRef.isDrag.dy));
             for (var i in selfRef.graph.edges) {
                 selfRef.graph.edges[i].connection && selfRef.graph.edges[i].connection.draw();
@@ -278,6 +285,14 @@ Graph.Renderer.Raphael = function(element, graph, width, height) {
     this.draw();
 };
 
+Graph.Renderer.Raphael.HEADER_SIZE = 3;   // number of non property sub-nodes
+Graph.Renderer.Raphael.VMARGIN = 2;
+Graph.Renderer.Raphael.HMARGIN = 10;
+Graph.Renderer.Raphael.HTAB = 5;
+Graph.Renderer.Raphael.RESTORE_TXT = "\u2B1C";
+Graph.Renderer.Raphael.COLLAPSE_TXT = "\u2581";
+Graph.Renderer.Raphael.DELETE_TXT = "\u2613";
+
 Graph.Renderer.Raphael.prototype = {
     translate: function(point) {
         return [
@@ -292,6 +307,72 @@ Graph.Renderer.Raphael.prototype = {
         return [point[0]+dx, point[1]+dy];
     },
 
+    collapseNode : function(node) {
+        if (node.collapsed) { return; }
+        node.collapsed = true;
+        
+        var numLabels = node.propLabels.length + node.nodeLabels.length;
+                                          
+        // Collapse a node
+
+        // hide sub-nodes and shrink the box height
+        for (var i=node.subnodes.length-1; i > node.subnodes.length -1 - numLabels; i--) {
+            // hide, and shrink the main parent height
+            node.subnodes[i].hide();  
+            node.shape[0].attr({"height" : node.shape[0].attrs.height - node.subnodes[i].getBBox().height - Graph.Renderer.Raphael.VMARGIN});
+        }
+
+        // stash the collapsed items
+        node.collapsedItems = node.shape.items.slice(Graph.Renderer.Raphael.HEADER_SIZE+1,);
+        node.shape.items = node.shape.items.slice(0,Graph.Renderer.Raphael.HEADER_SIZE+1);
+        node.collapsedItem0Box = node.shape.items[0].getBBox();
+
+        // change the button character
+        node.subnodes[1].attr({"text" : Graph.Renderer.Raphael.RESTORE_TXT});
+        
+        // redraw connections
+        for (var i=0; i < node.edges.length; i++) {
+            node.edges[i].connection.draw();
+        }
+    },
+    
+    uncollapseNode: function(node) {
+        if (!node.collapsed) { return; }
+        node.collapsed = false;
+        
+        var numLabels = node.propLabels.length + node.nodeLabels.length;
+        
+        // Un-collapse a node
+
+        // calculate offset in case node has moved
+        var item0Box = node.shape.items[0].getBBox();
+        var xOffset = item0Box.x - node.collapsedItem0Box.x;
+        var yOffset = item0Box.y - node.collapsedItem0Box.y;
+
+        // move all the stashed items
+        for (var j=0; j < node.collapsedItems.length; j++) {
+            var jItem = node.collapsedItems[j];
+            jItem.attr({"x": jItem.attrs.x + xOffset});
+            jItem.attr({"y":  jItem.attrs.y + yOffset});
+        }
+
+        // restore stashed items and expand the box
+        node.shape.items = node.shape.items.concat(node.collapsedItems);
+        node.collapsedItems = [];
+        for (var i=node.subnodes.length-1; i > node.subnodes.length -1 - numLabels; i--) {  
+            node.subnodes[i].show().toFront();
+            node.shape[0].attr({"height" : node.shape[0].attrs.height + node.subnodes[i].getBBox().height + Graph.Renderer.Raphael.VMARGIN});
+        }
+
+        // change the button character
+        node.subnodes[1].attr({"text" : Graph.Renderer.Raphael.COLLAPSE_TXT});
+        
+        // redraw connections
+        for (var i=0; i < node.edges.length; i++) {
+            node.edges[i].connection.draw();
+        }
+    },
+    
     draw: function() {
         this.factorX = (this.width - 2 * this.radius) / (this.graph.layoutMaxX - this.graph.layoutMinX);
         this.factorY = (this.height - 2 * this.radius) / (this.graph.layoutMaxY - this.graph.layoutMinY);
@@ -325,9 +406,7 @@ Graph.Renderer.Raphael.prototype = {
         if(!node.render) {
             node.render = function(r, node) {
                 /* the default node drawing */
-            	var vMargin = 2;
-            	var hMargin = 10;
-            	var hTab = 5;
+            	
             	var hue = "#0055FF";
                 var color = Raphael.getColor();
                 var fillVal = "90-#A9C6FF:5-#EEF4FF:100";   // blue gradient
@@ -338,11 +417,11 @@ Graph.Renderer.Raphael.prototype = {
                 rect.node.id = node.label || node.id;
                 
                 
-                if(node.propLabels.length == -1){
+                if(node.propLabels.length == -1 ){
 	                var label = r.text(5,5,node.label || node.id);
 	                label.attr({"font-size": 16, "font-family": "Arial, Helvetica, sans-serif"});
-	                label.attr({"x" : getLineX(label.getBBox().width, hMargin)});
-	                label.attr({"y" : getLineY(0, vMargin, [label])});
+	                label.attr({"x" : getLineX(label.getBBox().width, Graph.Renderer.Raphael.HMARGIN)});
+	                label.attr({"y" : getLineY(0, Graph.Renderer.Raphael.VMARGIN, [label])});
 	                label.node.ondblclick = function () { alert(node.label || node.id);};
 	                
 	                shape = r.set().
@@ -352,47 +431,58 @@ Graph.Renderer.Raphael.prototype = {
                 }
                 else{
                 	
-                	
-                	
-                	var headersize = 2; // basically, the row count for the name of the node + any control rows not representing semantics info (close button, etc)
-                	
                 	// loop over the props
                 	var labelN = [];
                 	var psize = node.propLabels.length;
                 	
-                	// add stub for the delete and minimize functions
+                	// ==== "X" for deleting SNodes
+                	var deleteX = r.text(5,5, Graph.Renderer.Raphael.DELETE_TXT);
+                	deleteX.attr({"font-size": 14, "font-family": "Arial, Helvetica, sans-serif", "fill" : "black", "stroke-width": 3, "font-weight": "bold"});
                 	
-                	var cntrl = r.text(5,5, "\u274E");
-                	cntrl.attr({"font-size": 12, "font-family": "Arial, Helvetica, sans-serif", "fill" : "black", "stroke-width": 3});
-                	// {"fill" : "#0000FF", "stroke-width": 3}
-                	cntrl.attr({"x" : getLineX(cntrl.getBBox().width, hMargin)});
-                	
-                	cntrl.node.ondblclick = (function (i) { 
-            	    	// alert("implement delete to remove :" + node.id );
-            	    	// node.hide();	// makes the removal actually work. 
-            	    	//node.parentSNode.removeFromNodeGroup(false);		
-            	   // 	removeNode(node.id);
-            	    	//node.parentSNode.nodeGrp.drawNodes();
-            	    });
-                	
-                	// "X" for deleting SNodes
-                	cntrl.node.onmousedown = function (e) {
+                	// delete callbacks
+                	deleteX.node.onmousedown = function (e) {
             			registerMouseDown(e);
             		};
             		
-            		cntrl.node.onmouseup = function (pnode, graph, e) {
+            		deleteX.node.onmouseup = function (pnode, graph, e) {
             			registerMouseUp(e);
             			if (mouseUpIsClick()) {
                             pnode.parentSNode.callAsyncSNodeRemover(); 
             			}
             		}.bind("fake_this", node, graph);
                 	
-                	// add the title
+                    labelN.push(deleteX);
+        			deleteX.attr({"y": deleteX.getBBox().height/2 + Graph.Renderer.Raphael.VMARGIN*2});
+                    
+                    // ===== 0 for collapsing node
+                    var collapseX = r.text(5,5,Graph.Renderer.Raphael.COLLAPSE_TXT)
+                    collapseX.attr({"font-size": 14, "font-family": "Arial, Helvetica, sans-serif", "fill" : "black", "stroke-width": 3});
+                	
+                	// collapse callbacks
+                	collapseX.node.onmousedown = function (e) {
+            			registerMouseDown(e);
+            		};
+            		
+            		collapseX.node.onmouseup = function (pnode, graph, e) {
+            			registerMouseUp(e);
+            			if (mouseUpIsClick()) {
+                            if (pnode.collapsed) {
+                                Graph.Renderer.Raphael.prototype.uncollapseNode(pnode);
+                            } else {
+                                Graph.Renderer.Raphael.prototype.collapseNode(pnode);
+                            }
+            			}
+            		}.bind(this, node, graph);
+                   
+                    labelN.push(collapseX);
+                    collapseX.attr({"y": collapseX.getBBox().height/2 + Graph.Renderer.Raphael.VMARGIN*2});
+                    
+                	// === add the title
                 	
 					//var lt = r.text(5,5, node.parentclass + " [ " + node.id + " ]"); // make sure both the SPARQL name and type appear in header
 					var lt = r.text(5,5, "\u2610 " + node.id ); // make sure both the SPARQL name and type appear in header
                 	lt.attr({"font-size": 16, "font-family": "Arial, Helvetica, sans-serif"});
-                	lt.attr({"x" : getLineX(lt.getBBox().width, hMargin)});
+                	lt.attr({"x" : getLineX(lt.getBBox().width, Graph.Renderer.Raphael.HMARGIN)});
                 	displayLabelOptions(lt, node.parentSNode.getDisplayOptions());
                 	
                 	// SNode
@@ -407,17 +497,14 @@ Graph.Renderer.Raphael.prototype = {
             		    	pnode.parentSNode.callAsyncSNodeEditor(lt); 
             			}
             		}.bind("blank_this", node);
-            		
-                	labelN.push(cntrl);
-        			cntrl.attr({"y" : getLineY(0, vMargin, labelN)});
 
         			labelN.push(lt);	
-        			lt.attr({"y" : getLineY(1, vMargin, labelN)});
+        			lt.attr({"y" : getLineY(1, Graph.Renderer.Raphael.VMARGIN, labelN)});
         			var str = "value";
         			
 
                 	for ( var i = 0; i < psize; i++){  		
-                		var l = buildGraphNodeLabels(node.propLabels[i], r, i, hMargin+hTab, vMargin, labelN, 0, node, true);
+                		var l = buildGraphNodeLabels(node.propLabels[i], r, i, Graph.Renderer.Raphael.HMARGIN+Graph.Renderer.Raphael.HTAB, Graph.Renderer.Raphael.VMARGIN, labelN, 0, node, true);
                     	displayLabelOptions(l, node.parentSNode.getPropertyItem(i).getDisplayOptions());
 
                 	}
@@ -426,17 +513,20 @@ Graph.Renderer.Raphael.prototype = {
                 	var ksize = node.nodeLabels.length;
                 	
                 	for ( var i = 0; i < ksize; i++){
-                		var l = buildGraphNodeLabels(node.nodeLabels[i], r, i, hMargin+hTab, vMargin, labelN, psize, node, false);
+                		var l = buildGraphNodeLabels(node.nodeLabels[i], r, i, Graph.Renderer.Raphael.HMARGIN+Graph.Renderer.Raphael.HTAB, Graph.Renderer.Raphael.VMARGIN, labelN, psize, node, false);
                     	displayLabelOptions(l, node.parentSNode.getNodeItem(i).getDisplayOptions());
 
                 	}
                 	
-                	rect.attr({"width": hMargin + hMargin + hTab + getMaxWidthArr(labelN)});
-                    rect.attr({"height": getHeightArr(vMargin, labelN)});
+                	rect.attr({"width": Graph.Renderer.Raphael.HMARGIN + Graph.Renderer.Raphael.HMARGIN + Graph.Renderer.Raphael.HTAB + getMaxWidthArr(labelN)});
+                    rect.attr({"height": getHeightArr(Graph.Renderer.Raphael.VMARGIN, labelN)});
 
+                    deleteX.attr({"x" : rect.getBBox().width - deleteX.getBBox().width - Graph.Renderer.Raphael.HMARGIN });
+                    collapseX.attr({"x" : deleteX.attrs.x - (Graph.Renderer.Raphael.HMARGIN * 2) - collapseX.getBBox().width} );
+                	
                 	shape = r.set();
                     
-                	allsize = psize + ksize + headersize;
+                	allsize = psize + ksize + Graph.Renderer.Raphael.HEADER_SIZE;
                     var whatever = shape.push(rect);
                     for( var i = 0; i < allsize; i++){
                     	labelN[i].id = node.id + "_" + i ;
@@ -448,6 +538,7 @@ Graph.Renderer.Raphael.prototype = {
                 return shape;
             }
         }
+        
         /* or check for an ajax representation of the nodes */
         if(node.shapes) {
             // TODO ajax representation evaluation

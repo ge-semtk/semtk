@@ -17,9 +17,15 @@
 
 package com.ge.research.semtk.test;
 
+import java.io.File;
+
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
+import com.ge.research.semtk.auth.AuthorizationProperties;
+import com.ge.research.semtk.edc.EndpointProperties;
+import com.ge.research.semtk.edc.JobEndpointProperties;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -28,6 +34,7 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
@@ -62,6 +69,32 @@ public class IntegrationTestUtility {
 	}
 	public static String getSparqlServerPassword() throws Exception{
 		return getIntegrationTestProperty("integrationtest.sparqlendpoint.password");
+	}
+	
+	/**
+	 * Get JobEndpointProperties without domain or dataset
+	 * @return
+	 * @throws Exception
+	 */
+	public static EndpointProperties getEndpointProperties() throws Exception {
+		EndpointProperties ret = new EndpointProperties();
+		
+		ret.setJobEndpointType(getSparqlServerType());
+		ret.setJobEndpointServerUrl(getSparqlServer());
+		ret.setJobEndpointUsername(getSparqlServerUsername());
+		ret.setJobEndpointPassword(getSparqlServerPassword());
+		
+		return ret;
+	}
+	
+	public static AuthorizationProperties getAuthorizationProperties() {
+		AuthorizationProperties ret = new AuthorizationProperties();
+		try {
+			ret.setRefreshFreqSeconds(Integer.parseInt(getIntegrationTestProperty("auth.refreshFreqSeconds")));
+		} catch (Exception e) {
+			// ok. optional property
+		}
+		return ret;
 	}
 	
 	// sparql query service
@@ -199,6 +232,23 @@ public class IntegrationTestUtility {
 	}
 	
 	public static String getIntegrationTestProperty(String key) throws Exception{
+		if (!Utility.ENV_TEST) {
+			throw new Exception(Utility.ENV_TEST_EXCEPTION_STRING);
+		}
 		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
+	}
+	
+	public static File getSampleFile(Object caller) throws Exception {
+		return Utility.getResourceAsFile(caller, "/annotationBattery.owl");
+	}
+	
+	public static String getSampleJsonBlob(Object caller) throws Exception {
+		return Utility.getResourceAsString(caller, "/annotationBatteryOInfo.json");
+	}
+	
+	public static Table getSampleTable() throws Exception {
+		Table table = new Table(new String [] {"col1", "col2"}, new String [] {"string", "int"});
+		table.addRow(new String [] {"value1", "2"});
+		return table;
 	}
 }

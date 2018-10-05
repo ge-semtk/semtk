@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,20 +19,17 @@
 package com.ge.research.semtk.load;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.DataSetExhaustedException;
 import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -153,18 +150,27 @@ public class DataLoader {
 		this.batchHandler.setBatchSize(rBatchSize);
 	}
 	
+	
 	/**
 	 * Performs one or two pass ingestion.
-	 * @param twoPassPrecheck
-	 * @return
+	 */
+	public int importData(Boolean precheck)throws Exception{
+		return importData(precheck, false);
+	}
+	
+	/**
+	 * Performs one or two pass ingestion.
+	 * Note: Check the error report if you don't know the expected number of records ingested
+	 *       Or use a flavor of this function that returns the error table.
+	 * @param precheck check that the ingest will succeed before starting it
+ 	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
+	 * @return number of records ingested
 	 * @throws Exception
 	 */
-	public int importData(Boolean twoPassPrecheck) throws Exception{
+	public int importData(Boolean precheck, Boolean skipIngest) throws Exception{
 
-		// check the nodegroup for consistency before continuing.
-		
-		LocalLogger.logToStdErr("about to validate against model.");
-		
+		// check the nodegroup for consistency before continuing.		
+		LocalLogger.logToStdErr("about to validate against model.");		
 		this.master.validateAgainstModel(this.oInfo);
 		LocalLogger.logToStdErr("validation completed.");
 		
@@ -173,12 +179,10 @@ public class DataLoader {
 		this.batchHandler.resetDataSet();
 		
 		// PASS 1
-		if(twoPassPrecheck){
+		if(precheck){
 			// perform "pre-check"
 			String exceptionHeader = "Error during ingest pre-check.  At least one thread threw exception.  e.g.: ";
-			Boolean skipCheck = false;
-			Boolean skipIngest = true;
-			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
+			this.totalRecordsProcessed = this.runIngestionThreads(true, false, exceptionHeader);  // skip ingest, don't skip check
 			this.batchHandler.generateNotFoundURIs();
 			
 			// inspect the transformer to determine if the checks succeeded
@@ -190,9 +194,7 @@ public class DataLoader {
 			
 			// perform invisible pass.  Only goal is to identify legally missing URI's and set them to NOT_FOUND.
 			String exceptionHeader = "Error during URILookup first pass.  At least one thread threw exception.  e.g.: ";
-			Boolean skipCheck = true;
-			Boolean skipIngest = true;
-			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
+			this.totalRecordsProcessed = this.runIngestionThreads(true, true, exceptionHeader); // skip ingest, skip check
 			this.batchHandler.generateNotFoundURIs();
 		}
 		
@@ -204,17 +206,16 @@ public class DataLoader {
 		//       And right here, those flagged URI's would be given UUIDs.
 		
 		// PASS 2
-		if (! precheckFailed) {
+		if (!skipIngest && !precheckFailed) {
 			String exceptionHeader = null;
-			if (twoPassPrecheck) 
+			if (precheck) 
 				exceptionHeader = "Error in ingestion after successful pre-check.\nPartial ingestion may have occurred.  At least one thread threw exception.  e.g.: ";
 			else
 				exceptionHeader = "Error during one-pass ingestion.\nParial ingestion may have occurred.  At least one thread threw exception.  e.g.:";
 			
 			this.batchHandler.resetDataSet();
-			Boolean skipCheck = twoPassPrecheck;
-			Boolean skipIngest = false;
-			this.totalRecordsProcessed = this.runIngestionThreads(skipIngest, skipCheck, exceptionHeader);
+			Boolean skipCheck = precheck;
+			this.totalRecordsProcessed = this.runIngestionThreads(false, skipCheck, exceptionHeader); // don't skip ingest
 			
 		} else {
 			this.totalRecordsProcessed = 0;
@@ -259,7 +260,7 @@ public class DataLoader {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest, ThreadAuthenticator.getThreadHeaderTable());
+				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				startingRow += nextRecords.size();
 				wrkrs.add(worker);
 				worker.start();
@@ -336,5 +337,38 @@ public class DataLoader {
 		return s;
 	}
 	
+	/**
+	 * import data and get the error string (or null if successful)
+	 * @param precheck
+	 * @return error report string or null
+	 * @throws Exception
+	 */
+	public String importDataGetBriefError(boolean precheck) throws Exception {
+		this.importData(precheck);
+		
+		String ret = this.getLoadingErrorReportBrief();
+		if (ret.isEmpty()) {
+			return null;
+		} else {
+			return ret;
+		}
+	}
+	
+	/**
+	 * import data and get the error table (or null if successful)
+	 * @param precheck
+	 * @return error report string or null
+	 * @throws Exception
+	 */
+	public Table importDataGetErrorTable(boolean precheck) throws Exception {
+		this.importData(precheck);
+		
+		Table ret = this.getLoadingErrorReport();
+		if (ret.getNumRows() == 0) {
+			return null;
+		} else {
+			return ret;
+		}
+	}
 
 }

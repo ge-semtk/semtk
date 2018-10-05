@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@
 package com.ge.research.semtk.sparqlX;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -187,6 +188,9 @@ public class SparqlConnection {
 		this.domain = domain;
 	}
 	
+	public void addModelInterface(SparqlEndpointInterface sei) {
+		this.modelInterfaces.add(sei);
+	}
 	public void addModelInterface(String sType, String url, String dataset) throws Exception {
 		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset));
 	}
@@ -198,6 +202,9 @@ public class SparqlConnection {
 		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset, user, passwd));
 	}
 	
+	public void addDataInterface(SparqlEndpointInterface sei) {
+		this.dataInterfaces.add(sei);
+	}
 	public void addDataInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
 		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset, user, passwd));
 	}
@@ -348,4 +355,24 @@ public class SparqlConnection {
 		return ret;
 	}
 	
+	/**
+	 * Generate a string that uniquely identifies the model connection(s)
+	 * @return
+	 */
+	public String getUniqueModelKey() {
+		
+		String modelKeys[] = new String[this.getModelInterfaceCount()];
+		
+		for (int i=0; i < this.getModelInterfaceCount(); i++) {
+			modelKeys[i] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getDataset();
+		}
+		Arrays.sort(modelKeys);
+		
+		StringBuilder ret = new StringBuilder();
+		ret.append(this.domain + ";");
+		for (int i=0; i < modelKeys.length; i++) {
+			ret.append(modelKeys[i] + ";");
+		}
+		return ret.toString();
+	}
 }

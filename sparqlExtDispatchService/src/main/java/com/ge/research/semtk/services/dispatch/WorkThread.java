@@ -41,17 +41,12 @@ public class WorkThread extends Thread {
 	String rawSparqlQuery;
 	HeaderTable headerTable = null;
 	
-	
 	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt){
-		this(dsp, constraintJson, flags, qt, null);
-	}
-	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt, HeaderTable headerTable){
 		this.dsp = dsp;
 		this.myQT = qt;
 		this.externalConstraintsJson = constraintJson;
 		this.queryFlags = flags;
-		this.headerTable = headerTable;
+		headerTable = ThreadAuthenticator.getThreadHeaderTable();
 	}
 	
 	public void setTargetObjectSparqlID(String targetObjectSparqlID) throws Exception{

@@ -31,6 +31,8 @@ import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -80,20 +82,14 @@ public class ResultsClientTest_IT {
 			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one\",\"two\"],[\"three\",\"four\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}";		
 			String expectedCSVString = "col1,col2\n\"one\",\"two\"\n\"three\",\"four\"\n";
 
-			URL[] urls = client.execGetResults(jobId);
-			// check the URLs from getResults
-			assertTrue(urls[0].toString().endsWith("/results/getTableResultsJsonForWebClient?jobId=" + jobId + "&maxRows=200")); 
-			assertTrue(urls[1].toString().endsWith("/results/getTableResultsCsvForWebClient?jobId=" + jobId)); 			
-			// check the contents from getResults
 			
-			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
-			Table tbl = tblresset.getTable();
+			Table tbl = client.getTableResultsJson(jobId, null);
 			String resultJSONString = tbl.toJson().toJSONString();
 			
 			
 			assertEquals(resultJSONString, expectedJsonString); 		// check the JSON results
 			
-			CSVDataset data = client.execTableResultsCsv(jobId, null);
+			CSVDataset data = client.getTableResultsCSV(jobId, null);
 			CSVDataset compare = new CSVDataset(expectedCSVString, true);
 			
 			
@@ -102,15 +98,13 @@ public class ResultsClientTest_IT {
 					
 			assertEquals(compareColumnNames.get(0), resultColumnNames.get(0));
 			assertEquals(compareColumnNames.get(1), resultColumnNames.get(1));
-			
-			assertEquals(Utility.getURLContentsAsString(urls[1]), expectedCSVString);		// check the CSV result
-			
+						
 			// check getting results as json
-			TableResultSet res = client.execTableResultsJson(jobId, null);
-			assertEquals(res.getTable().toJson().toString(), expectedJsonString);
+			Table jTable = client.getTableResultsJson(jobId, null);
+			assertEquals(jTable.toJson().toString(), expectedJsonString);
 			
 			// check getting results as csv
-			CSVDataset resCsvDataset = client.execTableResultsCsv(jobId, null);
+			CSVDataset resCsvDataset = client.getTableResultsCSV(jobId, null);
 			assertEquals(resCsvDataset.getColumnNamesinOrder().get(0), "col1");
 			assertEquals(resCsvDataset.getColumnNamesinOrder().get(1), "col2");
 			ArrayList<ArrayList<String>> resCsvRows = resCsvDataset.getNextRecords(5);
@@ -146,8 +140,7 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);	
 			
 			// check the JSON results
-			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
-			Table tbl = tblresset.getTable();
+			Table tbl = client.getTableResultsJson(jobId, null);
 			String resultJSONString = tbl.toJson().toJSONString();
 			
 			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple,ant\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi, dear\\\"\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json
@@ -159,7 +152,7 @@ public class ResultsClientTest_IT {
 			}		
 			
 			// check the CSV results
-			CSVDataset data = client.execTableResultsCsv(jobId, null);
+			CSVDataset data = client.getTableResultsCSV(jobId, null);
 			String expectedCSVString = "colA,colB,colC,colD\n\"apple,ant\",bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi, dear\"\"\"\n";  // validated by opening in Excel
 			CSVDataset compare = new CSVDataset(expectedCSVString, true);			
 			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
@@ -198,8 +191,7 @@ public class ResultsClientTest_IT {
 			String tableJsonStrPostStore = table.toJson().toJSONString();
 			
 			// check the JSON results
-			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
-			Table tbl = tblresset.getTable();
+			Table tbl = client.getTableResultsJson(jobId, null);
 			String tableJsonStrRetrieved = tbl.toJson().toJSONString();
 
 			System.out.println("jobId: " + jobId);
@@ -215,20 +207,7 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
-	@Test
-	public void delete_me() throws Exception {
-		// --- private experiment ---
-		/*
-		System.out.println("Notice how JSON simple parser treats these the same");
-		String s1 = "{\"str\": \"Tor likes blue\\purple jello	\n\u0001\"}";    // illegal
-		String s2 = "{\"str\": \"Tor likes blue\\\\purple jello	\n\u0001\"}";
-		JSONParser parser = new JSONParser();
-		JSONObject j1 = (JSONObject) parser.parse(s1);
-		JSONObject j2 = (JSONObject) parser.parse(s2);
-		System.out.println(j1.toJSONString());
-		System.out.println(j2.toJSONString());
-		*/
-	}
+	
 	/**
 	 * Test a row with quotes but no commas (in the past this triggered different logic in the ResultsClient)
 	 */
@@ -251,8 +230,7 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);	
 			
 			// check the JSON results
-			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
-			Table tbl = tblresset.getTable();
+			Table tbl = client.getTableResultsJson(jobId, null);
 			String resultJSONString = tbl.toJson().toJSONString();
 			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\",\"colC\",\"colD\"],\"rows\":[[\"apple\",\"bench\",\"\\\"cabana\\\"\",\"Dan declared \\\"hi\\\"\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\",\"String\",\"String\"],\"col_count\":4,\"row_count\":1}";  // validated json		
 			System.err.println(expectedJSONString);
@@ -265,7 +243,7 @@ public class ResultsClientTest_IT {
 			}
 			
 			// check the CSV results
-			CSVDataset data = client.execTableResultsCsv(jobId, null);
+			CSVDataset data = client.getTableResultsCSV(jobId, null);
 
 			String expectedCSVString = "colA,colB,colC,colD\napple,bench,\"\"\"cabana\"\"\",\"Dan declared \"\"hi\"\"\"\n";  // validated by opening in Excel
 			CSVDataset compare = new CSVDataset(expectedCSVString, true);
@@ -309,13 +287,13 @@ public class ResultsClientTest_IT {
 			client.execStoreTableResults(jobId, table);	
 			
 			// check the JSON results:   SOH comes back as an escape sequence
-			TableResultSet tblresset = client.execTableResultsJson(jobId, null);
-			String resultJSONString = tblresset.getTable().toJson().toJSONString();
+			Table tbl = client.getTableResultsJson(jobId, null);
+			String resultJSONString = tbl.toJson().toJSONString();
 			String expectedJSONString = "{\"col_names\":[\"colA\",\"colB\"],\"rows\":[[\"apple\\u0001ant\",\"bench\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":1}";  // validated json
 			assertEquals(expectedJSONString, resultJSONString);
 	
 			// check the CSV results:   SOH is in the string
-			CSVDataset data = client.execTableResultsCsv(jobId, null);
+			CSVDataset data = client.getTableResultsCSV(jobId, null);
 			String expectedCSVString = "colA,colB\napple\u0001ant,bench\n";  
 			CSVDataset compare = new CSVDataset(expectedCSVString, true);
 			ArrayList<String> compareColumnNames = compare.getColumnNamesinOrder();
@@ -354,18 +332,14 @@ public class ResultsClientTest_IT {
 			System.err.println(String.format(">>> client.execStoreTableResults()=%.2f sec", elapsed));
 			
 			// --- test results ---
-			URL[] urls = client.execGetResults(jobId);
-			
-			// test that we got 200 (truncated by getResults()) rows of JSON
-			String resultJsonString = Utility.getURLContentsAsString(urls[0]);
-			JSONObject resultJsonObject = (JSONObject) ((new JSONParser()).parse(resultJsonString));
-			Table tbl = Table.fromJson(resultJsonObject);
-			assertEquals(tbl.getNumRows(), 200);	
+			Table res = client.getTableResultsJson(jobId, 200);
+			assertEquals(res.getNumRows(), 200);	
 			
 			// test that we got full 9000 rows of CSV 
-			String resultCsvString = Utility.getURLContentsAsString(urls[1]);
-			String[] resultCsvLines = resultCsvString.split("\n");
-			assertEquals(resultCsvLines.length, 9001);
+			CSVDataset csv = client.getTableResultsCSV(jobId, 10000);
+			csv.getColumnNamesinOrder().contains("comments");
+			ArrayList<ArrayList<String>> lines = csv.getNextRecords(10000);
+			assertEquals(9000, lines.size(), 9000);
 			
 		} finally {
 			cleanup(client, jobId);
@@ -412,17 +386,17 @@ public class ResultsClientTest_IT {
 			
 			// --- test retrieving json results ---
 			startTime = System.nanoTime();
-			TableResultSet res = client.execTableResultsJson(jobId, null);
+			Table res = client.getTableResultsJson(jobId, null);
 			endTime = System.nanoTime();
 			elapsed = ((endTime - startTime) / 1000000000.0);
 			System.err.println(String.format(">>> client.execTableResultsJson()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
-			assertEquals(res.getTable().getNumRows(), NUM_ROWS);
-			assertEquals(res.getTable().getNumColumns(), NUM_COLS);
-			assertEquals(res.getTable().getCell(0,0).length(), 10);
+			assertEquals(res.getNumRows(), NUM_ROWS);
+			assertEquals(res.getNumColumns(), NUM_COLS);
+			assertEquals(res.getCell(0,0).length(), 10);
 			
 			// --- test retrieving csv results ---
 			startTime = System.nanoTime();
-			CSVDataset resultCsv = client.execTableResultsCsv(jobId, null);
+			CSVDataset resultCsv = client.getTableResultsCSV(jobId, null);
 			endTime = System.nanoTime();
 			elapsed = ((endTime - startTime) / 1000000000.0);
 			System.err.println(String.format(">>> client.execTableResultsCsv()=%.2f sec (%s columns, %s rows)", elapsed, NUM_COLS, NUM_ROWS));
@@ -508,12 +482,18 @@ public class ResultsClientTest_IT {
 	}
 	
 	@Test
+	public void testAuthenticationFailures() throws Exception {
+		// moved to AuthorizationTest_IT
+	}
+	@Test
 	public void testStoreAndRetrieveWrongId() throws Exception {
 
 		// Error case
-		
-		String fileContent = client.execReadBinaryFile("wrongId");
-		assertTrue(fileContent.contains("not found"));
+		try {
+			String fileContent = client.execReadBinaryFile("wrongId");
+			fail("Missing exception for bad fileId");
+		} catch (Exception e) {
+		}
 	}
 
 

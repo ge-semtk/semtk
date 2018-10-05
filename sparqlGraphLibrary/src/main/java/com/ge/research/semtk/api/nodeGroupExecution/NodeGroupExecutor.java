@@ -211,7 +211,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getTableResults -- the current job ID is null. unable to get info on nonexistent job.");
 		}
 		else{
-			retval = this.rc.execTableResultsJson(this.currentJobId, null).getTable();
+			retval = this.rc.getTableResultsJson(this.currentJobId, null);
 		}
 		return retval;
 		
@@ -270,6 +270,10 @@ public class NodeGroupExecutor {
 			LocalLogger.logToStdOut("Setting runtime constraints: " + runtimeConstraints.toJSONString());
 			RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
 			rtci.applyConstraintJson(runtimeConstraints);
+		}
+		
+		if (flags != null && flags.isSet(QueryFlags.FLAG_UNOPTIONALIZE_CONSTRAINED)) {
+			ng.unOptionalizeConstrained();
 		}
 		
 		if (limitOverride > 0) {

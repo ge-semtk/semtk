@@ -32,13 +32,9 @@ define([	// properly require.config'ed
         /*
          * Each param may be missing or null
          */
-		var SparqlGraphJson = function(conn, nodegroup, mappingTab, DEPRECATED_deflateFlag) {
-			var deflateFlag = (typeof DEPRECATED_deflateFlag == "undefined") ? false : DEPRECATED_deflateFlag;
-            
-            // new for version 2, trying it out for a while
-            deflateFlag = true;
-            //------------------
-			
+		var SparqlGraphJson = function(conn, nodegroup, mappingTab, deflateFlag) {
+			var deflateFlag = (typeof deflateFlag == "undefined") ? true : deflateFlag;
+            			
 			this.jObj = {
                     version: 2,
 					sparqlConn: null,

@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2017-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,6 +123,29 @@ public class OntologyInfoServiceRestController {
 			
 			retval = new SimpleResultSet();
 			retval.addResult("ontologyInfo", oInfoDetails);
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "getOntologyInfo", e);
+			LocalLogger.printStackTrace(e);
+		}
+		// send it out.
+		return retval.toJson();
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/getOntologyInfoJson", method=RequestMethod.POST)
+	public JSONObject getOntologyInfoJson(@RequestBody OntologyInfoRequestBody requestBody){
+		SimpleResultSet retval = null;
+		
+		try{
+			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			OntologyInfo oInfo = new OntologyInfo(conn);
+			JSONObject json = oInfo.toJson();
+			
+			retval = new SimpleResultSet();
+			retval.addResult("ontologyInfo", json);
 			retval.setSuccess(true);
 		}
 		catch(Exception e){

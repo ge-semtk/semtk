@@ -194,4 +194,31 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		return (SparqlEndpointInterface) retval;
 	}
 	
+	/**
+	 * Get explanations of known triple store errors
+	 * @param responseTxt
+	 * @return
+	 */
+	@Override
+	protected String explainResponseTxt(String responseTxt) {
+		if (responseTxt.contains("Virtuoso") && responseTxt.contains("Error SP031")) {
+			return "SemTK says: Virtuoso query may be too large or complex.\n";
+		}
+		
+		return "";
+	}
+
+	/**
+	 * Should system perform the default retry when it receives this exception from the triplestore
+	 * @param e
+	 * @return
+	 */
+	@Override
+	public boolean isExceptionRetryAble(Exception e) {
+		String msg = e.getMessage();
+		if ( Pattern.compile("Virtuoso [0-9]+ Error ").matcher(msg).find()) {
+			return false;
+		}
+		return true;
+	}
 }

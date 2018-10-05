@@ -20,45 +20,18 @@ package com.ge.research.semtk.edc;
 
 // meant to be inherited into a spring boot microservice property object
 // properties for a triple-store endpoint
-public class JobEndpointProperties {
-	private String jobEndpointType = "";
+public class JobEndpointProperties extends EndpointProperties {
 	private String jobEndpointDomain = "";
-	private String jobEndpointServerUrl = "";
 	private String jobEndpointDataset = "";
-	private String jobEndpointUsername = "";
 	
-	public String getJobEndpointUsername() {
-		return jobEndpointUsername;
-	}
-	public void setJobEndpointUsername(String jobEndpointUsername) {
-		this.jobEndpointUsername = jobEndpointUsername;
-	}
-	public String getJobEndpointPassword() {
-		return jobEndpointPassword;
-	}
-	public void setJobEndpointPassword(String jobEndpointPassword) {
-		this.jobEndpointPassword = jobEndpointPassword;
-	}
-	private String jobEndpointPassword = "";
 	
-	public String getJobEndpointType() {
-		return jobEndpointType;
-	}
-	public void setJobEndpointType(String jobEndpointType) {
-		this.jobEndpointType = jobEndpointType;
-	}
 	public String getJobEndpointDomain() {
 		return jobEndpointDomain;
 	}
 	public void setJobEndpointDomain(String jobEndpointDomain) {
 		this.jobEndpointDomain = jobEndpointDomain;
 	}
-	public String getJobEndpointServerUrl() {
-		return jobEndpointServerUrl;
-	}
-	public void setJobEndpointServerUrl(String jobEndpointServerUrl) {
-		this.jobEndpointServerUrl = jobEndpointServerUrl;
-	}
+	
 	public String getJobEndpointDataset() {
 		return jobEndpointDataset;
 	}

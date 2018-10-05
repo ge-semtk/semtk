@@ -24,29 +24,29 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 
 public enum XSDSupportedType {
 
-	STRING("string") , 
-	BOOLEAN("boolean") , 
-	DECIMAL("decimal") , 
-	INT("int") , 
-	INTEGER("integer") , 
-	NEGATIVEINTEGER("negativeInteger") , 
-	NONNEGATIVEINTEGER("nonNegativeInteger") , 
-	POSITIVEINTEGER("positiveInteger"), 
-	NONPOSISITIVEINTEGER("nonPositiveInteger") , 
-	LONG("long") , 
-	FLOAT("float") , 
-	DOUBLE("double") , 
-	DURATION("duration") , 
-	DATETIME("dateTime") , 
-	TIME("time") , 
-	DATE("date") , 
-	UNSIGNEDBYTE("unsignedByte") , 
-	UNSIGNEDINT("unsignedInt") , 
-	ANYSIMPLETYPE("anySimpleType") ,
-	GYEARMONTH("gYearMonth") , 
-	GMONTH("gMonth") , 
-	GMONTHDAY("gMonthDay"), 
-	NODE_URI("node_uri");
+	STRING("string", "string") , 
+	BOOLEAN("boolean", "True") , 
+	DECIMAL("decimal", "27.1") , 
+	INT("int", "42") , 
+	INTEGER("integer", "42") , 
+	NEGATIVEINTEGER("negativeInteger", "-42") , 
+	NONNEGATIVEINTEGER("nonNegativeInteger", "42") , 
+	POSITIVEINTEGER("positiveInteger", "42"), 
+	NONPOSISITIVEINTEGER("nonPositiveInteger", "-42") , 
+	LONG("long", "4200000") , 
+	FLOAT("float", "42.42") , 
+	DOUBLE("double", "42.42") , 
+	DURATION("duration", "DURATION") , 
+	DATETIME("dateTime", "2017-03-23T10:03:16") , 
+	TIME("time", "10:03:16") , 
+	DATE("date", "2017-03-23") , 
+	UNSIGNEDBYTE("unsignedByte", "UNSIGNEDBYTE") , 
+	UNSIGNEDINT("unsignedInt", "42") , 
+	ANYSIMPLETYPE("anySimpleType", "ANYSIMPLETYPE") ,
+	GYEARMONTH("gYearMonth", "GYEARMONTH") , 
+	GMONTH("gMonth", "10") , 
+	GMONTHDAY("gMonthDay", "28"), 
+	NODE_URI("node_uri", "http://uri#uri");
 	
 	// note: "node_uri" was added for compatibility reasons to the way nodes in a nodegroup spec
 	// when their URI is able to be constrained at runtime.
@@ -55,9 +55,11 @@ public enum XSDSupportedType {
 	private static String xmlSchemaTrailer = ">";
 	
 	private String camelCaseStr;
+	private String sampleValue;
 	
-	XSDSupportedType(String camelCase) {
+	XSDSupportedType(String camelCase, String sampleVal) {
 		this.camelCaseStr = camelCase;
+		this.sampleValue = sampleVal;
 	}
 	
 	public static XSDSupportedType getMatchingValue(String candidate) throws Exception {
@@ -115,6 +117,10 @@ public enum XSDSupportedType {
 	
 	public String getSimpleName() {
 		return this.camelCaseStr;
+	}
+	
+	public String getSampleValue() {
+		return this.sampleValue;
 	}
 	
 	public String getPrefixedName() {

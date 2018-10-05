@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -45,6 +48,7 @@ import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -74,27 +78,67 @@ public class IngestionRestController {
 	@RequestMapping(value="/fromCsvFile", method= RequestMethod.POST)
 	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(templateFile, dataFile, null, true, false);
+		try {
+			//debug("fromCsvFile", templateFile, dataFile);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFileWithNewConnection(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
+		try {
+			//debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+		try {
+			//debug("fromCsvFilePrecheck", templateFile, dataFile);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFileWithNewConnectionPrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
+		try {
+			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	
+	/**
+	 * Perform precheck only (no ingest) using a CSV file against the given connection
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheckOnly", method= RequestMethod.POST)
+	public JSONObject fromCsvFilePrecheckOnly(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	/**
@@ -105,34 +149,93 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsv", method= RequestMethod.POST)
-	public JSONObject fromCsv(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+	public JSONObject fromCsv(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
 		HeadersManager.setHeaders(headers);
-		// LocalLogger.logToStdErr("the request: " + requestBody);
-		IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
-		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), null, false, false);
+		try {
+			// LocalLogger.logToStdErr("the request: " + requestBody);
+			//IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvWithNewConnection(@RequestBody String requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+	public JSONObject fromCsvWithNewConnection(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
 		HeadersManager.setHeaders(headers);
-		// LocalLogger.logToStdErr("the request: " + requestBody);
-		IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
-		return this.fromAnyCsv(deserialized.getTemplate(), deserialized.getData(), deserialized.getConnectionOverride(), false, false);
+		try {
+			// LocalLogger.logToStdErr("the request: " + requestBody);
+			//IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
+		try {
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnectionPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
+		try {
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile) {
+		try {
+			LocalLogger.logToStdErr(endpoint);
+	
+			LocalLogger.logToStdErr("template file");
+			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
+			
+			LocalLogger.logToStdErr("data file");
+			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
+			
+		} catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+		}
+	}
+	
+	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile, MultipartFile connection) {
+		try {
+			LocalLogger.logToStdErr(endpoint);
+	
+			LocalLogger.logToStdErr("template file");
+			LocalLogger.logToStdErr(new SparqlGraphJson(new String(templateFile.getBytes())).getJson().toJSONString());
+			
+			LocalLogger.logToStdErr("connection");
+			LocalLogger.logToStdErr(new SparqlConnection(new String(connection.getBytes())).toJson().toJSONString());
+			
+			LocalLogger.logToStdErr("data file");
+			LocalLogger.logToStdErr(new String(dataFile.getBytes()));
+			
+		} catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+		}
+	}
+	/**
+	 * Load data from csv.
+	 */
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck){
+		return fromAnyCsv(templateFile, dataFile, sparqlConnectionOverride, fromFiles, precheck, false); // don't skip ingest
 	}
 	
 	/**
@@ -141,111 +244,81 @@ public class IngestionRestController {
 	 * @param dataFile the data file (File if fromFiles=true, else String)
 	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
 	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
-	 * @param safeLoad
+	 * @param precheck check that the ingest will succeed before starting it
+	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
 	 */
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean safeLoad){
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
+
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 		int recordsProcessed = 0;
 		
-		LoggerRestClient logger = null;	// we may want to log.
-		LoggerClientConfig lcc = null;
-		ArrayList<DetailsTuple> deets = null;	// details to be logged
-		
-		logger = loggerConfigInitialization(logger, lcc);	// set up the logger. 
+		// set up the logger
+		LoggerRestClient logger = null;
+		logger = loggerConfigInitialization(logger, null);	
+		ArrayList<DetailsTuple> detailsToLog = null;	
 		
 		RecordProcessResults retval = new RecordProcessResults();
 		
 		try {
-			if(logger != null){	// always checking if we are actually logging. 
-				deets = LoggerRestClient.addDetails("Ingestion Type", "From CSV", null);
+			if(logger != null){ 
+				detailsToLog = LoggerRestClient.addDetails("Ingestion Type", "From CSV", null);
 			}
 			
-			// get ingestion sparql credentials
-			String sparqlEndpointUser = prop.getSparqlUserName();
-			String sparqlEndpointPassword = prop.getSparqlPassword();
-			
-			// get template file content and convert to json object for use. 
-			
-			String templateContent = null;
-			
-			if(fromFiles) { templateContent = new String( ((MultipartFile)templateFile).getBytes() ); }
-			else{ templateContent = (String)templateFile ; }
-			JSONParser parser = new JSONParser();
-			JSONObject json = null;
-			
+			// get SparqlGraphJson from template
+			String templateContent = fromFiles ? new String(((MultipartFile)templateFile).getBytes()) : (String)templateFile;
 			if(templateContent != null){
 				LocalLogger.logToStdErr("template size: "  + templateContent.length());
-			}
-			else{
+			}else{
 				LocalLogger.logToStdErr("template content was null");
-			}
+			}			
+			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJsonObjectFromString(templateContent));			
 			
-			json = (JSONObject) parser.parse(templateContent);
-			SparqlGraphJson sgJson = new SparqlGraphJson(json);
-			
-		
-			String dataFileContent = null;
-			if(fromFiles) { dataFileContent = new String( ((MultipartFile)dataFile).getBytes() ); }
-			else{ 
-				dataFileContent = (String)dataFile ; 
-			}
-			
+			// get data file content
+			String dataFileContent = fromFiles ? new String(((MultipartFile)dataFile).getBytes()) : (String)dataFile; 
 			if(dataFileContent != null){
 				LocalLogger.logToStdErr("data size: "  + dataFileContent.length());
-			}
-			else{
+			}else{
 				LocalLogger.logToStdErr("data content was null");
 			}
 					
-			// get the connection override, if any
+			// override the connection, if needed
 			if(sparqlConnectionOverride != null){
-				String sparqlConnectionString = null;	
-				if(fromFiles){
-					sparqlConnectionString = new String( ((MultipartFile)sparqlConnectionOverride).getBytes() ); // read from file
-				}else{
-					sparqlConnectionString = (String)sparqlConnectionOverride;
-				}
-				// override the connection
-				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));				
+				String sparqlConnectionString = fromFiles ? new String(((MultipartFile)sparqlConnectionOverride).getBytes()) : (String)sparqlConnectionOverride;				
+				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));   				
 			}
-			
-			
-			if(logger != null){ // always checking if we are actually logging. 
-				deets = LoggerRestClient.addDetails("template", templateContent, deets);
+						
+			if(logger != null){  
+				detailsToLog = LoggerRestClient.addDetails("template", templateContent, detailsToLog);
 			}
 					
 			// get a CSV data set to use in the load. 
 			Dataset ds = new CSVDataset(dataFileContent, true);
 
 			// perform actual load
-			Calendar cal = Calendar.getInstance();
-			String startTime = dateFormat.format(cal.getTime());
+			String startTime = dateFormat.format(Calendar.getInstance().getTime());
 			if(logger != null) { 
-				deets = LoggerRestClient.addDetails("Start Time", startTime, deets); 				
+				detailsToLog = LoggerRestClient.addDetails("Start Time", startTime, detailsToLog); 				
 			}
 						
-			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			
-			recordsProcessed = dl.importData(safeLoad); 	// defaulting to preflight.
+			recordsProcessed = dl.importData(precheck, skipIngest);
 	
-			String endTime = dateFormat.format(cal.getTime());
+			String endTime = dateFormat.format(Calendar.getInstance().getTime());
 			if(logger != null) { 
-				deets = LoggerRestClient.addDetails("End Time", endTime, deets); 
-				deets = LoggerRestClient.addDetails("input record size", recordsProcessed + "", deets);	
+				detailsToLog = LoggerRestClient.addDetails("End Time", endTime, detailsToLog); 
+				detailsToLog = LoggerRestClient.addDetails("input record size", recordsProcessed + "", detailsToLog);	
 			}
 			
 			// set success values
-			if(safeLoad && dl.getLoadingErrorReport().getRows().size() == 0){
+			if(precheck && dl.getLoadingErrorReport().getRows().size() == 0){
 				retval.setSuccess(true);
-			}
-			else if(safeLoad && dl.getLoadingErrorReport().getRows().size() != 0){
+			} else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
 				retval.setSuccess(false);
-			}
-			else if(!safeLoad && recordsProcessed > 0){
+			} else if(!precheck && recordsProcessed > 0){
 				retval.setSuccess(true);
-			}
-			else {
+			} else {
 				retval.setSuccess(false);
 			}			
 			
@@ -254,34 +327,37 @@ public class IngestionRestController {
 			retval.addResults(dl.getLoadingErrorReport());
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
-			LocalLogger.printStackTrace(e);
-			
+			LocalLogger.printStackTrace(e);			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromCsv*", e);
-		}
-		if(logger != null){ // always checking if we are actually logging. 
+		}  
+		
+		if(logger != null){  
 			// what are we returning
-			deets = LoggerRestClient.addDetails("error code", retval.getResultCodeString(), deets);
-			deets = LoggerRestClient.addDetails("results", retval.toJson().toJSONString(), deets);
-			deets = LoggerRestClient.addDetails("records Processed", recordsProcessed + "", deets);
+			detailsToLog = LoggerRestClient.addDetails("error code", retval.getResultCodeString(), detailsToLog);
+			detailsToLog = LoggerRestClient.addDetails("results", retval.toJson().toJSONString(), detailsToLog);
+			detailsToLog = LoggerRestClient.addDetails("records Processed", recordsProcessed + "", detailsToLog);
 		}
 		
-		if(logger != null){ //log this...
-			logger.logEvent("Data ingestion", deets, "Add Instance Data To Triple Store");
+		if(logger != null){ 
+			logger.logEvent("Data ingestion", detailsToLog, "Add Instance Data To Triple Store");
 		}
-		JSONObject retvalJSON = retval.toJson();
-	//	LocalLogger.logToStdErr(retvalJSON.toJSONString());
-		return retvalJSON;
+		return retval.toJson();
 	}	
 	
 	
 	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)
-	public JSONObject fromPostgresODBC(@RequestParam("template") MultipartFile templateFile, @RequestParam("dbHost") String dbHost, @RequestParam("dbPort") String dbPort, @RequestParam("dbDatabase") String dbDatabase, @RequestParam("dbUser") String dbUser, @RequestParam("dbPassword") String dbPassword, @RequestParam("dbQuery") String dbQuery){
+	public JSONObject fromPostgresODBC(
+			@RequestParam("template") MultipartFile templateFile, 
+			@RequestParam("dbHost")     @Size(min=4, max=256) @Pattern(regexp="[\\d\\w:/\\?=&-]+", message="string contains invalid characters") String dbHost, 
+			@RequestParam("dbPort")     @Size(min=1, max=5  ) @Pattern(regexp="[\\d]+"           , message="string contains non-numbers"       ) String dbPort, 
+			@RequestParam("dbDatabase") @Size(min=4, max=64 ) @Pattern(regexp="[\\d\\w:/\\?=&-]+", message="string contains invalid characters") String dbDatabase, 
+			@RequestParam("dbUser")     @Size(min=4, max=64 )                                                                                    String dbUser, 
+			@RequestParam("dbPassword") @Size(min=4, max=128)                                                                                    String dbPassword, 
+			@RequestParam("dbQuery") String dbQuery){
 		
 		TableResultSet retval = new TableResultSet();
-		int recordsProcessed = 0;
 
-		
 		try {
 					
 			String sparqlEndpointUser = prop.getSparqlUserName();
@@ -304,7 +380,7 @@ public class IngestionRestController {
 			
 			// perform actual load
 			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
-			recordsProcessed = dl.importData(true);	// defaulting to preflight.
+			dl.importData(true);	// defaulting to precheck
 	
 			retval.setSuccess(true);
 			retval.addResultsJSON(dl.getLoadingErrorReport().toJson());
@@ -312,11 +388,9 @@ public class IngestionRestController {
 		} catch (Exception e) {
 			// TODO write failure JSONObject to return and return it.
 			LocalLogger.printStackTrace(e);
-			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
-
-		}
+		} 
 		
 		return retval.toJson();
 	}	

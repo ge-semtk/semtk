@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2017-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,18 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+import io.swagger.annotations.ApiModelProperty;
+
 public class NodegroupRequest {
 
+	@ApiModelProperty(
+			value = "jsonRenderedNodeGroup",
+			required = true,
+			example = 	"{ \"sparqlConn\": {...}, \"sNodeGroup\": {...}, \"importSpec\": {...} }\n" +
+						"or\n"+
+						"{\"version\": 3, \"limit\": 0, \"offset\": 0, \"sNodeList\": [...], \"orderBy\": []}"
+			           )	
 	private String jsonRenderedNodeGroup;
 	
 	/**
@@ -31,6 +41,11 @@ public class NodegroupRequest {
 	 */
 	public NodeGroup getNodeGroup() throws Exception {
 		return this.getSparqlGraphJson().getNodeGroup();
+	}
+
+
+	public SparqlConnection getConnection() throws Exception {
+		return getSparqlGraphJsonWithConn().getSparqlConn();
 	}
 	
 	/**
@@ -45,7 +60,25 @@ public class NodegroupRequest {
 		try {
 			ret = new SparqlGraphJson(this.jsonRenderedNodeGroup);
 		} catch (Exception e) {
-			throw new Exception("Error parsing nodegroup json", e);
+			throw new Exception("Error parsing jsonRenderedNodeGroup", e);
+		}
+		return ret;
+	}
+	
+	/**
+	 * Make sure jsonRenderedNodeGroup contains nodegroup and connection, and return
+	 * @return
+	 * @throws Exception
+	 */
+	public SparqlGraphJson getSparqlGraphJsonWithConn() throws Exception {
+		
+		SparqlGraphJson ret = this.getSparqlGraphJson();
+		if (ret.getSparqlConn() == null) {
+			throw new Exception("Missing sparql connection: jsonRenderedNodeGroup param has no sparqlConn");
+		}
+		
+		if (ret.getNodeGroup() == null) {
+			throw new Exception("Missing nodegroup: jsonRenderedNodeGroup param has no sNodeGroup");
 		}
 		return ret;
 	}

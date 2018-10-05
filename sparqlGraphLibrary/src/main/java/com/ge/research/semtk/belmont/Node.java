@@ -57,6 +57,7 @@ public class Node extends Returnable {
 	private NodeDeletionTypes deletionMode = NodeDeletionTypes.NO_DELETE;
 	
 	// a collection of our known subclasses. 
+	// PEC 9/21/2018 this is a terrible idea.  Any operation requiring subclasses should have the oInfo.
 	private ArrayList<String> subclassNames = new ArrayList<String>();
 	
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng){
@@ -321,6 +322,8 @@ public class Node extends Returnable {
 		
 		this.props = newProps;
 		this.nodes = newNodes;
+		
+		this.subclassNames = oInfo.getSubclassNames(this.fullURIname);
 	}
 	
 	/**
@@ -676,22 +679,47 @@ public class Node extends Returnable {
 		}
 	}
 	
+	/**
+	 * Find all nodeItems that connect to otherNode
+	 * @param otherNode
+	 * @return
+	 */
 	public ArrayList<NodeItem> getConnectingNodeItems(Node otherNode) {
-		ArrayList<NodeItem> items = new ArrayList<NodeItem>();
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
 		
-		for (NodeItem item : nodes) {
+		// look through all my nodeItems
+		for (NodeItem item : this.nodes) {
 			if (item.getConnected()) {
 				ArrayList<Node> nodeList = item.getNodeList();
 				
+				// does my connection point to otherNode
 				for (Node node : nodeList) {
 					if (node.getSparqlID().equals(otherNode.getSparqlID())) {
-						items.add(item);
+						ret.add(item);
 					}
 				}
 			}
 		}
 		
-		return items;
+		return ret;
+	}
+
+	/**
+	 * Get all nodeItems that are connected
+	 * @param otherNode
+	 * @return
+	 */
+	public ArrayList<NodeItem> getConnectedNodeItems() {
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+		
+		// look through all my nodeItems
+		for (NodeItem item : this.nodes) {
+			if (item.getConnected()) {
+				ret.add(item);
+			}
+		}
+		
+		return ret;
 	}
 
 	public ArrayList<PropertyItem> getPropertyItems() {
@@ -792,6 +820,22 @@ public class Node extends Returnable {
 		
 		for (PropertyItem p : this.props) {
 			ret += (p.getIsReturned() ? 1 : 0);
+		}
+		
+		return ret;
+	}
+	
+	public int countUnconstrainedReturns () {
+		int ret = 0;
+		
+		if (this.getIsReturned() && this.getValueConstraint() == null) {
+			ret ++;
+		}
+		
+		for (PropertyItem p : this.props) {
+			if (p.getIsReturned() && p.getValueConstraint() == null) {
+				ret ++;
+			}
 		}
 		
 		return ret;

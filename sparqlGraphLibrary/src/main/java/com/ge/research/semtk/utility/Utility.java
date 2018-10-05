@@ -51,6 +51,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -74,6 +75,9 @@ public abstract class Utility {
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");	// e.g. 2014-12-01 00:00:00 
 	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyKmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy K:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
 	
+	private static StrSubstitutor envSubstitutor = new StrSubstitutor(System.getenv());
+	public static final Boolean ENV_TEST = ! envSubstitutor.replace("${HOST_IP}").equals("${HOST_IP}");
+	public static final String ENV_TEST_EXCEPTION_STRING = "Environment is not set up for integration testing (top-level .env)";
 	static{
 		// supported input date formats 
 		/**
@@ -328,7 +332,7 @@ public abstract class Utility {
 		try{
 			jsonArr = Utility.getJSONArrayFromFile(jsonFile);	
 		}catch (Exception e){
-			throw new Exception("Could not load JSON from file " + jsonFilePath);
+			throw new Exception("Could not load JSON from file " + jsonFilePath, e);
 		}
 		
 		return jsonArr;
@@ -449,7 +453,8 @@ public abstract class Utility {
 		    throw new Exception("Cannot read property '" + key + "' from " + propertyFile);	
 		}
 		
-		return ret.trim();
+		// Replace ENV and trim()
+		return envSubstitutor.replace(ret).trim();
 	}	
 
 	
@@ -628,6 +633,18 @@ public abstract class Utility {
 		try{
 			InputStream in = obj.getClass().getResourceAsStream(fileName);
 			ret = IOUtils.toString(in, StandardCharsets.UTF_8);
+		}catch(Exception e){
+			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
+			LocalLogger.printStackTrace(e);
+		}
+		return ret;
+	}
+	
+	public static File getResourceAsFile(Object obj, String fileName) {
+		File ret = null;
+		try{
+			URL url = obj.getClass().getResource(fileName);
+			ret = new File(url.getPath());
 		}catch(Exception e){
 			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
 			LocalLogger.printStackTrace(e);

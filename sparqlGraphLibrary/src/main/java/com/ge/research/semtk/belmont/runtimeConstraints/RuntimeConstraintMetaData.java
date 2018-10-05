@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,8 @@ public class RuntimeConstraintMetaData{
 	private RuntimeConstraintManager.SupportedTypes itemType;
 	private Returnable ngItem; 
 	private SupportedOperations operation;
+	
+
 	private ArrayList<String> operands;
 	
 	public RuntimeConstraintMetaData(Returnable item, RuntimeConstraintManager.SupportedTypes itemType){
@@ -92,7 +94,9 @@ public class RuntimeConstraintMetaData{
 		}
 				
 	}
-	
+	public SupportedOperations getOperation() {
+		return operation;
+	}
 	public String getOperationName(){ return this.operation.name(); }
 	public ArrayList<String> getOperands(){ return this.operands; }
 

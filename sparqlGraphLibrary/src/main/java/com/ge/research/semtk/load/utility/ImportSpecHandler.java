@@ -42,8 +42,10 @@ import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -63,7 +65,9 @@ public class ImportSpecHandler {
 	
 	JSONObject importspec = null; 
 	
-	JSONObject nodegroupJson = null;      
+	JSONObject nodegroupJson = null;    
+	NodeGroup ng = null;
+	SparqlConnection lookupConn = null;
 	HashMap<Integer, JSONObject> lookupNodegroupsJson = new HashMap<Integer, JSONObject>();       // cache of pruned nodegroups ready for lookup
 	HashMap<Integer, String>     lookupMode = new HashMap<Integer, String>();
 	HashMap<Integer, Long>    	 lookupResultCount = new HashMap<Integer, Long>();                // number of URI's in the triple-store to choose from
@@ -86,15 +90,18 @@ public class ImportSpecHandler {
 	
 	SparqlEndpointInterface nonThreadSafeEndpoint = null;  // Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
 	
-	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, OntologyInfo oInfo) throws Exception {
+	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
 		
 		// reset the nodegroup and store as json (for efficient duplication)
-		NodeGroup ng = NodeGroup.getInstanceFromJson(ngJson);
-		ng.reset();
+		this.ng = NodeGroup.getInstanceFromJson(ngJson);
+		this.ng.validateAgainstModel(oInfo);
+		this.ng.reset();
 		this.nodegroupJson = ng.toJson();
 		
 		this.oInfo = oInfo;
+		
+		this.lookupConn = lookupConn;
 		
 		this.colHashesFromJson(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
 		this.transformsFromJson((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
@@ -108,11 +115,6 @@ public class ImportSpecHandler {
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 		
 		this.errorCheckImportSpec();
-	}
-	
-	public ImportSpecHandler(JSONObject importSpecJson, ArrayList<String> headers, JSONObject ngJson, OntologyInfo oInfo) throws Exception{
-		this(importSpecJson, ngJson, oInfo);
-		this.setHeaders(headers);
 	}
 
 	public void setEndpoint(SparqlEndpointInterface endpoint) {
@@ -415,9 +417,20 @@ public class ImportSpecHandler {
 				map.setLookupNodeIndex(lookupIndex);
 			}
 			
-			// save the lookupNodegroupJson
 			this.lookupNodegroupsJson.put(importNodeIndex, lookupNg.toJson());
 		}
+	}
+	
+	/**
+	 * Create a lookupNodegroup from it's json plus the lookup SparqlConnection
+	 * @param nodeIndex
+	 * @return
+	 * @throws Exception
+	 */
+	private NodeGroup getLookupNodegroup(int nodeIndex) throws Exception {
+		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		lookupNodegroup.setSparqlConnection(this.lookupConn);
+		return lookupNodegroup;
 	}
 	
 	/**
@@ -720,7 +733,7 @@ public class ImportSpecHandler {
 			
 		} else {
 			// get the nodegroup and do the lookup
-			NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+			NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeIndex);
 			
 			// loop through lookupMappings and add constraints to the lookupNodegroup
 			int i = 0;
@@ -811,7 +824,7 @@ public class ImportSpecHandler {
 		}
 		
 		// get the nodegroup 
-		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeIndex);
 		
 		// 0th mapping (all same) lookupNodeIndex has SparqlID of the result URI.  Hash it to -1
 		HashMap<String, Integer> colHash = new HashMap<String,Integer>();
@@ -892,7 +905,7 @@ public class ImportSpecHandler {
 	private long lookupCount(int nodeIndex) throws Exception {
 		
 		// get the nodegroup 
-		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
+		NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeIndex);
 		
 		// loop through lookupMappings and remove constraints
 		for (ImportMapping mapping : this.lookupMappings.get(nodeIndex)) {
@@ -1250,5 +1263,153 @@ public class ImportSpecHandler {
 		}
 		
 		return input;
+	}
+
+	public String getSampleIngestionCSV() {
+		
+		HashMap<String,String> sampleHash = addSampleIngestionValues(null);
+		
+		// return "" if there's apparently no import spec
+		if (sampleHash.isEmpty()) {
+			return "";
+		}
+				
+		StringBuilder ret = new StringBuilder();
+		String colNames[] = this.getColNamesUsed();
+		ret.append(String.join(",", colNames));
+		ret.append("\n");
+		
+		String delim = "";
+		for (String colName : colNames) {
+			ret.append(delim + sampleHash.get(colName));
+			delim = ",";
+		}
+		ret.append("\n");
+
+		return ret.toString();
+		
+	}
+	
+	/**
+	 * Add sample values to a hash <col_name, sample_value>
+	 * Conflicts and too-complicated columns will be "value"
+	 * @param hash - can be null
+	 * @return
+	 */
+	public HashMap<String,String> addSampleIngestionValues(HashMap<String,String> hash) {
+		if (hash == null) {
+			hash = new HashMap<String,String>();
+		}
+		
+		// get columns and any discernable sample values
+		String colNames[] = this.getColNamesUsed();
+		HashMap<Integer, String> sampleHash = this.getColumnSampleValues();
+
+		// build a hash of sample values
+		for (String colName : colNames) {
+			
+			// get sample, setting to "value" if unknown/too-complicated
+			String sample = sampleHash.get(this.colNameToIndexHash.get(colName));
+			if (sample == null || sample.isEmpty()) {
+				sample = "value";
+			}
+			
+			// default all conflicts to "value"
+			if (hash.containsKey(colName)) {
+				if (! hash.get(colName).equals(sample)) {
+					hash.put(colName, "value");
+				}
+			} else {
+				hash.put(colName,  sample);
+			}
+		}
+		
+		return hash;
+	}
+	
+	public static String getSampleIngestionCSV(ArrayList<ImportSpecHandler> specList) {
+		// get samples
+		HashMap<String,String> sampleHash = null;
+		for (ImportSpecHandler spec : specList) {
+			sampleHash = spec.addSampleIngestionValues(sampleHash);
+		}
+		
+		// return "" if there's apparently no import spec
+		if (sampleHash.isEmpty()) {
+			return "";
+		}
+		
+		// add column names
+		StringBuilder ret = new StringBuilder();
+		String delim = "";
+		for (String colName : sampleHash.keySet()) {
+			ret.append(delim + colName);
+			delim = ",";	
+		}
+		ret.append("\n");
+
+		// add values
+		delim = "";
+		for (String colName : sampleHash.keySet()) {
+			ret.append(delim + sampleHash.get(colName));
+			delim = ",";
+		}
+		ret.append("\n");
+		
+		return ret.toString();
+	}
+	
+	/**
+	 * Build a hashmap of <int_mapping_index, type_string> columns where we can figure out the type
+	 * EMPTY for complicated columns
+	 * @return
+	 */
+	private HashMap<Integer, String> getColumnSampleValues() {
+		HashMap<Integer, String> ret = new HashMap<Integer, String>();
+		
+		for (ImportMapping mapping : this.importMappings) {
+			ArrayList<MappingItem> items = mapping.getItemList();
+			
+			// if it is a single column mapping with no transforms, we can guess type
+			if (items.size() == 1 && items.get(0).isColumnMapping() && items.get(0).getTransformList() == null) {
+				XSDSupportedType ngItemType = this.getNodegroupItemType(mapping);
+				Integer colIndex = items.get(0).getColumnIndex();
+				String sample = ngItemType.getSampleValue();
+				
+				if (ngItemType == XSDSupportedType.NODE_URI && mapping.getIsEnum()) {
+					try {
+						// if it's an enum, try to get the local fragment of the first legal value
+						String uriName = this.ng.getNode(mapping.getImportNodeIndex()).getFullUriName();
+						String enumVal = this.oInfo.getEnumerationStrings(uriName).get(0);
+						sample = new OntologyName(enumVal).getLocalName();
+					} catch (Exception e) {
+						sample = "enum";
+					}
+				}
+				
+				// conflicts change to strings
+				if (ret.containsKey(colIndex) && !ret.get(colIndex).equals(sample)) {
+					ret.put(colIndex, XSDSupportedType.STRING.getSampleValue());
+				} else {
+					ret.put(colIndex, sample);
+				}
+			} 
+			
+
+		}
+		return ret;
+	}
+	
+	private XSDSupportedType getNodegroupItemType(ImportMapping map) {
+		XSDSupportedType ret = null;
+		
+		if (map.isNode()) {
+			ret = XSDSupportedType.NODE_URI;
+		} else {
+			ret = this.ng.getNode(map.getImportNodeIndex()).getPropertyItem(map.getPropItemIndex()).getValueType();
+		
+		}
+		
+		return ret;
 	}
 }

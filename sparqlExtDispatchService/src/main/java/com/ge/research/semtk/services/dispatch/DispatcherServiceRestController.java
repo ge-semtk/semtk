@@ -62,56 +62,96 @@ public class DispatcherServiceRestController {
 	@RequestMapping(value="/queryFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject querySelectFromNodeGroup_BC(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/querySelectFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject querySelectFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/queryCountFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryCounttFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryDeleteFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryDeleteFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.DELETE, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.DELETE, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/queryFilterFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryFilterFromNodeGroup(@RequestBody FilterConstraintsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 
 	@CrossOrigin
 	@RequestMapping(value="/asynchronousDirectQuery", method=RequestMethod.POST)
 	public JSONObject asynchronousDirectQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL);
+		try {
+			return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroupForInstanceManipulation", method=RequestMethod.POST)
 	public JSONObject queryConstructFromNodeGroupForInstanceManipulation(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, true);
+		try {
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 		
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
@@ -133,7 +173,7 @@ public class DispatcherServiceRestController {
 			
 			dsp = getDispatcher(props, requestId, ngrb, true, true);
 			
-			WorkThread thread = new WorkThread(dsp, null, null, qt,  ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, null, null, qt);
 
 			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL)){
 				// we are going to launch straight from the raw sparql
@@ -165,7 +205,7 @@ public class DispatcherServiceRestController {
 				}
 			}
 			
-		}
+		} 
 		// send back the request ID.
 		// the request is not finished but that is okay
 		return retval.toJson();
@@ -191,7 +231,7 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
 			
-			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt, ThreadAuthenticator.getThreadHeaderTable());
+			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt);
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				
@@ -222,7 +262,7 @@ public class DispatcherServiceRestController {
 				}
 			}
 			
-		}
+		} 
 		// send back the request ID.
 		// the request is not finished but that is okay
 		return retval.toJson();
@@ -232,31 +272,36 @@ public class DispatcherServiceRestController {
 	@RequestMapping(value="/getConstraintInfo", method=RequestMethod.POST)
 	public JSONObject getConstraintInfo(@RequestBody NodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = new SimpleResultSet(true);
-		
-		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
-		String fakeReqId = "unused_in_this_case";
-		// get the things we need for the dispatcher
 		try {
+			SimpleResultSet retval = new SimpleResultSet(true);
 			
-			dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, true, false);
-			
-			retval.addResult("constraintType", dsp.getConstraintType());
-			retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
-			 
-		} catch (BadQueryException bqe) {
-			// handle this exception by showing the user the simplified message.
-			retval.setSuccess(false);
-			retval.addRationaleMessage(bqe.getMessage());
-		}
-		catch (Exception e) {
-			LocalLogger.printStackTrace(e);
-			retval.setSuccess(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getConstraintInfo", e);
-		}
-		// send back the request ID.
-		// the request is not finished but that is okay
-		return retval.toJson();
+			AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
+			String fakeReqId = "unused_in_this_case";
+			// get the things we need for the dispatcher
+			try {
+				
+				dsp = getDispatcher(props, fakeReqId, (NodegroupRequestBody) requestBody, true, false);
+				
+				retval.addResult("constraintType", dsp.getConstraintType());
+				retval.addResultStringArray("variableNames", dsp.getConstraintVariableNames());
+				 
+			} catch (BadQueryException bqe) {
+				// handle this exception by showing the user the simplified message.
+				retval.setSuccess(false);
+				retval.addRationaleMessage(bqe.getMessage());
+			}
+			catch (Exception e) {
+				LocalLogger.printStackTrace(e);
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "getConstraintInfo", e);
+			} 
+			// send back the request ID.
+			// the request is not finished but that is okay
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
 	}
 	
 	private String getRequestId(){

@@ -81,7 +81,7 @@
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
 	    	
 	    	 // set up the node group
-	        gNodeGroup = new SemanticNodeGroup(1000, 700, 'canvas');
+	        gNodeGroup = new SemanticNodeGroup(2000, 1400, 'canvas');
 	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
 	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
             gNodeGroup.setAsyncSNodeRemover(snodeRemover);
@@ -136,6 +136,9 @@
             gStoreDialog = new ModalStoreDialog(user || "",
                                                      g.service.nodeGroupStore.url); 
             
+            
+            resizeWindow();
+	        window.onresize = resizeWindow;
             
             authenticate(document.getElementById("nav-but-span"));
             
@@ -519,8 +522,25 @@
         nodeGroupChanged(true);
     };
       
+    // window's onresize event
+    var resizeWindow = function() {
+        resizeElem("importcanvasdiv", -1, 95);
+        resizeElem("importcolsdiv", -1, 95);
+    };
+
+    var resizeElem = function(name, xPercent, yPercent) {
+        
+        var elem = document.getElementById(name);
+        if (xPercent > 0) {
+            elem.style.width = Math.round((window.innerWidth - elem.getBoundingClientRect().left) * (xPercent / 100)) + "px";
+        }
+        if (yPercent > 0) {
+            elem.style.height = Math.round((window.innerHeight - elem.getBoundingClientRect().top) * (yPercent / 100)) + "px";
+        }
+    };
+
     var doLoad = function() {
-    	logEvent("SG Menu: File->Load");
+    	logEvent("SG Menu: File->Load"); 
     	gLoadDialog.loadDialog(gConn, doLoadConnection);
     };
     
@@ -889,7 +909,8 @@
         });
     };
     
-    var doNodeGroupDownload = function () {
+    var doNodeGroupDownload = function (optDeflateFlag) {
+        let deflateFlag = (typeof optDeflateFlag != "undefined") ? optDeflateFlag : true;
     	logEvent("SG menu: File->Download");
     	if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0) {
     		logAndAlert("Query canvas is empty.  Nothing to download.");
@@ -901,7 +922,7 @@
     			// make sure importSpec is in sync
     			gMappingTab.updateNodegroup(gNodeGroup);
     			
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, deflateFlag);
 	    		
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
@@ -968,9 +989,7 @@
    	};
 
     var doTest = function () {            
-        //activateOntologyEditor();
-        getUser();
-        
+        doNodeGroupDownload(false);
     };
 
     // append user button to an elem
@@ -1244,7 +1263,9 @@
    		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, "")); 		
    	};
     
-   	
+   	var doCollapseUnused = function() {
+        gNodeGroup.renderUnusedNodesCollapsed();
+    };
     
     // only used for non-microservice code
     // Almost DEPRECATED
@@ -1648,6 +1669,7 @@
     };
    
     var guiGraphNonEmpty = function () {
+        document.getElementById("btnCollapseUnused").disabled = false;
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
@@ -1655,7 +1677,8 @@
     };
     
     var giuGraphEmpty = function () {
-    	document.getElementById("btnLayout").disabled = true;
+    	document.getElementById("btnCollapseUnused").disabled = true;
+        document.getElementById("btnLayout").disabled = true;
         document.getElementById("SGOrderBy").disabled = true;
     	guiUpdateGraphRunButton();
     };
@@ -1825,6 +1848,8 @@
 		
 		// PEC TODO: this overwrites everything each time
 		gMappingTab.updateNodegroup(gNodeGroup);
+        
+        resizeWindow();
 	};
 	
 	var tabUploadActivated = function() {

@@ -19,38 +19,50 @@ package com.ge.research.semtk.services.status;
 
 import java.util.TreeMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class StatusServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-  /**
-   * Code to run after the service starts up.
-   */
-  @Override
-  public void onApplicationEvent(final ApplicationReadyEvent event) {
-	  
-	  
-	  // print and validate properties - and exit if invalid
-	  String[] propertyNames = {
-			  "status.edc.services.jobEndpointType",
-			  "status.edc.services.jobEndpointDomain",
-			  "status.edc.services.jobEndpointServerUrl",
-			  "status.edc.services.jobEndpointDataset",
-			  "status.edc.services.jobEndpointUsername",
-			  "status.edc.services.jobEndpointPassword"
-	  };
-	  TreeMap<String,String> properties = new TreeMap<String,String>();
-	  for(String propertyName : propertyNames){
-		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-	  }
-	  Utility.validatePropertiesAndExitOnFailure(properties); 
-	  	  
-	  return;
-  }
- 
+	@Autowired
+	StatusEdcConfigProperties edc_prop;
+	@Autowired
+	StatusAuthProperties auth_prop;
+
+	/**
+	 * Code to run after the service starts up.
+	 */
+	@Override
+	public void onApplicationEvent(final ApplicationReadyEvent event) {
+
+
+		// print and validate properties - and exit if invalid
+		String[] propertyNames = {
+				"status.edc.services.jobEndpointType",
+				"status.edc.services.jobEndpointDomain",
+				"status.edc.services.jobEndpointServerUrl",
+				"status.edc.services.jobEndpointDataset",
+				"status.edc.services.jobEndpointUsername",
+				"status.edc.services.jobEndpointPassword"
+		};
+		TreeMap<String,String> properties = new TreeMap<String,String>();
+		for(String propertyName : propertyNames){
+			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+		}
+		Utility.validatePropertiesAndExitOnFailure(properties); 
+
+		// start AuthorizationManager for all threads
+		
+		AuthorizationManager.authorize(edc_prop, auth_prop);
+		
+		return;
+	}
+
 }
