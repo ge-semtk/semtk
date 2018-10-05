@@ -48,6 +48,7 @@
 //    different formats should return different results object types
 //
 SparqlServerInterface.FUSEKI_SERVER = "fuseki";
+SparqlServerInterface.NEPTUNE_SERVER = "neptune";
 SparqlServerInterface.VIRTUOSO_SERVER = "virtuoso";
 
 SparqlServerInterface.TABLE_RESULTS = 0;
@@ -63,6 +64,9 @@ function SparqlServerInterface(serverType, serverURL, dataset) {
 	// Fuseki and Virtuoso put the /dataset and /sparql in different orders in the URL!
 	if (serverType == SparqlServerInterface.FUSEKI_SERVER) {
 		this.queryURL = encodeURI(this.serverURL) +"/" +  encodeURIComponent(this.dataset) + "/sparql?output=json";
+		
+	} else if (serverType == SparqlServerInterface.NEPTUNE_SERVER) {
+		this.queryURL = encodeURI(this.serverURL) + "/sparql?default-graph-uri=" + encodeURIComponent(dataset) + "&format=json";
 		
 	} else if (serverType == SparqlServerInterface.VIRTUOSO_SERVER) {
 		this.queryURL = encodeURI(this.serverURL) + "/sparql?default-graph-uri=" + encodeURIComponent(dataset);

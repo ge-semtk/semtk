@@ -101,6 +101,7 @@ define([	// properly require.config'ed
                         <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Type:</label><div class="controls" align="left">\
                             <select id="mdSelectSeiType"> \
                                 <option value="F"         >fuseki</label></option>\
+                                <option value="N"         >neptune</label></option>\
                                 <option value="V" selected>virtuoso</label></option>\
                             </select> \
                         </div></div> \
@@ -379,7 +380,17 @@ define([	// properly require.config'ed
             // set screen fields from memory
             if (seiIndex > -1) {
                 var sei = seiType == "m" ? this.conn.getModelInterface(seiIndex) : this.conn.getDataInterface(seiIndex);
-                document.getElementById("mdSelectSeiType").selectedIndex = (sei.getServerType() == SparqlConnection.FUSEKI_SERVER) ? 0 : 1;
+                switch (sei.getServerType()) {
+                	case SparqlConnection.FUSEKI_SERVER:
+                		document.getElementById("mdSelectSeiType").selectedIndex = 0;
+                		break;
+                	case SparqlConnection.NEPTUNE_SERVER:
+                		document.getElementById("mdSelectSeiType").selectedIndex = 1;
+                		break;
+                	case SparqlConnection.VIRTUOSO_SERVER:
+                		document.getElementById("mdSelectSeiType").selectedIndex = 2;
+                		break;
+                }	
                 document.getElementById("mdServerURL").value = sei.getServerURL();
                 document.getElementById("mdDataset").value = sei.getDataset();
 
@@ -777,7 +788,17 @@ define([	// properly require.config'ed
                 var oppSei0 = (this.currSeiType == "m") ? this.conn.getDataInterface(0) : this.conn.getModelInterface(0);
 
                 // set fields
-                sei.setServerType(document.getElementById("mdSelectSeiType").value == "F" ? SparqlConnection.FUSEKI_SERVER : SparqlConnection.VIRTUOSO_SERVER);
+                switch (document.getElementById("mdSelectSeiType").value) {
+                	case "F":
+                		sei.setServerType(SparqlConnection.FUSEKI_SERVER);
+                		break;
+                	case "N":
+                		sei.setServerType(SparqlConnection.NEPTUNE_SERVER);
+                		break;
+                	case "V":
+                		sei.setServerType(SparqlConnection.VIRTUOSO_SERVER);
+                		break;
+                }
                 sei.setServerURL(this.document.getElementById("mdServerURL").value.trim());
                 sei.setDataset(this.document.getElementById("mdDataset").value.trim());
 

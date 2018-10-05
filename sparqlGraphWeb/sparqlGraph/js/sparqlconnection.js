@@ -55,6 +55,8 @@ var SparqlConnection = function(jsonText) {
 SparqlConnection.QUERY_SERVER = "kdl";
 SparqlConnection.FUSEKI_SERVER = "fuseki";
 SparqlConnection.VIRTUOSO_SERVER = "virtuoso";
+SparqlConnection.NEPTUNE_SERVER = "neptune";
+
 
 SparqlConnection.prototype = {
 	
@@ -276,6 +278,8 @@ SparqlConnection.prototype = {
 	createInterface : function (stype, url, dataset) {
 		if (stype == SparqlConnection.FUSEKI_SERVER) {
 			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, dataset);
+		} else if (stype == SparqlConnection.NEPTUNE_SERVER) {
+			return new SparqlServerInterface(SparqlServerInterface.NEPTUNE_SERVER, url, dataset);
 		} else if (stype == SparqlConnection.VIRTUOSO_SERVER) {
 			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, dataset);
 		} else {
