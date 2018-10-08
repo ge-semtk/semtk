@@ -825,15 +825,17 @@ public class Node extends Returnable {
 		return ret;
 	}
 	
-	public int countConstraints () {
+	public int countUnconstrainedReturns () {
 		int ret = 0;
 		
-		if (this.getValueConstraint() != null) {
+		if (this.getIsReturned() && this.getValueConstraint() == null) {
 			ret ++;
 		}
 		
 		for (PropertyItem p : this.props) {
-			ret += (p.getValueConstraint() != null ? 1 : 0);
+			if (p.getIsReturned() && p.getValueConstraint() == null) {
+				ret ++;
+			}
 		}
 		
 		return ret;
