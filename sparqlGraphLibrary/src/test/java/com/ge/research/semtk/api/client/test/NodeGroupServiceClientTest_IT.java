@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,33 +22,21 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
-import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
-import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.nodeGroupService.client.NodeGroupServiceConfig;
 import com.ge.research.semtk.nodeGroupService.client.NodeGroupServiceRestClient;
-import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
-import com.ge.research.semtk.resultSet.RecordProcessResults;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 public class NodeGroupServiceClientTest_IT {
 		
@@ -260,6 +248,9 @@ public class NodeGroupServiceClientTest_IT {
 		
 		@Test
 		public void getImportColumns() throws Exception{				
+			
+			TestGraph.clearGraph();
+			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
 			
 			// get a nodegroup
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
