@@ -95,9 +95,6 @@ else
 	PROTOCOL="https"
 fi				 
 
-# note: no_proxy has to be lower case for curl to work
-# todo: get this via an environment variable
-no_proxy=localhost,127.0.0.1,.ge.com
 echo Using no_proxy: $no_proxy
 
 # check for each service				 
