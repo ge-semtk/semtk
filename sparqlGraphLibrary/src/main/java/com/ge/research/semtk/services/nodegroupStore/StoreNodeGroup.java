@@ -51,7 +51,7 @@ public class StoreNodeGroup {
 		
 		// should add better error handling here. 
 		try{
-			
+					
 			// some diagnostic output 
 			LocalLogger.logToStdErr("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
 			
@@ -64,8 +64,16 @@ public class StoreNodeGroup {
 			
 			// ingest
 			irc.execIngestionFromCsv(templateStr, data, overrideConn.toString());
-			RecordProcessResults tbl = irc.getLastResult();			
-			LocalLogger.logToStdErr("does the return believes the run was a succes?" + tbl.getSuccess() );
+			RecordProcessResults tbl = irc.getLastResult();	
+			
+			// check for error due to model not being loaded
+			if (!tbl.getSuccess() && tbl.getRationaleAsString(" ").toLowerCase().contains("class does not exist")) {
+				// load model
+				SparqlEndpointInterface prefabModel = overrideConn.getModelInterface(0);
+				throw new Exception("Config/setup error: src/main/Semantics/OwlModels/prefabNodeGroup.owl is not loaded in " +
+						prefabModel.getServerAndPort() + " graph: " + prefabModel.getDataset()	);
+			}
+			
 			tbl.throwExceptionIfUnsuccessful();
 			
 		}
