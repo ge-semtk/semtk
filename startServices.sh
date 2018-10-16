@@ -95,9 +95,14 @@ else
 	PROTOCOL="https"
 fi				 
 
+# note: no_proxy has to be lower case for curl to work
+# todo: get this via an environment variable
+no_proxy=localhost,127.0.0.1,.ge.com
+echo Using no_proxy: $no_proxy
+
 # check for each service				 
 for port in "${PORTS[@]}"; do
-   while ! curl -X POST ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
+   while ! curl --noproxy $no_proxy -X POST ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
 		echo waiting for service at ${PROTOCOL}://${HOST_NAME}:${port}
         if (($SECONDS > $MAX_SEC)) ; then
         	echo ERROR: Took to longer than $MAX_SEC seconds to start services
