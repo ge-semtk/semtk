@@ -49,8 +49,8 @@ public class StatusServiceStartup implements ApplicationListener<ApplicationRead
 				"status.edc.services.jobEndpointDomain",
 				"status.edc.services.jobEndpointServerUrl",
 				"status.edc.services.jobEndpointDataset",
-				"status.edc.services.jobEndpointUsername",
-				"status.edc.services.jobEndpointPassword"
+				//"status.edc.services.jobEndpointUsername",
+				//"status.edc.services.jobEndpointPassword"
 		};
 		TreeMap<String,String> properties = new TreeMap<String,String>();
 		for(String propertyName : propertyNames){

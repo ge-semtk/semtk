@@ -37,7 +37,7 @@ public class IngestionServiceStartup implements ApplicationListener<ApplicationR
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
-			  "ingestion.sparqlUserName",
+			  //"ingestion.sparqlUserName",
 			  "ingestion.batchSize"
 	  };
 	  TreeMap<String,String> properties = new TreeMap<String,String>();

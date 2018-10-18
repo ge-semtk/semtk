@@ -56,8 +56,8 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 				"results.edc.services.jobEndpointDomain",
 				"results.edc.services.jobEndpointServerUrl",
 				"results.edc.services.jobEndpointDataset",
-				"results.edc.services.jobEndpointUsername",
-				"results.edc.services.jobEndpointPassword",
+				//"results.edc.services.jobEndpointUsername",
+				//"results.edc.services.jobEndpointPassword",
 				"results.cleanUpThreadEnabled",
 				"results.cleanUpThreadFrequency"
 		};

@@ -151,7 +151,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			return "Succeeded in " + msec + " millisec";
 			
 		} catch (Exception e) {
-			throw new Exception("Failed to parse Neptune confirm message", e);
+			throw new Exception("Failed to parse Neptune confirm message: " + resp.toString(), e);
 		}
 	}
 	
