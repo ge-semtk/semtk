@@ -21,6 +21,15 @@ package com.ge.research.semtk.auth;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.Syntax;
+import org.apache.jena.update.UpdateFactory;
+import org.apache.jena.update.UpdateRequest;
 
 import com.ge.research.semtk.edc.EndpointProperties;
 import com.ge.research.semtk.load.DataLoader;
@@ -285,6 +294,85 @@ public class AuthorizationManager {
 		}
 	}
 	
+	//
+	// NOTES
+	//	INSERT requires WHERE clause.   Perhaps INSERT DATA does not.
+	//  	https://stackoverflow.com/questions/39620846/sparql-expecting-one-of-where-using
+	//
+	//
+	//
+	//
+	//
+	
+	public static Pattern REGEX_SERVICE = Pattern.compile("\\sservice\\s*[<?]", Pattern.CASE_INSENSITIVE);
+	public static Pattern REGEX_FROM = Pattern.compile("\\sfrom\\s*[<?]", Pattern.CASE_INSENSITIVE);
+	public static Pattern REGEX_INTO = Pattern.compile("\\sinto\\s*[<?]", Pattern.CASE_INSENSITIVE);
+
+	/**
+	 * Check if query is authorized 
+	 * CORRENTLY JUST IN TEST: ONLY LOGS INFORMATION
+	 * @param query
+	 * @throws AuthorizationException
+	 */
+	public static void authorizeQuery(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
+		StringBuilder logMessage = new StringBuilder();
+		List<String> graphURIs = new ArrayList();
+		boolean readOnlyFlag = false;
+		long startTime = System.nanoTime();
+		
+		// log the first half
+        logMessage.append("\nAUTH_DEBUG ");
+        logMessage.append("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG ") + "\nAUTH_DEBUG ");
+        logMessage.append("User:     " + ThreadAuthenticator.getThreadUserName()         + "\nAUTH_DEBUG ");
+
+		// ask Jena about the query
+		try {
+	        Query query = QueryFactory.create(queryStr);
+	        graphURIs = query.getGraphURIs();
+	        readOnlyFlag = true;
+	        Matcher service = REGEX_SERVICE.matcher(queryStr);
+	        
+	        if (service.find()) {
+	        	LocalLogger.logToStdErr(service.group(1));
+	        	throw new AuthorizationException("AUTH_ERR: Can't authorize select queries containing SERVICE clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+	        }
+		} catch (Exception e) {
+
+			try {
+				UpdateRequest request = UpdateFactory.create(queryStr, Syntax.defaultQuerySyntax);
+				// tried and failed:  
+				// Syntax.syntaxSPARQL_11
+				// Syntax.defaultUpdateSyntax
+				readOnlyFlag = false;
+				
+				// process queries that update or delete
+				Matcher from = REGEX_FROM.matcher(queryStr);
+				Matcher into = REGEX_INTO.matcher(queryStr);
+				if (from.find()) {
+		        	LocalLogger.logToStdErr(from.group(0));
+		        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing FROM clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+		        }
+				if (into.find()) {
+		        	LocalLogger.logToStdErr(into.group(0));
+		        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing INTO clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+		        }
+			
+			} catch (Exception ee) {
+				throw new AuthorizationException("AUTH_ERR: Query can't be parsed. \nAUTH_ERR: message: " + ee.getMessage() + "\nAUTH_ERR: query: " + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+			}
+			readOnlyFlag = false;
+		}
+        
+		// log the second half
+        logMessage.append("Graphs:   " + graphURIs                                       + "\nAUTH_DEBUG ");
+        logMessage.append("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() + "\nAUTH_DEBUG ");
+        logMessage.append("Type:     " + (readOnlyFlag ? "SELECT" : "non-SELECT")        + "\nAUTH_DEBUG ");
+        logMessage.append("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
+        
+        LocalLogger.logToStdOut(logMessage.toString());
+
+	}
+	
 	public static boolean isAuthorizationOwlLoaded() throws Exception {
 
 		OntologyInfo oInfo = new OntologyInfo(getConnection());
@@ -298,6 +386,7 @@ public class AuthorizationManager {
 		conn.addDataInterface(sei);
 		return conn;
 	}
+	
 	public static void uploadAuthorizationOwl(String owl) throws Exception {
 		
 		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl.getBytes()));

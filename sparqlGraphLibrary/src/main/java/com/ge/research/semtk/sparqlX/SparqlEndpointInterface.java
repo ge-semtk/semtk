@@ -57,6 +57,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -401,7 +403,8 @@ public abstract class SparqlEndpointInterface {
 	 * Sample graph output:
 	 */
 	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws Exception {
-		
+		AuthorizationManager.authorizeQuery(this, query);
+
 		if(resultType == null){
 			resultType = getDefaultResultType();
 		}
@@ -456,6 +459,7 @@ public abstract class SparqlEndpointInterface {
 	 * @throws Exception
 	 */
 	private JSONObject executeQueryAuthPost(String query, SparqlResultTypes resultType) throws Exception{
+		AuthorizationManager.authorizeQuery(this, query);
 		
 		if(resultType == null){
 			resultType = getDefaultResultType();
@@ -550,6 +554,10 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 */
 	public boolean isExceptionRetryAble(Exception e) {
+		if (e instanceof AuthorizationException) {
+			return false;
+		}
+		
 		return true;
 	}
 	
