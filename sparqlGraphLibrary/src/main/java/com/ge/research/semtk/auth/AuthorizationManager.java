@@ -315,61 +315,67 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException
 	 */
 	public static void authorizeQuery(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
-		StringBuilder logMessage = new StringBuilder();
-		List<String> graphURIs = new ArrayList();
-		boolean readOnlyFlag = false;
-		long startTime = System.nanoTime();
-		
-		// log the first half
-        logMessage.append("\nAUTH_DEBUG ");
-        logMessage.append("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG ") + "\nAUTH_DEBUG ");
-        logMessage.append("User:     " + ThreadAuthenticator.getThreadUserName()         + "\nAUTH_DEBUG ");
-
-		// ask Jena about the query
 		try {
-	        Query query = QueryFactory.create(queryStr);
-	        graphURIs = query.getGraphURIs();
-	        readOnlyFlag = true;
-	        Matcher service = REGEX_SERVICE.matcher(queryStr);
-	        
-	        if (service.find()) {
-	        	LocalLogger.logToStdErr(service.group(1));
-	        	throw new AuthorizationException("AUTH_ERR: Can't authorize select queries containing SERVICE clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-	        }
-		} catch (Exception e) {
-
-			try {
-				UpdateRequest request = UpdateFactory.create(queryStr, Syntax.defaultQuerySyntax);
-				// tried and failed:  
-				// Syntax.syntaxSPARQL_11
-				// Syntax.defaultUpdateSyntax
-				readOnlyFlag = false;
-				
-				// process queries that update or delete
-				Matcher from = REGEX_FROM.matcher(queryStr);
-				Matcher into = REGEX_INTO.matcher(queryStr);
-				if (from.find()) {
-		        	LocalLogger.logToStdErr(from.group(0));
-		        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing FROM clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-		        }
-				if (into.find()) {
-		        	LocalLogger.logToStdErr(into.group(0));
-		        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing INTO clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-		        }
+			StringBuilder logMessage = new StringBuilder();
+			List<String> graphURIs = new ArrayList();
+			boolean readOnlyFlag = false;
+			long startTime = System.nanoTime();
 			
-			} catch (Exception ee) {
-				throw new AuthorizationException("AUTH_ERR: Query can't be parsed. \nAUTH_ERR: message: " + ee.getMessage() + "\nAUTH_ERR: query: " + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+			// log the first half
+	        logMessage.append("\nAUTH_DEBUG ");
+	        logMessage.append("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG ") + "\nAUTH_DEBUG ");
+	        logMessage.append("User:     " + ThreadAuthenticator.getThreadUserName()         + "\nAUTH_DEBUG ");
+	
+			// ask Jena about the query
+			try {
+		        Query query = QueryFactory.create(queryStr);
+		        graphURIs = query.getGraphURIs();
+		        readOnlyFlag = true;
+		        Matcher service = REGEX_SERVICE.matcher(queryStr);
+		        
+		        if (service.find()) {
+		        	LocalLogger.logToStdErr(service.group(1));
+		        	throw new AuthorizationException("AUTH_ERR: Can't authorize select queries containing SERVICE clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+		        }
+			} catch (Exception e) {
+	
+				try {
+					UpdateRequest request = UpdateFactory.create(queryStr, Syntax.defaultQuerySyntax);
+					// tried and failed:  
+					// Syntax.syntaxSPARQL_11
+					// Syntax.defaultUpdateSyntax
+					readOnlyFlag = false;
+					
+					// process queries that update or delete
+					Matcher from = REGEX_FROM.matcher(queryStr);
+					Matcher into = REGEX_INTO.matcher(queryStr);
+					if (from.find()) {
+			        	LocalLogger.logToStdErr(from.group(0));
+			        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing FROM clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+			        }
+					if (into.find()) {
+			        	LocalLogger.logToStdErr(into.group(0));
+			        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing INTO clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+			        }
+				
+				} catch (Exception ee) {
+					throw new AuthorizationException("AUTH_ERR: Query can't be parsed. \nAUTH_ERR: message: " + ee.getMessage() + "\nAUTH_ERR: query: " + queryStr.replaceAll("\n", "\nAUTH_ERR "));
+				}
+				readOnlyFlag = false;
 			}
-			readOnlyFlag = false;
+	        
+			// log the second half
+	        logMessage.append("Graphs:   " + graphURIs                                       + "\nAUTH_DEBUG ");
+	        logMessage.append("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() + "\nAUTH_DEBUG ");
+	        logMessage.append("Type:     " + (readOnlyFlag ? "SELECT" : "non-SELECT")        + "\nAUTH_DEBUG ");
+	        logMessage.append("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
+	        
+	        LocalLogger.logToStdOut(logMessage.toString());
+	        
+		} catch (AuthorizationException ae) {
+			LocalLogger.logToStdOut("Forgiving AuthorizationException");
 		}
-        
-		// log the second half
-        logMessage.append("Graphs:   " + graphURIs                                       + "\nAUTH_DEBUG ");
-        logMessage.append("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() + "\nAUTH_DEBUG ");
-        logMessage.append("Type:     " + (readOnlyFlag ? "SELECT" : "non-SELECT")        + "\nAUTH_DEBUG ");
-        logMessage.append("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
-        
-        LocalLogger.logToStdOut(logMessage.toString());
+		
 
 	}
 	
