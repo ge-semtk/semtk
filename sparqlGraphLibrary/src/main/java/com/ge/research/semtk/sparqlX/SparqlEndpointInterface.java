@@ -927,13 +927,13 @@ public abstract class SparqlEndpointInterface {
 		// response.head
 		JSONObject head = (JSONObject)resp.get("head");
 		if (head == null) {
-			throw new Exception("Sparql server did not return a 'head' object");
+			throw new Exception("Unexepected response from SPARQL endpoint (no head): " + resp.toJSONString());
 		}
 		
 		// response.head.vars
 		JSONArray vars = (JSONArray) head.get("vars");
 		if (vars == null){
-			throw new Exception("Sparql server response 'head' did not include a 'vars' array of column names");
+			throw new Exception("Unexepected response from SPARQL endpoint (no head.vars): " + resp.toJSONString());
 		}
 		return vars;
 	}
