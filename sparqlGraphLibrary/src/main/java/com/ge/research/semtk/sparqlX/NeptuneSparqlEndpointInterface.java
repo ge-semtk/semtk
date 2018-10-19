@@ -53,7 +53,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	public String getServerType() {
-		return "virtuoso";
+		return "neptune";
 	}
 	
 	/**
