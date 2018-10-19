@@ -44,7 +44,7 @@ function hostname
         case "${OPERATING_SYSTEM}" in
         "Linux")
 				# fully qualified, e.g. host.company.com
-                export HOST_NAME=$(host $HOST_IP | awk '{print substr($NF, 1, length($NF)-1)}') # Linux
+                export HOST_NAME="$(host $HOST_IP | awk '{print substr($NF, 1, length($NF)-1)}')" # Linux
                 ;;
         *)
 				# TODO plain hostname for now - in future may need to differentiate between OS and/or get fully qualified hostname
