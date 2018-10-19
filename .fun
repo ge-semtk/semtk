@@ -38,6 +38,22 @@ function hostip
 }
 ## End hostip function
 
+## Determine current host name
+function hostname
+{
+        case "${OPERATING_SYSTEM}" in
+        "Linux")
+				# fully qualified, e.g. host.company.com
+                export HOST_NAME=$(host $HOST_IP | awk '{print substr($NF, 1, length($NF)-1)}') # Linux
+                ;;
+        *)
+				# TODO plain hostname for now - in future may need to differentiate between OS and/or get fully qualified hostname
+                export HOST_NAME=$(hostname)
+                ;;
+        esac
+}
+## End hostname function
+
 
 # @author 200001934 Paul
 #
