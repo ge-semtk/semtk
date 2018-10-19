@@ -36,6 +36,7 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
+			  "ssl.enabled",
 			  "store.ingestorLocation",
 			  "store.ingestorProtocol",
 			  "store.ingestorPort",

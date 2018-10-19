@@ -171,7 +171,7 @@ public class JobTracker {
 	        "   ?Job job:status job:InProgress. \n" +
 	        "   ?Job job:statusMessage '%s'^^XMLSchema:string." +
 	        "} \n" +
-	        "where { \n" +
+	        "WHERE { \n" +
 	        "   ?Job a job:Job. \n" +
 	        "   ?Job job:id '%s'^^XMLSchema:string. \n" +
 	        "   optional {?Job job:percentComplete ?percentComplete.} \n" +
@@ -213,7 +213,7 @@ public class JobTracker {
 	        "   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
 	        "   ?Job job:status job:Failure. \n" +
 	        "} \n" +
-	        "where { \n" +
+	        "WHERE { \n" +
 	        "   ?Job a job:Job. \n" +
 	        "   ?Job job:id '%s'^^XMLSchema:string . \n" +
 			"   optional {?Job job:percentComplete ?percentComplete .} \n" +
@@ -285,7 +285,7 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
-				"	select distinct ?statusMessage ?userName where {  \n" +
+				"	SELECT DISTINCT ?statusMessage ?userName where {  \n" +
 				"	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:statusMessage ?statusMessage .  \n" +
@@ -342,7 +342,7 @@ public class JobTracker {
 				"   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
 				"   ?Job job:status job:Success. \n" +
 				"} \n" +
-				"where { \n" +
+				"WHERE { \n" +
 				"   ?Job a job:Job. \n" +
 				"   ?Job job:id '%s'^^XMLSchema:string . \n" +
 				"   optional {?Job job:percentComplete ?percentComplete .} \n" +
@@ -393,7 +393,7 @@ public class JobTracker {
 		        "   ?Job job:sampleResultsURL <%s>. \n" +
 		        "   <%s> job:full '%s'^^XMLSchema:string . \n" +
 		        "} \n" +
-		        "where { \n" +
+		        "WHERE { \n" +
 		        "   ?Job a job:Job. \n" +
 		        "   ?Job job:id '%s'^^XMLSchema:string . \n" +
 		        "   optional {?Job job:fullResultsURL ?fullURI. \n" +
@@ -428,7 +428,7 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?fullUrl ?userName where {  \n" +
+	    	"	SELECT DISTINCT ?fullUrl ?userName where {  \n" +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:fullResultsURL ?URL.  \n" +
@@ -479,7 +479,7 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?sampleUrl ?userName where {  \n" +
+	    	"	SELECT DISTINCT ?sampleUrl ?userName where {  \n" +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:sampleResultsURL ?URL.  \n" +
@@ -534,28 +534,26 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "DELETE  {\n" +
-            "<%s> job:creationTime ?x. \n" +
-	        "<%s> job:percentComplete ?y. \n" +
-	        "<%s> job:status ?w. \n" +
+	        "DELETE {\n" +
+            "?job job:creationTime ?x. \n" +
+	        "?job job:percentComplete ?y. \n" +
+	        "?job job:status ?w. \n" +
 	        "} \n" +
-	        "INSERT  {\n" +
-	        "<%s> a job:Job. \n" + 
-	        "<%s> job:id '%s'^^XMLSchema:string. \n" +
-            "<%s> job:creationTime '%s'^^XMLSchema:dateTime. \n" +
-	        "<%s> job:percentComplete '0'^^XMLSchema:integer. \n" +
-	        "<%s> job:userName '%s'^^XMLSchema:string. \n" +
-	        "<%s> job:status job:InProgress. \n" +
-	        "}",
-	        jobUri,
-	        jobUri, 
-	        jobUri,
+	        "INSERT {\n" +
+	        "?job a job:Job. \n" + 
+	        "?job job:id '%s'^^XMLSchema:string. \n" +
+            "?job job:creationTime '%s'^^XMLSchema:dateTime. \n" +
+	        "?job job:percentComplete '0'^^XMLSchema:integer. \n" +
+	        "?job job:userName '%s'^^XMLSchema:string. \n" +
+	        "?job job:status job:InProgress. \n" +
+	        "}\n" +
+	        "WHERE {\n" +
+	        "BIND (<%s> AS ?job)\n" +
+	        "}\n",
 	        
-	        jobUri, 
-	        jobUri, SparqlToXUtils.safeSparqlString(jobId), 
-	        jobUri, xsdFormat.format(initialDate), 
-	        jobUri,
-	        jobUri, userName,
+	        SparqlToXUtils.safeSparqlString(jobId), 
+	        xsdFormat.format(initialDate), 
+	        userName,
 	        jobUri);
 	    // LocalLogger.logToStdErr(query);
 	    try {
@@ -577,13 +575,16 @@ public class JobTracker {
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 		        " \n" +
 		        "DELETE  {\n" +
-	            "<%s> job:name ?x. \n" +
+	            "?job job:name ?x. \n" +
 		        "} \n" +
 		        "INSERT  {\n" +
-		        "<%s> job:name '%s'^^XMLSchema:string. \n" +
-		        "}",
-		        jobUri,
-		        jobUri,safeName
+		        "?job job:name '%s'^^XMLSchema:string. \n" +
+		        "}\n" +
+		        "WHERE {\n" +
+		        "BIND (<%s> AS ?job)\n" +
+		        "}\n",
+		        safeName,
+		        jobUri
 		       );
 	    try {
 	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
@@ -605,17 +606,22 @@ public class JobTracker {
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				" \n" +
 				"INSERT  {\n" +
-				"<%s> a job:BinaryFile. \n" + 
-				"<%s> job:file <%s>. \n" +
-				"<%s> job:fileID   '%s'^^XMLSchema:string. \n" +
-				"<%s> job:filename '%s'^^XMLSchema:string. \n" +
-				"<%s> job:path     '%s'^^XMLSchema:string. \n" +
-				"}",
-				fileUri, 
-				jobUri, fileUri,
-				fileUri, fileId,
-				fileUri, filename,
-				fileUri, path
+				"?file a job:BinaryFile. \n" + 
+				"?job job:file ?file. \n" +
+				"?file job:fileID   '%s'^^XMLSchema:string. \n" +
+				"?file job:filename '%s'^^XMLSchema:string. \n" +
+				"?file job:path     '%s'^^XMLSchema:string. \n" +
+				"}\n" +
+		        "WHERE {\n" +
+		        "BIND (<%s> AS ?file)\n" +
+		        "BIND (<%s> AS ?job)\n" +
+		        "}\n",
+				
+				fileId,
+				filename,
+				path,
+				fileUri,
+				jobUri
 				);
 	    try {
 	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);

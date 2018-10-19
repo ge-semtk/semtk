@@ -49,23 +49,38 @@ public class StoreNodeGroup {
 //		LocalLogger.logToStdErr(":: csv data output ::");	
 //		LocalLogger.logToStdErr(data);
 		
-		
-		// some diagnostic output 
-		LocalLogger.logToStdErr("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
-		
-		// create the rest client
-		IngestorClientConfig icc = new IngestorClientConfig(ingestorProtocol, ingestorLocation, Integer.parseInt(ingestorPort));
-		IngestorRestClient irc   = new IngestorRestClient(icc);
-		
-		// get store.json
-		String templateStr = Utility.getResourceAsString(icc, "/nodegroups/store.json");
-		
-		// ingest
-		irc.execIngestionFromCsv(templateStr, data, overrideConn.toString());
-		RecordProcessResults tbl = irc.getLastResult();			
-		LocalLogger.logToStdErr("does the return believes the run was a succes?" + tbl.getSuccess() );
-		tbl.throwExceptionIfUnsuccessful();
+		// should add better error handling here. 
+		try{
+					
+			// some diagnostic output 
+			LocalLogger.logToStdErr("attempting to write a new nodegroup to the ingestor at " + ingestorLocation + " using the protocol " + ingestorProtocol);
 			
+			// create the rest client
+			IngestorClientConfig icc = new IngestorClientConfig(ingestorProtocol, ingestorLocation, Integer.parseInt(ingestorPort));
+			IngestorRestClient irc   = new IngestorRestClient(icc);
+			
+			// get store.json
+			String templateStr = Utility.getResourceAsString(icc, "/nodegroups/store.json");
+			
+			// ingest
+			irc.execIngestionFromCsv(templateStr, data, overrideConn.toString());
+			RecordProcessResults tbl = irc.getLastResult();	
+			
+			// check for error due to model not being loaded
+			if (!tbl.getSuccess() && tbl.getRationaleAsString(" ").toLowerCase().contains("class does not exist")) {
+				// load model
+				SparqlEndpointInterface prefabModel = overrideConn.getModelInterface(0);
+				throw new Exception("Config/setup error: src/main/Semantics/OwlModels/prefabNodeGroup.owl is not loaded in " +
+						prefabModel.getServerAndPort() + " graph: " + prefabModel.getDataset()	);
+			}
+			
+			tbl.throwExceptionIfUnsuccessful();
+			
+		}
+		catch(Exception eee){
+			LocalLogger.logToStdErr(eee.getMessage());
+			retval = false;		// set this to false. hopefully this functions as a response. 
+		}
 		
 		return retval;
 	}

@@ -50,6 +50,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 
 		// print and validate properties - and exit if invalid
 		String[] propertyNames = {
+				"ssl.enabled",
 				"results.baseURL",
 				"results.fileLocation",
 				"results.edc.services.jobEndpointType",

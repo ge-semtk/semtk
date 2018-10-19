@@ -29,8 +29,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
-
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -215,6 +215,9 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	@Override
 	public boolean isExceptionRetryAble(Exception e) {
+		if (! super.isExceptionRetryAble(e)) {
+			return false;
+		}
 		String msg = e.getMessage();
 		if ( Pattern.compile("Virtuoso [0-9]+ Error ").matcher(msg).find()) {
 			return false;

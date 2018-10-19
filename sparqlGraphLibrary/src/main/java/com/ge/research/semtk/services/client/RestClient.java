@@ -236,6 +236,7 @@ public abstract class RestClient extends Client implements Runnable {
 		try {
 			HttpClient httpclient = HttpClients.custom().build();
 			//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
+			LocalLogger.logToStdOut("Connecting to: " + this.conf.getServiceURL());
 			httpresponse = httpclient.execute(targetHost, httpreq);
 		} catch (Exception e) {
 			throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);

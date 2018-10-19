@@ -88,17 +88,26 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_INGESTION_SERVICE
                   $PORT_NODEGROUP_SERVICE
                  )
+# protocol for ping
+if [ "$SSL_ENABLED" == "false" ]; then
+    PROTOCOL="http"
+else
+	PROTOCOL="https"
+fi				 
 
+echo Using no_proxy: $no_proxy
+
+# check for each service				 
 for port in "${PORTS[@]}"; do
-   while !  curl -X POST http://localhost:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
-        echo waiting for service on port $port
+   while ! curl --noproxy $no_proxy -X POST ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
+		echo waiting for service at ${PROTOCOL}://${HOST_NAME}:${port}
         if (($SECONDS > $MAX_SEC)) ; then
         	echo ERROR: Took to longer than $MAX_SEC seconds to start services
         	exit 1
         fi
         sleep 3
    done
-   echo service on port $port is up
+   echo service at ${PROTOCOL}://${HOST_NAME}:${port} is up
 done
 echo "=== DONE ==="
 exit 0

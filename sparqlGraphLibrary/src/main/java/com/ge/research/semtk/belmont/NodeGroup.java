@@ -518,6 +518,7 @@ public class NodeGroup {
 
 		this.addToPrefixHash(UriResolver.DEFAULT_URI_PREFIX);   // make sure to force the inclusion of the old ones.
 		this.addToPrefixHash("http://www.w3.org/2001/XMLSchema#");
+		this.addToPrefixHash("http://xmlns.com/foaf/0.1/rdf#");
 		
 		for(Node n : this.nodes){
 

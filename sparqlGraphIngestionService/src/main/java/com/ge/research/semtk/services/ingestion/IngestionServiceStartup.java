@@ -37,6 +37,7 @@ public class IngestionServiceStartup implements ApplicationListener<ApplicationR
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
+			  "ssl.enabled",
 			  //"ingestion.sparqlUserName",
 			  "ingestion.batchSize"
 	  };
