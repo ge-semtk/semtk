@@ -34,13 +34,16 @@ public class LoggerClientConfig {
 	// constructor default
 	public LoggerClientConfig(String applicationName, String protocol, String serverName, int loggingPort, String loggingServiceLocation) throws Exception{
 		// just create the basic logger config. 
-		
-		//validity and null checks.
-		if(!protocol.equalsIgnoreCase("HTTP") && !protocol.equalsIgnoreCase("HTTPS")){
-			throw new Exception("unrecognized protocol used for logger: " + protocol + ". HTTP and HTTPS supported.");
-		}
-		if(serverName == null || serverName == ""){
-			throw new Exception("no logging server name provided.");
+		if (protocol.isEmpty() && serverName.isEmpty() && loggingServiceLocation.isEmpty()) {
+			// all blank is valid way to turn logging off
+		} else {
+			//validity and null checks.
+			if(!protocol.equalsIgnoreCase("HTTP") && !protocol.equalsIgnoreCase("HTTPS")){
+				throw new Exception("unrecognized protocol used for logger: " + protocol + ". HTTP and HTTPS supported.");
+			}
+			if(serverName == null || serverName == ""){
+				throw new Exception("no logging server name provided.");
+			}
 		}
 		
 		this.protocol = protocol;

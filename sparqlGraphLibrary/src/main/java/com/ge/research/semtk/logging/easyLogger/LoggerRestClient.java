@@ -139,6 +139,11 @@ public class LoggerRestClient {
 	}
 	
 	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, Boolean useParent) throws Exception{
+		if (this.conf.getServerName().isEmpty()) {
+			LocalLogger.logToStdErr("logging is off.  action=" + action);
+			return;
+		}
+		
 		// the method actually perform the log message sent
 	
 		// used to serialize and send the details. 
@@ -195,7 +200,7 @@ public class LoggerRestClient {
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 		HttpResponse httpresponse = httpclient.execute(targetHost, httppost);
 	
-		}
+	}
 
 	private String serializeTenants(ArrayList<String> tenants) {
 		String retval = null;
@@ -323,12 +328,13 @@ public class LoggerRestClient {
 		LoggerRestClient logger = null;
 		try{	// wrapped in a try block because logging never announces a failure.
 			LoggerClientConfig lcc = null;
+			int port = logProps.getLoggingPort().isEmpty() ? 80 : Integer.parseInt(logProps.getLoggingPort());
 			if(logProps.getLoggingEnabled()){
 				// logging was set to occur. 
 				lcc = new LoggerClientConfig(	logProps.getApplicationLogName(), 
 												logProps.getLoggingProtocol(), 
 												logProps.getLoggingServer(), 
-												Integer.parseInt(logProps.getLoggingPort()), 
+												port, 
 												logProps.getLoggingServiceLocation());
 				logger = new LoggerRestClient(lcc);
 			}
