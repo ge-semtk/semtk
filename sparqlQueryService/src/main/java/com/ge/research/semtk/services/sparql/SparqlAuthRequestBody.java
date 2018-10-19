@@ -34,13 +34,15 @@ public class SparqlAuthRequestBody extends SparqlRequestBody {
     public void validate() throws Exception{
     	
     	super.validate();  // validate items from non-auth request 
-    	
-		if(user == null || user.trim().isEmpty()){
-			throw new Exception("No user name specified");
-		}
-		if(password == null || password.trim().isEmpty()){
-			throw new Exception("No password specified");
-		}
+  
+// not required for neptune
+// 
+//		if(user == null || user.trim().isEmpty()){
+//			throw new Exception("No user name specified");
+//		}
+//		if(password == null || password.trim().isEmpty()){
+//			throw new Exception("No password specified");
+//		}
     }
 	
     /**
