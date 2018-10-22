@@ -470,6 +470,10 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	public void addToPrefixHash(String prefixName, String prefixValue) {
+		this.prefixHash.put(prefixValue, prefixName);
+	}
+	
 	public void addToPrefixHash(String prefixedUri){
 		// from the incoming string, remove the local fragment and then try to add the rest to the prefix hash.
 		if(prefixedUri == null){ return; }
@@ -518,7 +522,7 @@ public class NodeGroup {
 
 		this.addToPrefixHash(UriResolver.DEFAULT_URI_PREFIX);   // make sure to force the inclusion of the old ones.
 		this.addToPrefixHash("http://www.w3.org/2001/XMLSchema#");
-		this.addToPrefixHash("http://xmlns.com/foaf/0.1/rdf#");
+		this.addToPrefixHash("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns");
 		
 		for(Node n : this.nodes){
 
