@@ -321,6 +321,9 @@ public class AuthorizationManager {
 	public static Pattern REGEX_FROM = Pattern.compile("\\sfrom\\s*[<?]", Pattern.CASE_INSENSITIVE);
 	public static Pattern REGEX_INTO = Pattern.compile("\\sinto\\s*[<?]", Pattern.CASE_INSENSITIVE);
 
+	private static void logAuthDebug(String msg) {
+		//LocalLogger.logToStdOut("AUTH_DEBUG " + msg);
+	}
 	/**
 	 * Check if query is authorized 
 	 * CORRENTLY JUST IN TEST: ONLY LOGS INFORMATION
@@ -349,9 +352,8 @@ public class AuthorizationManager {
 			String user = ThreadAuthenticator.getThreadUserName();
 			
 			// log the first half
-	        logMessage.append("\nAUTH_DEBUG ");
-	        logMessage.append("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG ") + "\nAUTH_DEBUG ");
-	        logMessage.append("User:     " + user                                       + "\nAUTH_DEBUG ");
+	        logAuthDebug("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG "));
+	        logAuthDebug("User:     " + user);
 	
 			SparqlQueryInterrogator sqi = new SparqlQueryInterrogator(queryStr);
 			readOnlyFlag = sqi.isReadOnly();
@@ -362,10 +364,10 @@ public class AuthorizationManager {
 	        
 			
 			// log the second half
-	        logMessage.append("Graphs:   " + graphURIs                                       + "\nAUTH_DEBUG ");
-	        logMessage.append("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() + "\nAUTH_DEBUG ");
-	        logMessage.append("Type:     " + (readOnlyFlag ? "read" : "write")               + "\nAUTH_DEBUG ");
-	        logMessage.append("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
+			logAuthDebug("Graphs:   " + graphURIs                                       );
+			logAuthDebug("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() );
+			logAuthDebug("Type:     " + (readOnlyFlag ? "read" : "write")               );
+			logAuthDebug("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
 	        
 	        LocalLogger.logToStdOut(logMessage.toString());
 	        
@@ -376,10 +378,10 @@ public class AuthorizationManager {
 						if (!graphReaders.get(graphURI).contains(user)) {
 							throw new AuthorizationException("User \'" + user + "' does not have read permission on '" + graphURI + "'");
 						} else {
-							LocalLogger.logToStdErr("AUTH_DEBUG Access granted");
+							logAuthDebug("Access granted");
 						}
 					} else {
-						LocalLogger.logToStdErr("AUTH_DEBUG Grpah is not in graphReaders: default access granted");
+						logAuthDebug("Grpah is not in graphReaders: default access granted");
 						//  allowing read access if graphURI isn't in the auth table
 					}
 				} else {
@@ -388,7 +390,7 @@ public class AuthorizationManager {
 							throw new AuthorizationException("User \'" + user + "' does not have write permission on '" + graphURI + "'");
 						}
 					} else {
-						LocalLogger.logToStdErr("AUTH_DEBUG Grpah is not in graphWriters: default access granted");
+						logAuthDebug("Graph is not in graphWriters: default access granted");
 						//  allowing write access if graphURI isn't in the auth table
 					}
 				}
