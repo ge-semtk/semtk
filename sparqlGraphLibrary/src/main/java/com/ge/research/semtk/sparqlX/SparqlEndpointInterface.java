@@ -54,6 +54,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -436,6 +437,7 @@ public abstract class SparqlEndpointInterface {
 	 * @throws Exception
 	 */
 	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws Exception{
+		AuthorizationManager.authorizeQuery(this, query);
 		
         // get client, adding userName/password credentials if any exist
         CloseableHttpClient httpclient = this.buildHttpClient();
@@ -647,6 +649,7 @@ public abstract class SparqlEndpointInterface {
 	 * @throws Exception
 	 */
 	private JSONObject executeQueryAuthGet(String queryAndUrl, SparqlResultTypes resultType) throws Exception{
+		AuthorizationManager.authorizeQuery(this, queryAndUrl);
 		
 		// buid resultsFormat
 		String resultsFormat = null;

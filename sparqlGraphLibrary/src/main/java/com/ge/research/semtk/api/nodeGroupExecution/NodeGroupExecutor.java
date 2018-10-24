@@ -24,6 +24,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -273,7 +274,12 @@ public class NodeGroupExecutor {
 		}
 		
 		if (flags != null && flags.isSet(QueryFlags.FLAG_UNOPTIONALIZE_CONSTRAINED)) {
-			ng.unOptionalizeConstrained();
+			if (qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){	
+				Returnable targetObj = ng.getItemBySparqlID(targetObjectSparqlID);
+				ng.unOptionalizeConstrained(targetObj);
+			} else {
+				ng.unOptionalizeConstrained();
+			}
 		}
 		
 		if (limitOverride > 0) {

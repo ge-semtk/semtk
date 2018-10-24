@@ -55,14 +55,14 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class JobTracker {
-	JobEndpointProperties prop = null;
+	SemtkEndpointProperties prop = null;
 	
 	public static String STATUS_SUCCESS = "Success";
 	public static String STATUS_IN_PROGRESS = "InProgress";
 	public static String STATUS_FAILURE = "Failure";
 
 	
-	public JobTracker (JobEndpointProperties edc_prop) throws Exception {
+	public JobTracker (SemtkEndpointProperties edc_prop) throws Exception {
 		this.prop = edc_prop;
 		
 	}

@@ -95,7 +95,7 @@ public class ResultsServiceRestController {
 	@Autowired
 	ResultsProperties prop;
 	@Autowired
-	ResultsEdcConfigProperties edc_prop;
+	ResultsSemtkEndpointProperties edc_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
 	

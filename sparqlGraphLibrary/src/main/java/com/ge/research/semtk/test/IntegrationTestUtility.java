@@ -24,7 +24,7 @@ import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionCli
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationProperties;
 import com.ge.research.semtk.edc.EndpointProperties;
-import com.ge.research.semtk.edc.JobEndpointProperties;
+import com.ge.research.semtk.edc.SemtkEndpointProperties;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;

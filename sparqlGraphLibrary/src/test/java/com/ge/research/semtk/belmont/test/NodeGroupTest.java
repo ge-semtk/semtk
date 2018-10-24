@@ -43,9 +43,9 @@ public class NodeGroupTest {
 		NodeGroup ng = sgJson.getNodeGroup();
 		
 		assertEquals(3, ng.getNodeList().size());
-		assertEquals(ng.getNodeList().get(0).getFullUriName(),"http://kdl.ge.com/batterydemo#Color");
-		assertEquals(ng.getNodeList().get(1).getFullUriName(),"http://kdl.ge.com/batterydemo#Cell");
-		assertEquals(ng.getNodeList().get(2).getFullUriName(),"http://kdl.ge.com/batterydemo#Battery");	
+		assertEquals("http://kdl.ge.com/batterydemo#Color",   ng.getNodeList().get(0).getFullUriName());
+		assertEquals("http://kdl.ge.com/batterydemo#Cell",    ng.getNodeList().get(1).getFullUriName());
+		assertEquals("http://kdl.ge.com/batterydemo#Battery", ng.getNodeList().get(2).getFullUriName());	
 		
 		// Make sure old fashioned "isOptional: false" on a node translates to new version
 		Node color = ng.getNodeBySparqlID("?Color");
@@ -318,7 +318,19 @@ public class NodeGroupTest {
 	}
 	
 	@Test
-	public void testUnOptionalizeConstrained_one_of_three_leafs() throws Exception {
+	public void testUnoptionalizeConstrained_1of3leafs() throws Exception {
+		// un-optionalize a leaf by constraining it
+		testUnOptionalizeConstrained_one_of_three_leafs("constrain");
+		
+		// un-optionalize a leaf by declaring it the targetObj in filter query
+		testUnOptionalizeConstrained_one_of_three_leafs("filter");
+		
+		// un-optionalize a leaf by declaring it the targetObj in filter query
+		// preserve lack of return and value constraint
+		testUnOptionalizeConstrained_one_of_three_leafs("filter1");
+	}
+	
+	public void testUnOptionalizeConstrained_one_of_three_leafs(String mode) throws Exception {
 
 		// load nodegroup
 		String jsonPath = "src/test/resources/sampleBatteryThreeCells.json";
@@ -353,17 +365,33 @@ public class NodeGroupTest {
 		cellEdge1.setSNodeOptional(cell2, NodeItem.OPTIONAL_TRUE);
 		
 		// remove property returns so we have three leaf nodes each: EmptyMain->Empty->Leaf
+		// where "Empty" means no returns or constraints
+		// so only Leafs have a return.
 		cellId0.setIsReturned(false);
 		cellId1.setIsReturned(false);
 		cellId2.setIsReturned(false);
 		name.setIsReturned(false);
 		
-
-		// set constraint on color0 
-		color0.setValueConstraint(new ValueConstraint("anything"));
-		
-		// go: 
-		nodegroup.unOptionalizeConstrained(); 
+		if (mode.equals("constrain")) {
+			// set constraint on color0 
+			color0.setValueConstraint(new ValueConstraint("anything"));
+			nodegroup.unOptionalizeConstrained();
+			
+		} else if (mode.equals("filter")) {
+			nodegroup.unOptionalizeConstrained(color0);
+			// make sure the process didn't mess with constraint or return
+			assertEquals(null, color0.getValueConstraint());
+			assertEquals(true, color0.getIsReturned());
+			
+		} else if (mode.equals("filter1")) {
+			color0.setIsReturned(false);
+			color0.setValueConstraint(new ValueConstraint("FILTER(?test)"));
+			
+			nodegroup.unOptionalizeConstrained(color0);
+			// make sure the process didn't mess with constraint or return
+			assertEquals("FILTER(?test)", color0.getValueConstraint().toString());
+			assertEquals(false, color0.getIsReturned());
+		}
 		
 		// check results: unOptionalize only the entire color0 subgraph
 		assertEquals(NodeItem.OPTIONAL_FALSE, colorEdge0.getSNodeOptional(color0));

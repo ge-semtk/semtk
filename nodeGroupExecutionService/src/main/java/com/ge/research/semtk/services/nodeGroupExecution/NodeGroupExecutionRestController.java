@@ -86,7 +86,7 @@ public class NodeGroupExecutionRestController {
 	@Autowired
 	NodegroupExecutionProperties prop;
 	@Autowired
-	NodegroupExecutionEdcConfigProperties edc_prop;
+	NodegroupExecutionSemtkEndpointProperties edc_prop;
 	
 	@ApiOperation(
 			value="Get job status",

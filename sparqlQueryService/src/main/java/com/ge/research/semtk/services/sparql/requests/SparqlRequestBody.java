@@ -16,7 +16,7 @@
  */
 
 
-package com.ge.research.semtk.services.sparql;
+package com.ge.research.semtk.services.sparql.requests;
 
 import com.ge.research.semtk.utility.LocalLogger;
 

@@ -60,6 +60,7 @@ public class AuthorizationManager {
 
 	private static SparqlEndpointInterface sei = null;
 	private static int refreshFreqSeconds = 301;
+	private static boolean authSetupFailed = false;
 	
 	// userGroup.get(name) = ArrayList of user names
 	private static HashMap<String, ArrayList<String>> userGroups = new HashMap<String, ArrayList<String>>();
@@ -71,14 +72,24 @@ public class AuthorizationManager {
 
 	/**
 	 * Turn on Authorization by providing a SPARQL endpoint and frequency
-	 * @param jeProps
-	 * @param authorizProps
+	 * @param endpointProps - location of the semtk services
+	 * @param authProps - authorization properties
 	 * @throws Exception
 	 */
 	public static void authorize(EndpointProperties endpointProps, AuthorizationProperties authProps) {
-		refreshFreqSeconds = authProps.getRefreshFreqSeconds();
 		
+		// If any necessary authorization info is empty
+		if ( authProps.getGraphName().isEmpty() ) {
+			LocalLogger.logToStdErr("NOTICE: Running with no authorization due empty auth.graphName");
+			// make sure sei is null so no authorization takes place.
+			sei = null;
+			return;
+		}
+				
+		// else set up authorization	
 		try {
+			refreshFreqSeconds = authProps.getRefreshFreqSeconds();
+			
 			sei = SparqlEndpointInterface.getInstance(
 					endpointProps.getJobEndpointType(),
 					endpointProps.getJobEndpointServerUrl(), 
@@ -89,7 +100,9 @@ public class AuthorizationManager {
 			updateAuthorization();
 			
 		} catch (Exception e) {
-			LocalLogger.logToStdErr("Failed to load authorization info");
+			sei = null;
+			authSetupFailed = true;
+			LocalLogger.logToStdErr("WARNING: Authorization setup failed");
 			LocalLogger.printStackTrace(e);
 		}
 	}
@@ -315,6 +328,86 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException
 	 */
 	public static void authorizeQuery(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
+		try {
+			// is authorization turned off or suffering a setup failure
+			if (authSetupFailed) {
+				throw new AuthorizationException("Authorization failed due to setup failure.  See log entries at startup.");
+			} else if (sei == null) {
+				// Authorization is turned off.
+				return;
+			}
+			
+			// get latest auth info
+			updateAuthorization();
+			
+			// start authorizing the query
+		
+			StringBuilder logMessage = new StringBuilder();
+			ArrayList<String> graphURIs = null;
+			boolean readOnlyFlag = false;
+			long startTime = System.nanoTime();
+			String user = ThreadAuthenticator.getThreadUserName();
+			
+			// log the first half
+	        logMessage.append("\nAUTH_DEBUG ");
+	        logMessage.append("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG ") + "\nAUTH_DEBUG ");
+	        logMessage.append("User:     " + user                                       + "\nAUTH_DEBUG ");
+	
+			SparqlQueryInterrogator sqi = new SparqlQueryInterrogator(queryStr);
+			readOnlyFlag = sqi.isReadOnly();
+			graphURIs = sqi.getGraphNames();
+			if (! graphURIs.contains(sei.getDataset()) ) {
+				graphURIs.add(sei.getDataset());
+			}
+	        
+			
+			// log the second half
+	        logMessage.append("Graphs:   " + graphURIs                                       + "\nAUTH_DEBUG ");
+	        logMessage.append("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() + "\nAUTH_DEBUG ");
+	        logMessage.append("Type:     " + (readOnlyFlag ? "read" : "write")               + "\nAUTH_DEBUG ");
+	        logMessage.append("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
+	        
+	        LocalLogger.logToStdOut(logMessage.toString());
+	        
+	        // do the actual authorization
+	        for (String graphURI : graphURIs) {
+				if (readOnlyFlag) {
+					if (graphReaders.containsKey(graphURI)) {
+						if (!graphReaders.get(graphURI).contains(user)) {
+							throw new AuthorizationException("User \'" + user + "' does not have read permission on '" + graphURI + "'");
+						} else {
+							LocalLogger.logToStdErr("AUTH_DEBUG Access granted");
+						}
+					} else {
+						LocalLogger.logToStdErr("AUTH_DEBUG Grpah is not in graphReaders: default access granted");
+						//  allowing read access if graphURI isn't in the auth table
+					}
+				} else {
+					if (graphWriters.containsKey(graphURI)) {
+						if (!graphWriters.get(graphURI).contains(user)) {
+							throw new AuthorizationException("User \'" + user + "' does not have write permission on '" + graphURI + "'");
+						}
+					} else {
+						LocalLogger.logToStdErr("AUTH_DEBUG Grpah is not in graphWriters: default access granted");
+						//  allowing write access if graphURI isn't in the auth table
+					}
+				}
+			}
+		} catch (AuthorizationException ae) {
+			LocalLogger.logToStdErr(ae.getMessage());
+			LocalLogger.logToStdOut("Forgiving AuthorizationException");
+		}
+		
+
+	}
+	
+	/**
+	 * Check if query is authorized 
+	 * CORRENTLY JUST IN TEST: ONLY LOGS INFORMATION
+	 * @param query
+	 * @throws AuthorizationException
+	 */
+	public static void authorizeQueryWithJena(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
 		try {
 			StringBuilder logMessage = new StringBuilder();
 			List<String> graphURIs = new ArrayList();

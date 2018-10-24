@@ -35,10 +35,8 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 
 	private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
 
-	ResultsEdcConfigProperties edcProp;
-
 	@Autowired
-	ResultsEdcConfigProperties edc_prop;
+	ResultsSemtkEndpointProperties edc_prop;
 	@Autowired
 	ResultsAuthProperties auth_prop;
 	
@@ -96,8 +94,6 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 
 	private void cleanUpFileLocation(final ApplicationReadyEvent event){
 
-		this.createResultsEdcConfigProperties(event);
-
 		// check for the presence of the "cleanUpThreadEnabled" property and 
 		LocalLogger.logToStdErr("set up for cleanup job");
 
@@ -131,27 +127,13 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 			String fileStore = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
 
 			// setup and run the actual thread. 
-			DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, edcProp);
+			DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, edc_prop);
 			ripper.start();
 		}
 		else{
 			LocalLogger.logToStdErr("cleanup disabled. no cleanup will be performed.");
 			return;		  
 		}
-
-	}
-
-	private void createResultsEdcConfigProperties(final ApplicationReadyEvent event){
-
-		this.edcProp = new ResultsEdcConfigProperties();
-
-		this.edcProp.setJobEndpointDataset( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDataset") );
-		this.edcProp.setJobEndpointDomain( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointDomain") );
-		this.edcProp.setJobEndpointServerUrl( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointServerUrl") );
-		this.edcProp.setJobEndpointType( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointType") );
-		this.edcProp.setJobEndpointUsername( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointUsername") );
-		this.edcProp.setJobEndpointPassword( event.getApplicationContext().getEnvironment().getProperty("results.edc.services.jobEndpointPassword") );
-
 
 	}
 

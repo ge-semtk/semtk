@@ -681,4 +681,9 @@ public abstract class Utility {
 	public static String standardizeCRLF(String orig) {
 		return orig.replaceAll("\r\n", "\n");
 	}
+	
+	public static String removeQuotedSubstrings(String orig, String replacement) {
+		//https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
+		return orig.replaceAll("((?<![\\\\])['\"])((?:.(?!(?<![\\\\])\\1))*.?)\\1", replacement);
+	}
 }

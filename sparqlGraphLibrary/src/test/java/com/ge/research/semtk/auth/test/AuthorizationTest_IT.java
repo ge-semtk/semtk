@@ -30,7 +30,7 @@ import com.ge.research.semtk.auth.AuthorizationProperties;
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.EndpointProperties;
-import com.ge.research.semtk.edc.JobEndpointProperties;
+import com.ge.research.semtk.edc.SemtkEndpointProperties;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;

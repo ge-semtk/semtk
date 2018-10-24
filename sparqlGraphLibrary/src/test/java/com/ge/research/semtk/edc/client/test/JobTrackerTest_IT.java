@@ -39,7 +39,7 @@ import com.google.common.io.Files;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.edc.JobEndpointProperties;
+import com.ge.research.semtk.edc.SemtkEndpointProperties;
 
 public class JobTrackerTest_IT {
 
@@ -72,8 +72,8 @@ public class JobTrackerTest_IT {
 		jobIds.add(jobId);
 	}
 	
-	private static JobEndpointProperties getProp() throws Exception {
-		JobEndpointProperties prop = new JobEndpointProperties();
+	private static SemtkEndpointProperties getProp() throws Exception {
+		SemtkEndpointProperties prop = new SemtkEndpointProperties();
 		prop.setJobEndpointDataset(TestGraph.getDataset());
 		prop.setJobEndpointDomain("http//research.ge.com");
 		prop.setJobEndpointServerUrl(TestGraph.getSparqlServer());

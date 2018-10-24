@@ -35,6 +35,12 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.services.sparql.requests.SparqlAuthRequestBody;
+import com.ge.research.semtk.services.sparql.requests.SparqlParallelQueryRequestBody;
+import com.ge.research.semtk.services.sparql.requests.SparqlPrefixAuthRequestBody;
+import com.ge.research.semtk.services.sparql.requests.SparqlPrefixesAuthRequestBody;
+import com.ge.research.semtk.services.sparql.requests.SparqlQueryAuthRequestBody;
+import com.ge.research.semtk.services.sparql.requests.SparqlQueryRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;

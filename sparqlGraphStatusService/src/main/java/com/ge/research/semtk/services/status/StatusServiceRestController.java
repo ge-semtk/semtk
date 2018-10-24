@@ -56,7 +56,7 @@ public class StatusServiceRestController {
 	@Autowired
 	StatusProperties prop;
 	@Autowired
-	StatusEdcConfigProperties edc_prop;
+	StatusSemtkEndpointProperties edc_prop;
 	@Autowired
 	StatusLoggingProperties log_prop;
 	

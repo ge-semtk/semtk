@@ -146,4 +146,14 @@ public class UtilityTest {
 		assertTrue(s.trim().startsWith("<rdf:RDF"));
 		assertTrue(s.trim().endsWith("</rdf:RDF>"));
 	}
+	
+	@Test
+	public void removeQuotedSubstrings() {
+		System.out.println(
+				Utility.removeQuotedSubstrings("I have a 'toad' named \"Mr Toad\".", "\"replaced\"")
+				);
+		System.out.println(
+				Utility.removeQuotedSubstrings("?sparql = 'insert ?junk into <graph>'", "\"replaced\"")
+				);
+	}
 }

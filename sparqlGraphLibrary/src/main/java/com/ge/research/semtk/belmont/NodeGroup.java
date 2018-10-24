@@ -1688,7 +1688,27 @@ public class NodeGroup {
 	}
 	
 	/**
-	 * Make sure that any subtrees containing no
+	 * Version for FILTER queries.  Make sure targetObj is also not optional.
+	 * @param targetObj
+	 * @throws Exception
+	 */
+	public void unOptionalizeConstrained(Returnable targetObj) throws Exception {
+		boolean saveIsReturned = targetObj.getIsReturned();
+		ValueConstraint saveConstraint = targetObj.getValueConstraint();
+		
+		targetObj.setValueConstraint(new ValueConstraint("FILTER(?neverExecuted==1))"));
+		targetObj.setIsReturned(true);
+		
+		this.unOptionalizeConstrained();
+		
+		targetObj.setValueConstraint(saveConstraint);
+		targetObj.setIsReturned(saveIsReturned);
+	}
+	
+	/**
+	 * Make sure that any subtrees contain no constrained but optional returns.
+	 * Walk any optionals as far from the leaf nodes as possible
+	 * without affecting any unconstrianed optionals.
 	 * @throws Exception
 	 */
 	public void unOptionalizeConstrained() throws Exception {

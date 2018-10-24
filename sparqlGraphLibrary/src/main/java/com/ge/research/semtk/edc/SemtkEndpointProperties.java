@@ -20,7 +20,7 @@ package com.ge.research.semtk.edc;
 
 // meant to be inherited into a spring boot microservice property object
 // properties for a triple-store endpoint
-public class JobEndpointProperties extends EndpointProperties {
+public class SemtkEndpointProperties extends EndpointProperties {
 	private String jobEndpointDomain = "";
 	private String jobEndpointDataset = "";
 	

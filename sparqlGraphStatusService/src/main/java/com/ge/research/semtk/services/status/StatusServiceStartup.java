@@ -32,7 +32,7 @@ import com.ge.research.semtk.utility.Utility;
 public class StatusServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
 	@Autowired
-	StatusEdcConfigProperties edc_prop;
+	StatusSemtkEndpointProperties edc_prop;
 	@Autowired
 	StatusAuthProperties auth_prop;
 
