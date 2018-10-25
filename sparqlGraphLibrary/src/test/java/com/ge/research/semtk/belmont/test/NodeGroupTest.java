@@ -308,7 +308,7 @@ public class NodeGroupTest {
 		assertEquals(NodeItem.OPTIONAL_FALSE, colorEdge0.getSNodeOptional(color0));
 		assertEquals(NodeItem.OPTIONAL_FALSE, colorEdge1.getSNodeOptional(color1));
 		assertEquals(NodeItem.OPTIONAL_TRUE, colorEdge2.getSNodeOptional(color2));
-		assertEquals(NodeItem.OPTIONAL_TRUE, cellEdge0.getSNodeOptional(cell0));
+		assertEquals(NodeItem.OPTIONAL_FALSE, cellEdge0.getSNodeOptional(cell0));
 		assertEquals(NodeItem.OPTIONAL_FALSE, cellEdge1.getSNodeOptional(cell1));
 		assertEquals(NodeItem.OPTIONAL_TRUE, cellEdge2.getSNodeOptional(cell2));
 		assertEquals(true, cellId0.getIsOptional());

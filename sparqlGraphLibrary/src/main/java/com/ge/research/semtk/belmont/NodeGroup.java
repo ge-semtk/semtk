@@ -1729,22 +1729,22 @@ public class NodeGroup {
 			for (Node rangeNode : nItem.getNodeList()) {
 				HashSet<Node> upstream = this.getUpstreamSubGraph(owningNode, nItem, rangeNode);
 				HashSet<Node> downstream = this.getDownstreamSubGraph(owningNode, nItem, rangeNode);
-				int upUnconstrainedReturns = 0;
-				int downUnconstrainedReturns = 0;
+				int upConstrainedReturns = 0;
+				int downConstrainedReturns = 0;
 			
 				for (Node n : upstream) {
-					upUnconstrainedReturns += n.countUnconstrainedReturns();
+					upConstrainedReturns += n.countConstrainedReturns();
 				}
 				for (Node n : downstream) {
-					downUnconstrainedReturns += n.countUnconstrainedReturns();
+					downConstrainedReturns += n.countConstrainedReturns();
 				}
 				
-				// if subgraph has no unconstrained returns, make sure it is not optional
-				if (upUnconstrainedReturns == 0 &&  nItem.getSNodeOptional(rangeNode) == NodeItem.OPTIONAL_REVERSE) {
+				// if subgraph has Constrained returns, make sure it is not optional
+				if (upConstrainedReturns != 0 &&  nItem.getSNodeOptional(rangeNode) == NodeItem.OPTIONAL_REVERSE) {
 					nItem.setSNodeOptional(rangeNode, NodeItem.OPTIONAL_FALSE);
 				}
 				// repeat in downstream direction
-				if (downUnconstrainedReturns == 0 && nItem.getSNodeOptional(rangeNode) == NodeItem.OPTIONAL_TRUE) {
+				if (downConstrainedReturns != 0 && nItem.getSNodeOptional(rangeNode) == NodeItem.OPTIONAL_TRUE) {
 					nItem.setSNodeOptional(rangeNode, NodeItem.OPTIONAL_FALSE);
 				}
 			}
