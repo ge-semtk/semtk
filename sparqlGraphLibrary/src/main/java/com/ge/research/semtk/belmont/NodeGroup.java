@@ -2581,6 +2581,10 @@ public class NodeGroup {
 		String retval = "";
 		if(sparqlIDSuffix == null){ sparqlIDSuffix = "";}
 		
+		if (this.nodes.size() < 1) {
+			throw new Exception("Can't generate INSERT query on nodegroup with zero nodes");
+		}
+		
 		// loop through the nodes and get any values we may need. 
 		for(Node curr : this.nodes){
 			

@@ -63,15 +63,7 @@ public class DeleteThread extends Thread {
     			Date cutoff = cal.getTime();
     			long cutoffMsec = cutoff.getTime();
     			
-    			// cleanup files.
- 
-    			// HERE
-    			//
-    			// ThreadAuthenticator jobAdmin needs to be separate from graphAdmin
-    			// Plain old isAdmin is too vague.
-    			// Start by changing regular admin to jobAdmin and getting this to work
-    			// by making sure that checkingJobAdmin checks the triples and the jobAdmin flag
-    			
+    			// cleanup files.   			
     			
     			LocalLogger.logToStdErr("Clean up started...");
     			

@@ -13,13 +13,15 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class SparqlQueryInterrogator {
-	private static Pattern PATTERN_INSERT = Pattern.compile("\\Winsert\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_DELETE = Pattern.compile("\\Wdelete\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_CLEAR = Pattern.compile("\\Wclear\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_DROP = Pattern.compile("\\Wdrop\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_CREATE = Pattern.compile("\\Wcreate\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_SELECT = Pattern.compile("\\Wselect\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_SERVICE = Pattern.compile("\\Wservice\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_INSERT = 	Pattern.compile("\\Winsert\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_DELETE = 	Pattern.compile("\\Wdelete\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_CLEAR = 		Pattern.compile("\\Wclear\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_DROP = 		Pattern.compile("\\Wdrop\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_CREATE = 	Pattern.compile("\\Wcreate\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_SELECT = 	Pattern.compile("\\Wselect\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_CONSTRUCT = 	Pattern.compile("\\Wconstruct\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_ASK = 		Pattern.compile("\\Wask\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_SERVICE = 	Pattern.compile("\\Wservice\\W", Pattern.CASE_INSENSITIVE);
 	
 	// a keyword that's supposed to be followed by <graph> but has something else (like a variable) afterwards
 	private static Pattern PATTERN_ILLEGAL_GRAPH = Pattern.compile("\\W(from|into|graph)\\s*[^<]", Pattern.CASE_INSENSITIVE);
@@ -47,19 +49,24 @@ public class SparqlQueryInterrogator {
 	 * @return
 	 */
 	public boolean isReadOnly() throws AuthorizationException {
-		boolean ret = 
-				!this.containsClear() &&
-				!this.containsCreate() &&
-				!this.containsDrop() &&
-				!this.containsInsert() &&
-				!this.containsDelete()
+		boolean hasWriteKeyword = 
+				this.containsClear() ||
+				this.containsCreate() ||
+				this.containsDrop() ||
+				this.containsInsert() ||
+				this.containsDelete()
 				;
 		
-		if (ret && !this.containsSelect()) {
-			throw new AuthorizationException("Can not authorize query containing none of CLEAR, CREATE, DROP, DELETE, SELECT: \n" + this.origQuery);
+		boolean hasReadKeyword =
+				this.containsSelect() ||
+				this.containsConstruct() ||
+				this.containsAsk();
+		
+		if (!hasWriteKeyword && !hasReadKeyword) {
+			throw new AuthorizationException("Can not authorize query containing none of CLEAR, CREATE, DROP, DELETE, SELECT, CONSTRUCT, ASK: \n" + this.origQuery);
 		}
 		
-		return ret;
+		return hasReadKeyword && !hasWriteKeyword;
 	}
 	
 	public ArrayList<String> getGraphNames() throws AuthorizationException {
@@ -93,6 +100,12 @@ public class SparqlQueryInterrogator {
 	}
 	private boolean containsSelect() {
 		return PATTERN_SELECT.matcher(this.query).find();
+	}
+	private boolean containsConstruct() {
+		return PATTERN_CONSTRUCT.matcher(this.query).find();
+	}
+	private boolean containsAsk() {
+		return PATTERN_ASK.matcher(this.query).find();
 	}
 	private boolean containsService() {
 		return PATTERN_SERVICE.matcher(this.query).find();

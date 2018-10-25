@@ -154,6 +154,10 @@ public class DataLoadBatchHandler {
 			// add the values from the results to it.
 			try{
 				cng = this.importSpec.buildImportNodegroup(record, skipValidation);
+				
+				if (cng.getNodeCount() == 0) {
+					throw new Exception("Row contains no data to be ingested");
+				}
 			
 				// add the new group to the output arraylist, only if it succceeded
 				retval.add(cng);

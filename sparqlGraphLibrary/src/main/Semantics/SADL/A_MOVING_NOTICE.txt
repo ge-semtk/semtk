@@ -1,0 +1,3 @@
+Migrating to src/main/resources/Semantics
+
+so that owl is available in the jar (in case it needs to be loaded)

@@ -1,4 +1,4 @@
-group,user
+group_name,user_name
 JobAdmin,200001934
 JobAdmin,testuser_job_admin
 securityTestRead,testuser_read_only

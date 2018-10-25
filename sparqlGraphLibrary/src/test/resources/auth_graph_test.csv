@@ -1,2 +1,2 @@
-graph,read_group,write_group
+graph_name,read_group_name,write_group_name
 http://securityTest,securityTestRead,securityTestWrite

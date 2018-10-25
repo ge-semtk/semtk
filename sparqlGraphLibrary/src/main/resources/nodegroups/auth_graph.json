@@ -1,19 +1,19 @@
 {
 	"version": 2,
 	"sparqlConn": {
-		"name": "edc semtk services",
-		"domain": "http://research.ge.com",
+		"name": "semTK services v-test",
+		"domain": "http://",
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://localhost:2420",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://localhost:2420",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		]
@@ -44,7 +44,7 @@
 				"NodeName": "UserGroup",
 				"fullURIName": "http://research.ge.com/semtk/authorization#UserGroup",
 				"subClassNames": [],
-				"SparqlID": "?WriteGroup",
+				"SparqlID": "?UserGroup_0",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
 				"valueConstraint": "",
@@ -72,7 +72,7 @@
 				"NodeName": "UserGroup",
 				"fullURIName": "http://research.ge.com/semtk/authorization#UserGroup",
 				"subClassNames": [],
-				"SparqlID": "?ReadGroup",
+				"SparqlID": "?UserGroup",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
 				"valueConstraint": "",
@@ -82,10 +82,10 @@
 			{
 				"propList": [
 					{
-						"KeyName": "name",
+						"KeyName": "graphName",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://research.ge.com/semtk/authorization#name",
+						"UriRelationship": "http://research.ge.com/semtk/authorization#graphName",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?graphName",
@@ -96,40 +96,10 @@
 						"isMarkedForDeletion": false
 					}
 				],
-				"nodeList": [],
-				"NodeName": "GraphSpec",
-				"fullURIName": "http://research.ge.com/semtk/authorization#GraphSpec",
-				"subClassNames": [],
-				"SparqlID": "?GraphSpec",
-				"isReturned": false,
-				"isRuntimeConstrained": false,
-				"valueConstraint": "",
-				"instanceValue": null,
-				"deletionMode": "NO_DELETE"
-			},
-			{
-				"propList": [],
 				"nodeList": [
 					{
 						"SnodeSparqlIDs": [
-							"?GraphSpec"
-						],
-						"SnodeOptionals": [
-							0
-						],
-						"DeletionMarkers": [
-							false
-						],
-						"KeyName": "graph",
-						"ValueType": "GraphSpec",
-						"UriValueType": "http://research.ge.com/semtk/authorization#GraphSpec",
-						"ConnectBy": "graph",
-						"Connected": true,
-						"UriConnectBy": "http://research.ge.com/semtk/authorization#graph"
-					},
-					{
-						"SnodeSparqlIDs": [
-							"?ReadGroup"
+							"?UserGroup"
 						],
 						"SnodeOptionals": [
 							"1"
@@ -146,7 +116,7 @@
 					},
 					{
 						"SnodeSparqlIDs": [
-							"?WriteGroup"
+							"?UserGroup_0"
 						],
 						"SnodeOptionals": [
 							"1"
@@ -177,19 +147,27 @@
 	},
 	"importSpec": {
 		"version": "1",
-		"baseURI": "http://research.ge.com/semtk/authdata",
+		"baseURI": "",
 		"columns": [
 			{
 				"colId": "col_0",
-				"colName": "graph"
+				"colName": "graph_name"
 			},
 			{
 				"colId": "col_1",
-				"colName": "read_group"
+				"colName": "read_group_name"
 			},
 			{
 				"colId": "col_2",
-				"colName": "write_group"
+				"colName": "read_user_name"
+			},
+			{
+				"colId": "col_3",
+				"colName": "write_group_name"
+			},
+			{
+				"colId": "col_4",
+				"colName": "write_user_name"
 			}
 		],
 		"texts": [],
@@ -198,19 +176,13 @@
 			{
 				"sparqlID": "?GraphAuthorization",
 				"type": "http://research.ge.com/semtk/authorization#GraphAuthorization",
-				"mapping": [],
-				"props": []
-			},
-			{
-				"sparqlID": "?GraphSpec",
-				"type": "http://research.ge.com/semtk/authorization#GraphSpec",
 				"URILookupMode": "createIfMissing",
 				"mapping": [],
 				"props": [
 					{
-						"URIRelation": "http://research.ge.com/semtk/authorization#name",
+						"URIRelation": "http://research.ge.com/semtk/authorization#graphName",
 						"URILookup": [
-							"?GraphSpec"
+							"?GraphAuthorization"
 						],
 						"mapping": [
 							{
@@ -221,7 +193,7 @@
 				]
 			},
 			{
-				"sparqlID": "?ReadGroup",
+				"sparqlID": "?UserGroup",
 				"type": "http://research.ge.com/semtk/authorization#UserGroup",
 				"URILookupMode": "createIfMissing",
 				"mapping": [],
@@ -229,7 +201,7 @@
 					{
 						"URIRelation": "http://research.ge.com/semtk/authorization#name",
 						"URILookup": [
-							"?ReadGroup"
+							"?UserGroup"
 						],
 						"mapping": [
 							{
@@ -240,7 +212,7 @@
 				]
 			},
 			{
-				"sparqlID": "?WriteGroup",
+				"sparqlID": "?UserGroup_0",
 				"type": "http://research.ge.com/semtk/authorization#UserGroup",
 				"URILookupMode": "createIfMissing",
 				"mapping": [],
@@ -248,11 +220,11 @@
 					{
 						"URIRelation": "http://research.ge.com/semtk/authorization#name",
 						"URILookup": [
-							"?WriteGroup"
+							"?UserGroup_0"
 						],
 						"mapping": [
 							{
-								"colId": "col_2"
+								"colId": "col_3"
 							}
 						]
 					}

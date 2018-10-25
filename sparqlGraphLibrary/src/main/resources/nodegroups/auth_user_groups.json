@@ -1,19 +1,19 @@
 {
 	"version": 2,
 	"sparqlConn": {
-		"name": "edc semtk services",
-		"domain": "http://research.ge.com",
+		"name": "semTK services v-test",
+		"domain": "http://",
 		"model": [
 			{
 				"type": "virtuoso",
-				"url": "http://localhost:2420",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
-				"url": "http://localhost:2420",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
 				"dataset": "http://research.ge.com/semtk/services"
 			}
 		]
@@ -102,15 +102,23 @@
 	},
 	"importSpec": {
 		"version": "1",
-		"baseURI": "http://research.ge.com/semtk/authdata",
+		"baseURI": "",
 		"columns": [
 			{
 				"colId": "col_0",
-				"colName": "group"
+				"colName": "group_name"
 			},
 			{
 				"colId": "col_1",
-				"colName": "user"
+				"colName": "read_group_name"
+			},
+			{
+				"colId": "col_2",
+				"colName": "user_name"
+			},
+			{
+				"colId": "col_3",
+				"colName": "write_group_name"
 			}
 		],
 		"texts": [],
@@ -148,7 +156,7 @@
 						],
 						"mapping": [
 							{
-								"colId": "col_1"
+								"colId": "col_2"
 							}
 						]
 					}

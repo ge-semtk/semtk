@@ -30,6 +30,7 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.Syntax;
 import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateRequest;
+import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.EndpointProperties;
 import com.ge.research.semtk.load.DataLoader;
@@ -126,7 +127,7 @@ public class AuthorizationManager {
 	 * 
      * Eats all exceptions and clears permissions
 	 */
-	private static void updateAuthorization() {
+	private static void updateAuthorization() throws AuthorizationException {
 		// bail if authorize() has not been called
 		if (sei == null) return;
 		
@@ -146,7 +147,7 @@ public class AuthorizationManager {
 	/**
 	 * Force refresh of Authorization info from triplestore.
 	 */
-	public static void refresh() {
+	public static void refresh() throws AuthorizationException {
 		try {
 			// update
 			updateUserGroups(sei);
@@ -154,8 +155,7 @@ public class AuthorizationManager {
 			
 		} catch (Exception e) {
 			clear();
-			LocalLogger.logToStdErr("Failure reading authorization data");
-			LocalLogger.printStackTrace(e);;
+			throw new AuthorizationException("Error reading authorization", e);
 		}
 	}
 	
@@ -368,9 +368,7 @@ public class AuthorizationManager {
 			logAuthDebug("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() );
 			logAuthDebug("Type:     " + (readOnlyFlag ? "read" : "write")               );
 			logAuthDebug("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
-	        
-	        LocalLogger.logToStdOut(logMessage.toString());
-	        
+	        	        
 	        // do the actual authorization
 	        for (String graphURI : graphURIs) {
 				if (readOnlyFlag) {
@@ -497,7 +495,8 @@ public class AuthorizationManager {
 	}
 	
 	public static void ingestUserGroups(CSVDataset ds) throws Exception {
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), USER_GROUPS_NODEGROUP)); 
+		JSONObject json = Utility.getResourceAsJson(new AuthorizationManager(), USER_GROUPS_NODEGROUP);
+		SparqlGraphJson sgJson = new SparqlGraphJson(json); 
 		sgJson.setSparqlConn(getConnection());
 		// load the data
 		DataLoader dl = new DataLoader(sgJson, 2, ds, sei.getUserName(), sei.getPassword());
