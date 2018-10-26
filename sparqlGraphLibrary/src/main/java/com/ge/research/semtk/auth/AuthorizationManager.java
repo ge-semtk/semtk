@@ -293,7 +293,7 @@ public class AuthorizationManager {
 	public static Pattern REGEX_INTO = Pattern.compile("\\sinto\\s*[<?]", Pattern.CASE_INSENSITIVE);
 
 	private static void logAuthDebug(String msg) {
-		LocalLogger.logToStdOut("AUTH_DEBUG " + msg);
+		//LocalLogger.logToStdOut("AUTH_DEBUG " + msg);
 	}
 	/**
 	 * Check if query is authorized 
