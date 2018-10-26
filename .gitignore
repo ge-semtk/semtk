@@ -13,3 +13,4 @@ DOT_SETTINGS
 .idea/
 .vscode/
 ENV_OVERRIDE
+auth_settings.json

@@ -18,14 +18,14 @@ package com.ge.research.semtk.auth;
 
 public class AuthorizationProperties {
 	int refreshFreqSeconds = 300;
-	String graphName = "http://research.ge.com/semtk/services";
+	String settingsFilePath = "";
 
-	public String getGraphName() {
-		return graphName;
+	public String getSettingsFilePath() {
+		return settingsFilePath;
 	}
 
-	public void setGraphName(String graphName) {
-		this.graphName = graphName;
+	public void setSettingsFilePath(String path) {
+		this.settingsFilePath = path;
 	}
 
 	public int getRefreshFreqSeconds() {

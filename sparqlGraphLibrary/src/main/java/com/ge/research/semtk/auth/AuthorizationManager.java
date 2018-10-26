@@ -21,25 +21,11 @@ package com.ge.research.semtk.auth;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.Syntax;
-import org.apache.jena.update.UpdateFactory;
-import org.apache.jena.update.UpdateRequest;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.edc.EndpointProperties;
-import com.ge.research.semtk.load.DataLoader;
-import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -55,14 +41,11 @@ public class AuthorizationManager {
 	private static long lastUpdate = 0;
 
 	private static final String JOB_ADMIN_GROUP = "JobAdmin";
-	private static final String USER_GROUPS_NODEGROUP = "/nodegroups/auth_user_groups.json";
-	private static final String GRAPH_NODEGROUP = "/nodegroups/auth_graph.json";
-	private static final String DOMAIN = "http://research.ge.com/semtk/authorization";
 
-	private static SparqlEndpointInterface sei = null;
 	private static int refreshFreqSeconds = 301;
 	private static boolean authSetupFailed = false;
-	
+	private static String authFilePath = null;
+		
 	// userGroup.get(name) = ArrayList of user names
 	private static HashMap<String, ArrayList<String>> userGroups = new HashMap<String, ArrayList<String>>();
 	
@@ -71,41 +54,46 @@ public class AuthorizationManager {
 	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
 
 
+	private static void clear() {
+		refreshFreqSeconds = 301;
+		authSetupFailed = false;
+		authFilePath = null;
+		userGroups.clear();
+		graphReaders.clear();
+		graphWriters.clear();
+	}
+	
 	/**
-	 * Turn on Authorization by providing a SPARQL endpoint and frequency
+	 * Turn on Authorization by providing a SPARQL endpoint and frequency.
+	 * Called at service start-up
+	 * If no authFilePath is given, succeeds and all Authorization requests will pass.
+	 * If authFilePath is given but load fails: >> KILLS THE PROCESS. <<
+	 * 
 	 * @param endpointProps - location of the semtk services
 	 * @param authProps - authorization properties
-	 * @throws Exception
+	 * @returns boolean - was authorization applied
 	 */
-	public static void authorize(EndpointProperties endpointProps, AuthorizationProperties authProps) {
+	public static boolean authorize(AuthorizationProperties authProps) throws AuthorizationException {
+		clear();
 		
 		// If any necessary authorization info is empty
-		if ( authProps.getGraphName().isEmpty() ) {
-			LocalLogger.logToStdErr("NOTICE: Running with no authorization due empty auth.graphName");
-			// make sure sei is null so no authorization takes place.
-			sei = null;
-			return;
+		if ( authProps.getSettingsFilePath().isEmpty() ) {
+			LocalLogger.logToStdErr("NOTICE: Running with no authorization due empty auth.authFilePath");
+			return false;
 		}
 				
 		// else set up authorization	
 		try {
 			refreshFreqSeconds = authProps.getRefreshFreqSeconds();
-			
-			sei = SparqlEndpointInterface.getInstance(
-					endpointProps.getJobEndpointType(),
-					endpointProps.getJobEndpointServerUrl(), 
-					authProps.getGraphName(),
-					endpointProps.getJobEndpointUsername(),
-					endpointProps.getJobEndpointPassword());
-			
+			authFilePath = authProps.getSettingsFilePath();
 			updateAuthorization();
 			
 		} catch (Exception e) {
-			sei = null;
 			authSetupFailed = true;
-			LocalLogger.logToStdErr("WARNING: Authorization setup failed");
-			LocalLogger.printStackTrace(e);
+			authFilePath = null;
+			throw new AuthorizationException("Authorization setup failed", e);
 		}
+		return true;
 	}
 	
 	/** 
@@ -128,77 +116,53 @@ public class AuthorizationManager {
      * Eats all exceptions and clears permissions
 	 */
 	private static void updateAuthorization() throws AuthorizationException {
-		// bail if authorize() has not been called
-		if (sei == null) return;
 		
+		// return if we're not using authorization
+		if (authFilePath == null) return;
+		
+		// check whether it's too soon to re-read the auth file
 		long now = Calendar.getInstance().getTime().getTime();
 		
-		// return if authorization is up-to-date
-		if (now - lastUpdate < refreshFreqSeconds * 1000  ) {
-			return;
-		}
+		if (now - lastUpdate >= refreshFreqSeconds * 1000  ) {
 		
-		LocalLogger.logToStdOut("Authorization Manager: refreshing authorization.");
-		lastUpdate = now;
-		
-		refresh();
-	}
-	
-	/**
-	 * Force refresh of Authorization info from triplestore.
-	 */
-	public static void refresh() throws AuthorizationException {
-		try {
-			// update
-			updateUserGroups(sei);
-			updateGraphAuthorization(sei);
+			LocalLogger.logToStdOut("Authorization Manager: refreshing authorization.");
+			lastUpdate = now;
 			
-		} catch (Exception e) {
-			clear();
-			throw new AuthorizationException("Error reading authorization", e);
+			try {
+				JSONObject authJson = Utility.getJSONObjectFromFilePath(authFilePath);
+				updateUserGroups(authJson);
+				updateGraphAuthorization(authJson);
+				
+			} catch (Exception e) {
+				String path = authFilePath;
+				clear();
+				throw new AuthorizationException("Error reading authorization file: " + path, e);
+			} 
 		}
 	}
 	
-	
-	/**
-	 * clear local cache of Authorization
-	 */
-	private static void clear() {
-		userGroups.clear();
-		graphReaders.clear();
-		graphWriters.clear();
-	}
 	
 	/**
 	 * Read user groups from triplestore
 	 * @param sei
 	 * @throws Exception
 	 */
-	private static void updateUserGroups(SparqlEndpointInterface sei) throws Exception {
+	private static void updateUserGroups(JSONObject authJson) throws Exception {
 		userGroups.clear();
 		
-		// read nodegroup and query
-		SparqlGraphJson sgjAuthJobs = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), USER_GROUPS_NODEGROUP));
-		Table userGroupsTable = sei.executeQueryToTable(sgjAuthJobs.getNodeGroup().generateSparqlSelect());
-		
-		// loop through table
-		for (int i=0; i < userGroupsTable.getNumRows(); i++) {
-			String group = userGroupsTable.getCell(i, "groupName");
-			String user = userGroupsTable.getCell(i, "userName");
+		JSONArray groups = (JSONArray) authJson.get("groups");
+		for (int i=0; i < groups.size(); i++) {
+			JSONObject group = (JSONObject) groups.get(i);
 			
-			// create new group userList or find the hashed one
-			ArrayList<String> userList = null;
-			if (userGroups.containsKey(group)) {
-				userList = userGroups.get(group);
-			} else {
-				userList = new ArrayList<String>();
-				userGroups.put(group, userList);
+			JSONArray members = (JSONArray) group.get("members");
+			String groupName = (String) group.get("name");
+			
+			ArrayList<String> userList = new ArrayList<String>();
+			for (int j=0; j < members.size(); j++) {
+				userList.add((String)members.get(j));
 			}
 			
-			// add the user
-			if (!userList.contains(user)) {
-				userList.add(user);
-			}
+			userGroups.put(groupName, userList);
 		}
 	}
 	
@@ -207,53 +171,60 @@ public class AuthorizationManager {
 	 * @param sei
 	 * @throws Exception
 	 */
-	private static void updateGraphAuthorization(SparqlEndpointInterface sei) throws Exception {
+	private static void updateGraphAuthorization(JSONObject authJson) throws Exception {
 		graphReaders.clear();
 		graphWriters.clear();
 		
-		// read nodegroup and query
-		SparqlGraphJson sgjGraphAdmin = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), GRAPH_NODEGROUP));
-		Table graphAdminTable = sei.executeQueryToTable(sgjGraphAdmin.getNodeGroup().generateSparqlSelect());
-		
-		// loop through table
-		for (int i=0; i < graphAdminTable.getNumRows(); i++) {
-			String graph = graphAdminTable.getCell(i, "graphName");
-			String readGroup = graphAdminTable.getCell(i, "readGroupName");
-			String writeGroup = graphAdminTable.getCell(i, "writeGroupName");
+		JSONArray graphs = (JSONArray) authJson.get("graphs");
+		for (int i=0; i < graphs.size(); i++) {
+			JSONObject graph = (JSONObject) graphs.get(i);
 			
-			// add readGroupName to graphReaders
-			if (readGroup != null && ! readGroup.isEmpty()) {
-				ArrayList<String> groupList = null;
-				if (graphReaders.containsKey(graph)) {
-					groupList = graphReaders.get(graph);
-				} else {
-					groupList = new ArrayList<String>();
-					graphReaders.put(graph, groupList);
-				}
-				
-				// add the user
-				if (!groupList.contains(readGroup)) {
-					groupList.add(readGroup);
-				}
+			String graphName = (String) graph.get("name");
+			JSONArray readers = (JSONArray) graph.get("readGroups");
+			JSONArray writers = (JSONArray) graph.get("writeGroups");
+
+			// read groups
+			ArrayList<String> readGroups = new ArrayList<String>();
+			
+			for (int j=0; j < readers.size(); j++) {
+				readGroups.add((String)readers.get(j));
 			}
+			graphReaders.put(graphName, readGroups);
 			
-			// add writeGroupName to graphWriters
-			if (writeGroup != null && ! writeGroup.isEmpty()) {
-				ArrayList<String> groupList = null;
-				if (graphWriters.containsKey(graph)) {
-					groupList = graphWriters.get(graph);
-				} else {
-					groupList = new ArrayList<String>();
-					graphWriters.put(graph, groupList);
-				}
-				
-				// add the user
-				if (!groupList.contains(writeGroup)) {
-					groupList.add(writeGroup);
+			// read groups
+			ArrayList<String> writeGroups = new ArrayList<String>();
+			
+			for (int j=0; j < writers.size(); j++) {
+				writeGroups.add((String)writers.get(j));
+			}
+			graphWriters.put(graphName, writeGroups);
+		}
+	}
+	
+	public static void throwExceptionIfNotGraphReader(String graphName, String userName) throws AuthorizationException {
+		if (graphReaders.containsKey(graphName)) {
+			ArrayList<String> groups = graphReaders.get(graphName);
+			for (String group : groups) {
+				if (graphReaders.get(group).contains(userName)) {
+					return;
 				}
 			}
 		}
+		throw new AuthorizationException("User " + userName + " does not have permission to read graph " + graphName);
 	}
+	
+	public static void throwExceptionIfNotGraphWriter(String graphName, String userName) throws AuthorizationException {
+		if (graphWriters.containsKey(graphName)) {
+			ArrayList<String> groups = graphWriters.get(graphName);
+			for (String group : groups) {
+				if (graphWriters.get(group).contains(userName)) {
+					return;
+				}
+			}
+		}
+		throw new AuthorizationException("User " + userName + " does not have permission to write to graph " + graphName);
+	}
+	
 	/**
 	 * check if this thread's user owns an item with:
 	 * @param owner - user_name of item to be checked
@@ -322,7 +293,7 @@ public class AuthorizationManager {
 	public static Pattern REGEX_INTO = Pattern.compile("\\sinto\\s*[<?]", Pattern.CASE_INSENSITIVE);
 
 	private static void logAuthDebug(String msg) {
-		//LocalLogger.logToStdOut("AUTH_DEBUG " + msg);
+		LocalLogger.logToStdOut("AUTH_DEBUG " + msg);
 	}
 	/**
 	 * Check if query is authorized 
@@ -397,126 +368,7 @@ public class AuthorizationManager {
 			LocalLogger.logToStdErr(ae.getMessage());
 			LocalLogger.logToStdOut("Forgiving AuthorizationException");
 		}
-		
 
-	}
-	
-	/**
-	 * Check if query is authorized 
-	 * CORRENTLY JUST IN TEST: ONLY LOGS INFORMATION
-	 * @param query
-	 * @throws AuthorizationException
-	 */
-	public static void authorizeQueryWithJena(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
-		try {
-			StringBuilder logMessage = new StringBuilder();
-			List<String> graphURIs = new ArrayList();
-			boolean readOnlyFlag = false;
-			long startTime = System.nanoTime();
-			
-			// log the first half
-	        logMessage.append("\nAUTH_DEBUG ");
-	        logMessage.append("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG ") + "\nAUTH_DEBUG ");
-	        logMessage.append("User:     " + ThreadAuthenticator.getThreadUserName()         + "\nAUTH_DEBUG ");
-	
-			// ask Jena about the query
-			try {
-		        Query query = QueryFactory.create(queryStr);
-		        graphURIs = query.getGraphURIs();
-		        readOnlyFlag = true;
-		        Matcher service = REGEX_SERVICE.matcher(queryStr);
-		        
-		        if (service.find()) {
-		        	LocalLogger.logToStdErr(service.group(1));
-		        	throw new AuthorizationException("AUTH_ERR: Can't authorize select queries containing SERVICE clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-		        }
-			} catch (Exception e) {
-	
-				try {
-					UpdateRequest request = UpdateFactory.create(queryStr, Syntax.defaultQuerySyntax);
-					// tried and failed:  
-					// Syntax.syntaxSPARQL_11
-					// Syntax.defaultUpdateSyntax
-					readOnlyFlag = false;
-					
-					// process queries that update or delete
-					Matcher from = REGEX_FROM.matcher(queryStr);
-					Matcher into = REGEX_INTO.matcher(queryStr);
-					if (from.find()) {
-			        	LocalLogger.logToStdErr(from.group(0));
-			        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing FROM clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-			        }
-					if (into.find()) {
-			        	LocalLogger.logToStdErr(into.group(0));
-			        	throw new AuthorizationException("AUTH_ERR: Can't authorize update queries containing INTO clauses: \n" + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-			        }
-				
-				} catch (Exception ee) {
-					throw new AuthorizationException("AUTH_ERR: Query can't be parsed. \nAUTH_ERR: message: " + ee.getMessage() + "\nAUTH_ERR: query: " + queryStr.replaceAll("\n", "\nAUTH_ERR "));
-				}
-				readOnlyFlag = false;
-			}
-	        
-			// log the second half
-	        logMessage.append("Graphs:   " + graphURIs                                       + "\nAUTH_DEBUG ");
-	        logMessage.append("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() + "\nAUTH_DEBUG ");
-	        logMessage.append("Type:     " + (readOnlyFlag ? "SELECT" : "non-SELECT")        + "\nAUTH_DEBUG ");
-	        logMessage.append("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
-	        
-	        LocalLogger.logToStdOut(logMessage.toString());
-	        
-		} catch (AuthorizationException ae) {
-			LocalLogger.logToStdOut("Forgiving AuthorizationException");
-		}
-		
-
-	}
-	
-	public static boolean isAuthorizationOwlLoaded() throws Exception {
-
-		OntologyInfo oInfo = new OntologyInfo(getConnection());
-		return oInfo.getNumberOfClasses() > 0;
-	}
-	
-	private static SparqlConnection getConnection() {
-		SparqlConnection conn = new SparqlConnection();
-		conn.setDomain(DOMAIN);
-		conn.addModelInterface(sei);
-		conn.addDataInterface(sei);
-		return conn;
-	}
-	
-	public static void uploadAuthorizationOwl(String owl) throws Exception {
-		
-		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl.getBytes()));
-		if (!resultSet.getSuccess()) {
-			throw new Exception(resultSet.getRationaleAsString(" "));
-		}
-	}
-	
-	public static void ingestUserGroups(CSVDataset ds) throws Exception {
-		JSONObject json = Utility.getResourceAsJson(new AuthorizationManager(), USER_GROUPS_NODEGROUP);
-		SparqlGraphJson sgJson = new SparqlGraphJson(json); 
-		sgJson.setSparqlConn(getConnection());
-		// load the data
-		DataLoader dl = new DataLoader(sgJson, 2, ds, sei.getUserName(), sei.getPassword());
-		String err = dl.importDataGetBriefError(true);
-		if (err != null) {
-			LocalLogger.logToStdErr(err);
-			throw new Exception("ingestion failed");
-		}
-	}
-	
-	public static void ingestGraphs(CSVDataset ds) throws Exception {
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsJson(new AuthorizationManager(), GRAPH_NODEGROUP)); 
-		sgJson.setSparqlConn(getConnection());
-		// load the data
-		DataLoader dl = new DataLoader(sgJson, 2, ds, sei.getUserName(), sei.getPassword());
-		String err = dl.importDataGetBriefError(true);
-		if (err != null) {
-			LocalLogger.logToStdErr(err);
-			throw new Exception("ingestion failed");
-		}
 	}
 	
 }

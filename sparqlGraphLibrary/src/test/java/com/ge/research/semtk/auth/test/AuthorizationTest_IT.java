@@ -74,54 +74,18 @@ public class AuthorizationTest_IT {
 	 */
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		setupAuthorization();
+		
 	}
 	
 	private static void setupAuthorization() throws Exception {
 
-		String failures = "";
-		
 		// Set up authorization, should be same location as all services participating in the test
-		EndpointProperties sei_prop = TestGraph.getEndpointProperties();
 		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
-		AuthorizationManager.authorize( sei_prop, auth_prop );
-		
-		// Check for authorization.owl
-		// Exception?  see notes at the top of this file
-		if (! AuthorizationManager.isAuthorizationOwlLoaded()) { 
-			failures += "	authorization.owl is not loaded to the auth graph: " + auth_prop.getGraphName() + "\n";
-			
-			// try to reload authorization.owl
-			try {
-				String owl = Utility.readFile("../sparqlGraphLibrary/src/main/Semantics/OwlModels/authorization.owl");
-				AuthorizationManager.uploadAuthorizationOwl(owl);
-			} catch (Exception e) {
-				throw new Exception("Can't test authentication due to:\n " + failures + "Could not correct due to the following:", e);
-			}
+		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+		if (! AuthorizationManager.authorize( auth_prop ) ) {
+			throw new Exception("Authorization.authorize failed");
 		}
 		
-		// Check for a random indicator that test auth csv's have been loaded
-		// Exception?  see notes at the top of this file
-		ThreadAuthenticator.authenticateThisThread("testuser_job_admin");
-		if (! AuthorizationManager.threadIsJobAdmin()) {
-			failures += "	don't detect testuser_job_admin.  Test auth CSVs are not loaded into: " + auth_prop.getGraphName() + "\n";
-			// ingest test
-			try {
-				AuthorizationManager.ingestUserGroups(new CSVDataset("src/test/resources/auth_user_groups_test.csv",false));
-				AuthorizationManager.ingestGraphs(new CSVDataset("src/test/resources/auth_graph_test.csv",false));
-			} catch (Exception e) {
-				throw new Exception("Can't test authentication due to:\n" + failures + "Could not correct due to the following:", e);
-			}
-		}
-		
-		// survived either because there were no failures or they were all corrected
-		// Exception?  see notes at the top of this file
-		if (!failures.isEmpty()) {
-			fail("Can't test authentication do to:\n" + 
-					failures +
-					"Authorization in triplestore has been re-loaded\n" +
-					"Tests will not pass until services are restarted OR auth.refreshFrecSeconds seconds passes for all services");
-		}
 	}
 	
 	@AfterClass
@@ -363,7 +327,8 @@ public class AuthorizationTest_IT {
 	
 	@Test
 	public void testJobAdmins() throws Exception {
-					
+		setupAuthorization();
+		
 		// make sure some JobAdmin loaded
 		if (AuthorizationManager.getJobAdmins().size() == 0) {
 			fail("No job admins are loaded");

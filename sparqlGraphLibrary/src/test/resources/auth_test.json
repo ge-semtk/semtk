@@ -1,0 +1,23 @@
+{
+	"groups": [
+		{
+			"name": "JobAdmin",
+			"members": ["200001934", "testuser_job_admin"]
+		},
+		{
+			"name": "securityTestRead",
+			"members": ["testuser_read_only", "testuser_read_write"]
+		},
+		{
+			"name": "securityTestWrite",
+			"members": ["testuser_read_write"]
+		}
+	],
+	"graphs" [
+		{
+			"name": "http://securityTest",
+			"readGroups": ["securityTestRead"],
+			"writeGroups": ["securityTestWrite"]
+		}
+	]
+}

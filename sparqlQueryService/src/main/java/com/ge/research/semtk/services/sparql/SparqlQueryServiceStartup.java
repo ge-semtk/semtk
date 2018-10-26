@@ -17,6 +17,11 @@ public class SparqlQueryServiceStartup implements ApplicationListener<Applicatio
 	@Override
 	public void onApplicationEvent(final ApplicationReadyEvent event) {
 		
-		AuthorizationManager.authorize(semtk_prop, auth_prop);
+		try {
+			AuthorizationManager.authorize(auth_prop);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}		
 }

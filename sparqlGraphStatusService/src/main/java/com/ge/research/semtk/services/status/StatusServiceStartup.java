@@ -61,7 +61,12 @@ public class StatusServiceStartup implements ApplicationListener<ApplicationRead
 
 		// start AuthorizationManager for all threads
 		
-		AuthorizationManager.authorize(edc_prop, auth_prop);
+		try {
+			AuthorizationManager.authorize(auth_prop);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 		
 		return;
 	}
