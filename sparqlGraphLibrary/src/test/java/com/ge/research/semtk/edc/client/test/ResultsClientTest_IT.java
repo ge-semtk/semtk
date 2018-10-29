@@ -442,11 +442,14 @@ public class ResultsClientTest_IT {
 
 		// Happy path
 		File testFile = new File("src/test/resources/test.csv");
+		File testFile2 = new File("src/test/resources/test2.csv");
 		String jobId = "test_jobid_" + UUID.randomUUID();
 		
 		try {
 			final String fileName = "test.csv";
 			SimpleResultSet res = client.execStoreBinaryFile(jobId, testFile);
+			SimpleResultSet res2 = client.execStoreBinaryFile(jobId, testFile2);
+
 			
 			String fileId = (String) res.getResult("fileId");
 	 		
@@ -456,7 +459,7 @@ public class ResultsClientTest_IT {
 			
 			// check getting resultsURLs
 			Table urlTab = client.getResultsFiles(jobId);
-			assertEquals(1, urlTab.getNumRows());
+			assertEquals(2, urlTab.getNumRows());
 			assertEquals(fileName, urlTab.getCell(0, "name"));
 			urlTab.getCell(0, "fileId");
 		

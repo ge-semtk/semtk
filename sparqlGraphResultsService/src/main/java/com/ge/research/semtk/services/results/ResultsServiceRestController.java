@@ -268,7 +268,6 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		try {
 			SimpleResultSet res = null;
-			Path rootLocation = Paths.get(prop.getFileLocation());
 	
 			// logging
 			LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
@@ -278,12 +277,16 @@ public class ResultsServiceRestController {
 				if (file != null) {
 					String fileId = this.generateFileId();
 					String originalFileName = file.getOriginalFilename();
-					String storageFileName = prop.getFileLocation() + "/" + fileId;
+					String storagePath = prop.getFileLocation() + "/" + jobId + "/" + fileId;
 					
-					LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + storageFileName);
-					Files.copy(file.getInputStream(), rootLocation.resolve(storageFileName));
+					LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + storagePath);
+					
+					// make any non-existent parent folders and then copy
+					File storageFile = new File(storagePath);
+					storageFile.getParentFile().mkdirs();
+					Files.copy(file.getInputStream(), storageFile.toPath());
 	
-					res = this.addBinaryFile(jobId, fileId, originalFileName, storageFileName);
+					res = this.addBinaryFile(jobId, fileId, originalFileName, storagePath.toString());
 					
 					LocalLogger.logToStdOut("done uploading file");
 				}
