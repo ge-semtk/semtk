@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.edc.services.hive;
 
-public class HiveServiceCountRowsRequestBody extends HiveServiceRequestBody {
+import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
+
+public class HiveServiceCountRowsRequestBody extends DatabaseRequest {
     public String table;
 }

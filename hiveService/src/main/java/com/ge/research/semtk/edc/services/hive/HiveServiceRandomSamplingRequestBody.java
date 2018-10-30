@@ -18,7 +18,9 @@
 
 package com.ge.research.semtk.edc.services.hive;
 
-public class HiveServiceRandomSamplingRequestBody extends HiveServiceRequestBody {
+import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
+
+public class HiveServiceRandomSamplingRequestBody extends DatabaseRequest {
     public String table;
     public int numRows;
 }

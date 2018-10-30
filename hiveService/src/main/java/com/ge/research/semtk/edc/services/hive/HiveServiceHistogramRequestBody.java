@@ -20,7 +20,9 @@ package com.ge.research.semtk.edc.services.hive;
 
 import java.util.List;
 
-public class HiveServiceHistogramRequestBody extends HiveServiceRequestBody {
+import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
+
+public class HiveServiceHistogramRequestBody extends DatabaseRequest {
     public String table;
     public List<String> columns;
     public String numBuckets;

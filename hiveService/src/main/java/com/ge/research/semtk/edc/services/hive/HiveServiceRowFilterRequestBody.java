@@ -20,7 +20,9 @@ package com.ge.research.semtk.edc.services.hive;
 
 import java.util.List;
 
-public class HiveServiceRowFilterRequestBody extends HiveServiceRequestBody {
+import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
+
+public class HiveServiceRowFilterRequestBody extends DatabaseRequest {
     public String table;
     public List<ColumnFilter> columnFilters;
 }

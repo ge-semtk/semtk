@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,10 @@
  */
 
 
-package com.ge.research.semtk.edc.services.hive;
+package com.ge.research.semtk.springutilib.requests;
 
-public class HiveServiceQueryRequestBody extends HiveServiceRequestBody {
-    public String query;
+public abstract class DatabaseRequest {
+    public String host;
+    public String port;
+    public String database;
 }

@@ -29,6 +29,8 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.springutilib.requests.DatabaseQueryRequest;
+import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.edc.services.hive.HiveProperties;
 
@@ -50,7 +52,7 @@ public class HiveServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/queryHive", method= RequestMethod.POST)
-	public JSONObject queryHive(@RequestBody HiveServiceQueryRequestBody requestBody){
+	public JSONObject queryHive(@RequestBody DatabaseQueryRequest requestBody){
 		String query = requestBody.query;
 		return runQuery (requestBody, query);
 	}
@@ -242,7 +244,7 @@ public class HiveServiceRestController {
 	/**
 	 * Execute query in Hive
 	 */
-	private JSONObject runQuery (HiveServiceRequestBody requestBody, String query) {
+	private JSONObject runQuery (DatabaseRequest requestBody, String query) {
 		
 		// prepend statement to set execution engine (should be mr/tez/spark - Hive itself will give a nice error if not)
 		String setStmtExecutionEngine = "";  
