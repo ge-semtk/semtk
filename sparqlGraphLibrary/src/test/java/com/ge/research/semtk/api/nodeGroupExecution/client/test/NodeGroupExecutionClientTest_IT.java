@@ -129,15 +129,9 @@ public class NodeGroupExecutionClientTest_IT {
 			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
-			boolean exceptionThrown = false;
-			try{
-				nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
-				fail(); // should not get here...we expect an exception
-			}catch(Exception e){
-				exceptionThrown = true;
-			}
-			assertTrue(exceptionThrown);
-			assertEquals(TestGraph.getNumTriples(),123);	// confirm nothing loaded
+			
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
+			// simply confirming there's no exception
 		}
 		
 		@Test
