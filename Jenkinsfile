@@ -9,7 +9,7 @@ pipeline {
 	   
 		       stage('build') {
 			           steps {
-				            sh 'mvn -f semtk-opensource/pom.xml  clean install -DskipTests'
+				            sh 'mvn -f clean install -DskipTests'
 			           }
 		       }
 
