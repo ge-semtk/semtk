@@ -1,4 +1,4 @@
-@Library("seamtkpipeline") _ 
-seamtkpipeline {
+@Library("semtkpipeline") _ 
+semtkpipeline {
 
  }
