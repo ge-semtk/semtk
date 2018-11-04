@@ -98,6 +98,12 @@ public class DataLoader {
 	}
 	
 	private void validateColumns(Dataset ds) throws Exception {
+		// not sure we should care if dataset has some column(s) missing
+		// as the actual mapping process will decide if there's enough data
+	}
+	
+	private void validateColumnsOLD(Dataset ds) throws Exception {
+		
 		// validate that the columns specified in the template are present in the dataset
 		String[] colNamesToIngest = batchHandler.getImportColNames();   // col names from JSON		
 		ArrayList<String> colNamesInDataset = ds.getColumnNamesinOrder();

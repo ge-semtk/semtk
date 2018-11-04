@@ -141,16 +141,19 @@ public class MappingItem {
 			
 			// error if there's no translation for an old column index: means new headers don't have it.
 			if (!translateHash.containsKey(oldIndex)) {
-				for (String k : oldNameToIndexHash.keySet()) {
-					if (oldNameToIndexHash.get(k) == oldIndex)  {
-						throw new Exception("Data source headers are missing required column: " + k);
-					}
-				}
-				throw new Exception("Internal error: can't find old or new column name");
-			}
+				this.setColumnIndex(-1);
+				// find error message and throw Exception
+//				for (String k : oldNameToIndexHash.keySet()) {
+//					if (oldNameToIndexHash.get(k) == oldIndex)  {
+//						throw new Exception("Data source headers are missing required column: " + k);
+//					}
+//				}
+//				throw new Exception("Internal error: can't find old or new column name");
+			} else {
 			
-			// make the change
-			this.setColumnIndex(translateHash.get(oldIndex));
+				// make the change
+				this.setColumnIndex(translateHash.get(oldIndex));
+			}
 		}
 	}
 	
@@ -167,14 +170,17 @@ public class MappingItem {
 			
 		} else {
 			String ret ="";
-			try {
-				ret = record.get(this.columnIndex);
-			} catch (IndexOutOfBoundsException iob) {
-				throw new Exception("Record does not have enough columns.", iob);
-			}
-			if (this.transformList != null) {
-				for(int i=0; i < this.transformList.length; i++) {
-					ret = this.transformList[i].applyTransform(ret);
+			// If item maps to a column in the input, get it and transform it.
+			if (this.columnIndex > -1) {
+				try {
+					ret = record.get(this.columnIndex);
+				} catch (IndexOutOfBoundsException iob) {
+					throw new Exception("Record does not have enough columns.", iob);
+				}
+				if (this.transformList != null) {
+					for(int i=0; i < this.transformList.length; i++) {
+						ret = this.transformList[i].applyTransform(ret);
+					}
 				}
 			}
 			return ret;
