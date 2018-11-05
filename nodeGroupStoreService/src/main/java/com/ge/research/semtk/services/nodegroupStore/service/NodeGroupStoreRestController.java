@@ -41,9 +41,11 @@ import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.nodegroupStore.NgStoreSparqlGenerator;
 import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
 
@@ -114,11 +116,19 @@ public class NodeGroupStoreRestController {
 				}
 	
 	
-				// try to store the values.
-				boolean retBool = StoreNodeGroup.storeNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(),
-						createOverrideConnection(prop), prop.getIngestorLocation(), prop.getIngestorProtocol(), prop.getIngestorPort());
-	
-				retval = new SimpleResultSet(retBool);
+				// start temporary merge nightmare
+				ArrayList<String> queries = NgStoreSparqlGenerator.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
+				
+				for (String query : queries) {
+					GeneralResultSet gRes = clnt.execute(query, SparqlResultTypes.CONFIRM);
+						
+					if (!gRes.getSuccess()) {
+						throw new Exception(gRes.getRationaleAsString(" "));
+					}
+				}
+				
+				retval = new SimpleResultSet(true);
+				// end temporary merge nightmare
 	
 			}
 			catch(Exception e){
@@ -142,10 +152,29 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = null;
 	
 			try{
-				String qry = SparqlQueries.getNodeGroupByID(requestBody.getId());
+				ArrayList<String> queries = NgStoreSparqlGenerator.getNodeGroupByID(requestBody.getId());
 				SparqlQueryClient clnt = createClient(prop);
 	
-				retval = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
+				retval = (TableResultSet) clnt.execute(queries.get(0), SparqlResultTypes.TABLE);
+				
+				// look for additional text
+				TableResultSet catval = (TableResultSet) clnt.execute(queries.get(1), SparqlResultTypes.TABLE);
+				catval.throwExceptionIfUnsuccessful();
+				if (catval.getTable().getNumRows() > 0) {
+					StringBuilder ngStr = new StringBuilder(retval.getTable().getCellAsString(0,  "NodeGroup"));
+					
+					// append additional text
+					for (int i=0; i < catval.getTable().getNumRows(); i++) {
+						ngStr.append(catval.getTable().getCellAsString(i, "NodeGroup"));
+					}
+					
+					// overwrite table in original retval
+					int col = retval.getTable().getColumnIndex("NodeGroup");
+					Table fullTable = retval.getTable();
+					fullTable.setCell(0,  col, ngStr.toString());
+					retval.addResults(fullTable);
+				}
+
 			}
 			catch(Exception e){
 				// something went wrong. report and exit. 
@@ -298,25 +327,8 @@ public class NodeGroupStoreRestController {
 			// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
 			// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
 	
-			String qry =
-					"prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-							"Delete " + 
-							"{" +
-							"  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup." +
-							"  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId() + "\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
-							"  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup ." +
-							"  ?PrefabNodeGroup prefabNodeGroup:comments ?comments . " +
-							"  ?PrefabNodeGroup prefabNodeGroup:creator ?creator . " +
-							"  ?PrefabNodeGroup prefabNodeGroup:creationDate ?creationDate . " +
-							"}" + 
-							"where { " +
-							"  ?PrefabNodeGroup prefabNodeGroup:ID \"" + requestBody.getId()  +"\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
-							"  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
-							"  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-							"  optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
-							"  optional { ?PrefabNodeGroup prefabNodeGroup:creator ?creator . } " +
-							"  optional { ?PrefabNodeGroup prefabNodeGroup:creationDate ?creationDate . } " +
-							"}";
+			String qry = NgStoreSparqlGenerator.deleteNodeGroup(requestBody.getId());
+					
 	
 			try{
 				// attempt to delete the nodegroup, name and comments where there is a give ID.

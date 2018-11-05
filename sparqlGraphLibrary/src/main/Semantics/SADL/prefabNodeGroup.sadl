@@ -12,8 +12,13 @@ SemTkConnection is a class,
 PrefabNodeGroup is a class,
 	described by ID with a single value of type string,
 	described by NodeGroup with a single value of type string,
+	described by stringChunk with a single value of type StringChunk,
 	described by originalConnection with a single value of type SemTkConnection,
 	described by comments with values of type string,
 	described by creator with a single value of type string,
 	described by creationDate with a single value of type date.
+	
+StringChunk is a class,
+	described by counter with a single value of type int,
+	described by chunk with a single value of type string.
 	

@@ -27,6 +27,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -186,18 +187,72 @@ public class NodeGroupStoreTest_IT {
 	public void test_NodegroupIdExactMatch() throws Exception{
 		String ID2 = ID + "2";
 		try{
+			SimpleResultSet ret = null;
 			// store two nodegroups.  The 1st nodegroup id is a subset of the 2nd nodegroup id.
-			nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, NG_JSON);
-			nodeGroupStoreClient.executeStoreNodeGroup(ID2, COMMENTS, CREATOR, NG_JSON); 
+			ret = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, NG_JSON);
+			ret.throwExceptionIfUnsuccessful();
+			ret = nodeGroupStoreClient.executeStoreNodeGroup(ID2, COMMENTS, CREATOR, NG_JSON); 
+			ret.throwExceptionIfUnsuccessful();
 			
 			Table res = nodeGroupStoreClient.executeGetNodeGroupById(ID).getTable();
 			assertEquals(1, res.getNumRows());  	// ensure 1 nodegroup returned (we're getting an exact match, not a regex match)
 			Table res2 = nodeGroupStoreClient.executeGetNodeGroupById(ID2).getTable();
 			assertEquals(1, res2.getNumRows());  	// ensure 1 nodegroup returned
+			
+			// make sure json is valid
+			nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(ID);
+			nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(ID2);
+
 		}finally{
 			// clean up
 			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
 			nodeGroupStoreClient.deleteStoredNodeGroup(ID2);
+		}
+	}
+	
+	@Test
+	public void deleteMe() throws Exception {
+		try {
+			JSONObject rawJson = Utility.getJSONObjectFromFilePath("C:\\Users\\200001934\\Desktop\\Temp\\current-bug\\subset-of-bhm-query.json");
+			SparqlGraphJson sjJson = new SparqlGraphJson(rawJson);
+			
+			SimpleResultSet ret = null;
+			ret = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, rawJson);
+			ret.throwExceptionIfUnsuccessful();
+			System.out.println("rawJson:\n" + rawJson.toJSONString());
+			System.out.println("length: " + rawJson.toJSONString().length());
+
+			
+			// get raw Json back
+			TableResultSet tabResults = nodeGroupStoreClient.executeGetNodeGroupById(ID);
+			tabResults.throwExceptionIfUnsuccessful();
+			String outStr = tabResults.getTable().getCellAsString(0, 1);
+			System.out.println("outStr:\n" + outStr);
+			System.out.println("length: " + outStr.length());
+
+			
+			// get sgJson back
+			SparqlGraphJson sgJsonOut = nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(ID);
+			String sparql = sgJsonOut.getNodeGroup().generateSparqlSelect();
+			System.out.println(sparql);
+			
+			
+			// loop through every ng in the store
+//			tabResults = nodeGroupStoreClient.executeGetNodeGroupList();
+//			tabResults.throwExceptionIfUnsuccessful();
+//			Table tab = tabResults.getTable();
+//			for (int i=0; i < tab.getNumRows(); i++) {
+//				String id = tab.getCellAsString(i, "ID");
+//				System.out.println(id);
+//				sgJsonOut = nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(id);
+//				sparql = sgJsonOut.getNodeGroup().generateSparqlSelect();
+//				System.out.println(sparql);
+//			}
+
+			
+		} finally {
+			// clean up
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
 		}
 	}
 
