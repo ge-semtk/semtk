@@ -210,50 +210,5 @@ public class NodeGroupStoreTest_IT {
 		}
 	}
 	
-	@Test
-	public void deleteMe() throws Exception {
-		try {
-			JSONObject rawJson = Utility.getJSONObjectFromFilePath("C:\\Users\\200001934\\Desktop\\Temp\\current-bug\\subset-of-bhm-query.json");
-			SparqlGraphJson sjJson = new SparqlGraphJson(rawJson);
-			
-			SimpleResultSet ret = null;
-			ret = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, rawJson);
-			ret.throwExceptionIfUnsuccessful();
-			System.out.println("rawJson:\n" + rawJson.toJSONString());
-			System.out.println("length: " + rawJson.toJSONString().length());
-
-			
-			// get raw Json back
-			TableResultSet tabResults = nodeGroupStoreClient.executeGetNodeGroupById(ID);
-			tabResults.throwExceptionIfUnsuccessful();
-			String outStr = tabResults.getTable().getCellAsString(0, 1);
-			System.out.println("outStr:\n" + outStr);
-			System.out.println("length: " + outStr.length());
-
-			
-			// get sgJson back
-			SparqlGraphJson sgJsonOut = nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(ID);
-			String sparql = sgJsonOut.getNodeGroup().generateSparqlSelect();
-			System.out.println(sparql);
-			
-			
-			// loop through every ng in the store
-//			tabResults = nodeGroupStoreClient.executeGetNodeGroupList();
-//			tabResults.throwExceptionIfUnsuccessful();
-//			Table tab = tabResults.getTable();
-//			for (int i=0; i < tab.getNumRows(); i++) {
-//				String id = tab.getCellAsString(i, "ID");
-//				System.out.println(id);
-//				sgJsonOut = nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(id);
-//				sparql = sgJsonOut.getNodeGroup().generateSparqlSelect();
-//				System.out.println(sparql);
-//			}
-
-			
-		} finally {
-			// clean up
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
-		}
-	}
 
 }
