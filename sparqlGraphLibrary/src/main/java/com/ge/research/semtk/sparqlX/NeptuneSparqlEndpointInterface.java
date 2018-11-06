@@ -29,6 +29,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -85,7 +86,8 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			return this.server + "/sparql-graph-crud-auth";
 	}
 	
-	public JSONObject executeUpload(byte[] owl) throws Exception {
+	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception {
+		this.authorizeUpload();
 		throw new Exception("Unimplmenented");
 	}
 

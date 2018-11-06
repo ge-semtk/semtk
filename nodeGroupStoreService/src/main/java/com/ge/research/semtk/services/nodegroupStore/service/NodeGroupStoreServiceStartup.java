@@ -19,45 +19,57 @@ package com.ge.research.semtk.services.nodegroupStore.service;
 
 import java.util.TreeMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class NodeGroupStoreServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-  /**
-   * Code to run after the service starts up.
-   */
-  @Override
-  public void onApplicationEvent(final ApplicationReadyEvent event) {
-	  
-	  // print and validate properties - and exit if invalid
-	  String[] propertyNames = {
-			  "ssl.enabled",
-			  "store.ingestorLocation",
-			  "store.ingestorProtocol",
-			  "store.ingestorPort",
-			  "store.sparqlServiceServer",
-			  "store.sparqlServicePort",
-			  "store.sparqlServiceProtocol",
-			  "store.sparqlServiceEndpoint",
-			  "store.sparqlConnServerAndPort",
-			  "store.sparqlConnDataDataset",
-			  "store.sparqlConnModelDataset",
-			  "store.sparqlConnDomain",
-			  "store.sparqlConnType",
-			  "store.sparqlServiceUser"
-	  };
-	  TreeMap<String,String> properties = new TreeMap<String,String>();
-	  for(String propertyName : propertyNames){
-		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-	  }
-	  Utility.validatePropertiesAndExitOnFailure(properties); 
-	  
-	  return;
-  }
- 
+	@Autowired
+	NodeGroupStoreAuthProperties auth_prop;
+
+	/**
+	 * Code to run after the service starts up.
+	 */
+	@Override
+	public void onApplicationEvent(final ApplicationReadyEvent event) {
+
+		// print and validate properties - and exit if invalid
+		String[] propertyNames = {
+				"ssl.enabled",
+				"store.ingestorLocation",
+				"store.ingestorProtocol",
+				"store.ingestorPort",
+				"store.sparqlServiceServer",
+				"store.sparqlServicePort",
+				"store.sparqlServiceProtocol",
+				"store.sparqlServiceEndpoint",
+				"store.sparqlConnServerAndPort",
+				"store.sparqlConnDataDataset",
+				"store.sparqlConnModelDataset",
+				"store.sparqlConnDomain",
+				"store.sparqlConnType",
+				"store.sparqlServiceUser"
+		};
+		TreeMap<String,String> properties = new TreeMap<String,String>();
+		for(String propertyName : propertyNames){
+			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+		}
+		Utility.validatePropertiesAndExitOnFailure(properties); 
+
+		// start AuthorizationManager for all threads
+		try {
+			AuthorizationManager.authorize(auth_prop);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return;
+	}
+
 }

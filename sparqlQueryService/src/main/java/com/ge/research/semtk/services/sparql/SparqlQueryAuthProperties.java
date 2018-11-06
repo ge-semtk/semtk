@@ -6,6 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import com.ge.research.semtk.auth.AuthorizationProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="query.auth", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class SparqlQueryAuthProperties extends AuthorizationProperties {
 }

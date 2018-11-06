@@ -31,6 +31,7 @@ import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -96,7 +97,8 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
-	public JSONObject executeUpload(byte[] owl) throws Exception{
+	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception{
+		this.authorizeUpload();
 		
         CloseableHttpClient httpclient = this.buildHttpClient();
 		HttpHost targetHost = this.buildHttpHost();

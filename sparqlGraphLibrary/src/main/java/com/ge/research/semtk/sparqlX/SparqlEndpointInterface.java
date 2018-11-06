@@ -54,6 +54,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -61,8 +62,11 @@ import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -233,7 +237,31 @@ public abstract class SparqlEndpointInterface {
 		this.password = pass;
 	}	
 	
-	
+	/**
+	 * Static method to get an instance of this abstract class
+	 * 
+	 * This one takes a query client config (historical fix-up reasons)
+	 */
+	public static SparqlEndpointInterface getInstance(RestClientConfig conf) throws Exception {
+		// auth queries will have these as well
+		if(conf instanceof SparqlQueryAuthClientConfig){	
+			return SparqlEndpointInterface.getInstance (
+					((SparqlQueryClientConfig)conf).getSparqlServerType(),
+					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
+					((SparqlQueryClientConfig)conf).getSparqlDataset(),
+					((SparqlQueryAuthClientConfig)conf).getSparqlServerUser(),
+					((SparqlQueryAuthClientConfig)conf).getSparqlServerPassword()
+					);			
+		} else if (conf instanceof SparqlQueryAuthClientConfig) {
+			return SparqlEndpointInterface.getInstance (
+					((SparqlQueryClientConfig)conf).getSparqlServerType(),
+					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
+					((SparqlQueryClientConfig)conf).getSparqlDataset()
+					);			
+		} else {
+			throw new Exception("Can't create SparqlEndpointInterface out of RestClient that is not SparqlQueryClientConfig or subclass");
+		}
+	}
 	
 	/**
 	 * Static method to get an instance of this abstract class
@@ -596,6 +624,9 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 */
 	public boolean isExceptionRetryAble(Exception e) {
+		if (e instanceof AuthorizationException) {
+			return false;
+		}
 		return true;
 	}
 	
@@ -606,7 +637,16 @@ public abstract class SparqlEndpointInterface {
 	 */
 
 	public JSONObject executeAuthUploadOwl(byte[] owl) throws Exception{
-		return this.executeAuthUpload(owl);
+		return this.executeUpload(owl);
+	}
+	
+	/**
+	 * Execute an auth query using POST, and using AUTH if this.userName != null
+	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
+	 * @throws Exception
+	 */
+	public JSONObject executeAuthUpload(byte[] owl) throws Exception{
+        return this.executeUpload(owl);
 	}
 
 	/**
@@ -615,15 +655,10 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract JSONObject executeUpload(byte[] owl) throws Exception;
+	public abstract JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception;
 
-	/**
-	 * Execute an auth query using POST, and using AUTH if this.userName != null
-	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
-	 * @throws Exception
-	 */
-	public JSONObject executeAuthUpload(byte[] owl) throws Exception{
-        return this.executeUpload(owl);
+	public void authorizeUpload() throws AuthorizationException {
+		AuthorizationManager.throwExceptionIfNotGraphWriter(this.graph);
 	}
 	
 

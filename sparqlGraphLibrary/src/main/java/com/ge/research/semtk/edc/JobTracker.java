@@ -15,6 +15,10 @@
  ** limitations under the License.
  */
 
+/**
+ * Security note:  JobTracker checks job ownership and job admin before taking action.
+ *                 All queries against triplestore are done as super-user
+ */
 
 package com.ge.research.semtk.edc;
 
@@ -67,12 +71,16 @@ public class JobTracker {
 		
 	}
 	
-	private SparqlEndpointInterface createEndpoint() throws Exception {
+	private SparqlEndpointInterface createSuperuserEndpoint() throws Exception {
+		
+		AuthorizationManager.nextQuerySemtkSuper();
+	    
 		return SparqlEndpointInterface.getInstance(	this.prop.getJobEndpointType(),
 				this.prop.getJobEndpointServerUrl(), 
 				this.prop.getJobEndpointDataset(),
 				this.prop.getJobEndpointUsername(),
 				this.prop.getJobEndpointPassword());
+		
 	}
 	
 	public static String generateJobId() {
@@ -106,7 +114,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-	    SparqlEndpointInterface endpoint = this.createEndpoint();
+	    SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 	    
 	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
@@ -181,7 +189,7 @@ public class JobTracker {
 	    	percentComplete, SparqlToXUtils.safeSparqlString(message), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+		    this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -224,7 +232,7 @@ public class JobTracker {
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -253,7 +261,7 @@ public class JobTracker {
 				"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 
 		this.checkEndpointUserNames(jobId, endpoint);
@@ -293,7 +301,7 @@ public class JobTracker {
 		    	"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		this.checkEndpointUserNames(jobId, endpoint);
 
@@ -353,7 +361,7 @@ public class JobTracker {
 				SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
 		try {
-			this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+			this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
@@ -410,7 +418,7 @@ public class JobTracker {
 		        SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
 		try {
-			this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+			this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
@@ -437,7 +445,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		this.checkEndpointUserNames(jobId, endpoint);
 
@@ -488,7 +496,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		this.checkEndpointUserNames(jobId, endpoint);
 
@@ -557,7 +565,7 @@ public class JobTracker {
 	        jobUri);
 	    // LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -587,7 +595,7 @@ public class JobTracker {
 		        jobUri
 		       );
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -624,7 +632,7 @@ public class JobTracker {
 				jobUri
 				);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -654,7 +662,7 @@ public class JobTracker {
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
 		TableResultSet res = null;
 		try {
-			SparqlEndpointInterface endpoint = this.createEndpoint();
+			SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 		    res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
@@ -699,7 +707,7 @@ public class JobTracker {
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
 		TableResultSet res = null;
 		try {
-			SparqlEndpointInterface endpoint = this.createEndpoint();
+			SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 		    res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
@@ -745,9 +753,9 @@ public class JobTracker {
 		String creationTimeConstraint = ValueConstraint.buildFilterConstraint(creationTime, "<", boundaryDate);	
 		creationTime.setValueConstraint(new ValueConstraint(creationTimeConstraint));
 		
-		// delete binary files
+		// delete binary files: query paths, then delete
 		String query = ngGetPaths.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    Table pathTable = endpoint.executeQueryToTable(query);
 		String paths[] = pathTable.getColumn("path");
 		for (String p : paths) {
@@ -776,6 +784,8 @@ public class JobTracker {
 		// run
 		query = ngJobDel.generateSparqlDelete(null);
 		
+		// we've already checked that user is JobAdmin.  So user can delete jobs from triplestore.
+		endpoint = this.createSuperuserEndpoint();
 		endpoint.executeQueryAndConfirm(query);
 		LocalLogger.logToStdOut("Deleted jobs from triplestore: " + creationTimeConstraint);
 
@@ -856,7 +866,7 @@ public class JobTracker {
 		idItem.setValueConstraint(new ValueConstraint(jobIdConstraint));
 		
 		// delete from triplestore
-		this.createEndpoint().executeQueryAndConfirm(ngJobDel.generateSparqlDelete(null));
+		this.createSuperuserEndpoint().executeQueryAndConfirm(ngJobDel.generateSparqlDelete(null));
 		LocalLogger.logToStdOut("Deleted job from triplestore: " + jobIdConstraint);
 		
 	}
@@ -877,7 +887,7 @@ public class JobTracker {
 		
 		// run query
 		String query = ngGetPaths.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		Table pathTable = this.createEndpoint().executeQueryToTable(query);
+		Table pathTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 		
 		// change results into JobFileInfo objects
 		for (int i=0; i < pathTable.getNumRows(); i++) {
@@ -915,7 +925,7 @@ public class JobTracker {
 		
 		// run query
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		Table urlTable = this.createEndpoint().executeQueryToTable(query);
+		Table urlTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 		
 		int fullUrlPos = urlTable.getColumnIndex("fullResultsURL");
 		int sampleUrlPos = urlTable.getColumnIndex("sampleResultsURL");
@@ -962,7 +972,7 @@ public class JobTracker {
 		
 		// run query
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		Table urlTable = this.createEndpoint().executeQueryToTable(query);
+		Table urlTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 		
 		if (urlTable.getNumRows() == 0) {
 			ret[0] = null;
@@ -1035,8 +1045,7 @@ public class JobTracker {
 				"}",
 				SparqlToXUtils.safeSparqlString(jobId));
 		
-		
-		Table jobTable = this.createEndpoint().executeQueryToTable(query);
+		Table jobTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 	    int rows = jobTable.getNumRows();
 		
 	    if (rows == 0) {
