@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -30,6 +31,8 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -39,22 +42,31 @@ public class NodeGroupExecutorTest_IT {
 	private static NodeGroupExecutor nodeGroupExecutor = null;
 	private static NodeGroupStoreRestClient nodeGroupStoreRestClient = null;	
 	private static String ngID = "test" + UUID.randomUUID();
-	
+	private static final String CREATOR = "JUnit NodeGroupExecutorTest_IT";
 	private final String DATA =     "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 	
 	@BeforeClass
 	public static void setup() throws Exception{
 		nodeGroupStoreRestClient = IntegrationTestUtility.getNodeGroupStoreRestClient();
 		nodeGroupExecutor = IntegrationTestUtility.getNodegroupExecutor();
+		
+		IntegrationTestUtility.cleanupNodegroupStore(nodeGroupStoreRestClient, CREATOR);
+
 	}
 	
 	// utility method to store a nodegroup for use in the test
 	private void insertNodeGroupToStore(String ngJsonString) throws Exception{
 		JSONObject ngJson = Utility.getJsonObjectFromString(ngJsonString);
 		nodeGroupStoreRestClient.deleteStoredNodeGroup(ngID); // delete any existing stored nodegroup with the same ID
-		SimpleResultSet sim = nodeGroupStoreRestClient.executeStoreNodeGroup(ngID, "integration test node group", "Jane Smith", ngJson); // store nodegroup
+		SimpleResultSet sim = nodeGroupStoreRestClient.executeStoreNodeGroup(ngID, "integration test node group", CREATOR, ngJson); // store nodegroup
 		assertTrue("failed to store node group: " + sim.getRationaleAsString("||"), sim.getSuccess());		// check success
 	}
+	
+	@AfterClass
+    public static void teardown() throws Exception {
+        // delete stored nodegroup when done with all tests
+		nodeGroupStoreRestClient.deleteStoredNodeGroup(ngID);
+    } 
 	
 	/**
 	 * Test ingesting data by nodegroup 

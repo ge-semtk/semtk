@@ -46,12 +46,16 @@ public class NodeGroupExecutionClientTest_IT {
 		private static NodeGroupExecutionClient nodeGroupExecutionClient = null;
 		private static NodeGroupStoreRestClient nodeGroupStoreClient = null;
 		private final static String ID = "test" + UUID.randomUUID();
-		
+		private final static String CREATOR = "JUnit NodeGroupExecutorTest_IT";
+
 		@BeforeClass
 		public static void setup() throws Exception {
 			// instantiate a client
 			nodeGroupExecutionClient = new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupExecutionServiceServer(), IntegrationTestUtility.getNodegroupExecutionServicePort()));
 			nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
+			
+			
+			IntegrationTestUtility.cleanupNodegroupStore(nodeGroupStoreClient, CREATOR);
 		}
 		
 		@AfterClass
@@ -143,7 +147,7 @@ public class NodeGroupExecutionClientTest_IT {
 				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
 			} catch (Exception e) {
 			}
-			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", "creator", ngJson);
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
 			
 			TestGraph.clearGraph();
 			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
@@ -166,7 +170,7 @@ public class NodeGroupExecutionClientTest_IT {
 				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
 			} catch (Exception e) {
 			}
-			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", "creator", ngJson);
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
 			
 			TestGraph.clearGraph();
 			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
