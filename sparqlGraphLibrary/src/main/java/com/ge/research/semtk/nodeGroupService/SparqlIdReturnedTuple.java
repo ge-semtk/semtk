@@ -18,7 +18,7 @@ public class SparqlIdReturnedTuple {
 	public String getSparqlId() throws Exception {
 		return BelmontUtil.formatSparqlId(sparqlId);
 	}
-	public void setSparqlID(String sparqlId) {
+	public void setSparqlId(String sparqlId) {
 		this.sparqlId = sparqlId;
 	}
 	public boolean isReturned() {
