@@ -33,6 +33,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.edc.JobTracker;
@@ -87,6 +88,8 @@ public class NodeGroupExecutionRestController {
 	NodegroupExecutionProperties prop;
 	@Autowired
 	NodegroupExecutionSemtkEndpointProperties edc_prop;
+	@Autowired
+	NodegroupExecutionLoggingProperties log_prop;
 	
 	@ApiOperation(
 			value="Get job status",
@@ -95,7 +98,10 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin 
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
 	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		//final String ENDPOINT_NAME="jobStatus";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -108,7 +114,8 @@ public class NodeGroupExecutionRestController {
 				retval.addResult("status", results);
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new SimpleResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "jobStatus", e);
@@ -128,7 +135,9 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/jobStatusMessage", method=RequestMethod.POST)
 	public JSONObject getJobStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		//final String ENDPOINT_NAME="jobStatusMessage";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -141,7 +150,8 @@ public class NodeGroupExecutionRestController {
 				retval.addResult("message", results);
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new SimpleResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "jobStatusMessage", e);
@@ -161,7 +171,9 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionCheck", method=RequestMethod.POST)
 	public JSONObject getJobCompletion(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		//final String ENDPOINT_NAME="getJobCompletionCheck";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -179,7 +191,8 @@ public class NodeGroupExecutionRestController {
 				}
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new SimpleResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionCheck", e);
@@ -199,7 +212,9 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionPercentage", method=RequestMethod.POST)
 	public JSONObject getJobCompletionPercent(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		//final String ENDPOINT_NAME="getJobCompletionPercentage";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -213,7 +228,8 @@ public class NodeGroupExecutionRestController {
 	
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new SimpleResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getJobCompletionPercentage", e);
@@ -239,8 +255,10 @@ public class NodeGroupExecutionRestController {
 		// copy-and-pasted the request body, though. Still needs consolodating in sparqlGraphLibrary
 	    String jobId = requestBody.jobID;
 	    
+	    //final String ENDPOINT_NAME="getResultsTable";
 		HeadersManager.setHeaders(headers);
-	    try {
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		try {
 	    	SimpleResultSet retval = new SimpleResultSet();    	
     	
 		    try {
@@ -251,7 +269,8 @@ public class NodeGroupExecutionRestController {
 		    	retval.setSuccess(true);
 			    
 		    } catch (Exception e) {
-				LocalLogger.printStackTrace(e);
+		    	//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "waitForPercentOrMsec", e);
 		    }		    
@@ -270,7 +289,9 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getResultsTable", method=RequestMethod.POST)
 	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		//final String ENDPOINT_NAME="getResultsTable";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			TableResultSet retval = new TableResultSet();
 			
@@ -281,7 +302,8 @@ public class NodeGroupExecutionRestController {
 				retval.addResults(retTable);
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new TableResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getResultsTable", e);
@@ -297,7 +319,9 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getResultsJsonLd", method=RequestMethod.POST)
 	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		//final String ENDPOINT_NAME="getResultsJsonLd";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			NodeGroupResultSet retval = new NodeGroupResultSet();
 			
@@ -308,7 +332,8 @@ public class NodeGroupExecutionRestController {
 				retval.addResultsJSON(retLd);
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new NodeGroupResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
@@ -329,7 +354,9 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getResultsLocation", method=RequestMethod.POST)
 	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		//final String ENDPOINT_NAME="getResultsLocation";
 		HeadersManager.setHeaders(headers);
+		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			TableResultSet retval = new TableResultSet();
 			
@@ -371,7 +398,8 @@ public class NodeGroupExecutionRestController {
 	
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new TableResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getResultsLocation", e);
@@ -494,8 +522,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
 	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 		    
 		} finally {
@@ -510,8 +541,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 		
 		} finally {
@@ -527,8 +561,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchSelectById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 		    
 		} finally {
@@ -543,9 +580,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectByIdSync", method=RequestMethod.POST)
 	public JSONObject dispatchSelectByIdSync(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchSelectByIdSync";
 		HeadersManager.setHeaders(headers);
-		try {
-			final String ENDPOINT_NAME = "/dispatchSelectByIdSync";
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			final int TIMEOUT_SEC = 55;
 			TableResultSet ret = null;
 			try {
@@ -578,9 +617,10 @@ public class NodeGroupExecutionRestController {
 			    	
 				}
 			} catch (Exception e) {
-					LocalLogger.printStackTrace(e);
-					ret = new TableResultSet(false);
-					ret.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
+			    ret = new TableResultSet(false);
+			    ret.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 			} 
 			
 			return ret.toJson();
@@ -597,8 +637,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchSelectFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
 		    
 		} finally {
@@ -614,8 +657,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructById", method=RequestMethod.POST)
 	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchConstructById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
 		    
 		} finally {
@@ -630,8 +676,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchConstructFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
 		    
 		} finally {
@@ -643,8 +692,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructForInstanceManipulationById", method=RequestMethod.POST)
 	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchConstructForInstanceManipulationById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
 		    
 		} finally {
@@ -655,8 +707,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructForInstanceManipulationFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchConstructForInstanceManipulationFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
 		    
 		} finally {
@@ -672,8 +727,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchCountById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
 		    
 		} finally {
@@ -688,8 +746,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchCountFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
 		    
 		} finally {
@@ -705,8 +766,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterById", method=RequestMethod.POST)
 	public JSONObject dispatchFilterJobById(@RequestBody FilterDispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchFilterById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
 		    
 		} finally {
@@ -721,8 +785,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody FilterDispatchFromNodeGroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchFilterFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
 		    
 		} finally {
@@ -738,8 +805,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteById", method=RequestMethod.POST)
 	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchDeleteById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
+    	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
 		    
 		} finally {
@@ -754,8 +824,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteFromNodegroup", method=RequestMethod.POST)
 	public JSONObject dispatchDeleteJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers ){	
+		final String ENDPOINT_NAME="dispatchDeleteFromNodegroup";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
 		    
 		} finally {
@@ -771,8 +844,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/dispatchRawSparql", method=RequestMethod.POST)
 	public JSONObject dispatchRawSparql(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchRawSparql";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
 			try{
@@ -790,7 +866,8 @@ public class NodeGroupExecutionRestController {
 	
 			}
 			catch(Exception e){
-				LocalLogger.printStackTrace(e);
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
 				retval = new SimpleResultSet();
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
@@ -814,13 +891,17 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsNewConnection";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
+    	try {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
 				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
 			} 
@@ -842,14 +923,18 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
 	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsAndTemplateNewConnection";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
+    	try {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
 			}catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
 				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
 			} 
@@ -870,13 +955,17 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
 	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsById";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getTemplateId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
+    	try {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
 				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
 			} 
@@ -894,8 +983,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroupID", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="getRuntimeConstraintsByNodeGroupID";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodegroupId());
+    	try {
 			TableResultSet retval = null;
 			
 			try {
@@ -904,6 +996,7 @@ public class NodeGroupExecutionRestController {
 				retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
 			}
 			catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				LocalLogger.printStackTrace(e);
 				retval = new TableResultSet(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroupID", e);
@@ -922,8 +1015,11 @@ public class NodeGroupExecutionRestController {
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroup", method=RequestMethod.POST)
 	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="getRuntimeConstraintsByNodeGroup";
 		HeadersManager.setHeaders(headers);
-		try {
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
 			TableResultSet retval = null;
 			
 			try {
@@ -935,7 +1031,8 @@ public class NodeGroupExecutionRestController {
 			
 			}
 			catch(Exception e){
-				retval = new TableResultSet(false);
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    retval = new TableResultSet(false);
 				retval.addRationaleMessage(SERVICE_NAME, "getRuntimeConstraintsByNodeGroup", e);
 			} 
 			return retval.toJson();

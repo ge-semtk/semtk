@@ -323,7 +323,7 @@ public class LoggerRestClient {
 	
 	public static LoggerRestClient loggerConfigInitialization(EasyLogEnabledConfigProperties logProps, String userName) {
 		LoggerRestClient ret = loggerConfigInitialization(logProps);
-		ret.setUser(userName);
+		if (ret != null) { ret.setUser(userName); }
 		return ret;
 	}
 	
