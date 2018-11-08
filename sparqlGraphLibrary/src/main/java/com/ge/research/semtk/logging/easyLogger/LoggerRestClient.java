@@ -188,7 +188,7 @@ public class LoggerRestClient {
 			paramsJson.put("Parent", this.parentEventStack.peek().toString());
 		}
 		if (user != null) {
-			paramsJson.put("SSO", this.user);
+			paramsJson.put("UserID", this.user);
 		}
 		
 		HttpEntity entity = new ByteArrayEntity(paramsJson.toJSONString().getBytes("UTF-8"));
@@ -320,6 +320,13 @@ public class LoggerRestClient {
 			logger.logEvent(action, deets, null, highLevelTask);
 		}
 	}
+	
+	public static LoggerRestClient loggerConfigInitialization(EasyLogEnabledConfigProperties logProps, String userName) {
+		LoggerRestClient ret = loggerConfigInitialization(logProps);
+		ret.setUser(userName);
+		return ret;
+	}
+	
 	/**
 	 *  Create a logger from an EasyLogEnabledConfigProperties
 	 */

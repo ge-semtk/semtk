@@ -106,8 +106,8 @@ public class ResultsServiceRestController {
 
 		try {
 			// logging
-			LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-			LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
+			LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+			LoggerRestClient.easyLog(logger, "ResultsService", "storeJsonLdResults", "jobId", requestBody.jobId, "chars", String.valueOf(requestBody.getJsonRenderedGraph().length()));
 	    	LocalLogger.logToStdOut("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
@@ -493,28 +493,30 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeTableResultsJsonAddIncremental", method=RequestMethod.POST)
 	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		try {
+		SimpleResultSet res = new SimpleResultSet();
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+
+		try{
+			String decompressed = Utility.decompress(requestBody.getContents());
+
 			// logging
-			LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);	 
-			LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental start", "jobId", requestBody.jobId);
+			LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental", "jobId", requestBody.jobId, "chars", String.valueOf(decompressed.length()) );
 			LocalLogger.logToStdOut("Results Service storeTableResultsJsonAddIncremental start JobId=" + requestBody.jobId);
-	
-			SimpleResultSet res = new SimpleResultSet();
-			try{
-				getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, Utility.decompress(requestBody.getContents()));
-			    res.setSuccess(true);
-			}
-			catch(Exception e){
-		    	res.setSuccess(false);
-		    	res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonAddIncremental", e);
-			    LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
-			    LocalLogger.printStackTrace(e);
-			}     	
-			return res.toJson();
-			
+
+			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, decompressed);
+			res.setSuccess(true);
+		}
+		catch(Exception e){
+			res.setSuccess(false);
+			res.addRationaleMessage(SERVICE_NAME, "storeTableResultsJsonAddIncremental", e);
+			LoggerRestClient.easyLog(logger, "ResultsService", "storeTableResultsJsonAddIncremental exception", "message", e.toString());
+			LocalLogger.printStackTrace(e);
 		} finally {
 			HeadersManager.clearHeaders();
-		}
+		}    	
+		return res.toJson();
+			
+		
 	}
 	
 	/**
