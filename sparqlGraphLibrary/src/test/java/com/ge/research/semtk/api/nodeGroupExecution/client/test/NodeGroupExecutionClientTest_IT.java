@@ -49,6 +49,7 @@ public class NodeGroupExecutionClientTest_IT {
 		
 		@BeforeClass
 		public static void setup() throws Exception {
+			IntegrationTestUtility.authenticateJunit();
 			// instantiate a client
 			nodeGroupExecutionClient = new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupExecutionServiceServer(), IntegrationTestUtility.getNodegroupExecutionServicePort()));
 			nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file

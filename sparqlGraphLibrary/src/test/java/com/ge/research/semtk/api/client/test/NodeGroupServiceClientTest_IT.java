@@ -22,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
@@ -44,6 +45,7 @@ public class NodeGroupServiceClientTest_IT {
 		
 		@BeforeClass
 		public static void setup() throws Exception {
+			IntegrationTestUtility.authenticateJunit();
 			// instantiate a client
 			ngServiceClient = new NodeGroupServiceRestClient(
 					new NodeGroupServiceConfig(

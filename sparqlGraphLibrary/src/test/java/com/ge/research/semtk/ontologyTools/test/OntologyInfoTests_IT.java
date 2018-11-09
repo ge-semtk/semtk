@@ -18,6 +18,7 @@ package com.ge.research.semtk.ontologyTools.test;
 
 import static org.junit.Assert.*;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -31,7 +32,10 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
 public class OntologyInfoTests_IT {
-	
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
 	@Test
 	public void testFullLoad() throws Exception {
 

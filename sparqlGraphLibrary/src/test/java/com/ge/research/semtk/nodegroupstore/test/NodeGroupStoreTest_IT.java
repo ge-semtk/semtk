@@ -53,7 +53,8 @@ public class NodeGroupStoreTest_IT {
 	private SimpleResultSet result = null;
 	
 	@BeforeClass
-	public static void setup() throws Exception{
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
 		NG_JSON = Utility.getJsonObjectFromString(NG_JSON_STRING);
 		nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
 	}

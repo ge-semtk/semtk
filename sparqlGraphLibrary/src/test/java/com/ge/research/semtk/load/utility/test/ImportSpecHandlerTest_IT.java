@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.json.simple.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -31,10 +32,15 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 public class ImportSpecHandlerTest_IT {
 
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
 	@Test
 	public void test_getMappedPropItems() throws Exception {
 		// load test data

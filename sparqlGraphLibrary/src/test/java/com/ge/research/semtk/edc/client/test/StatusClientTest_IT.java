@@ -42,7 +42,8 @@ public class StatusClientTest_IT {
 	
 	
 	@BeforeClass
-	public static void setup() throws Exception{
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
 		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
 		SERVICE_SERVER = IntegrationTestUtility.getStatusServiceServer();
 		SERVICE_PORT = IntegrationTestUtility.getStatusServicePort();

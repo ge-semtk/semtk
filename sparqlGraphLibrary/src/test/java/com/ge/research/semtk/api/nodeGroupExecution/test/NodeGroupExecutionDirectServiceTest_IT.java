@@ -39,7 +39,8 @@ public class NodeGroupExecutionDirectServiceTest_IT {
 		private static NodeGroupExecutionClientConfig nodeGroupExecutionClientConfig;
 		
 		@BeforeClass
-		public static void setup() throws Exception {			
+		public static void setup() throws Exception {
+			IntegrationTestUtility.authenticateJunit();			
 			// get client config for nodegroup execution service
 			nodeGroupExecutionClientConfig = new NodeGroupExecutionClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupExecutionServiceServer(), IntegrationTestUtility.getNodegroupExecutionServicePort());
 			nodeGroupExecutionClientConfig.setServiceEndpoint(nodeGroupExecutionServiceMappingPrefix + dispatchSelectByIdEndpoint);

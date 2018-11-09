@@ -2,15 +2,21 @@ package com.ge.research.semtk.ontologyTools.test;
 
 import static org.junit.Assert.*;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 
 public class DataDictionaryTest_IT {
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
 	
 	@Test
 	public void test() throws Exception {

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -53,6 +55,11 @@ public class DataLoaderTest_IT {
 	private static final String DELETE_URI_FMT = "delete { ?x ?y ?z.} where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";
 	private static final String SELECT_URI_TRIPLES_FMT = "select distinct ?x ?y ?z where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";	
 	private static final int DEFAULT_BATCH_SIZE = 32;
+	
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
 	
 	@Test
 	public void testOriginal() throws Exception {

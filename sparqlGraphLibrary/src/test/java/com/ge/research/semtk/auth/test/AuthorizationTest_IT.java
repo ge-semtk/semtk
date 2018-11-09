@@ -108,7 +108,7 @@ public class AuthorizationTest_IT {
 	}
 	
 	private String getTestJobId() {
-		String jobId = JobTracker.generateJobId();
+		String jobId = IntegrationTestUtility.generateJobId("AuthorizationTest_IT");
 		cleanupJobIds.add(jobId);
 		return jobId;
 	}
@@ -299,17 +299,22 @@ public class AuthorizationTest_IT {
 	
 	@Test
 	public void testCheckAdminStatusClient() throws Exception {
-		testAllStatusResultsEndpointsFail("user1", "user2");
-		testAllStatusResultsEndpointsSucceed("user1", "user1");
+		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
+		String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
+		testAllStatusResultsEndpointsFail(user1, user2);
+		testAllStatusResultsEndpointsSucceed(user1, user1);
 	}
 	
 	@Test
 	public void testCheckAdmin() throws Exception {
-		ThreadAuthenticator.authenticateThisThread("user1");
+		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
+		String user5 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "5");
+
+		ThreadAuthenticator.authenticateThisThread(user1);
 		ThreadAuthenticator.setJobAdmin(true);
 		
 		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner("user1", "item");
+			AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 			e.printStackTrace();
 			fail("Authorization failed");
@@ -317,7 +322,7 @@ public class AuthorizationTest_IT {
 		
 		ThreadAuthenticator.setJobAdmin(false);
 		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner("user5", "item");
+			AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
 			fail("Admin didn't reset");
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 
@@ -340,7 +345,10 @@ public class AuthorizationTest_IT {
 		
 		// tests
 		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner("anyOtherUser", "item");
+			String otherUser = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "other");
+			// since I'm jobAdmin I own others' jobs
+			AuthorizationManager.throwExceptionIfNotJobOwner(otherUser, "item");
+			// since I'm jobAdmin I own my own jobs
 			AuthorizationManager.throwExceptionIfNotJobOwner(jobAdmin, "item");
 
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {

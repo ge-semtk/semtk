@@ -7,6 +7,7 @@ package com.ge.research.semtk.belmont.test;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -18,11 +19,16 @@ import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 public class DataLoadBatchHandlerTest_IT {
-
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
+	
 	@Test
 	public void checkSpecHandlerFunction() throws Exception {
 

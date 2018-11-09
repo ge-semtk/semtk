@@ -43,7 +43,8 @@ public class NodeGroupExecutorTest_IT {
 	private final String DATA =     "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 	
 	@BeforeClass
-	public static void setup() throws Exception{
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();	
 		nodeGroupStoreRestClient = IntegrationTestUtility.getNodeGroupStoreRestClient();
 		nodeGroupExecutor = IntegrationTestUtility.getNodegroupExecutor();
 	}

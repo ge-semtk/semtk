@@ -18,11 +18,13 @@
 package com.ge.research.semtk.test;
 
 import java.io.File;
+import java.util.UUID;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationProperties;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.EndpointProperties;
 import com.ge.research.semtk.edc.SemtkEndpointProperties;
 import com.ge.research.semtk.edc.JobTracker;
@@ -250,5 +252,17 @@ public class IntegrationTestUtility {
 		Table table = new Table(new String [] {"col1", "col2"}, new String [] {"string", "int"});
 		table.addRow(new String [] {"value1", "2"});
 		return table;
+	}
+
+	public static void authenticateJunit() {
+		ThreadAuthenticator.authenticateThisThread("junit");
+	}
+	
+	public static String generateUser(String testName, String suffix) {
+		return "junit_" + testName + "_" + suffix;
+	}
+	
+	public static String generateJobId(String testName) {
+		return "junit_" + UUID.randomUUID().toString();
 	}
 }

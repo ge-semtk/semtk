@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 import org.json.simple.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.DataLoader;
@@ -27,6 +28,10 @@ import com.ge.research.semtk.utility.Utility;
 
 public class StoreNodeGroupTest_IT {
 
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
 	@Test
 	public void storeNg() throws Exception {
 		// test storing a nodegroup without using any clients.  Use ingestor code directly to the triple-store

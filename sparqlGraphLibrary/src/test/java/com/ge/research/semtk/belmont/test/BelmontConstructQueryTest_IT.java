@@ -30,6 +30,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 public class BelmontConstructQueryTest_IT {
@@ -37,7 +38,8 @@ public class BelmontConstructQueryTest_IT {
 	private static SparqlGraphJson sgJson = null;
 	
 	@BeforeClass
-	public static void beforeClass() throws Exception {
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
 		sgJson = TestGraph.initGraphWithData("sampleBattery");
 	}
 	

@@ -51,7 +51,8 @@ public class JobTrackerTest_IT {
 	 * Before any tests run, load the Jobs model into TestGraph
 	 */
 	@BeforeClass
-	public static void loadTestGraph() throws Exception{
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/main/Semantics/OwlModels/serviceJob.owl");
 		
@@ -87,7 +88,7 @@ public class JobTrackerTest_IT {
 	public void test_create_set_read_delete() throws Exception {
 		
 		// Create job, set %, read it back, delete job
-		String jobId = "test_create_set_read_delete";
+		String jobId = IntegrationTestUtility.generateJobId("test_create_set_read_delete");
 		registerJob(jobId);
 		int percent = 10;
 		
@@ -106,7 +107,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_set_read_delete() throws Exception {
 		// DON'T Create job, set %, read it back, delete job
-		String jobId = "test_set_read_delete";
+		String jobId = IntegrationTestUtility.generateJobId("test_set_read_delete");
 		registerJob(jobId);
 		int percent = 99;
 		
@@ -121,7 +122,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_bad_get() throws Exception {
 		// try to retrieve getPercentComplete from non-existant job
-		String jobId = "test_bad_get";
+		String jobId = IntegrationTestUtility.generateJobId("test_bad_get");
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
@@ -141,7 +142,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_bad_set_percent_complete() throws Exception {
 		// try to retrieve getPercentComplete from non-existant job
-		String jobId = "test_bad_set_percent_complete";
+		String jobId = IntegrationTestUtility.generateJobId("test_bad_set_percent_complete");
 		JobTracker tracker = null;
 		
 		tracker = new JobTracker(getProp());
@@ -170,7 +171,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_set_success() throws Exception {
 		// try to retrieve getPercentComplete from non-existant job
-		String jobId = "test_set_success";
+		String jobId = IntegrationTestUtility.generateJobId("test_set_success");
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
@@ -193,7 +194,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_set_urls() throws Exception {
 		// test setting URLs
-		String jobId = "test_set_urls";
+		String jobId = IntegrationTestUtility.generateJobId("test_set_urls");
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
@@ -228,7 +229,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_with_trstore() throws Exception {
 		// test setting URLs
-		String jobId = "test_with_trstore" + UUID.randomUUID().toString();
+		String jobId = IntegrationTestUtility.generateJobId("test_with_trstore" + UUID.randomUUID().toString());
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
@@ -259,7 +260,7 @@ public class JobTrackerTest_IT {
 	
 	@Test
 	public void test_get_jobs_info() throws Exception {
-		String jobId = "test_get_jobs_info" + UUID.randomUUID().toString();
+		String jobId = IntegrationTestUtility.generateJobId("test_get_jobs_info" + UUID.randomUUID().toString());
 		registerJob(jobId);
 		JobTracker tracker =  new JobTracker(getProp());
 		tracker.deleteJob(jobId);
@@ -283,7 +284,7 @@ public class JobTrackerTest_IT {
 	
 	@Test
 	public void test_set_name() throws Exception {
-		String jobId = "test_set_name" + UUID.randomUUID().toString();
+		String jobId = IntegrationTestUtility.generateJobId("test_set_name" + UUID.randomUUID().toString());
 		registerJob(jobId);
 		JobTracker tracker =  new JobTracker(getProp());
 		tracker.deleteJob(jobId);
@@ -302,7 +303,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_set_urls_blank_sample() throws Exception {
 		// test setting URLs
-		String jobId = "test_set_urls_blank_sample";
+		String jobId = IntegrationTestUtility.generateJobId("test_set_urls_blank_sample");
 		registerJob(jobId);
 		JobTracker tracker = null;
 
@@ -334,7 +335,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_set_failure() throws Exception {
 		// test setting URLs
-		String jobId = "test_set_failure";
+		String jobId = IntegrationTestUtility.generateJobId("test_set_failure");
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
@@ -357,7 +358,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_set_failure_tricky() throws Exception {
 		// test setting URLs
-		String jobId = "test_set_failure_tricky";
+		String jobId = IntegrationTestUtility.generateJobId("test_set_failure_tricky");
 		registerJob(jobId);
 		final String STATUS_MESSAGE = "Failure message. with 'quoted' and \"double-quoted\" and new\nlines\n";
 		JobTracker tracker = null;
@@ -379,7 +380,7 @@ public class JobTrackerTest_IT {
 	@Test
 	public void test_bad_jobId() throws Exception {
 		// try to retrieve getPercentComplete from non-existant job
-		String jobId = "test_bad_jobId";
+		String jobId = IntegrationTestUtility.generateJobId("test_bad_jobId");
 		registerJob(jobId);
 		String MESSAGE = "test failure";
 
