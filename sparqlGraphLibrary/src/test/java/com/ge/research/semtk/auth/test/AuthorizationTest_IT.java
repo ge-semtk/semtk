@@ -175,6 +175,10 @@ public class AuthorizationTest_IT {
 		status = IntegrationTestUtility.getStatusClient(jobId);
 		results = IntegrationTestUtility.getResultsClient();
 		
+		if ( AuthorizationManager.FORGIVE_ALL) {
+			return;
+		}
+
 		// --- test status ---
 		try {
 			status.execGetPercentComplete();
@@ -288,11 +292,13 @@ public class AuthorizationTest_IT {
 			fail("Authorization failed");
 		}
 		
-		// different owner
-		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner("user2", "item");
-			fail("No exception thrown for bad ownership");
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+		if (! AuthorizationManager.FORGIVE_ALL) {
+			// different owner
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner("user2", "item");
+				fail("No exception thrown for bad ownership");
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+			}
 		}
 		
 	}
@@ -320,13 +326,16 @@ public class AuthorizationTest_IT {
 			fail("Authorization failed");
 		} 
 		
-		ThreadAuthenticator.setJobAdmin(false);
-		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
-			fail("Admin didn't reset");
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-
-		} 
+		if ( !AuthorizationManager.FORGIVE_ALL) {
+		
+			ThreadAuthenticator.setJobAdmin(false);
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
+				fail("Admin didn't reset");
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+	
+			} 
+		}
 		
 	}
 	
