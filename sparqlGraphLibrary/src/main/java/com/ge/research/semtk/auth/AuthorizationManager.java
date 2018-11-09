@@ -53,7 +53,7 @@ public class AuthorizationManager {
 	private static HashMap<String, ArrayList<String>> graphReaders = new HashMap<String, ArrayList<String>>();
 	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
 
-
+	public static final boolean FORGIVE_ALL = true;
 	private static void clear() {
 		refreshFreqSeconds = 301;
 		authSetupFailed = false;
@@ -235,7 +235,6 @@ public class AuthorizationManager {
 	public static void throwExceptionIfNotJobOwner(String owner, String itemName) throws AuthorizationException, Exception {
 		updateAuthorization();
 		String user = ThreadAuthenticator.getThreadUserName();
-		final boolean FORGIVE_ALL = true;
 		try {
 		
 			// is user_name equal, or thread is a job admin
