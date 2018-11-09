@@ -1,0 +1,100 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>com.ge.research.semtk</groupId>
+    <artifactId>semtk-oss</artifactId>
+    <version>2.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <artifactId>distribution</artifactId>
+ 
+  <packaging>pom</packaging>
+ 
+  <name>Distribution</name>
+  
+  <!-- NOTE: These dependency declarations are only required to force this project to go LAST in the multimodule build. -->
+  <dependencies>
+  	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphLibrary</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphIngestionService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>hiveService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlQueryService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphStatusService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphResultsService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>nodeGroupStoreService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>ontologyInfoService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlExtDispatchService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>nodeGroupExecutionService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>nodeGroupService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+  </dependencies>
+ 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>distro-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+			  <finalName>semtk-opensource-${pom.version}</finalName>
+			  <tarLongFileMode>posix</tarLongFileMode>
+              <descriptors>
+                <descriptor>src/assembly/bin.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

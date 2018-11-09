@@ -41,7 +41,8 @@
 		<module>nodeGroupExecutionService</module>
 		<module>nodeGroupService</module>
 		<module>springSecurityLibrary</module>
-    <module>springUtilLibrary</module>
+		<module>springUtilLibrary</module>
+		<module>distribution</module>
   </modules>
 
 	<properties>
