@@ -108,7 +108,7 @@ public class ResultsServiceRestController {
 		try {
 			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeJsonLdResults", "jobId", requestBody.jobId, "chars", String.valueOf(requestBody.getJsonRenderedGraph().length()));
-	    	LocalLogger.logToStdOut("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
+	    	LocalLogger.logToStdOut("Results Service storeJsonLdResults JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
@@ -163,7 +163,7 @@ public class ResultsServiceRestController {
 			String blobStr = requestBody.getJsonBlobString();
 			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeJsonBlobResults", "jobId", requestBody.jobId, "chars", String.valueOf(blobStr.length()));
-			LocalLogger.logToStdOut("Results Service storeJsonLdResults start JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut("Results Service storeJsonLdResults JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
@@ -224,7 +224,7 @@ public class ResultsServiceRestController {
 		
 		try {
 			final String ENDPOINT_NAME = "getResultsFiles";
-			final String STRING_TYPE = "http://www.w3.org/2001/XMLSchema#string";  // TODO create an enum in Belmont and start using it everywhere
+			final String STRING_TYPE = "http://www.w3.org/2001/XMLSchema#string";  // TODO create an enum in Belmont and using it everywhere
 			TableResultSet res = null;
 			try{
 				JobTracker tracker = getJobTracker();
@@ -456,8 +456,8 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			// logging
-			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonInitialize start", "jobId", requestBody.jobId);
-			LocalLogger.logToStdOut("Results Service storeTableResultsJsonInitialize start JobId=" + requestBody.jobId);
+			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonInitialize", "jobId", requestBody.jobId);
+			LocalLogger.logToStdOut("Results Service storeTableResultsJsonInitialize JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
@@ -506,7 +506,7 @@ public class ResultsServiceRestController {
 
 			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonAddIncremental", "jobId", requestBody.jobId, "chars", String.valueOf(decompressed.length()) );
-			LocalLogger.logToStdOut("Results Service storeTableResultsJsonAddIncremental start JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut("Results Service storeTableResultsJsonAddIncremental JobId=" + requestBody.jobId);
 
 			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, decompressed);
 			res.setSuccess(true);
@@ -540,8 +540,8 @@ public class ResultsServiceRestController {
 
 		try {
 			// logging
-			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonFinalize start", "jobId", requestBody.jobId);
-			LocalLogger.logToStdOut("Results Service storeTableResultsJsonFinalize start JobId=" + requestBody.jobId);
+			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonFinalize", "jobId", requestBody.jobId);
+			LocalLogger.logToStdOut("Results Service storeTableResultsJsonFinalize JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
@@ -777,8 +777,8 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		try { 
 		    SimpleResultSet res = new SimpleResultSet();
-	    	//LoggerRestClient.easyLog(logger, "Results Service", "getResults start", "JobId", requestBody.jobId);    	
-	    	LocalLogger.logToStdOut("Results Service getResults start JobId=" + requestBody.jobId);
+	    	//LoggerRestClient.easyLog(logger, "Results Service", "getResults", "JobId", requestBody.jobId);    	
+	    	LocalLogger.logToStdOut("Results Service getResults JobId=" + requestBody.jobId);
 	    	
 		    try {
 		    	
@@ -820,10 +820,10 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
-			LocalLogger.logToStdOut("Results Service deleteStorage start JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut("Results Service deleteStorage JobId=" + requestBody.jobId);
 	
 		    SimpleResultSet res = new SimpleResultSet();
-	    	//LoggerRestClient.easyLog(logger, "Results Service", "deleteStorage start", "JobId", requestBody.jobId);
+	    	//LoggerRestClient.easyLog(logger, "Results Service", "deleteStorage", "JobId", requestBody.jobId);
 	    	
 		    try {   	
 		    	getJobTracker().deleteJob(requestBody.jobId, getTableResultsStorage()); 
