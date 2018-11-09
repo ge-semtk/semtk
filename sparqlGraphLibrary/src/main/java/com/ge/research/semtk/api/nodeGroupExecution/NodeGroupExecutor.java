@@ -194,6 +194,7 @@ public class NodeGroupExecutor {
 	
 	// Results Information
 	public URL[] getResultsLocation() throws Exception{
+		LocalLogger.logToStdErr("Using DEPRECATED getResultsLocation in NodeGroupExcutor.java.  Depending on your setup, security may prevent retrieval of URL's");
 		URL[] retval = null;
 		
 		if(this.currentJobId == null){

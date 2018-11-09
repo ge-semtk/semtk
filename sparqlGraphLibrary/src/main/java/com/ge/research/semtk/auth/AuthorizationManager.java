@@ -235,7 +235,7 @@ public class AuthorizationManager {
 	public static void throwExceptionIfNotJobOwner(String owner, String itemName) throws AuthorizationException, Exception {
 		updateAuthorization();
 		String user = ThreadAuthenticator.getThreadUserName();
-		final boolean FORGIVE_ALL = false;
+		final boolean FORGIVE_ALL = true;
 		try {
 		
 			// is user_name equal, or thread is a job admin
