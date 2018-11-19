@@ -16,7 +16,6 @@
             </includes>
 			<excludes>
                 <exclude>sparqlGraphLibrary/target/**/*.jar</exclude>
-                <exclude>standaloneExecutables/target/**/*.jar</exclude>
             </excludes>
         </fileSet>
         <fileSet>
