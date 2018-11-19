@@ -56,6 +56,7 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class JobTracker {
 	SemtkEndpointProperties prop = null;
+	private String graphName = null;
 	
 	public static String STATUS_SUCCESS = "Success";
 	public static String STATUS_IN_PROGRESS = "InProgress";
@@ -64,6 +65,7 @@ public class JobTracker {
 	
 	public JobTracker (SemtkEndpointProperties edc_prop) throws Exception {
 		this.prop = edc_prop;
+		this.graphName = edc_prop.getJobEndpointDataset();
 		
 	}
 	
@@ -98,7 +100,8 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?Job ?percentComplete ?userName where {  \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
+	    	"	select distinct ?Job ?percentComplete ?userName \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
+	    	"   from <" + this.graphName + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 	    	"	   ?Job job:percentComplete ?percentComplete .  \n" +
@@ -161,17 +164,19 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "DELETE {\n" +
+	        "WITH <" + this.graphName + "> " +
+	        "DELETE { " +
+
 	        "   ?Job job:percentComplete ?percentComplete .\n" +
 	        "   ?Job job:status ?status." +
 	        "   ?Job job:statusMessage ?statusMessage." +
 	        "} \n" +
-	        "INSERT {\n" +
+	        "INSERT { " +
 	        "   ?Job job:percentComplete '%d'^^XMLSchema:integer. \n" +
 	        "   ?Job job:status job:InProgress. \n" +
 	        "   ?Job job:statusMessage '%s'^^XMLSchema:string." +
 	        "} \n" +
-	        "WHERE { \n" +
+	        "WHERE {\n" +
 	        "   ?Job a job:Job. \n" +
 	        "   ?Job job:id '%s'^^XMLSchema:string. \n" +
 	        "   optional {?Job job:percentComplete ?percentComplete.} \n" +
@@ -203,12 +208,13 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "DELETE {\n" +
+	        "WITH <" + this.graphName + "> " +
+	        "DELETE { " +
 			"   ?Job job:percentComplete ?percentComplete . \n" +
 			"   ?Job job:statusMessage ?statusMessage . \n" +
 	        "   ?Job job:status ?status." +
 	        "} \n" +
-	        "INSERT {\n" +
+	        "INSERT { " +
 			"   ?Job job:percentComplete '100'^^XMLSchema:integer.  \n" +
 	        "   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
 	        "   ?Job job:status job:Failure. \n" +
@@ -245,7 +251,8 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
-				"	select distinct ?status ?userName where {  \n" +
+				"	select distinct ?status ?userName \n" +
+		        "   from <" + this.graphName + "> where { " +
 				"	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:status ?status .  \n" +
@@ -285,8 +292,9 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
-				"	SELECT DISTINCT ?statusMessage ?userName where {  \n" +
-				"	   ?Job a job:Job.  \n" +
+				"	SELECT DISTINCT ?statusMessage ?userName \n" +
+		        "   from <" + this.graphName + "> where { " +
+		        "	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:statusMessage ?statusMessage .  \n" +
 				"	   ?Job job:userName ?userName .  \n" +
@@ -332,17 +340,18 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				" \n" +
-				"DELETE {\n" +
+		        "WITH <" + this.graphName + "> " +
+		        "DELETE { " +
 				"   ?Job job:percentComplete ?percentComplete . \n" +
 				"   ?Job job:statusMessage ?statusMessage . \n" +
 				"   ?Job job:status ?status." +
 				"} \n" +
-				"INSERT {\n" +
+		        "INSERT { " +
 				"   ?Job job:percentComplete '100'^^XMLSchema:integer.  \n" +
 				"   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
 				"   ?Job job:status job:Success. \n" +
 				"} \n" +
-				"WHERE { \n" +
+		        "WHERE { \n" +
 				"   ?Job a job:Job. \n" +
 				"   ?Job job:id '%s'^^XMLSchema:string . \n" +
 				"   optional {?Job job:percentComplete ?percentComplete .} \n" +
@@ -381,19 +390,20 @@ public class JobTracker {
 		        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 		        " \n" +
-		        "DELETE { \n" +
+		        "WITH <" + this.graphName + "> " +
+		        "DELETE { " +
 		        "   ?Job job:fullResultsURL ?fullURI. \n" +
 		        "   ?fullURI job:full ?fullURL .  \n" +
 		        "   ?Job job:sampleResultsURL ?sampleURI. \n" +
 		        "   ?sampleURI job:full ?sampleURL . \n" +
 		        "} \n" +
-		        "INSERT { \n" +
+		        "INSERT { " +
 		        "   ?Job job:fullResultsURL <%s>. \n" +
 		        "   <%s> job:full '%s'^^XMLSchema:string .  \n" +
 		        "   ?Job job:sampleResultsURL <%s>. \n" +
 		        "   <%s> job:full '%s'^^XMLSchema:string . \n" +
 		        "} \n" +
-		        "WHERE { \n" +
+		        "WHERE {\n" +
 		        "   ?Job a job:Job. \n" +
 		        "   ?Job job:id '%s'^^XMLSchema:string . \n" +
 		        "   optional {?Job job:fullResultsURL ?fullURI. \n" +
@@ -428,7 +438,8 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	SELECT DISTINCT ?fullUrl ?userName where {  \n" +
+	    	"	SELECT DISTINCT ?fullUrl ?userName \n" +
+	        "   FROM <" + this.graphName + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:fullResultsURL ?URL.  \n" +
@@ -479,7 +490,8 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	SELECT DISTINCT ?sampleUrl ?userName where {  \n" +
+	    	"	SELECT DISTINCT ?sampleUrl ?userName \n" +
+	        "   FROM <" + this.graphName + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:sampleResultsURL ?URL.  \n" +
@@ -534,12 +546,13 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "DELETE {\n" +
+	        "WITH <" + this.graphName + "> " +
+	        "DELETE { " +
             "?job job:creationTime ?x. \n" +
 	        "?job job:percentComplete ?y. \n" +
 	        "?job job:status ?w. \n" +
 	        "} \n" +
-	        "INSERT {\n" +
+	        "INSERT { " +
 	        "?job a job:Job. \n" + 
 	        "?job job:id '%s'^^XMLSchema:string. \n" +
             "?job job:creationTime '%s'^^XMLSchema:dateTime. \n" +
@@ -574,10 +587,11 @@ public class JobTracker {
 		        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 		        " \n" +
-		        "DELETE  {\n" +
+		        "WITH <" + this.graphName + "> " +
+		        "DELETE { " +
 	            "?job job:name ?x. \n" +
 		        "} \n" +
-		        "INSERT  {\n" +
+		        "INSERT { " +
 		        "?job job:name '%s'^^XMLSchema:string. \n" +
 		        "}\n" +
 		        "WHERE {\n" +
@@ -605,7 +619,8 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				" \n" +
-				"INSERT  {\n" +
+		        "WITH <" + this.graphName + "> " +
+		        "INSERT { " +
 				"?file a job:BinaryFile. \n" + 
 				"?job job:file ?file. \n" +
 				"?file job:fileID   '%s'^^XMLSchema:string. \n" +
@@ -1027,6 +1042,7 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				"SELECT ?id ?userName \n" +
+		        "from <" + this.graphName + "> " +
 				"where { \n" +
 				"   ?Job a job:Job. \n" +
 				"   ?Job job:id ?id. \n" +
