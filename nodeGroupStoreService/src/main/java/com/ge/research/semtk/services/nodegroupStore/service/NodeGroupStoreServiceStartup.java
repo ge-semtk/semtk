@@ -48,8 +48,8 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 			  "store.sparqlConnDataDataset",
 			  "store.sparqlConnModelDataset",
 			  "store.sparqlConnDomain",
-			  "store.sparqlConnType",
-			  "store.sparqlServiceUser"
+			  "store.sparqlConnType"
+			  // "store.sparqlServiceUser"  // may be null for neptune
 	  };
 	  TreeMap<String,String> properties = new TreeMap<String,String>();
 	  for(String propertyName : propertyNames){

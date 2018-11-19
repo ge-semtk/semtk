@@ -72,7 +72,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public String getPostURL(){
 		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
-			return String.format("%s:%s/sparql-auth", this.server, this.port);
+			return String.format("%s:%s/sparql", this.server, this.port);
 		}else{
 			return String.format("%s:%s/sparql", this.server, this.port);
 		}
@@ -88,7 +88,15 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	public JSONObject executeUpload(byte[] owl) throws Exception {
 		throw new Exception("Unimplmenented");
 	}
-
+	
+	@Override
+	public boolean isExceptionRetryAble(Exception e) {
+		String msg = e.getMessage();
+		return super.isExceptionRetryAble(e) &&
+				! msg.contains("{\"detailedMessage\":\"Malformed query:");
+				
+	}
+	
 	/**
 	 * Handle an empty response
 	 * (if a Virtuoso response is empty, then something is wrong)

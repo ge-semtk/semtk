@@ -1078,10 +1078,9 @@ public class NodeGroup {
     }
 
 	/**
-	 * Very simple FROM clause logic
+	 * FROM clause logic
 	 * Generates FROM clause if this.conn has
 	 *     - exactly 1 serverURL
-	 *     - more than one datasets (graphs)
 	 */
 	private String generateSparqlFromClause(String tab) {
 		
@@ -1096,14 +1095,11 @@ public class NodeGroup {
 		// get datasets for first model server.  All others must be equal
 		ArrayList<String> datasets = this.conn.getAllDatasetsForServer(this.conn.getDataInterface(0).getServerAndPort());
 		
-		if (datasets.size() < 2) return "";
-		
 		StringBuilder sparql = new StringBuilder().append("\n");
-		// multiple datasets: generate FROM clause
 		// No optimization: always "from" all datasets
 		tab = tabIndent(tab);
 		for (int i=0; i < datasets.size(); i++) {
-			sparql.append(tab + "FROM <" + datasets.get(i) + ">\n");
+			sparql.append(tab + "from <" + datasets.get(i) + ">\n");
 		}
 		tab = tabOutdent(tab);
 		

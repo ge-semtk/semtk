@@ -28,32 +28,19 @@ import com.ge.research.semtk.utility.Utility;
 
 public class NgStoreSparqlGenerator {
 	
-	// headers to be used for the insertion of new nodegroups into the system.
-	public static String insertHeaders[] = {"id", "nodegroup", "comments", "creator", "creationDate", "connectionAlias", "domain", "dsDataset", "dsKsURL", "dsURL", "originalServerType"};
-
-	public static String getHeaderRow(){
-		StringBuilder sb = new StringBuilder();
-		
-		// get all the headers
-		int counter = 0;	// we need to keep track of the current postion. it makes the commas easier. 
-		for(String curr : NgStoreSparqlGenerator.insertHeaders){
-			sb.append(curr);
-			counter++;
-			if(counter < NgStoreSparqlGenerator.insertHeaders.length){  // add a comma, if we need one.
-				sb.append(",");
-			}
-		}
-		sb.append("\n"); 	// add a new line to the end of the input. 
-		
-		return sb.toString();
+	private String dataGraph = null;
+	
+	public NgStoreSparqlGenerator(String dataGraph) {
+		this.dataGraph = dataGraph;
 	}
 	
 	
 	// get sparql queries for getting the needed info. 
-	public static ArrayList<String> getNodeGroupByID(String id){
+	public ArrayList<String> getNodeGroupByID(String id){
 		ArrayList<String> ret = new ArrayList<String>();
 		String query  = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"select distinct ?ID ?NodeGroup ?comments where { " +
+						"select distinct ?ID ?NodeGroup ?comments" +
+						"from <" + this.dataGraph + "> where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"VALUES ?ID {\"" + id + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . " +
@@ -78,9 +65,10 @@ public class NgStoreSparqlGenerator {
 		return ret;
 	}
 	
-	public static String getNodeGroupByConnectionAlias(String connectionAlias){
+	public String getNodeGroupByConnectionAlias(String connectionAlias){
 		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"select distinct ?ID ?NodeGroup ?comments where { " +
+						"select distinct ?ID ?NodeGroup ?comments " +
+						"from <" + this.dataGraph + "> where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
@@ -92,9 +80,10 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 	
-	public static String getConnectionInfo(){
+	public String getConnectionInfo(){
 		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"select distinct ?connectionAlias ?domain ?dsDataset ?dsKsURL ?dsURL ?originalServerType where { " +
+						"select distinct ?connectionAlias ?domain ?dsDataset ?dsKsURL ?dsURL ?originalServerType " +
+						"from <" + this.dataGraph + "> where { " +
 						"?SemTkConnection a prefabNodeGroup:SemTkConnection. " +
 						"?SemTkConnection prefabNodeGroup:connectionAlias ?connectionAlias . " +
 						"?SemTkConnection prefabNodeGroup:domain ?domain . " +
@@ -106,9 +95,10 @@ public class NgStoreSparqlGenerator {
 		return retval;	
 	}
 	
-	public static String getFullNodeGroupList(){
+	public String getFullNodeGroupList(){
 		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"select distinct ?ID ?NodeGroup ?comments where { " +
+						"select distinct ?ID ?NodeGroup ?comments" +
+						"from <" + this.dataGraph + "> where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
@@ -117,9 +107,10 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 
-	public static String getNodeGroupIdAndCommentList(){
+	public String getNodeGroupIdAndCommentList(){
 		String retval = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"select distinct ?ID ?comments where { " +
+						"select distinct ?ID ?comments " +
+						"from <" + this.dataGraph + "> where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
@@ -128,11 +119,11 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 	
-	public static String getNodeGroupMetadata(){
+	public String getNodeGroupMetadata(){
 		String retval = "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 						"prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"select distinct ?ID ?comments ?creationDate ?creator " +
-						"where { " +
+						"from <" + this.dataGraph + "> where { " +
 						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
@@ -142,7 +133,7 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 
-	public static String deleteNodeGroup(String jobId) {
+	public  String deleteNodeGroup(String jobId) {
 		String ret = "prefix prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 				"Delete " + 
 				"{" +
@@ -156,7 +147,7 @@ public class NgStoreSparqlGenerator {
 				"      ?SemTkStringChunk__0 rdf:type prefabNodeGroup:StringChunk . "    + 
 				"      ?SemTkStringChunk__0 ?pred ?predVal."     +
 				"}" + 
-				"where { " +
+				"from <" + this.dataGraph + "> where { " +
 				"  ?PrefabNodeGroup prefabNodeGroup:ID \"" + jobId  +"\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
 				"  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 				"  ?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
@@ -172,7 +163,7 @@ public class NgStoreSparqlGenerator {
 		return ret;
 	}
 	
-	public static ArrayList<String> insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator) throws Exception {
+	public ArrayList<String> insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator) throws Exception {
 		final int SPLIT = 25000;
 		
 		// extract the connJson
@@ -189,7 +180,7 @@ public class NgStoreSparqlGenerator {
 				"prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 				"prefix generateSparqlInsert:<belmont/generateSparqlInsert#> " +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
-				"INSERT { GRAPH <http://research.ge.com/knowledge/prefab/data> { " +
+				"INSERT { GRAPH <" + this.dataGraph + "> { " +
 				"      ?SemTkConnection__0 a prefabNodeGroup:SemTkConnection . " +
 				"      ?SemTkConnection__0 prefabNodeGroup:connectionAlias \""    + conn.getName() +"\"^^XMLSchema:string ." +
 				"      ?SemTkConnection__0 prefabNodeGroup:domain \""             + conn.getDomain() +"\"^^XMLSchema:string ." +
@@ -219,7 +210,7 @@ public class NgStoreSparqlGenerator {
 					"prefix rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 					"prefix generateSparqlInsert:<belmont/generateSparqlInsert#> " +
 					"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
-					"INSERT { GRAPH <http://research.ge.com/knowledge/prefab/data> { " +
+					"INSERT { GRAPH <" + this.dataGraph + "> { " +
 					"      ?SemTkStringChunk__0 a prefabNodeGroup:StringChunk . " +
 					"      ?SemTkStringChunk__0 prefabNodeGroup:counter \""    + i++ +"\"^^XMLSchema:int ." +
 					"      ?SemTkStringChunk__0 prefabNodeGroup:chunk \""    + chunks[0] +"\"^^XMLSchema:string ." +

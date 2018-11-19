@@ -46,7 +46,6 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStoreSparqlGenerator;
-import com.ge.research.semtk.services.nodegroupStore.SparqlQueries;
 import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -91,10 +90,11 @@ public class NodeGroupStoreRestController {
 				requestBody.validate();	
 	
 				// check that the ID does not already exist. if it does, fail.
-				String qry = SparqlQueries.getNodeGroupByID(requestBody.getName());
+				NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
+				ArrayList<String> queries = sparqlGen.getNodeGroupByID(requestBody.getName());
 				SparqlQueryClient clnt = createClient(prop);
 	
-				TableResultSet instanceTable = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
+				TableResultSet instanceTable = (TableResultSet) clnt.execute(queries.get(0), SparqlResultTypes.TABLE);
 	
 				if(instanceTable.getTable().getNumRows() > 0){
 					throw new Exception("Unable to store node group:  ID (" + requestBody.getName() + ") already exists");
@@ -115,9 +115,7 @@ public class NodeGroupStoreRestController {
 					throw new Exception("storeNodeGroup :: sparqlgraph jason serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
 				}
 	
-	
-				// start temporary merge nightmare
-				ArrayList<String> queries = NgStoreSparqlGenerator.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
+				queries = sparqlGen.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
 				
 				for (String query : queries) {
 					GeneralResultSet gRes = clnt.execute(query, SparqlResultTypes.CONFIRM);
@@ -128,7 +126,6 @@ public class NodeGroupStoreRestController {
 				}
 				
 				retval = new SimpleResultSet(true);
-				// end temporary merge nightmare
 	
 			}
 			catch(Exception e){
@@ -151,32 +148,10 @@ public class NodeGroupStoreRestController {
 			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupById";
 			TableResultSet retval = null;
 	
-			try{
-				ArrayList<String> queries = NgStoreSparqlGenerator.getNodeGroupByID(requestBody.getId());
-				SparqlQueryClient clnt = createClient(prop);
-	
-				retval = (TableResultSet) clnt.execute(queries.get(0), SparqlResultTypes.TABLE);
-				
-				// look for additional text
-				TableResultSet catval = (TableResultSet) clnt.execute(queries.get(1), SparqlResultTypes.TABLE);
-				catval.throwExceptionIfUnsuccessful();
-				if (catval.getTable().getNumRows() > 0) {
-					StringBuilder ngStr = new StringBuilder(retval.getTable().getCellAsString(0,  "NodeGroup"));
-					
-					// append additional text
-					for (int i=0; i < catval.getTable().getNumRows(); i++) {
-						ngStr.append(catval.getTable().getCellAsString(i, "NodeGroup"));
-					}
-					
-					// overwrite table in original retval
-					int col = retval.getTable().getColumnIndex("NodeGroup");
-					Table fullTable = retval.getTable();
-					fullTable.setCell(0,  col, ngStr.toString());
-					retval.addResults(fullTable);
-				}
-
+			try {
+				retval = this.getNodeGroupById(requestBody.getId(), prop.getSparqlConnDataDataset());
 			}
-			catch(Exception e){
+			catch (Exception e) {
 				// something went wrong. report and exit. 
 	
 				retval = new TableResultSet(false);
@@ -199,7 +174,8 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = null;
 	
 			try{
-				String qry = SparqlQueries.getFullNodeGroupList();
+				NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
+				String qry = sparqlGen.getFullNodeGroupList();
 				SparqlQueryClient clnt = createClient(prop);
 	
 				retval = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
@@ -225,7 +201,8 @@ public class NodeGroupStoreRestController {
 			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupMetadata";
 			TableResultSet retval = null;		
 			try{
-				String qry = SparqlQueries.getNodeGroupMetadata();
+				NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
+				String qry = sparqlGen.getNodeGroupMetadata();
 				SparqlQueryClient clnt = createClient(prop);
 				retval = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
 			}
@@ -250,11 +227,7 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = null;
 	
 			try{
-				// get the nodegroup
-				String qry = SparqlQueries.getNodeGroupByID(requestBody.getId());
-				SparqlQueryClient clnt = createClient(prop); 
-	
-				TableResultSet temp = (TableResultSet) clnt.execute(qry, SparqlResultTypes.TABLE);
+				TableResultSet temp = this.getNodeGroupById(requestBody.getId(), prop.getSparqlConnDataDataset());
 	
 				// get the first result and return all the runtime constraints for it.
 				Table tbl = temp.getResults();
@@ -327,7 +300,8 @@ public class NodeGroupStoreRestController {
 			// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
 			// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
 	
-			String qry = NgStoreSparqlGenerator.deleteNodeGroup(requestBody.getId());
+			NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
+			String qry = sparqlGen.deleteNodeGroup(requestBody.getId());
 					
 	
 			try{
@@ -355,6 +329,40 @@ public class NodeGroupStoreRestController {
 	    }
 	}
 
+	/**
+	 * Generate multiple quries, exec, stitch together to retrieve a nodegroup
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	private TableResultSet getNodeGroupById(String id, String storeDataGraph) throws Exception {
+	
+		NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(storeDataGraph);
+		ArrayList<String> queries = sparqlGen.getNodeGroupByID(id);
+		SparqlQueryClient clnt = createClient(prop);
+
+		TableResultSet retval = (TableResultSet) clnt.execute(queries.get(0), SparqlResultTypes.TABLE);
+		
+		// look for additional text
+		TableResultSet catval = (TableResultSet) clnt.execute(queries.get(1), SparqlResultTypes.TABLE);
+		catval.throwExceptionIfUnsuccessful();
+		if (catval.getTable().getNumRows() > 0) {
+			StringBuilder ngStr = new StringBuilder(retval.getTable().getCellAsString(0,  "NodeGroup"));
+			
+			// append additional text
+			for (int i=0; i < catval.getTable().getNumRows(); i++) {
+				ngStr.append(catval.getTable().getCellAsString(i, "NodeGroup"));
+			}
+			
+			// overwrite table in original retval
+			int col = retval.getTable().getColumnIndex("NodeGroup");
+			Table fullTable = retval.getTable();
+			fullTable.setCell(0,  col, ngStr.toString());
+			retval.addResults(fullTable);
+		}
+		return retval;
+	}
+	
 	// static method to avoid repeating the client generation code...
 
 
