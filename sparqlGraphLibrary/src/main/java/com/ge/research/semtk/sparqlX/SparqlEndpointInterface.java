@@ -29,6 +29,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import java.security.cert.X509Certificate;
+
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -68,6 +74,8 @@ import com.ge.research.semtk.utility.LocalLogger;
 /**
  * Interface to SPARQL endpoint.
  * This is an abstract class - create a subclass per implementation (Virtuoso, etc)
+ * 
+ * NOTE: for HTTPS connections, does not validate certificate chain.
  */
 public abstract class SparqlEndpointInterface {
 
@@ -440,14 +448,13 @@ public abstract class SparqlEndpointInterface {
 		AuthorizationManager.authorizeQuery(this, query);
 		
         // get client, adding userName/password credentials if any exist
-        CloseableHttpClient httpclient = this.buildHttpClient();
 		HttpHost targetHost = this.buildHttpHost();
+        CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
 		// get context with digest auth if there is a userName, else null context
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
-
+     
 		// create the HttpPost
 		HttpPost httppost = new HttpPost(this.getPostURL());
-		
 		this.addHeaders(httppost, resultType);
 		this.addParams(httppost, query, resultType);
 		
@@ -474,10 +481,12 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * Get an CloseableHttpClient, adding credentials if userName exists
-	 * @return
+	 * Get an CloseableHttpClient, handling credentials and HTTPS if needed
+	 * NOTE: for HTTPS connections, does not validate certificate chain.
+	 * @schemeName http or https
 	 */
-	protected CloseableHttpClient buildHttpClient() {
+	protected CloseableHttpClient buildHttpClient(String schemeName) throws Exception {
+		
 		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
 		
 		// add userName and password, if any
@@ -485,12 +494,39 @@ public abstract class SparqlEndpointInterface {
 			CredentialsProvider credsProvider = new BasicCredentialsProvider();
 			credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(this.userName, this.password));
 	        clientBuilder.setDefaultCredentialsProvider(credsProvider);
-	        return clientBuilder.build();
-	        
-		} else {
-			return clientBuilder.build();
+		} 
+		
+		// if https, use SSL context that will not validate certificate
+		if(schemeName.equalsIgnoreCase("https")){
+			clientBuilder.setSSLContext(getTrustingSSLContext());
 		}
+		
+		return clientBuilder.build();
 	}
+	
+	
+	/**
+	 * Gets a context with an all-trusting trust manager
+	 */
+	private static SSLContext getTrustingSSLContext() throws Exception{
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] {
+        	new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }
+        };
+        // Install the trust manager
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        return sslContext;
+	}
+	
 	
 	/**
 	 * build the host from this.server and this.port
@@ -659,8 +695,8 @@ public abstract class SparqlEndpointInterface {
 			resultsFormat = this.getContentType(resultType);
 		}
 		
-		CloseableHttpClient httpclient = this.buildHttpClient();
 		HttpHost targetHost = this.buildHttpHost();
+		CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 
 		LocalLogger.logToStdErr(queryAndUrl);

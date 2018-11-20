@@ -98,8 +98,8 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public JSONObject executeUpload(byte[] owl) throws Exception{
 		
-        CloseableHttpClient httpclient = this.buildHttpClient();
 		HttpHost targetHost = this.buildHttpHost();
+        CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 		HttpPost httppost = new HttpPost(this.getUploadURL());
 		
