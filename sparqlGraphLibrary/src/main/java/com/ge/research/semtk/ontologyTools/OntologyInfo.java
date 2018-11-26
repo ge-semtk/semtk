@@ -519,7 +519,7 @@ public class OntologyInfo {
 	/**
 	 * returns the sparql for getting the sub and super-class relationships for known classes.
 	 **/
-	public static String getSuperSubClassQuery(String domain){
+	private static String getSuperSubClassQuery(String graphName, String domain){
 		// returns a very basic query 
 		// domain : something like "caterham.ge.com"
 		
@@ -528,7 +528,7 @@ public class OntologyInfo {
 				       	"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
 				       	"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
 				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-				       	"select distinct ?x ?y  where { " +
+				       	"select distinct ?x ?y from <" + graphName + "> where { " +
 				       	"?x rdfs:subClassOf ?y " +
 				       	" filter regex(str(?x),'^" + domain + "') " +
 				        " filter regex(str(?y),'^" + domain + "') " + 
@@ -567,13 +567,13 @@ public class OntologyInfo {
 	 * returns the sparql query used to get all top-level classes of interest. these classes do not
 	 * have meaningful super-classes.
 	 **/
-	public static String getTopLevelClassQuery(String domain){
+	private static String getTopLevelClassQuery(String graphName, String domain){
 		// domain : something like "caterham.ge.com"
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 		       			"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
 		       			"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
 		       			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-		       			"select distinct ?Class  { " +
+		       			"select distinct ?Class from <" + graphName + "> { " +
 		       			"?Class rdf:type owl:Class filter regex(str(?Class),'^" + domain + "') . " +
 		       			"MINUS " +
 		       			"{?Class rdfs:subClassOf ?Sup " +
@@ -600,8 +600,8 @@ public class OntologyInfo {
 	/**
 	 * returns the sparql query to get all of the enumerated values found in the model.
 	 **/
-	public static String getEnumQuery(String domain){
-		String retval = "select ?Class ?EnumVal where { " +
+	private static String getEnumQuery(String graphName, String domain){
+		String retval = "select ?Class ?EnumVal from <" + graphName + "> where { " +
 				"  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec filter regex(str(?Class),'^" + domain + "'). " + 
 				"  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . " +
 				"  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. " +
@@ -633,7 +633,7 @@ public class OntologyInfo {
 		
 	}
 	
-	public static String getAnnotationLabelsQuery(String domain) {
+	private static String getAnnotationLabelsQuery(String graphName, String domain) {
 		// This query will be sub-optimal if there are multiple labels and comments for many elements
 		// because every combination will be returned
 		//
@@ -642,7 +642,7 @@ public class OntologyInfo {
 		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
 				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"\n" + 
-				"select distinct ?Elem ?Label where {\n" + 
+				"select distinct ?Elem ?Label from <" + graphName + "> where {\n" + 
 				" ?Elem a ?p.\r\n" + 
 				" filter regex(str(?Elem),'^" + domain + "'). " + 
 				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
@@ -667,7 +667,7 @@ public class OntologyInfo {
 			e.addAnnotationLabel(labelList[i]);
 		}
 	}
-	public static String getAnnotationCommentsQuery(String domain) {
+	private static String getAnnotationCommentsQuery(String graphName, String domain) {
 		// This query will be sub-optimal if there are multiple labels and comments for many elements
 		// because every combination will be returned
 		//
@@ -676,7 +676,7 @@ public class OntologyInfo {
 		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
 				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"\n" + 
-				"select distinct ?Elem ?Comment where {\n" + 
+				"select distinct ?Elem ?Comment from <" + graphName + "> where {\n" + 
 				" ?Elem a ?p.\r\n" + 
 				" filter regex(str(?Elem),'^" + domain + "'). " + 
 				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
@@ -705,13 +705,13 @@ public class OntologyInfo {
 	/**
 	 * returns the sparql query used to get all of the properties in scope.
 	 */
-	public static String getLoadPropertiesQuery(String domain){
+	private static String getLoadPropertiesQuery(String graphName, String domain){
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 						"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
 						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
 						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 						"PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " +
-						"select distinct ?Class ?Property ?Range { " +
+						"select distinct ?Class ?Property ?Range from <" + graphName + "> { " +
 						"{" +
 							"?Property rdfs:domain ?Class filter regex(str(?Class),'^" + domain + "'). " + 
 							"?Property rdfs:range ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
@@ -1067,22 +1067,22 @@ public class OntologyInfo {
 	 */
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
 		// execute each sub-query in order
-		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(domain), SparqlResultTypes.TABLE);
+		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
 		
-		endpoint.executeQuery(OntologyInfo.getTopLevelClassQuery(domain), SparqlResultTypes.TABLE);
+		endpoint.executeQuery(OntologyInfo.getTopLevelClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadTopLevelClasses(endpoint.getStringResultsColumn("Class"));
 		
-		endpoint.executeQuery(OntologyInfo.getLoadPropertiesQuery(domain), SparqlResultTypes.TABLE);
+		endpoint.executeQuery(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadProperties(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("Property"),endpoint.getStringResultsColumn("Range"));
 		
-		endpoint.executeQuery(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
+		endpoint.executeQuery(OntologyInfo.getEnumQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadEnums(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("EnumVal"));
 		
-		endpoint.executeQuery(OntologyInfo.getAnnotationLabelsQuery(domain), SparqlResultTypes.TABLE);
+		endpoint.executeQuery(OntologyInfo.getAnnotationLabelsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationLabels(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Label"));
 		
-		endpoint.executeQuery(OntologyInfo.getAnnotationCommentsQuery(domain), SparqlResultTypes.TABLE);
+		endpoint.executeQuery(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Comment"));
 		
 	}
@@ -1097,23 +1097,23 @@ public class OntologyInfo {
 		
 		// execute each sub-query in order
 		TableResultSet tableRes;
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(domain), SparqlResultTypes.TABLE);
+		String graphName = client.getConfig().getGraph();
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
 		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadTopLevelClasses(tableRes.getTable().getColumn("Class"));
 		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadProperties(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("Property"), tableRes.getTable().getColumn("Range"));
 		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
 		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationLabels(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Label"));
 		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
 	}
 		

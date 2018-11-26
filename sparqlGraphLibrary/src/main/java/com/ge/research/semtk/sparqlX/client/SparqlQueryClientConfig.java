@@ -87,6 +87,14 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 	public String getSparqlDataset(){
 		return sparqlDataset;
 	}
+	
+	/**
+	 * Newer naming convention
+	 * @return
+	 */
+	public String getGraph() {
+		return sparqlDataset;
+	}
 
 	public SparqlQueryClientConfig getSparqlQueryClientConfigFromExistingConfig(SparqlQueryClientConfig config) throws Exception{
 		return (new SparqlQueryClientConfig(config) );
