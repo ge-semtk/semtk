@@ -116,7 +116,11 @@ public class RuntimeConstraintManager {
 	}
 	
 	public String toJSONString() throws Exception {
-		return this.toJson().toString();
+		if (this.toJson() == null) {
+			return "";
+		} else {
+			return this.toJson().toString();
+		}
 	}
 	
 	/**
