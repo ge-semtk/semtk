@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@
 /*
  * This holds a local copy of model information returned from a SPARQL connection.
  * Allows local path finding and listing of classes and attributes, etc.
- * 
+ *
  * Version 2.   Multi directional breadth first path finding.
- * 
+ *
  */
 
 
@@ -33,21 +33,21 @@ var OntologyInfo = function(optJson) {
     this.propertyHash = {};         // propertyHash[propURI] = oProp object
     this.subclassHash = {};     // for each class list of sub-classes names  (NOTE: super-classes are stored in the class itsself)
     this.enumHash = {};         // this.enumHash[className] = [ full-uri-of-enum-val, full-uri-of-enum_val2... ]
-    
+
     this.maxPathLen = 50;
     this.pathWarnings = [];
-    
+
     this.connHash = {};           // calculated as needed. connHash[class] = [all single-hop paths to or from other classes]
     this.prefixHash = null;       // calculated as needed: prefixHash[longName]=shortName
-    
+
     this.getFlag = false;
-   
+
     this.asyncDomain = null;
     this.asyncSei = null;
     this.asyncStatusCallback = null;
     this.asyncSuccessCallback = null;
     this.asyncFailureCallback = null;
-    
+
     if (typeof optJson != "undefined") {
         this.addJson(optJson);
     }
@@ -66,15 +66,15 @@ OntologyInfo.getSadlRangeList = function() {
 };
 
 OntologyInfo.prototype = {
-    
+
     /*
      * create a hash of human-readable uri prefixes
      *
      */
 	calcPrefixHash : function() {
-        
+
         this.prefixHash = {};
-        
+
         // preload standard prefixes
         // http://eo.dbpedia.org/sparql?nsdecl
         this.prefixHash["http://www.w3.org/1999/02/22-rdf-syntax-ns"] = "rdf";
@@ -89,7 +89,7 @@ OntologyInfo.prototype = {
         for (var p in this.propertyHash) {
             uriList.push(this.propertyHash[p].getRangeStr());
         }
-        
+
         for (var i=0; i < uriList.length; i++) {
             var tok = uriList[i].split("#");
             // if there is a #
@@ -97,9 +97,9 @@ OntologyInfo.prototype = {
                 // if prefix isn't known yet
                 var longName = tok[0];
                 var shortName = longName.substring(longName.lastIndexOf('/')+1);
-                
+
                 if (! (longName in this.prefixHash)) {
-                   
+
                     // append a number until the shortname is unique
                     // while Object.values(this.prefixHash) contains shortName
                     // (browser compatibility issue creates unreadable code)
@@ -112,17 +112,17 @@ OntologyInfo.prototype = {
 
                     this.prefixHash[longName] = shortName;
                 }
-            } 
+            }
         }
     },
-    
+
     // TODO: this should be renamed and static
     getPrefix : function(namespace) {
         if (! this.prefixHash) this.calcPrefixHash();
-        
+
         return this.prefixHash[namespace];
     },
-       
+
     /*
      * split an OntologyName into [shortPrefix, localName]
      */
@@ -131,41 +131,41 @@ OntologyInfo.prototype = {
         return [this.getPrefix(oName.getNamespace()),
                 oName.getLocalName()];
     },
-    
+
     // TODO: this should be an OntologyName method
     getPrefixedName : function(oName) {
         return this.splitName(oName).join(":");
     },
-    
+
 	addClass : function(ontClass) {
 		var classNameStr = ontClass.getNameStr();
 		this.connHash = {};
-		
+
 		// silently overwrites if it already exists
 		this.classHash[classNameStr] = ontClass;
-		
+
 		// store subClasses
 		var supClassNames = ontClass.getParentNameStrs();
         for (var i=0; i < supClassNames.length; i++) {
-            
+
             if (!(supClassNames[i] in this.subclassHash)) {
                 this.subclassHash[supClassNames[i]] = [];
-            } 
-            
+            }
+
             this.subclassHash[supClassNames[i]].push(classNameStr);
         }
-		
+
 	},
 	setGetFlag : function() {
 		this.getFlag = true;
-	},	
-	
+	},
+
 	getDomainRangeRoots : function () {
 		// get names of all classes who are not in the range of any other classes
-		
+
 		// start with all classes
 		var ret = Object.keys(this.classHash);
-		
+
 		// loop through all classes
 		for (var className in this.classHash) {
 			var classVal = this.classHash[className];
@@ -176,7 +176,7 @@ OntologyInfo.prototype = {
 				// find range and all subclasses
 				var rangeClasses = [prop.getRangeStr()];
 				rangeClasses = rangeClasses.concat(this.getSubclassNames(rangeClasses[0]));
-				
+
 				// remove range and its subclasses from ret
 				for (var j=0; j < rangeClasses.length; j++) {
 					var index = ret.indexOf(rangeClasses[j]);
@@ -188,25 +188,25 @@ OntologyInfo.prototype = {
 		}
 		return ret;
 	},
-	
+
 	getNumClasses : function () {
 		return Object.keys(this.classHash).length;
 	},
-	
+
 	getClass : function(classNameStr) {
 		// inefficient but great for debugging
-		//if (!this.containsClass(classNameStr)) 
+		//if (!this.containsClass(classNameStr))
 		//	alert("OntologyInfo.getClass() is undefined for class name: " + classNameStr);
-		
+
 		// returns undefined if class does not exist
 		return this.classHash[classNameStr];
 	},
-	
+
 	getClassNames : function() {
 		// returns an array of all known classes
 		return Object.keys(this.classHash);
 	},
-	
+
 	getClassParents : function (ontClass) {
         var ret = [];
 		var names = ontClass.getParentNameStrs();
@@ -215,14 +215,14 @@ OntologyInfo.prototype = {
         }
 		return ret;
 	},
-	
+
 	getSubclassNames : function (classNameStr) {
 		// recursively find all subclasses
 		var ret = [];
-		
+
 		// get list of subclasses (or undefined)
 		var subclassList = this.subclassHash[classNameStr];
-		
+
 		if (subclassList) {
 			// recursively add subclass names
 			for (var i=0; i < subclassList.length; i++ ) {
@@ -232,36 +232,36 @@ OntologyInfo.prototype = {
 		}
 		return ret;
 	},
-	
+
 	getSuperclassNames : function (subclassName) {
 		// walk up list of all superclasses
 		var ret = [];
 		var superclasses = [];
-        
+
         var parentNames = this.classHash[subclassName].getParentNameStrs(false);
         for (var i=0; i < parentNames.length; i++) {
             var currParentName = parentNames[i];
             ret.push(currParentName);
             superclasses.push(this.classHash[currParentName]);
         }
-        
+
         for (var i=0; i < superclasses.length; i++) {
             var currParentClass = superclasses[i];
             ret = ret.concat(this.getSuperclassNames(currParentClass.getNameStr(false)));
         }
 		return ret;
 	},
-	
+
 	getPropNames : function() {
 		// returns an array of all known properties
 		return Object.keys(this.propertyHash);
 	},
-    
+
     getEnumNames : function() {
         // returns an array of all known enumeration values
-        
+
         var retHash = {};
-        
+
         for (var k in this.enumHash) {
             var eList = this.enumHash[k];
             for (var i=0; i < eList.length; i++) {
@@ -270,48 +270,48 @@ OntologyInfo.prototype = {
         }
         return Object.keys(retHash);
     },
-    
+
     /*
      * return a list of all namespace strings
      */
     getNamespaceNames : function () {
         var retHash = {};
         var names = this.getClassNames().concat(this.getPropNames()).concat(this.getEnumNames());
-        
+
         for (var i=0; i < names.length; i++) {
             var oName = new OntologyName(names[i]);
             retHash[oName.getNamespace()] = 1;
         }
-        
+
         return Object.keys(retHash);
     },
-    
+
     /*
      * Return list of URIs
      */
     getClassEnumList : function (oClass) {
         var ret = [];
-        
+
         if (oClass.getNameStr() in this.enumHash) {
             var eList = this.enumHash[oClass.getNameStr()];
             for (var i=0; i < eList.length; i++) {
                 ret.push(eList[i]);
             }
         }
-        
+
         return ret;
     },
-    
+
     uriIsKnown : function(uri) {
         return (    this.getPropNames().indexOf(uri) > -1   ||
                     this.getClassNames().indexOf(uri) > -1  ||
-                    this.getEnumNames().indexOf(uri) > -1   
+                    this.getEnumNames().indexOf(uri) > -1
                );
     },
-	
+
 	getConnList : function(classNameStr) {
 		// return or calculate all legal one-hop path connections to and from a class
-		
+
 		if (!(classNameStr in this.connHash)) {
 			var ret = [];
 			// var prop; // bug removed when I ported to Java
@@ -322,17 +322,17 @@ OntologyInfo.prototype = {
 			var classVal = this.classHash[classNameStr];
 			var foundHash = {};     // hash of path.asString()     PEC TODO FAILS when Man-hasSon->Man hashes same as Man<-hasSon-Man
 			var hashStr = '';
-			
-			
+
+
 			//--- calculate HasA:   exact range classes for all inherited properties
 			var props = this.getInheritedProperties(classVal);
 			for (var i=0; i < props.length; i++) {
 				var prop = props[i];
 				var rangeClassName = prop.getRangeStr();
-				
+
 				// if the range class in this domain
 				if (this.containsClass(rangeClassName)) {
-					
+
 					// Exact match:  class -> hasA -> rangeClassName
 					path = new OntologyPath(classNameStr);
 					path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
@@ -341,7 +341,7 @@ OntologyInfo.prototype = {
 						ret.push(path);
 						foundHash[hashStr] = 1;
 					}
-				
+
 					// Sub-classes:  class -> hasA -> subclass(rangeClassName)
 					var rangeSubNames = this.getSubclassNames(rangeClassName);
 					for (var j=0; j < rangeSubNames.length; j++) {
@@ -357,24 +357,24 @@ OntologyInfo.prototype = {
 					}
 				}
 			}
-			
+
 			//--- calculate HadBy: class which HasA classNameStr
-			
+
 			// store all superclasses of target class
 			var supList = this.getSuperclassNames(classNameStr);
-			
+
 			// loop through every single class in oInfo
 			for (var cname in this.classHash) {
-				
+
 				// loop through every property
 				// Issue 50 : fixed this to get inherited properties
 				// var cprops = this.classHash[cname].getProperties();
 				var cprops = this.getInheritedProperties(this.classHash[cname]);
-				
+
 				for (var i=0; i < cprops.length; i++) {
 					var prop = cprops[i];
 					var rangeClassStr = prop.getRangeStr();
-					
+
 					// HadBy:  cName -> hasA -> class
 					if (rangeClassStr == classNameStr) {
 						path = new OntologyPath(classNameStr);
@@ -385,7 +385,7 @@ OntologyInfo.prototype = {
 							foundHash[hashStr] = 1;
 						}
 					}
-					
+
 					// IsA + HadBy:   cName -> hasA -> superClass(class)
 					for (var j = 0; j < supList.length; j++) {
 						if (rangeClassStr == supList[j]) {
@@ -402,36 +402,36 @@ OntologyInfo.prototype = {
 			}
 			this.connHash[classNameStr] = ret;
 		}
-		
+
 		return this.connHash[classNameStr];
 	},
-	
+
 	containsClass : function(classNameStr) {
 		// returns an array of all known classes
 		return (classNameStr in this.classHash);
 	},
-	
+
 	containsProperty : function(propNameStr) {
 		// does this contain given property
 		return (propNameStr in this.propertyHash);
 	},
-	
+
 	getInheritedProperties : function(ontClass, skipSelfFlag) {
 		// return an array of OntologyProperties representing all inherited properties
 		// error if any class names do not exist
-		
+
 		var ret = [];
 		var dup = {};
-			
+
         // get full list of classes
         var cNames = skipSelfFlag ? [] : [ontClass.getNameStr()];
 		cNames = cNames.concat(this.getSuperclassNames(ontClass.getNameStr()));
-        
+
         // for each class
 		for (var i=0; i < cNames.length; i++) {
-			
+
 			var p = this.classHash[cNames[i]].getProperties();
-		
+
             // save each prop if it's new
 			for (var j=0; j < p.length; j++) {
 				if (ret.indexOf(p[j]) == -1) {
@@ -439,19 +439,19 @@ OntologyInfo.prototype = {
                 }
 			}
 		}
-		
+
 		// properties are sorted by subclass as we walked up the tree
 		ret.sort( function(a,b) {
                                     var aa = a.getNameStr(true);
                                     var bb = b.getNameStr(true);
-                                    if (aa < bb)  return -1; 
-                                    else if (aa > bb)  return 1; 
+                                    if (aa < bb)  return -1;
+                                    else if (aa > bb)  return 1;
                                     else return 0;
                                 } );
-		
+
 		return ret;
 	},
-	
+
 	getInheritedPropertyByKeyname(ontClass, propName) {
 		var props = this.getInheritedProperties(ontClass);
 		for (var i=0; i < props.length; i++) {
@@ -461,21 +461,21 @@ OntologyInfo.prototype = {
 		}
 		return null;
 	},
-	
+
 	getDescendantProperties : function(ontClass) {
 		// return properties in subclasses
-		
+
 		var ret = [];
 		var dup = {};
-		
+
 		// get subclasses and loop through them
 		var subclassNames = this.getSubclassNames(ontClass.getNameStr());
-		
+
 		for (var i=0; i < subclassNames.length; i++) {
 			var subClass = this.getClass(subclassNames[i]);
 			var props = subClass.getProperties();
-		
-			// loop through properties 
+
+			// loop through properties
 			for (var j=0; j < props.length; j++) {
 				// push class if it isn't already on the list
 				var key = props[j].getNameStr() + ":" + props[j].getRangeStr();
@@ -485,17 +485,19 @@ OntologyInfo.prototype = {
 				}
 			}
 		}
-		
+
 		// the following code makes them alphabetical...just to show off maybe
 		ret.sort( function(a,b) {if (a.getNameStr() < b.getNameStr())  return -1; else if (a.getNameStr() > b.getNameStr())  return 1; else return 0;} );
-		
+
 		return ret;
 	},
-	
+
 	getSuperSubClassQuery : function (domain) {
-		// returns a cheesy query that gives
+        console.log("ontologyinfo.js getSuperSubClassQuery is deprecated.  Use loadFromService() instead.");
+
+        // returns a cheesy query that gives
 		// domain - e.g. caterham.ge.com
-		
+
 		// PEC TODO: domain regex does not match the isInDomain() method logic
 		return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>    \
 				PREFIX owl: <http://www.w3.org/2002/07/owl#>   \
@@ -512,11 +514,11 @@ OntologyInfo.prototype = {
 				}    \
 			';
 	},
-	
+
 	loadSuperSubClasses : function(subClassList, superClassList) {
         var tempClasses = {};
         for (var i=0; i < subClassList.length; i++) {
-            // check for the existence of the current class. 
+            // check for the existence of the current class.
 			if( ! (subClassList[i] in tempClasses)) {
 				var c = new OntologyClass(subClassList[i], null);
 				tempClasses[subClassList[i]] = c;
@@ -525,16 +527,18 @@ OntologyInfo.prototype = {
 			var c = tempClasses[subClassList[i]];
 			c.addParentName(superClassList[i]);
         }
-        
+
 		// call addClass() on the temp list.
 		for(keyName in tempClasses) {
 			var oClass = tempClasses[keyName];
 			this.addClass(oClass);
 		}
 	},
-	
+
 	getTopLevelClassQuery : function (domain) {
-		// returns a cheesy query that gives
+        console.log("ontologyinfo.js getTopLevelClassQuery is deprecated.  Use loadFromService() instead.");
+
+        // returns a cheesy query that gives
 		// domain - e.g. caterham.ge.com
 		return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>                \
 		PREFIX owl: <http://www.w3.org/2002/07/owl#> 	    \
@@ -551,7 +555,7 @@ OntologyInfo.prototype = {
 			}                \
 			';
 	},
-	
+
 	loadTopLevelClasses : function(classList) {
 		// load from rows of [class]
 		for (var i=0; i < classList.length; i++) {
@@ -559,16 +563,16 @@ OntologyInfo.prototype = {
 			this.addClass(x);
 		}
 	},
-	
+
 	findSubclassProperty : function (className, propName) {
 		// return property from a subclass of className, or NULL
 		var scNames = this.getSubclassNames(className);
-		
+
 		// loop through subclasses
 		for (var i=0; i < scNames.length; i++) {
 			var subClass = this.getClass(scNames[i]);
 			var props = subClass.getProperties();
-			
+
 			// loop through subclass properties
 			for (var j=0; j < props.length; j++) {
 				if (props[j].getName().getFullName() == propName) {
@@ -578,9 +582,11 @@ OntologyInfo.prototype = {
 		}
 		return null;
 	},
-	
+
 	getLoadPropertiesQuery : function (domain) {
-		// returns a cheesy query that gives
+        console.log("ontologyinfo.js getLoadPropertiesQuery is deprecated.  Use loadFromService() instead.");
+
+        // returns a cheesy query that gives
 		// domain - e.g. caterham.ge.com
 		return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>              \
 		PREFIX owl: <http://www.w3.org/2002/07/owl#>              \
@@ -645,16 +651,16 @@ OntologyInfo.prototype = {
 			}              \
 		}';
 	},
-	
+
 	loadProperties : function(classList, propList, rangeList) {
 		// load from rows of [class, property, range]
 		for (var i=0; i < classList.length; i++) {
             var prop = null;
-            
+
             // does property already exist
 			if (propList[i] in this.propertyHash) {
 				prop = this.propertyHash[propList[i]];
-				
+
 				// if property exists, make sure range is the same
 				if (prop.getRangeStr() != rangeList[i]) {
 					throw new Error("SemTk doesn't handle complex ranges.\nClass" + classList[i] +
@@ -672,9 +678,11 @@ OntologyInfo.prototype = {
 			this.propertyHash[propList[i]] = prop;
 		}
 	},
-	
+
 	getEnumQuery : function (domain) {
-		// return every ?t ?e where 
+        console.log("ontologyinfo.js getEnumQuery is deprecated.  Use loadFromService() instead.");
+
+        // return every ?t ?e where
 		//     ?t is a class that "must be one of" ?e
 		return  'select ?Class ?EnumVal where { \n' +
 				'  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec filter regex(str(?Class),"^' + domain + '").' +
@@ -682,13 +690,13 @@ OntologyInfo.prototype = {
 				'  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. \n' +
 				'}';
 	},
-	
+
 	loadEnums : function(classList, valList) {
 		// load from rows of [class, property, range]
 		for (var i=0; i < classList.length; i++) {
 			var className = classList[i];
 			var enumVal = valList[i];
-			
+
 			// add to enumHash list for this class, or start a new entry
 			if (className in this.enumHash) {
 				this.enumHash[classList[i]].push(valList[i]);
@@ -697,85 +705,89 @@ OntologyInfo.prototype = {
 			}
 		}
 	},
-	
+
     getAnnotationLabelsQuery : function(domain) {
-		// This query will be sub-optimal if there are multiple labels and comments for many elements
+        console.log("ontologyinfo.js getAnnotationLabelsQuery is deprecated.  Use loadFromService() instead.");
+
+        // This query will be sub-optimal if there are multiple labels and comments for many elements
 		// because every combination will be returned
 		//
 		// But in the ususal case where each element has zero or 1 labels and comments
 		// It is more efficient to get them in a single query with each element URI only transmitted once.
-		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
-				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
-				"\n" + 
-				"select distinct ?Elem ?Label where {\n" + 
-				" ?Elem a ?p.\r\n" + 
-				" filter regex(str(?Elem),'^" + domain + "'). " + 
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
-				"    optional { ?Elem rdfs:label ?Label. }\n" + 
+		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" +
+				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" +
+				"\n" +
+				"select distinct ?Elem ?Label where {\n" +
+				" ?Elem a ?p.\r\n" +
+				" filter regex(str(?Elem),'^" + domain + "'). " +
+				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" +
+				"    optional { ?Elem rdfs:label ?Label. }\n" +
 				"}";
 	},
-	
+
 	loadAnnotationLabels : function(elemList, labelList) {
-        
+
 		for (var i=0; i < elemList.length; i++) {
-			
+
 			// find the element: class or property
 			var e = this.classHash[elemList[i]];
 			if (e == null) {
 				e = this.propertyHash[elemList[i]];
-			} 
+			}
 			if (e == null)  {
 				throw new Error("Error in ontology: cannot find element to attach annotation: " + elemList[i]);
 			}
-			
+
 			// add the annotations (empties and duplicates are handled downstream)
 			e.addAnnotationLabel(labelList[i]);
 		}
 	},
-    
+
 	getAnnotationCommentsQuery : function(domain) {
-		// This query will be sub-optimal if there are multiple labels and comments for many elements
+        console.log("ontologyinfo.js getAnnotationCommentsQuery is deprecated.  Use loadFromService() instead.");
+
+        // This query will be sub-optimal if there are multiple labels and comments for many elements
 		// because every combination will be returned
 		//
 		// But in the ususal case where each element has zero or 1 labels and comments
 		// It is more efficient to get them in a single query with each element URI only transmitted once.
-		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
-				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
-				"\n" + 
-				"select distinct ?Elem ?Comment where {\n" + 
-				" ?Elem a ?p.\r\n" + 
-				" filter regex(str(?Elem),'^" + domain + "'). " + 
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
+		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" +
+				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" +
+				"\n" +
+				"select distinct ?Elem ?Comment where {\n" +
+				" ?Elem a ?p.\r\n" +
+				" filter regex(str(?Elem),'^" + domain + "'). " +
+				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" +
 				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
 				"}";
 	},
-	
+
 	loadAnnotationComments : function(elemList, commentList) {
 		for (var i=0; i < elemList.length; i++) {
-			
+
 			// find the element: class or property
 			var e = this.classHash[elemList[i]];
 			if (e == null) {
 				e = this.propertyHash[elemList[i]];
-			} 
+			}
 			if (e == null)  {
 				throw new Error("Error in ontology: cannot find element " + elemList[i] + " in the ontology");
 			}
-			
+
 			// add the annotations (empties and duplicates are handled downstream)
 			e.addAnnotationComment(commentList[i]);
 		}
 	},
-    
+
 	classIsEnum : function (classURI) {
 		return classURI in this.enumHash;
 	},
-	
+
 	getMatchingEnum : function (classURI, enumStr) {
 		// return full URI of enumStr matching an enumerated value for classURI
 		// "match" means enumStr is an exact match or the local fragment
 		// returns NULL if classURI is not enumerated or if none of its enum values end in enumStr
-		
+
 		if (classURI in this.enumHash) {
 			var enumList = this.enumHash[classURI];
 			for (var i=0; i < enumList.length; i++) {
@@ -783,10 +795,10 @@ OntologyInfo.prototype = {
 					return enumList[i];
 				}
 			}
-		} 
+		}
 		return null;
 	},
-	
+
 	findAllPaths : function(fromClassName, targetClassNames, domain) {
 		//   A form of A* path finding algorithm
 		//   See getConnList() for the types of connections that are allowed
@@ -795,58 +807,58 @@ OntologyInfo.prototype = {
 		//        pathX.getEndClassName() == member of targetClassNames
 		//        pathX.asList() returns list of triple lists [[className0, att, className1], [className1, attName, className2]...]
 		var t0 = (new Date()).getTime();
-		this.pathWarnings = []; 
+		this.pathWarnings = [];
 		var waitingList = [new OntologyPath(fromClassName)];
 		var ret = [];
 		var targetHash = {};              // hash of all possible ending classes:  targetHash[className] = 1
-		
+
 		var LENGTH_RANGE = 2;     // search only for paths this much longer than the shortest one found
 		var SEARCH_TIME_MSEC = 5000;
 		var LONGEST_PATH = 10;
 		var CONSOLE_LOG = false;
-		
+
 		/* ISSUE 50:  but perhaps these should be handled by a caller, not by this method
 		 * Pathfinding should also find paths
  		 *   A) from the new class to a superclass of an existing class
          *   B) from an existing class to a superclass of the new class.
 		 */
-		
+
 		// return if there is no endpoint
 		if (targetClassNames.length < 1) return [];
-		
+
 		// PEC CONFUSED: why is this here?  Process->hasNext->Process can't get past here.
 		// return if this special case has no possible solution
 		//if (targetClassNames.length == 1 && targetClassNames[0] == fromClassName) return [];
-		
+
 		// set up targetHash[targetClass] = 1
 		for (var i=0; i < targetClassNames.length; i++) {
-            
+
             // experiment:  don't connect to an existing measurement
             if ( !this.experimentIsDataClass(targetClassNames[i]) ) {
 			     targetHash[targetClassNames[i]] = 1;
             }
 		}
-		
-				
-		// STOP CRITERIA A: search as long as there is a waiting list 
+
+
+		// STOP CRITERIA A: search as long as there is a waiting list
 		while (waitingList.length > 0) {
 			// pull one off waiting list
 			var item = waitingList.shift();
 			var waitClass = item.getEndClassName();
 			var waitPath = item;
-			
+
 			// STOP CRITERIA B:  Also stop searching if:
 			//    this final path (with 1 added connection) will be longer than the first (shortest) already found path
-			if (ret.length > 0 && 
+			if (ret.length > 0 &&
 				(waitPath.getLength() + 1  > ret[0].getLength() + LENGTH_RANGE)) {
 				break;
-			} 
+			}
 
 			// STOP CRITERIA C: stop if path is too long
 			if (waitPath.getLength() > LONGEST_PATH) {
 				break;
 			}
-			
+
 			// STOP CRITERIA D: too much time spent searching
 			var tt = (new Date()).getTime();
 			// PEC TODO: false && turns it off for debugging
@@ -854,47 +866,47 @@ OntologyInfo.prototype = {
 				alert("Note: Path-finding timing out.  Search incomplete.");
 				break;
 			}
-			
+
 			// get all one hop connections and loop through them
-			var conn = this.getConnList(waitClass); 
+			var conn = this.getConnList(waitClass);
 			for (var i=0; i < conn.length; i++) {
-				
+
 				//  each connection is a path with only one node (the 0th)
 				//  grab the name of the newly found class
 				var newClass = "";
 				var newPath = null;
 				var loopFlag = false;
-				
+
 				// if the newfound class is pointed to by an attribute of one on the wait list
 				if (conn[i].getStartClassName() == waitClass) {
 					newClass = conn[i].getEndClassName();
-					
+
 				} else {
 					newClass = conn[i].getStartClassName();
 				}
-				
+
 				// check for loops in the path before adding the class
 				if (waitPath.containsClass(newClass)) {
 					loopFlag = true;
-				} 
-				
+				}
+
 				// build the new path
 				var t = conn[i].getTriple(0);
 				newPath = waitPath.deepCopy();
 				newPath.addTriple(t[0], t[1], t[2]);
-				
+
 				// if path leads anywhere in domain, store it
 				var name = new OntologyName(newClass);
                 // experiment: don't connect through a measurement
 				if (name.isInDomain(domain) && ! this.experimentIsDataClass(newClass) ) {
-					
+
 					// if path leads to a target, push onto the ret list
 					if (newClass in targetHash) {
 						ret.push(newPath);
 						if (CONSOLE_LOG) console.log(">>>found path " + newPath.debugString());
-						
+
 					// PEC CONFUSED: this used to happen every time without any "else" or "else if"
-					
+
 					// if path doens't lead to target, add to waiting list
 					// But if it is a loop (that didn't end at the targetHash) then stop
 					}  else if (loopFlag == false){
@@ -902,64 +914,64 @@ OntologyInfo.prototype = {
 						waitingList.push(newPath);
 						if (CONSOLE_LOG) console.log("searching " + newPath.debugString());
 					}
-					
+
 				}
-				
+
 			}
 		}
-		
+
 		if (CONSOLE_LOG) {
 			console.log("These are the paths I found:");
 			for (var i=0; i < ret.length; i++) {
 				console.log(ret[i].debugString());
 			}
-			
+
 			var t1 = (new Date()).getTime();
 			console.log("findAllPaths time is: " + (t1-t0) + " msec");
 		}
 		return ret;
 	},
-	
+
 	experimentIsDataClass : function (classStr) {
         return (classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" ||
                 classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#XYZCoordinate");
     },
-    
+
 	classIsA : function (class1, class2) {
-		
-		
+
+
 		if (!class1 || !class2) return false;
-		
+
         if (class1.equals(class2)) return true;
-        
+
         var allParents = this.getClassParents(class1);
 		// recursively check class1 parents
 		for (var i=0; i < allParents.length; i++) {
 			if (this.classIsA(allParents[i], class2)) {
                 return true;
             }
-		} 
-		
+		}
+
 		return false;
 	},
-	
+
 	classIsInRange : function (class1, range1) {
 		// at the moment a range is just a single class.
 		return this.classIsA(class1, this.getClass(range1.getFullName()));
-		
+
 	},
-	
+
 	addPathWarning : function (txt) {
 		// add a path warning if it is new
 		if (this.pathWarnings.indexOf(txt) < 0) {
 			this.pathWarnings.push(txt);
 		}
 	},
-	
+
 	hasPathWarnings : function () {
 		return (this.pathWarnings.length > 0);
 	},
-	
+
 	getPathWarnings : function () {
 		ret = "";
 		for (var i=0; i < this.pathWarnings.length; i++) {
@@ -967,131 +979,162 @@ OntologyInfo.prototype = {
 		}
 		return ret;
 	},
-	
-	clearPathWarnings : function() { 
-		this.pathWarnings = []; 
+
+	clearPathWarnings : function() {
+		this.pathWarnings = [];
 	},
-	
+
 	loadAsync : function(conn, statusCallback, successCallback, failureCallback) {
-		// loadAsync() is for backwards compatibility.   
+		// loadAsync() is for backwards compatibility.
 		// Please use load() instead.
 		console.log("OntologyInfo.loadAsync(): called DEPRECATED function.  Use load()");
 		this.load(conn.getDomain(), conn.getModelInterface(0), statusCallback, successCallback, failureCallback);
-		
+
     },
-    
+
     loadSparqlConnection : function(conn, queryServiceUrl, statusCallback, successCallback, failureCallback, optRecursionIndex) {
     	throw new Error("This is implemented in backcompatutils.js");
-    	
+
     },
-    
+
+    loadFromService : function (oInfoClient, conn, statusCallback, successCallback, failureCallback) {
+        statusCallback("retrieving ontology");
+
+        var success = function(statusCbk, successCbk, failureCbk, msiRes) {
+            statusCbk("parsing ontology");
+            if (!msiRes.isSuccess()) {
+                failureCbk(msiRes.getFailureHtml());
+            } else {
+                this.addJson(msiRes.getSimpleResultField("ontologyInfo"));
+                statusCbk("");
+                successCbk();
+            }
+        }.bind(this, statusCallback, successCallback, failureCallback);
+
+        oInfoClient.execGetOntologyInfoJson(conn, success);
+    },
+
     load : function (domain, interfaceOrClient, statusCallback, successCallback, failureCallback) {
-    	// interfaceOrClient: sparqlServerInterface or MsiClientQuery
-    	// 
+    	console.log("ontologyinfo.js loadVirtuosoOnlyDeprecated is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
+        // interfaceOrClient: sparqlServerInterface or MsiClientQuery
+    	//
     	this.asyncDomain = domain;
 		this.asyncSei = interfaceOrClient;
 		this.asyncStatusCallback = statusCallback;
 		this.asyncSuccessCallback = successCallback;
 		this.asyncFailureCallback = failureCallback;
-		
+
     	// Need to initialize this object intelligently:  some server address
     	var sparql = this.getSuperSubClassQuery(this.asyncDomain);
     	statusCallback("Loading ontology (1/4: sub-classes)");
     	this.executeQuery(sparql, this.doLoad1.bind(this));
     },
-    
+
     doLoad1 : function (qsResult) {
-    	// if loading is still successful, load classes, run topLevelClass query, callback: doLoad2()
-    	
+        console.log("ontologyinfo.js doLoad1 is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
+        // if loading is still successful, load classes, run topLevelClass query, callback: doLoad2()
+
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("First connection to sparql endpoint failed.\nSuper-subclass query:\n\n" + qsResult.getStatusMessage());
-			
+
     	} else {
             // Note: can load nothing if ontology is flat
-    		this.loadSuperSubClasses(qsResult.getStringResultsColumn("x"), 
+    		this.loadSuperSubClasses(qsResult.getStringResultsColumn("x"),
                                      qsResult.getStringResultsColumn("y"));
-    		    	
+
     		var sparql = this.getTopLevelClassQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (2/4: top-level classes)");
-        	
+
     		this.executeQuery(sparql, this.doLoad2.bind(this));
     	};
     },
-    
+
     doLoad2 : function (qsResult) {
+        console.log("ontologyinfo.js doLoad2 is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
     	// if loading is still successful, load classes, run loadProperties query, callback: doLoad2()
-    	
+
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Top-level class query:\n\n " + qsResult.getStatusMessage());
 
 		} else {
 			this.loadTopLevelClasses(qsResult.getStringResultsColumn("Class"));
-    		    	
+
     		var sparql = this.getLoadPropertiesQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (3/4: properties)");
     		this.executeQuery(sparql, this.doLoad3.bind(this));
     	};
     },
-    
+
     doLoad3 : function  (qsResult) {
-    	// last in callback chain.  
+        console.log("ontologyinfo.js doLoad3 is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
+        // last in callback chain.
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Class properties query:\n\n" + qsResult.getStatusMessage());
-			
+
 		} else {
 			this.loadProperties(qsResult.getStringResultsColumn("Class"),
                                 qsResult.getStringResultsColumn("Property"),
                                 qsResult.getStringResultsColumn("Range") );
-			
+
 			var sparql = this.getAnnotationCommentsQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (4/6: comments)");
     		this.executeQuery(sparql, this.doLoad4.bind(this));
-		}	
+		}
     },
-    
+
     doLoad4 : function  (qsResult) {
-    	// last in callback chain.  
+        console.log("ontologyinfo.js doLoad4 is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
+        // last in callback chain.
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Annotation comments query:\n\n" + qsResult.getStatusMessage());
-			
+
 		} else {
 			this.loadAnnotationComments(qsResult.getStringResultsColumn("Elem"),
                                         qsResult.getStringResultsColumn("Comment"));
-			
+
 			var sparql = this.getAnnotationLabelsQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (5/6: labels)");
     		this.executeQuery(sparql, this.doLoad5.bind(this));
-		}	
+		}
     },
-    
+
     doLoad5 : function  (qsResult) {
-    	// last in callback chain.  
+        console.log("ontologyinfo.js doLoad5 is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
+        // last in callback chain.
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Annotation labels query:\n\n" + qsResult.getStatusMessage());
-			
+
 		} else {
 			this.loadAnnotationLabels(qsResult.getStringResultsColumn("Elem"),
                                       qsResult.getStringResultsColumn("Label") );
-			
+
 			var sparql = this.getEnumQuery(this.asyncDomain);
     		this.asyncStatusCallback("Loading ontology (6/6: enums)");
     		this.executeQuery(sparql, this.doLoad6.bind(this));
-		}	
+		}
     },
-    
+
     doLoad6 : function  (qsResult) {
-    	// last in callback chain.  
+        console.log("ontologyinfo.js doLoad6 is deprecated. May only work with virtuoso.  Use loadFromService() instead.");
+
+        // last in callback chain.
     	if (!qsResult.isSuccess()) {
     		this.asyncFailureCallback("Enums query:\n\n" + qsResult.getStatusMessage());
-   
+
 		} else {
 			this.loadEnums(qsResult.getStringResultsColumn("Class"),
                            qsResult.getStringResultsColumn("EnumVal"));
 			this.asyncStatusCallback("");
 			this.asyncSuccessCallback();
-		}	
+		}
     },
-    
+
     executeQuery : function (sparql, callback) {
     	// some kind of Justin / Kareem hack
     	// will die if using query server.  fix please.
@@ -1101,7 +1144,7 @@ OntologyInfo.prototype = {
 			this.asyncSei.executeAndParse(sparql, callback);
 		}
     },
-    
+
     // numeric prefix for efficient JSON
     prefixURI : function (uri, prefixToIntHash) {
         var tok = uri.split("#");
@@ -1111,13 +1154,13 @@ OntologyInfo.prototype = {
             if (! (tok[0] in prefixToIntHash)) {
                 prefixToIntHash[tok[0]] = Object.keys(prefixToIntHash).length;
             }
-            
+
             return prefixToIntHash[tok[0]] + ":" + tok[1];
         } else {
             return uri;
         }
     },
-    
+
     unPrefixURI : function (uri, intToPrefixHash) {
         var tok = uri.split(":");
         if (tok.length == 2 && tok[0] in intToPrefixHash) {
@@ -1126,11 +1169,11 @@ OntologyInfo.prototype = {
             return uri;
         }
     },
-    
+
     /*
      * Build a json that mimics the returns from the load queries
      */
-    toJson : function () { 
+    toJson : function () {
         var json = {
             "version" : OntologyInfo.JSON_VERSION,
             "topLevelClassList" : [],
@@ -1141,7 +1184,7 @@ OntologyInfo.prototype = {
             "annotationCommentList" : [],
             "prefixes" : {}
         };
-        
+
         var prefixToIntHash = {};
 
         // topLevelClassList and subClassSuperClassList
@@ -1152,29 +1195,29 @@ OntologyInfo.prototype = {
                 json.topLevelClassList.push(this.prefixURI(name, prefixToIntHash));
             } else {
                 for (var i=0; i < parents.length; i++) {
-                    json.subClassSuperClassList.push([this.prefixURI(name, prefixToIntHash), 
+                    json.subClassSuperClassList.push([this.prefixURI(name, prefixToIntHash),
                                                       this.prefixURI(parents[i], prefixToIntHash) ]);
                 }
             }
         }
-        
+
         // classPropertyRangeList
         for (var c in this.classHash) {
             var propList = this.classHash[c].getProperties();
             for (var i=0; i < propList.length; i++) {
                 var oProp = propList[i];
-                json.classPropertyRangeList.push([this.prefixURI(c, prefixToIntHash), 
+                json.classPropertyRangeList.push([this.prefixURI(c, prefixToIntHash),
                                                   this.prefixURI(oProp.getNameStr(), prefixToIntHash),
                                                   this.prefixURI(oProp.getRangeStr(), prefixToIntHash) ]);
             }
         }
-        
+
         // classEnumValList
         for (var c in this.enumHash) {
             var valList = this.enumHash[c];
             for (var i=0; i < valList.length; i++) {
                 var v = valList[i];
-                json.classEnumValList.push([this.prefixURI(c, prefixToIntHash), 
+                json.classEnumValList.push([this.prefixURI(c, prefixToIntHash),
                                             this.prefixURI(v, prefixToIntHash)]);
             }
         }
@@ -1185,7 +1228,7 @@ OntologyInfo.prototype = {
         	for (var i=0; i < commentList.length; i++) {
                 json.annotationCommentList.push([this.prefixURI(c, prefixToIntHash), commentList[i]]);
         	}
-        	
+
         	labelList = this.classHash[c].getAnnotationLabels();
         	for (var i=0; i < labelList.length; i++) {
                 json.annotationLabelList.push([this.prefixURI(c, prefixToIntHash), labelList[i]]);
@@ -1198,21 +1241,21 @@ OntologyInfo.prototype = {
         	for (var i=0; i < commentList.length; i++) {
                 json.annotationCommentList.push([this.prefixURI(p, prefixToIntHash), commentList[i]]);
         	}
-        	
+
         	labelList = this.propertyHash[p].getAnnotationLabels();
         	for (var i=0; i < labelList.length; i++) {
                 json.annotationLabelList.push([this.prefixURI(p, prefixToIntHash), labelList[i]]);
         	}
         }
-        
+
         // prefixes: reverse the hash so its intToPrefix
         for (var p in prefixToIntHash) {
             json.prefixes[prefixToIntHash[p]] = p;
         }
-        
+
         return json;
     },
-    
+
     /*
      * adds json to OntologyInfo
      *
@@ -1226,23 +1269,23 @@ OntologyInfo.prototype = {
         if (version > OntologyInfo.JSON_VERSION) {
             throw new Error("Can't decode OntologyInfo JSON with newer version > " + OntologyInfo.JSON_VERSION + " found: " + version);
         }
-        /* 
+        /*
          * return one columns of data as a list
          * unPrefix all values
-         */ 
+         */
         var getColumn = function(hash, data, colNum) {
             return data.map( function(h, c, row) { return this.unPrefixURI(row[c], h); }.bind(this, hash, colNum) );
         }.bind(this, json.prefixes);
-                
+
         // unhash topLevelClasses
         var topLevelClassList = [];
         for (var i=0; i < json.topLevelClassList.length; i++) {
             topLevelClassList.push(this.unPrefixURI(json.topLevelClassList[i], json.prefixes));
         }
-        
+
         this.loadTopLevelClasses(topLevelClassList);
         this.loadSuperSubClasses(getColumn(json.subClassSuperClassList, 0),
-                                 getColumn(json.subClassSuperClassList, 1)     
+                                 getColumn(json.subClassSuperClassList, 1)
                                 );
         this.loadProperties(getColumn(json.classPropertyRangeList, 0),
                             getColumn(json.classPropertyRangeList, 1),
@@ -1251,25 +1294,25 @@ OntologyInfo.prototype = {
         this.loadEnums(getColumn(json.classEnumValList, 0),
                        getColumn(json.classEnumValList, 1)
                       );
-        
+
         if (json.hasOwnProperty("annotationLabelList")) {
             this.loadAnnotationLabels(getColumn(json.annotationLabelList, 0),
                                       getColumn(json.annotationLabelList, 1));
         }
-        
+
         if (json.hasOwnProperty("annotationCommentList")) {
             this.loadAnnotationComments(getColumn(json.annotationCommentList, 0),
                                       getColumn(json.annotationCommentList, 1));
         }
     },
-    
+
     /* =========== Edit functions =============== */
-    
+
     clearTempHashes : function () {
-        this.connHash = {};         
+        this.connHash = {};
         this.prefixHash = null;
     },
-    
+
     //
     // Delete all traces of a namespace from each hash
     // and from any classes
@@ -1277,7 +1320,7 @@ OntologyInfo.prototype = {
     deleteNamespace : function (namespace) {
         var prefix = namespace + "#";
         this.clearTempHashes();
-        
+
         // classHash
         for (var c in this.classHash) {
             if (c.startsWith(prefix)) {
@@ -1286,14 +1329,14 @@ OntologyInfo.prototype = {
                 this.classHash[c].deleteNamespace(namespace);
             }
         }
-        
+
         // propertyHash
         for (var p in this.propertyHash) {
              if (p.startsWith(prefix)) {
                 delete this.propertyHash[p];
             }
         }
-        
+
         // subclassHash
         for (var c in this.subclassHash) {
             if (c.startsWith(prefix)) {
@@ -1308,7 +1351,7 @@ OntologyInfo.prototype = {
                 }
             }
         }
-        
+
         // enumHash
         for (var e in this.enumHash) {
             if (e.startsWith(prefix)) {
@@ -1324,7 +1367,7 @@ OntologyInfo.prototype = {
             }
         }
     },
-    
+
     //
     // Delete all traces of a namespace from each hash
     // and from any classes
@@ -1332,24 +1375,24 @@ OntologyInfo.prototype = {
     renameNamespace : function (oldName, newName) {
         var oldPrefix = oldName + "#";
         this.clearTempHashes();
-        
+
         // usage:  uri = updateURI(uri)
         var updateURI = function(oName, nName, uri) {
-           return nName + uri.slice(oName.length); 
+           return nName + uri.slice(oName.length);
         }.bind(this, oldName, newName);
-        
+
         // classHash
         for (var c in this.classHash) {
             // handle the class innards
             this.classHash[c].renameNamespace(oldName, newName);
-            
+
             if (c.startsWith(oldPrefix)) {
                 // rename hash key
                 this.classHash[updateURI(c)] = this.classHash[c];
                 delete this.classHash[c];
-            } 
+            }
         }
-        
+
         // propertyHash
         for (var p in this.propertyHash) {
              if (p.startsWith(oldPrefix)) {
@@ -1358,7 +1401,7 @@ OntologyInfo.prototype = {
                 delete this.propertyHash[p];
             }
         }
-        
+
         // subclassHash
         for (var c in this.subclassHash) {
             if (c.startsWith(oldPrefix)) {
@@ -1374,7 +1417,7 @@ OntologyInfo.prototype = {
                 }
             }
         }
-        
+
         // enumHash
         for (var e in this.enumHash) {
             if (e.startsWith(oldPrefix)) {
@@ -1391,7 +1434,7 @@ OntologyInfo.prototype = {
             }
         }
     },
-    
+
     /*
      * Change name of a class
      * @param oClass {OntologyClass} - a class from this oInfo
@@ -1399,27 +1442,27 @@ OntologyInfo.prototype = {
      */
     editClassName : function(oClass, newURI) {
         var oldURI = oClass.getNameStr(false);
-        
+
         if (! SparqlUtil.isValidURI(newURI)) {
             throw new Error("Invalid URL: " + newURI);
-        
+
         } else if (this.uriIsKnown(newURI)) {
             throw new Error("URI is already in use: " + newURI);
-        
+
         } else if (newURI != oldURI) {
-            
+
             oClass.setName(newURI);
-            
+
             // update classHash
             this.classHash[newURI] = oClass;
             delete this.classHash[oldURI];
-            
+
             // update subclassHash keys
             if (oldURI in this.subclassHash) {
                 this.subclassHash[newURI] = this.subclassHash[oldURI];
                 delete this.subclassHash[oldURI];
             }
-            
+
             // update subclassHash contents
             for (var key in this.subclassHash) {
                 var i = this.subclassHash[key].indexOf(oldURI);
@@ -1427,13 +1470,13 @@ OntologyInfo.prototype = {
                     this.subclassHash[key][i] = newURI;
                 }
             }
-            
+
             // update enumHash
             if (oldURI in this.enumHash) {
                 this.enumHash[newURI] = this.enumHash[oldURI];
                 delete this.enumHash[oldURI];
             }
-            
+
             // update enumHash contents
             for (key in this.enumHash) {
                 var i = this.enumHash[key].indexOf(oldURI);
@@ -1441,19 +1484,19 @@ OntologyInfo.prototype = {
                     this.enumHash[key][i] = newURI;
                 }
             }
-            
+
             // upadate superclasses
             for (var key in this.classHash) {
                 this.classHash[key].renameParent(oldURI, newURI);
             }
-   
+
             // clear connHash
-            this.connHash = {};   
-            
+            this.connHash = {};
+
             return oClass;
-        } 
+        }
     },
-    
+
     /*
      * Change name of a class
      * @param oClass {OntologyClass} - a class from this oInfo
@@ -1461,8 +1504,8 @@ OntologyInfo.prototype = {
      */
     deleteClass : function(oClass) {
         var oldURI = oClass.getNameStr(false);
-        
-                
+
+
         // update classHash
         delete this.classHash[oldURI];
 
@@ -1478,7 +1521,7 @@ OntologyInfo.prototype = {
                 splice(this.subclassHash[key], i, 1);
             }
         }
- 
+
         // update enumHash
         if (oldURI in this.enumHash) {
             delete this.enumHash[oldURI];
@@ -1493,7 +1536,7 @@ OntologyInfo.prototype = {
         }
 
         // clear connHash
-        this.connHash = {};   
+        this.connHash = {};
     }
 };
 
@@ -1505,62 +1548,62 @@ var OntologyPath = function(className) {
 	this.tripleList = [];
 	this.startClassName = className;
 	this.endClassName = className;
-	
+
 	// hash of all known classes
 	this.classHash = {};
 	this.classHash[className] = 1;
 };
 
 OntologyPath.prototype = {
-	
+
 	addTriple : function(className0, attName, className1) {
 		// PEC TODO:  Fails when className0 == className1
 		//            Presumes "forward" link direction.
 		//            There's no way to make it go in the other direction.
 		//            This might only matter for paths with only one hop  [ Man hasDad Man ]
 		//              because that's the only time we care about new vs. existing sparqlID's
-		
+
 		// add whichever class is new to the hash and endpoint
 		if (className0 == this.endClassName) {
 			this.classHash[className1] = 1;
 			this.endClassName = className1;
-			
+
 		} else if (className1 == this.endClassName) {
 			this.classHash[className0] = 1;
 			this.endClassName = className0;
-			
+
 		} else {
 			alert("OntologyPath.addTriple(): Error adding triple to path.  It isn't connected.\n"+
 				   "  Triple is: "+className0+","+attName+"," + className1 + "\n" +
 				   "  Path is: " + this.debugString());
 		}
-		
+
 		// push triple onto end of path
 		this.tripleList.push([className0, attName, className1]);
 	},
-	
+
 	addTriples : function(tripleList) {
 		for (var i=0; i < tripleList.length; i++) {
 			this.addTriple(tripleList[i][0], tripleList[i][1], tripleList[i][2]);
 		}
 	},
-	
+
 	asList : function() {
 		// return list of triples.  Each triple is a list of three string names [class, att, class]
 		return this.tripleList;
 	},
-	
+
 	asOldFashionedList : function() {
 		// create backwards compatible list if possible.  Otherwise alert and return []
 		var ret = [];
-		
+
 		// push first triple
 		if (this.tripleList.length > 0) {
 			ret.push(this.tripleList[0][0]);
 			ret.push(this.tripleList[0][1]);
 			ret.push(this.tripleList[0][2]);
 		}
-		
+
 		// push the rest skipping the first value presuming it is a duplicate of the last value in the prev triple
 		// if it is not a duplicate then alert and fail.
 		for (var i=1; i < this.tripleList.length; i++) {
@@ -1572,66 +1615,66 @@ OntologyPath.prototype = {
 			ret.push(this.tripleList[i][2]);
 		}
 		return ret;
-		
+
 	},
-	
+
 	getClass0Name : function(tripleIndex) {
 		return this.tripleList[tripleIndex][0];
 	},
-	
+
 	getClass1Name : function(tripleIndex) {
 		return this.tripleList[tripleIndex][2];
 	},
-	
+
 	getStartClassName: function() {
 		return this.startClassName;
 	},
-	
+
 	// for paul
 	getEndClassName : function () {
 		return this.endClassName;
 	},
-	
+
 	// for justin
 	getAnchorClassName : function () {
 		return this.endClassName;
 	},
-	
+
 	getAttributeName : function(tripleIndex) {
 		return this.tripleList[tripleIndex][1];
 	},
-	
+
 	getTriple : function(tripleIndex) {
 		// return a copy of the given triple
-		return [this.tripleList[tripleIndex][0], 
-		        this.tripleList[tripleIndex][1], 
+		return [this.tripleList[tripleIndex][0],
+		        this.tripleList[tripleIndex][1],
 		        this.tripleList[tripleIndex][2]
 		       ];
 	},
-	
+
 	getLength : function () {
 		return this.tripleList.length;
 	},
-	
+
 	containsClass : function(className) {
 		return className in this.classHash;
 	},
-	
+
 	isSingleLoop : function () {
 		// detect exceptional path such as  Man -hasSon-> Man
 		// It's the only case where start and end class don't help determine the direction of the path.
 		return (this.tripleList.length == 1 && this.tripleList[0][0] == this.tripleList[0][2]);
 	},
-	
+
 	deepCopy : function() {
 		ret = new OntologyPath(this.getStartClassName());
-		
+
 		for (var i=0; i < this.tripleList.length; i++) {
 			ret.addTriple(this.tripleList[i][0], this.tripleList[i][1], this.tripleList[i][2]);
 		}
 		return ret;
 	},
-	
+
 	debugString : function() {
 		ret = "(OntologyPath from " + this.getStartClassName() + " to " + this.getEndClassName() + ") \n [";
 		for (var i=0; i < this.tripleList.length; i++) {
@@ -1641,28 +1684,28 @@ OntologyPath.prototype = {
 		ret = ret + "]";
 		return ret;
 	},
-	
+
 	asString : function() {
 		// generate a one-line string for the user to choose or select paths
 		ret = "";
 		for (var i=0; i < this.tripleList.length; i++) {
-			
+
 			var from =  new OntologyName(this.tripleList[i][0]).getLocalName();
 			var via =  new OntologyName(this.tripleList[i][1]).getLocalName();
 			var to =  new OntologyName(this.tripleList[i][2]).getLocalName();
-			
+
 			// Always show first class and attribute
 			ret += from + "." + via + " ";
-			
+
 			// If "to" does not equal first class in next triple then put it in too
 			if (i == this.tripleList.length - 1 || to != this.tripleList[i+1][2].getLocalName()) {
 				ret += to + " ";
 			}
 		}
-		
+
 		return ret;
 	},
-    
+
     genPathString : function(anchorNode, singleLoopFlag) {
         var str = anchorNode.getSparqlID() + ": ";
 
@@ -1709,7 +1752,7 @@ OntologyPath.prototype = {
 
         return str;
     },
-		
+
 };
 
 /*
@@ -1735,11 +1778,11 @@ OntologyAnnotation.prototype = {
             }
         }
 	},
-    
+
     clearAnnotationComments : function() {
         this.comments = [];
     },
-	
+
 	/**
 	 * Add label, silently ignoring duplicates, nulls, isEmpty
 	 * @param label
@@ -1752,11 +1795,11 @@ OntologyAnnotation.prototype = {
             }
         }
 	},
-	
+
     clearAnnotationLabels : function() {
         this.labels = [];
     },
-    
+
 	getAnnotationComments : function() {
 		return this.comments;
 	},
@@ -1772,7 +1815,7 @@ OntologyAnnotation.prototype = {
 	getAnnotationCommentsString : function() {
 		return this.comments.join(" ; ");
 	},
-	
+
 	/**
 	 * Return ; separated list of comments, or ""
 	 * @return
@@ -1780,7 +1823,7 @@ OntologyAnnotation.prototype = {
 	getAnnotationLabelsString : function() {
 		return this.labels.join(" ; ");
 	},
-	
+
 	/**
      * Generate <rdfs:label> and <rdfs:comment> lines for an element
      * @param elem
@@ -1788,29 +1831,29 @@ OntologyAnnotation.prototype = {
      */
     generateAnnotationRdf : function(tab) {
     	var ret = "";
-    	
+
     	for (var i=0; i < this.comments.length; i++) {
             ret += tab + "<rdfs:comment>" + this.comments[i] + "</rdfs:comment>\n";
     	}
-    	
+
     	for (var i=0; i < this.labels.length; i++) {
             ret += tab + "<rdfs:label>" + this.labels[i] + "</rdfs:label>\n";
     	}
-    	
+
     	return ret;
     },
-    
+
     generateAnnotationsSADL : function() {
     	var ret = "";
-    	
+
     	for (var i=0; i < this.comments.length; i++) {
             ret += '(note "' + this.comments[i] + '\")';
     	}
-    	
+
     	for (var i=0; i < this.labels.length; i++) {
             ret += '(alias "' + this.labels[i] + '\")';
     	}
-    	
+
     	return ret;
     },
 };
@@ -1824,7 +1867,7 @@ var OntologyClass = function(name, parentName) {
     this.parentNames = [];
     this.properties = [];
     this.annotation = new OntologyAnnotation();
-    
+
     if (parentName) {
         this.parentNames.push(new OntologyName(parentName));
     }
@@ -1842,30 +1885,30 @@ OntologyClass.prototype = {
     getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
     generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
     generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
-    
+
     setName : function (nameStr) {
         this.name = new OntologyName(nameStr);
     },
-    
+
     getName : function () {
         return this.name;
     },
-    
+
 	getNameStr : function(stripNsFlag) {
-		if (stripNsFlag) 
+		if (stripNsFlag)
 			return this.name.getLocalName();
 		else
 			return this.name.getFullName();
 	},
-	
+
     getLocalName : function() {
 		return this.name.getLocalName();
 	},
-    
+
     getNamespaceStr : function() {
 		return this.name.getNamespace();
 	},
-	
+
 	getParentNameStrs : function(stripNsFlag) {
         var ret = [];
         for (var i=0; i < this.parentNames.length; i++) {
@@ -1877,11 +1920,11 @@ OntologyClass.prototype = {
         }
 		return ret;
 	},
-	
+
 	getProperties : function() {
 		return this.properties;
 	},
-	
+
 	getProperty : function(propName) {
 		for (var i=0; i < this.properties.length; i++) {
 			if (this.properties[i].getNameStr() == propName) {
@@ -1890,7 +1933,7 @@ OntologyClass.prototype = {
 		}
 		return ;
 	},
-	
+
 	getPropertyByKeyname : function(keyName) {
 		// find first matching property
 		for (var i=0; i < this.properties.length; i++) {
@@ -1900,11 +1943,11 @@ OntologyClass.prototype = {
 		}
 		return null;
 	},
-	
+
     addParentName : function(name) {
         this.parentNames.push(new OntologyName(name));
     },
-    
+
 	addProperty : function(ontProperty) {
         // insert property alphabetically
         var name = ontProperty.getNameStr(true);
@@ -1917,16 +1960,16 @@ OntologyClass.prototype = {
         // else put it on the end
         this.properties.push(ontProperty);
 	},
-	
+
 	equals : function(other) {
 		return this.name.equals(other.name);
 	},
-	
+
 	powerMatch : function(pattern) {
-		// match against class name 
+		// match against class name
 		// Case-insensitive
 		var pat = pattern.toLowerCase();
-		
+
 		return (this.getNameStr(true).toLowerCase().indexOf(pat) > -1);
 	},
 
@@ -1934,19 +1977,19 @@ OntologyClass.prototype = {
 		// match against name and all of the property names and ranges
 		// Case-insensitive
 		var pat = pattern.toLowerCase();
-		
+
 		var ret = [];
 		var prop = this.getProperties();
 		for (var i=0; i < prop.length; i++) {
-			if (prop[i].getNameStr().toLowerCase().indexOf(pat) > -1 || 
+			if (prop[i].getNameStr().toLowerCase().indexOf(pat) > -1 ||
 				prop[i].getRangeStr().toLowerCase().indexOf(pat) > -1) {
 				ret.push(prop[i]);
 			}
 		}
-		
+
 		return ret;
 	},
-    
+
     renameParent : function(oldURI, newURI) {
         for (var i=0; i < this.parentNames.length; i++) {
             var oName = this.parentNames[i];
@@ -1955,21 +1998,21 @@ OntologyClass.prototype = {
             }
         }
     },
-    
+
     /* =========== Edit functions =============== */
-    
+
     //
     // delete parent or property if it belongs to namespace
     //
     deleteNamespace : function (namespace) {
-        
+
         // parentNames
         for (var i=this.parentNames.length-1; i >= 0; i--) {
             if (this.parentNames[i].getNamespace() == namespace) {
                 this.parentNames.slice(i,1);
             }
         }
-        
+
         // properties
         for (var i=this.properties.length-1; i >= 0; i--) {
             if (this.properties[i].getNamespace() == namespace) {
@@ -1977,25 +2020,25 @@ OntologyClass.prototype = {
             }
         }
     },
-    
+
     renameNamespace : function (oldName, newName) {
-        
+
         // usage:  uri = updateURI(uri)
         var updateURI = function(oName, nName, uri) {
-           return nName + uri.slice(oName.length); 
+           return nName + uri.slice(oName.length);
         }.bind(this, oldName, newName);
-        
+
         if (this.name.getNamespace() == oldName) {
             this.name = new OntologyName(updateURI(this.name.getFullName()));
         }
-        
+
          // parentNames
         for (var i=this.parentNames.length-1; i >= 0; i--) {
             if (this.parentNames[i].getNamespace() == oldName) {
                 this.parentNames[i] = new OntologyName(updateURI(this.parentNames[i].getFullName()));
             }
         }
-        
+
         // properties
         for (var i=this.properties.length-1; i >= 0; i--) {
             if (this.properties[i].getNamespace() == oldName) {
@@ -2026,46 +2069,46 @@ OntologyProperty.prototype = {
     getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
     generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
     generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
-    
+
 	getName : function() {
 		return this.name;
 	},
-    
+
     setName : function(n) {
         this.name = n;
     },
-	
+
 	getRange : function() {
 		return this.range;
 	},
-	
+
     getLocalName : function() {
 		return this.name.getLocalName();
 	},
 	getNamespace : function() {
 		return this.name.getNamespace();
 	},
-    
+
 	getNameStr : function(stripNsFlag) {
-		if (stripNsFlag) 
+		if (stripNsFlag)
 			return this.name.getLocalName();
 		else
 			return this.name.getFullName();
 	},
-	
+
 	getRangeStr : function(stripNsFlag) {
-		if (stripNsFlag) 
+		if (stripNsFlag)
 			return this.range.getLocalName();
 		else
 			return this.range.getFullName();
 	},
-	
+
 	powerMatch : function(pattern) {
 		// match against the property names and ranges
 		// Case-insensitive
 		var pat = pattern.toLowerCase();
-		
-		return (this.getNameStr(true).toLowerCase().indexOf(pat) > -1 || 
+
+		return (this.getNameStr(true).toLowerCase().indexOf(pat) > -1 ||
 				this.getRangeStr(true).toLowerCase().indexOf(pat) > -1);
 	}
 };
@@ -2078,7 +2121,7 @@ var OntologyName = function(fullname) {
 
 };
 OntologyName.prototype = {
-		
+
 	getLocalName : function() {
 		return this.name.split('#')[1];
 	},
@@ -2095,7 +2138,7 @@ OntologyName.prototype = {
 		// does my name start with this domain
 		//i = this.name.indexOf(domain);
 		//return (i == 0);
-		
+
 		var m = this.name.match("^"+domain);
 		return (m != null);
 	},
@@ -2109,7 +2152,7 @@ var OntologyRange = function(fullname) {
 
 };
 OntologyRange.prototype = {
-		
+
     getName : function() {
         return new OntologyName(this.name);
     },
@@ -2129,5 +2172,5 @@ OntologyRange.prototype = {
 		var m = this.name.match("^"+domain);
 		return (m != null);
 	},
-	
+
 };

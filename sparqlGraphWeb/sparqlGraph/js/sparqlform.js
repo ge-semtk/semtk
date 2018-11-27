@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,14 +45,14 @@ var gCancelled = false;
 
 //
 //  Require.js tutorial:
-//      Put the proper require.js-ized dependencies first.  
-//      Give the main function() a parameter for each.  
+//      Put the proper require.js-ized dependencies first.
+//      Give the main function() a parameter for each.
 //      This will look rather like a global inside the function.
 //
 //      Put the shimmed stuff last.  They will be in scope.
 
 require([	'local/sparqlformconfig',
-         
+
          	'sparqlgraph/js/backcompatutils',
             'sparqlgraph/js/modaliidx',
             'sparqlgraph/js/modalitemdialog',
@@ -62,23 +62,23 @@ require([	'local/sparqlformconfig',
             'sparqlgraph/js/msiclientresults',
             'sparqlgraph/js/modalstoredialog',
             'sparqlgraph/js/sparqlgraphjson',
-         	
+
          	'jquery',
-		
+
 			// rest are shimmed
-			'sparqlgraph/js/sparqlconnection', 
+			'sparqlgraph/js/sparqlconnection',
 			'sparqlgraph/js/belmont',
 			'sparqlgraph/js/ontologyinfo',
 			'sparqlgraph/js/ontologytree',
-			'sparqlgraph/dynatree-1.2.5/jquery.dynatree', 
+			'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
 		],
 
 	function(Config, BackwardCompatibleUtil, ModalIidx, ModalItemDialog, IIDXHelper, MsiClientNodeGroupExec, MsiClientNodeGroupService, MsiClientResults, ModalStoreDialog, SparqlGraphJson, $) {
-		
+
 		gConnSetup = function() {
-			// Establish Sparql Connection in gConn, using g		
+			// Establish Sparql Connection in gConn, using g
 			gConn = new SparqlConnection();
-            
+
             if (g.hasOwnProperty('conn')) {
                 gConn.setName(g.conn.name);
                 gConn.setDomain(g.conn.domain);
@@ -86,7 +86,7 @@ require([	'local/sparqlformconfig',
 
                 // backwards-compatible single connection
                 if (g.conn.hasOwnProperty('serverURL') && g.conn.hasOwnProperty('dataset')) {
-                    gConn.addDataInterface(	
+                    gConn.addDataInterface(
                             serverType,
                             g.conn.serverURL,
                             g.conn.dataset
@@ -101,7 +101,7 @@ require([	'local/sparqlformconfig',
                 } else if (g.conn.hasOwnProperty('dataServerURL') && g.conn.hasOwnProperty('dataDataset') &&
                            g.conn.hasOwnProperty('ontologyServerURL') && g.conn.hasOwnProperty('ontologyDataset')) {
 
-                    gConn.addDataInterface(	
+                    gConn.addDataInterface(
                             serverType,
                             g.conn.dataServerURL,
                             g.conn.dataDataset
@@ -116,11 +116,11 @@ require([	'local/sparqlformconfig',
             // normal
 			} else if (g.hasOwnProperty('model') || g.hasOwnProperty('onURL')) {
                 gConn.fromJson(g);
-                
+
             } else {
 				throw "Incomplete connection configuration info.  Need either (serverURL and dataset), or (dataServerURL, dataDataset, ontologyServerURL, and ontologyDataset).";
 			}
-			
+
 			// add gConn to gNodeGroup if it exists
 			if (gNodeGroup != null) {
 				gNodeGroup.setSparqlConnection(gConn);
@@ -142,21 +142,21 @@ require([	'local/sparqlformconfig',
 		};
 
 		showDebug = function(title, nodeGroup) {
-			
+
 		};
 
 		initServices = function () {
             gModalStoreDialog = new ModalStoreDialog(localStorage.getItem("SPARQLgraph_user"),
                                                      Config.services.nodeGroupStore.url);
         };
-    
+
 		initOTree = function() {
 			// turn this into a stub if some version of a program has no OTree
 			if (document.getElementById("treeDiv") == null) return;
-			
+
 			// Attach the dynatree widget to an existing <div id="tree"> element
 			// and pass the tree options as an argument to the dynatree() function:
-	
+
 			$("#treeDiv").dynatree({
 				onActivate : function(node) {
 					// A DynaTreeNode object is passed to the activation handler
@@ -167,13 +167,13 @@ require([	'local/sparqlformconfig',
 					// A DynaTreeNode object is passed to the activation handler
 					// Note: we also get this event, if persistence is on, and the page is reloaded.
 					//console.log("You double-clicked "+ node.data.title);
-	
+
 					// Paul:  We only get this onDblClick for leaf nodes, which for the current functionality is ok.
 					//        But, it indicates I don't really understand these callbacks yet.
 					// Double-click:  (1) pretend we're dragging.  (2) force a drop with no event (drop function ignores it anyway)
 					addRowFromOTree(node);
 				},
-	
+
 				dnd : {
 					onDragStart : function(node) {
 						gDragNode = node;
@@ -182,36 +182,36 @@ require([	'local/sparqlformconfig',
 					},
 					onDragStop : function(node) {
 						console.log("onDragStop: "	+ gOTree.nodeGetURI(gDragNode));
-	
+
 					},
-	
+
 				},
-	
+
 				persist : true,
 			});
-	
+
 			// load the data
-			gOTree = new OntologyTree(	$("#treeDiv").dynatree("getTree"), 
+			gOTree = new OntologyTree(	$("#treeDiv").dynatree("getTree"),
 										false,                                                                 // don't show enums
 										["http://research.ge.com/kdl/sparqlgraph/externalDataConnection"]  );  // collapse sparqlEDC
 			gOTree.setSpecialClassFormat('<font color="blue">','<font>');
 			gOTree.setSpecialClassFormat("<div>" + FORM_TRIGGER_CLASS_ICON + " ", "</div>");
-					
-			gOTree.addSpecialClasses(getOntTriggerClassNames(gOInfo));  
-			                            
+
+			gOTree.addSpecialClasses(getOntTriggerClassNames(gOInfo));
+
 			gOTree.setOInfo(gOInfo); // add ontology but don't display yet
-			
+
 			document.getElementById("chkShowAll").checked = true;
 			doTreeShowAllButton(); // decide what to display based on the checkbox
-	
+
 			// activate relevant buttons
 			document.getElementById("btnTreeExpand").className = "btn";
 			document.getElementById("btnTreeExpand").disabled = false;
-	
+
 			document.getElementById("btnTreeCollapse").className = "btn";
 			document.getElementById("btnTreeCollapse").disabled = false;
 		};
-		
+
 		addFormRow = function(parentSNode, itemKeyName, childSNode, optNoConstraintUpdate) {
 			// adds a row to the form PRESUMING that the gNodeGroup has already been updated
 			// parentSNode is the node
@@ -233,8 +233,8 @@ require([	'local/sparqlformconfig',
 			var iconID = filterItem.getSparqlID().slice(1) + "_txt";
 			var icon;
 			var constrainableFlag = true;
-			
-			if (isOntTriggerClassName(parentSNode.getURI()) || 
+
+			if (isOntTriggerClassName(parentSNode.getURI()) ||
 				 (childSNode !== null && isOntTriggerClassName(childSNode.getURI()))) {
 				icon = FORM_TRIGGER_CLASS_ICON;
 				constrainableFlag = false;
@@ -271,10 +271,10 @@ require([	'local/sparqlformconfig',
 			// label for user
 			var cellStr = (parentSNode.getSparqlID() + ((itemKeyName != "") ? ("->" + itemKeyName) : "")).slice(-48);
 			row.insertCell(-1).innerHTML = cellStr;
-			
+
 			// icon
 			row.insertCell(-1).innerHTML = "<div id='" + iconID + "'>" + icon + "</div>";
-			
+
 			// constrain button
 			if (constrainableFlag) {
 				cellStr =  "<button id='b_" + IIDXHelper.getNextId() + "' class='btn btn-info" + (constrainableFlag ? "" : " disabled") + "' " +
@@ -284,24 +284,24 @@ require([	'local/sparqlformconfig',
 				cellStr = "";
 			}
 			row.insertCell(-1).innerHTML = cellStr;
-				   
+
 			// delete button
 			// PEC TODO: the constraints table does this a different and much cooler way.  share.
-			row.insertCell(-1).innerHTML = 
+			row.insertCell(-1).innerHTML =
 					"<button id='b_" + IIDXHelper.getNextId() + "' class='btn btn-danger' onclick='javascript:delFormRow(\"" + gRowId + "\"); return false;'><i class='icon-trash icon-white'></i></button>";
 
 			gRowId += 1;
-			
+
 			if (! noConstraintUpdate) {
 				formConstraintsUpdateTable();
 			}
-			
+
 			kdlLogEvent("SF: Add class", "classURI", parentSNode.getURI(false), "itemKeyName", itemKeyName);
 		};
-		
+
 		filterCallback = function(rowId, textId) { // nodeSparqlID, itemURI, textId) {
 			// callback for filter buttons on the form
-			
+
 			// add a constraint to a SparqlID->property
 			var row = getFormRow(rowId);
 			var sNode;
@@ -309,13 +309,13 @@ require([	'local/sparqlformconfig',
 			var tmpSNode;
 			var tmpItem;
 			var tmpNodeGroup = gNodeGroup.deepCopy();
-			
+
 			// ==== find the item in both copies of the nodegroup:  item and tmpItem ====
 				// if there's a child node
 			if (row.childNodeID !== "") {
 				sNode = gNodeGroup.getNodeBySparqlID(row.childNodeID);
 				item = sNode;
-				
+
 				tmpSNode = tmpNodeGroup.getNodeBySparqlID(row.childNodeID);
 				tmpItem = tmpSNode;
 
@@ -323,7 +323,7 @@ require([	'local/sparqlformconfig',
 			} else if (row.itemKeyName !== "") {
 				sNode = gNodeGroup.getNodeBySparqlID(row.parentNodeID);
 				item = sNode.getPropertyByKeyname(row.itemKeyName);
-				
+
 				tmpSNode = tmpNodeGroup.getNodeBySparqlID(row.parentNodeID);
 				tmpItem = tmpSNode.getPropertyByKeyname(row.itemKeyName);
 
@@ -331,7 +331,7 @@ require([	'local/sparqlformconfig',
 			} else {
 				sNode = gNodeGroup.getNodeBySparqlID(row.parentNodeID);
 				item = sNode;
-				
+
 				tmpSNode = tmpNodeGroup.getNodeBySparqlID(row.parentNodeID);
 				tmpItem = tmpSNode;
 			}
@@ -343,27 +343,27 @@ require([	'local/sparqlformconfig',
 			// prepare a query for the constraint dialog
 			removeTrigger(tmpNodeGroup);
 			tmpNodeGroup.expandOptionalSubgraphs();
-			
+
 			showDebug("Constraining " + sNode.getSparqlID() + "->" + item.getSparqlID(), tmpNodeGroup);
 			kdlLogEvent("SF: Filter Button", "Node", sNode.getURI(), "itemSparqlID", item.getSparqlID());
-			            
-			var dialog= new ModalItemDialog(item, 
-                                            gNodeGroup, 
-                                            runSfSuggestValuesQuery.bind(this, tmpNodeGroup, tmpItem), 
+
+			var dialog= new ModalItemDialog(item,
+                                            gNodeGroup,
+                                            runSfSuggestValuesQuery.bind(this, tmpNodeGroup, tmpItem),
                                             itemDialogCallback,
     				                        {"textId": textId}
     		                                );
             dialog.setLimit(Config.itemDialog.limit);
             dialog.setMaxValues(Config.itemDialog.maxValues);
-            
+
             var sparqlFormFlag = true;
     		dialog.show(sparqlFormFlag);
 		};
-    
+
         doCancel = function() {
             gCancelled = true;
         };
-    
+
         checkForCancel = function() {
             if (gCancelled) {
                 gCancelled = false;
@@ -372,9 +372,9 @@ require([	'local/sparqlformconfig',
                 return false;
             }
         };
-    
+
         runSfSuggestValuesQuery = function (ng, item, msiOrQsResultCallback, failureCallback, statusCallback) {
-        
+
             // make sure there is a sparqlID
             var runNodegroup;
             var runId;
@@ -390,21 +390,21 @@ require([	'local/sparqlformconfig',
                 runId = item.getSparqlID();
             }
 
-            
+
             if (typeof gAvoidQueryMicroserviceFlag != "undefined" && gAvoidQueryMicroserviceFlag) {
                 // Generate sparql and run via query interface
-                
+
                 // get answer for msiOrQsResultCallback
                 var sparqlCallback = function (cn, resCallback, failCallback, sparql) {
                     var ssi = cn.getDefaultQueryInterface();
                     ssi.executeAndParseToSuccess(sparql, resCallback, failCallback );
-                    
+
                 }.bind(this, gConn, msiOrQsResultCallback, failureCallback);
-                
+
                 // generate sparql and send to sparqlCallback
                 var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
                 ngClient.execAsyncGenerateFilter(runNodegroup, gConn, runId, sparqlCallback, failureCallback);
-                
+
             } else {
                 // Run nodegroup via Node Group Exec Svc
                 var jobIdCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
@@ -419,7 +419,7 @@ require([	'local/sparqlformconfig',
 
             }
         };
-    
+
 		doTreeSearch = function() {
 			//gOTree.find($("#search").val());
 			gOTree.powerSearch($("#search").val());
@@ -448,7 +448,7 @@ require([	'local/sparqlformconfig',
 			return;
 
 		};
-		
+
 		doQueryLoadFile = function(file) {
 			// reads json file, clears form, loads new one
 			var r = new FileReader();
@@ -472,7 +472,7 @@ require([	'local/sparqlformconfig',
 		doRetrieveFromNGStore = function() {
             if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0
 					|| confirm("Clearing current form\nbefore loading a new one.\n\n")) {
-                
+
                 gModalStoreDialog.launchRetrieveDialog(restoreQueryFromJsonStr);
             }
         };
@@ -480,18 +480,18 @@ require([	'local/sparqlformconfig',
         doDeleteFromNGStore = function() {
             gModalStoreDialog.launchDeleteDialog();
         };
-        
+
         doStoreNodeGroup = function () {
-        
+
             // save user when done
             var doneCallback = function () {
                 localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
             }
 
-            gModalStoreDialog.launchStoreDialog(getSGJson(), doneCallback); 
-            
+            gModalStoreDialog.launchStoreDialog(getSGJson(), doneCallback);
+
         };
-        		
+
 		doQueryUpload = function() {
 			// menu pick callback
 			if (gNodeGroup.getNodeCount() == 0
@@ -512,12 +512,12 @@ require([	'local/sparqlformconfig',
 			gOTree.removeAll();
 
 			if (document.getElementById("chkShowAll").checked) {
-				gOTree.showAll();   
+				gOTree.showAll();
 			} else {
 				gOTree.showSubset(g.simpleClassURIs);
 			}
 		};
-    
+
 		//***********  drag and drop *************//
 		allowDrop = function(ev) {
 			alertUser("allowDrop5");
@@ -540,7 +540,7 @@ require([	'local/sparqlformconfig',
 			gRowId = 0;
 			var table = document.getElementById("formTable");
 			table.innerHTML = "";
-			
+
 			formConstraintsNew();
 			formConstraintsInit();
 
@@ -549,7 +549,7 @@ require([	'local/sparqlformconfig',
 		addRowFromOTree = function(treeNode) {
 			// main function to handle dropping a new property on the form
 			// uses gDragNode as the parameter, NOT evIgnored
-			
+
 			// PEC TODO: drag handlers should be smarter so this never happens
 			if (!gOTree.nodeIsProperty(treeNode)) {
 				alertUser("Only properties can be added to the form.");
@@ -580,60 +580,60 @@ require([	'local/sparqlformconfig',
 					return;
 				}
 			}
-			
+
 			// get info on the dropped Node
 			var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getDomain(), true);
-			
+
 			if (itemSNode == null) {
 				alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add " + classObj.getNameStr());
 				return;
 			}
-			
+
 			// start by presuming that "item" is a property item
 			var item = itemSNode.getPropertyByKeyname(itemKeyName);
 			var filterItem = null;
 			var childSNode = null;
 
-			// if item is not a propertyItem, it is nodeItem.  
+			// if item is not a propertyItem, it is nodeItem.
 			// So get the childSNode
 			if (!item) {
 				var nodeItem = itemSNode.getNodeItemByKeyname(itemKeyName);
-				
-                
+
+
                 // test special case: change "Measurement" to measuredValue
-                
+
                 if (nodeItem.getUriValueType() == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement") {
-                    
+
                     // first get class of itemSNode, get the "property" that represents this nodeItem, and get it's URI
                     var nodeURIStr = gOInfo.getClass(itemSNode.getURI()).getPropertyByKeyname(nodeItem.getKeyName()).getName().getFullName();
                     // create a new node and connect it
                     childSNode = gNodeGroup.returnBelmontSemanticNode(nodeItem.getUriValueType(), gOInfo);
-                    nodeItem = gNodeGroup.addOneNode(childSNode, itemSNode, null, nodeURIStr ); 
-                    
+                    nodeItem = gNodeGroup.addOneNode(childSNode, itemSNode, null, nodeURIStr );
+
                     item = childSNode.getPropertyByKeyname("measuredValue");
                     filterItem = item;
                     itemSNode = childSNode;
                     childSNode = null;
                     gNodeGroup.changeSparqlID(itemSNode, itemKeyName);
                     gNodeGroup.changeSparqlID(item, "measuredValue");
-                    
+
                 // end test
-                
+
                 // normal node Item
-                } else {   
-                    
+                } else {
+
                     childSNode = gNodeGroup.getOrAddNode(nodeItem.getUriValueType(), gOInfo, gConn.getDomain(), true);
                     if (childSNode == null) {
                         alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add the child node " + nodeItem.getUriValueType());
                         return;
                     }
-                
-                    filterItem = childSNode;   
+
+                    filterItem = childSNode;
                 }
-                
-               
-				
-				
+
+
+
+
 			} else {
 				childSNode = null;
 				filterItem = item;
@@ -645,7 +645,7 @@ require([	'local/sparqlformconfig',
 			if (filterItemID === null || filterItemID === "") {
 				filterItemID = gNodeGroup.changeSparqlID(item,
 						itemKeyName);
-				showDebug("drop " + itemSNode.getSparqlID() + ((itemKeyName != "") ? ("->" + itemKeyName) : ""), 
+				showDebug("drop " + itemSNode.getSparqlID() + ((itemKeyName != "") ? ("->" + itemKeyName) : ""),
 						  gNodeGroup);
 
 			}
@@ -653,24 +653,24 @@ require([	'local/sparqlformconfig',
 
 			addFormRow(itemSNode, item.getKeyName(), childSNode);
 		};
-		
+
 		itemDialogCallback = function(item, sparqlID, returnFlag, optionalFlag, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
-			
+
 	    	// Note: ModalItemDialog validates that sparqlID is legal
-	    	
+
 	    	// Not sure dialog lets you change sparqlID, but function will handle non-event
 	    	gNodeGroup.changeSparqlID(item, sparqlID);
-            
+
             item.setIsReturned(returnFlag);
-	    	
+
 	    	// Optional
 	    	if (item.getItemType() == "PropertyItem") {
 	    		item.setIsOptional(optionalFlag);
-	    		
+
 	    	} else if (item.getItemType() == "NodeItem") {
 	    		alert("Internal Error in sparqlForm.js itemDialogCallback():  item is a nodeItem.  Not implemented");
-	    	
+
 	    	} else {
 	    		// "SemanticNode"
 	    		if (optionalFlag != null) {
@@ -684,22 +684,22 @@ require([	'local/sparqlformconfig',
 	    			}
 	    		}
 	    	}
-	    	
+
 	    	// RuntimeConstrained
 	    	item.setIsRuntimeConstrained(rtConstrainedFlag);
-	    	
+
 	    	if (constraintStr.length > 0) {
 	    		document.getElementById(data.textId).innerHTML = FORM_CONSTRAINED_ICON;
 	    	} else {
 	    		document.getElementById(data.textId).innerHTML = FORM_UNCONSTRAINED_ICON;
 	    	}
-	    	
+
 	    	item.setConstraints(constraintStr);
 	    	formConstraintsUpdateTable();
-	    	
+
 	    	kdlLogEvent("SF: Filtered", "sparqlId", sparqlID, "constraints", constraintStr);
 	    };
-	    
+
 		// DEPRECATED: used with modalconstraintdialog
 		filterDialogCallback = function(textId, item, constraintArr) {
 			item.setConstraints(constraintArr[0]);
@@ -715,7 +715,7 @@ require([	'local/sparqlformconfig',
 			//displayLabelOptions(draculaLabel, propItm.getDisplayOptions());
 			showDebug("filterCallback", gNodeGroup);
 			formConstraintsUpdateTable();
-			
+
 			kdlLogEvent("SF: Filtered", "itemKeyName", textId, "constraints", constraintArr[0]);
 		};
 
@@ -753,7 +753,7 @@ require([	'local/sparqlformconfig',
 			return ret;
 		}
 
-		
+
 
 		delFormRow = function(rowId) {
 			// delete row from form
@@ -788,16 +788,16 @@ require([	'local/sparqlformconfig',
 
 			gNodeGroup.pruneUnusedSubGraph(pruneSNode);
 
-			showDebug("Deleted " + r.parentNodeID + "," + r.itemKeyName + "," + r.childNodeID, 
+			showDebug("Deleted " + r.parentNodeID + "," + r.itemKeyName + "," + r.childNodeID,
 					  gNodeGroup);
-			
+
 			formConstraintsUpdateTable();
-			
+
 			kdlLogEvent("SF: Delete Row", "Node", pruneSNode.getURI(), "itemKeyName", r.itemKeyName);
 
 		};
 
-		
+
 		doClearFormBut = function() {
 
 			if (gNodeGroup.getNodeCount() == 0 || confirm("Clearing form.")) {
@@ -814,11 +814,11 @@ require([	'local/sparqlformconfig',
 			document.getElementById("gridDiv").innerHTML = "";
 			document.getElementById("hrefDiv").innerHTML = "";
 		};
-		
+
 		guiStartQuery = function () {
             guiDisableAll();
 		};
-		
+
 		guiEndQuery = function (errorMsg) {
 			// query is done.  If (errorMsg) then it failed.
 			if (errorMsg) {
@@ -827,9 +827,9 @@ require([	'local/sparqlformconfig',
             guiUnDisableAll();
 			setStatus("");
 		};
-    
+
         disableHash = {};
-    
+
         /*
          * For all buttons with an id:
          *     disable
@@ -838,12 +838,12 @@ require([	'local/sparqlformconfig',
         guiDisableAll = function () {
             disableHash = {};
             var opposite = [];
-            
+
             // Cancel button works backwards as long as we're not avoiding microservices
             if (typeof gAvoidQueryMicroserviceFlag == "undefined" || !gAvoidQueryMicroserviceFlag) {
                 opposite.push("btnFormCancel");
             }
-            
+
             var buttons = document.getElementsByTagName("button");
             for (var i = 0; i < buttons.length; i++) {
                 if (buttons[i].id && buttons[i].id.length > 0) {
@@ -867,20 +867,20 @@ require([	'local/sparqlformconfig',
                 }
             }
         };
-		
+
 		doRunQueryBut = function() {
 			// callback for the "Get Data" button
-			
+
 			if (formConstraintsValidate() > 0) {
 				alertUser("Fix invalid constraints before executing a query.");
 				return;
 			}
-			
+
 			if (gNodeGroup.getNodeCount() === 0) {
 				alertUser("Query is empty.");
 				return;
 			}
-			
+
 			guiStartQuery();
 
 			gSparqlResults = null;
@@ -888,12 +888,12 @@ require([	'local/sparqlformconfig',
 
 			doQuery();
 		};
-    
+
         doQuery = function() {
             // Paul 7/9/18 - always expand optionals in UI
             var tmpNodeGroup = gNodeGroup.deepCopy();
             tmpNodeGroup.expandOptionalSubgraphs();
-            
+
             // DIRECT
             if (typeof gAvoidQueryMicroserviceFlag != "undefined" && gAvoidQueryMicroserviceFlag) {
                  // get answer for msiOrQsResultCallback
@@ -901,18 +901,18 @@ require([	'local/sparqlformconfig',
                     setStatusProgressBar("Running direct query", 25);
                     var ssi = cn.getDefaultQueryInterface();
                     ssi.executeAndParseToSuccess(sparql, resCallback, failCallback );
-                    
+
                 }.bind(this, gConn, doQueryDirectCallback, guiEndQuery);
-                
+
                 // generate sparql and send to sparqlCallback
                 setStatusProgressBar("Running direct query", 5);
                 var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
                 ngClient.execAsyncGenerateSelect(tmpNodeGroup, gConn, sparqlCallback, guiEndQuery);
-             
+
             // Microservices
             } else {
                 kdlLogEvent("SF: Query vi Dispatcher");
-                
+
                 setStatusProgressBar.bind(this, "Running Query", 0);
                 var client = new MsiClientNodeGroupExec(Config.services.nodeGroupExec.url, Config.timeout.long);
                 var jobIdCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(Config.resultsTable.sampleSize,
@@ -923,40 +923,40 @@ require([	'local/sparqlformconfig',
                                                                                      Config.services.status.url,
                                                                                      Config.services.results.url);
                setStatusProgressBar("Running Query", 1);
-               client.execAsyncDispatchSelectFromNodeGroup(tmpNodeGroup, 
-                                                           gConn, 
-                                                           gFormConstraint ? gFormConstraint.getConstraintSet() : null, 
-                                                           null, 
-                                                           jobIdCallback, 
+               client.execAsyncDispatchSelectFromNodeGroup(tmpNodeGroup,
+                                                           gConn,
+                                                           gFormConstraint ? gFormConstraint.getConstraintSet() : null,
+                                                           null,
+                                                           jobIdCallback,
                                                            guiEndQuery);
 
             }
         };
-		
+
         doQueryDirectCallback = function (sparqlServerResult) {
             setStatusProgressBar("Running direct query", 95);
-            
+
             var doneCallback = function () {
                 setStatusProgressBar("Running direct query", 100);
                 guiEndQuery();
             }
-            
+
             sparqlServerResult.putSparqlResultsDatagridInDiv(	document.getElementById("gridDiv"), doneCallback, true );
-            
+
         };
-    
+
 		doQueryTableResCallback = function(csvFilename, fullURL, results) {
-                    
+
             // display anchor for fullURL
             var hdiv = document.getElementById("hrefDiv");
             var filename = fullURL.split('/').pop();
             var anchor = "<a href='" + fullURL + "'>" + csvFilename + "</a>";
             hdiv.innerHTML = "<b>Full Results:</b><br>";
             hdiv.innerHTML += anchor;
-            hdiv.innerHTML += "<br>";  
-                
+            hdiv.innerHTML += "<br>";
+
             results.setLocalUriFlag(true);
-            
+
             var headerHTML = "";
             if (results.getRowCount() == Config.resultsTable.sampleSize) {
                 headerHTML += " <span class='label label-warning'>Showing first " + String(Config.resultsTable.sampleSize) + " rows. </span> "
@@ -966,35 +966,35 @@ require([	'local/sparqlformconfig',
             results.tableApplyTransformFunctions(resultsClient.getResultTransformFunctions());
 
 			results.putTableResultsDatagridInDiv(document.getElementById("gridDiv"), headerHTML);
-											
+
 			guiEndQuery();
         };
-		
+
 		//***********  save and restore *************//
-    
+
         /**
-         **  Get a sparqlGraphJson with 
+         **  Get a sparqlGraphJson with
          **       - expand optional subgraphs
          **       - formRows added
          **/
 		getSGJson = function() {
             var tmpNodegroup = gNodeGroup.deepCopy();
             tmpNodegroup.expandOptionalSubgraphs();
-            
+
             var sgJson = new SparqlGraphJson(gConn, tmpNodegroup);
 			sgJson.setExtra("formRows", getFormRowsArray());
-				
+
 			if (formConstraintsGet() != null) {
 				 sgJson.setExtra("constraintSet", formConstraintJson());
 			}
-            
+
 			return sgJson;
 		};
 
         restoreQueryFromJsonStr = function(str) {
             restoreQueryFromJson(JSON.parse(str));
         };
-            
+
 		restoreQueryFromJson = function(json) {
             var sgJson = new SparqlGraphJson();
             sgJson.fromJson(json);
@@ -1008,23 +1008,23 @@ require([	'local/sparqlformconfig',
 			initForm();
 			formConstraintsInit();
             clearResults();
-            
+
             // set conn
             var tmpConn = sgJson.getSparqlConn();
             if (tmpConn != null) {
                 gConn = tmpConn;
-                
+
                 // after loading new connection
                 var success = function (sgj) {
                     loadSuccess2();
                     restoreQueryFromJson2(sgj);
                 }.bind(this, sgJson)
-                
+
                 gOInfo = new OntologyInfo();
-                BackwardCompatibleUtil.loadSparqlConnection(gOInfo, gConn, Config.services.query.url, 
-                                                            setStatus, 
-                                                            success, 
-                                                            loadFailure);
+
+                var oInfoClient = new MsiClientOntologyInfo(Config.services.ontologyInfo.url, loadFailure);
+                gOInfo.loadFromService(oInfoClient, gConn, setStatus, success, loadFailure);
+
             } else {
                 restoreQueryFromJson2(sgJson);
             }
@@ -1035,20 +1035,20 @@ require([	'local/sparqlformconfig',
          * nodegroup, form rows, and constraints
          */
         restoreQueryFromJson2 = function(sgJson) {
-            
+
             try {
                 sgJson.getNodeGroup(gNodeGroup, gOInfo);
             } catch (e) {
                 ModalIidx.alert("Error loading nodegroup",
                                  e.hasOwnProperty("message") ? e.message : e
                                  );
-                doClearFormBut();               
+                doClearFormBut();
                 return;
             }
-            
+
             var formRows = sgJson.getExtra("formRows");
             if (formRows == null) formRows = [];
-            
+
 			// fill up the form
 			for (var i = 0; i < formRows.length; i++) {
 				// read and check parentSNode
@@ -1099,29 +1099,29 @@ require([	'local/sparqlformconfig',
 
 				addFormRow(parentSNode, itemKeyName, childSNode, true);
 			}
-			
+
             addMissingFormRows();
-            
+
             // if there are constraints, load them
             var constraintSet = sgJson.getExtra("constraintSet");
-			
+
 			if (constraintSet != null ) {
 				formConstraintSetFromJson(constraintSet);
 			}
-			
+
 			formConstraintsUpdateTable();
 			showDebug("read from JSON", gNodeGroup);
-			
+
 			kdlLogEvent("SF: Upload Query");
         };
-    
+
         addMissingFormRows = function() {
             var sNodeList = gNodeGroup.getSNodeList();
             for (var i=0; i < sNodeList.length; i++) {
-                
+
                 // if sNode is returned
                 if (sNodeList[i].getIsReturned() == true) {
-                    
+
                     var id = sNodeList[i].getSparqlID();
                     // if sNode isn't on the form
                     if (! rowExists(null, null, id)) {
@@ -1130,26 +1130,26 @@ require([	'local/sparqlformconfig',
                             ModalIidx.alert("Error",
                                             "Having trouble adding return to form: " + id +
                                             "<br><br>Expecting a single incoming connection:" + id);
-                        } 
-                        
+                        }
+
                         addFormRow( gNodeGroup.getNodeItemParentSNode(nodeItems[0]),
-                                    nodeItems[0].getKeyName(), 
+                                    nodeItems[0].getKeyName(),
                                     sNodeList[i]);
                     }
                 }
-                
+
                 // check all returned properties
                 var retPropList = sNodeList[i].getReturnedPropertyItems();
                 for (var j=0; j < retPropList.length; j++) {
                     if (! rowExists(sNodeList[i].getSparqlID(), retPropList[j].getKeyName(), null)) {
-                        addFormRow(sNodeList[i], 
-                                   retPropList[j].getKeyName(), 
+                        addFormRow(sNodeList[i],
+                                   retPropList[j].getKeyName(),
                                    null);
                     }
                 }
             }
         };
-    
+
         rowExists = function(snode, propOrNode, child) {
             // get an object representing a specific valid rowId
 			var table = document.getElementById("formTable");
@@ -1165,8 +1165,8 @@ require([	'local/sparqlformconfig',
 			}
 			return false;
         };
-    
-		//***********  misc *************//               // PEC TODO: should be in their own util.js file 
+
+		//***********  misc *************//               // PEC TODO: should be in their own util.js file
 
 		enableButton = function(id) {
 			document.getElementById(id).disabled = false;

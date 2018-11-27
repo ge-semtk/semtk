@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,18 +21,18 @@
 
 define([], function() {
 	var Config = {
-		"services" : { 
+		"services" : {
 			"query" : {
 				url : "${WEB_PROTOCOL}://${WEB_SPARQL_QUERY_HOST}:${WEB_SPARQL_QUERY_PORT}/sparqlQueryService/",
 			},
 			"status" : {
-				"url" : "${WEB_PROTOCOL}://${WEB_STATUS_HOST}:${WEB_STATUS_PORT}/status/",  // window.location.origin + "/status/",    
+				"url" : "${WEB_PROTOCOL}://${WEB_STATUS_HOST}:${WEB_STATUS_PORT}/status/",  // window.location.origin + "/status/",
 			},
 			"results" : {
-				"url" : "${WEB_PROTOCOL}://${WEB_RESULTS_HOST}:${WEB_RESULTS_PORT}/results/",     
+				"url" : "${WEB_PROTOCOL}://${WEB_RESULTS_HOST}:${WEB_RESULTS_PORT}/results/",
 			},
 			"dispatcher" : {
-				"url" : "${WEB_PROTOCOL}://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",     
+				"url" : "${WEB_PROTOCOL}://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",
 			},
             nodeGroup:{
 				url : "${WEB_PROTOCOL}://${WEB_NODEGROUP_HOST}:${WEB_NODEGROUP_PORT}/nodeGroup/",
@@ -42,6 +42,9 @@ define([], function() {
             },
             nodeGroupStore:{
 				url : "${WEB_PROTOCOL}://${WEB_NODEGROUPSTORE_HOST}:${WEB_NODEGROUPSTORE_PORT}/nodeGroupStore/",
+            },
+			ontologyInfo:{
+				url : "${WEB_PROTOCOL}://${WEB_ONTOLOGYINFO_HOST}:${WEB_ONTOLOGYINFO_PORT}/ontologyinfo/",
             },
 		},
 		"help" : {
@@ -88,15 +91,12 @@ define([], function() {
         },
         "timeout" : {
             "short" : 5000,
-            "long"  : 30000  
+            "long"  : 30000
         },
         "resultsTable" : {
             "sampleSize" : 200
         }
 	};
-	
+
 	return Config;
 });
-
-
-
