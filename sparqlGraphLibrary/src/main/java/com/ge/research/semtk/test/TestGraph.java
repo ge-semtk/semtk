@@ -276,7 +276,7 @@ public class TestGraph {
 		
 		String machine = null;
 		try {
-			machine = java.net.InetAddress.getLocalHost().getHostName().replaceAll("[^a-zA-Z0-9]", "_");
+			machine = java.net.InetAddress.getLocalHost().getHostName().replaceAll("[^a-zA-Z0-9-]", "_");
 		} catch (Exception e) {
 			machine = "unknown_host";
 		}
