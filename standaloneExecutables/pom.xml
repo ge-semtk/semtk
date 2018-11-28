@@ -19,7 +19,7 @@
   
   </dependencies>
   
-    	<properties>
+   	<properties>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 	</properties>
@@ -86,7 +86,26 @@
 						<goals>
 							<goal>single</goal>
 						</goals>
-					</execution>					
+					</execution>
+
+					<execution>
+						<id>build-d</id>
+						<configuration>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<archive>
+								<manifest>
+									<mainClass>com.ge.research.semtk.standaloneExecutables.StoreNodeGroup</mainClass>
+								</manifest>
+							</archive>
+							<finalName>storeNodeGroup</finalName>
+						</configuration>
+						<phase>install</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
 
 				</executions>
 			</plugin>
