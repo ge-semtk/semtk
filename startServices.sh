@@ -108,14 +108,6 @@ for port in "${PORTS[@]}"; do
         fi
         sleep 3
 
-	# bail if exceptions are seen in logs
-	exceptions="$(grep Exception "${LOGS}"/*)"
-	if [ ! -z "$exceptions" ] ; then
-		echo ERROR: found exceptions in logs
-		echo $exceptions
-		exit 1
-	fi
-	
    done
    echo service at ${PROTOCOL}://${HOST_NAME}:${port} is up
 done
