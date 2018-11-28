@@ -39,6 +39,7 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -46,7 +47,6 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStoreSparqlGenerator;
-import com.ge.research.semtk.services.nodegroupStore.StoreNodeGroup;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -240,26 +240,14 @@ public class NodeGroupStoreRestController {
 					String ngJSONstr = tmpRow.get(targetCol);
 					JSONParser jParse = new JSONParser();
 					JSONObject json = (JSONObject) jParse.parse(ngJSONstr); 
-	
-					// check if this is a wrapped or unwrapped 
-					// check that sNodeGroup is a key in the json. if so, this has a connection and the rest.
-					if (SparqlGraphJson.isSparqlGraphJson(json)) {
-						SparqlGraphJson sgJson = new SparqlGraphJson(json);
-						LocalLogger.logToStdErr("located key: sNodeGroup");
-						json = sgJson.getSNodeGroupJson();
-					}
-	
-					// otherwise, check for a truncated one that is only the nodegroup proper.
-					else if(! NodeGroup.isNodeGroup(json)) {
-	
-						throw new Exception("Value given for encoded node group can't be parsed");
-					}
-	
+					SparqlGraphJson sgJson = new SparqlGraphJson(json);
+					NodeGroup ng = sgJson.getNodeGroup();
 	
 					// get the runtime constraints. 
-	
+					RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
 					retval = new TableResultSet(true); 
-					retval.addResults(StoreNodeGroup.getConstrainedItems(json));
+					retval.addResults(rtci.getConstrainedItemsDescription());
+					
 				} else {
 					retval = new TableResultSet(false);
 					retval.addRationaleMessage(SVC_ENDPOINT_NAME, "Nodegroup was not found: " + requestBody.getId());

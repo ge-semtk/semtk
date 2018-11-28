@@ -205,7 +205,7 @@ public class SparqlGraphJson {
 	}
 	
 	/**
-	 * 
+	 * Gets nodegroup regardless of whether sgJson is a whole sgJson or just a nodegroup
 	 * @param uncompressOInfo
 	 * @return
 	 * @throws Exception
