@@ -272,7 +272,16 @@ public class TestGraph {
 		return generateDatasetName(sub);
 	}
 	public static String generateDatasetName(String sub) {
-		return String.format("http://%s/junit/%s", System.getProperty("user.name"), sub);
+		String user = System.getProperty("user.name");
+		
+		String machine = null;
+		try {
+			machine = java.net.InetAddress.getLocalHost().getHostName().replaceAll("[^a-zA-Z0-9]", "_");
+		} catch (Exception e) {
+			machine = "unknown_host";
+		}
+		
+		return String.format("http://junit/%s/%s/%s", machine, user, sub);
 	}	
 	
 	/**
