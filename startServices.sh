@@ -24,7 +24,7 @@
 
 # SEMTK = directory holding this script
 SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo $SEMTK
+echo SEMTK is $SEMTK
 
 # Handle $1 optional arg of alternate semtk dir that contains
 #    ENV_OVERRIDE 
@@ -100,12 +100,22 @@ echo Using no_proxy: $no_proxy
 # check for each service				 
 for port in "${PORTS[@]}"; do
    while ! curl --insecure --noproxy $no_proxy -X POST ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
-		echo waiting for service at ${PROTOCOL}://${HOST_NAME}:${port}
+
+	echo waiting for service at ${PROTOCOL}://${HOST_NAME}:${port}
         if (($SECONDS > $MAX_SEC)) ; then
         	echo ERROR: Took to longer than $MAX_SEC seconds to start services
         	exit 1
         fi
         sleep 3
+
+	# bail if exceptions are seen in logs
+	exceptions="$(grep Exception "${LOGS}"/*)"
+	if [ ! -z "$exceptions" ] ; then
+		echo ERROR: found exceptions in logs
+		echo $exceptions
+		exit 1
+	fi
+	
    done
    echo service at ${PROTOCOL}://${HOST_NAME}:${port} is up
 done
