@@ -1,0 +1,127 @@
+{
+  "version": 2,
+  "sparqlConn": {
+    "name": "Additive - Build Prep & Inspection",
+    "domain": "http://",
+    "model": [
+      {
+        "type": "virtuoso",
+        "url": "http://vesuvius-test.crd.ge.com:2420",
+        "dataset": "http://research.ge.com/additive-bpi/model"
+      }
+    ],
+    "data": [
+      {
+        "type": "virtuoso",
+        "url": "http://vesuvius-test.crd.ge.com:2420",
+        "dataset": "http://research.ge.com/additive-bpi/data"
+      }
+    ]
+  },
+  "sNodeGroup": {
+    "version": 8,
+    "limit": 0,
+    "offset": 0,
+    "sNodeList": [
+      {
+        "propList": [],
+        "nodeList": [],
+        "NodeName": "DesignCurveMetadata",
+        "fullURIName": "http://kdl.ge.com/additiveMaterials#DesignCurveMetadata",
+        "subClassNames": [],
+        "SparqlID": "?DesignCurveMetadata",
+        "isReturned": false,
+        "isRuntimeConstrained": false,
+        "valueConstraint": "",
+        "instanceValue": null,
+        "deletionMode": "NO_DELETE"
+      },
+      {
+        "propList": [
+          {
+            "KeyName": "dummyAttribute",
+            "ValueType": "string",
+            "relationship": "http://www.w3.org/2001/XMLSchema#string",
+            "UriRelationship": "http://kdl.ge.com/additiveMaterials#dummyAttribute",
+            "Constraints": "",
+            "fullURIName": "",
+            "SparqlID": "?dummyAttribute",
+            "isReturned": true,
+            "isOptional": false,
+            "isRuntimeConstrained": false,
+            "instanceValues": [],
+            "isMarkedForDeletion": false
+          }
+        ],
+        "nodeList": [
+          {
+            "SnodeSparqlIDs": [
+              "?DesignCurveMetadata"
+            ],
+            "SnodeOptionals": [
+              0
+            ],
+            "DeletionMarkers": [
+              false
+            ],
+            "KeyName": "designCurveMetadata",
+            "ValueType": "DesignCurveMetadata",
+            "UriValueType": "http://kdl.ge.com/additiveMaterials#DesignCurveMetadata",
+            "ConnectBy": "designCurveMetadata",
+            "Connected": true,
+            "UriConnectBy": "http://kdl.ge.com/additiveMaterials#designCurveMetadata"
+          }
+        ],
+        "NodeName": "DesignCurve",
+        "fullURIName": "http://kdl.ge.com/additiveMaterials#DesignCurve",
+        "subClassNames": [],
+        "SparqlID": "?DesignCurve",
+        "isReturned": false,
+        "isRuntimeConstrained": false,
+        "valueConstraint": "",
+        "instanceValue": null,
+        "deletionMode": "NO_DELETE"
+      }
+    ],
+    "orderBy": []
+  },
+  "importSpec": {
+    "version": "1",
+    "baseURI": "",
+    "columns": [
+      {
+        "colId": "col_0",
+        "colName": "dummyAttribute"
+      }
+    ],
+    "texts": [],
+    "transforms": [],
+    "nodes": [
+      {
+        "sparqlID": "?DesignCurve",
+        "type": "http://kdl.ge.com/additiveMaterials#DesignCurve",
+        "URILookupMode": "createIfMissing",
+        "mapping": [],
+        "props": [
+          {
+            "URIRelation": "http://kdl.ge.com/additiveMaterials#dummyAttribute",
+            "URILookup": [
+              "?DesignCurve"
+            ],
+            "mapping": [
+              {
+                "colId": "col_0"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sparqlID": "?DesignCurveMetadata",
+        "type": "http://kdl.ge.com/additiveMaterials#DesignCurveMetadata",
+        "mapping": [],
+        "props": []
+      }
+    ]
+  }
+}

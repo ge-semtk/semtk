@@ -58,33 +58,8 @@ public class StoreNodeGroup {
 		    String endpointUrlWithPort = args[0]; //e.g. http://localhost:12056
 			String csvFile = args[1];
 
-			try ( BufferedReader br = new BufferedReader(new FileReader(csvFile)) ) {
-
-				String line  = br.readLine();
-				if (line == null) {
-					throw new Exception("Could not find CSV file head line. "+formatInfo);
-				}
-
-				while ((line = br.readLine()) != null) {
-					// use comma as separator
-					String[] parsedLine = line.split(CSV_SPLIT_CHARACTER);
-
-					if (parsedLine.length < 5) {
-						throw new Exception("Missing column in input file. "+formatInfo);
-					} else if (parsedLine.length > 5 ) {
-						throw new Exception("Found Too many columns in file. "+formatInfo);
-					}
-
-					String ngId = parsedLine[0]; // e.g. "AMP Design Curve"
-					String ngComments = parsedLine[1]; // e.g. "Retrieve an AMP design curve"
-					// ignore parsedLine[2]...
-					String ngOwner = parsedLine[3]; // e.g. sso as "20000588"
-					String ngFilePath = parsedLine[4]; // system full path of the file with json representation of the nodegroup
-					String endpointPart [] = endpointUrlWithPort.split(":/*");
-
-					storeSingeNodeGroup(endpointUrlWithPort, ngId, ngComments, ngOwner, ngFilePath, endpointPart);
-
-				}
+			try {
+				processCSVFile(endpointUrlWithPort, csvFile);
 
 			} catch(Exception e){
 				LocalLogger.printStackTrace(e);
@@ -93,6 +68,53 @@ public class StoreNodeGroup {
 		
 		System.exit(0);
 	}
+
+	public static void processCSVFile(String endpointUrlWithPort, String csvFile) throws Exception {
+
+		try ( BufferedReader br = new BufferedReader(new FileReader(csvFile)) ) {
+
+			String line  = br.readLine();
+			if (line == null) {
+				throw new Exception("Could not find CSV file head line. "+formatInfo);
+			}
+
+			while ((line = br.readLine()) != null) {
+				// use comma as separator
+				String[] parsedLine = line.split(CSV_SPLIT_CHARACTER);
+
+				if (parsedLine.length == 0) {
+					LocalLogger.logToStdOut("Ignoring line without column values: "+line);
+				} else  if (parsedLine.length < 5) {
+					LocalLogger.logToStdOut("Ignoring! Missing column in line: "+line);
+				} else if (parsedLine.length > 5 ) {
+					LocalLogger.logToStdOut("Ignoring! Found Too many columns in line: "+line);
+
+				} else {
+
+					String ngId = parsedLine[0]; // e.g. "AMP Design Curve"
+					String ngComments = parsedLine[1]; // e.g. "Retrieve an AMP design curve"
+					// ignore parsedLine[2]...
+					String ngOwner = parsedLine[3]; // e.g. sso as "20000588"
+					String ngFilePath = parsedLine[4]; // system full path of the file with json representation of the nodegroup
+					String endpointPart[] = endpointUrlWithPort.split(":/*");
+
+					if (endpointUrlWithPort != null && !"".equals(endpointUrlWithPort.trim())) {
+						storeSingeNodeGroup(endpointUrlWithPort, ngId, ngComments, ngOwner, ngFilePath, endpointPart);
+					} else {
+						LocalLogger.logToStdOut("Ignoring line: "+line);
+					}
+				}
+
+			}
+			LocalLogger.logToStdOut("Finished processing file: "+csvFile);
+
+		} catch (FileNotFoundException e) {
+			LocalLogger.printStackTrace(e);
+		} catch (IOException e) {
+			LocalLogger.printStackTrace(e);
+		}
+	}
+
 
 	private static void storeSingeNodeGroup(String endpointUrlWithPort, String ngId, String ngComments, String ngOwner, String ngFilePath, String[] endpointPart) throws Exception {
 
