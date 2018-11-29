@@ -32,15 +32,25 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 
+//
+// DEPRECATED.   Please use NodeGroupExecutionClient instead.
+//
+
+
+@Deprecated
 public class StoredNodeGroupExecutionLauncher {
 	
-	
+	@Deprecated
 	public StoredNodeGroupExecutionLauncher(){
 		
 	}
 	// by ID
 	// select functionality
-	public TableResultSet launchSelectJob(String id, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+	@Deprecated
+	public TableResultSet launchSelectJob(String id, JSONArray runtimeConstraintsJson, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
+		
+		System.err.println("Using deprecated StoredNodeGroupExecutionLauncher.  Please use NodeGroupExecutionClient instead." );
+		
 		TableResultSet retval = null;
 		
 		// create the executor we will be using
@@ -49,7 +59,7 @@ public class StoredNodeGroupExecutionLauncher {
 		
 		// get a name for the job.
 		LocalLogger.logToStdErr("About to request job");
-		String jobId = snec.dispatchSelectByIdToJobId(id, overrideConn, edcConstraints, runtimeConstraints);
+		String jobId = snec.dispatchSelectByIdToJobId(id, overrideConn, edcConstraints, runtimeConstraintsJson);
 		LocalLogger.logToStdErr("job request created. Job ID returned was " + jobId);
 		
 		// waiting on results.
@@ -81,6 +91,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 	
 	// Delete functionality
+	@Deprecated
 	public TableResultSet launchDeleteJob(String id, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
@@ -122,6 +133,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 
 	// Count functionality
+	@Deprecated
 	public TableResultSet launchCountJob(String id, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
@@ -205,6 +217,7 @@ public class StoredNodeGroupExecutionLauncher {
 	
 	// by NodeGroup			
 	// select functionality
+	@Deprecated
 	public TableResultSet launchSelectJob(NodeGroup ng, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
@@ -247,6 +260,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 		
 	// count functionality
+	@Deprecated
 	public TableResultSet launchCounctJob(NodeGroup ng, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
@@ -289,6 +303,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 		
 	// delete functionality
+	@Deprecated
 	public TableResultSet launchDeleteJob(NodeGroup ng, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
@@ -331,6 +346,7 @@ public class StoredNodeGroupExecutionLauncher {
 	}	
 
 	// Filter functionality
+	@Deprecated
 	public TableResultSet launchFilterJob(NodeGroup ng, String targetObjectSparqlId, RuntimeConstraintManager runtimeConstraints, JSONObject edcConstraints, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		TableResultSet retval = null;
 		
@@ -374,6 +390,7 @@ public class StoredNodeGroupExecutionLauncher {
 
 	
 	// insert functionality
+	@Deprecated
 	public RecordProcessResults launchInsertJob(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		RecordProcessResults retval = null;
 		
@@ -387,6 +404,7 @@ public class StoredNodeGroupExecutionLauncher {
 		return retval;
 	}
 	
+	@Deprecated
 	public RecordProcessResults launchInsertJob(String nodegroupAndTemplateId, JSONArray mappingArray, GenericInsertionRequestBody requestBody, SparqlConnection overrideConn, NodeGroupExecutionClientConfig sncc) throws Exception{
 		RecordProcessResults retval = null;
 		
