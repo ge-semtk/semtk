@@ -1,4 +1,4 @@
 ID,comments,creationDate,creator,jsonFile
-MATERIA - TEST1,"Test nodegroup 1 created by unit test",11/9/18,205000703,src/test/resources/nodegroups/sample.json
-MATERIA - TEST2,"Test nodegroup 2 created by unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
-MATERIA - TEST3,"Test nodegroup 3 created by unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
+MATERIA - TEST1,"Test nodegroup 1 created by TestStoreNodegroup unit test",11/9/18,205000703,src/test/resources/nodegroups/sample.json
+MATERIA - TEST2,"Test nodegroup 2 created by TestStoreNodegroup unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
+MATERIA - TEST3,"Test nodegroup 3 created by TestStoreNodegroup unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
