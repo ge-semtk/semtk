@@ -53,25 +53,47 @@ mkdir -p $LOGS
 
 echo "=== START MICROSERVICES... ==="
 
+PID_ARRAY=()
+PROC_ARRAY=()
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("ontologyInfoService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar > "$LOGS"/nodeGroupStoreService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("nodeGroupStoreService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("sparqlGraphStatusService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("sparqlGraphResultsService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("hiveService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("sparqlExtDispatchService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar > "$LOGS"/nodeGroupExecutionService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("nodeGroupExecutionService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-*.jar > "$LOGS"/sparqlQueryService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("sparqlQueryService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("sparqlGraphIngestionService");
 
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar > "$LOGS"/nodeGroupService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("nodeGroupService");
 
 #
 # wait for services
@@ -108,6 +130,13 @@ for port in "${PORTS[@]}"; do
         fi
         sleep 3
 
+	# check that no processes have died yet
+	for i in "${!PID_ARRAY[@]}"; do
+		if (! (ps -p ${PID_ARRAY[$i]} >> /dev/null)) ; then
+			echo ERROR: Proccess ${PID_ARRAY[$i]} ${PROC_ARRAY[$i]} has died
+			exit 1
+		fi
+	done
    done
    echo service at ${PROTOCOL}://${HOST_NAME}:${port} is up
 done
