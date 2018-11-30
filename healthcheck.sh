@@ -66,6 +66,7 @@ echo Using no_proxy: $no_proxy
 
 # check for each service				 
 for port in "${PORTS[@]}"; do
+   echo ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping
    if ! curl --insecure --noproxy $no_proxy -X POST ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; then
 	echo failure at ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping
        	FAILURE="true"
