@@ -98,7 +98,7 @@ public class StoreNodeGroup {
 				} else  if (parsedLine.length < headers.length) {
 					LocalLogger.logToStdOut("Ignoring! Missing column in line: "+Arrays.toString(parsedLine));
 				} else if (parsedLine.length > headers.length ) {
-					LocalLogger.logToStdOut("Ignoring! Found Too many columns in line: "+Arrays.toString(parsedLine));
+					LocalLogger.logToStdOut("Ignoring! Found Too many: "+parsedLine.length+" columns in line: "+Arrays.toString(parsedLine));
 
 				} else {
 

@@ -2,3 +2,4 @@ Context,ID,comments,creationDate,creator,jsonFile
 Context,MATERIA - TEST1,"Test nodegroup 1 created by TestStoreNodegroup unit test",11/9/18,205000703,src/test/resources/nodegroups/sample.json
 Context,MATERIA - TEST2,"Test nodegroup 2 created by TestStoreNodegroup unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
 Context,MATERIA - TEST3,"Test nodegroup 3 created by TestStoreNodegroup unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
+"Context,with, commas",MATERIA - TEST4,"Test, nodegroup 3, created by, TestStoreNodegroup unit test",10/19/18,205000703,src/test/resources/nodegroups/sample.json
