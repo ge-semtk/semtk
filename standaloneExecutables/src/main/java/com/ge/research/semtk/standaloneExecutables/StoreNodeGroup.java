@@ -76,32 +76,31 @@ public class StoreNodeGroup {
 
 		try ( CSVReader br = new CSVReader(new FileReader(csvFile)) ) {
 
-
 			String[] parsedLine = br.readNext(); // header line
 			if (parsedLine.length != headers.length) {
 				throw new Exception("Wrong number of columns on header: "+Arrays.toString(parsedLine));
 			}
 
-			int i=0;
+			// check first line column names
+			int col=0;
 			for (String headerName: parsedLine) {
-				if (! headerName.trim().equalsIgnoreCase(headers[i].trim())) {
-					LocalLogger.logToStdErr("Wrong column name: "+headerName+". Was expecting: "+headers[i]);
+				if (! headerName.trim().equalsIgnoreCase(headers[col].trim())) {
+					LocalLogger.logToStdErr("Wrong column name: "+headerName+". Was expecting: "+headers[col]);
 				}
-				i++;
+				col++;
 			}
 
-
-			while ((parsedLine = br.readNext()) != null) {
-
+			int lineNumber=1; // header is line #1
+ 			while ((parsedLine = br.readNext()) != null) {
+				lineNumber++;
 				if (parsedLine.length == 0) {
-					LocalLogger.logToStdOut("Ignoring line without column values: "+ Arrays.toString(parsedLine));
+					LocalLogger.logToStdOut("Ignoring blank line number: "+ lineNumber);
 				} else  if (parsedLine.length < headers.length) {
 					LocalLogger.logToStdOut("Ignoring! Missing column in line: "+Arrays.toString(parsedLine));
 				} else if (parsedLine.length > headers.length ) {
 					LocalLogger.logToStdOut("Ignoring! Found Too many: "+parsedLine.length+" columns in line: "+Arrays.toString(parsedLine));
 
 				} else {
-
                     String context = parsedLine[0];
 					String ngId = parsedLine[1]; // e.g. "AMP Design Curve"
 					String ngComments = parsedLine[2]; // e.g. "Retrieve an AMP design curve"
@@ -120,7 +119,6 @@ public class StoreNodeGroup {
 						LocalLogger.logToStdOut("Ignoring line: "+Arrays.toString(parsedLine));
 					}
 				}
-
 			}
 			LocalLogger.logToStdOut("Finished processing file: "+csvFile);
 
