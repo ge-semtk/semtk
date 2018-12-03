@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.standaloneExecutables;
 
+import com.opencsv.CSVReader;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.jena.base.Sys;
 import org.json.simple.JSONObject;
@@ -33,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Loads OWL to a semantic store.
@@ -72,23 +74,31 @@ public class StoreNodeGroup {
 
 	public static void processCSVFile(String endpointUrlWithPort, String csvFile) throws Exception {
 
-		try ( BufferedReader br = new BufferedReader(new FileReader(csvFile)) ) {
+		try ( CSVReader br = new CSVReader(new FileReader(csvFile)) ) {
 
-			String line  = br.readLine();
-			if (line == null) {
-				throw new Exception("Could not find CSV file head line. "+formatInfo);
+
+			String[] parsedLine = br.readNext(); // header line
+			if (parsedLine.length != headers.length) {
+				throw new Exception("Wrong number of columns on header: "+Arrays.toString(parsedLine));
 			}
 
-			while ((line = br.readLine()) != null) {
-				// use comma as separator
-				String[] parsedLine = line.split(CSV_SPLIT_CHARACTER);
+			int i=0;
+			for (String headerName: parsedLine) {
+				if (! headerName.trim().equalsIgnoreCase(headers[i].trim())) {
+					LocalLogger.logToStdErr("Wrong column name: "+headerName+". Was expecting: "+headers[i]);
+				}
+				i++;
+			}
+
+
+			while ((parsedLine = br.readNext()) != null) {
 
 				if (parsedLine.length == 0) {
-					LocalLogger.logToStdOut("Ignoring line without column values: "+line);
+					LocalLogger.logToStdOut("Ignoring line without column values: "+ Arrays.toString(parsedLine));
 				} else  if (parsedLine.length < headers.length) {
-					LocalLogger.logToStdOut("Ignoring! Missing column in line: "+line);
+					LocalLogger.logToStdOut("Ignoring! Missing column in line: "+Arrays.toString(parsedLine));
 				} else if (parsedLine.length > headers.length ) {
-					LocalLogger.logToStdOut("Ignoring! Found Too many columns in line: "+line);
+					LocalLogger.logToStdOut("Ignoring! Found Too many columns in line: "+Arrays.toString(parsedLine));
 
 				} else {
 
@@ -101,9 +111,13 @@ public class StoreNodeGroup {
 					String endpointPart[] = endpointUrlWithPort.split(":/*");
 
 					if (endpointUrlWithPort != null && !"".equals(endpointUrlWithPort.trim())) {
-						storeSingeNodeGroup(endpointUrlWithPort, ngId, ngComments, ngOwner, ngFilePath, endpointPart);
+					    try {
+                            storeSingeNodeGroup(endpointUrlWithPort, ngId, ngComments, ngOwner, ngFilePath, endpointPart);
+                        } catch (Exception e) {
+					        LocalLogger.logToStdErr("Error processing file: "+ngFilePath+" - "+e.toString());
+                        }
 					} else {
-						LocalLogger.logToStdOut("Ignoring line: "+line);
+						LocalLogger.logToStdOut("Ignoring line: "+Arrays.toString(parsedLine));
 					}
 				}
 

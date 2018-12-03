@@ -8,7 +8,9 @@ conf/maven/settings.xml
 target
 sparqlGraphLibrary/src/test/resources/datacleanertest-output.csv
 logs/
+.sts4-cache/
 *.swp
+*.crt
 DOT_SETTINGS
 .idea/
 .vscode/
