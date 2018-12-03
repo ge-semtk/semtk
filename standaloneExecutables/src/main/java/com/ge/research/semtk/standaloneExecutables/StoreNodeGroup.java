@@ -41,6 +41,7 @@ public class StoreNodeGroup {
 
 	private static final String CSV_SPLIT_CHARACTER = ",";
 	private static final String formatInfo = "Input file should be in the format: ID, comments, creationDate, creator, jsonFile";
+	private static final String[] headers= {"Context","ID","comments","creationDate","creator","jsonFile"};
 
 
 	/**
@@ -84,18 +85,19 @@ public class StoreNodeGroup {
 
 				if (parsedLine.length == 0) {
 					LocalLogger.logToStdOut("Ignoring line without column values: "+line);
-				} else  if (parsedLine.length < 5) {
+				} else  if (parsedLine.length < headers.length) {
 					LocalLogger.logToStdOut("Ignoring! Missing column in line: "+line);
-				} else if (parsedLine.length > 5 ) {
+				} else if (parsedLine.length > headers.length ) {
 					LocalLogger.logToStdOut("Ignoring! Found Too many columns in line: "+line);
 
 				} else {
 
-					String ngId = parsedLine[0]; // e.g. "AMP Design Curve"
-					String ngComments = parsedLine[1]; // e.g. "Retrieve an AMP design curve"
-					// ignore parsedLine[2]...
-					String ngOwner = parsedLine[3]; // e.g. sso as "20000588"
-					String ngFilePath = parsedLine[4]; // system full path of the file with json representation of the nodegroup
+                    String context = parsedLine[0];
+					String ngId = parsedLine[1]; // e.g. "AMP Design Curve"
+					String ngComments = parsedLine[2]; // e.g. "Retrieve an AMP design curve"
+					// ignore parsedLine[3]...
+					String ngOwner = parsedLine[4]; // e.g. sso as "20000588"
+					String ngFilePath = parsedLine[5]; // system full path of the file with json representation of the nodegroup
 					String endpointPart[] = endpointUrlWithPort.split(":/*");
 
 					if (endpointUrlWithPort != null && !"".equals(endpointUrlWithPort.trim())) {
