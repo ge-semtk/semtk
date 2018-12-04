@@ -133,7 +133,7 @@ for port in "${PORTS[@]}"; do
 	# check that no processes have died yet
 	for i in "${!PID_ARRAY[@]}"; do
 		if (! (ps -p ${PID_ARRAY[$i]} >> /dev/null)) ; then
-			echo ERROR: Proccess ${PID_ARRAY[$i]} ${PROC_ARRAY[$i]} has died
+			echo ERROR: Process ${PID_ARRAY[$i]} ${PROC_ARRAY[$i]} has died
 			exit 1
 		fi
 	done
