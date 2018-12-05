@@ -20,7 +20,6 @@ package com.ge.research.semtk.standaloneExecutables;
 
 import com.opencsv.CSVReader;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.jena.base.Sys;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.utility.LocalLogger;
