@@ -62,7 +62,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a GET URL
 	 */
 	public String getGetURL(){
-		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
+		if(this.isAuth()){
 			return String.format("%s:%s/sparql-auth/?default-graph-uri=%s&format=json&query=", server, this.port, this.graph);  
 		}else{
 			return String.format("%s:%s/sparql/?default-graph-uri=%s&format=json&query=", this.server, this.port, this.graph); 
@@ -73,7 +73,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a POST URL
 	 */
 	public String getPostURL(){
-		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
+		if(this.isAuth()){
 			return String.format("%s:%s/sparql-auth", this.server, this.port);
 		}else{
 			return String.format("%s:%s/sparql", this.server, this.port);
@@ -84,7 +84,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a upload URL
 	 */
 	public String getUploadURL() throws Exception{
-		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
+		if(this.isAuth()){
 			return this.server + "/sparql-graph-crud-auth";
 		}else{
 			throw new Exception("Virtuoso requires authentication for file upload");	

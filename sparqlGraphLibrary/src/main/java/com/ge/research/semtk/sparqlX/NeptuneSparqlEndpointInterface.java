@@ -36,6 +36,8 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
  */
 public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	
+	private S3BucketConfig s3Config = null;
+	
 	/**
 	 * Constructor
 	 */
@@ -52,6 +54,14 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		// TODO Auto-generated constructor stub
 	}
 	
+	/**
+	 * Neptune never requires username or password.  Always auth-capable.
+	 */
+	@Override
+	public boolean isAuth() {
+		return true;
+	}
+	
 	public String getServerType() {
 		return "neptune";
 	}
@@ -60,33 +70,31 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a GET URL
 	 */
 	public String getGetURL(){
-		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
-			return String.format("%s:%s/sparql-auth/?default-graph-uri=%s&format=json&query=", server, this.port, this.graph);  
-		}else{
-			return String.format("%s:%s/sparql/?default-graph-uri=%s&format=json&query=", this.server, this.port, this.graph); 
-		}
+		return String.format("%s:%s/sparql/?default-graph-uri=%s&format=json&query=", this.server, this.port, this.graph); 
 	}
 	
 	/**
 	 * Build a POST URL
 	 */
 	public String getPostURL(){
-		if(this.userName != null && this.userName.length() > 0 && this.password != null && this.password.length() > 0){
-			return String.format("%s:%s/sparql", this.server, this.port);
-		}else{
-			return String.format("%s:%s/sparql", this.server, this.port);
-		}
+		return String.format("%s:%s/sparql", this.server, this.port);
 	}
 
 	/**
 	 * Build a upload URL
 	 */
 	public String getUploadURL() throws Exception{
-			return this.server + "/sparql-graph-crud-auth";
+		throw new Exception("un-implemented");
 	}
 	
 	public JSONObject executeUpload(byte[] owl) throws Exception {
-		throw new Exception("Unimplmenented");
+		// throw some exceptions if setup looks sketchy
+		if (this.s3Config == null) throw new Exception ("No S3 bucket has been configured for owl upload to Neptune.");
+		this.s3Config.verifySetup();
+		
+		
+		JSONObject ret = null;
+		return ret;
 	}
 	
 	@Override
@@ -128,6 +136,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+	}
+	
+	public void setS3Config(S3BucketConfig s3Config) {
+		this.s3Config = s3Config;
 	}
 	
 	@Override

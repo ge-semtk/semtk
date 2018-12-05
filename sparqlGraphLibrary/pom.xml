@@ -122,11 +122,17 @@
 			</exclusions>
 		</dependency>
  
- 		<dependency>
+ 		<!--  dependency>
               <groupId>org.apache.jena</groupId>
               <artifactId>jena-arq</artifactId>
               <version>3.8.0</version>
-       </dependency>
+       </dependency-->
+       
+       <!--  dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk</artifactId>
+			<version>[1.11.461,)</version>
+		</dependency-->
  		
 	</dependencies>
 

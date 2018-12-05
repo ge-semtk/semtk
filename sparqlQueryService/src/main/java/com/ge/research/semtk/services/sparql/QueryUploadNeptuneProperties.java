@@ -20,30 +20,10 @@ package com.ge.research.semtk.services.sparql;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.ge.research.semtk.sparqlX.NeptuneS3Properties;
+
 @Configuration
-@ConfigurationProperties(prefix="triplestore", ignoreUnknownFields = true)
-public class SparqlQueryServiceProperties {
+@ConfigurationProperties(prefix="query.neptuneupload", ignoreUnknownFields = true)
+public class QueryUploadNeptuneProperties extends NeptuneS3Properties {
 	
-	private String serverAndPort;  	
-	
-	private String serverType;
-
-	public String getServerAndPort() {
-		return serverAndPort;
-	}
-
-	public void setServerAndPort(String serverAndPort) {
-		this.serverAndPort = serverAndPort;
-	}
-
-	public String getServerType() {
-		return serverType;
-	}
-
-	public void setServerType(String serverType) {
-		this.serverType = serverType;
-	}
-	
-	
-
 }

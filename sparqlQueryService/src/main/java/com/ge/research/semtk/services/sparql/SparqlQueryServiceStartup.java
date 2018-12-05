@@ -9,8 +9,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 
 @Component
 public class SparqlQueryServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
-	@Autowired
-	private SparqlQuerySemtkEndpointProperties semtk_prop;
+	
 	@Autowired
 	private SparqlQueryAuthProperties auth_prop; 
 	

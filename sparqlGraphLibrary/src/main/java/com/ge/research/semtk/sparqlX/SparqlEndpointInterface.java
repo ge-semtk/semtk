@@ -125,11 +125,18 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public SparqlEndpointInterface(String serverAndPort, String graph, String user, String pass) throws Exception {
 		this.graph = graph;		
-		this.userName = user;
-		this.password = pass;
+		this.setUserAndPassword(user, pass);
 		
 		this.setServerAndPort(serverAndPort);
 		
+	}
+	
+	/**
+	 * Can this endpoint run auth queries
+	 * @return
+	 */
+	public boolean isAuth() {
+		return (this.userName != null && this.userName.length() > 0);
 	}
 
 	public String getServerAndPort() {		
@@ -237,11 +244,12 @@ public abstract class SparqlEndpointInterface {
 	 * Set the username and password
 	 */
 	public void setUserAndPassword(String user, String pass){
-		this.userName = user;
-		this.password = pass;
+		// make sure blank userName is null
+		this.userName = (user != null && user.isEmpty()) ? null : user;
+		
+		// make sure if there is a userName, then a blank pass is ""
+		this.password = (user != null && pass == null) ? "" : pass;
 	}	
-	
-	
 	
 	/**
 	 * Static method to get an instance of this abstract class
@@ -255,39 +263,18 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String graph, String user, String password) throws Exception{
 		if(serverTypeString.equalsIgnoreCase(VIRTUOSO_SERVER)){
-			if(user != null && ! user.isEmpty() && password != null && ! password.isEmpty()){
-				return new VirtuosoSparqlEndpointInterface(server, graph, user, password);				
-			}else{
-				return new VirtuosoSparqlEndpointInterface(server, graph);
-			}
+			return new VirtuosoSparqlEndpointInterface(server, graph, user, password);				
+			
 		}else if(serverTypeString.equalsIgnoreCase(FUSEKI_SERVER)){
-			if(user != null && ! user.isEmpty() && password != null && ! password.isEmpty()){
-				return new FusekiSparqlEndpointInterface(server, graph, user, password);				
-			}else{			
-				return new FusekiSparqlEndpointInterface(server, graph);
-			}
+			return new FusekiSparqlEndpointInterface(server, graph, user, password);				
+			
 		}else if(serverTypeString.equalsIgnoreCase(NEPTUNE_SERVER)){
-			if(user != null && ! user.isEmpty() && password != null && ! password.isEmpty()){
-				return new NeptuneSparqlEndpointInterface(server, graph, user, password);				
-			}else{			
-				return new NeptuneSparqlEndpointInterface(server, graph);
-			}
+			return new NeptuneSparqlEndpointInterface(server, graph, user, password);				
+		
 		}else{
 			throw new Exception("Invalid SPARQL server type : " + serverTypeString);
 		}	
 	}
-	
-	
-	// I renamed this function because it was not clear which Endpoint it was getting
-	// And labeled it deprecated because it is only two lines of code and the first one is usually shared with calls to retrieve other things from the json.
-	// And re-implemented it with the preferred code.
-	// - Paul  5/26/2016
-	public static SparqlEndpointInterface getDataInterfaceFromJsonDEPRECATE(JSONObject json) throws Exception{
-		SparqlGraphJson sgJson = new SparqlGraphJson(json);
-		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDataInterface(0);
-		return sei;
-	}
-	
 	
 	/**
 	 * Static method to create an endpoint and execute a query
@@ -383,14 +370,12 @@ public abstract class SparqlEndpointInterface {
 		while (true) {
 			tryCount++;
 			try {
-				if(this.userName !=null && this.password != null){
-					return executeQueryPost(query, resultType);
-				}else{
-					return executeQueryPost(query, resultType);
-				}
+				return executeQueryPost(query, resultType);
+				
 			} catch (DontRetryException e) {
 				LocalLogger.logToStdErr(e.getMessage());
 				throw e;
+				
 			} catch (Exception e) {
 				if (! this.isExceptionRetryAble(e)) {
 					LocalLogger.logToStdErr(e.getMessage());
@@ -432,6 +417,7 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception
 	 */
+	@Deprecated
 	public JSONObject executeQueryAuthPost(String query, SparqlResultTypes resultType) throws Exception {
 		// deprecated in favor of:
 		return this.executeQueryPost(query, resultType);
@@ -490,7 +476,7 @@ public abstract class SparqlEndpointInterface {
 		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
 		
 		// add userName and password, if any
-		if (this.userName != null) {
+		if (this.isAuth()) {
 			CredentialsProvider credsProvider = new BasicCredentialsProvider();
 			credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(this.userName, this.password));
 	        clientBuilder.setDefaultCredentialsProvider(credsProvider);
@@ -566,7 +552,7 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 */
 	protected BasicHttpContext buildHttpContext(HttpHost targetHost) {
-		if (this.userName != null) {
+		if (this.isAuth()) {
 			DigestScheme digestAuth = new DigestScheme();
 			AuthCache authCache = new BasicAuthCache();
 			digestAuth.overrideParamter("realm", "SPARQL");

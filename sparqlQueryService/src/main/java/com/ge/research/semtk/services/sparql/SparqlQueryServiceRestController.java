@@ -41,6 +41,8 @@ import com.ge.research.semtk.services.sparql.requests.SparqlPrefixAuthRequestBod
 import com.ge.research.semtk.services.sparql.requests.SparqlPrefixesAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryRequestBody;
+import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -82,7 +84,7 @@ public class SparqlQueryServiceRestController {
 	}
 	
 	@Autowired
-	private SparqlQueryServiceProperties serviceProps; 
+	private QueryUploadNeptuneProperties serviceProps; 
 	/**
 	 * Execute (non-auth) query 
 	 */
@@ -96,12 +98,6 @@ public class SparqlQueryServiceRestController {
 		LocalLogger.logToStdOut("Sparql Query Service start query");
 		long startTime = System.nanoTime();
 
-		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
-		
-		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-			requestBody.serverType = serviceProps.getServerType();  }
-		
 		try{
 			
 			
@@ -155,12 +151,6 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start queryAuth");
 
-		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
-		
-		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-			requestBody.serverType = serviceProps.getServerType();  }
-		
 		try{
 			// disallow running drop graph query here - require client to explicitly use /dropGraph to avoid accidental drops
 			if(SparqlResultTypes.isDropGraphQuery(requestBody.query)){ 
@@ -196,12 +186,6 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start dropGraph");
 
-		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
-		
-		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-			requestBody.serverType = serviceProps.getServerType();  }
-		
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
@@ -297,13 +281,6 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start clearPrefix");
 		
-		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
-		
-		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-			requestBody.serverType = serviceProps.getServerType();  }
-		
-		
 		String query = "";
 		try{
 			requestBody.printInfo(); 	// print info to console			
@@ -359,14 +336,6 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start " + endpointName);
 		
-		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-			requestBody.serverAndPort = serviceProps.getServerAndPort(); 
-		}
-		
-		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-			requestBody.serverType = serviceProps.getServerType();  
-		}
-		
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
@@ -397,14 +366,6 @@ public class SparqlQueryServiceRestController {
 		GeneralResultSet resultSet = null;
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start clearAll");
-
-		if(requestBody.serverAndPort == null || requestBody.serverAndPort.isEmpty()) {
-			requestBody.serverAndPort = serviceProps.getServerAndPort(); }
-		
-		if(requestBody.serverType == null || requestBody.serverType.isEmpty()) {
-			requestBody.serverType = serviceProps.getServerType();  }
-		
-		
 		
 		try {			
 			requestBody.printInfo(); 	// print info to console			
@@ -439,27 +400,35 @@ public class SparqlQueryServiceRestController {
 								@RequestParam("owlFile") MultipartFile owlFile, 
 								@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-
-		if(serverAndPort == null || serverAndPort.isEmpty()) {
-			serverAndPort = serviceProps.getServerAndPort(); }
-		
-		if(serverType == null || serverType.isEmpty()) {
-			serverType = serviceProps.getServerType();  }
-		
 		
 		SimpleResultSet resultSet = null;
 		JSONObject simpleResultSetJson = null;
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start uploadOwl");
-
+		
+		
 		try {	
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
 			if (dataset == null || dataset.trim().isEmpty() ) throw new Exception("dataset is empty.");
-			if (user == null || user.trim().isEmpty() ) throw new Exception("user is empty.");
-			if (password == null || password.trim().isEmpty() ) throw new Exception("password is empty.");
 
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, dataset, user, password);
+			
+			if (sei instanceof NeptuneSparqlEndpointInterface) {
+				// S3 bucket is option.  It can be filled with blanks and nulls
+				S3BucketConfig s3Config= new S3BucketConfig(
+						serviceProps.getS3ClientRegion(), 
+						serviceProps.getS3BucketName(), 
+						serviceProps.getAwsIamRoleArn(), 
+						serviceProps.getS3AccessId(), 
+						serviceProps.getS3Secret());
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
+			}
+			
+			if (! sei.isAuth()) { 
+				throw new Exception("Required SPARQL endpoint user/password weren't provided.");
+			}
+			
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
 			 
 		} catch (Exception e) {			
