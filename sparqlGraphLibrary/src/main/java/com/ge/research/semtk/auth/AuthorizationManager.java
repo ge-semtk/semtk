@@ -36,7 +36,6 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class AuthorizationManager {
-	static boolean FORGIVENESS_TEST_FLAG = true;
 
 	private static long lastUpdate = 0;
 
@@ -58,6 +57,7 @@ public class AuthorizationManager {
 	private static HashMap<String, ArrayList<String>> graphReaders = new HashMap<String, ArrayList<String>>();
 	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
 
+	// remove when done with dev and test
 	public static final boolean FORGIVE_ALL = true;
 	
 	public static void clear() {
@@ -398,7 +398,7 @@ public class AuthorizationManager {
 			throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + user);
 			
 		} catch (AuthorizationException ae) {
-			if (FORGIVENESS_TEST_FLAG) return;
+			if (FORGIVE_ALL) return;
 			else throw ae;
 		}
 	}
@@ -439,7 +439,7 @@ public class AuthorizationManager {
 			throw new AuthorizationException("Write Access Denied.  graph=" + graphName + " user=" + user);
 			
 		} catch (AuthorizationException ae) {
-			if (FORGIVENESS_TEST_FLAG) return;
+			if (FORGIVE_ALL) return;
 			else throw ae;
 		}
 	}
