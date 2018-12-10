@@ -28,6 +28,8 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 public class AuthorizationException extends Exception {
 	static final long serialVersionUID = 23098467;
 	private static String authLogPath = null;
@@ -62,9 +64,10 @@ public class AuthorizationException extends Exception {
 				return;
 			} catch (Exception e) {
 			}
+		} else {
+			LocalLogger.logToStdErr("AuthorizationException: " + msg);
 		}
-		// PEC TODO remove for production
-		// LocalLogger.logToStdOut(datStr + " AUTH: " + msg);
+		
 	}
 	
 	/**
@@ -89,6 +92,8 @@ public class AuthorizationException extends Exception {
 					ps.close();
 				} catch (Exception ee) {}
 			}
+		} else {
+			LocalLogger.printStackTrace(ae);
 		}
 		
 	}

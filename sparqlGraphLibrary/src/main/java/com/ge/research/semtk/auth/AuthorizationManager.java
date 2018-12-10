@@ -264,11 +264,18 @@ public class AuthorizationManager {
 		
 		String user = ThreadAuthenticator.getThreadUserName();
 		
-		// is user_name equal, or thread is a job admin
-		if (!user.equals(owner) && !threadIsJobAdmin()) {
-			throw new AuthorizationException("Permission denied on thread" + Thread.currentThread().getName() + ": " + user + " may not access " + itemName + " owned by " + owner);
+		try {
+			// is user_name equal, or thread is a job admin
+			if (!user.equals(owner) && !threadIsJobAdmin() && !FORGIVE_ALL) {
+				throw new AuthorizationException("Permission denied on thread" + Thread.currentThread().getName() + ": " + user + " may not access " + itemName + " owned by " + owner);
+			}
+		} catch (AuthorizationException ae) {
+			if (FORGIVE_ALL) {
+				AuthorizationException.logAuthEvent("Forgiven during development");
+				return;
+			}
 		}
-			
+				
 	}
 		
 	/**
@@ -279,8 +286,15 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException
 	 */
 	public static void throwExceptionIfNotJobAdmin() throws AuthorizationException {
-		if (!threadIsJobAdmin()) {
-			throw new AuthorizationException("Function may only be performed by job admin.");
+		try {
+			if (!threadIsJobAdmin()) {
+				throw new AuthorizationException("Function may only be performed by job admin.");
+			}
+		} catch (AuthorizationException ae) {
+			if (FORGIVE_ALL) {
+				AuthorizationException.logAuthEvent("Forgiven during development");
+				return;
+			}
 		}
 	}
 	
@@ -398,7 +412,10 @@ public class AuthorizationManager {
 			throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + user);
 			
 		} catch (AuthorizationException ae) {
-			if (FORGIVE_ALL) return;
+			if (FORGIVE_ALL) {
+				AuthorizationException.logAuthEvent("Forgiven during development");
+				return;
+			}
 			else throw ae;
 		}
 	}
@@ -439,7 +456,10 @@ public class AuthorizationManager {
 			throw new AuthorizationException("Write Access Denied.  graph=" + graphName + " user=" + user);
 			
 		} catch (AuthorizationException ae) {
-			if (FORGIVE_ALL) return;
+			if (FORGIVE_ALL) {
+				AuthorizationException.logAuthEvent("Forgiven during development");
+				return;
+			}
 			else throw ae;
 		}
 	}
