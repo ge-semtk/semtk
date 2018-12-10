@@ -494,7 +494,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Gets a context with an all-trusting trust manager
 	 */
-	private static SSLContext getTrustingSSLContext() throws Exception{
+	protected static SSLContext getTrustingSSLContext() throws Exception{
         // Create a trust manager that does not validate certificate chains
         TrustManager[] trustAllCerts = new TrustManager[] {
         	new X509TrustManager() {

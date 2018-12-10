@@ -101,7 +101,8 @@ public class IngestorRestClientTest_IT {
 		seiOverride.executeAuthUploadOwl(Files.readAllBytes(Paths.get("src/test/resources/testTransforms.owl")));
 		
 		// get count of triples in override graph (after OWL load, but before data load)
-		JSONObject resultJson = seiOverride.executeQuery(Utility.SPARQL_QUERY_TRIPLE_COUNT, SparqlResultTypes.TABLE);			
+		String sparql = Utility.generateCountTriplesSparql(seiOverride);
+		JSONObject resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
 		Table table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
 		assertEquals(table.getCell(0,0), "123");	// confirm that data was loaded to the override graph
 		
@@ -112,7 +113,8 @@ public class IngestorRestClientTest_IT {
 		assertEquals(TestGraph.getNumTriples(),0);	
 		
 		// confirm triples loaded to override graph
-		resultJson = seiOverride.executeQuery(Utility.SPARQL_QUERY_TRIPLE_COUNT, SparqlResultTypes.TABLE);			
+		sparql = Utility.generateCountTriplesSparql(seiOverride);
+		resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
 		table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
 		assertEquals(table.getCell(0,0), "131");	// confirm that data was loaded to the override graph
 	}

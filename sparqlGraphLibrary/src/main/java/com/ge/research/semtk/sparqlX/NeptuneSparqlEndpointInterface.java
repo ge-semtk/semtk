@@ -21,21 +21,41 @@ package com.ge.research.semtk.sparqlX;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.mortbay.util.ajax.JSON;
 
+import com.ge.research.semtk.aws.client.AwsS3Client;
+import com.ge.research.semtk.aws.client.AwsS3ClientConfig;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
  */
 public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
-	
+	public static String STATUS_COMPLETE = "LOAD_COMPLETED";
+	public static String STATUS_IN_PROGRESS = "LOAD_IN_PROGRESS";
 	private S3BucketConfig s3Config = null;
 	
 	/**
@@ -84,17 +104,180 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a upload URL
 	 */
 	public String getUploadURL() throws Exception{
-		throw new Exception("un-implemented");
+			return this.server + "/loader";
 	}
 	
+	@Override
+	public JSONObject executeAuthUpload(byte[] owl) throws Exception {
+		return this.executeUpload(owl);
+	}
+	
+	@Override
 	public JSONObject executeUpload(byte[] owl) throws Exception {
 		// throw some exceptions if setup looks sketchy
 		if (this.s3Config == null) throw new Exception ("No S3 bucket has been configured for owl upload to Neptune.");
 		this.s3Config.verifySetup();
 		
+		SimpleResultSet ret = new SimpleResultSet();
+		// upload file to S3
+		String keyName = UUID.randomUUID().toString() + ".owl";
+		AwsS3ClientConfig config = new AwsS3ClientConfig(
+				this.s3Config.getName(), this.s3Config.getAccessId(), this.s3Config.getSecret());
+        AwsS3Client s3Client = new AwsS3Client(config);
+        
+		try {
+			
+	        s3Client.execUploadFile(new String(owl), keyName);
+        	String loadId = this.uploadFromS3(keyName);
+        	
+        	// wait for STATUS_COMPLETE 
+        	int tries = 0;
+        	while (this.getLoadStatus(loadId).equals(STATUS_IN_PROGRESS)) {
+        		Thread.sleep(250);
+        		if (++tries > 80) {
+        			throw new Exception("S3 load timed out");
+        		}
+        	}
+        	
+        	ret.setSuccess(true);
+        	
+		} catch (Exception e) {
+			ret.setSuccess(false);
+			ret.addRationaleMessage("NeptuneSparqlEndpointInterface.executeUpload()", e);
+			
+        } finally {
+	        // delete the file from S3
+	        s3Client.execDeleteFile(keyName);
+        }
+        
+        // return something
+		return ret.toJson();
+	}
+	
+	private String uploadFromS3(String keyName) throws Exception {
+		// start the upload
+        //curl blast-cluster.cluster-ceg7ggop9fho.us-east-1.neptune.amazonaws.com:8182/loader
+        //-X POST 
+        //-H 'Content-Type: application/json'
+        //-d 
+        //'{ "source" : "s3://blast-neptune/Proposal.owl", 
+        //   "format" : "rdfxml", 
+        //   "iamRoleArn" : "arn:aws:iam::378058653094:role/NeptuneLoadFromS3", 
+        //   "region" : "us-east-1", 
+        //   "failOnError" : "TRUE", 
+        //   "parserConfiguration" : { "namedGraphUri" : "http://kdl.ge.com/blast-ontology" } 
+        // }'
 		
-		JSONObject ret = null;
-		return ret;
+		HttpHost targetHost = this.buildHttpHost();
+        CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
+		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
+		HttpPost httppost = new HttpPost(this.getUploadURL());
+		
+		httppost.addHeader("Content-Type", "application/json");
+		
+		JSONObject parametersJSON = new JSONObject();
+		parametersJSON.put("source", "s3://" + this.s3Config.getName() + "/" + keyName);
+		parametersJSON.put("format", "rdfxml");
+		parametersJSON.put("iamRoleArn", this.s3Config.getIamRoleArn());
+		parametersJSON.put("region", this.s3Config.getRegion());
+		parametersJSON.put("failOnError", "TRUE");
+		
+		JSONObject parserConfig = new JSONObject();
+		parserConfig.put("namedGraphUri", this.getGraph());
+		parametersJSON.put("parserConfiguration", parserConfig);
+		
+		HttpEntity entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
+		httppost.setEntity(entity);
+		
+		HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
+		
+		HttpEntity resp_entity = response_http.getEntity();
+		String responseTxt = EntityUtils.toString(resp_entity, "UTF-8");
+		JSONObject response = (JSONObject) new JSONParser().parse(responseTxt);
+		
+		// make sure there's a payload.loadId, otherwise throw an Exception
+		if (response.containsKey("status") && response.get("status").equals("200 OK")) {
+			if (!response.containsKey("payload") || ! ((JSONObject)response.get("payload")).containsKey("loadId")) {
+				throw new Exception("Neptune responded with success but can't find payload.loadId in: " + response.toJSONString());
+			}
+		} else if (response.containsKey("detailedMessage")) {
+			throw new Exception((String)response.get("detailedMessage"));
+		} else {
+			throw new Exception(responseTxt);
+		}
+		
+		return (String)((JSONObject)response.get("payload")).get("loadId");
+	}
+	
+	/**
+	 * Get status or throw exception if any kind of failure
+	 * @param loadId
+	 * @return STATUS_IN_PROGRESS or STATUS_COMPLETE
+	 * @throws Exception
+	 */
+	private String getLoadStatus(String loadId) throws Exception {
+		
+		
+		HttpHost targetHost = this.buildHttpHost();
+        CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
+		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
+		HttpGet httpget = new HttpGet(this.getUploadURL() + "/" + loadId + "?details=TRUE&errors=TRUE" );
+		
+		HttpResponse response_http = httpclient.execute(targetHost, httpget, localcontext);
+		
+		HttpEntity resp_entity = response_http.getEntity();
+		String responseTxt = EntityUtils.toString(resp_entity, "UTF-8");
+		JSONObject response = (JSONObject) new JSONParser().parse(responseTxt);
+		
+
+		
+		// {"payload":{
+		//     "feedCount":[{"LOAD_FAILED":1}],
+		//     "overallStatus":{
+		//       "totalRecords":1,
+		//       "totalTimeSpent":3,
+		//       "insertErrors":0,
+		//       "totalDuplicates":0,
+		//       "datatypeMismatchErrors":0,
+		//       "retryNumber":0,
+		//       "runNumber":1,
+		//       "fullUri":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl",
+		//       "parsingErrors":2,
+		//       "status":"LOAD_FAILED"
+		//     },
+		//     "errors":{
+		//       "startIndex":1,
+		//       "loadId":"1517eb74-4858-416e-8707-e64db46d3d8d",
+		//       "endIndex":2,
+		//       "errorLogs":[{
+		//          "fileName":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl",
+		//          "errorMessage":"Content is not allowed in prolog.",
+		//          "errorCode":"PARSING_ERROR",
+		//          "recordNum":1
+		//       },{
+		//          "fileName":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl",
+		//          "errorMessage":"Fatal parsing error: Content is not allowed in prolog. [line 1, column 1]",
+		//          "errorCode":"PARSING_ERROR",
+		//          "recordNum":0
+		//       }]
+		//     },
+		//     "failedFeeds":[{"totalRecords":1,"totalTimeSpent":3,"insertErrors":0,"totalDuplicates":0,"datatypeMismatchErrors":0,"retryNumber":0,"runNumber":1,"fullUri":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl","parsingErrors":2,"status":"LOAD_FAILED"}]},
+		//     "status":"200 OK"}
+
+		String status = null;
+		try {
+			JSONObject payload = (JSONObject)(response.get("payload"));
+			JSONObject overallStatus = (JSONObject)(payload.get("overallStatus"));
+			status = (String)(overallStatus.get("status"));
+		} catch (Exception e) {
+			throw new Exception(responseTxt);
+		}
+
+		if (!status.equals(STATUS_IN_PROGRESS) && !status.equals(STATUS_COMPLETE)) {
+			throw new Exception(responseTxt);
+		}
+		
+		return status;
 	}
 	
 	@Override
@@ -171,8 +354,31 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			return "Succeeded in " + msec + " millisec";
 			
 		} catch (Exception e) {
-			throw new Exception("Failed to parse Neptune confirm message: " + resp.toString(), e);
+			try {
+				JSONObject responseObj = (JSONObject) resp;
+				if (responseObj.containsKey("DetailedMessage")) {
+					return (String) responseObj.get("DetailedMessage");
+				} else {
+					throw new Exception("ee");
+				}
+			} catch (Exception ee) {
+				throw new Exception("Failed to parse Neptune confirm message: " + resp.toString());
+			}
 		}
 	}
 	
+	@Override
+	protected CloseableHttpClient buildHttpClient(String schemeName) throws Exception {
+		
+		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+		
+		// skip  userName and password for Neptune
+		
+		// if https, use SSL context that will not validate certificate
+		if(schemeName.equalsIgnoreCase("https")){
+			clientBuilder.setSSLContext(getTrustingSSLContext());
+		}
+		
+		return clientBuilder.build();
+	}
 }

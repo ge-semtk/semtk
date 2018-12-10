@@ -40,6 +40,7 @@ import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -62,11 +63,16 @@ public class TestGraph {
 	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
 		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(getSparqlServerType(), getSparqlServer(), generateDatasetName("both"), getUsername(), getPassword());
+		
 		try{
 			sei.executeTestQuery();
 		}catch(Exception e){
 			LocalLogger.logToStdOut("***** Cannot connect to " + getSparqlServerType() + " server at " + getSparqlServer() + " with the given credentials for '" + getUsername() + "'.  Set up this server or change settings in TestGraph. *****");
 			throw e;
+		}
+		
+		if (sei instanceof NeptuneSparqlEndpointInterface) {
+			((NeptuneSparqlEndpointInterface) sei).setS3Config(IntegrationTestUtility.getS3Config());
 		}
 		return sei;
 	}
@@ -174,7 +180,8 @@ public class TestGraph {
 	 * Get the number of triples in the test graph.
 	 */
 	public static int getNumTriples() throws Exception {
-		Table table = TestGraph.execTableSelect(Utility.SPARQL_QUERY_TRIPLE_COUNT); 
+		String sparql = Utility.generateCountTriplesSparql(getSei());
+		Table table = TestGraph.execTableSelect(sparql); 
 		return (new Integer(table.getCell(0, 0))).intValue(); // this cell contains the count
 	}
 	
@@ -187,7 +194,6 @@ public class TestGraph {
 	public static void uploadOwl(String owlFilename) throws Exception {
 		
 		SparqlEndpointInterface sei = getSei();
-		
 		Path path = Paths.get(owlFilename);
 		byte[] owl = Files.readAllBytes(path);
 		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl));
@@ -248,18 +254,13 @@ public class TestGraph {
 	@SuppressWarnings("unchecked")
 	public static SparqlGraphJson getSparqlGraphJsonFromJson(JSONObject jObj) throws Exception{
 		
-	
-		
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
+		
+		// swap out connection
 		SparqlConnection conn = s.getSparqlConn();
-		for (int i=0; i < conn.getDataInterfaceCount(); i++) {
-			conn.getDataInterface(i).setGraph(generateDatasetName("both"));
-			conn.getDataInterface(i).setServerAndPort(getSparqlServer());
-		}
-		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-			conn.getModelInterface(i).setGraph(generateDatasetName("both"));
-			conn.getModelInterface(i).setServerAndPort(getSparqlServer());
-		}
+		conn.clearInterfaces();
+		conn.addDataInterface(getSei());
+		conn.addModelInterface(getSei());
 		s.setSparqlConn(conn);
 		
 		return s;
