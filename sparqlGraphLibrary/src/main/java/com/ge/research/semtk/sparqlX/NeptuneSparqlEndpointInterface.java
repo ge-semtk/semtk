@@ -29,6 +29,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -87,7 +88,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		throw new Exception("un-implemented");
 	}
 	
+
 	public JSONObject executeUpload(byte[] owl) throws Exception {
+		this.authorizeUpload();
+
 		// throw some exceptions if setup looks sketchy
 		if (this.s3Config == null) throw new Exception ("No S3 bucket has been configured for owl upload to Neptune.");
 		this.s3Config.verifySetup();

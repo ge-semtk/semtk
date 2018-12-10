@@ -46,7 +46,7 @@ public class NodeGroupStoreTest_IT {
 	// id to use for stored nodegroups
 	private final static String ID = "test" + UUID.randomUUID();
 	private final static String COMMENTS = "pop music nodegroup for testing";
-	private final static String CREATOR = "Jane Smith";
+	private final static String CREATOR = "Junit NodeGroupStoreTest_IT.java";
 	private final static String NG_JSON_STRING = "{ \"sparqlConn\": { \"name\": \"pop music test\", \"type\": \"virtuoso\", \"dsURL\": \"http://host:2420\", \"dsKsURL\": \"\", \"dsDataset\": \"http://research.ge.com/test/popmusic/data\", \"domain\": \"http://\", \"onDataset\": \"http://research.ge.com/test/popmusic/model\" }, \"sNodeGroup\": { \"version\": 1, \"sNodeList\": [ { \"propList\": [ { \"KeyName\": \"name\", \"ValueType\": \"string\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#string\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#name\", \"Constraints\": \"FILTER regex(%id, \\\"the Beatles\\\")\", \"fullURIName\": \"\", \"SparqlID\": \"?name\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] } ], \"nodeList\": [], \"NodeName\": \"Artist\", \"fullURIName\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"subClassNames\": [ \"http://com.ge.research/knowledge/test/popMusic#Band\" ], \"SparqlID\": \"?Artist\", \"isReturned\": false, \"isRuntimeConstrained\": false, \"valueConstraint\": \"\", \"instanceValue\": null }, { \"propList\": [ { \"KeyName\": \"songTitle\", \"ValueType\": \"string\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#string\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#songTitle\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"?songTitle\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] } ], \"nodeList\": [ { \"SnodeSparqlIDs\": [], \"KeyName\": \"composer\", \"ValueType\": \"Artist\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"ConnectBy\": \"\", \"Connected\": false, \"UriConnectBy\": \"\", \"isOptional\": 0 }, { \"SnodeSparqlIDs\": [ \"?Artist\" ], \"KeyName\": \"originalArtrist\", \"ValueType\": \"Artist\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"ConnectBy\": \"originalArtrist\", \"Connected\": true, \"UriConnectBy\": \"http://com.ge.research/knowledge/test/popMusic#originalArtrist\", \"isOptional\": 0 } ], \"NodeName\": \"Song\", \"fullURIName\": \"http://com.ge.research/knowledge/test/popMusic#Song\", \"subClassNames\": [], \"SparqlID\": \"?Song\", \"isReturned\": false, \"isRuntimeConstrained\": false, \"valueConstraint\": \"\", \"instanceValue\": null }, { \"propList\": [ { \"KeyName\": \"durationInSeconds\", \"ValueType\": \"int\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#int\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#durationInSeconds\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"?durationInSeconds\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": true, \"instanceValues\": [] }, { \"KeyName\": \"recordingDate\", \"ValueType\": \"date\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#date\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#recordingDate\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"\", \"isReturned\": false, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] }, { \"KeyName\": \"trackNumber\", \"ValueType\": \"int\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#int\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#trackNumber\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"?trackNumber\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] } ], \"nodeList\": [ { \"SnodeSparqlIDs\": [], \"KeyName\": \"recordingArtist\", \"ValueType\": \"Artist\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"ConnectBy\": \"\", \"Connected\": false, \"UriConnectBy\": \"\", \"isOptional\": 0 }, { \"SnodeSparqlIDs\": [ \"?Song\" ], \"KeyName\": \"song\", \"ValueType\": \"Song\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Song\", \"ConnectBy\": \"song\", \"Connected\": true, \"UriConnectBy\": \"http://com.ge.research/knowledge/test/popMusic#song\", \"isOptional\": 0 } ], \"NodeName\": \"AlbumTrack\", \"fullURIName\": \"http://com.ge.research/knowledge/test/popMusic#AlbumTrack\", \"subClassNames\": [], \"SparqlID\": \"?AlbumTrack\", \"isReturned\": false, \"isRuntimeConstrained\": false, \"valueConstraint\": \"\", \"instanceValue\": null }, { \"propList\": [ { \"KeyName\": \"name\", \"ValueType\": \"string\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#string\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#name\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"?name_0\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] } ], \"nodeList\": [ { \"SnodeSparqlIDs\": [], \"KeyName\": \"member\", \"ValueType\": \"Artist\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"ConnectBy\": \"\", \"Connected\": false, \"UriConnectBy\": \"\", \"isOptional\": 0 } ], \"NodeName\": \"Band\", \"fullURIName\": \"http://com.ge.research/knowledge/test/popMusic#Band\", \"subClassNames\": [], \"SparqlID\": \"?Band\", \"isReturned\": false, \"isRuntimeConstrained\": false, \"valueConstraint\": \"\", \"instanceValue\": null }, { \"propList\": [ { \"KeyName\": \"albumTtitle\", \"ValueType\": \"string\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#string\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#albumTtitle\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"?albumTtitle\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] }, { \"KeyName\": \"releaseDate\", \"ValueType\": \"date\", \"relationship\": \"http://www.w3.org/2001/XMLSchema#date\", \"UriRelationship\": \"http://com.ge.research/knowledge/test/popMusic#releaseDate\", \"Constraints\": \"\", \"fullURIName\": \"\", \"SparqlID\": \"?releaseDate\", \"isReturned\": true, \"isOptional\": false, \"isRuntimeConstrained\": false, \"instanceValues\": [] } ], \"nodeList\": [ { \"SnodeSparqlIDs\": [ \"?Band\" ], \"KeyName\": \"band\", \"ValueType\": \"Band\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Band\", \"ConnectBy\": \"band\", \"Connected\": true, \"UriConnectBy\": \"http://com.ge.research/knowledge/test/popMusic#band\", \"isOptional\": 0 }, { \"SnodeSparqlIDs\": [], \"KeyName\": \"genre\", \"ValueType\": \"Genre\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Genre\", \"ConnectBy\": \"\", \"Connected\": false, \"UriConnectBy\": \"\", \"isOptional\": 0 }, { \"SnodeSparqlIDs\": [], \"KeyName\": \"producer\", \"ValueType\": \"Artist\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"ConnectBy\": \"\", \"Connected\": false, \"UriConnectBy\": \"\", \"isOptional\": 0 }, { \"SnodeSparqlIDs\": [ \"?AlbumTrack\" ], \"KeyName\": \"track\", \"ValueType\": \"AlbumTrack\", \"UriValueType\": \"http://com.ge.research/knowledge/test/popMusic#AlbumTrack\", \"ConnectBy\": \"track\", \"Connected\": true, \"UriConnectBy\": \"http://com.ge.research/knowledge/test/popMusic#track\", \"isOptional\": 0 } ], \"NodeName\": \"Album\", \"fullURIName\": \"http://com.ge.research/knowledge/test/popMusic#Album\", \"subClassNames\": [], \"SparqlID\": \"?Album\", \"isReturned\": false, \"isRuntimeConstrained\": false, \"valueConstraint\": \"\", \"instanceValue\": null } ] }, \"importSpec\": { \"version\": \"1\", \"baseURI\": \"\", \"columns\": [ { \"colId\": \"col_0\", \"colName\": \"Album\" }, { \"colId\": \"col_1\", \"colName\": \"AlbumTrack\" }, { \"colId\": \"col_2\", \"colName\": \"Arelease\" }, { \"colId\": \"col_3\", \"colName\": \"Artist\" }, { \"colId\": \"col_4\", \"colName\": \"Atitle\" }, { \"colId\": \"col_5\", \"colName\": \"Band\" }, { \"colId\": \"col_6\", \"colName\": \"artName\" }, { \"colId\": \"col_7\", \"colName\": \"bName\" }, { \"colId\": \"col_8\", \"colName\": \"durationInSec\" }, { \"colId\": \"col_9\", \"colName\": \"recordingDate\" }, { \"colId\": \"col_10\", \"colName\": \"song\" }, { \"colId\": \"col_11\", \"colName\": \"songTitle\" }, { \"colId\": \"col_12\", \"colName\": \"trackNumber\" } ], \"texts\": [], \"transforms\": [], \"nodes\": [ { \"sparqlID\": \"?Album\", \"type\": \"http://com.ge.research/knowledge/test/popMusic#Album\", \"mapping\": [ { \"colId\": \"col_0\", \"colName\": \"Album\" } ], \"props\": [ { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#albumTtitle\", \"mapping\": [ { \"colId\": \"col_4\", \"colName\": \"Atitle\" } ] }, { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#releaseDate\", \"mapping\": [ { \"colId\": \"col_2\", \"colName\": \"Arelease\" } ] } ] }, { \"sparqlID\": \"?Band\", \"type\": \"http://com.ge.research/knowledge/test/popMusic#Band\", \"mapping\": [ { \"colId\": \"col_5\", \"colName\": \"Band\" } ], \"props\": [ { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#name\", \"mapping\": [ { \"colId\": \"col_7\", \"colName\": \"bName\" } ] } ] }, { \"sparqlID\": \"?AlbumTrack\", \"type\": \"http://com.ge.research/knowledge/test/popMusic#AlbumTrack\", \"mapping\": [ { \"colId\": \"col_1\", \"colName\": \"AlbumTrack\" } ], \"props\": [ { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#durationInSeconds\", \"mapping\": [ { \"colId\": \"col_8\", \"colName\": \"durationInSec\" } ] }, { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#trackNumber\", \"mapping\": [ { \"colId\": \"col_12\", \"colName\": \"trackNumber\" } ] } ] }, { \"sparqlID\": \"?Song\", \"type\": \"http://com.ge.research/knowledge/test/popMusic#Song\", \"mapping\": [ { \"colId\": \"col_10\", \"colName\": \"song\" } ], \"props\": [ { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#songTitle\", \"mapping\": [ { \"colId\": \"col_11\", \"colName\": \"songTitle\" } ] } ] }, { \"sparqlID\": \"?Artist\", \"type\": \"http://com.ge.research/knowledge/test/popMusic#Artist\", \"mapping\": [ { \"colId\": \"col_3\", \"colName\": \"Artist\" } ], \"props\": [ { \"URIRelation\": \"http://com.ge.research/knowledge/test/popMusic#name\", \"mapping\": [ { \"colId\": \"col_6\", \"colName\": \"artName\" } ] } ] } ] } }";		
 	private static JSONObject NG_JSON;
 	
@@ -57,6 +57,9 @@ public class NodeGroupStoreTest_IT {
 		IntegrationTestUtility.authenticateJunit();
 		NG_JSON = Utility.getJsonObjectFromString(NG_JSON_STRING);
 		nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
+		
+		IntegrationTestUtility.cleanupNodegroupStore(nodeGroupStoreClient, CREATOR);
+
 	}
 	
 	@AfterClass
@@ -165,20 +168,23 @@ public class NodeGroupStoreTest_IT {
 	 */
 	@Test
 	public void testGetNodegroupMetadata() throws Exception {
-		TableResultSet res;
-		res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
-		int countBefore = res.getResults().getNumRows();
-		nodeGroupStoreClient.executeStoreNodeGroup(ID + "a", COMMENTS, CREATOR, NG_JSON);
-		nodeGroupStoreClient.executeStoreNodeGroup(ID + "b", COMMENTS, CREATOR, NG_JSON);
-		nodeGroupStoreClient.executeStoreNodeGroup(ID + "c", "", "", NG_JSON);
-		res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
-		int countAfter = res.getResults().getNumRows();
-		assertEquals(countBefore + 3, countAfter);		 // confirm that we get metadata for 3 more nodegroups (imperfect test)
-		assertEquals(res.getTable().getNumColumns(),4);  // confirm that there are 4 columns of metadata
-		// could add more tests.
-		nodeGroupStoreClient.deleteStoredNodeGroup(ID + "a");
-		nodeGroupStoreClient.deleteStoredNodeGroup(ID + "b");
-		nodeGroupStoreClient.deleteStoredNodeGroup(ID + "c");
+		try {
+			TableResultSet res;
+			res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+			int countBefore = res.getResults().getNumRows();
+			nodeGroupStoreClient.executeStoreNodeGroup(ID + "a", COMMENTS, CREATOR, NG_JSON);
+			nodeGroupStoreClient.executeStoreNodeGroup(ID + "b", COMMENTS, CREATOR, NG_JSON);
+			nodeGroupStoreClient.executeStoreNodeGroup(ID + "c", "", "", NG_JSON);
+			res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+			int countAfter = res.getResults().getNumRows();
+			assertEquals(countBefore + 3, countAfter);		 // confirm that we get metadata for 3 more nodegroups (imperfect test)
+			assertEquals(res.getTable().getNumColumns(),4);  // confirm that there are 4 columns of metadata
+			// could add more tests.
+		} finally {
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "a");
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "b");
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "c");
+		}
 	}
 	
 	/**
@@ -211,5 +217,27 @@ public class NodeGroupStoreTest_IT {
 		}
 	}
 	
+	@Test
+	public void testVeryBigNodegroup() throws Exception {
+		try{
+			// get very big nodegroup
+			JSONObject json = Utility.getJSONObjectFromFilePath("src/test/resources/very-big-nodegroup.json");
+			SparqlGraphJson orig = new SparqlGraphJson(json);
+			
+			// store very big nodegroup
+			SimpleResultSet ret = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, json);
+			ret.throwExceptionIfUnsuccessful();
+			
+			// retrieve it
+			SparqlGraphJson stored = nodeGroupStoreClient.executeGetNodeGroupByIdToSGJson(ID);
+			
+			assertEquals(orig.getNodeGroup().generateSparqlSelect(), stored.getNodeGroup().generateSparqlSelect());
+			assertEquals(orig.getMappingTabJson().toJSONString(),    stored.getMappingTabJson().toJSONString());
+			assertEquals(orig.getSparqlConnJson().toJSONString(),    stored.getSparqlConnJson().toJSONString());
+		}finally{
+			// clean up
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+		}
+	}
 
 }

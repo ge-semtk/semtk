@@ -37,6 +37,7 @@ import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
@@ -264,5 +265,27 @@ public class IntegrationTestUtility {
 	
 	public static String generateJobId(String testName) {
 		return "junit_" + UUID.randomUUID().toString();
+	}
+	
+	/**
+	 * Clean up nodegroups from the store with this creator and a creationDate not today
+	 * @param nodeGroupStoreClient
+	 * @param creator
+	 * @throws Exception
+	 */
+	public static void cleanupNodegroupStore(NodeGroupStoreRestClient nodeGroupStoreClient, String creator) throws Exception {
+		// Clean up old nodegroups.   Shouldn't happen but it seems to.
+		// So as not to interfere with others' testing, don't delete if creation date is today
+		TableResultSet tabRes = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+		tabRes.throwExceptionIfUnsuccessful();
+		Table storeTab = tabRes.getTable();
+		String today = Utility.getSPARQLCurrentDateString();
+		for (int i=0; i < storeTab.getNumRows(); i++) {
+			if (storeTab.getCell(i,  "creator").equals(creator) && 
+					! storeTab.getCell(i, "creationDate").equals(today)) {
+				String id = storeTab.getCell(i, "ID");
+				nodeGroupStoreClient.deleteStoredNodeGroup(id);
+			}
+		}
 	}
 }

@@ -69,6 +69,15 @@ public class SparqlQueryClient extends RestClient {
 			parametersJSON.put("password", ((SparqlQueryAuthClientConfig)this.conf).getSparqlServerPassword());			
 		}
 	}
+	
+	/**
+	 * Get an SEI where this client would connect from it's config object
+	 * @return
+	 * @throws Exception
+	 */
+	public SparqlEndpointInterface getSei() throws Exception {
+		return SparqlEndpointInterface.getInstance(this.conf);
+	}
 
 	@Override
 	public void handleEmptyResponse() throws Exception {

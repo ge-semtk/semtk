@@ -17,37 +17,47 @@
 
 package com.ge.research.semtk.services.ingestion;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.utility.Utility;
 
 import java.util.TreeMap;
 
 @Component
 public class IngestionServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
+	@Autowired
+	IngestionAuthProperties auth_prop;
+	/**
+	 * Code to run after the service starts up.
+	 */
+	@Override
+	public void onApplicationEvent(final ApplicationReadyEvent event) {
 
-  /**
-   * Code to run after the service starts up.
-   */
-  @Override
-  public void onApplicationEvent(final ApplicationReadyEvent event) {
-	  
-	  
-	  // print and validate properties - and exit if invalid
-	  String[] propertyNames = {
-			  "ssl.enabled",
-			  //"ingestion.sparqlUserName",
-			  "ingestion.batchSize"
-	  };
-	  TreeMap<String,String> properties = new TreeMap<String,String>();
-	  for(String propertyName : propertyNames){
-		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-	  }
-	  Utility.validatePropertiesAndExitOnFailure(properties); 
-	   
-	  return;
-  }
- 
+
+		// print and validate properties - and exit if invalid
+		String[] propertyNames = {
+				"ssl.enabled",
+				//"ingestion.sparqlUserName",
+				"ingestion.batchSize"
+		};
+		TreeMap<String,String> properties = new TreeMap<String,String>();
+		for(String propertyName : propertyNames){
+			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+		}
+		Utility.validatePropertiesAndExitOnFailure(properties); 
+
+		// start AuthorizationManager for all threads
+		try {
+			AuthorizationManager.authorize(auth_prop);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return;
+	}
+
 }

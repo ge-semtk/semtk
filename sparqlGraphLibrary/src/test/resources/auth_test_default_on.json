@@ -33,6 +33,11 @@
 			"name": "http://all/read",
 			"readGroups": ["ALL_USERS"],
 			"writeGroups": []
+		},
+		{
+			"name": "DEFAULT",
+			"readGroups": ["ALL_USERS"],
+			"writeGroups": ["JobAdmin"]
 		}
 	]
 }

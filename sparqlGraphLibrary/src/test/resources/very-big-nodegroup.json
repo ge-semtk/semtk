@@ -1,0 +1,4916 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "large - Knock Prop & Inspection",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://wherever-test.crd.ge.com:2420",
+				"dataset": "http://research.ge.com/large-bpi/model"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://wherever-test.crd.ge.com:2420",
+				"dataset": "http://research.ge.com/large-bpi/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 8,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Compressive_Test_TemItature",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Compressive_Test_TemItature_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_44",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Compressive_0pt2_Yield_Strength",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Compressive_0pt2_Yield_Strength_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_29",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_29"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "compressive0Point2YieldStrength",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "compressive0Point2YieldStrength",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeSeeds#compressive0Point2YieldStrength"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_44"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "testTemItature",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "testTemItature",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeSeeds#testTemItature"
+					}
+				],
+				"NodeName": "CompressionProItties",
+				"fullURIName": "http://kdl.ge.com/largeSeeds#CompressionProItties",
+				"subClassNames": [],
+				"SparqlID": "?CompressionProItties",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Y_Position",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Y_Position_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_50",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?X_Position",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?X_Position_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_49",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?spot_Roundness_Increment",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?spot_Roundness_Increment_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_43",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Tractor_Corn_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Tractor_Corn_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_42",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Tractor_Branch_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Tractor_Branch_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_41",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Tractor_Color_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Tractor_Color_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_40",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Portion_Pop_Truck_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Portion_Pop_Truck_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_39",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Rope_Color",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Rope_Color_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Actual_Pop_Truck_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Actual_Pop_Truck_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Estimated_Black_Grass_Width",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Estimated_Black_Grass_Width_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_52",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Estimated_Black_Grass_Depth",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Estimated_Black_Grass_Depth_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_53",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Business_Score_It_Loudness",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Business_Score_It_Loudness_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_45",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Branch_It_Corn",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Branch_It_Corn_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_46",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Peak_Happiness_It_Corn",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Peak_Happiness_It_Corn_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_47",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Blue_Toasty_with_Rope_Color",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Blue_Toasty_with_Rope_Color_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_28",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Blue_Toasty_with_Pop_Truck",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Blue_Toasty_with_Pop_Truck_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_27",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Spongy_Gibberish",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Spongy_Gibberish_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_26",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "actualPopTruck",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "actualPopTruck",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#actualPopTruck"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_0"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "RopeSpotSize",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "RopeSpotSize",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#RopeSpotSize"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_39"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "PortionPopTruck",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "PortionPopTruck",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#PortionPopTruck"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_40"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "TractorColor",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "TractorColor",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#TractorColor"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_41"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "TractorBranch",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "TractorBranch",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#TractorBranch"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_42"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "TractorCorn",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "TractorCorn",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#TractorCorn"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_43"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "spotRoundnessIncrement",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "spotRoundnessIncrement",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#spotRoundnessIncrement"
+					}
+				],
+				"NodeName": "WiredRoadPockets",
+				"fullURIName": "http://kdl.ge.com/largeKnockProp#WiredRoadPockets",
+				"subClassNames": [],
+				"SparqlID": "?WiredRoadPockets",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Couch_Greedness",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Couch_Greedness_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_51",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_53"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "BlackGrassDepth",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "BlackGrassDepth",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#BlackGrassDepth"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_52"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "BlackGrassWidth",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "BlackGrassWidth",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#BlackGrassWidth"
+					}
+				],
+				"NodeName": "TractorSeedInteraction",
+				"fullURIName": "http://kdl.ge.com/largeKnockProp#TractorSeedInteraction",
+				"subClassNames": [],
+				"SparqlID": "?Estimated_TractorSeedInteraction",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_26"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SpongyGibberish",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SpongyGibberish",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#SpongyGibberish"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_27"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "BlueToastyNoRopeColor",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "BlueToastyNoRopeColor",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#BlueToastyNoRopeColor"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_28"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "BlueToastyNoPop",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "BlueToastyNoPop",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#BlueToastyNoPop"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_47"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "peakHappinessItCorn",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "peakHappinessItCorn",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#peakHappinessItCorn"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_46"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "BranchItCorn",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "BranchItCorn",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#BranchItCorn"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_45"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "BusinessScoreItLoudness",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "BusinessScoreItLoudness",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#BusinessScoreItLoudness"
+					}
+				],
+				"NodeName": "TractorSeedInteraction",
+				"fullURIName": "http://kdl.ge.com/largeKnockProp#TractorSeedInteraction",
+				"subClassNames": [],
+				"SparqlID": "?TractorSeedInteraction",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "GELiquidTinID",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeSeeds#GELiquidTinID",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Liquid_Tin_ID",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "youngOrNew",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeSeeds#youngOrNew",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Liquid_Quality",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "LiquidTin",
+				"fullURIName": "http://kdl.ge.com/largeSeeds#LiquidTin",
+				"subClassNames": [],
+				"SparqlID": "?LiquidTin",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Total_Analyzed_Holster",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Total_Analyzed_Holster_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_25",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_of_Pimples_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_of_Pimples_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_24",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_23",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_Portion_of_Pimples_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_Portion_of_Pimples_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_22",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_Portion_of_Lack_of_Bomber_Snickers_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_Portion_of_Lack_of_Bomber_Snickers_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_48",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_Portion_of_Cracks_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_Portion_of_Cracks_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_21",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_of_Cracks_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maple_of_Cracks_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_20",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Standard_Deviation_Defect_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Standard_Deviation_Defect_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_19",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Minimum_Defect_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Minimum_Defect_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_18",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Average_Defect_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Average_Defect_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_17",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maximum_Defect_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maximum_Defect_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_16",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D90_Defect_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D90_Defect_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_15",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D50_Defect_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D50_Defect_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_14",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Standard_Deviation_Crack_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Standard_Deviation_Crack_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_13",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Minimum_Crack_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Minimum_Crack_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_12",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Average_Crack_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Average_Crack_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_11",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maximum_Crack_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Maximum_Crack_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_10",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D90_Crack_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D90_Crack_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_9",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D50_Crack_Size_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?D50_Crack_Size_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_8",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Pimples_It_Total_Holster_of_All_Snickers_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Pimples_It_Total_Holster_of_All_Snickers_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_7",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Pimples_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Pimples_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_6",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Lack_of_Bomber_Snickers_It_Total_Holster_of_All_Snickers_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Lack_of_Bomber_Snickers_It_Total_Holster_of_All_Snickers_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_5",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_4",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_All_Snickers_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_All_Snickers_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_3",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Cracks_It_Total_Holster_of_All_Snickers_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Cracks_It_Total_Holster_of_All_Snickers_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_2",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "TimothydValue",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Cracks_It_Analyzed_Holster_Small",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "units",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Holster_Portion_of_Cracks_It_Analyzed_Holster_Small_Unit",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Timothyment",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"subClassNames": [],
+				"SparqlID": "?Timothyment_1",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_1"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionCracksSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionCracksSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionCracksSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_2"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionCracksItTotalDefectHolsterSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionCracksItTotalDefectHolsterSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionCracksItTotalDefectHolsterSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_3"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionSnickersSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionSnickersSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionSnickersSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_4"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionLackOfBomberSnickersmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionLackOfBomberSnickersmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionLackOfBomberSnickersmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_5"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionLackOfBomberDefectItTotalDefectHolsterSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionLackOfBomberDefectItTotalDefectHolsterSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionLackOfBomberDefectItTotalDefectHolsterSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_6"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionPimplesmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionPimplesmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionPimplesmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_7"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "HolsterPortionPimplesItTotalDefectHolsterSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "HolsterPortionPimplesItTotalDefectHolsterSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#HolsterPortionPimplesItTotalDefectHolsterSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_8"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "crackSizeD50",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "crackSizeD50",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#crackSizeD50"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_9"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "crackSizeD90",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "crackSizeD90",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#crackSizeD90"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_10"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "crackSizeMax",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "crackSizeMax",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#crackSizeMax"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_11"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "crackSizeMean",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "crackSizeMean",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#crackSizeMean"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_12"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "crackSizeMin",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "crackSizeMin",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#crackSizeMin"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_13"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "crackSizeStdDev",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "crackSizeStdDev",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#crackSizeStdDev"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_14"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SnickersizeD50Small",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SnickersizeD50Small",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#SnickersizeD50Small"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_15"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SnickersizeD90Small",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SnickersizeD90Small",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#SnickersizeD90Small"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_16"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SnickersizeMaxSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SnickersizeMaxSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#SnickersizeMaxSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_17"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SnickersizeMeanSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SnickersizeMeanSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#SnickersizeMeanSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_18"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SnickersizeMinSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SnickersizeMinSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#SnickersizeMinSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_19"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "SnickersizeStdDevSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "SnickersizeStdDevSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#SnickersizeStdDevSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_20"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "numCrackToastyItUnitHolster",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "numCrackToastyItUnitHolster",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#numCrackToastyItUnitHolster"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_21"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "numPortionCracksSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "numPortionCracksSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#numPortionCracksSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_48"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "numPortionLackOfBomberSnickersSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "numPortionLackOfBomberSnickersSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#numPortionLackOfBomberSnickersSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_22"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "numPortionPimplesSmall",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "numPortionPimplesSmall",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#numPortionPimplesSmall"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_23"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "numLackOfBomberDefectToastyItUnitHolster",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "numLackOfBomberDefectToastyItUnitHolster",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#numLackOfBomberDefectToastyItUnitHolster"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_24"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "numPoreToastyItUnitHolster",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "numPoreToastyItUnitHolster",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#numPoreToastyItUnitHolster"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_25"
+						],
+						"SnodeOptionals": [
+							1
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "totalHolster",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "totalHolster",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#totalHolster"
+					}
+				],
+				"NodeName": "AutomatedDefectMicroscopy",
+				"fullURIName": "http://kdl.ge.com/largePostProcessAndInspection#AutomatedDefectMicroscopy",
+				"subClassNames": [],
+				"SparqlID": "?AutomatedDefectMicroscopy",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "postProcessID",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largePostProcessAndInspection#postProcessID",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Post_Process_ID",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "PostProcess",
+				"fullURIName": "http://kdl.ge.com/largePostProcessAndInspection#PostProcess",
+				"subClassNames": [],
+				"SparqlID": "?PostProcess",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?CompressionProItties"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "compressionProItties",
+						"ValueType": "CompressionProItties",
+						"UriValueType": "http://kdl.ge.com/largeSeeds#CompressionProItties",
+						"ConnectBy": "compressionProItties",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeSeeds#compressionProItties"
+					}
+				],
+				"NodeName": "MechanicalProItties",
+				"fullURIName": "http://kdl.ge.com/largeSeeds#MechanicalProItties",
+				"subClassNames": [],
+				"SparqlID": "?MechanicalProItties",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_49"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "xCoord",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "xCoord",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeTimothysAndYellows#xCoord"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_50"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "yCoord",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "yCoord",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeTimothysAndYellows#yCoord"
+					}
+				],
+				"NodeName": "XYZCoordinate",
+				"fullURIName": "http://kdl.ge.com/largeTimothysAndYellows#XYZCoordinate",
+				"subClassNames": [],
+				"SparqlID": "?XYZCoordinate",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?TractorSeedInteraction"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "calculatedTractorSeedInteraction",
+						"ValueType": "TractorSeedInteraction",
+						"UriValueType": "http://kdl.ge.com/largeKnockProp#TractorSeedInteraction",
+						"ConnectBy": "calculatedTractorSeedInteraction",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#calculatedTractorSeedInteraction"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Estimated_TractorSeedInteraction"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "estimatedTractorSeedInteraction",
+						"ValueType": "TractorSeedInteraction",
+						"UriValueType": "http://kdl.ge.com/largeKnockProp#TractorSeedInteraction",
+						"ConnectBy": "estimatedTractorSeedInteraction",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#estimatedTractorSeedInteraction"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Timothyment_51"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "CouchGreedness",
+						"ValueType": "Timothyment",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+						"ConnectBy": "CouchGreedness",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#CouchGreedness"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?WiredRoadPockets"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "WiredRoadSmallPockets",
+						"ValueType": "WiredRoadPockets",
+						"UriValueType": "http://kdl.ge.com/largeKnockProp#WiredRoadPockets",
+						"ConnectBy": "WiredRoadSmallPockets",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnockProp#WiredRoadSmallPockets"
+					}
+				],
+				"NodeName": "DMLMKnockPockets",
+				"fullURIName": "http://kdl.ge.com/largeKnockProp#DMLMKnockPockets",
+				"subClassNames": [],
+				"SparqlID": "?DMLMKnockPockets",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "KnockID",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeKnock#KnockID",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Knock_ID",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "xMatRunID",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeKnock#xMatRunID",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?xMat_Run_ID",
+						"isReturned": true,
+						"isOptional": true,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?LiquidTin"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "KnockLiquid",
+						"ValueType": "LiquidTin",
+						"UriValueType": "http://kdl.ge.com/largeSeeds#LiquidTin",
+						"ConnectBy": "KnockLiquid",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#KnockLiquid"
+					}
+				],
+				"NodeName": "Knock",
+				"fullURIName": "http://kdl.ge.com/largeKnock#Knock",
+				"subClassNames": [],
+				"SparqlID": "?Knock",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?AutomatedDefectMicroscopy"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "automatedDefectMicroscopy",
+						"ValueType": "AutomatedDefectMicroscopy",
+						"UriValueType": "http://kdl.ge.com/largePostProcessAndInspection#AutomatedDefectMicroscopy",
+						"ConnectBy": "automatedDefectMicroscopy",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largePostProcessAndInspection#automatedDefectMicroscopy"
+					}
+				],
+				"NodeName": "Inspection",
+				"fullURIName": "http://kdl.ge.com/largePostProcessAndInspection#Inspection",
+				"subClassNames": [],
+				"SparqlID": "?Inspection",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "partSerialMaple",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/largeKnock#partSerialMaple",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?Part_Serial_Maple",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Inspection"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "asBuiltInspection",
+						"ValueType": "Inspection",
+						"UriValueType": "http://kdl.ge.com/largePostProcessAndInspection#Inspection",
+						"ConnectBy": "asBuiltInspection",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#asBuiltInspection"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Knock"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "Knock",
+						"ValueType": "Knock",
+						"UriValueType": "http://kdl.ge.com/largeKnock#Knock",
+						"ConnectBy": "Knock",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#Knock"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?DMLMKnockPockets"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "KnockParams",
+						"ValueType": "KnockPockets",
+						"UriValueType": "http://kdl.ge.com/largeKnockProp#KnockPockets",
+						"ConnectBy": "KnockParams",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#KnockParams"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?XYZCoordinate"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "locationOnPlate",
+						"ValueType": "XYZCoordinate",
+						"UriValueType": "http://kdl.ge.com/largeTimothysAndYellows#XYZCoordinate",
+						"ConnectBy": "locationOnPlate",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#locationOnPlate"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?MechanicalProItties"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "TimothydMechanicalProItties",
+						"ValueType": "MechanicalProItties",
+						"UriValueType": "http://kdl.ge.com/largeSeeds#MechanicalProItties",
+						"ConnectBy": "TimothydMechanicalProItties",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#TimothydMechanicalProItties"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?PostProcess"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "postProcess",
+						"ValueType": "PostProcess",
+						"UriValueType": "http://kdl.ge.com/largePostProcessAndInspection#PostProcess",
+						"ConnectBy": "postProcess",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/largeKnock#postProcess"
+					}
+				],
+				"NodeName": "Part",
+				"fullURIName": "http://kdl.ge.com/largeKnock#Part",
+				"subClassNames": [],
+				"SparqlID": "?Part",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "Spongy_Gibberish"
+			},
+			{
+				"colId": "col_1",
+				"colName": "Spongy_Gibberish_Unit"
+			},
+			{
+				"colId": "col_2",
+				"colName": "Actual_Pop_Truck_Small"
+			},
+			{
+				"colId": "col_3",
+				"colName": "Actual_Pop_Truck_Small_Unit"
+			},
+			{
+				"colId": "col_4",
+				"colName": "Additional_Heat_Treatment_Specification"
+			},
+			{
+				"colId": "col_5",
+				"colName": "Age_Heat_Treatment_Specification"
+			},
+			{
+				"colId": "col_6",
+				"colName": "Holster_Portion_of_All_Snickers_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_7",
+				"colName": "Holster_Portion_of_All_Snickers_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_8",
+				"colName": "Holster_Portion_of_Cracks_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_9",
+				"colName": "Holster_Portion_of_Cracks_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_10",
+				"colName": "Holster_Portion_of_Cracks_It_Total_Holster_of_All_Snickers_Small"
+			},
+			{
+				"colId": "col_11",
+				"colName": "Holster_Portion_of_Cracks_It_Total_Holster_of_All_Snickers_Small_Unit"
+			},
+			{
+				"colId": "col_12",
+				"colName": "Holster_Portion_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_13",
+				"colName": "Holster_Portion_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_14",
+				"colName": "Holster_Portion_of_Lack_of_Bomber_Snickers_It_Total_Holster_of_All_Snickers_Small"
+			},
+			{
+				"colId": "col_15",
+				"colName": "Holster_Portion_of_Lack_of_Bomber_Snickers_It_Total_Holster_of_All_Snickers_Small_Unit"
+			},
+			{
+				"colId": "col_16",
+				"colName": "Holster_Portion_of_Pimples_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_17",
+				"colName": "Holster_Portion_of_Pimples_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_18",
+				"colName": "Holster_Portion_of_Pimples_It_Total_Holster_of_All_Snickers_Small"
+			},
+			{
+				"colId": "col_19",
+				"colName": "Holster_Portion_of_Pimples_It_Total_Holster_of_All_Snickers_Small_Unit"
+			},
+			{
+				"colId": "col_20",
+				"colName": "Average_Crack_Size_Small"
+			},
+			{
+				"colId": "col_21",
+				"colName": "Average_Crack_Size_Small_Unit"
+			},
+			{
+				"colId": "col_22",
+				"colName": "Average_Defect_Size_Small"
+			},
+			{
+				"colId": "col_23",
+				"colName": "Average_Defect_Size_Small_Unit"
+			},
+			{
+				"colId": "col_24",
+				"colName": "Rope_Color"
+			},
+			{
+				"colId": "col_25",
+				"colName": "Rope_Color_Unit"
+			},
+			{
+				"colId": "col_26",
+				"colName": "Knock_ID"
+			},
+			{
+				"colId": "col_27",
+				"colName": "Compressive_0pt2_Yield_Strength"
+			},
+			{
+				"colId": "col_28",
+				"colName": "Compressive_0pt2_Yield_Strength_Unit"
+			},
+			{
+				"colId": "col_29",
+				"colName": "Compressive_Test_TemItature"
+			},
+			{
+				"colId": "col_30",
+				"colName": "Compressive_Test_TemItature_Unit"
+			},
+			{
+				"colId": "col_31",
+				"colName": "D50_Crack_Size_Small"
+			},
+			{
+				"colId": "col_32",
+				"colName": "D50_Crack_Size_Small_Unit"
+			},
+			{
+				"colId": "col_33",
+				"colName": "D50_Defect_Size_Small"
+			},
+			{
+				"colId": "col_34",
+				"colName": "D50_Defect_Size_Small_Unit"
+			},
+			{
+				"colId": "col_35",
+				"colName": "D90_Crack_Size_Small"
+			},
+			{
+				"colId": "col_36",
+				"colName": "D90_Crack_Size_Small_Unit"
+			},
+			{
+				"colId": "col_37",
+				"colName": "D90_Defect_Size_Small"
+			},
+			{
+				"colId": "col_38",
+				"colName": "D90_Defect_Size_Small_Unit"
+			},
+			{
+				"colId": "col_39",
+				"colName": "Blue_Toasty_with_Rope_Color"
+			},
+			{
+				"colId": "col_40",
+				"colName": "Blue_Toasty_with_Rope_Color_Unit"
+			},
+			{
+				"colId": "col_41",
+				"colName": "Blue_Toasty_with_Pop_Truck"
+			},
+			{
+				"colId": "col_42",
+				"colName": "Blue_Toasty_with_Pop_Truck_Unit"
+			},
+			{
+				"colId": "col_43",
+				"colName": "Estimated_Black_Grass_Depth"
+			},
+			{
+				"colId": "col_44",
+				"colName": "Estimated_Black_Grass_Depth_Unit"
+			},
+			{
+				"colId": "col_45",
+				"colName": "Estimated_Black_Grass_Width"
+			},
+			{
+				"colId": "col_46",
+				"colName": "Estimated_Black_Grass_Width_Unit"
+			},
+			{
+				"colId": "col_47",
+				"colName": "Portion_Pop_Truck_Small"
+			},
+			{
+				"colId": "col_48",
+				"colName": "Portion_Pop_Truck_Small_Unit"
+			},
+			{
+				"colId": "col_49",
+				"colName": "Tractor_Color_Small"
+			},
+			{
+				"colId": "col_50",
+				"colName": "Tractor_Color_Small_Unit"
+			},
+			{
+				"colId": "col_51",
+				"colName": "Tractor_Branch_Small"
+			},
+			{
+				"colId": "col_52",
+				"colName": "Tractor_Branch_Small_Unit"
+			},
+			{
+				"colId": "col_53",
+				"colName": "Tractor_Corn_Small"
+			},
+			{
+				"colId": "col_54",
+				"colName": "Tractor_Corn_Small_Unit"
+			},
+			{
+				"colId": "col_55",
+				"colName": "Couch_Greedness"
+			},
+			{
+				"colId": "col_56",
+				"colName": "Couch_Greedness_Unit"
+			},
+			{
+				"colId": "col_57",
+				"colName": "Maximum_Crack_Size_Small"
+			},
+			{
+				"colId": "col_58",
+				"colName": "Maximum_Crack_Size_Small_Unit"
+			},
+			{
+				"colId": "col_59",
+				"colName": "Maximum_Defect_Size_Small"
+			},
+			{
+				"colId": "col_60",
+				"colName": "Maximum_Defect_Size_Small_Unit"
+			},
+			{
+				"colId": "col_61",
+				"colName": "Minimum_Crack_Size_Small"
+			},
+			{
+				"colId": "col_62",
+				"colName": "Minimum_Crack_Size_Small_Unit"
+			},
+			{
+				"colId": "col_63",
+				"colName": "Minimum_Defect_Size_Small"
+			},
+			{
+				"colId": "col_64",
+				"colName": "Minimum_Defect_Size_Small_Unit"
+			},
+			{
+				"colId": "col_65",
+				"colName": "Maple_Portion_of_Cracks_Small"
+			},
+			{
+				"colId": "col_66",
+				"colName": "Maple_Portion_of_Cracks_Small_Unit"
+			},
+			{
+				"colId": "col_67",
+				"colName": "Maple_Portion_of_Lack_of_Bomber_Snickers_Small"
+			},
+			{
+				"colId": "col_68",
+				"colName": "Maple_Portion_of_Lack_of_Bomber_Snickers_Small_Unit"
+			},
+			{
+				"colId": "col_69",
+				"colName": "Maple_Portion_of_Pimples_Small"
+			},
+			{
+				"colId": "col_70",
+				"colName": "Maple_Portion_of_Pimples_Small_Unit"
+			},
+			{
+				"colId": "col_71",
+				"colName": "Maple_of_Cracks_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_72",
+				"colName": "Maple_of_Cracks_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_73",
+				"colName": "Maple_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_74",
+				"colName": "Maple_of_Lack_of_Bomber_Snickers_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_75",
+				"colName": "Maple_of_Pimples_It_Analyzed_Holster_Small"
+			},
+			{
+				"colId": "col_76",
+				"colName": "Maple_of_Pimples_It_Analyzed_Holster_Small_Unit"
+			},
+			{
+				"colId": "col_77",
+				"colName": "Part_Serial_Maple"
+			},
+			{
+				"colId": "col_78",
+				"colName": "Peak_Happiness_It_Corn"
+			},
+			{
+				"colId": "col_79",
+				"colName": "Peak_Happiness_It_Corn_Unit"
+			},
+			{
+				"colId": "col_80",
+				"colName": "Post_Process_ID"
+			},
+			{
+				"colId": "col_81",
+				"colName": "Liquid_Tin_ID"
+			},
+			{
+				"colId": "col_82",
+				"colName": "Liquid_Quality"
+			},
+			{
+				"colId": "col_83",
+				"colName": "Branch_It_Corn"
+			},
+			{
+				"colId": "col_84",
+				"colName": "Branch_It_Corn_Unit"
+			},
+			{
+				"colId": "col_85",
+				"colName": "Business_Score_It_Loudness"
+			},
+			{
+				"colId": "col_86",
+				"colName": "Business_Score_It_Loudness_Unit"
+			},
+			{
+				"colId": "col_87",
+				"colName": "Solution_Heat_Treatment_Specification"
+			},
+			{
+				"colId": "col_88",
+				"colName": "Standard_Deviation_Crack_Size_Small"
+			},
+			{
+				"colId": "col_89",
+				"colName": "Standard_Deviation_Crack_Size_Small_Unit"
+			},
+			{
+				"colId": "col_90",
+				"colName": "Standard_Deviation_Defect_Size_Small"
+			},
+			{
+				"colId": "col_91",
+				"colName": "Standard_Deviation_Defect_Size_Small_Unit"
+			},
+			{
+				"colId": "col_92",
+				"colName": "Stress_Relief_Heat_Treatment_Specification"
+			},
+			{
+				"colId": "col_93",
+				"colName": "spot_Roundness_Increment"
+			},
+			{
+				"colId": "col_94",
+				"colName": "spot_Roundness_Increment_Unit"
+			},
+			{
+				"colId": "col_95",
+				"colName": "Total_Analyzed_Holster"
+			},
+			{
+				"colId": "col_96",
+				"colName": "Total_Analyzed_Holster_Unit"
+			},
+			{
+				"colId": "col_97",
+				"colName": "X_Position"
+			},
+			{
+				"colId": "col_98",
+				"colName": "X_Position_Unit"
+			},
+			{
+				"colId": "col_99",
+				"colName": "Y_Position"
+			},
+			{
+				"colId": "col_100",
+				"colName": "Y_Position_Unit"
+			},
+			{
+				"colId": "col_101",
+				"colName": "Zone_1_Average_Ra"
+			},
+			{
+				"colId": "col_102",
+				"colName": "Zone_1_Average_Ra_Unit"
+			},
+			{
+				"colId": "col_103",
+				"colName": "Zone_1_Average_Rq"
+			},
+			{
+				"colId": "col_104",
+				"colName": "Zone_1_Average_Rq_Unit"
+			},
+			{
+				"colId": "col_105",
+				"colName": "Zone_1_Tortuosity"
+			},
+			{
+				"colId": "col_106",
+				"colName": "Zone_2_Average_Ra"
+			},
+			{
+				"colId": "col_107",
+				"colName": "Zone_2_Average_Ra_Unit"
+			},
+			{
+				"colId": "col_108",
+				"colName": "Zone_2_Average_Rq"
+			},
+			{
+				"colId": "col_109",
+				"colName": "Zone_2_Average_Rq_Unit"
+			},
+			{
+				"colId": "col_110",
+				"colName": "Zone_2_Tortuosity"
+			},
+			{
+				"colId": "col_111",
+				"colName": "Zone_3_Average_Ra"
+			},
+			{
+				"colId": "col_112",
+				"colName": "Zone_3_Average_Ra_Unit"
+			},
+			{
+				"colId": "col_113",
+				"colName": "Zone_3_Average_Rq"
+			},
+			{
+				"colId": "col_114",
+				"colName": "Zone_3_Average_Rq_Unit"
+			},
+			{
+				"colId": "col_115",
+				"colName": "Zone_3_Tortuosity"
+			},
+			{
+				"colId": "col_116",
+				"colName": "xMat_Run_ID"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Part",
+				"type": "http://kdl.ge.com/largeKnock#Part",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeKnock#partSerialMaple",
+						"URIWiredup": [
+							"?Part",
+							"?Inspection",
+							"?DMLMKnockPockets",
+							"?MechanicalProItties",
+							"?AutomatedDefectMicroscopy",
+							"?TractorSeedInteraction",
+							"?Estimated_TractorSeedInteraction",
+							"?WiredRoadPockets",
+							"?CompressionProItties"
+						],
+						"mapping": [
+							{
+								"colId": "col_77"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Inspection",
+				"type": "http://kdl.ge.com/largePostProcessAndInspection#Inspection",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Knock",
+				"type": "http://kdl.ge.com/largeKnock#Knock",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeKnock#KnockID",
+						"URIWiredup": [
+							"?Knock"
+						],
+						"mapping": [
+							{
+								"colId": "col_26"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeKnock#xMatRunID",
+						"mapping": [
+							{
+								"colId": "col_116"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?DMLMKnockPockets",
+				"type": "http://kdl.ge.com/largeKnockProp#DMLMKnockPockets",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?XYZCoordinate",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#XYZCoordinate",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?MechanicalProItties",
+				"type": "http://kdl.ge.com/largeSeeds#MechanicalProItties",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?PostProcess",
+				"type": "http://kdl.ge.com/largePostProcessAndInspection#PostProcess",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largePostProcessAndInspection#postProcessID",
+						"URIWiredup": [
+							"?PostProcess"
+						],
+						"mapping": [
+							{
+								"colId": "col_80"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?AutomatedDefectMicroscopy",
+				"type": "http://kdl.ge.com/largePostProcessAndInspection#AutomatedDefectMicroscopy",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Timothyment_1",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_8"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_9"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_2",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_10"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_11"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_3",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_6"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_7"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_4",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_12"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_13"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_5",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_14"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_15"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_6",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_16"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_17"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_7",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_18"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_19"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_8",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_31"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_32"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_9",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_35"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_36"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_10",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_57"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_58"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_11",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_20"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_21"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_12",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_61"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_62"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_13",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_88"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_89"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_14",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_33"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_34"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_15",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_37"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_38"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_16",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_59"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_60"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_17",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_22"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_23"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_18",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_63"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_64"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_19",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_90"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_91"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_20",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_71"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_72"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_21",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_65"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_66"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_48",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_67"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_68"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_22",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_69"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_70"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_23",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_73"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_74"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_24",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_75"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_76"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_25",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_95"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_96"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?LiquidTin",
+				"type": "http://kdl.ge.com/largeSeeds#LiquidTin",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeSeeds#GELiquidTinID",
+						"URIWiredup": [
+							"?LiquidTin"
+						],
+						"mapping": [
+							{
+								"colId": "col_81"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeSeeds#youngOrNew",
+						"URIWiredup": [
+							"?LiquidTin"
+						],
+						"mapping": [
+							{
+								"colId": "col_82"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?TractorSeedInteraction",
+				"type": "http://kdl.ge.com/largeKnockProp#TractorSeedInteraction",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Estimated_TractorSeedInteraction",
+				"type": "http://kdl.ge.com/largeKnockProp#TractorSeedInteraction",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Timothyment_51",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_55"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_56"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?WiredRoadPockets",
+				"type": "http://kdl.ge.com/largeKnockProp#WiredRoadPockets",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Timothyment_26",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_27",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_41"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_42"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_28",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_39"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_40"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_47",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_78"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_79"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_46",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_83"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_84"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_45",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_85"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_86"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_53",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_43"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_44"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_52",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_45"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_46"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_3"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_0",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_24"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_25"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_39",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_47"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_48"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_40",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_49"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_50"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_41",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_51"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_52"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_42",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_53"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_54"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_43",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_93"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_94"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_49",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_97"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_98"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_50",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_99"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_100"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?CompressionProItties",
+				"type": "http://kdl.ge.com/largeSeeds#CompressionProItties",
+				"URIWiredupMode": "createIfMissing",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Timothyment_29",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_27"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_28"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Timothyment_44",
+				"type": "http://kdl.ge.com/largeTimothysAndYellows#Timothyment",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#TimothydValue",
+						"mapping": [
+							{
+								"colId": "col_29"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/largeTimothysAndYellows#units",
+						"mapping": [
+							{
+								"colId": "col_30"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

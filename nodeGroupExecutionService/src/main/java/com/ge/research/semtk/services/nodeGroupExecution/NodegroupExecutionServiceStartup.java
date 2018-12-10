@@ -19,50 +19,61 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import java.util.TreeMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class NodegroupExecutionServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
+	@Autowired
+	private NodegroupExecutionAuthProperties auth_prop;
+	
   /**
    * Code to run after the service starts up.
    */
-  @Override
-  public void onApplicationEvent(final ApplicationReadyEvent event) {
-	  
-	  // print and validate properties - and exit if invalid
-	  String[] propertyNames = {
-			  "ssl.enabled",
-			  "nodeGroupExecution.ngStoreProtocol",
-			  "nodeGroupExecution.ngStoreServer",
-			  "nodeGroupExecution.ngStorePort",
-			  "nodeGroupExecution.dispatchProtocol",
-			  "nodeGroupExecution.dispatchServer",
-			  "nodeGroupExecution.dispatchPort",
-			  "nodeGroupExecution.resultsProtocol",
-			  "nodeGroupExecution.resultsServer",
-			  "nodeGroupExecution.resultsPort",
-			  "nodeGroupExecution.statusProtocol",
-			  "nodeGroupExecution.statusServer",
-			  "nodeGroupExecution.statusPort",
-			  "nodeGroupExecution.edc.services.jobEndpointType",
-			  "nodeGroupExecution.edc.services.jobEndpointDomain",
-			  "nodeGroupExecution.edc.services.jobEndpointServerUrl",
-			  "nodeGroupExecution.edc.services.jobEndpointDataset",
-			  //"nodeGroupExecution.edc.services.jobEndpointUsername",
-			  //"nodeGroupExecution.edc.services.jobEndpointPassword"
-	  };
-	  TreeMap<String,String> properties = new TreeMap<String,String>();
-	  for(String propertyName : propertyNames){
-		  properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-	  }
-	  Utility.validatePropertiesAndExitOnFailure(properties); 
-	  
-	  return;
-  }
+	@Override
+	public void onApplicationEvent(final ApplicationReadyEvent event) {
+
+		// print and validate properties - and exit if invalid
+		String[] propertyNames = {
+				"ssl.enabled",
+				"nodeGroupExecution.ngStoreProtocol",
+				"nodeGroupExecution.ngStoreServer",
+				"nodeGroupExecution.ngStorePort",
+				"nodeGroupExecution.dispatchProtocol",
+				"nodeGroupExecution.dispatchServer",
+				"nodeGroupExecution.dispatchPort",
+				"nodeGroupExecution.resultsProtocol",
+				"nodeGroupExecution.resultsServer",
+				"nodeGroupExecution.resultsPort",
+				"nodeGroupExecution.statusProtocol",
+				"nodeGroupExecution.statusServer",
+				"nodeGroupExecution.statusPort",
+				"nodeGroupExecution.edc.services.jobEndpointType",
+				"nodeGroupExecution.edc.services.jobEndpointDomain",
+				"nodeGroupExecution.edc.services.jobEndpointServerUrl",
+				"nodeGroupExecution.edc.services.jobEndpointDataset",
+				//"nodeGroupExecution.edc.services.jobEndpointUsername",
+				//"nodeGroupExecution.edc.services.jobEndpointPassword"
+		};
+		TreeMap<String,String> properties = new TreeMap<String,String>();
+		for(String propertyName : propertyNames){
+			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
+		}
+		Utility.validatePropertiesAndExitOnFailure(properties); 
+
+		try {
+			AuthorizationManager.authorize(auth_prop);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return;
+	}
  
 }

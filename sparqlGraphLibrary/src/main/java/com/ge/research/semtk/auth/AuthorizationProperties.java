@@ -19,6 +19,15 @@ package com.ge.research.semtk.auth;
 public class AuthorizationProperties {
 	int refreshFreqSeconds = 300;
 	String settingsFilePath = "";
+	String logPath = "";
+
+	public String getLogPath() {
+		return logPath;
+	}
+
+	public void setLogPath(String logPath) {
+		this.logPath = logPath;
+	}
 
 	public String getSettingsFilePath() {
 		return settingsFilePath;
