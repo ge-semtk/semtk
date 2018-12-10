@@ -36,7 +36,7 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class AuthorizationManager {
-	static boolean FORGIVENESS_TEST_FLAG = false;
+	static boolean FORGIVENESS_TEST_FLAG = true;
 
 	private static long lastUpdate = 0;
 
