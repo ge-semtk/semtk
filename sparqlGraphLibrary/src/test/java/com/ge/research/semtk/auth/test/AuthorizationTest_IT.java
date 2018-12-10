@@ -301,7 +301,9 @@ public class AuthorizationTest_IT {
 		// different owner
 		try {
 			AuthorizationManager.throwExceptionIfNotJobOwner(user2, "item");
-			fail("No exception thrown for bad ownership");
+			if (! AuthorizationManager.FORGIVE_ALL) {
+				fail("No exception thrown for bad ownership");
+			}
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 		}
 		
@@ -344,7 +346,9 @@ public class AuthorizationTest_IT {
 		ThreadAuthenticator.setJobAdmin(false);
 		try {
 			AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
-			fail("Admin didn't reset");
+			if (! AuthorizationManager.FORGIVE_ALL) {
+				fail("Admin didn't reset");
+			}
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 
 		} 
