@@ -37,6 +37,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
@@ -96,12 +97,14 @@ public class IngestorRestClientTest_IT {
 		sparqlConnectionOverride.getModelInterface(0).setGraph(otherDataset);
 		
 		// clear the override graph and upload OWL to it (else the test load will fail)
-		SparqlEndpointInterface seiOverride = new VirtuosoSparqlEndpointInterface(TestGraph.getSparqlServer(), otherDataset, TestGraph.getUsername(), TestGraph.getPassword());
-		seiOverride.executeQueryAndBuildResultSet("clear graph <" + otherDataset + ">", SparqlResultTypes.CONFIRM);
+		SparqlEndpointInterface seiOverride = TestGraph.getSei();
+		seiOverride.setDataset(otherDataset);
+		seiOverride.clearGraph();
 		seiOverride.executeAuthUploadOwl(Files.readAllBytes(Paths.get("src/test/resources/testTransforms.owl")));
 		
 		// get count of triples in override graph (after OWL load, but before data load)
-		JSONObject resultJson = seiOverride.executeQuery(Utility.SPARQL_QUERY_TRIPLE_COUNT, SparqlResultTypes.TABLE);			
+		String sparql = SparqlToXUtils.generateCountTriplesSparql(seiOverride);
+		JSONObject resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
 		Table table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
 		assertEquals(table.getCell(0,0), "123");	// confirm that data was loaded to the override graph
 		
@@ -112,7 +115,8 @@ public class IngestorRestClientTest_IT {
 		assertEquals(TestGraph.getNumTriples(),0);	
 		
 		// confirm triples loaded to override graph
-		resultJson = seiOverride.executeQuery(Utility.SPARQL_QUERY_TRIPLE_COUNT, SparqlResultTypes.TABLE);			
+		sparql = SparqlToXUtils.generateCountTriplesSparql(seiOverride);
+		resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
 		table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
 		assertEquals(table.getCell(0,0), "131");	// confirm that data was loaded to the override graph
 	}

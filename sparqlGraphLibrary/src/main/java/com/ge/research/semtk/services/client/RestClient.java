@@ -19,17 +19,23 @@ package com.ge.research.semtk.services.client;
 
 import java.io.File;
 import java.net.ConnectException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
@@ -45,6 +51,7 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.client.RestClientConfig.Methods;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -58,7 +65,9 @@ public abstract class RestClient extends Client implements Runnable {
 	protected JSONObject parametersJSON = new JSONObject();
 	Exception runException = null;
 	protected HeaderTable headerTable = null;
+	protected String putContent = null;
 	protected File fileParameter = null;
+	protected HttpResponse httpResponse = null;
 	
 	/** 
 	 * Get default headers
@@ -98,6 +107,23 @@ public abstract class RestClient extends Client implements Runnable {
 	
 	public RestClientConfig getConfig() {
 		return this.conf;
+	}
+	
+	public void addHeader(String key, List<String> vals) {
+		if (this.headerTable == null) {
+			this.headerTable = new HeaderTable();
+		}
+		this.headerTable.put(key, vals);
+	}
+	
+	public void addHeader(String key, String value) {
+		ArrayList<String> vals = new ArrayList<String>();
+		vals.add(value);
+		this.addHeader(key, vals);
+	}
+	
+	public void removeHeader(String key) {
+		this.headerTable.remove(key);
 	}
 	
 	/** 
@@ -186,15 +212,30 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// set all parameters available upon instantiation
 		buildParametersJSON();  
-		if(parametersJSON == null){
-			throw new Exception("Service parameters not set");
+		
+		if (conf.method != RestClientConfig.Methods.PUT) {
+			if(parametersJSON == null){
+				throw new Exception("Service parameters not set");
+			}
+		} else {
+			if(parametersJSON != null && parametersJSON.size() > 0){
+				throw new Exception("Service parameters are not implemented for PUT");
+			}
 		}
 
 		// create entity
 		// HttpEntity entity = new ByteArrayEntity(parametersJSON.toJSONString().getBytes("UTF-8")); // perform html encoding in stream	
 		// js version:  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&#37;")
 		HttpEntity entity = null;
-		if (fileParameter != null) {
+		
+		if (putContent != null) {
+			if (conf.method == RestClientConfig.Methods.PUT) {
+				entity = new StringEntity(putContent);
+			} else {
+				throw new Exception("Internal: putContent is provided for non-PUT request: " + conf.method.name());
+			}
+			
+		} else if (fileParameter != null) {
 			// add the file
 			FileBody bin = new FileBody(fileParameter);
 			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
@@ -205,6 +246,7 @@ public abstract class RestClient extends Client implements Runnable {
 				builder.addPart((String) k, new StringBody((String)parametersJSON.get(k)));
 			}
 			entity = builder.build();
+			
 		} else {
 			// add just parametersJSON
 			entity = new ByteArrayEntity(parametersJSON.toString().getBytes("UTF-8"));
@@ -216,6 +258,17 @@ public abstract class RestClient extends Client implements Runnable {
 			HttpGet httpget = new HttpGet(this.conf.getServiceURL());
 			httpget.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 			httpreq = httpget;
+		} else if (conf.method == RestClientConfig.Methods.PUT) {
+			HttpPut httpput = new HttpPut(this.conf.getServiceURL());
+			if (entity != null) {
+				httpput.setEntity(entity);
+			}
+			httpreq = httpput;
+			
+		} else if (conf.method == RestClientConfig.Methods.DELETE) {
+			HttpDelete httpdelete = new HttpDelete(this.conf.getServiceURL());
+			httpreq = httpdelete;
+			
 		} else {
 			HttpPost httppost = new HttpPost(this.conf.getServiceURL());
 			httppost.setEntity(entity);
@@ -232,22 +285,30 @@ public abstract class RestClient extends Client implements Runnable {
 		
 		// execute
 		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());		
-		HttpResponse httpresponse = null;
+		this.httpResponse = null;
 		try {
 			HttpClient httpclient = HttpClients.custom().build();
 			//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
 			LocalLogger.logToStdOut("Connecting to: " + this.conf.getServiceURL());
-			httpresponse = httpclient.execute(targetHost, httpreq);
+			this.httpResponse = httpclient.execute(targetHost, httpreq);
 		} catch (Exception e) {
 			throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);
 		}
 		
 		// handle the output			
-		String responseTxt = EntityUtils.toString(httpresponse.getEntity(), "UTF-8");		
-		if(responseTxt == null){ 
+		String responseTxt = null;
+		HttpEntity responseEntity = this.httpResponse.getEntity();
+		if (responseEntity != null) {
+			responseTxt = EntityUtils.toString(responseEntity, "UTF-8");		
+		}
+		
+		// Null response for GET or post is Exception
+		if(responseTxt == null && (this.conf.method == Methods.GET || this.conf.method == Methods.POST)){ 
 			throw new Exception("Received null response text"); 
-		}else if(responseTxt.trim().isEmpty()){
-			handleEmptyResponse();  // implementation-specific behavior
+			
+		// Handle other null or empty responses with implementation-specific behavior
+		}else if(responseTxt == null || responseTxt.trim().isEmpty()){
+			handleEmptyResponse();
 		}
 		
 		if(returnRawResponse){
@@ -264,14 +325,18 @@ public abstract class RestClient extends Client implements Runnable {
 			return responseTxt;		// return the raw string
 			
 		}else{
-			JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
-			if (responseParsed == null) {
-				LocalLogger.logToStdErr("The response could not be transformed into json for request to " + this.conf.getServiceEndpoint());
-				if(responseTxt.contains("Error")){
-					throw new Exception(responseTxt); 
+			// return empty response (legal and common for PUT)
+			if (responseTxt == null || responseTxt.isEmpty()) {
+				return new JSONObject();
+				
+			} else {
+				// parse response into JSON or throw an error
+				JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
+				if (responseParsed == null) {
+						throw new Exception(responseTxt);
 				}
+				return responseParsed;	// return the response parsed into JSON
 			}
-			return responseParsed;	// return the response parsed into JSON
 		}
 	}
 	

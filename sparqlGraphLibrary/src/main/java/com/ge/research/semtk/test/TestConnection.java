@@ -40,6 +40,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
 
@@ -58,13 +59,14 @@ public class TestConnection {
 		conn.setName("JUnitTest");
 		conn.setDomain(domain);
 		
+		SparqlEndpointInterface sei = TestGraph.getSei();
 		for (int i=0; i < modelCount; i++) {
-			conn.addModelInterface( IntegrationTestUtility.getSparqlServerType(), IntegrationTestUtility.getSparqlServer(), generateDatasetName(String.format("model%d", i)),
-					IntegrationTestUtility.getSparqlServerUsername(), IntegrationTestUtility.getSparqlServerPassword() );
+			sei.setDataset(generateDatasetName(String.format("model%d", i)));
+			conn.addModelInterface( sei );
 		}
 		for (int i=0; i < dataCount; i++) {
-			conn.addDataInterface( IntegrationTestUtility.getSparqlServerType(), IntegrationTestUtility.getSparqlServer(), generateDatasetName(String.format("data%d", i)),
-					IntegrationTestUtility.getSparqlServerUsername(), IntegrationTestUtility.getSparqlServerPassword() );
+			sei.setDataset(generateDatasetName(String.format("data%d", i)));
+			conn.addModelInterface( sei );
 		}
 		
 		// make sure everything is empty
@@ -98,7 +100,8 @@ public class TestConnection {
 		seiList.addAll(this.conn.getDataInterfaces());
 		
 		for (SparqlEndpointInterface sei : seiList) {
-			GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet("drop graph <" + sei.getGraph() + ">", SparqlResultTypes.CONFIRM);
+			String query = SparqlToXUtils.generateDropGraphSparql(sei);
+			GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			if (!resultSet.getSuccess()) {
 				throw new Exception(resultSet.getRationaleAsString(" "));
 			}

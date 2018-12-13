@@ -239,9 +239,9 @@ public class JobTrackerTest_IT {
 		JSONObject data = new JSONObject();
 		data.put("test_with_trstore", "test value");
 		
-		this.trstore.storeTableResultsJsonInitialize(jobId, data);
-		this.trstore.storeTableResultsJsonAddIncremental(jobId, "contents");
-		URL fullURL = this.trstore.storeTableResultsJsonFinalize(jobId);
+		trstore.storeTableResultsJsonInitialize(jobId, data);
+		trstore.storeTableResultsJsonAddIncremental(jobId, "contents");
+		URL fullURL = trstore.storeTableResultsJsonFinalize(jobId);
 		tracker.setJobResultsURL(jobId, fullURL);
 		tracker.setJobSuccess(jobId);
 		

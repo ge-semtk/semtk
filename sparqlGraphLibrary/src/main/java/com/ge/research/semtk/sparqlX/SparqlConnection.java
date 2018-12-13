@@ -220,6 +220,10 @@ public class SparqlConnection {
 		return this.modelInterfaces;
 	}
 	
+	public void clearInterfaces() {
+		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
+	}
 	public String getDomain() {
 		return this.domain;
 	}

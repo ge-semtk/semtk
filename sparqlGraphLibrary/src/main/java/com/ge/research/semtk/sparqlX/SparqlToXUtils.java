@@ -76,7 +76,7 @@ public class SparqlToXUtils {
 	 * To prevent a catastrophic delete, disallows a URI starting with ?
 	 * @throws IOException
 	 */
-  public static String generateDeleteURIQuery(String uri) throws IOException{
+  public static String generateDeleteURIQuery(SparqlEndpointInterface sei, String uri) throws IOException{
 
     // check that URI does not start with ?   
     if(uri.startsWith("?")){
@@ -85,7 +85,7 @@ public class SparqlToXUtils {
     }
     
     // delete anywhere where the URI is a subject or object
-    String query = generateDeleteURISubjectQuery(uri) + generateDeleteURIObjectQuery(uri);
+    String query = generateDeleteURISubjectQuery(sei, uri) + generateDeleteURIObjectQuery(sei, uri);
     return query;
 
   }	
@@ -94,8 +94,8 @@ public class SparqlToXUtils {
    * Generate a DELETE query where the subject is a specific URI.
    * @throws IOException
    */
-  public static String generateDeleteURISubjectQuery(String uri) throws IOException{
-    return generateDeleteURISubjectQuery(uri, null);
+  public static String generateDeleteURISubjectQuery(SparqlEndpointInterface sei, String uri) throws IOException{
+    return generateDeleteURISubjectQuery(sei, uri, null);
   }
   
   /**
@@ -103,7 +103,7 @@ public class SparqlToXUtils {
    * Expects that predicate will NOT be enclosed by < >
    * @throws IOException
    */
-  public static String generateDeleteURISubjectQuery(String uri, String predicate) throws IOException {
+  public static String generateDeleteURISubjectQuery(SparqlEndpointInterface sei, String uri, String predicate) throws IOException {
    
     // avoid catastrophic delete by checking that URI does not start with ?  
     if(uri.startsWith("?")){
@@ -126,7 +126,7 @@ public class SparqlToXUtils {
       predicate = "<" + predicate + ">";  // predicate specified - use it
     }
     
-    String query = "DELETE where { <" +  uri + "> " + predicate + " ?z1 . } ";  // uri is subject
+    String query = generateWithDeleteWhereClause(sei, "") + " <" +  uri + "> " + predicate + " ?z1 . } ";  // uri is subject
     return query;
   }   
   
@@ -134,7 +134,7 @@ public class SparqlToXUtils {
    * Generate a DELETE query where the object is a specific URI.
    * @throws IOException
    */
-  public static String generateDeleteURIObjectQuery(String uri) throws IOException{
+  public static String generateDeleteURIObjectQuery(SparqlEndpointInterface sei, String uri) throws IOException{
 
     // avoid catastrophic delete by checking that URI does not start with ?   
     if(uri.startsWith("?")){
@@ -145,18 +145,21 @@ public class SparqlToXUtils {
       throw new IOException("URI to delete may not be empty");
     }
     
-    String query = "DELETE where { ?x2 ?y2 <" + uri + "> . } ";  // uri is object
+    String query = generateWithDeleteWhereClause(sei, "") + " ?x2 ?y2 <" + uri + "> . } ";  // uri is object
     return query;
 
   }  
   
-  public static String generateDeletePrefixQuery(String prefix) {
+  /**
+   * 
+   * @param sei
+   * @param prefix
+   * @return
+   */
+  public static String generateDeletePrefixQuery(SparqlEndpointInterface sei, String prefix) {
 	  // delete all triples containing any trace of the given prefix
 	  String sparql = String.format(
-				"delete {" +
-				"?x ?y ?z." +
-				"}" +
-				"where {" +
+				generateWithDeleteWhereClause(sei, "{ ?x ?y ?z. }") +
 				" ?x ?y ?z  FILTER ( strstarts(str(?x), \"%s\") || strstarts(str(?y), \"%s\") || strstarts(str(?z), \"%s\") )." +
 				"}", 
 				prefix, prefix, prefix);
@@ -164,13 +167,10 @@ public class SparqlToXUtils {
 	  return sparql;
   }
   
-  public static String generateDeleteBySubjectPrefixQuery(String prefix) {
+  public static String generateDeleteBySubjectPrefixQuery(SparqlEndpointInterface sei, String prefix) {
 	  // delete all triples containing any trace of the given prefix
 	  String sparql = String.format(
-				"delete {" +
-				"?x ?y ?z." +
-				"}" +
-				"where {" +
+			  generateWithDeleteWhereClause(sei, "{ ?x ?y ?z. }") +
 				" ?x ?y ?z FILTER strstarts(str(?x), \"%s\")." +
 				"}", 
 				prefix);
@@ -178,26 +178,32 @@ public class SparqlToXUtils {
 	  return sparql;
   }
   
-  public static String generateDeleteBySubjectRegexQuery(String regex) {
+  public static String generateDeleteBySubjectRegexQuery(SparqlEndpointInterface sei, String regex) {
 	  // delete all triples containing any trace of the given prefix
 	  String sparql = String.format(
-				"delete {" +
-				"?x ?y ?z." +
-				"}" +
-				"where {" +
+				generateWithDeleteWhereClause(sei, "{ ?x ?y ?z. }") +
 				" ?x ?y ?z FILTER regex(str(?x), \"%s\")." +
 				"}", 
 				regex);
 	  
 	  return sparql;
   }
+  public static String generateClearGraphSparql(SparqlEndpointInterface sei) {
+	  return "CLEAR GRAPH <" + sei.getGraph() + ">";
+  }
+  public static String generateCountTriplesSparql(SparqlEndpointInterface sei) {
+	  return "SELECT (COUNT(*) as ?count) from <" + sei.getDataset() + "> WHERE { ?x ?y ?z. }";
+  }
   
+  public static String generateDropGraphSparql(SparqlEndpointInterface sei) {
+	  return "DROP GRAPH <" + sei.getGraph() + ">";
+  }
   /**
    * Delete all model triples given a list of prefixes.   Also deletes blank nodes.
    * @param prefixes
    * @return
    */
-  public static String generateDeleteModelTriplesQuery(ArrayList<String> prefixes, Boolean deleteBlankNodes) {
+  public static String generateDeleteModelTriplesQuery(SparqlEndpointInterface sei, ArrayList<String> prefixes, Boolean deleteBlankNodes) {
 	  // init regex
 	  StringBuilder regex = new StringBuilder("^(");
 	  
@@ -216,17 +222,17 @@ public class SparqlToXUtils {
 	  regex.append(")");
 	  
 	  // delete all triples w
-	  return SparqlToXUtils.generateDeleteBySubjectRegexQuery(regex.toString());
+	  return SparqlToXUtils.generateDeleteBySubjectRegexQuery(sei, regex.toString());
 	  
   }
   
 
 	
 	// check that all required columns are found in the return values from the Sparql endpoint. 
-	public static void validateSparqlResults(SparqlEndpointInterface endpoint, String[] requiredCols) throws IOException {
+	public static void validateSparqlResults(SparqlEndpointInterface sei, String[] requiredCols) throws IOException {
 		for (String col : requiredCols){
 			try {
-				endpoint.checkResultsCol(col);
+				sei.checkResultsCol(col);
 			} catch (Exception e) {
 				throw new IOException("Semantic query did not return column: " + col);
 			}
@@ -291,4 +297,13 @@ public class SparqlToXUtils {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param sei
+	 * @param deletePhrase - e.g. ""  or "{ ?x ?y ?z. }"
+	 * @return
+	 */
+	private static String generateWithDeleteWhereClause(SparqlEndpointInterface sei, String deletePhrase) {
+		return "WITH <" + sei.getGraph() + "> DELETE " + deletePhrase + " WHERE {";
+	}
 }

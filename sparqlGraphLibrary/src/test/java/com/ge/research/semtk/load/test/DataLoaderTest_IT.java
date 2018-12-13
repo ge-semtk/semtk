@@ -52,8 +52,6 @@ import com.ge.research.semtk.utility.LocalLogger;
  */
 public class DataLoaderTest_IT {
 
-	private static final String DELETE_URI_FMT = "delete { ?x ?y ?z.} where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";
-	private static final String SELECT_URI_TRIPLES_FMT = "select distinct ?x ?y ?z where { ?x ?y ?z FILTER (?x = <%s> || ?z = <%s>).\n }";	
 	private static final int DEFAULT_BATCH_SIZE = 32;
 	
 	@BeforeClass
@@ -101,9 +99,6 @@ public class DataLoaderTest_IT {
 		String prefix = sgJson.getImportSpec().getUriPrefix();
 		String uri = prefix + "Cell_abcdE_tEst";
 
-		// delete uri if left over from previous tests
-		deleteUri(uri);
-
 		// import
 		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -113,7 +108,9 @@ public class DataLoaderTest_IT {
 		}
 
 		// look for triples
-		confirmUriExists(uri);
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		Table table = sei.executeQueryToTable(sgJson.getNodeGroup().generateSparqlSelect());
+		assertTrue(table.toCSVString().contains(uri));
 	}
 	
 	@Test
@@ -163,8 +160,8 @@ public class DataLoaderTest_IT {
 		String prefix = sgJson.getImportSpec().getUriPrefix();
 		uri = prefix + "Cell_" + uri.replaceAll("e", "E");
 
-		// delete uri if left over from previous tests
-		deleteUri(uri);
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -188,9 +185,9 @@ public class DataLoaderTest_IT {
 		}
 
 		// check first pasteLot
-		String answer = tab.getRow(0).get(1);
+		String answer = tab.getCell(0, "pasteLot");
 		if (!answer.equals(pastelot)) {
-			fail(String.format("Inserted wrong string: %s expecting %s ", answer, pastelot));
+			fail(String.format("Inserted wrong string: '%s' expecting '%s' ", answer, pastelot));
 		}
 	}
 	
@@ -1058,26 +1055,5 @@ public class DataLoaderTest_IT {
 			throw new Exception("Failure running delete query: \n" + query + "\n rationale: " + res.getRationaleAsString(" "));
 		}
 	}
-
-	private void deleteUri(String uri) throws Exception {
-		String query = String.format(DELETE_URI_FMT, uri, uri);
-		SparqlEndpointInterface sei = TestGraph.getSei();
-		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-		if (!res.getSuccess()) {
-			throw new Exception("Failure deleting uri: " + uri + " rationale: "	+ res.getRationaleAsString(" "));
-		}
-	}
-
-	private void confirmUriExists(String uri) throws Exception {
-		String query = String.format(SELECT_URI_TRIPLES_FMT, uri, uri);
-		SparqlEndpointInterface sei = TestGraph.getSei();
-		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-		if (!res.getSuccess()) {
-			throw new Exception("Failure querying uri: " + uri + " rationale: "	+ res.getRationaleAsString(" "));
-		}
-		if (res.getTable().getNumRows() < 1) {
-			throw new Exception("No triples were found for uri: " + uri);
-		}
-	}	
 	
 }

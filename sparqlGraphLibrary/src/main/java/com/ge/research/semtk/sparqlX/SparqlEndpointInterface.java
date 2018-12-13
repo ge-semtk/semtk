@@ -93,9 +93,9 @@ public abstract class SparqlEndpointInterface {
 	private final static String NEPTUNE_SERVER = "neptune";
 	
 	// results types to request
-	private static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
-	private static final String CONTENTTYPE_JSON_LD = "application/x-json+ld";
-	private static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
+	protected static final String CONTENTTYPE_X_JSON_LD = "application/x-json+ld";
+	protected static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 	
 	private static final int MAX_QUERY_TRIES = 4;
 
@@ -107,6 +107,7 @@ public abstract class SparqlEndpointInterface {
 	private JSONArray resBindings = null;
 	
 	protected String userName = null;
+	
 	protected String password = null;
 	protected String server = null;
 	protected String port = null;
@@ -235,7 +236,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Get a default result type
 	 */
-	private static SparqlResultTypes getDefaultResultType() {
+	protected static SparqlResultTypes getDefaultResultType() {
 		return SparqlResultTypes.TABLE;  // if no result type, assume it's a SELECT
 	}
 
@@ -493,7 +494,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	public void clearGraph() throws Exception {
-		this.executeQueryAndConfirm("clear graph <" + this.getGraph() + ">");
+		this.executeQueryAndConfirm(SparqlToXUtils.generateClearGraphSparql(this));
 	}
 	
 	/**
@@ -524,7 +525,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Gets a context with an all-trusting trust manager
 	 */
-	private static SSLContext getTrustingSSLContext() throws Exception{
+	protected static SSLContext getTrustingSSLContext() throws Exception{
         // Create a trust manager that does not validate certificate chains
         TrustManager[] trustAllCerts = new TrustManager[] {
         	new X509TrustManager() {
@@ -652,6 +653,21 @@ public abstract class SparqlEndpointInterface {
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Upload turtle.  Many triplestores treat ttl and owl the same.
+	 * @param turtle
+	 * @return
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public JSONObject executeUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle);
+	}
+	
+	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle);
 	}
 	
 	/**
@@ -932,7 +948,7 @@ public abstract class SparqlEndpointInterface {
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
 			
 		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
-			return CONTENTTYPE_JSON_LD; 
+			return CONTENTTYPE_X_JSON_LD; 
 		} else if (resultType == SparqlResultTypes.HTML) { 
 			return CONTENTTYPE_HTML; 
 		} 
@@ -971,7 +987,7 @@ public abstract class SparqlEndpointInterface {
 			retval.put(SimpleResultSet.MESSAGE_JSONKEY, this.getConfirmMessage(responseObj)); // @message
 
 		} else if(resultType == SparqlResultTypes.GRAPH_JSONLD) {
-			retval = new JSONObject((JSONObject) responseObj);
+			retval = getJsonldResponse(responseObj);
 		
 		} else{
 			throw new Exception("an unknown results type was passed to \"getResultsBasedOnExpectedType\". don't know how to handle type: " + resultType);
@@ -979,6 +995,9 @@ public abstract class SparqlEndpointInterface {
 		return retval;
 	}
 
+	protected JSONObject getJsonldResponse(Object responseObj) {
+		return new JSONObject((JSONObject) responseObj);
+	}
 	/**
 	 * Get head.vars with some error checking
 	 * @param resp

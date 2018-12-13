@@ -40,4 +40,7 @@ public class HeaderTable {
 		return tab.keySet();
 	}
 	
+	public void remove(String key) {
+		this.tab.remove(key);
+	}
 }

@@ -24,7 +24,7 @@ package com.ge.research.semtk.services.client;
  */
 public abstract class RestClientConfig {
 
-	public enum Methods {POST, GET};
+	public enum Methods {POST, GET, PUT, DELETE};
 
 	protected String serviceProtocol;
 	protected String serviceServer; // may be either the FQDN or IP address.

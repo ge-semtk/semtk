@@ -37,6 +37,7 @@ import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
@@ -268,11 +269,23 @@ public class IntegrationTestUtility {
 	}
 	
 	/**
-	 * Clean up nodegroups from the store with this creator and a creationDate not today
-	 * @param nodeGroupStoreClient
-	 * @param creator
+	 * return an un-verified S3config.  It could be empty/garbage.
+	 * @return
 	 * @throws Exception
 	 */
+	public static S3BucketConfig getS3Config() throws Exception {
+		// these should exist, but may be blank
+		String region = getIntegrationTestProperty("integrationtest.neptuneupload.s3ClientRegion");
+		String iamRoleArn = getIntegrationTestProperty("integrationtest.neptuneupload.awsIamRoleArn");
+		String name =   getIntegrationTestProperty("integrationtest.neptuneupload.s3BucketName");
+        String accessId = getIntegrationTestProperty("integrationtest.neptuneupload.s3AccessId");
+        String secret = getIntegrationTestProperty("integrationtest.neptuneupload.s3Secret");
+        
+        S3BucketConfig config = new S3BucketConfig(region, name, iamRoleArn, accessId, secret);
+        
+        return config;
+	}
+	
 	public static void cleanupNodegroupStore(NodeGroupStoreRestClient nodeGroupStoreClient, String creator) throws Exception {
 		// Clean up old nodegroups.   Shouldn't happen but it seems to.
 		// So as not to interfere with others' testing, don't delete if creation date is today

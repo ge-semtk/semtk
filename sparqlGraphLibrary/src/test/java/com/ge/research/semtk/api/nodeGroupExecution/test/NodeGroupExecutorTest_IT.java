@@ -85,7 +85,7 @@ public class NodeGroupExecutorTest_IT {
 		
 		// do the insert (using full nodegroup)
 		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA);
-		assertTrue("Ingest failed", res.getSuccess());
+		assertTrue("Ingest failed:" + res.getRationaleAsString(" "), res.getSuccess());
 		assertEquals("Ingest has failures", 0, res.getFailuresEncountered());
 		
 		// check number of triples after insert

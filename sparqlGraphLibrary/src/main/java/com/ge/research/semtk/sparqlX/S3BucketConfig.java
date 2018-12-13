@@ -16,8 +16,8 @@ public class S3BucketConfig {
 	}
 	
 	public void verifySetup() throws Exception {
-		if (this.region == null || this.region.isEmpty() ||
-				this.name == null || this.name.isEmpty() ||
+		if (this.region == null || this.region.isEmpty() || this.region.startsWith("$") ||
+				this.name == null || this.name.isEmpty() || this.region.startsWith("$") ||
 				this.iamRoleArn == null || this.iamRoleArn.isEmpty() ||
 				this.accessId == null || this.accessId.isEmpty() ||
 				this.secret == null || this.secret.isEmpty()) {

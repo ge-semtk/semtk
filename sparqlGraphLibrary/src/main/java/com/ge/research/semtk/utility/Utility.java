@@ -59,6 +59,7 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 
 /*
@@ -67,8 +68,6 @@ import com.ge.research.semtk.resultSet.Table;
 public abstract class Utility {
 	
 	private final static Charset CHAR_ENCODING = StandardCharsets.ISO_8859_1; // needed for string compression
-	
-	public static String SPARQL_QUERY_TRIPLE_COUNT = "select count(*) where {?x ?y ?z}"; // SPARQL query to count triples
 	
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
