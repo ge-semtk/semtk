@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
@@ -116,9 +117,6 @@ public abstract class Utility {
 		DATETIME_FORMATTERS.add(dateFormat);
 	}
 
-	public static String generateCountTriplesSparql(SparqlEndpointInterface sei) {
-		return "SELECT (COUNT(*) as ?count) from <" + sei.getDataset() + "> WHERE { ?x ?y ?z. }";
-	}
 	/**
 	 * Change the format of a datetime string.
 	 * @param dateTimeString		the string, e.g. "02/02/2018 4:00:00 AM"
@@ -687,5 +685,17 @@ public abstract class Utility {
 	public static String removeQuotedSubstrings(String orig, String replacement) {
 		//https://www.metaltoad.com/blog/regex-quoted-string-escapable-quotes
 		return orig.replaceAll("((?<![\\\\])['\"])((?:.(?!(?<![\\\\])\\1))*.?)\\1", replacement);
+	}
+	
+	public static String escapeQuotes(String aString){
+		
+		String retval = aString.replaceAll("\"", "\"\"");  // replace the quotes.
+		retval = retval.replace("\\\"\"", "\\\\\"\"");  // trying to avoid orphaned quotes.this leads to issues in the csv interpretter.
+			
+		return retval;
+	}
+	
+	public static String generateRandomURI() {
+		return "r" + UUID.randomUUID().toString();
 	}
 }

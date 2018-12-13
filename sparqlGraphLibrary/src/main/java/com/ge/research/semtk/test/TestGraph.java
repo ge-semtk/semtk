@@ -44,6 +44,7 @@ import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -180,7 +181,7 @@ public class TestGraph {
 	 * Get the number of triples in the test graph.
 	 */
 	public static int getNumTriples() throws Exception {
-		String sparql = Utility.generateCountTriplesSparql(getSei());
+		String sparql = SparqlToXUtils.generateCountTriplesSparql(getSei());
 		Table table = TestGraph.execTableSelect(sparql); 
 		return (new Integer(table.getCell(0, 0))).intValue(); // this cell contains the count
 	}
@@ -197,6 +198,17 @@ public class TestGraph {
 		Path path = Paths.get(owlFilename);
 		byte[] owl = Files.readAllBytes(path);
 		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl));
+		if (!resultSet.getSuccess()) {
+			throw new Exception(resultSet.getRationaleAsString(" "));
+		}
+	}
+	
+	public static void uploadTurtle(String owlFilename) throws Exception {
+		
+		SparqlEndpointInterface sei = getSei();
+		Path path = Paths.get(owlFilename);
+		byte[] owl = Files.readAllBytes(path);
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadTurtle(owl));
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
@@ -348,7 +360,7 @@ public class TestGraph {
 	 * @param expectedFileName
 	 * @throws Exception 
 	 */
-	public static void compareResults(String results, Object caller, String expectedFileName) throws Exception {
+	public static void compareResultsOLD(String results, Object caller, String expectedFileName) throws Exception {
 		String actual =  results.replaceAll("\r\n", "\n");
 		String expected = null;
 		try {
@@ -383,7 +395,47 @@ public class TestGraph {
 			}
 			
 			// fail
-			assertTrue("Results equal expected", false);
+			assertTrue("Actual results did not match expected (see stdout)", false);
 		}
 	}
+	
+	public static void compareResults(String actual, Object caller, String expectedFileName) throws Exception {
+		String expected = null;
+		
+		try {
+			expected = Utility.getResourceAsString(caller, expectedFileName);
+		} catch (Exception e) {
+			throw new Exception ("Error retrieving file: " + expectedFileName, e);
+		}
+		
+		String actualLines[] = actual.split("\\r?\\n");
+		String expectedLines[] = expected.split("\\r?\\n");
+		
+		for (int i=0; i < expectedLines.length; i++) {
+			String actualCells[] = actualLines[i].split("\\s*,\\s*");
+			String expectedCells[] = expectedLines[i].split("\\s*,\\s*");
+			
+			for (int j=0; j < expectedCells.length; j++) {
+				// change any GUIDs to <UUID>
+				// so <UUID> may also appear in expected results already 'converted'
+				String actualVal = Utility.replaceUUIDs(actualCells[j]);
+				String expectedVal = Utility.replaceUUIDs(expectedCells[j]);
+				
+				// cheap shot at handling dates with and without milliseconds
+				if (actualVal.endsWith(".000Z") && !expectedVal.endsWith(".000Z")) {
+					expectedVal += ".000Z";
+				}
+				
+				// cheap shot at allowing Neptune to add a URI prefix to belmont/generateSparqlInsert#uri
+				if (expectedVal.startsWith("belmont/generateSparqlInsert#")) {
+						actualVal = actualVal.replaceFirst("^.*/belmont", "belmont");
+				}
+				
+				if (! actualVal.equals(expectedVal)) {
+					assertTrue("At return line " + String.valueOf(i) + " expected val '" + expectedVal + "' did not match actual '" + actualVal + "'", false);
+				}
+			}
+		}
+	}
+
 }

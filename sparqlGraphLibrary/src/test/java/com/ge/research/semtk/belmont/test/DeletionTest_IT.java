@@ -56,7 +56,7 @@ public class DeletionTest_IT {
 		
 		// flush and reload graph.
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl(ttlGraphContentsPath);
+		TestGraph.uploadTurtle(ttlGraphContentsPath);
 	}
 
 	

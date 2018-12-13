@@ -19,7 +19,6 @@
 package com.ge.research.semtk.sparqlX;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,14 +26,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -43,8 +38,8 @@ import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.mortbay.util.ajax.JSON;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.aws.client.AwsS3Client;
 import com.ge.research.semtk.aws.client.AwsS3ClientConfig;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -54,8 +49,13 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
  * Interface to Virtuoso SPARQL endpoint
  */
 public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
-	public static String STATUS_COMPLETE = "LOAD_COMPLETED";
-	public static String STATUS_IN_PROGRESS = "LOAD_IN_PROGRESS";
+	
+	protected static final String CONTENTTYPE_LD_JSON = "application/ld+json";
+
+	private static String STATUS_COMPLETE = "LOAD_COMPLETED";
+	private static String STATUS_IN_PROGRESS = "LOAD_IN_PROGRESS";
+	private static String STATUS_NOT_STARTED = "LOAD_NOT_STARTED";
+
 	private S3BucketConfig s3Config = null;
 	
 	/**
@@ -106,6 +106,15 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	public String getUploadURL() throws Exception{
 			return this.server + "/loader";
 	}
+	@Override 
+	public JSONObject executeUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle, "turtle");
+	}
+	
+	@Override 
+	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle, "turtle");
+	}
 	
 	@Override
 	public JSONObject executeAuthUpload(byte[] owl) throws Exception {
@@ -114,13 +123,20 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	@Override
 	public JSONObject executeUpload(byte[] owl) throws Exception {
+		return this.executeUpload(owl, "rdfxml");
+	}
+		
+	public JSONObject executeUpload(byte[] owl, String format) throws Exception {
+		
+		this.authorizeUpload();
+
 		// throw some exceptions if setup looks sketchy
 		if (this.s3Config == null) throw new Exception ("No S3 bucket has been configured for owl upload to Neptune.");
 		this.s3Config.verifySetup();
 		
 		SimpleResultSet ret = new SimpleResultSet();
 		// upload file to S3
-		String keyName = UUID.randomUUID().toString() + ".owl";
+		String keyName = UUID.randomUUID().toString() + "." + format;
 		AwsS3ClientConfig config = new AwsS3ClientConfig(
 				this.s3Config.getName(), this.s3Config.getAccessId(), this.s3Config.getSecret());
         AwsS3Client s3Client = new AwsS3Client(config);
@@ -128,10 +144,21 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		try {
 			
 	        s3Client.execUploadFile(new String(owl), keyName);
-        	String loadId = this.uploadFromS3(keyName);
+        	String loadId = this.uploadFromS3(keyName, format);
+        	
+        	
+        	// Allow 20 seconds for load to start.
+        	// Clearly this should be configurable in the future
+        	int tries = 0;
+        	while (this.getLoadStatus(loadId).equals(STATUS_NOT_STARTED)) {
+        		Thread.sleep(1000);
+        		if (++tries > 20) {
+        			throw new Exception("S3 load timed out");
+        		}
+        	}
         	
         	// wait for STATUS_COMPLETE 
-        	int tries = 0;
+        	tries = 0;
         	while (this.getLoadStatus(loadId).equals(STATUS_IN_PROGRESS)) {
         		Thread.sleep(250);
         		if (++tries > 80) {
@@ -154,7 +181,14 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		return ret.toJson();
 	}
 	
-	private String uploadFromS3(String keyName) throws Exception {
+	/**
+	 * 
+	 * @param keyName
+	 * @param format - https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-format.html
+	 * @return
+	 * @throws Exception
+	 */
+	private String uploadFromS3(String keyName, String format) throws Exception {
 		// start the upload
         //curl blast-cluster.cluster-ceg7ggop9fho.us-east-1.neptune.amazonaws.com:8182/loader
         //-X POST 
@@ -177,7 +211,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
 		JSONObject parametersJSON = new JSONObject();
 		parametersJSON.put("source", "s3://" + this.s3Config.getName() + "/" + keyName);
-		parametersJSON.put("format", "rdfxml");
+		parametersJSON.put("format", format);
 		parametersJSON.put("iamRoleArn", this.s3Config.getIamRoleArn());
 		parametersJSON.put("region", this.s3Config.getRegion());
 		parametersJSON.put("failOnError", "TRUE");
@@ -273,7 +307,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			throw new Exception(responseTxt);
 		}
 
-		if (!status.equals(STATUS_IN_PROGRESS) && !status.equals(STATUS_COMPLETE)) {
+		if (!status.equals(STATUS_IN_PROGRESS) && !status.equals(STATUS_NOT_STARTED) && !status.equals(STATUS_COMPLETE)) {
 			throw new Exception(responseTxt);
 		}
 		
@@ -284,7 +318,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	public boolean isExceptionRetryAble(Exception e) {
 		String msg = e.getMessage();
 		return super.isExceptionRetryAble(e) &&
-				! msg.contains("{\"detailedMessage\":\"Malformed query:");
+				! msg.contains("Malformed query");
 				
 	}
 	
@@ -356,8 +390,8 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		} catch (Exception e) {
 			try {
 				JSONObject responseObj = (JSONObject) resp;
-				if (responseObj.containsKey("DetailedMessage")) {
-					return (String) responseObj.get("DetailedMessage");
+				if (responseObj.containsKey("detailedMessage")) {
+					throw new Exception((String) responseObj.get("detailedMessage"));
 				} else {
 					throw new Exception("ee");
 				}
@@ -367,6 +401,63 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		}
 	}
 	
+	/**
+	 * Get a results content type to be set in the HTTP header.
+	 */
+	@Override
+	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+		
+		if (resultType == null) {
+			return this.getContentType(getDefaultResultType());
+			
+		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
+			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
+			
+		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
+			return CONTENTTYPE_LD_JSON;    // this is neptune-specific
+		} else if (resultType == SparqlResultTypes.HTML) { 
+			return CONTENTTYPE_HTML; 
+		} 
+		
+		// fail and throw an exception if the value was not valid.
+		throw new Exception("Cannot get content type for query type " + resultType);
+	}
+	/**
+	 * Add the @graph {} wrapper to make Neptune look like Virtuoso
+	 * This is only so that unit tests pass.
+	 * At the moment (12/2018) it doesn't appear that anyone uses this.
+	 * If you want to use it, go ahead and change it
+	 * but note that Virtuoso and Neptune return different MIME types and have quirkily different returns.
+	 * -Paul
+	 */
+	@Override
+	protected JSONObject getJsonldResponse(Object responseObj) {
+		JSONObject ret =  new JSONObject();
+		ret.put("@graph", (JSONArray) responseObj);
+		return ret;
+	}
+	/**
+	 * Get head.vars with some error checking
+	 * @param resp
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	protected JSONArray getHeadVars(JSONObject resp) throws Exception {
+		// response.head
+		JSONObject head = (JSONObject)resp.get("head");
+		if (head != null) {
+			JSONArray vars = (JSONArray) head.get("vars");
+			if (vars != null){
+				return vars;
+			}
+		}
+		if (resp.containsKey("detailedMessage")) {
+			throw new Exception((String)resp.get("detailedMessage"));
+		} else {
+			throw new Exception("Unexepected response (no head.vars): " + resp.toJSONString());
+		}
+	}
 	@Override
 	protected CloseableHttpClient buildHttpClient(String schemeName) throws Exception {
 		

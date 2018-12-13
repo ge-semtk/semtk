@@ -1,0 +1,15 @@
+{
+	"groups": [
+		{
+			"name": "JobAdmin",
+			"members": ["testuser_job_admin"]
+		}
+	],
+	"graphs" [
+		{
+			"name": "http://securityTest",
+			"readGroups": ["securityTestRead"],
+			"writeGroups": ["securityTestWrite"]
+		}
+	]
+}

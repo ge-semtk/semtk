@@ -20,6 +20,7 @@ package com.ge.research.semtk.sparqlX;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
@@ -53,7 +54,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		return String.format("%s:%s/%s/update?update=", this.server, this.port, this.graph);	
 	}	
 	
-	public JSONObject executeUpload(byte[] owl) throws Exception {
+	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception {
+		this.authorizeUpload();
 		throw new Exception("Unimplmenented");
 	}
 	

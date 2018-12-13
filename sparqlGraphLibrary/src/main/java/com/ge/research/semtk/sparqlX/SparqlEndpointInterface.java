@@ -60,6 +60,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -67,8 +68,11 @@ import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -89,9 +93,9 @@ public abstract class SparqlEndpointInterface {
 	private final static String NEPTUNE_SERVER = "neptune";
 	
 	// results types to request
-	private static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
-	private static final String CONTENTTYPE_JSON_LD = "application/x-json+ld";
-	private static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
+	protected static final String CONTENTTYPE_X_JSON_LD = "application/x-json+ld";
+	protected static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 	
 	private static final int MAX_QUERY_TRIES = 4;
 
@@ -103,6 +107,7 @@ public abstract class SparqlEndpointInterface {
 	private JSONArray resBindings = null;
 	
 	protected String userName = null;
+	
 	protected String password = null;
 	protected String server = null;
 	protected String port = null;
@@ -231,7 +236,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Get a default result type
 	 */
-	private static SparqlResultTypes getDefaultResultType() {
+	protected static SparqlResultTypes getDefaultResultType() {
 		return SparqlResultTypes.TABLE;  // if no result type, assume it's a SELECT
 	}
 
@@ -250,6 +255,32 @@ public abstract class SparqlEndpointInterface {
 		// make sure if there is a userName, then a blank pass is ""
 		this.password = (user != null && pass == null) ? "" : pass;
 	}	
+	
+	/**
+	 * Static method to get an instance of this abstract class
+	 * 
+	 * This one takes a query client config (historical fix-up reasons)
+	 */
+	public static SparqlEndpointInterface getInstance(RestClientConfig conf) throws Exception {
+		// auth queries will have these as well
+		if(conf instanceof SparqlQueryAuthClientConfig){	
+			return SparqlEndpointInterface.getInstance (
+					((SparqlQueryClientConfig)conf).getSparqlServerType(),
+					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
+					((SparqlQueryClientConfig)conf).getSparqlDataset(),
+					((SparqlQueryAuthClientConfig)conf).getSparqlServerUser(),
+					((SparqlQueryAuthClientConfig)conf).getSparqlServerPassword()
+					);			
+		} else if (conf instanceof SparqlQueryAuthClientConfig) {
+			return SparqlEndpointInterface.getInstance (
+					((SparqlQueryClientConfig)conf).getSparqlServerType(),
+					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
+					((SparqlQueryClientConfig)conf).getSparqlDataset()
+					);			
+		} else {
+			throw new Exception("Can't create SparqlEndpointInterface out of RestClient that is not SparqlQueryClientConfig or subclass");
+		}
+	}
 	
 	/**
 	 * Static method to get an instance of this abstract class
@@ -463,7 +494,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	public void clearGraph() throws Exception {
-		this.executeQueryAndConfirm("clear graph <" + this.getGraph() + ">");
+		this.executeQueryAndConfirm(SparqlToXUtils.generateClearGraphSparql(this));
 	}
 	
 	/**
@@ -618,7 +649,25 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 */
 	public boolean isExceptionRetryAble(Exception e) {
+		if (e instanceof AuthorizationException) {
+			return false;
+		}
 		return true;
+	}
+	
+	/**
+	 * Upload turtle.  Many triplestores treat ttl and owl the same.
+	 * @param turtle
+	 * @return
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public JSONObject executeUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle);
+	}
+	
+	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle);
 	}
 	
 	/**
@@ -628,7 +677,16 @@ public abstract class SparqlEndpointInterface {
 	 */
 
 	public JSONObject executeAuthUploadOwl(byte[] owl) throws Exception{
-		return this.executeAuthUpload(owl);
+		return this.executeUpload(owl);
+	}
+	
+	/**
+	 * Execute an auth query using POST, and using AUTH if this.userName != null
+	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
+	 * @throws Exception
+	 */
+	public JSONObject executeAuthUpload(byte[] owl) throws Exception{
+        return this.executeUpload(owl);
 	}
 
 	/**
@@ -637,15 +695,10 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract JSONObject executeUpload(byte[] owl) throws Exception;
+	public abstract JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception;
 
-	/**
-	 * Execute an auth query using POST, and using AUTH if this.userName != null
-	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
-	 * @throws Exception
-	 */
-	public JSONObject executeAuthUpload(byte[] owl) throws Exception{
-        return this.executeUpload(owl);
+	public void authorizeUpload() throws AuthorizationException {
+		AuthorizationManager.throwExceptionIfNotGraphWriter(this.graph);
 	}
 	
 
@@ -895,7 +948,7 @@ public abstract class SparqlEndpointInterface {
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
 			
 		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
-			return CONTENTTYPE_JSON_LD; 
+			return CONTENTTYPE_X_JSON_LD; 
 		} else if (resultType == SparqlResultTypes.HTML) { 
 			return CONTENTTYPE_HTML; 
 		} 
@@ -934,7 +987,7 @@ public abstract class SparqlEndpointInterface {
 			retval.put(SimpleResultSet.MESSAGE_JSONKEY, this.getConfirmMessage(responseObj)); // @message
 
 		} else if(resultType == SparqlResultTypes.GRAPH_JSONLD) {
-			retval = new JSONObject((JSONObject) responseObj);
+			retval = getJsonldResponse(responseObj);
 		
 		} else{
 			throw new Exception("an unknown results type was passed to \"getResultsBasedOnExpectedType\". don't know how to handle type: " + resultType);
@@ -942,6 +995,9 @@ public abstract class SparqlEndpointInterface {
 		return retval;
 	}
 
+	protected JSONObject getJsonldResponse(Object responseObj) {
+		return new JSONObject((JSONObject) responseObj);
+	}
 	/**
 	 * Get head.vars with some error checking
 	 * @param resp

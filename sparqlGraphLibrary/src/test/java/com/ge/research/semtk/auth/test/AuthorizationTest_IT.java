@@ -37,6 +37,7 @@ import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -77,17 +78,6 @@ public class AuthorizationTest_IT {
 		
 	}
 	
-	private static void setupAuthorization() throws Exception {
-
-		// Set up authorization, should be same location as all services participating in the test
-		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
-		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
-		if (! AuthorizationManager.authorize( auth_prop ) ) {
-			throw new Exception("Authorization.authorize failed");
-		}
-		
-	}
-	
 	@AfterClass
 	public static void cleanupJobs() {
 		ArrayList<String> cleaned = new ArrayList<String>();
@@ -105,13 +95,21 @@ public class AuthorizationTest_IT {
 		for (String jobId : cleaned) {
 			cleanupJobIds.remove(cleaned);
 		}
+		
+		// turn off any authorization
+		AuthorizationManager.clear();
 	}
 	
+	/**
+	 * Get a jobId that will be cleaned up
+	 * @return
+	 */
 	private String getTestJobId() {
 		String jobId = IntegrationTestUtility.generateJobId("AuthorizationTest_IT");
 		cleanupJobIds.add(jobId);
 		return jobId;
 	}
+	
 	private void testAllStatusResultsEndpointsSucceed(String createUser, String defaultUser) throws Exception {
 		// create jobId and client
 		String jobId = this.getTestJobId();
@@ -140,6 +138,7 @@ public class AuthorizationTest_IT {
 		status.execSetSuccess();
 		status.execSetSuccess("message");
 		status.execWaitForPercentOrMsec(100, 1);
+		status.getJobsInfo();
 		status2.execDeleteJob();
 		
 		// test results
@@ -150,6 +149,7 @@ public class AuthorizationTest_IT {
 		results.getTableResultsCSV(jobId, 10);
 		results.getTableResultsJson(jobId, 10);
 		results.execDeleteJob(jobId);
+		
 	
 	}
 	
@@ -280,38 +280,54 @@ public class AuthorizationTest_IT {
 	}
 	
 	@Test
+	/**
+	 * Test that setting thread owner enforces job ownership
+	 * @throws Exception
+	 */
 	public void testCheckJobOwnership() throws Exception {
-		ThreadAuthenticator.authenticateThisThread("user1");
+		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
+		String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
+		ThreadAuthenticator.authenticateThisThread(user1);
 	
 		// same owner
 		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner("user1", "item");
+			AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
 			
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 			e.printStackTrace();
 			fail("Authorization failed");
 		}
 		
-		if (! AuthorizationManager.FORGIVE_ALL) {
-			// different owner
-			try {
-				AuthorizationManager.throwExceptionIfNotJobOwner("user2", "item");
+		// different owner
+		try {
+			AuthorizationManager.throwExceptionIfNotJobOwner(user2, "item");
+			if (! AuthorizationManager.FORGIVE_ALL) {
 				fail("No exception thrown for bad ownership");
-			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 			}
+		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 		}
 		
 	}
 	
 	@Test
+	/**
+	 * Test that every status and results endpoint enforces job ownership
+	 * @throws Exception
+	 */
 	public void testCheckAdminStatusClient() throws Exception {
+
 		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
 		String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
 		testAllStatusResultsEndpointsFail(user1, user2);
 		testAllStatusResultsEndpointsSucceed(user1, user1);
+
 	}
 	
 	@Test
+	/**
+	 * test that setJobAdmin() makes and removes ownership of others' jobs
+	 * @throws Exception
+	 */
 	public void testCheckAdmin() throws Exception {
 		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
 		String user5 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "5");
@@ -321,50 +337,323 @@ public class AuthorizationTest_IT {
 		
 		try {
 			AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
+
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 			e.printStackTrace();
 			fail("Authorization failed");
 		} 
 		
-		if ( !AuthorizationManager.FORGIVE_ALL) {
-		
-			ThreadAuthenticator.setJobAdmin(false);
-			try {
-				AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
+		ThreadAuthenticator.setJobAdmin(false);
+		try {
+			AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
+			if (! AuthorizationManager.FORGIVE_ALL) {
 				fail("Admin didn't reset");
-			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-	
-			} 
-		}
+			}
+		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+
+		} 
+
 		
 	}
 	
 	@Test
+	/**
+	 * test that being a job admin in auth_setup.json gives job permissions
+	 * @throws Exception
+	 */
 	public void testJobAdmins() throws Exception {
-		setupAuthorization();
 		
-		// make sure some JobAdmin loaded
-		if (AuthorizationManager.getJobAdmins().size() == 0) {
-			fail("No job admins are loaded");
+		// Set up authorization, should be same location as all services participating in the test
+		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+		
+		try {
+			AuthorizationManager.authorize( auth_prop );
+	
+			// make sure some JobAdmin loaded
+			if (AuthorizationManager.getJobAdmins().size() == 0) {
+				fail("No job admins are loaded");
+			}
+			
+			// authenticate thread with first jobAdmin
+			String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
+			ThreadAuthenticator.authenticateThisThread(jobAdmin);
+			
+			// tests that should pass
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner("test_anyOtherUser", "item");
+				AuthorizationManager.throwExceptionIfNotJobOwner(jobAdmin, "item");
+	
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+				e.printStackTrace();
+				fail("Authorization failed for a jobAdmin: " + jobAdmin);
+			} 
+			
+		} finally {
+			AuthorizationManager.clear();
+		}
+
+	}
+	
+	@Test
+	/**
+	 * Make sure status.getJobsInfo handles job ownership correctly
+	 * @throws Exception
+	 */
+	public void testGetJobsInfoOwnership() throws Exception {
+		
+		
+		// create jobId and client
+		String jobId1 = this.getTestJobId();
+		String jobId2 = this.getTestJobId();
+		String owner1 = "test_owner1";
+		String owner2 = "test_owner2";
+		
+		// owner1: create existing job
+		ThreadAuthenticator.authenticateThisThread(owner1);
+		StatusClient status1 = IntegrationTestUtility.getStatusClient(jobId1);
+		status1.execSetPercentComplete(10);
+
+		ThreadAuthenticator.authenticateThisThread(owner2);
+		
+		// owner2: delete existing jobs
+		Table oldJobTable = IntegrationTestUtility.getStatusClient(jobId2).getJobsInfo();
+		for (int i=0; i < oldJobTable.getNumRows(); i++) {
+			String oldId = oldJobTable.getCell(i,  "id");
+			IntegrationTestUtility.getStatusClient(oldId).execDeleteJob();
 		}
 		
-		// authenticate thread with first jobAdmin
-		String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
-		ThreadAuthenticator.authenticateThisThread(jobAdmin);
+		// owner2: create a new job
+		StatusClient status2 = IntegrationTestUtility.getStatusClient(jobId2);
+		status2.execSetPercentComplete(10);
 		
-		// tests
-		try {
-			String otherUser = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "other");
-			// since I'm jobAdmin I own others' jobs
-			AuthorizationManager.throwExceptionIfNotJobOwner(otherUser, "item");
-			// since I'm jobAdmin I own my own jobs
-			AuthorizationManager.throwExceptionIfNotJobOwner(jobAdmin, "item");
-
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-			e.printStackTrace();
-			fail("Authorization failed for a jobAdmin: " + jobAdmin);
-		} 
-		
+		// owner2: there should only be one job
+		Table t = status2.getJobsInfo();
+		if (t.getNumRows() != 1) System.err.println(t.toCSVString());
+		assertEquals(1, t.getNumRows());
 	}
 
+	@Test
+	/**
+	 * Test that setting NO_AUTH will allow a random query
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public void testAuthorizeQueryNoAuth() throws AuthorizationException, Exception {
+		// turn off AUTH in the correct way
+		AuthorizationProperties props = new AuthorizationProperties();
+		props.setSettingsFilePath(AuthorizationManager.AUTH_FILE_NO_AUTH);
+		AuthorizationManager.authorize(props);
+		
+		try {
+			// authorize a random query
+			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsString(this, "/sampleBattery.json"));
+			AuthorizationManager.authorizeQuery(sgJson.getSparqlConn().getDefaultQueryInterface(), "select ?x ?y ?z where { ?x ?y ?z. }");
+			// no exception should be thrown
+		} finally {
+			AuthorizationManager.clear();
+		}
+	}
+	
+	@Test
+	/**
+	 * Uninitialized AuthorizationManager should throw an error on authorizeQuery
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public void testAuthorizeUnAuth() {
+		// best we can simulate lack of authorize() 
+		AuthorizationManager.clear();
+		
+		// authorize a random query
+		try {
+			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsString(this, "/sampleBattery.json"));
+			AuthorizationManager.authorizeQuery(sgJson.getSparqlConn().getDefaultQueryInterface(), "select ?x ?y ?z where { ?x ?y ?z. }");
+			
+		} catch (Exception e) {
+			fail("AuthorizationException occurred when authorize() has not been called.");
+		}
+	}
+	
+	@Test
+	/**
+	 * test read write permissions read from auth.json
+	 * @throws Exception
+	 */
+	public void testGraphReadWrite() throws Exception {
+		
+		// Set up authorization, should be same location as all services participating in the test
+		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+		
+		try {
+			AuthorizationManager.authorize( auth_prop );
+	
+			// make sure some JobAdmin loaded
+			if (AuthorizationManager.getJobAdmins().size() == 0) {
+				fail("No job admins are loaded");
+			}
+			
+			// authenticate thread with first jobAdmin
+			String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
+			ThreadAuthenticator.authenticateThisThread(jobAdmin);
+			
+			// tests that should pass
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/read");
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/write");
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://all/read");
+	
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+				e.printStackTrace();
+				fail("Authorization failed for a jobAdmin: " + jobAdmin);
+			} 
+			
+			if (!AuthorizationManager.FORGIVE_ALL) {
+				// tests that should fail
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/read");
+					fail("Authorization didn't prevent writing");
+				} catch (AuthorizationException ae) {}
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/write");
+					fail("Authorization didn't prevent reading");
+				} catch (AuthorizationException ae) {}
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
+					fail("Authorization didn't prevent writing graph not in props");
+				} catch (AuthorizationException ae) {}
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
+					fail("Authorization didn't prevent writing graph not in props");
+				} catch (AuthorizationException ae) {}
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphWriter("http://all/read");
+					fail("Authorization didn't prevent user writing graph");
+				} catch (AuthorizationException ae) {}
+				
+				// become an unknown user
+				ThreadAuthenticator.authenticateThisThread("testuser_doesnt_exist");
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
+					fail("Authorization didn't prevent user not in props writing graph not in props");
+				} catch (AuthorizationException ae) {}
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
+					fail("Authorization didn't prevent user not in props writing graph not in props");
+				} catch (AuthorizationException ae) {}
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphWriter("http://securityTest");
+					fail("Authorization didn't prevent user not in props writing graph");
+				} catch (AuthorizationException ae) {}
+				
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphReader("http://securityTest");
+					fail("Authorization didn't prevent user not in props writing graph");
+				} catch (AuthorizationException ae) {}
+				try {
+					AuthorizationManager.throwExceptionIfNotGraphWriter("http://all/read");
+					fail("Authorization didn't prevent user not in props writing graph");
+				} catch (AuthorizationException ae) {}
+			}
+			
+			
+		} finally {
+			AuthorizationManager.clear();
+		}
+
+	}
+	
+	@Test
+	/**
+	 * test read write permissions read from auth.json
+	 * @throws Exception
+	 */
+	public void testGraphReadWriteDefaultON() throws Exception {
+		
+		// Set up authorization, should be same location as all services participating in the test
+		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+		auth_prop.setSettingsFilePath("src/test/resources/auth_test_default_on.json");
+		
+		try {
+			AuthorizationManager.authorize( auth_prop );
+	
+			// make sure some JobAdmin loaded
+			if (AuthorizationManager.getJobAdmins().size() == 0) {
+				fail("No job admins are loaded");
+			}
+			
+			// authenticate thread with first jobAdmin
+			String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
+			ThreadAuthenticator.authenticateThisThread(jobAdmin);
+			
+			// tests that should pass
+			try {
+				// known user in reads DEFAULT ALL_USERS and writes DEFAULT with group specified
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
+				
+				// anon user read DEFAULT is ALL_USERS
+				ThreadAuthenticator.unAuthenticateThisThread();
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
+				
+				// non existent user reads DEFAULT as ALL_USERS
+				ThreadAuthenticator.authenticateThisThread("test_user_nonexistent");
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
+	
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+				e.printStackTrace();
+				fail("Authorization failed when DEFAULT: " + jobAdmin);
+			} 
+			
+			// tests that should fail
+			try {
+				ThreadAuthenticator.authenticateThisThread("testuser_read_only");
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
+				if (!AuthorizationManager.FORGIVE_ALL) {
+					fail("Authorization didn't prevent writing to default graph by known user in wrong group");
+				}
+			} catch (AuthorizationException ae) {}
+			
+			try {
+				ThreadAuthenticator.authenticateThisThread("test_user_nonexistent");
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
+				if (!AuthorizationManager.FORGIVE_ALL) {
+					fail("Authorization didn't prevent writing to default graph by unknown user");
+				}
+			} catch (AuthorizationException ae) {}
+			
+			
+		} finally {
+			AuthorizationManager.clear();
+		}
+
+	}
+	
+	@Test
+	public void testGraphReadWriteError() throws Exception {
+		
+		// Set up authorization, should be same location as all services participating in the test
+		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+		auth_prop.setSettingsFilePath("src/test/resources/auth_test_error.json");
+		
+		try {
+			AuthorizationManager.authorize( auth_prop );
+
+			if (!AuthorizationManager.FORGIVE_ALL) {
+				fail("Authorizing with unknown group name did not throw exception");
+			}
+		} catch (AuthorizationException ae) {
+			ae.printStackTrace();
+		} finally {
+			AuthorizationManager.clear();
+		}
+
+	}
 }

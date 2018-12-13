@@ -55,7 +55,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 	
 	protected NodeGroup queryNodeGroup;
-	protected SparqlQueryClient retrievalClient; // used to get info on EDC service end points: the ones used to service EDC calls.
+	protected SparqlQueryClient retrievalClient;   // the queryClient provided in the constructor, but with the sgjson's default Sei
 	protected ResultsClient resultsClient;
 	protected StatusClient statusClient;
 	

@@ -19,15 +19,19 @@ package com.ge.research.semtk.services.nodegroupStore.service;
 
 import java.util.TreeMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.services.nodegroupStore.NgStoreSparqlGenerator;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class NodeGroupStoreServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
-
+	@Autowired
+	NodeGroupStoreAuthProperties auth_prop;
   /**
    * Code to run after the service starts up.
    */
@@ -57,6 +61,13 @@ public class NodeGroupStoreServiceStartup implements ApplicationListener<Applica
 	  }
 	  Utility.validatePropertiesAndExitOnFailure(properties); 
 	  
+	  // start AuthorizationManager for all threads
+	  try {
+		  AuthorizationManager.authorize(auth_prop);
+	  } catch (Exception e) {
+		  e.printStackTrace();
+		  System.exit(1);
+	  }
 	  return;
   }
  

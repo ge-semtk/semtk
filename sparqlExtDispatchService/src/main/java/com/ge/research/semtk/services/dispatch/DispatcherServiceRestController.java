@@ -334,6 +334,7 @@ public class DispatcherServiceRestController {
 					props.getSparqlServiceUser(),
 					props.getSparqlServicePass());
 			queryClient = new SparqlQueryClient(queryConf);
+			
 		}
 		else{
 			queryConf = new SparqlQueryClientConfig(	
@@ -345,7 +346,8 @@ public class DispatcherServiceRestController {
 	                props.getEdcSparqlServerType(), 
 	                props.getEdcSparqlServerDataset());
 			queryClient = new SparqlQueryClient(queryConf);
-		}				
+		}		
+		
 		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
 		StatusClient sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 		sClient.execSetPercentComplete(0, "Job Initialized");

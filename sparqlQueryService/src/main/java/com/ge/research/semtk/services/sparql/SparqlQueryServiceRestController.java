@@ -190,7 +190,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
-			String dropGraphQuery = "drop graph <" + requestBody.dataset + ">";  // drop query
+			String dropGraphQuery = SparqlToXUtils.generateDropGraphSparql(sei);
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			
@@ -285,8 +285,8 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			query = SparqlToXUtils.generateDeletePrefixQuery(requestBody.prefix);
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			query = SparqlToXUtils.generateDeletePrefixQuery(sei, requestBody.prefix);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			
@@ -339,8 +339,8 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(requestBody.prefixes, deleteBlankNodes);
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, requestBody.prefixes, deleteBlankNodes);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
 		} catch (Exception e) {			

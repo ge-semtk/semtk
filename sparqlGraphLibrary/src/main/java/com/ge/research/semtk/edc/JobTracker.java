@@ -15,6 +15,10 @@
  ** limitations under the License.
  */
 
+/**
+ * Security note:  JobTracker checks job ownership and job admin before taking action.
+ *                 All queries against triplestore are done as super-user
+ */
 
 package com.ge.research.semtk.edc;
 
@@ -42,6 +46,7 @@ import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -69,12 +74,41 @@ public class JobTracker {
 		
 	}
 	
-	private SparqlEndpointInterface createEndpoint() throws Exception {
+	/**
+	 * Create a jobs endpoint with one free superuser query
+	 * @return
+	 * @throws Exception
+	 */
+	private SparqlEndpointInterface createSuperuserEndpoint() throws Exception {
+		
+		AuthorizationManager.nextQuerySemtkSuper();
+	    
 		return SparqlEndpointInterface.getInstance(	this.prop.getJobEndpointType(),
 				this.prop.getJobEndpointServerUrl(), 
 				this.prop.getJobEndpointDataset(),
 				this.prop.getJobEndpointUsername(),
 				this.prop.getJobEndpointPassword());
+		
+	}
+	
+	/**
+	 * Build the override connection for queries of job info
+	 * @return
+	 * @throws Exception
+	 */
+	private SparqlConnection createOverrideConnection() throws Exception {
+			    
+		SparqlEndpointInterface sei =  SparqlEndpointInterface.getInstance(	this.prop.getJobEndpointType(),
+				this.prop.getJobEndpointServerUrl(), 
+				this.prop.getJobEndpointDataset(),
+				this.prop.getJobEndpointUsername(),
+				this.prop.getJobEndpointPassword());
+		
+		SparqlConnection ret = new SparqlConnection();
+		ret.addDataInterface(sei);
+		ret.addModelInterface(sei);
+		return ret;
+		
 	}
 	
 	public static String generateJobId() {
@@ -109,7 +143,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-	    SparqlEndpointInterface endpoint = this.createEndpoint();
+	    SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 	    
 	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
@@ -186,7 +220,7 @@ public class JobTracker {
 	    	percentComplete, SparqlToXUtils.safeSparqlString(message), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+		    this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -230,7 +264,7 @@ public class JobTracker {
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -260,7 +294,7 @@ public class JobTracker {
 				"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 
 		this.checkEndpointUserNames(jobId, endpoint);
@@ -301,7 +335,7 @@ public class JobTracker {
 		    	"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		this.checkEndpointUserNames(jobId, endpoint);
 
@@ -362,7 +396,7 @@ public class JobTracker {
 				SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
 		try {
-			this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+			this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
@@ -420,7 +454,7 @@ public class JobTracker {
 		        SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
 		try {
-			this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+			this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
@@ -434,6 +468,7 @@ public class JobTracker {
 	 */
 	public URL getOptionalFullResultsURL(String jobId) throws AuthorizationException, Exception {	 
 		
+		// TODO: this should be a nodegroup and use generateSparql()
 		String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
@@ -448,7 +483,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		this.checkEndpointUserNames(jobId, endpoint);
 
@@ -486,6 +521,7 @@ public class JobTracker {
 	 * @throws Exception if jobID can't be found or it doesn't have exactly one sample URL
 	 */
 	public URL getSampleResultsURL(String jobId) throws AuthorizationException, Exception {	 
+		// TODO: this should be a nodegroup and use generateSparql()
 		String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
@@ -500,7 +536,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 		this.checkEndpointUserNames(jobId, endpoint);
 
@@ -570,7 +606,7 @@ public class JobTracker {
 	        jobUri);
 	    // LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -601,7 +637,7 @@ public class JobTracker {
 		        jobUri
 		       );
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -639,7 +675,7 @@ public class JobTracker {
 				jobUri
 				);
 	    try {
-	    	this.createEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -657,6 +693,7 @@ public class JobTracker {
 		// get nodegroup
 		JSONObject jObj = Utility.getResourceAsJson(this, "/nodegroups/job_get_file.json");
 		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
+		sgj.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ng = sgj.getNodeGroup();
 		
 		// set constraint
@@ -669,7 +706,7 @@ public class JobTracker {
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
 		TableResultSet res = null;
 		try {
-			SparqlEndpointInterface endpoint = this.createEndpoint();
+			SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 		    res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
@@ -699,6 +736,7 @@ public class JobTracker {
 		// get nodegroup
 		JSONObject jObj = Utility.getResourceAsJson(this, "/nodegroups/jobs_get_info.json");
 		SparqlGraphJson sgj = new SparqlGraphJson(jObj);
+		sgj.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ng = sgj.getNodeGroup();
 		
 		// set constraint unless administrator
@@ -708,13 +746,13 @@ public class JobTracker {
 			valList.add(ThreadAuthenticator.getThreadUserName());
 			prop.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(prop, valList)));
 			prop.setIsOptional(false);
-		}
+		}		
 		
 		// run query
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
 		TableResultSet res = null;
 		try {
-			SparqlEndpointInterface endpoint = this.createEndpoint();
+			SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 		    res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
@@ -753,6 +791,7 @@ public class JobTracker {
 		
 		// --- delete binary files --- 
 		SparqlGraphJson sgjGetPaths = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_get_file_info.json"));
+		sgjGetPaths.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ngGetPaths = sgjGetPaths.getNodeGroup();
 		
 		// add creationTime constraint
@@ -760,9 +799,9 @@ public class JobTracker {
 		String creationTimeConstraint = ValueConstraint.buildFilterConstraint(creationTime, "<", boundaryDate);	
 		creationTime.setValueConstraint(new ValueConstraint(creationTimeConstraint));
 		
-		// delete binary files
+		// delete binary files: query paths, then delete
 		String query = ngGetPaths.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		SparqlEndpointInterface endpoint = this.createEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    Table pathTable = endpoint.executeQueryToTable(query);
 		String paths[] = pathTable.getColumn("path");
 		for (String p : paths) {
@@ -781,6 +820,7 @@ public class JobTracker {
 
 		// --- delete from triplestore --- 
 		SparqlGraphJson sgjJobDeletion = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_deletion.json"));
+		sgjJobDeletion.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ngJobDel = sgjJobDeletion.getNodeGroup();
 		
 		// add creationTime constraint
@@ -791,6 +831,8 @@ public class JobTracker {
 		// run
 		query = ngJobDel.generateSparqlDelete(null);
 		
+		// we've already checked that user is JobAdmin.  So user can delete jobs from triplestore.
+		endpoint = this.createSuperuserEndpoint();
 		endpoint.executeQueryAndConfirm(query);
 		LocalLogger.logToStdOut("Deleted jobs from triplestore: " + creationTimeConstraint);
 
@@ -861,6 +903,7 @@ public class JobTracker {
 		
 		// get job deletion nodegroup
 		SparqlGraphJson sgjJobDeletion = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_deletion.json"));
+		sgjJobDeletion.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ngJobDel = sgjJobDeletion.getNodeGroup();
 		
 		// add id constraint
@@ -871,7 +914,7 @@ public class JobTracker {
 		idItem.setValueConstraint(new ValueConstraint(jobIdConstraint));
 		
 		// delete from triplestore
-		this.createEndpoint().executeQueryAndConfirm(ngJobDel.generateSparqlDelete(null));
+		this.createSuperuserEndpoint().executeQueryAndConfirm(ngJobDel.generateSparqlDelete(null));
 		LocalLogger.logToStdOut("Deleted job from triplestore: " + jobIdConstraint);
 		
 	}
@@ -881,6 +924,7 @@ public class JobTracker {
 		
 		// get nodegroup
 		SparqlGraphJson sgjGetPaths = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_get_file_info.json"));
+		sgjGetPaths.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ngGetPaths = sgjGetPaths.getNodeGroup();
 		
 		// set id constraint
@@ -892,7 +936,7 @@ public class JobTracker {
 		
 		// run query
 		String query = ngGetPaths.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		Table pathTable = this.createEndpoint().executeQueryToTable(query);
+		Table pathTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 		
 		// change results into JobFileInfo objects
 		for (int i=0; i < pathTable.getNumRows(); i++) {
@@ -921,6 +965,7 @@ public class JobTracker {
 		
 		// get nodegroup
 		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_get_results_urls.json"));
+		sgjson.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ng = sgjson.getNodeGroup();
 		
 		// add creationTime constraint
@@ -930,7 +975,7 @@ public class JobTracker {
 		
 		// run query
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		Table urlTable = this.createEndpoint().executeQueryToTable(query);
+		Table urlTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 		
 		int fullUrlPos = urlTable.getColumnIndex("fullResultsURL");
 		int sampleUrlPos = urlTable.getColumnIndex("sampleResultsURL");
@@ -966,6 +1011,7 @@ public class JobTracker {
 		
 		// get nodegroup
 		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/job_get_results_urls.json"));
+		sgjson.setSparqlConn(this.createOverrideConnection());
 		NodeGroup ng = sgjson.getNodeGroup();
 		
 		// set id constraint
@@ -977,7 +1023,7 @@ public class JobTracker {
 		
 		// run query
 		String query = ng.generateSparql(AutoGeneratedQueryTypes.QUERY_DISTINCT, false, -1, null);
-		Table urlTable = this.createEndpoint().executeQueryToTable(query);
+		Table urlTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 		
 		if (urlTable.getNumRows() == 0) {
 			ret[0] = null;
@@ -1051,8 +1097,7 @@ public class JobTracker {
 				"}",
 				SparqlToXUtils.safeSparqlString(jobId));
 		
-		
-		Table jobTable = this.createEndpoint().executeQueryToTable(query);
+		Table jobTable = this.createSuperuserEndpoint().executeQueryToTable(query);
 	    int rows = jobTable.getNumRows();
 		
 	    if (rows == 0) {
