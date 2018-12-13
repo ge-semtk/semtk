@@ -24,6 +24,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -54,27 +55,30 @@ public class SparqlToXUtilsTest {
 		prefixes.add("http://kdl.ge.com/batterydemo");
 		prefixes.add("http://does/nothing");
 		
-		String sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(TestGraph.getSei(), prefixes, true);
+		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance("virtuoso", "http://myserver:4242", "http://mygraph");
+		
+		String sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, prefixes, true);
 		
 		String expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing|nodeID://)\").}";
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
-		assertTrue(sparql.contains("WITH <" + TestGraph.getSei().getGraph() + ">"));
+		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
 		
 		// repeat with false
-		sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(TestGraph.getSei(), prefixes, false);
+		sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, prefixes, false);
 		expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing)\").}";
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
-		assertTrue(sparql.contains("WITH <" + TestGraph.getSei().getGraph() + ">"));
+		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
 
 	}
 	
 	@Test
 	public void testDeletePrefix() throws Exception {
-		String sparql = SparqlToXUtils.generateDeletePrefixQuery(TestGraph.getSei(), "http://prefix");
+		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance("virtuoso", "http://myserver:4242", "http://mygraph");
+		String sparql = SparqlToXUtils.generateDeletePrefixQuery(sei, "http://prefix");
 		
 		String expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z  FILTER ( strstarts(str(?x), \"http://prefix\") || strstarts(str(?y), \"http://prefix\") || strstarts(str(?z), \"http://prefix\") ).}";
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
-		assertTrue(sparql.contains("WITH <" + TestGraph.getSei().getGraph() + ">"));
+		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
 
 	}
 }
