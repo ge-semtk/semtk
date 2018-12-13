@@ -77,7 +77,7 @@ public abstract class Utility {
 	
 	private static StrSubstitutor envSubstitutor = new StrSubstitutor(System.getenv());
 	public static final Boolean ENV_TEST = ! envSubstitutor.replace("${HOST_IP}").equals("${HOST_IP}");
-	public static final String ENV_TEST_EXCEPTION_STRING = "Environment is not set up for integration testing (top-level .env)";
+	public static final String ENV_TEST_EXCEPTION_STRING = "Can't find environment variable $HOST_IP, suggesting a testing setup problem.";
 	static{
 		// supported input date formats 
 		/**
