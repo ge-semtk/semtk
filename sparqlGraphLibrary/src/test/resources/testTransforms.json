@@ -218,14 +218,14 @@
 						"ConnectBy": "screenPrinting",
 						"Connected": true,
 						"UriConnectBy": "http://research.ge.com/spcell#screenPrinting",
-						"isOptional": false
+						"isOptional": true
 					}
 				],
 				"NodeName": "Cell",
 				"fullURIName": "http://research.ge.com/spcell#Cell",
 				"subClassNames": [],
 				"SparqlID": "?Cell",
-				"isReturned": false,
+				"isReturned": true,
 				"valueConstraint": "",
 				"instanceValue": null
 			}
