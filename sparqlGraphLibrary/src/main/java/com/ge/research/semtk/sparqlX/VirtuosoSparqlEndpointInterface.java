@@ -65,7 +65,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (!s.contains("done")){
+        if (!sLower.contains("done")){
         	throw new Exception(s);
         }
 	}
@@ -81,7 +81,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (!s.contains("done")){
+        if (!sLower.contains("done")){
         	throw new Exception(s);
         }
 	}

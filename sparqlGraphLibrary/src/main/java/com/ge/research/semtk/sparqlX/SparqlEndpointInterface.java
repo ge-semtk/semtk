@@ -499,7 +499,7 @@ public abstract class SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (s.contains("fail") || s.contains("error")){
+        if (sLower.contains("fail") || sLower.contains("error")){
         	throw new Exception(s);
         }
 	}
@@ -516,7 +516,7 @@ public abstract class SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (s.contains("fail") || s.contains("error")){
+        if (sLower.contains("fail") || sLower.contains("error")){
         	throw new Exception(s);
         }
 	}
@@ -533,7 +533,7 @@ public abstract class SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (s.contains("fail") || s.contains("error")){
+        if (sLower.contains("fail") || sLower.contains("error")){
         	throw new Exception(s);
         }
 	}
