@@ -494,7 +494,48 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	public void clearGraph() throws Exception {
-		this.executeQueryAndConfirm(SparqlToXUtils.generateClearGraphSparql(this));
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateClearGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (s.contains("fail") || s.contains("error")){
+        	throw new Exception(s);
+        }
+	}
+	
+	/**
+	 * It has been observed that this behaves differently on different triple-stores.
+	 * e.g. virtuoso throws an error if you create a graph that already exists
+	 *      Neptune doesn't seem to support this command at all (?)
+	 * @throws Exception
+	 */
+	public void createGraph() throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateCreateGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (s.contains("fail") || s.contains("error")){
+        	throw new Exception(s);
+        }
+	}
+	
+	/**
+	 * It has been observed that this behaves differently on different triple-stores.
+	 * e.g. virtuoso throws an error if you drop a graph that doesn't exist
+	 *      while Neptune succeeds.
+	 * @throws Exception
+	 */
+	public void dropGraph() throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDropGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (s.contains("fail") || s.contains("error")){
+        	throw new Exception(s);
+        }
 	}
 	
 	/**
@@ -763,8 +804,8 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query, retrieving a HashMap of data for a given set of headers.
 	 */
-	public HashMap<String,String[]> executeQuery(String query, String[] resultHeaders) throws Exception {
-		return executeQuery(query, resultHeaders, false);
+	public HashMap<String,String[]> executeQuery(String query, String[] colNames) throws Exception {
+		return executeQuery(query, colNames, false);
 	}
 	
 
@@ -772,40 +813,40 @@ public abstract class SparqlEndpointInterface {
 	 * Execute a query, retrieving a HashMap of data for a given set of headers.
 	 *
 	 * @param query	the query
-	 * @param resultHeaders	the headers of the result columns desired.  If null, use all column headers.
+	 * @param colNames	the headers of the result columns desired.  If null, use all column headers.
 	 * @param expectOneResult if true, expect a single row result per column - if zero or multiple results are returned, then error
 	 * @return a hashmap: keys are resultHeaders, values are String arrays with contents
 	 *
 	 */
-	public HashMap<String,String[]> executeQuery(String query, String[] resultHeaders, boolean expectOneResult) throws Exception {
+	public HashMap<String,String[]> executeQuery(String query, String[] colNames, boolean expectOneResult) throws Exception {
 
 		executeQuery(query, SparqlResultTypes.TABLE);
 
 		HashMap<String,String[]> results = new HashMap<String,String[]>();
 		
 		String colArr[] = null;
-		if (resultHeaders != null) {
-			colArr = resultHeaders;
+		if (colNames != null) {
+			colArr = colNames;
 		} else {
 			List<String> colList = getResultsColumnName();
 			colArr = colList.toArray(new String[colList.size()]);
 			
 		}
 		
-		for (String resultHeader: colArr){
+		for (String colName: colArr){
 
-			String[] column = getStringResultsColumn(resultHeader);
+			String[] column = getStringResultsColumn(colName);
 
 			if(expectOneResult){
 				// expect each column to have exactly one entry
 				if(column.length > 1){
-					throw new Exception("Expected 1 result for " + resultHeader + ", but retrieved multiple results");
+					throw new Exception("Expected 1 result for " + colName + ", but retrieved multiple results");
 				}else if (column.length < 1){
-					throw new Exception("Expected 1 result for " + resultHeader + ", but retrieved zero results");
+					throw new Exception("Expected 1 result for " + colName + ", but retrieved zero results");
 				}
 			}
 
-			results.put(resultHeader, column);
+			results.put(colName, column);
 		}
 
 		return results;

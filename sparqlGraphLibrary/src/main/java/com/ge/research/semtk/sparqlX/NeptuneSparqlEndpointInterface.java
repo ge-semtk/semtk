@@ -100,6 +100,42 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		return String.format("%s:%s/sparql", this.server, this.port);
 	}
 
+	@Override
+	public void createGraph() throws Exception {
+		// Not support in Neptune ???
+	}
+	
+	/**
+	 * Success criteria: contains "done"
+	 * @throws Exception
+	 */
+	@Override
+	public void clearGraph() throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateClearGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (!s.contains("succeeded")){
+        	throw new Exception(s);
+        }
+	}
+	
+	/**
+	  * Success criteria: contains "done"
+	 * @throws Exception
+	 */
+	@Override
+	public void dropGraph() throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDropGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (!s.contains("succeeded")){
+        	throw new Exception(s);
+        }
+	}
 	/**
 	 * Build a upload URL
 	 */

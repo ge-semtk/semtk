@@ -50,6 +50,10 @@ public class SimpleResultSet extends GeneralResultSet{
 		return RESULTS_BLOCK_NAME;
 	}
 	
+	public String getMessage() throws Exception {
+		return this.getResult(SimpleResultSet.MESSAGE_JSONKEY);		
+	}
+	
 	/**
 	 * Return results in a hashmap
 	 */

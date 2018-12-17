@@ -198,6 +198,11 @@ public class SparqlToXUtils {
   public static String generateDropGraphSparql(SparqlEndpointInterface sei) {
 	  return "DROP GRAPH <" + sei.getGraph() + ">";
   }
+  
+  public static String generateCreateGraphSparql(SparqlEndpointInterface sei) {
+	  return "CREATE GRAPH <" + sei.getGraph() + ">";
+  }
+  
   /**
    * Delete all model triples given a list of prefixes.   Also deletes blank nodes.
    * @param prefixes

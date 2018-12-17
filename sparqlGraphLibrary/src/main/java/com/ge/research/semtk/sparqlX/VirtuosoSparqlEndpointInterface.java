@@ -54,6 +54,37 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		super(server, graph, user, pass);
 		// TODO Auto-generated constructor stub
 	}
+	/**
+	 * Success criteria: contains "done"
+	 * @throws Exception
+	 */
+	@Override
+	public void createGraph() throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateCreateGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (!s.contains("done")){
+        	throw new Exception(s);
+        }
+	}
+	
+	/**
+	  * Success criteria: contains "done"
+	 * @throws Exception
+	 */
+	@Override
+	public void dropGraph() throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDropGraphSparql(this), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (!s.contains("done")){
+        	throw new Exception(s);
+        }
+	}
 	
 	public String getServerType() {
 		return "virtuoso";

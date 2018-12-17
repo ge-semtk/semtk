@@ -151,11 +151,7 @@ public class TestGraph {
 	 * Drop the test graph (DROP lets the graph be CREATEd again, whereas CLEAR does not)
 	 */
 	public static void dropGraph() throws Exception {
-		SparqlEndpointInterface sei = getSei();
-		GeneralResultSet resultSet = sei.executeQueryAndBuildResultSet("drop graph <" + TestGraph.getDataset() + ">", SparqlResultTypes.CONFIRM);
-		if (!resultSet.getSuccess()) {
-			throw new Exception(resultSet.getRationaleAsString(" "));
-		}
+		getSei().dropGraph();
 	}
 	
 	public static void execDeletionQuery(String query) throws Exception{
