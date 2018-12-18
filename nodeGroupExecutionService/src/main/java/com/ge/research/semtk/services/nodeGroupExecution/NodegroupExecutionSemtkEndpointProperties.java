@@ -26,7 +26,7 @@ import com.ge.research.semtk.edc.SemtkEndpointProperties;
 // subclass simply adds spring annotations including locations
 
 @Configuration
-@ConfigurationProperties(prefix="nodeGroupExecution.edc.services", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="node-group-execution.edc.services", ignoreUnknownFields = true)
 public class NodegroupExecutionSemtkEndpointProperties extends SemtkEndpointProperties {
 
 }

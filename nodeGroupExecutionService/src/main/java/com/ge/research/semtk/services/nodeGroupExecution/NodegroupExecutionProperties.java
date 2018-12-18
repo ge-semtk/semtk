@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="nodeGroupExecution", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="node-group-execution", ignoreUnknownFields = true)
 public class NodegroupExecutionProperties {
 
 	// all of the values we are likely to need

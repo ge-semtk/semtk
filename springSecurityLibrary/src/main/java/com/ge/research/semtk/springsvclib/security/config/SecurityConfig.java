@@ -94,12 +94,14 @@ public class SecurityConfig extends ResourceServerConfigurerAdapter {
 			System.setProperty("http.nonProxyHosts", localNetworkProperties.getNonProxyHosts());
 		}
 	}
-	
+
+	/* // this is not compatible with springboot 2
 	protected void httpRequiresChannel(HttpSecurity http) throws Exception {
 		if (securityProperties.isRequireSsl()) {
 			http.requiresChannel().anyRequest().requiresSecure();
 		}
 	}
+	*/
 	
 	protected void noSecurity(HttpSecurity http) throws Exception {
 		LocalLogger.logToStdOut("Launching with NO SECURITY");

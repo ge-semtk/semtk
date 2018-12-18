@@ -19,6 +19,7 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import java.util.TreeMap;
 
+import com.ge.research.semtk.services.nodeGroupExecution.NodegroupExecutionAuthProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -42,24 +43,24 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 		// print and validate properties - and exit if invalid
 		String[] propertyNames = {
 				"ssl.enabled",
-				"nodeGroupExecution.ngStoreProtocol",
-				"nodeGroupExecution.ngStoreServer",
-				"nodeGroupExecution.ngStorePort",
-				"nodeGroupExecution.dispatchProtocol",
-				"nodeGroupExecution.dispatchServer",
-				"nodeGroupExecution.dispatchPort",
-				"nodeGroupExecution.resultsProtocol",
-				"nodeGroupExecution.resultsServer",
-				"nodeGroupExecution.resultsPort",
-				"nodeGroupExecution.statusProtocol",
-				"nodeGroupExecution.statusServer",
-				"nodeGroupExecution.statusPort",
-				"nodeGroupExecution.edc.services.jobEndpointType",
-				"nodeGroupExecution.edc.services.jobEndpointDomain",
-				"nodeGroupExecution.edc.services.jobEndpointServerUrl",
-				"nodeGroupExecution.edc.services.jobEndpointDataset",
-				//"nodeGroupExecution.edc.services.jobEndpointUsername",
-				//"nodeGroupExecution.edc.services.jobEndpointPassword"
+				"node-group-execution.ngStoreProtocol",
+				"node-group-execution.ngStoreServer",
+				"node-group-execution.ngStorePort",
+				"node-group-execution.dispatchProtocol",
+				"node-group-execution.dispatchServer",
+				"node-group-execution.dispatchPort",
+				"node-group-execution.resultsProtocol",
+				"node-group-execution.resultsServer",
+				"node-group-execution.resultsPort",
+				"node-group-execution.statusProtocol",
+				"node-group-execution.statusServer",
+				"node-group-execution.statusPort",
+				"node-group-execution.edc.services.jobEndpointType",
+				"node-group-execution.edc.services.jobEndpointDomain",
+				"node-group-execution.edc.services.jobEndpointServerUrl",
+				"node-group-execution.edc.services.jobEndpointDataset",
+				//"node-group-execution.edc.services.jobEndpointUsername",
+				//"node-group-execution.edc.services.jobEndpointPassword"
 		};
 		TreeMap<String,String> properties = new TreeMap<String,String>();
 		for(String propertyName : propertyNames){

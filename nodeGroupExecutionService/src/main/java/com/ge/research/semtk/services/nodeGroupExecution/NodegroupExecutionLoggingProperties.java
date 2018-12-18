@@ -7,7 +7,7 @@ import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
 
 
 @Configuration
-@ConfigurationProperties(prefix="nodeGroupExecution.logging", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="node-group-execution.logging", ignoreUnknownFields = true)
 public class NodegroupExecutionLoggingProperties extends EasyLogEnabledConfigProperties {
 
 }
