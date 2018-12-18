@@ -74,6 +74,7 @@ public abstract class Utility {
 
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");	// e.g. 2014-12-01 00:00:00 
 	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyKmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy K:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
+	public static final DateTimeFormatter DATETIME_FORMATTER_ISO8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");     // e.g. 2017-09-16T13:37:04Z
 	
 	private static StrSubstitutor envSubstitutor = new StrSubstitutor(System.getenv());
 	public static final Boolean ENV_TEST = ! envSubstitutor.replace("${HOST_IP}").equals("${HOST_IP}");
