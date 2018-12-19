@@ -32,6 +32,8 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -344,6 +346,39 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
+	public void testLoadDataDuraBatteryAsync() throws Exception {
+		// Pre changes:   
+		// During changes:  
+		// Bigger-ish test of many import spec features and timing. 
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import
+		DataLoader dl = new DataLoader(sgJson, 8, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		
+		String jobId = IntegrationTestUtility.generateJobId("testLoadDataDuraBatteryAsync");
+		StatusClient sClient = IntegrationTestUtility.getStatusClient(jobId);
+		ResultsClient rClient = IntegrationTestUtility.getResultsClient();
+		try {
+			dl.setupAsyncRun(true, false, sClient, rClient);
+			dl.run();
+			int percent = sClient.execWaitForPercentOrMsec(100, 60000);
+			assertTrue("ingest did not complete in 60 seconds", percent == 100);
+			assertTrue("ingest failed", sClient.execIsSuccess());
+			System.out.println(sClient.execGetStatusMessage());
+		} finally {
+			sClient.execDeleteJob();
+		}
+
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestDuraBatteryResults.csv");
+		
+	}
+	
+	@Test
 	public void testLoadDataDuraBatteryEmptyCol() throws Exception {
 		// Catch the error when a URI mappingItem column contains empty
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
@@ -364,6 +399,39 @@ public class DataLoaderTest_IT {
 		assertEquals(1, err.getNumRows());
 		assertTrue(err.toCSVString().contains("Empty values in"));
 		assertTrue(err.toCSVString().contains("only colors"));
+	}
+	
+	@Test
+	public void testLoadDataDuraBatteryEmptyColAsync() throws Exception {
+		// Catch the error when a URI mappingItem column contains empty
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
+
+		String jobId = IntegrationTestUtility.generateJobId("testLoadDataDuraBatteryEmptyColAsync");
+		StatusClient sClient = IntegrationTestUtility.getStatusClient(jobId);
+		ResultsClient rClient = IntegrationTestUtility.getResultsClient();
+		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
+
+		try {
+			dl.setupAsyncRun(true, false, sClient, rClient);
+			dl.run();
+			int percent = sClient.execWaitForPercentOrMsec(100, 60000);
+			assertTrue("ingest did not complete in 60 seconds", percent == 100);
+			assertTrue("ingest succeeded unexpectedly", !sClient.execIsSuccess());
+			
+			Table err = rClient.getTableResultsJson(jobId, 10000);
+			assertEquals(1, err.getNumRows());
+			assertTrue(err.toCSVString().contains("Empty values in"));
+			assertTrue(err.toCSVString().contains("only colors"));
+		} finally {
+			sClient.execDeleteJob();
+		}
+
+		
 	}
 	
 	@Test

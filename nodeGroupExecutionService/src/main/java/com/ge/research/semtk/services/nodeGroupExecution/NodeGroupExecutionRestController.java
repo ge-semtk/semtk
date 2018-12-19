@@ -82,7 +82,7 @@ import io.swagger.annotations.ApiOperation;
 public class NodeGroupExecutionRestController {
 	
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
- 	static final String JOB_ID_RESULT_KEY = "JobId";
+ 	static final String JOB_ID_RESULT_KEY = SimpleResultSet.JOB_ID_RESULT_KEY;
  	
 	@Autowired
 	NodegroupExecutionProperties prop;
@@ -967,6 +967,41 @@ public class NodeGroupExecutionRestController {
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
+				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	/**
+	 * Perform ingestion using a stored nodegroup ID.
+	 */
+	@ApiOperation(
+			value=	"Async ingest CSV data given nodegroup id",
+			notes=	"Returns JobId. \n" +
+			        "Successful status will have number of records proccessed message at /jobStatusMessage.\n" +
+					"Failure will have an error table at /getResultsTable. \n"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/ingestFromCsvStringsByIdAsync", method=RequestMethod.POST)
+	public JSONObject ingestFromCsvStringsByIdAsync(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsByIdAsync";
+		HeadersManager.setHeaders(headers);
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getTemplateId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
+    	try {
+			SimpleResultSet retval = null;
+			try{
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				retval = new SimpleResultSet(true);
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
+			}catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+				retval = new SimpleResultSet(false);
 				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
 			} 
 			return retval.toJson();

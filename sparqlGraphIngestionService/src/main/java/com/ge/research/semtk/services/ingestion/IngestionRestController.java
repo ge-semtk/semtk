@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.UUID;
 
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -42,13 +43,20 @@ import org.json.simple.parser.JSONParser;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+
+import io.swagger.annotations.ApiOperation;
+
+import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.edc.client.StatusClient;
+import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -59,6 +67,7 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.query.rdb.PostgresConnector;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**
@@ -70,7 +79,15 @@ public class IngestionRestController {
  
 	@Autowired
 	IngestionProperties prop;
+	
+	@Autowired
+	ResultsServiceProperties results_prop;
+	
+	@Autowired
+	StatusServiceProperties status_prop;
 			
+	static final String SERVICE_NAME = "ingestion";
+	
 	/**
 	 * Load data from CSV
 	 */
@@ -199,6 +216,25 @@ public class IngestionRestController {
 	    }
 	}
 	
+	@ApiOperation(
+			value=	"Main ASYNC endpoint.  With override connection and precheck.",
+			notes=	"returns a jobId.  \n" +
+					"If job fails, get error report table from results service.\n" + 
+					"If it succeeds, status message will confirm number of records processed.\n"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvWithNewConnectionPrecheckAsync", method= RequestMethod.POST)
+	public JSONObject fromCsvPrecheckAsync(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			SimpleResultSet res = this.fromAnyCsvAsync(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false);
+			return res.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
 	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile) {
 		try {
 			LocalLogger.logToStdErr(endpoint);
@@ -246,6 +282,7 @@ public class IngestionRestController {
 	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
 	 * @param precheck check that the ingest will succeed before starting it
 	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
+	 * @param async perform async
 	 */
 	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
 
@@ -271,7 +308,8 @@ public class IngestionRestController {
 				LocalLogger.logToStdErr("template size: "  + templateContent.length());
 			}else{
 				LocalLogger.logToStdErr("template content was null");
-			}			
+			}	
+			
 			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJsonObjectFromString(templateContent));			
 			
 			// get data file content
@@ -295,16 +333,18 @@ public class IngestionRestController {
 			// get a CSV data set to use in the load. 
 			Dataset ds = new CSVDataset(dataFileContent, true);
 
-			// perform actual load
+			// how about some more logging
 			String startTime = dateFormat.format(Calendar.getInstance().getTime());
 			if(logger != null) { 
 				detailsToLog = LoggerRestClient.addDetails("Start Time", startTime, detailsToLog); 				
 			}
-						
+			
+			// load
 			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			
 			recordsProcessed = dl.importData(precheck, skipIngest);
 	
+			// yet some more logging
 			String endTime = dateFormat.format(Calendar.getInstance().getTime());
 			if(logger != null) { 
 				detailsToLog = LoggerRestClient.addDetails("End Time", endTime, detailsToLog); 
@@ -343,6 +383,69 @@ public class IngestionRestController {
 			logger.logEvent("Data ingestion", detailsToLog, "Add Instance Data To Triple Store");
 		}
 		return retval.toJson();
+	}	
+	
+	
+
+	/**
+	 * Load data from csv.
+	 * Note this is a newer copy of fromAsynCsv with Async added
+	 *     - more "modern" logging
+	 * @param templateFile the json template (File if fromFiles=true, else String)
+	 * @param dataFile the data file (File if fromFiles=true, else String)
+	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
+	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
+	 * @param precheck check that the ingest will succeed before starting it
+	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
+	 * @param async perform async
+	 */
+	private SimpleResultSet fromAnyCsvAsync(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
+
+
+		int recordsProcessed = 0;
+		SimpleResultSet simpleResult = new SimpleResultSet();
+		
+		// set up the logger
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(prop, ThreadAuthenticator.getThreadUserName());
+				
+		try {
+			
+			// get SparqlGraphJson from template
+			String templateContent = fromFiles ? new String(((MultipartFile)templateFile).getBytes()) : (String)templateFile;	
+			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJsonObjectFromString(templateContent));			
+			
+			// get data file content
+			String dataFileContent = fromFiles ? new String(((MultipartFile)dataFile).getBytes()) : (String)dataFile;
+			LoggerRestClient.easyLog(logger, SERVICE_NAME, "fromAnyCsvAsync", "chars", String.valueOf(dataFileContent != null ? dataFileContent.length() : 0));
+		
+			// override the connection, if needed
+			if(sparqlConnectionOverride != null){
+				String sparqlConnectionString = fromFiles ? new String(((MultipartFile)sparqlConnectionOverride).getBytes()) : (String)sparqlConnectionOverride;				
+				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));   				
+			}
+					
+			// get a CSV data set to use in the load. 
+			Dataset ds = new CSVDataset(dataFileContent, true);
+			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
+			String jobId = "job-" + UUID.randomUUID().toString();
+			dl.setupAsyncRun(precheck, skipIngest, 
+					new StatusClient(new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobId)), 
+					new ResultsClient(new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort()))
+					);
+			dl.run();
+			simpleResult.setSuccess(true);
+			simpleResult.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
+					
+			
+		} catch (Exception e) {
+			// TODO write failure JSONObject to return and return it.
+			LoggerRestClient.easyLog(logger, SERVICE_NAME, "fromAnyCsvAsync exception", "message", e.toString());
+			LocalLogger.printStackTrace(e);			
+			simpleResult.setSuccess(false);
+			simpleResult.addRationaleMessage("ingestion", "fromCsv*", e);
+		}  
+		
+		return simpleResult;
 	}	
 	
 	

@@ -24,7 +24,7 @@ public abstract class ServiceProperties {
 	private String server;
 	private int    port;
 	private String protocol;
-	private String endpoint;
+
 	public String getServer() {
 		return server;
 	}
@@ -42,11 +42,5 @@ public abstract class ServiceProperties {
 	}
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
-	}
-	public String getEndpoint() {
-		return endpoint;
-	}
-	public void setEndpoint(String endpoint) {
-		this.endpoint = endpoint;
 	}
 }

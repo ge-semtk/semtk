@@ -71,6 +71,7 @@ public class IngestionWorkerThread extends Thread {
 	 * It is more efficient to use this value when sizing future threads.
 	 */
 	public void run(){
+		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		
 		try {
 			ArrayList<NodeGroup> nodeGroupList = this.batchHandler.convertToNodeGroups(this.dataSetRecords, this.startingRowNum, this.skipChecks);
@@ -80,7 +81,6 @@ public class IngestionWorkerThread extends Thread {
 				// try to run one efficient query
 				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo, this.endpoint);
 				if (query.length() <= this.optimalQueryChars) {
-					//System.out.println("Ingest Query\n" + query);   
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 					
 				} else {
@@ -89,7 +89,6 @@ public class IngestionWorkerThread extends Thread {
 					
 					// run queryList
 					for (String q : queryList) {
-						//System.out.println("Ingest Query\n" + q);   
 						this.endpoint.executeQuery(q, SparqlResultTypes.CONFIRM);
 					}
 				}

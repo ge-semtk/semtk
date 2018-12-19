@@ -19,11 +19,15 @@
 package com.ge.research.semtk.load;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -35,7 +39,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 /**
  * Imports a dataset into a triple store.
  **/
-public class DataLoader {
+public class DataLoader implements Runnable {
 	// actually orchestrates the loading of data from a dataset based on a template.
 
 	NodeGroup master = null;
@@ -53,6 +57,16 @@ public class DataLoader {
 	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
 
 	int totalRecordsProcessed = 0;
+	
+	// async information
+	Boolean asyncSkipIngest = null;
+	Boolean asyncPrecheck = null;
+	ResultsClient rClient = null;
+	StatusClient sClient = null;
+	HeaderTable headerTable = null;
+	int datasetRows = 0;
+	int percentStart = 0;
+	int percentEnd = 0;
 	
 	public DataLoader(){
 		// default and does nothing special 
@@ -102,37 +116,7 @@ public class DataLoader {
 		// as the actual mapping process will decide if there's enough data
 	}
 	
-	private void validateColumnsOLD(Dataset ds) throws Exception {
-		
-		// validate that the columns specified in the template are present in the dataset
-		String[] colNamesToIngest = batchHandler.getImportColNames();   // col names from JSON		
-		ArrayList<String> colNamesInDataset = ds.getColumnNamesinOrder();
-		for(String c: colNamesToIngest){
-			if(!colNamesInDataset.contains(c)){
-				ds.close();  // close the dataset
-				
-				// log some info on the bad column before throwing the exception.
-				LocalLogger.logToStdErr("column " + c + " not found in the data set. the length of the column name was " + c.length() + " . the character codes are as follows:");
-				for(int i = 0; i < c.length(); i += 1){
-					char curr = c.charAt(i);
-					System.err.print((int) curr + " ");
-				}
-				LocalLogger.logToStdErr("");
-				// available columns list 
-				LocalLogger.logToStdErr("available columns are: ");
-				for(String k : colNamesInDataset ){
-					System.err.print(k + " (");
-					for(int m = 0; m < k.length(); m += 1){
-						char curr = k.charAt(m);
-						System.err.print((int) curr + " ");
-					}
-					LocalLogger.logToStdErr(")" );
-				}
-				
-				throw new Exception("Column '" + c + "' not found in dataset. Available columns are: " + colNamesInDataset.toString());
-			}
-		}
-	}
+
 	public void setCredentials(String user, String pass){
 		this.endpoint.setUserAndPassword(user, pass);
 	}
@@ -175,6 +159,9 @@ public class DataLoader {
 	 */
 	public int importData(Boolean precheck, Boolean skipIngest) throws Exception{
 
+		// set up information for percent complete
+		this.datasetRows = batchHandler.getDsRows();
+		
 		// check the nodegroup for consistency before continuing.		
 		LocalLogger.logToStdErr("about to validate against model.");		
 		this.master.validateAgainstModel(this.oInfo);
@@ -183,6 +170,15 @@ public class DataLoader {
 		Boolean precheckFailed = false;
 		this.totalRecordsProcessed = 0;	// reset the counter.
 		this.batchHandler.resetDataSet();
+		
+		// for percent complete, what portion of the total is this pass
+		if (skipIngest) {
+			this.percentStart = 0;
+			this.percentEnd = 100;
+		} else {
+			this.percentStart = 0;
+			this.percentEnd = 20;
+		}
 		
 		// PASS 1
 		if(precheck){
@@ -204,6 +200,10 @@ public class DataLoader {
 			this.batchHandler.generateNotFoundURIs();
 		}
 		
+		
+		// next pass, if any, is all the remaining weight
+		this.percentStart = this.percentEnd;
+		this.percentEnd = 100;
 		
 		
 		// NOTE: when create-URI-if-lookup-fails exists is implemented,
@@ -293,19 +293,36 @@ public class DataLoader {
 				// log to stdout occasionally
 				long nowMillis = System.currentTimeMillis();
 				if (nowMillis - lastMillis > 1000) {
-					LocalLogger.logToStdOutNoEOL("..." + startingRow);
+					
+					// calculate percent complete
+					double fraction = (double)startingRow / Math.max(1, this.datasetRows);
+					int percent = this.percentStart + (int) Math.floor((this.percentEnd - this.percentStart) * fraction); 
+					LocalLogger.logToStdOutNoEOL("..." + percent);
 					lastMillis = nowMillis;
+					
+					// tell status client if there is one set up
+					if (this.sClient != null) {
+						this.sClient.execSetPercentComplete(percent);
+					}
 				}
 			}
 		}
 		
-		LocalLogger.logToStdOutNoEOL("..." + startingRow + "\n");
+		LocalLogger.logToStdOutNoEOL("...100 (" + startingRow + ")\n");
+		
 		
 		// join all remaining threads
 		for(int i = 0; i < wrkrs.size(); i++){
 			this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
 		}
+		
 		LocalLogger.logToStdOut("(DONE)");
+		
+		// tell status client if there is one set up
+		if (this.sClient != null) {
+			this.sClient.execSetPercentComplete(Math.min(99,this.percentEnd));
+		}
+		
 		return recordsProcessed;
 	}
 	
@@ -374,6 +391,68 @@ public class DataLoader {
 			return null;
 		} else {
 			return ret;
+		}
+	}
+	
+	/*** ASYNC section ***/
+	public void setupAsyncRun(Boolean precheck, Boolean skipIngest, StatusClient sClient, ResultsClient rClient) throws Exception {
+		this.asyncPrecheck = precheck;
+		this.asyncSkipIngest = skipIngest;
+		this.sClient = sClient;
+		this.rClient = rClient;
+		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
+		
+		this.sClient.execSetPercentComplete(1);
+	}
+	
+	/**
+	 * Perform a load asynchronously, after having first called setupAsyncRun()
+	 */
+	public void run() {
+		if (this.asyncPrecheck == null || this.asyncSkipIngest == null || this.sClient == null || this.rClient == null) {
+			this.asyncFailure(new Exception("Internal error: ran async data load without first calling setupAsyncRun()"));
+		
+		// perform the load
+		} else {
+			ThreadAuthenticator.authenticateThisThread(this.headerTable);
+			String jobId = this.sClient.getJobId();  // wonky that status client has this and results client needs it.
+			try {
+				int recordsProcessed = this.importData(this.asyncPrecheck, this.asyncSkipIngest);
+				
+				Table errorTable = this.getLoadingErrorReport();
+				
+				if(this.asyncPrecheck) {
+					if (errorTable.getRows().size() == 0) {
+						sClient.execSetSuccess("Imported " + String.valueOf(recordsProcessed) + " records.");
+					} else {
+						rClient.execStoreTableResults(jobId, errorTable);
+						sClient.execSetFailure("Failures encountered");
+					}
+				}
+				else {
+					if(recordsProcessed > 0) {
+						sClient.execSetSuccess("Imported " + String.valueOf(recordsProcessed) + " records.");
+					} else {
+						rClient.execStoreTableResults(jobId, errorTable);
+						sClient.execSetFailure("Failures encountered");
+					}	
+				}
+				
+			} catch (Exception e) {
+				this.asyncFailure(e);
+			}
+		}
+	}
+	
+	public void asyncFailure(Exception e) {
+		try {
+			LocalLogger.printStackTrace(e);
+			this.sClient.execSetFailure(e.getMessage());
+			
+		} catch (Exception ee) {
+			// we're out of luck if we can't tell the status service what happened
+			LocalLogger.logToStdErr("Exception when trying to report to Status Service:");
+			LocalLogger.printStackTrace(ee);
 		}
 	}
 

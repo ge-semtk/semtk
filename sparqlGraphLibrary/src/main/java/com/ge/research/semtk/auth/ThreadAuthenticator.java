@@ -25,6 +25,18 @@ import com.ge.research.semtk.utility.LocalLogger;
 /**
  * @author 200001934
  *
+ *  USAGE:
+ *  >> Get headers from incoming REST call.   Authenticate.
+ *		rest controller endpoint needs parameter:   @RequestHeader HttpHeaders headers
+ *		first line of rest controller endpoint:     HeadersManager.setHeaders(headers);
+ *
+ *  >> RestClient automatically passes Authentication on to other calls
+ *
+ *  >> Manually passing authentication into threads:
+ *  	thread constructor should have:     this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
+ *      and thread run should start with:   ThreadAuthenticator.authenticateThisThread(this.headerTable);
+ *
+ *  >> Use AuthorizationManager to decide what this authenticated thread is allowed to do.
  */
 
 public class ThreadAuthenticator {

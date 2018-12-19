@@ -87,5 +87,21 @@ public abstract class Dataset {
 	 */
 	public abstract void close() throws Exception;
 	
-
+	/**
+	 * Potentially expensive count of rows
+	 * @return
+	 */
+	public int getNumRows() throws Exception {
+		int ret = 0;
+		ArrayList<ArrayList<String>> records = null;
+		reset();
+		
+		do {
+			records = this.getNextRecords(100);
+			ret += records.size();
+		} while (records.size() == 100);
+		
+		reset();
+		return ret;
+	}
 }
