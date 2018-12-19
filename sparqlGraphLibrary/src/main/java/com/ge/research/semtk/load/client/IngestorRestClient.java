@@ -24,6 +24,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
@@ -68,6 +69,22 @@ public class IngestorRestClient extends RestClient{
 	}
 	
 	/**
+	 * execute endpoints that return simple jobId
+	 * @return
+	 * @throws Exception
+	 */
+	private String executeToJobId() throws ConnectException, EndpointNotFoundException, Exception {
+		
+		if (conf.getServiceEndpoint().isEmpty()) {
+			throw new Exception("Attempting to execute IngestionClient with no enpoint specified.");
+		}
+		
+		SimpleResultSet ret = SimpleResultSet.fromJson((JSONObject)super.execute());
+		
+		return ret.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+	}
+	
+	/**
 	 * Ingest from CSV, with the option to override the SPARQL connection
 	 * @param template the template (as a String)
 	 * @param data the data (as a String)
@@ -82,6 +99,31 @@ public class IngestorRestClient extends RestClient{
 		try{
 			this.lastResult = this.execute();	
 			return;
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("template");
+			this.parametersJSON.remove("data");
+			this.parametersJSON.remove("connectionOverride");
+		}
+	}
+	
+	/**
+	 * Ingest from CSV, with the option to override the SPARQL connection
+	 * @param template the template (as a String)
+	 * @param data the data (as a String)
+	 * @param sparqlConnectionOverride the SPARQL connection as a String, or null to use the connection from the template.
+	 * @return jobId
+	 */
+	public String execIngestionFromCsvAsync(String template, String data, String sparqlConnectionOverride) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheckAsync");
+		this.parametersJSON.put("template", template);
+		this.parametersJSON.put("data", data);
+		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
+		
+		try{
+			return this.executeToJobId();
 		} 
 		finally {
 			// reset conf and parametersJSON

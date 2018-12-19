@@ -442,25 +442,43 @@ public class NodeGroupExecutor {
 	 */
 	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, String storedNodeGroupId, String csvContents) throws Exception{
 		
+		SparqlGraphJson sparqlGraphJson = this.getSparqlGraphJson(storedNodeGroupId);
+			
+		return ingestFromTemplateIdAndCsvString(conn, sparqlGraphJson, csvContents);
+	}
+	
+	
+	/**
+	 * Ingest CSV, given a nodegroup ID
+	 * @param conn - override, may be null
+	 * @param storedNodeGroupId
+	 * @param csvContents
+	 * @return
+	 * @throws Exception
+	 */
+	public String ingestFromTemplateIdAndCsvStringAsync(SparqlConnection conn, String storedNodeGroupId, String csvContents) throws Exception{
+		
+		SparqlGraphJson sparqlGraphJson = this.getSparqlGraphJson(storedNodeGroupId);
+			
+		return ingestFromTemplateAndCsvStringAsync(conn, sparqlGraphJson, csvContents);
+	}
+	
+	private SparqlGraphJson getSparqlGraphJson(String storedNodeGroupId) throws Exception {
 		// get the node group from the remote store
 		TableResultSet trs = this.ngsrc.executeGetNodeGroupById(storedNodeGroupId);
 		Table t = trs.getResults();
-		
+
 		if(t.getNumRows() < 1){ 
 			throw new Exception("StoredQueryExecutor::dispatchJob -- the ID passed to look up a remote node group (" + storedNodeGroupId + ") did not return any results.");
 		}
 		if(t.getNumRows() > 1){
 			throw new Exception("StoredQueryExecutor::dispatchJob -- the ID passed to look up a remote node group (" + storedNodeGroupId + ") returned more than one result. this is likely not good.");
 		}
-		
+
 		String serializedNodeGroup = t.getRow(0).get( t.getColumnIndex("NodeGroup") );		
 		JSONObject parsedStoredNg = (JSONObject) (new JSONParser()).parse(serializedNodeGroup);
-		SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(parsedStoredNg);
-			
-		return ingestFromTemplateIdAndCsvString(conn, sparqlGraphJson, csvContents);
+		return new SparqlGraphJson(parsedStoredNg);
 	}
-		
-	
 	/**
 	 * Ingest CSV, given a nodegroup object
 	 * @param conn - override, may be null
@@ -489,6 +507,27 @@ public class NodeGroupExecutor {
 		return retval;
 	}
 	
+	/**
+	 * Ingest CSV, given a nodegroup object
+	 * @param conn - override, may be null
+	 * @param sparqlGraphJson
+	 * @param csvContents
+	 * @return jobId
+	 * @throws Exception
+	 */
+	public String ingestFromTemplateAndCsvStringAsync(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents) throws Exception{
+				
+		// check to make sure there is an importspec attached. how to do this?
+		if(sparqlGraphJson.getJson().get("importSpec") == null){
+			// there was no importspec. this is not valid for the requested operation.
+			throw new Exception("ingestFromTemplateIdAndCsvString -- the stored nodeGroup did not contain an import spec and is not elligible to use to ingest data.");
+		}
+		
+		String sgjStr = sparqlGraphJson.getJson().toJSONString();
+		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
+		
+		return this.irc.execIngestionFromCsvAsync(sgjStr, csvContents, connStr);
+	}
 	
 	/**
 	 * Look at conn and sgJson and determine proper override connection

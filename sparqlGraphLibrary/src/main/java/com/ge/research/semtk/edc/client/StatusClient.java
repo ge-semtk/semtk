@@ -88,6 +88,10 @@ public class StatusClient extends RestClient {
 		}
 	}
 	
+	public boolean execIsSuccess() throws Exception {
+		return this.execGetStatus().equals("Success");
+	}
+	
 	/**
 	 * 
 	 * @return status message string

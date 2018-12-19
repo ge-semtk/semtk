@@ -226,4 +226,8 @@ public class DataLoadBatchHandler {
 	public boolean containsLookupModeCreate() {
 		return this.importSpec.containsLookupModeCreate();
 	}
+	
+	public int getDsRows() throws Exception {
+		return ds.getNumRows();
+	}
 }
