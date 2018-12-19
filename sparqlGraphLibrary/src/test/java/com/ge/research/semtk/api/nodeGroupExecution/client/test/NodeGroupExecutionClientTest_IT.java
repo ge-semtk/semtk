@@ -120,6 +120,7 @@ public class NodeGroupExecutionClientTest_IT {
 		}
 		
 		
+		
 		/**
 		 * Test ingesting data with a missing column.
 		 */
@@ -159,6 +160,40 @@ public class NodeGroupExecutionClientTest_IT {
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			
 			assert(true);
+		}
+		
+		@Test
+		public void testIngestByNodegroupIdAsync() throws Exception {	
+			// also tests waitForPercentOrMsec
+			// also tests getJobStatus
+			
+			// store a nodegroup (modified with the test graph)
+			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
+			try {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			} catch (Exception e) {
+			}
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
+			
+			try {
+				TestGraph.clearGraph();
+				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				
+				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+				
+				// perform ingestion
+				String jobId = nodeGroupExecutionClient.execIngestFromCsvStringsByIdAsync(ID, csvStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+				int percent = nodeGroupExecutionClient.waitForPercentOrMsec(jobId, 60000, 100);
+				assertTrue("Ingestion didn't finish in 60 seconds", percent == 100);
+				assertTrue("Ingestion failed", nodeGroupExecutionClient.getJobSuccess(jobId));
+				
+				// select back the data
+				Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
+				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() > 0);
+				
+			} finally {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			}
 		}
 		
 		@Test

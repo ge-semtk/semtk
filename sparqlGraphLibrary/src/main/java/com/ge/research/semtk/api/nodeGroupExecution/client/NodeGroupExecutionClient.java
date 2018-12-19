@@ -62,6 +62,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String dispatchFromNodegroupEndpoint = "/dispatchFromNodegroup";
 	private static final String ingestFromCsvStringsNewConnectionEndpoint = "/ingestFromCsvStringsNewConnection";
 	private static final String ingestFromCsvStringsByIdEndpoint = "/ingestFromCsvStringsById";
+	private static final String ingestFromCsvStringsByIdAsyncEndpoint = "/ingestFromCsvStringsByIdAsync";
 	private static final String ingestFromCsvStringsAndTemplateNewConnectionEndpoint = "/ingestFromCsvStringsAndTemplateNewConnection";
 	private static final String getResultsTableEndpoint = "/getResultsTable";
 	private static final String getResultsJsonLdEndpoint = "/getResultsJsonLd";
@@ -1130,6 +1131,28 @@ public class NodeGroupExecutionClient extends RestClient {
 		return execIngestionFromCsvStrNewConnection(nodegroupAndTemplateId, csvContentStr, overrideConn);
 	}
 	
+	
+	/**
+	 * Ingest CSV using a nodegroup ID.
+	 */
+	@SuppressWarnings("unchecked")
+	public String execIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn) throws Exception {
+		
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsByIdAsyncEndpoint);
+		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+	
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}
+		finally{
+			this.reset();
+		}
+	}
 
 	/**
 	 * Ingest CSV using a nodegroup.
