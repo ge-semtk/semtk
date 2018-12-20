@@ -1024,8 +1024,15 @@ define([	// properly require.config'ed
                 var gotFailureTable = function(tableResults) {
                     if (!tableResults.isSuccess()) {
                         gotFailureMessage.bind(this)(tableResults.getRationaleHtml());
+
                     } else {
                         gotFailureMessage.bind(this)(tableResults.tableGetHtml());
+
+                        // check for an error table and download
+    					var csv = tableResults.tableGetCsv();
+    					if (csv) {
+    						IIDXHelper.downloadFile(csv, "error_report.csv", "text/csv;charset=utf8");
+    					}
                     }
                 };
 
