@@ -88,6 +88,10 @@ public class IngestionRestController {
 			
 	static final String SERVICE_NAME = "ingestion";
 	
+	static final String ASYNC_NOTES = "Success returns a jobId.\n" +
+			"* check for that job's status of success with status message" +
+			"* if job's status is failure then fetch a results table with ingestion errors" + 
+			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
 	/**
 	 * Load data from CSV
 	 */
@@ -142,6 +146,23 @@ public class IngestionRestController {
 	    }
 	}
 	
+	@ApiOperation(
+			value=	"File-based no-override ASYNC endpoint.  With override connection and precheck.",
+			notes=	ASYNC_NOTES
+			)
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvFilePrecheckAsync", method= RequestMethod.POST)
+	public JSONObject fromCsvFileAsync(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
+			SimpleResultSet retval = this.fromAnyCsvAsync(templateFile, dataFile, null, true, true, false);
+		    return retval.toJson();
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
 	
 	/**
 	 * Perform precheck only (no ingest) using a CSV file against the given connection
@@ -157,6 +178,7 @@ public class IngestionRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+	
 	
 	/**
 	 * Load data from CSV
@@ -218,9 +240,7 @@ public class IngestionRestController {
 	
 	@ApiOperation(
 			value=	"Main ASYNC endpoint.  With override connection and precheck.",
-			notes=	"returns a jobId.  \n" +
-					"If job fails, get error report table from results service.\n" + 
-					"If it succeeds, status message will confirm number of records processed.\n"
+			notes=	ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnectionPrecheckAsync", method= RequestMethod.POST)

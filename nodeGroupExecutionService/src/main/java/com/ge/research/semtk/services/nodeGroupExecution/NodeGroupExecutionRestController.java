@@ -946,6 +946,44 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	/**
+	 * Perform ingestion by passing in a nodegroup.
+	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
+	 */
+	@ApiOperation(
+			value=	"Async ingest CSV data given nodegroup json",
+			notes=	"Returns JobId. \n" +
+			        "Successful status will have number of records proccessed message at /jobStatusMessage.\n" +
+					"Failure will have an error table at /getResultsTable. \n"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/ingestFromCsvStringsAndTemplateAsync", method=RequestMethod.POST)
+	public JSONObject ingestFromCsvStringsAndTemplateAsync(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsAndTemplateAsync";
+		HeadersManager.setHeaders(headers);
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
+    	try {
+			SimpleResultSet retval = null;
+			try{
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
+				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+				retval = new SimpleResultSet(true);
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
+				
+			}catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+				retval = new SimpleResultSet(false);
+				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
+			} 
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	/**
 	 * Perform ingestion using a stored nodegroup ID.
 	 */
 	@ApiOperation(
