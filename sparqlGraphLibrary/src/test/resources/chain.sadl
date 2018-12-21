@@ -1,0 +1,9 @@
+uri "http://kdl.ge.com/junit/chain" alias chain version "$Revision:$ Last modified on   $Date:$".
+
+Chain is a top-level class,
+	described by chainName with a single value of type string,
+	described by firstLink with a single value of type Link.
+	
+Link is a top-level class,
+	described by linkName with a single value of type string,
+	described by nextLink with a single value of type Link.

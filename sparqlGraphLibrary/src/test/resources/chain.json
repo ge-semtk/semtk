@@ -1,0 +1,323 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit ves-test",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"dataset": "http://200001934/junit/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"dataset": "http://200001934/junit/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "linkName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#linkName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?linkName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Link",
+				"fullURIName": "http://kdl.ge.com/junit/chain#Link",
+				"subClassNames": [],
+				"SparqlID": "?Link_2",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "linkName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#linkName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?linkName_0",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Link_2"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "nextLink",
+						"ValueType": "Link",
+						"UriValueType": "http://kdl.ge.com/junit/chain#Link",
+						"ConnectBy": "nextLink",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/junit/chain#nextLink"
+					}
+				],
+				"NodeName": "Link",
+				"fullURIName": "http://kdl.ge.com/junit/chain#Link",
+				"subClassNames": [],
+				"SparqlID": "?Link_1",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "linkName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#linkName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?linkName_1",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Link_1"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "nextLink",
+						"ValueType": "Link",
+						"UriValueType": "http://kdl.ge.com/junit/chain#Link",
+						"ConnectBy": "nextLink",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/junit/chain#nextLink"
+					}
+				],
+				"NodeName": "Link",
+				"fullURIName": "http://kdl.ge.com/junit/chain#Link",
+				"subClassNames": [],
+				"SparqlID": "?Link_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "chainDesc",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#chainDesc",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "chainName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#chainName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?chainName",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Link_0"
+						],
+						"SnodeOptionals": [
+							0
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "firstLink",
+						"ValueType": "Link",
+						"UriValueType": "http://kdl.ge.com/junit/chain#Link",
+						"ConnectBy": "firstLink",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/junit/chain#firstLink"
+					}
+				],
+				"NodeName": "Chain",
+				"fullURIName": "http://kdl.ge.com/junit/chain#Chain",
+				"subClassNames": [],
+				"SparqlID": "?Chain",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "chainDesc"
+			},
+			{
+				"colId": "col_1",
+				"colName": "chainName"
+			},
+			{
+				"colId": "col_2",
+				"colName": "link0name"
+			},
+			{
+				"colId": "col_3",
+				"colName": "link1name"
+			},
+			{
+				"colId": "col_4",
+				"colName": "link2name"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Chain",
+				"type": "http://kdl.ge.com/junit/chain#Chain",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/chain#chainDesc",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/junit/chain#chainName",
+						"URILookup": [
+							"?Chain"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Link_0",
+				"type": "http://kdl.ge.com/junit/chain#Link",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/chain#linkName",
+						"URILookup": [
+							"?Link_0"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Link_1",
+				"type": "http://kdl.ge.com/junit/chain#Link",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/chain#linkName",
+						"URILookup": [
+							"?Link_1"
+						],
+						"mapping": [
+							{
+								"colId": "col_3"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Link_2",
+				"type": "http://kdl.ge.com/junit/chain#Link",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/chain#linkName",
+						"URILookup": [
+							"?Link_2"
+						],
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
