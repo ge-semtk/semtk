@@ -20,16 +20,34 @@ package com.ge.research.semtk.load.utility;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
+
 public class UriCache {
 	static final String NOT_FOUND = "0-NOT-FOUND";
 	static final String EMPTY_LOOKUP = "1-EMPTY-LOOKUP";
 	
-	ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap<String, String>();   // the cache
+	private NodeGroup nodeGroup;
+	
+	ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap<String, String>();   // uriCache(key)=uri
 	ConcurrentHashMap<String, Boolean> notFound = new ConcurrentHashMap<String, Boolean>(); // any == NOT_FOUND
 	ConcurrentHashMap<String, Boolean> isGenerated = new ConcurrentHashMap<String, Boolean>();  // any URI that was generated
 	
+	/**
+	 * This object holds URI's during the lookup process.
+	 * The unique "key" is the node type and builtStrings. 
+	 * Keeps track of whether each is found or not.
+	 * Generates URI's for the not founds.
+	 * ...
+	 * 
+	 * @param nodeGroup
+	 */
+	public UriCache(NodeGroup nodeGroup) {
+		this.nodeGroup = nodeGroup;
+	}
+	
 	private String getKey(int importNodeIndex, ArrayList<String> builtStrings) {
-		return String.valueOf(importNodeIndex) + "-" + String.join("-", builtStrings);
+		return this.nodeGroup.getNode(importNodeIndex).getFullUriName() + "-" + String.join("-", builtStrings);
 	}
 	
 	public void putUri(int importNodeIndex, ArrayList<String> builtStrings, String uri) {
@@ -89,6 +107,7 @@ public class UriCache {
 	 */
 	public void generateNotFoundURIs(UriResolver uriResolver) throws Exception {
 		for (String key : this.notFound.keySet()) {
+			
 			if (this.uriCache.get(key).equals(UriCache.NOT_FOUND)) {
 				String guid = uriResolver.generateRandomUri();
 				this.uriCache.put(key, guid);

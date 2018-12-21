@@ -35,6 +35,8 @@ public class NodeItem {
 	public static int OPTIONAL_FALSE = 0;
 	public static int OPTIONAL_TRUE = 1;
 	public static int OPTIONAL_REVERSE = -1;
+	public static int MINUS_TRUE = 2;
+	public static int MINUS_REVERSE = -2;
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 	private ArrayList<Integer> snodeOptionals = new ArrayList<Integer>();
@@ -279,6 +281,12 @@ public class NodeItem {
 		return retval;
 	}
 	
+	/**
+	 * "Optional" is now a misnomer.  Could also be MINUS
+	 * @param snode
+	 * @param optional
+	 * @throws Exception
+	 */
 	public void setSNodeOptional(Node snode, int optional) throws Exception {
 		for (int i=0; i < this.nodes.size(); i++) {
 			if (this.nodes.get(i) == snode) {
@@ -289,6 +297,12 @@ public class NodeItem {
 		throw new Exception("NodeItem can't find link to semantic node");
 	}
 	
+	/**
+	 * "Optional" is now a misnomer.  Could also be MINUS
+	 * @param snode
+	 * @return
+	 * @throws Exception
+	 */
 	public int getSNodeOptional(Node snode) throws Exception {
 		for (int i=0; i < this.nodes.size(); i++) {
 			if (this.nodes.get(i) == snode) {
@@ -297,6 +311,5 @@ public class NodeItem {
 		}
 		throw new Exception("NodeItem can't find link to semantic node");
 	}
-	
 	
 }

@@ -56,48 +56,6 @@ public class UriResolver {
 		}
 	}
 	
-	public String getInstanceUriWithPrefixPREV(String classUri, String localFragment) throws Exception{
-		String retval = DEFAULT_URI_PREFIX + localFragment;
-		Boolean enumDetected = false;
-		
-		if(localFragment != "" && localFragment != null && !localFragment.isEmpty()){
-			// check if fragment is from an enum
-			if(this.oInfo != null){
-				if(oInfo.classIsEnumeration(classUri)){
-					enumDetected = true;
-				}
-				String val = oInfo.getMatchingEnumeration(classUri, localFragment);
-				if(enumDetected  && val != null){
-					retval = val;
-				}
-				else{
-					// the requested class was an enumerated type but the value passed was not a valid 
-					// instance of that enumeration.
-					if(enumDetected && val == null ){
-						throw new Exception("the class '" + classUri + "' is an enumeration but the value '" + localFragment + "' is not a valid member of the enumeration.");
-					}
-				}
-				
-			}
-			// if it is not an enum, check for a user prefix
-			if(!enumDetected && this.userUriPrefix != null && this.userUriPrefix != "" && !userUriPrefix.isEmpty()){
-				if(!localFragment.contains("#")){  // make sure that the passed value does not have a prefix of its own.
-					retval = this.userUriPrefix + localFragment;}
-			}
-			if(!enumDetected && localFragment.contains("#")){
-				// this is not enumerated and contains a prefix, so it is likely a URI already. just pass it on.
-				retval = localFragment;
-			}
-		}
-		
-		else{  // localfragment was blank
-			
-			retval = localFragment;
-		}
-		
-		// return results
-		return retval;
-	}
 	
 	public String getInstanceUriWithPrefix(String classUri, String localFragment) throws Exception{
 		String retval = DEFAULT_URI_PREFIX + localFragment;

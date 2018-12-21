@@ -86,7 +86,7 @@ public class ImportSpecHandler {
 	UriResolver uriResolver;
 	OntologyInfo oInfo;
 	
-	UriCache uriCache = new UriCache();
+	UriCache uriCache = null;
 	
 	SparqlEndpointInterface nonThreadSafeEndpoint = null;  // Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
 	
@@ -114,6 +114,7 @@ public class ImportSpecHandler {
 	
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 		
+		this.uriCache = new UriCache(this.ng);
 		this.errorCheckImportSpec();
 	}
 
