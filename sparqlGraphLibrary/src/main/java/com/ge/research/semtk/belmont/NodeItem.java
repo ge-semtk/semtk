@@ -39,8 +39,10 @@ public class NodeItem {
 	public static int MINUS_REVERSE = -2;
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
-	private ArrayList<Integer> snodeOptionals = new ArrayList<Integer>();
+	private ArrayList<Integer> optionalMinus = new ArrayList<Integer>();
 	private ArrayList<Boolean> deletionFlags = new ArrayList<Boolean>();
+	private ArrayList<String> qualifiers = new ArrayList<String>();
+
 	private String keyName = "";
 	private String valueType = "";
 	private String valueTypeURI = "";
@@ -88,11 +90,19 @@ public class NodeItem {
 		}
 		
 		if (next.containsKey("SnodeOptionals")) {
+			// version 8 or earlier
 			JSONArray jsonOpt = (JSONArray)next.get("SnodeOptionals");
 			for (int i=0; i < jsonOpt.size(); i++) {
-				this.snodeOptionals.add(Integer.parseInt(jsonOpt.get(i).toString()));
+				this.optionalMinus.add(Integer.parseInt(jsonOpt.get(i).toString()));
+			}
+		} else if (next.containsKey("OptionalMinus")) {
+			// version 9 or later
+			JSONArray jsonOpt = (JSONArray)next.get("OptionalMinus");
+			for (int i=0; i < jsonOpt.size(); i++) {
+				this.optionalMinus.add(Integer.parseInt(jsonOpt.get(i).toString()));
 			}
 		} else {
+			// version "even earlier"
 			long opt = NodeItem.OPTIONAL_FALSE;
 
 			if (next.containsKey("isOptional")) {
@@ -106,9 +116,22 @@ public class NodeItem {
 			}
 		
 			for (int i=0; i < this.nodes.size(); i++) {
-				this.snodeOptionals.add((int) opt);
+				this.optionalMinus.add((int) opt);
 			}
 		}
+		
+		if (next.containsKey("Qualifiers")) {
+			// version 8 or earlier
+			JSONArray jsonQual = (JSONArray)next.get("Qualifiers");
+			for (int i=0; i < jsonQual.size(); i++) {
+				this.qualifiers.add(jsonQual.get(i).toString());
+			}
+		} else {
+			for (int i=0; i < this.nodes.size(); i++) {
+				this.qualifiers.add("");
+			}
+		}
+		
 		// get all of the deletion flag values, if any.
 		if (next.containsKey("DeletionMarkers")){
 			/*
@@ -148,15 +171,18 @@ public class NodeItem {
 		// return a JSON object of things needed to serialize
 		JSONObject ret = new JSONObject();
 		
-		JSONArray SNodeSparqlIDs = new JSONArray();
-		JSONArray SNodeOptionals = new JSONArray();
+		JSONArray sparqlIDs = new JSONArray();
+		JSONArray optionalMinus = new JSONArray();
+		JSONArray qualifiers = new JSONArray();
 		
 		for (int i=0; i < this.nodes.size(); i++) {
-			SNodeSparqlIDs.add(this.nodes.get(i).getSparqlID());
-			SNodeOptionals.add(this.snodeOptionals.get(i));
+			sparqlIDs.add(this.nodes.get(i).getSparqlID());
+			optionalMinus.add(this.optionalMinus.get(i));
+			qualifiers.add(this.qualifiers.get(i));
 		}
-		ret.put("SnodeSparqlIDs", SNodeSparqlIDs);
-		ret.put("SnodeOptionals", SNodeOptionals);
+		ret.put("SnodeSparqlIDs", sparqlIDs);
+		ret.put("OptionalMinus", optionalMinus);
+		ret.put("Qualifiers", qualifiers);
 		ret.put("DeletionMarkers", this.deletionFlags);
 		ret.put("KeyName", this.keyName);
 		ret.put("ValueType", this.valueType);
@@ -172,8 +198,11 @@ public class NodeItem {
 		for (int i=0; i < this.deletionFlags.size(); i++) {
 			this.deletionFlags.set(i, false);
 		}
-		for (int i=0; i < this.snodeOptionals.size(); i++) {
-			this.snodeOptionals.set(i, OPTIONAL_FALSE);
+		for (int i=0; i < this.optionalMinus.size(); i++) {
+			this.optionalMinus.set(i, OPTIONAL_FALSE);
+		}
+		for (int i=0; i < this.qualifiers.size(); i++) {
+			this.qualifiers.set(i, "");
 		}
 	}
 	
@@ -199,25 +228,29 @@ public class NodeItem {
 
 	public void pushNode(Node curr) {
 		this.nodes.add(curr);
-		this.snodeOptionals.add(NodeItem.OPTIONAL_FALSE);
+		this.optionalMinus.add(NodeItem.OPTIONAL_FALSE);
+		this.qualifiers.add("");
 		this.deletionFlags.add(false);
 	}
 	
 	public void pushNode(Node curr, int opt) {
 		this.nodes.add(curr);
-		this.snodeOptionals.add(opt);
+		this.optionalMinus.add(opt);
+		this.qualifiers.add("");
 		this.deletionFlags.add(false);
 	}
 	
 	public void pushNode(Node curr, Boolean deletionMarker){
 		this.nodes.add(curr);
-		this.snodeOptionals.add(NodeItem.OPTIONAL_FALSE);
+		this.optionalMinus.add(NodeItem.OPTIONAL_FALSE);
+		this.qualifiers.add("");
 		this.deletionFlags.add(deletionMarker);
 	}
 	
 	public void pushNode(Node curr, int opt, Boolean deletionMarker) {
 		this.nodes.add(curr);
-		this.snodeOptionals.add(opt);
+		this.optionalMinus.add(opt);
+		this.qualifiers.add("");
 		this.deletionFlags.add(deletionMarker);
 	}
 		
@@ -240,7 +273,8 @@ public class NodeItem {
 		int pos = this.nodes.indexOf(node);
 		if(pos > -1){
 			this.nodes.remove(pos);
-			this.snodeOptionals.remove(pos);
+			this.optionalMinus.remove(pos);
+			this.qualifiers.remove(pos);
 			this.deletionFlags.remove(pos);
 		}
 		if (this.nodes.size() == 0) {
@@ -287,10 +321,15 @@ public class NodeItem {
 	 * @param optional
 	 * @throws Exception
 	 */
+	@Deprecated
 	public void setSNodeOptional(Node snode, int optional) throws Exception {
+		this.setOptionalMinus(snode, optional);
+	}
+
+	public void setOptionalMinus(Node snode, int optional) throws Exception {
 		for (int i=0; i < this.nodes.size(); i++) {
 			if (this.nodes.get(i) == snode) {
-				this.snodeOptionals.set(i, optional);
+				this.optionalMinus.set(i, optional);
 				return;
 			}
 		}
@@ -303,10 +342,35 @@ public class NodeItem {
 	 * @return
 	 * @throws Exception
 	 */
+	@Deprecated
 	public int getSNodeOptional(Node snode) throws Exception {
+		return this.getOptionalMinus(snode);
+	}
+
+	public int getOptionalMinus(Node snode) throws Exception {
 		for (int i=0; i < this.nodes.size(); i++) {
 			if (this.nodes.get(i) == snode) {
-				return this.snodeOptionals.get(i);
+				return this.optionalMinus.get(i);
+			}
+		}
+		throw new Exception("NodeItem can't find link to semantic node");
+	}
+	
+	public void setQualifier(Node snode, String qual) throws Exception {
+		for (int i=0; i < this.nodes.size(); i++) {
+			if (this.nodes.get(i) == snode) {
+				this.qualifiers.set(i, qual);
+				return;
+			}
+		}
+		throw new Exception("NodeItem can't find link to semantic node");
+	}
+	
+
+	public String getQualifier(Node snode) throws Exception {
+		for (int i=0; i < this.nodes.size(); i++) {
+			if (this.nodes.get(i) == snode) {
+				return this.qualifiers.get(i);
 			}
 		}
 		throw new Exception("NodeItem can't find link to semantic node");

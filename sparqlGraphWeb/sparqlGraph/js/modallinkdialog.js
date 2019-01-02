@@ -69,7 +69,8 @@ define([	// properly require.config'ed
 								this.item,
 								this.targetSNode,
 								this.data,
-								document.getElementById("ModalLinkDialog.optionalSelect").value,
+								document.getElementById("ModalLinkDialog.optionalMinusSelect").value,
+                                document.getElementById("ModalLinkDialog.qualifierSelect").value,
 								document.getElementById("ModalLinkDialog.deleteSelect").value == "true",
 								document.getElementById("ModalLinkDialog.deleteCheck").checked
 							  );
@@ -87,7 +88,7 @@ define([	// properly require.config'ed
 				var fieldset = IIDXHelper.addFieldset(form);
 
 				// optional checkbox
-				var select = IIDXHelper.createSelect("ModalLinkDialog.optionalSelect",
+				var select = IIDXHelper.createSelect("ModalLinkDialog.optionalMinusSelect",
 													[[" ",                NodeItem.OPTIONAL_FALSE   ],
 													 ["optional",         NodeItem.OPTIONAL_TRUE    ],
 													 ["optional reverse", NodeItem.OPTIONAL_REVERSE ],
@@ -100,15 +101,27 @@ define([	// properly require.config'ed
 				select.style.width = "20ch";
 
 				// set select.selectedIndex
-				var o = this.item.getSNodeOptional(this.targetSNode);
+				var optMinus = this.item.getOptionalMinus(this.targetSNode);
 				for (var i=0; i < select.options.length; i++) {
-					if (select.options[i].value == o) {
+					if (select.options[i].value == optMinus) {
 						select.selectedIndex = i;
 						break;
 					}
 				}
 
 				fieldset.appendChild(IIDXHelper.buildControlGroup("Optional/Minus: ", select));
+
+                // Qualifier
+                select = IIDXHelper.createSelect("ModalLinkDialog.qualifierSelect",
+												  [[" ", ""],
+												   ["*", "*" ],
+                                                   ["+", "+" ],
+                                                   ["?", "?" ],
+                                                   ["^", "^" ],
+												  ],
+												  [this.item.getQualifier(this.targetSNode)]);
+                select.style.width = "20ch";
+                fieldset.appendChild(IIDXHelper.buildControlGroup("Qualifier: ", select));
 
 				// delete query checkbox
 				select = IIDXHelper.createSelect("ModalLinkDialog.deleteSelect",

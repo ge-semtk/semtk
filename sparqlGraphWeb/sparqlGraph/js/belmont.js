@@ -303,7 +303,8 @@ var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
 	} else {
 		this.SNodes = [];    // the semantic nodes, if one exists currently,
 							// represented by this NodeItem.
-		this.SNodeOptionals = [];
+		this.OptionalMinus = [];
+        this.Qualifiers = [];
 		this.KeyName = nome; // the name used to identify this node item
 		this.ValueType = val; // the type given for the linked (linkable?) node
 
@@ -330,7 +331,8 @@ NodeItem.prototype = {
 		// return a JSON object of things needed to serialize
 		var ret = {
 			SnodeSparqlIDs : [],
-			SnodeOptionals : [],
+			OptionalMinus : [],
+            Qualifiers : [],
 			DeletionMarkers : [],
 			KeyName : this.KeyName,
 			ValueType : this.ValueType,
@@ -342,7 +344,8 @@ NodeItem.prototype = {
 		};
 		for (var i=0; i < this.SNodes.length; i++) {
 			ret.SnodeSparqlIDs.push(this.SNodes[i].getSparqlID());
-			ret.SnodeOptionals.push(this.SNodeOptionals[i]);
+			ret.OptionalMinus.push(this.OptionalMinus[i]);
+            ret.Qualifiers.push(this.Qualifiers[i]);
 			ret.DeletionMarkers.push(this.deletionFlags[i]);
 		}
 
@@ -360,13 +363,20 @@ NodeItem.prototype = {
 			this.SNodes.push(snode);
 		}
 
-		// version 3:  SnodeOptionals
-		this.SNodeOptionals = [];
-		if (jObj.hasOwnProperty("SnodeOptionals")) {
-			for (var i=0; i < jObj.SnodeOptionals.length; i++) {
-				this.SNodeOptionals.push(jObj.SnodeOptionals[i]);
+
+		this.OptionalMinus = [];
+		if (jObj.hasOwnProperty("OptionalMinus")) {
+            // version 9
+			for (var i=0; i < jObj.OptionalMinus.length; i++) {
+				this.OptionalMinus.push(jObj.OptionalMinus[i]);
 			}
-		} else {
+		} else if (jObj.hasOwnProperty("SnodeOptionals")) {
+            // version 3:  SnodeOptionals
+			for (var i=0; i < jObj.SnodeOptionals.length; i++) {
+				this.OptionalMinus.push(jObj.SnodeOptionals[i]);
+			}
+		} else{
+            // older versions
 			var opt = NodeItem.OPTIONAL_FALSE;
 
 			// backward compatibility
@@ -380,7 +390,20 @@ NodeItem.prototype = {
 			}
 
 			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
-				this.SNodeOptionals.push(opt);
+				this.OptionalMinus.push(opt);
+			}
+		}
+
+        this.Qualifiers = [];
+		if (jObj.hasOwnProperty("Qualifiers")) {
+            // version 9
+			for (var i=0; i < jObj.Qualifiers.length; i++) {
+				this.Qualifiers.push(jObj.Qualifiers[i]);
+			}
+		} else {
+			// backward compatibility
+			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
+				this.Qualifiers.push("");
 			}
 		}
 
@@ -424,20 +447,49 @@ NodeItem.prototype = {
 		this.UriConnectBy = strConnName;
 	},
 
-	setSNodeOptional(snode, optional) {
+    // deprecated
+    setSNodeOptional(snode, optional) {
+        setOptionalMinus(snode, optional);
+    },
+
+	setOptionalMinus(snode, optionalMinus) {
 		for (var i=0; i < this.SNodes.length; i++) {
 			if (this.SNodes[i] == snode) {
-				this.SNodeOptionals[i] = optional;
+				this.OptionalMinus[i] = optionalMinus;
 				return;
 			}
 		}
 		throw new Error("NodeItem can't find link to semantic node");
 	},
 
-	getSNodeOptional(snode) {
+    // deprecated
+    getSNodeOptional(snode) {
+        return this.getOptionalMinus(snode);
+    },
+
+	getOptionalMinus(snode) {
 		for (var i=0; i < this.SNodes.length; i++) {
 			if (this.SNodes[i] == snode) {
-				return this.SNodeOptionals[i] ;
+				return this.OptionalMinus[i] ;
+			}
+		}
+		throw new Error("NodeItem can't find link to semantic node");
+	},
+
+    setQualifier(snode, qual) {
+		for (var i=0; i < this.SNodes.length; i++) {
+			if (this.SNodes[i] == snode) {
+				this.Qualifiers[i] = qual;
+				return;
+			}
+		}
+		throw new Error("NodeItem can't find link to semantic node");
+	},
+
+    getQualifier(snode) {
+		for (var i=0; i < this.SNodes.length; i++) {
+			if (this.SNodes[i] == snode) {
+				return this.Qualifiers[i] ;
 			}
 		}
 		throw new Error("NodeItem can't find link to semantic node");
@@ -447,11 +499,11 @@ NodeItem.prototype = {
 		// Does node item make it's owner node optional
 		//  1) connects to something
 		//  2) all optional reverse
-		if (this.SNodeOptionals.length == 0) {
+		if (this.OptionalMinus.length == 0) {
 			return false;
 		}
-		for (var i=0; i < this.SNodeOptionals.length; i++) {
-			if (this.SNodeOptionals[i] != NodeItem.OPTIONAL_REVERSE) {
+		for (var i=0; i < this.OptionalMinus.length; i++) {
+			if (this.OptionalMinus[i] != NodeItem.OPTIONAL_REVERSE) {
 				return false;
 			}
 		}
@@ -481,10 +533,11 @@ NodeItem.prototype = {
 		return (this.SNodes.indexOf(snode) > -1);
 	},
 
-	pushSNode : function(snode, optOptional, optDeletionFlag){
+	pushSNode : function(snode, optOptional, optDeletionFlag, optQualifier){
 		this.SNodes.push(snode);
-		this.SNodeOptionals.push((typeof optOptional === "undefined")     ? NodeItem.OPTIONAL_FALSE : optOptional );
+		this.OptionalMinus.push((typeof optOptional === "undefined")     ? NodeItem.OPTIONAL_FALSE : optOptional );
 		this.deletionFlags.push( (typeof optDeletionFlag === "undefined") ? false                   : optDeletionFlag);
+        this.Qualifiers.push( (typeof optQualifier === "undefined") ? ""                   : optQualifier);
 	},
 
 	// get values used by the NodeItem
@@ -522,7 +575,8 @@ NodeItem.prototype = {
 			if (this.SNodes[i] == nd) {
 				// console.log("removing " + this.SNodes[i].getSparqlID);
 				this.SNodes.splice(i, 1);
-				this.SNodeOptionals.splice(i,1);
+				this.OptionalMinus.splice(i,1);
+                this.Qualifiers.splice(i,1);
 				this.deletionFlags.splice(i, 1);
 			}
 		}
@@ -571,12 +625,17 @@ var PropertyItem = function(keyname, valType, relationship, UriRelationship, jOb
 		this.fullURIName = '';
 		this.SparqlID = '';
 		this.isReturned = false;
-		this.isOptional = false;
+		this.optMinus = 0;
 		this.isRuntimeConstrained = false;
 		this.instanceValues = [];
 		this.isMarkedForDeletion = false;
 	}
 };
+
+PropertyItem.OPT_MINUS_NONE = 0;
+PropertyItem.OPT_MINUS_OPTIONAL = 1;
+PropertyItem.OPT_MINUS_MINUS = 2;
+
 // the functions used by the property item to keep its stuff in order.
 PropertyItem.prototype = {
 	toJson : function() {
@@ -590,7 +649,7 @@ PropertyItem.prototype = {
 			fullURIName : this.fullURIName,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
-			isOptional : this.getIsOptional(),
+			optMinus : this.getOptMinus(),
 			isRuntimeConstrained : this.getIsRuntimeConstrained(),
 			instanceValues : this.instanceValues,
 			isMarkedForDeletion : this.isMarkedForDeletion,
@@ -607,7 +666,17 @@ PropertyItem.prototype = {
 		this.fullURIName = jObj.fullURIName;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
-		this.isOptional = jObj.isOptional;
+
+		this.optMinus = PropertyItem.OPT_MINUS_NONE;
+       	if (jObj.hasOwnProperty("isOptional")) {
+       		this.optMinus =  (jObj.isOptional) ? PropertyItem.OPT_MINUS_OPTIONAL : PropertyItem.OPT_MINUS_NONE;
+       	} else if (jObj.hasOwnProperty("optMinus")) {
+       		this.optMinus = jObj.optMinus;
+       	}
+
+
+
+
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 
 
@@ -688,9 +757,16 @@ PropertyItem.prototype = {
         }
 		this.isReturned = val;
 	},
+
+    // deprecated form of optMinus
 	setIsOptional : function(bool) {
-		this.isOptional = bool;
+		this.optMinus = bool ? PropertyItem.OPT_MINUS_OPTIONAL : PropertyItem.OPT_MINUS_NONE;
 	},
+
+    setOptMinus : function(optMin) {
+        this.optMinus = optMin;
+    },
+
 	setIsRuntimeConstrained : function(bool) {
 		this.isRuntimeConstrained = bool;
 	},
@@ -721,8 +797,11 @@ PropertyItem.prototype = {
 		return this.isReturned;
 	},
 	getIsOptional : function() {
-		return this.isOptional;
+		return this.isOptional == PropertyItem.OPT_MINUS_OPTIONAL;
 	},
+    getOptMinus : function() {
+        return this.optMinus;
+    },
 	getIsRuntimeConstrained : function() {
 		// boolean for PropertyItems
 		return this.isRuntimeConstrained;
@@ -1558,7 +1637,7 @@ SemanticNode.prototype = {
 	addSubclassProperty : function (keyname, valType, relation, uriRelation ) {
 		// force-add a subclass property.   So it must be optional.
 		prop = new PropertyItem(keyname, valType, relation, uriRelation);
-		prop.isOptional = true;
+		prop.optMinus = PropertyItem.OPT_MINUS_OPTIONAL;
 		this.propList.push(prop);
 		return prop;
 	},
@@ -2718,7 +2797,7 @@ SemanticNodeGroup.prototype = {
 
 		var nodeItems = this.getConnectingNodeItems(sNode);
 		for (j=0; j < nodeItems.length; j++) {
-			if (nodeItems[j].getSNodeOptional(sNode) != NodeItem.OPTIONAL_REVERSE) {
+			if (nodeItems[j].getOptionalMinus(sNode) != NodeItem.OPTIONAL_REVERSE) {
 				var uriValType = nodeItems[j].getUriValueType();
 				if (ret.indexOf(uriValType) < 0)
 					ret.push(uriValType);
@@ -2871,12 +2950,12 @@ SemanticNodeGroup.prototype = {
 					// then make it optional
 					if (nodeItems.length == 1) {
 						var nodeItem = nodeItems[0];
-						if (snode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(otherSnode) == NodeItem.OPTIONAL_FALSE) {
-							nodeItem.setSNodeOptional(otherSnode, NodeItem.OPTIONAL_REVERSE);
+						if (snode.ownsNodeItem(nodeItem) && nodeItem.getOptionalMinus(otherSnode) == NodeItem.OPTIONAL_FALSE) {
+							nodeItem.setOptionalMinus(otherSnode, NodeItem.OPTIONAL_REVERSE);
 						}
 
-						if (otherSnode.ownsNodeItem(nodeItem) && nodeItem.getSNodeOptional(snode) == NodeItem.OPTIONAL_FALSE) {
-							nodeItem.setSNodeOptional(snode, NodeItem.OPTIONAL_TRUE);
+						if (otherSnode.ownsNodeItem(nodeItem) && nodeItem.getOptionalMinus(snode) == NodeItem.OPTIONAL_FALSE) {
+							nodeItem.setOptionalMinus(snode, NodeItem.OPTIONAL_TRUE);
 						}
 					}
 				}
@@ -2918,7 +2997,7 @@ SemanticNodeGroup.prototype = {
 						var targets = nItem.getSNodes();
 						for (var t=0; t < targets.length; t++) {
 							var target = targets[t];
-							var opt = nItem.getSNodeOptional(target);
+							var opt = nItem.getOptionalMinus(target);
 
 							if (opt == NodeItem.OPTIONAL_FALSE) {
 								normItems.push([nItem, target]);
@@ -2938,7 +3017,7 @@ SemanticNodeGroup.prototype = {
 				for (var n=0; n < nItems.length; n++) {
 					var nItem = nItems[n];
 
-					var opt = nItem.getSNodeOptional(snode);
+					var opt = nItem.getOptionalMinus(snode);
 
 					if (opt == NodeItem.OPTIONAL_FALSE) {
 						normItems.push([nItem, snode]);
@@ -2962,16 +3041,16 @@ SemanticNodeGroup.prototype = {
 					var nItem = normItems[0][0];
 					var target = normItems[0][1];
 					if (target != snode) {
-						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_REVERSE);
+						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_REVERSE);
 					} else {
-						nItem.setSNodeOptional(target, NodeItem.OPTIONAL_TRUE);
+						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_TRUE);
 					}
 
 					// if there is only one outgoing optional, than it can be set to non-optional for performance
 					if (optOutItems.length == 1 && optPropCount == 0) {
 						var oItem = optOutItems[0][0];
 						var oTarget = optOutItems[0][1];
-						oItem.setSNodeOptional(oTarget, NodeItem.OPTIONAL_FALSE);
+						oItem.setOptionalMinus(oTarget, NodeItem.OPTIONAL_FALSE);
 					}
 
 					changedFlag = true;

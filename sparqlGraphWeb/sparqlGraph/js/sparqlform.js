@@ -655,7 +655,7 @@ require([	'local/sparqlformconfig',
 			addFormRow(itemSNode, item.getKeyName(), childSNode);
 		};
 
-		itemDialogCallback = function(item, sparqlID, returnFlag, optionalFlag, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
+		itemDialogCallback = function(item, sparqlID, returnFlag, optMinus, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
 
 	    	// Note: ModalItemDialog validates that sparqlID is legal
@@ -667,7 +667,7 @@ require([	'local/sparqlformconfig',
 
 	    	// Optional
 	    	if (item.getItemType() == "PropertyItem") {
-	    		item.setIsOptional(optionalFlag);
+	    		item.setOptMinus(optMinus);
 
 	    	} else if (item.getItemType() == "NodeItem") {
 	    		alert("Internal Error in sparqlForm.js itemDialogCallback():  item is a nodeItem.  Not implemented");

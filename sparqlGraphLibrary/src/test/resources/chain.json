@@ -62,7 +62,7 @@
 						"fullURIName": "",
 						"SparqlID": "?linkName_0",
 						"isReturned": true,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -108,7 +108,7 @@
 						"fullURIName": "",
 						"SparqlID": "?linkName_1",
 						"isReturned": true,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false

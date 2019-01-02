@@ -29,6 +29,9 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class PropertyItem extends Returnable {
+	public static final int OPT_MINUS_NONE = 0;
+	public static final int OPT_MINUS_OPTIONAL = 1;
+	public static final int OPT_MINUS_MINUS = 2;
 	
 	private String keyName = null;
 	private XSDSupportedType valueType = null;
@@ -36,7 +39,7 @@ public class PropertyItem extends Returnable {
 	private String uriRelationship = null; // the full URI of the relationship
 	
 	private String fullURIName = null;
-	private Boolean isOptional = false;
+	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
 	
 	private Boolean isMarkedForDeletion = false;
@@ -61,44 +64,52 @@ public class PropertyItem extends Returnable {
 	}
 
 		
-	public PropertyItem(JSONObject next) throws Exception {
+	public PropertyItem(JSONObject jObj) throws Exception {
 		// keeps track of the properties who are in the domain of a given node.
 		
-		this.keyName = next.get("KeyName").toString();
+		this.keyName = jObj.get("KeyName").toString();
 		
 		int i=1;
-		String typeStr = (String) (next.get("ValueType"));
+		String typeStr = (String) (jObj.get("ValueType"));
 		XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
 		this.valueType = typeVal;
-		this.valueTypeURI = next.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
-		this.uriRelationship = next.get("UriRelationship").toString();
+		this.valueTypeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
+		this.uriRelationship = jObj.get("UriRelationship").toString();
 		
-		String vStr = (String) next.get("Constraints");
+		String vStr = (String) jObj.get("Constraints");
 		if (vStr != null && ! vStr.isEmpty()) { 
 			this.constraints = new ValueConstraint(vStr); 
 		} else {
 			this.constraints = null;
 		}
 		
-		this.fullURIName = (String) next.get("fullURIName");
-		this.sparqlID = (String) next.get("SparqlID");
-		this.isOptional = (Boolean)next.get("isOptional");
-		this.isReturned = (Boolean)next.get("isReturned");
+		this.fullURIName = (String) jObj.get("fullURIName");
+		this.sparqlID = (String) jObj.get("SparqlID");
+		
+		this.optMinus = OPT_MINUS_NONE;
+		if (jObj.containsKey("isOptional")) {
+			this.optMinus = ((Boolean) jObj.get("isOptional")) ? OPT_MINUS_OPTIONAL : OPT_MINUS_NONE;
+		} else if (jObj.containsKey("optMinus")) {
+			this.optMinus = Integer.parseInt(jObj.get("optMinus").toString());
+		}
+
+		
+		this.isReturned = (Boolean)jObj.get("isReturned");
 		
 		try{
-			this.setIsRuntimeConstrained((Boolean)next.get("isRuntimeConstrained"));
+			this.setIsRuntimeConstrained((Boolean)jObj.get("isRuntimeConstrained"));
 		}
 		catch(Exception E){
 			this.setIsRuntimeConstrained(false);
 		}
 		try{
-			this.setIsMarkedForDeletion((Boolean)next.get("isMarkedForDeletion"));
+			this.setIsMarkedForDeletion((Boolean)jObj.get("isMarkedForDeletion"));
 		}
 		catch(Exception eee){
 			this.setIsMarkedForDeletion(false);
 		}
 		
-		JSONArray instArr = (JSONArray)next.get("instanceValues");
+		JSONArray instArr = (JSONArray)jObj.get("instanceValues");
 		Iterator<String> it = instArr.iterator();
 		while(it.hasNext()){
 			this.instanceValues.add(it.next());
@@ -123,7 +134,7 @@ public class PropertyItem extends Returnable {
 		ret.put("fullURIName", this.fullURIName);
 		ret.put("SparqlID", this.sparqlID);
 		ret.put("isReturned", this.isReturned);
-		ret.put("isOptional", this.isOptional);
+		ret.put("optMinus", this.optMinus);
 		ret.put("isMarkedForDeletion", this.isMarkedForDeletion);
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("instanceValues", iVals);
@@ -137,13 +148,17 @@ public class PropertyItem extends Returnable {
 	public void reset() {
 		this.constraints = null;
 		this.isReturned = false;
-		this.isOptional = false;
+		this.optMinus = OPT_MINUS_NONE;
 		this.isMarkedForDeletion = false;
 		this.isRuntimeConstrained = false;
 	}
 	
 	public boolean getIsOptional() {
-		return this.isOptional;
+		return this.optMinus == OPT_MINUS_OPTIONAL;
+	}
+	
+	public int getOptMinus() {
+		return this.optMinus;
 	}
 	
 	public String getKeyName() {
@@ -196,8 +211,13 @@ public class PropertyItem extends Returnable {
 		this.isReturned = b;
 	}
 	
+	@Deprecated
 	public void setIsOptional(boolean b){
-		this.isOptional = b;
+		this.optMinus = b ? OPT_MINUS_OPTIONAL : OPT_MINUS_NONE;
+	}
+	
+	public void setOptMinus(int optMin) {
+		this.optMinus = optMin;
 	}
 	
 	public void addConstraint(String str) {

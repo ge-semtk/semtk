@@ -745,7 +745,8 @@ public class JobTracker {
 			ArrayList<String> valList = new ArrayList<String>();
 			valList.add(ThreadAuthenticator.getThreadUserName());
 			prop.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(prop, valList)));
-			prop.setIsOptional(false);
+			prop.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+
 		}		
 		
 		// run query

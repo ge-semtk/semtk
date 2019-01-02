@@ -418,10 +418,11 @@
 			});
 	};
 
-	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalVal, deleteMarkerVal, deleteFlag) {
+	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, deleteMarkerVal, deleteFlag) {
 
 		// optionalFlag
-		nItem.setSNodeOptional(targetSNode, optionalVal);
+		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
+        nItem.setQualifier(targetSNode, qualifierVal);
 		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
 		// deleteFlag
 		if (deleteFlag) {
@@ -479,13 +480,13 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
         gNodeGroup.changeSparqlID(propItem, sparqlID);
         propItem.setIsReturned(returnFlag);
-        propItem.setIsOptional(optionalFlag);
+        propItem.setOptMinus(optMinus);
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
         propItem.setConstraints(constraintStr);
         propItem.setIsMarkedForDeletion(delMarker);
@@ -496,7 +497,7 @@
         nodeGroupChanged(true);
     };
 
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, optionalFlag, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
     	// Note: ModalItemDialog validates that sparqlID is legal
 
         // don't allow removal of node item's sparqlID
@@ -506,7 +507,7 @@
 
         snodeItem.setIsReturned(returnFlag);
 
-    	// ignore optionalFlag in sparqlGraph.  It is still used in sparqlForm
+    	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
 
 		// runtime constrained
     	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
@@ -876,6 +877,7 @@
                 sgJson.getNodeGroup(gNodeGroup, gOInfo);
                 gNodeGroup.setSparqlConnection(gConn);
             } catch (e) {
+                console.log(e.stack);
                 ModalIidx.choose("Error loading nodegroup",
                                  (e.hasOwnProperty("message") ? e.message : e) + "<br><hr>Would you like to save a copy of the nodegroup?",
                                  ["Yes", "No"],
