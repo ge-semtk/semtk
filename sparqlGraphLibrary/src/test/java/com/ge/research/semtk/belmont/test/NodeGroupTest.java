@@ -245,7 +245,7 @@ public class NodeGroupTest {
 		colorEdge0.setOptionalMinus(color0, NodeItem.OPTIONAL_TRUE);
 		colorEdge1.setOptionalMinus(color1, NodeItem.OPTIONAL_TRUE);
 		colorEdge2.setOptionalMinus(color2, NodeItem.OPTIONAL_TRUE);
-		cellId0.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+		cellId0.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
 
 		
 		// but no constraints
