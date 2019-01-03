@@ -1,5 +1,6 @@
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -22,11 +23,11 @@ public class OntologyInfoCache {
 	public synchronized OntologyInfo get(SparqlConnection conn) throws Exception {
 		String key = conn.getUniqueModelKey();
 		
+		this.clearExpired();
+		
 		if (!hash.containsKey(key)) {
 			hash.put(key, new CachedOntologyInfo(conn));
 		}
-		
-		this.clearExpired();
 		
 		return hash.get(key).getOInfo(this.maxAgeMillis);
 	}
@@ -43,10 +44,18 @@ public class OntologyInfoCache {
 	}
 	
 	private void clearExpired() {
+		ArrayList<String> keysToRemove = new ArrayList<String>();
+		
+		// find expired keys
 		for (String key : this.hash.keySet()) {
 			if (this.hash.get(key).isExpired(this.maxAgeMillis)) {
-				this.hash.remove(key);
+				keysToRemove.add(key);
 			}
+		}
+		
+		// remove expired keys (avoiding concurrentModificationException)
+		for (String key : keysToRemove) {
+			this.hash.remove(key);
 		}
 	}
 }
