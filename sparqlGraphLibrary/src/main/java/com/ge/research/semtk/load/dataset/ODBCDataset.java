@@ -106,6 +106,7 @@ public class ODBCDataset extends Dataset{
 		try{			
 			// get a database connection and execute the query
 			Class.forName(driver);
+			DriverManager.setLoginTimeout(30);
 			conn = DriverManager.getConnection(url, username, password);							
 			stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);  // enable beforeFirst()
 			// execute the query
