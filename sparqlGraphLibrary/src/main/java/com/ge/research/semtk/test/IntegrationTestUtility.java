@@ -28,6 +28,8 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.EndpointProperties;
 import com.ge.research.semtk.edc.SemtkEndpointProperties;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -214,6 +216,10 @@ public class IntegrationTestUtility {
 	 */
 	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
 		return new SparqlQueryClient(new SparqlQueryClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset));
+	}
+	
+	public static OntologyInfoClient getOntologyInfoClient() throws Exception{
+		return new OntologyInfoClient(new OntologyInfoClientConfig(getServiceProtocol(), getOntologyInfoServiceServer(), getOntologyInfoServicePort()));
 	}
 	
 	/**
