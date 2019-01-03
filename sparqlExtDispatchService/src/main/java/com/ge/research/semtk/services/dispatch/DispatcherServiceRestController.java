@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -350,6 +352,7 @@ public class DispatcherServiceRestController {
 		
 		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
 		StatusClient sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(props.getOinfoServiceProtocol(), props.getOinfoServiceServer(), props.getOinfoServicePort()));
 		sClient.execSetPercentComplete(0, "Job Initialized");
 
 		// instantiate the dispatcher from the class name 
@@ -375,7 +378,7 @@ public class DispatcherServiceRestController {
 								}}}}
 				}
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions, oClient);
 			
 		}catch(Exception e){
 			LocalLogger.printStackTrace(e);

@@ -47,6 +47,10 @@ public class DispatchProperties {
 	private String edcSparqlServerType;
 	
 
+	private String oinfoServiceProtocol;
+	private String oinfoServiceServer;
+	private int oinfoServicePort;
+	
 	private String resultsServiceProtocol;
 	private String resultsServiceServer;
 	private int resultsServicePort;
@@ -138,6 +142,25 @@ public class DispatchProperties {
 	public void setEdcSparqlServerType(String edcSparqlServerType) {
 		this.edcSparqlServerType = edcSparqlServerType;
 	}
+	public String getOinfoServiceProtocol() {
+		return oinfoServiceProtocol;
+	}
+	public void setOinfoServiceProtocol(String oinfoServiceProtocol) {
+		this.oinfoServiceProtocol = oinfoServiceProtocol;
+	}
+	public String getOinfoServiceServer() {
+		return oinfoServiceServer;
+	}
+	public void setOinfoServiceServer(String oinfoServiceServer) {
+		this.oinfoServiceServer = oinfoServiceServer;
+	}
+	public int getOinfoServicePort() {
+		return oinfoServicePort;
+	}
+	public void setOinfoServicePort(int oinfoServicePort) {
+		this.oinfoServicePort = oinfoServicePort;
+	}
+	
 	public String getResultsServiceProtocol() {
 		return resultsServiceProtocol;
 	}

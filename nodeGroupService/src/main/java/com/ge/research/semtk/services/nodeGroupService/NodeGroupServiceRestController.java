@@ -66,7 +66,7 @@ public class NodeGroupServiceRestController {
 	public static final String RET_KEY_NODEGROUP = "nodegroup";
 	public static final String RET_KEY_SPARQLID = "sparqlID";
 	
-	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
+	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);   // 5 seconds.  TODO make this a property
 
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)

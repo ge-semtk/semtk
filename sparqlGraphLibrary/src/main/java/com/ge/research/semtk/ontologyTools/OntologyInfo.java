@@ -102,6 +102,11 @@ public class OntologyInfo {
 		this.addJson(json);
 	}
 	
+	/**
+	 * Load directly from model sparql endpoint interfaces
+	 * @param conn
+	 * @throws Exception
+	 */
 	public void loadSparqlConnection(SparqlConnection conn) throws Exception {
     	
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
@@ -115,6 +120,14 @@ public class OntologyInfo {
     	}
     }
 
+	/**
+	 * Load from model sparql endpoint interfaces using a SparqlQueryClient
+	 * Deprecated because of performance.  Not clear what the QueryClient adds except overhead.
+	 * @param clientConfig
+	 * @param conn
+	 * @throws Exception
+	 */
+	@Deprecated
 	public void loadSparqlConnection(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception {
     	
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();

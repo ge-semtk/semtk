@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -41,6 +42,8 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class OntologyInfoServiceRestController {
  	static final String SERVICE_NAME = "ontologyInfoService";
 
+ 	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
+ 	
 	@Autowired
 	OntologyInfoLoggingProperties log_prop;
 	
@@ -57,7 +60,7 @@ public class OntologyInfoServiceRestController {
 	
     	TableResultSet res = new TableResultSet();	
 	    try {
-	    	OntologyInfo oInfo = new OntologyInfo(requestBody.getSparqlConnection());
+	    	OntologyInfo oInfo = oInfoCache.get(requestBody.getSparqlConnection());
 	    	Table dataDictionaryTable = DataDictionaryGenerator.generate(oInfo, true);
 	    	res.addResults(dataDictionaryTable);
 	    	res.setSuccess(true);
@@ -118,7 +121,7 @@ public class OntologyInfoServiceRestController {
 		
 		try{
 			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
-			OntologyInfo oInfo = new OntologyInfo(conn);
+			OntologyInfo oInfo = oInfoCache.get(conn);
 			JSONObject oInfoDetails = oInfo.toAdvancedClientJson();
 			
 			retval = new SimpleResultSet();
@@ -141,7 +144,7 @@ public class OntologyInfoServiceRestController {
 		
 		try{
 			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
-			OntologyInfo oInfo = new OntologyInfo(conn);
+			OntologyInfo oInfo = oInfoCache.get(conn);
 			JSONObject json = oInfo.toJson();
 			
 			retval = new SimpleResultSet();

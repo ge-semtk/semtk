@@ -171,6 +171,13 @@ public class IntegrationTestUtility {
 		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupexecution.port")).intValue();
 	}
 	
+	// oInfo store service
+	public static String getOntologyInfoServiceServer() throws Exception{
+		return getIntegrationTestProperty("integrationtest.ontologyinfoservice.server");
+	}
+	public static int getOntologyInfoServicePort() throws Exception{
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.ontologyinfoservice.port")).intValue();
+	}
 	// Hive
 	public static String getHiveServer() throws Exception{
 		return getIntegrationTestProperty("integrationtest.hive.server");
