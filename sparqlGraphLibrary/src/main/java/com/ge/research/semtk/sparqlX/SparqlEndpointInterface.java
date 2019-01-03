@@ -271,7 +271,7 @@ public abstract class SparqlEndpointInterface {
 					((SparqlQueryAuthClientConfig)conf).getSparqlServerUser(),
 					((SparqlQueryAuthClientConfig)conf).getSparqlServerPassword()
 					);			
-		} else if (conf instanceof SparqlQueryAuthClientConfig) {
+		} else if (conf instanceof SparqlQueryClientConfig) {
 			return SparqlEndpointInterface.getInstance (
 					((SparqlQueryClientConfig)conf).getSparqlServerType(),
 					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
