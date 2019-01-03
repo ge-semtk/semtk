@@ -101,6 +101,7 @@ public abstract class JdbcConnector extends Connector {
 	 */
 	private Connection getConnection() throws Exception{
 		Class.forName(driver);
+		DriverManager.setLoginTimeout(30);
 		return DriverManager.getConnection(dbUrl, connectionProperties);
 	}
 	
