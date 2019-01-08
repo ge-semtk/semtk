@@ -44,6 +44,7 @@ import com.ge.research.semtk.aws.client.AwsS3Client;
 import com.ge.research.semtk.aws.client.AwsS3ClientConfig;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
@@ -180,12 +181,30 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		try {
 			
 	        s3Client.execUploadFile(new String(owl), keyName);
-        	String loadId = this.uploadFromS3(keyName, format);
-        	
+	        
+	        // try loading from S3, while being a little careful about concurrent load limit
+	        String loadId = null;
+	        int tries = 0;
+	        while (loadId == null) {
+		        try {
+		        	loadId = this.uploadFromS3(keyName, format);
+		        	
+		        } catch (Exception e) {
+		        	// take 20 shots at concurrent load limit, sleeping 0-2 seconds between
+		        	if (tries < 20 && e.getMessage().contains("concurrent load limit")) {
+		        		LocalLogger.logToStdOut("Retrying: " + e.getMessage());
+		        		tries += 1;
+		        		Thread.sleep((long)(2.0 * Math.random()));
+		        	} else {
+		        		// give up retrying
+		        		throw e;
+		        	}
+		        }
+	        }
         	
         	// Allow 20 seconds for load to start.
         	// Clearly this should be configurable in the future
-        	int tries = 0;
+        	tries = 0;
         	while (this.getLoadStatus(loadId).equals(STATUS_NOT_STARTED)) {
         		Thread.sleep(1000);
         		if (++tries > 20) {
