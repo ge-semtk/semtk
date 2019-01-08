@@ -148,6 +148,17 @@
 	   	    gReady = true;
 	   	    console.log("Ready");
 	   	    logEvent("SG Page Load");
+
+            if (g.customization.startupDialogHtml != 'none' && g.customization.startupDialogHtml.length > 2) {
+                ModalIIDX.alert(g.customization.startupDialogTitle, g.customization.startupDialogHtml);
+            }
+
+            if (g.customization.bannerText != 'none' && g.customization.bannerText.length > 2) {
+                var span = document.getElementById("sparqlgraph-banner-span");
+                span.className = "label-warning right";
+                span.innerHTML = "&nbsp" + g.customization.bannerText + "&nbsp";
+            }
+
 		});
     });
 
