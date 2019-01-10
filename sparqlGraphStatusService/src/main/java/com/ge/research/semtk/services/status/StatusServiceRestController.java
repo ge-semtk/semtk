@@ -70,6 +70,7 @@ public class StatusServiceRestController {
 	/**
 	 * Get percentComplete
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/getPercentComplete", method= RequestMethod.POST)
 	public JSONObject getPercentComplete(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -108,6 +109,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return status
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/getStatus", method= RequestMethod.POST)
 	public JSONObject getStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
@@ -146,6 +148,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return statusMessage
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/getStatusMessage", method= RequestMethod.POST)
 	public JSONObject getStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -212,6 +215,7 @@ public class StatusServiceRestController {
 	/**
 	 * Block until status is percent complete is reached
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/waitForPercentComplete", method= RequestMethod.POST)
 	public JSONObject waitForPercentComplete(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -248,6 +252,7 @@ public class StatusServiceRestController {
 	/**
 	 * Block until status is percent complete is reached or Msec have elapsed
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
 	public JSONObject waitForPercentOrMsec(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -287,6 +292,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setName", method= RequestMethod.POST)
 	public JSONObject setName(@RequestBody @Valid StatusRequestBodyName requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -322,6 +328,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setPercentComplete", method= RequestMethod.POST)
 	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercent requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -357,6 +364,7 @@ public class StatusServiceRestController {
 	 * @param requestBodyMessage
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setSuccess", method= RequestMethod.POST)
 	public JSONObject setSuccess(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -392,6 +400,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setFailure", method= RequestMethod.POST)
 	public JSONObject setFailure(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -429,6 +438,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)
 	public JSONObject deleteJob(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);

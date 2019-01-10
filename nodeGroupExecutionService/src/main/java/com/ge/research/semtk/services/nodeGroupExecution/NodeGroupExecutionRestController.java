@@ -246,6 +246,7 @@ public class NodeGroupExecutionRestController {
 			notes="Returns as soon as the requested Msec elapses or percent complete is reached<br>" +
 			      "whichever comes first."
 			)
+	@CrossOrigin
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
 	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		// NOTE: May 2018 Paul

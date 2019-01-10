@@ -469,6 +469,7 @@ public class IngestionRestController {
 	}	
 	
 	
+	@CrossOrigin
 	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)
 	public JSONObject fromPostgresODBC(
 			@RequestParam("template") MultipartFile templateFile, 
