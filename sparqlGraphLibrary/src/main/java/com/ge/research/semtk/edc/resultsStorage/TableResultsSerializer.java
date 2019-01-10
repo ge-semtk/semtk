@@ -56,7 +56,7 @@ public class TableResultsSerializer {
 		this.dataFile = new File(dataFileLocation);
 		this.frmt = serializationType;
 		this.cutoffValue = cutoff;
-		if(startingRow == null | startingRow < 0){ this.startingRowNumber = 0; }
+		if(startingRow == null || startingRow < 0){ this.startingRowNumber = 0; }
 		else{ this.startingRowNumber = startingRow; }
 	}
 		
