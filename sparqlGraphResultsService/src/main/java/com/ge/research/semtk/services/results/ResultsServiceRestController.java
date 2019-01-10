@@ -733,12 +733,13 @@ public class ResultsServiceRestController {
 	
 	// PEC TODO: shouldn't this be a TableResultSet.toJson()
 	private void writeError(Exception e, String endpoint, HttpServletResponse resp) throws Exception {
-		TableResultSet res = new TableResultSet();
-		res.setSuccess(false);
-		res.addRationaleMessage(SERVICE_NAME, endpoint, e);
+		
 		PrintWriter outPrint = resp.getWriter();
 		
-		outPrint.write(res.toJson().toJSONString());
+		outPrint.write("\n\n==============\nInternal error in " + SERVICE_NAME + "/" + endpoint + "\n==============\n" );
+		e.printStackTrace(outPrint);
+		outPrint.write("\n==============\n" );
+
 		outPrint.flush();
 		outPrint.close();
 	}
