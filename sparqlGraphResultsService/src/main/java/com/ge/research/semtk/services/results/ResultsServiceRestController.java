@@ -568,7 +568,9 @@ public class ResultsServiceRestController {
 	 */
 	@ApiOperation(
 			value="Get CSV table",
-			notes="Too large a file can fail.  GET /getTableResultsCsvForWebClient is safer."
+			notes="Too large a file can fail.  <br>" +
+				  "This is good for a preview, for example, in a browser with limited memory.<br>" +
+			      "GET /getTableResultsCsvForWebClient safely retrieves entire large files."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
@@ -610,7 +612,7 @@ public class ResultsServiceRestController {
 
 	@ApiOperation(
 			value="Get JSON table results",
-			notes=""
+			notes="GET triggers browser MIME type handling"
 			)
 	@CrossOrigin
 	@RequestMapping(value= "/getTableResultsJsonForWebClient" , method= RequestMethod.GET)
@@ -639,7 +641,7 @@ public class ResultsServiceRestController {
 
 	@ApiOperation(
 			value="Get CSV table results",
-			notes=""
+			notes="GET triggers browser MIME type handling"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
@@ -705,8 +707,9 @@ public class ResultsServiceRestController {
 	
 	@ApiOperation(
 			value="Get JSON table",
-			notes="Too large a file can fail.  GET /getTableResultsJsonForWebClient is safer."
-			)
+			notes="Too large a file can fail.  <br>" +
+					  "This is good for a preview, for example, in a browser with limited memory.<br>" +
+				      "GET /getTableResultsCsvForWebClient safely retrieves entire large files.")
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
 	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
