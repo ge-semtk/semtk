@@ -218,6 +218,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 			throw new Exception("Virtuoso non-JSON response: " + responseTxt);
 		}
 	}
+	
 	@Override
 	public SparqlEndpointInterface copy() throws Exception {
 		VirtuosoSparqlEndpointInterface retval = null;
@@ -248,13 +249,25 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	@Override
 	public boolean isExceptionRetryAble(Exception e) {
-		if (! super.isExceptionRetryAble(e)) {
-			return false;
-		}
+		
+		// virtuoso-specific
 		String msg = e.getMessage();
-		if ( Pattern.compile("Virtuoso [0-9]+ Error ").matcher(msg).find()) {
+		
+		// Virtuoso 40001 Error SR172: Transaction deadlocked
+		// Retry and hope
+		if ( Pattern.compile("Virtuoso 40001 Error SR172 ").matcher(msg).find()) {
+			return true;
+		}
+		
+		// Generally Virtuoso errors are SPARQL problems
+		// No use retrying
+		else if ( Pattern.compile("Virtuoso [0-9]+ Error ").matcher(msg).find()) {
 			return false;
 		}
-		return true;
+		
+		else {
+			// didn't recognize anything.  Defer to superclass.
+			return super.isExceptionRetryAble(e);
+		}
 	}
 }
