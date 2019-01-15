@@ -394,8 +394,15 @@ public class DataLoader implements Runnable {
 		}
 	}
 	
-	/*** ASYNC section ***/
-	public void setupAsyncRun(Boolean precheck, Boolean skipIngest, StatusClient sClient, ResultsClient rClient) throws Exception {
+	/**
+	 * Run the data load asynchronously
+	 * @param precheck 
+	 * @param skipIngest 
+	 * @param sClient
+	 * @param rClient
+	 * @throws Exception
+	 */
+	public void runAsync(Boolean precheck, Boolean skipIngest, StatusClient sClient, ResultsClient rClient) throws Exception {
 		this.asyncPrecheck = precheck;
 		this.asyncSkipIngest = skipIngest;
 		this.sClient = sClient;
@@ -403,6 +410,8 @@ public class DataLoader implements Runnable {
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 		
 		this.sClient.execSetPercentComplete(1);
+		
+		(new Thread(this)).start();
 	}
 	
 	/**

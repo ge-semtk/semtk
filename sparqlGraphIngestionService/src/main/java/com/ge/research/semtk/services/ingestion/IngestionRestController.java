@@ -448,11 +448,10 @@ public class IngestionRestController {
 			Dataset ds = new CSVDataset(dataFileContent, true);
 			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			String jobId = "job-" + UUID.randomUUID().toString();
-			dl.setupAsyncRun(precheck, skipIngest, 
+			dl.runAsync(precheck, skipIngest, 
 					new StatusClient(new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobId)), 
 					new ResultsClient(new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort()))
 					);
-			dl.run();
 			simpleResult.setSuccess(true);
 			simpleResult.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 					

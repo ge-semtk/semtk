@@ -364,12 +364,17 @@ public class DataLoaderTest_IT {
 		StatusClient sClient = IntegrationTestUtility.getStatusClient(jobId);
 		ResultsClient rClient = IntegrationTestUtility.getResultsClient();
 		try {
-			dl.setupAsyncRun(true, false, sClient, rClient);
-			dl.run();
-			int percent = sClient.execWaitForPercentOrMsec(100, 60000);
-			assertTrue("ingest did not complete in 60 seconds", percent == 100);
-			assertTrue("ingest failed", sClient.execIsSuccess());
-			System.out.println(sClient.execGetStatusMessage());
+			dl.runAsync(true, false, sClient, rClient);
+			
+			int percent = 1;
+			int lastPercent = 0;
+			while (percent < 100 && percent > lastPercent) {
+				lastPercent = percent;
+				percent = sClient.execWaitForPercentOrMsec(100, 60000);
+			}
+			
+			assertTrue("ingest bogged down for 60 seconds. Percent complete stuck at: " + String.valueOf(percent), percent == 100);
+			assertTrue("ingest failed: " + sClient.execGetStatusMessage(), sClient.execIsSuccess());
 		} finally {
 			sClient.execDeleteJob();
 		}
@@ -417,10 +422,16 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
 
 		try {
-			dl.setupAsyncRun(true, false, sClient, rClient);
-			dl.run();
-			int percent = sClient.execWaitForPercentOrMsec(100, 60000);
-			assertTrue("ingest did not complete in 60 seconds", percent == 100);
+			dl.runAsync(true, false, sClient, rClient);
+
+			int percent = 1;
+			int lastPercent = 0;
+			while (percent < 100 && percent > lastPercent) {
+				lastPercent = percent;
+				percent = sClient.execWaitForPercentOrMsec(100, 60000);
+			}
+			
+			assertTrue("ingest bogged down for 60 seconds. Percent complete stuck at: " + String.valueOf(percent), percent == 100);
 			assertTrue("ingest succeeded unexpectedly", !sClient.execIsSuccess());
 			
 			Table err = rClient.getTableResultsJson(jobId, 10000);
