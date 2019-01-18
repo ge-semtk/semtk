@@ -324,13 +324,53 @@ public class StatusServiceRestController {
 	}
 	
 	/**
+	 * increment percentage up to max
+	 * @param requestBody
+	 * @return
+	 */
+	@ApiOperation(
+			value=	"Increment percent complete within specified maximum"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/incrementPercentComplete", method= RequestMethod.POST)
+	public JSONObject incrementPercentComplete(@RequestBody StatusRequestBodyIncrement requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT = "incrementPercentComplete";
+		HeadersManager.setHeaders(headers);
+		try {
+		    String jobId = requestBody.jobId;
+		    
+		    SimpleResultSet res = new SimpleResultSet();
+		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LocalLogger.logToStdOut("Status Service/" + ENDPOINT + " increment=" + requestBody.increment + " JobId=" + jobId);
+	
+		    try {
+		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	tracker.incrementPercentComplete(jobId, requestBody.increment, requestBody.max);
+			    res.setSuccess(true);
+			    
+		    } catch (Exception e) {
+		    	res.setSuccess(false);
+		    	res.addRationaleMessage(SERVICE_NAME, ENDPOINT, e);
+			    LoggerRestClient.easyLog(logger, "Status Service", ENDPOINT + " exception", "message", e.toString());
+			    LocalLogger.logToStdOut("Status Service " + ENDPOINT + " exception message=" + e.toString());
+		    } 
+		    
+		    return res.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+		    
+	}
+	
+	/**
 	 * set job to a given percent complete
 	 * @param requestBody
 	 * @return
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/setPercentComplete", method= RequestMethod.POST)
-	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercent requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercentMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
 		    String jobId = requestBody.jobId;

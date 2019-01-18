@@ -20,5 +20,4 @@ package com.ge.research.semtk.services.status;
 
 public class StatusRequestBodyPercent extends StatusRequestBody {
 	public int percentComplete;
-	public String message = "";
 }

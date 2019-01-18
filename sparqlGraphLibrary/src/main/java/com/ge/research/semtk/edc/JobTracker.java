@@ -169,6 +169,14 @@ public class JobTracker {
 	    }
 	}
 	
+	public void incrementPercentComplete(String jobId, int increment, int max) throws AuthorizationException, Exception {
+		int currentPercent = this.getJobPercentComplete(jobId);
+		int newPercentComplete = currentPercent + increment;
+		if (newPercentComplete < max && newPercentComplete < 100) {
+			this.setJobPercentComplete(jobId, newPercentComplete);
+		}
+	}
+	
 	/**
 	 * Set percentComplete for a job, 
 	 *   creating the job if it doesn't exist.

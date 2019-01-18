@@ -211,6 +211,25 @@ public class StatusClient extends RestClient {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	public void execIncrementPercentComplete(int increment, int max) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("status/incrementPercentComplete");
+		this.parametersJSON.put("increment", increment);
+		this.parametersJSON.put("max", max);
+
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return;
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("increment");
+			this.parametersJSON.remove("max");
+
+		}
+	}
+	
 	/**
 	 * 
 	 * @throws Exception

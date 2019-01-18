@@ -157,7 +157,7 @@ public class DispatcherServiceRestController {
 	}
 		
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
-		String requestId = this.getRequestId();
+		String requestId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.addResult("requestID", requestId);
 		
@@ -174,6 +174,7 @@ public class DispatcherServiceRestController {
 			ngrb.setjsonRenderedNodeGroup(sgjson.getJson().toJSONString());
 			
 			dsp = getDispatcher(props, requestId, ngrb, true, true);
+			dsp.getStatusClient().execIncrementPercentComplete(1, 10);
 			
 			WorkThread thread = new WorkThread(dsp, null, null, qt);
 
@@ -221,7 +222,7 @@ public class DispatcherServiceRestController {
 	 * @return
 	 */
 	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody, DispatcherSupportedQueryTypes qt, Boolean useAuth){
-		String requestId = this.getRequestId();
+		String requestId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.addResult("requestID", requestId);
 		
@@ -232,7 +233,8 @@ public class DispatcherServiceRestController {
 		// get the things we need for the dispatcher
 		try {
 			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
-			
+			dsp.getStatusClient().execIncrementPercentComplete(1, 10);
+
 			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt);
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
@@ -306,7 +308,7 @@ public class DispatcherServiceRestController {
 	    }
 	}
 	
-	private String getRequestId(){
+	private String generateJobId(){
 		return "req_" + UUID.randomUUID();
 	}
 	

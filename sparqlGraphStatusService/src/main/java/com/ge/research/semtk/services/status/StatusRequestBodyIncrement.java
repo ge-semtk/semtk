@@ -18,6 +18,20 @@
 
 package com.ge.research.semtk.services.status;
 
-public class StatusRequestBodyPercentMsec extends StatusRequestBodyPercent {
-	public int maxWaitMsec;
+import io.swagger.annotations.ApiModelProperty;
+
+public class StatusRequestBodyIncrement extends StatusRequestBody {
+	@ApiModelProperty(
+			value = "increment",
+			required = true,
+			example = "1"
+	)	
+	public int increment;
+	
+	@ApiModelProperty(
+			value = "increment",
+			required = false,
+			example = "10"
+	)	
+	public int max = 100;
 }

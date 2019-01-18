@@ -424,10 +424,8 @@ public class NodeGroupExecutionRestController {
 			// make sure the request has the needed parameters
 			requestBody.validate();
 			
-			// create a new StoredQueryExecutor
 			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
-			// try to create a sparql connection
-
+			
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
@@ -470,6 +468,7 @@ public class NodeGroupExecutionRestController {
 		try{
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+
 			// try to create a sparql connection
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
@@ -855,6 +854,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				// create a new StoredQueryExecutor
 				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.getSparqlConnection();			
 	
@@ -900,6 +900,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -932,6 +933,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
 			}catch(Exception e){
@@ -967,6 +969,7 @@ public class NodeGroupExecutionRestController {
 			SimpleResultSet retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
 				retval = new SimpleResultSet(true);
@@ -1002,6 +1005,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -1035,6 +1039,7 @@ public class NodeGroupExecutionRestController {
 			SimpleResultSet retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);

@@ -123,7 +123,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			this.retrievalClient = new SparqlQueryClient(config );
 		}
 		
-		this.updateStatus(0);
+		this.statusClient.execIncrementPercentComplete(1, 10);
 		
 	}
 	
@@ -136,16 +136,6 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	}
 	
 	public abstract TableResultSet execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception;
-	
-	protected int updateRunStatus(float increment, int last, int ceiling) throws UnableToSetStatusException{
-		int retval = ceiling;
-		if(( last + increment) >= ceiling ){ retval =  ceiling;}
-		else{
-			this.updateStatus((int)(last + increment));
-			retval = (int)(last + increment);
-		}
-		return retval;
-	}
 	
 	/**
 	 * send the collected results to the results service. 
@@ -231,6 +221,15 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		}
 	}
 	
+	protected void incrementStatus(int increment, int max) throws UnableToSetStatusException{
+		
+		try {
+			this.statusClient.execIncrementPercentComplete(increment, max);
+		} catch (Exception e) {
+			throw new UnableToSetStatusException(e.getMessage());
+		}
+	}
+	
 	
 	/**
 	 * the work failed. let the callers know via the status service. 
@@ -266,7 +265,8 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	public TableResultSet executePlainSparqlQuery(String sparqlQuery, DispatcherSupportedQueryTypes supportedQueryType) throws Exception{
 		TableResultSet retval = null;
 		SparqlQueryClient nodegroupQueryClient = this.retrievalClient;
-		
+		this.statusClient.execIncrementPercentComplete(1, 10);
+
 		try{
 
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor start");

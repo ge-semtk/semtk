@@ -18,6 +18,6 @@
 
 package com.ge.research.semtk.services.status;
 
-public class StatusRequestBodyPercentMsec extends StatusRequestBodyPercent {
-	public int maxWaitMsec;
+public class StatusRequestBodyPercentMessage extends StatusRequestBodyPercent {
+	public String message = "";
 }
