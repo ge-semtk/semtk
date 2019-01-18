@@ -123,8 +123,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			this.retrievalClient = new SparqlQueryClient(config );
 		}
 		
-		this.statusClient.execIncrementPercentComplete(1, 10);
-		
+		this.statusClient.execSetPercentComplete(1);
 	}
 	
 	/**
