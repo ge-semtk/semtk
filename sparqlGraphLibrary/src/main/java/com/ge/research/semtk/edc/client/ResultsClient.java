@@ -543,18 +543,27 @@ public class ResultsClient extends RestClient implements Runnable {
 	}
 	
 	/**
+	 * Multi-threaded TableFormatter
+	 * @param table
+	 * @throws InterruptedException
 	 */
 	private void formatTableElements(Table table) throws InterruptedException{
 		
-		int THREAD_BATCH_SIZE = 100;	// number of rows for each thread to handle
+		final int MIN_ROWS_PER_THREAD = 2000;
+		final int MAX_THREADS = 10;
+		
+		// make a thread for each 2000 rows, but max of 10 threads
+		int actualThreads = Math.min(MAX_THREADS, table.getNumRows() / MIN_ROWS_PER_THREAD + 1);
+		
+		// make sure last thread runs over a bit by adding (actualThreads)
+		int threadBatchSize = table.getNumRows() / actualThreads + actualThreads;
+		
 		ArrayList<TableFormatter> threads = new ArrayList<TableFormatter>();
 		
-		for(int i = 0; i < table.getNumRows(); i += THREAD_BATCH_SIZE){
+		for(int i = 0; i < table.getNumRows(); i += threadBatchSize){
 			int startIndex = i;
-			int endIndex = i + THREAD_BATCH_SIZE;
-			if(endIndex > table.getNumRows()){
-				endIndex = table.getNumRows();
-			}
+			int endIndex = Math.min(i + threadBatchSize, table.getNumRows());
+			
 			TableFormatter thread = new TableFormatter(table.getRows(), startIndex, endIndex);
 			threads.add(thread);
 			thread.start();
