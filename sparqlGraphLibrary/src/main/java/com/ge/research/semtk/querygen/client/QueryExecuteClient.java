@@ -18,7 +18,11 @@
 
 package com.ge.research.semtk.querygen.client;
 
+import org.json.simple.JSONObject;
+
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.ExecuteClientConfig;
+import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 
@@ -40,6 +44,14 @@ public abstract class QueryExecuteClient extends RestClient {
 		return this.jobId;
 	}
 	
-	public abstract TableResultSet execute(String query) throws Exception;
+	public TableOrJobIdResultSet execute(String query) throws Exception {
+		parametersJSON.put("query", query);
+		
+		JSONObject resultJSON = (JSONObject)super.execute();	
+				
+		TableOrJobIdResultSet retval = new TableOrJobIdResultSet();
+		retval.readJson(resultJSON);
+		return retval;
+	}
 	
 }
