@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.sparqlX.client;
 
+import java.io.File;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -114,10 +116,14 @@ public class SparqlQueryClient extends RestClient {
 		return retval;
 	}
 	
-	public SimpleResultSet uploadOwl(byte [] owlContents) throws Exception{
+	public SimpleResultSet uploadOwl(File owlFile) throws Exception{
 		if(conf.getServiceEndpoint().indexOf("uploadOwl") == -1){
 			throw new Exception("To upload owl, must use the uploadOwl endpoint");
 		}
+		
+		this.fileParameter = owlFile;
+		this.fileParameterName = "owlFile";
+		
 		JSONObject resultJSON = (JSONObject)super.execute();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.readJson(resultJSON);

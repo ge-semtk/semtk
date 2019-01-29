@@ -20,7 +20,7 @@ package com.ge.research.semtk.edc;
 // meant to be inherited into a spring boot properties object
 // needing connection info for a microservice
 
-public abstract class ServiceProperties {
+public abstract class ServiceProperties extends Properties {
 	private String server;
 	private int    port;
 	private String protocol;
@@ -43,4 +43,12 @@ public abstract class ServiceProperties {
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
+	
+	public void validate() throws Exception {
+		super.validate();
+		notEmpty("server", server);
+		notEmpty("port", port);
+		notEmpty("protocol", protocol);
+	}
+	
 }

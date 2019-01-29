@@ -19,6 +19,7 @@
 package com.ge.research.semtk.services.sparql;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,10 +30,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.sparql.requests.SparqlAuthRequestBody;
@@ -43,6 +49,7 @@ import com.ge.research.semtk.services.sparql.requests.SparqlQueryAuthRequestBody
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryRequestBody;
 import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.S3BucketConfig;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -74,6 +81,9 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class SparqlQueryServiceRestController {			
  	static final String SERVICE_NAME = "sparqlQueryService";
 	
+	@Autowired
+	OInfoServiceProperties oinfo_props;
+	
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
 	public void corsHeaders(HttpServletResponse response) {
@@ -85,6 +95,13 @@ public class SparqlQueryServiceRestController {
 	
 	@Autowired
 	private QueryUploadNeptuneProperties serviceProps; 
+	
+	@PostConstruct
+    public void init() {
+		oinfo_props.validateWithExit();
+		serviceProps.validateWithExit();
+	}
+	
 	/**
 	 * Execute (non-auth) query 
 	 */
@@ -190,6 +207,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			uncacheChangedModel(sei);
 			String dropGraphQuery = SparqlToXUtils.generateDropGraphSparql(sei);
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
 			
@@ -340,6 +358,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			uncacheChangedModel(sei);
 			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, requestBody.prefixes, deleteBlankNodes);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
@@ -372,6 +391,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
 			sei.clearGraph();
+			uncacheChangedModel(sei);
 			resultSet = new SimpleResultSet(true);
 			
 		} catch (Exception e) {			
@@ -430,7 +450,8 @@ public class SparqlQueryServiceRestController {
 			}
 			
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
-			 
+			uncacheChangedModel(sei);
+			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();
@@ -443,5 +464,16 @@ public class SparqlQueryServiceRestController {
 		
 		return simpleResultSetJson;	
 	}	
-	
+	 
+	/**
+	 * Clear a model
+	 * @param sei
+	 * @throws Exception
+	 */
+	private void uncacheChangedModel(SparqlEndpointInterface sei) throws Exception {
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		SparqlConnection conn = new SparqlConnection();
+		conn.addModelInterface(sei);
+		oClient.uncacheChangedModel(conn);
+	}
 }
