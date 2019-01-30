@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,17 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.edc;
+package com.ge.research.semtk.properties;
 
-// meant to be inherited into a spring boot properties object
-// needing connection info for a microservice
+// meant to be inherited into a spring boot properties object needing database connection info
 
-public abstract class ServiceProperties extends Properties {
+public abstract class DatabaseProperties {
 	private String server;
 	private int    port;
-	private String protocol;
-
+	private String database;
+	private String user;
+	private String password;
+	
 	public String getServer() {
 		return server;
 	}
@@ -37,18 +38,22 @@ public abstract class ServiceProperties extends Properties {
 	public void setPort(int port) {
 		this.port = port;
 	}
-	public String getProtocol() {
-		return protocol;
+	public String getDatabase() {
+		return database;
 	}
-	public void setProtocol(String protocol) {
-		this.protocol = protocol;
+	public void setDatabase(String database) {
+		this.database = database;
 	}
-	
-	public void validate() throws Exception {
-		super.validate();
-		notEmpty("server", server);
-		notEmpty("port", port);
-		notEmpty("protocol", protocol);
+	public String getUser() {
+		return user;
 	}
-	
+	public void setUser(String user) {
+		this.user = user;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
 }

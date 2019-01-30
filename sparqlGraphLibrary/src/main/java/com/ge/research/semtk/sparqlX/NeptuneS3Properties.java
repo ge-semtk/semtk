@@ -1,6 +1,6 @@
 package com.ge.research.semtk.sparqlX;
 
-import com.ge.research.semtk.edc.Properties;
+import com.ge.research.semtk.properties.Properties;
 
 public class NeptuneS3Properties extends Properties {
 

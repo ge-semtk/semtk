@@ -1,6 +1,6 @@
 package com.ge.research.semtk.edc.services.hive;
 
-import com.ge.research.semtk.edc.ServiceProperties;
+import com.ge.research.semtk.properties.ServiceProperties;
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;

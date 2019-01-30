@@ -38,8 +38,8 @@ import com.ge.research.semtk.test.TestGraph;
 import com.google.common.io.Files;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
+import com.ge.research.semtk.properties.SemtkEndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.edc.SemtkEndpointProperties;
 
 public class JobTrackerTest_IT {
 

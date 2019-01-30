@@ -5,11 +5,11 @@ import java.io.StringWriter;
 
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
-import com.ge.research.semtk.edc.ServiceProperties;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.properties.ServiceProperties;
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;

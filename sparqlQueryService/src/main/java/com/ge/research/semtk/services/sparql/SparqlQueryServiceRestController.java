@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.sparql;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,6 +56,7 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -81,9 +83,6 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class SparqlQueryServiceRestController {			
  	static final String SERVICE_NAME = "sparqlQueryService";
 	
-	@Autowired
-	OInfoServiceProperties oinfo_props;
-	
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
 	public void corsHeaders(HttpServletResponse response) {
@@ -92,14 +91,25 @@ public class SparqlQueryServiceRestController {
 	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
 	    response.addHeader("Access-Control-Max-Age", "3600");
 	}
-	
+	@Autowired
+	OInfoServiceProperties oinfo_props;
 	@Autowired
 	private QueryUploadNeptuneProperties serviceProps; 
+	@Autowired
+	private SparqlQueryAuthProperties auth_prop; 
+	@Autowired 
+	private ApplicationContext appContext;
 	
 	@PostConstruct
     public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.STANDARD_PROPERTIES);
+		env_prop.validateWithExit();
 		oinfo_props.validateWithExit();
 		serviceProps.validateWithExit();
+		auth_prop.validateWithExit();
+		
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
 	}
 	
 	/**

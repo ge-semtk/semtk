@@ -1,4 +1,6 @@
-package com.ge.research.semtk.edc;
+package com.ge.research.semtk.properties;
+
+import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 
@@ -15,7 +17,7 @@ import com.ge.research.semtk.utility.LocalLogger;
  *
  */
 public class Properties {
-	private String prefix = "";
+	private String prefix = "<unset>";
 	
 	/**
 	 * Designed to be called from @PostConstruct in a @RestController
@@ -44,15 +46,19 @@ public class Properties {
 	 * Call this from your top level annotated properties class
 	 * @param prefix
 	 */
-	protected void setPrefix(String prefix) {
-		this.prefix = prefix + ".";
+	public void setPrefix(String prefix) {
+		if (prefix == null || prefix.isEmpty()) {
+			this.prefix = "";
+		} else {
+			this.prefix = prefix + ".";
+		}
 	}
 	
 	/****** Individual field validators *******/
 	
 	protected void notEmpty(String name, Integer i) throws Exception {
 		if (i == null) {
-			throw new Exception(this.prefix + name + " is null");
+			throw new Exception(this.getPrefixedName(name) + " is null");
 		}
 		outputProperty(name, i);
 
@@ -60,22 +66,28 @@ public class Properties {
 	
 	protected void notEmpty(String name, String s) throws Exception {
 		if (s == null) {
-			throw new Exception(this.prefix + name + " is null");
+			throw new Exception(this.getPrefixedName(name) + " is null");
 		} else if (s.isEmpty()) {
-			throw new Exception(this.prefix + name + " is empty");
+			throw new Exception(this.getPrefixedName(name) + " is empty");
 		}
 		outputProperty(name, s);
 	}
 	
 	protected void notEmptyNoPrint(String name, String s) throws Exception {
 		if (s == null) {
-			throw new Exception(this.prefix + name + " is null");
+			throw new Exception(this.getPrefixedName(name) + " is null");
 		} else if (s.isEmpty()) {
-			throw new Exception(this.prefix + name + " is empty");
+			throw new Exception(this.getPrefixedName(name) + " is empty");
 		}
 		outputProperty(name, "xxxxxx");
 	}
 	
+	protected void rangeInclusive(String name, int val, int min, int max) throws Exception {
+		if (val < min || val > max) {
+			throw new Exception(this.getPrefixedNameValue(name, (Integer) val) + " must be between " + String.valueOf(min) + " and " + String.valueOf(max));
+		} 
+		outputProperty(name, val);
+	}
 	protected void noValidate(String name, String s) { 
 		outputProperty(name, s);
 	}
@@ -84,8 +96,16 @@ public class Properties {
 		outputProperty(name, "xxxxxx");
 	}
 	
-	private void outputProperty(String name, Object s) {
-		System.out.println(this.prefix + name + "=" + (s == null ? "" : s.toString()));
+	private void outputProperty(String name, Object v) {
+		System.out.println(this.getPrefixedNameValue(name, v));
+	}
+	
+	private String getPrefixedName(String name) {
+		return this.prefix + name;
+	}
+	
+	private String getPrefixedNameValue(String name, Object v) {
+		return this.prefix + name + "=" + (v == null ? "<null>" : v.toString());
 	}
 	
 }
