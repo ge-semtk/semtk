@@ -28,6 +28,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutilib.requests.DatabaseQueryRequest;
 import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
@@ -46,6 +47,10 @@ public class HiveServiceRestController {
 
 	@Autowired
 	HiveProperties props;
+	@Autowired
+	ResultsServiceProperties resultsProps;
+	@Autowired
+	StatusServiceProperties statusProps;
 	
 	/**
 	 * Execute arbitrary query in Hive
@@ -253,7 +258,7 @@ public class HiveServiceRestController {
 		}
 		query = setStmt + " " + setStmtExecutionEngine + " " + query;
 		
-		TableResultSet tableResultSet = new TableResultSet();
+		TableOrJobIdResultSet resultSet = new TableOrJobIdResultSet();
 
 		// get credentials from property file
 		String username = props.getUsername();
@@ -262,19 +267,32 @@ public class HiveServiceRestController {
 		try {
 			LocalLogger.logToStdOut("Connecting to: " + HiveConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
 			HiveConnector oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password);
-			LocalLogger.logToStdOut("Hive query: " + query);
-			Table table = oc.query(query);
-			LocalLogger.logToStdOut("Returning num rows: " + (table != null ? String.valueOf(table.getNumRows()) : "<null>"));
-			tableResultSet.addResults(table);
-			tableResultSet.setSuccess(true);
+			
+			// TODO decide on the mechanism to turn this on/off
+			boolean ASYNC = false;
+			if (ASYNC) {
+				LocalLogger.logToStdOut("Async Hive query: " + query);
+				HiveQueryThread queryThread = new HiveQueryThread(oc, query, statusProps, resultsProps);
+				queryThread.start();
+				resultSet.addResults(queryThread.getJobId());
+				
+			} else {
+				LocalLogger.logToStdOut("Hive query: " + query);
+				Table table = oc.query(query);
+				LocalLogger.logToStdOut("Returning num rows: " + (table != null ? String.valueOf(table.getNumRows()) : "<null>"));
+				resultSet.addResults(table);
+				
+			}
+			resultSet.setSuccess(true);
 
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);
-			tableResultSet.setSuccess(false);
-			tableResultSet.addRationaleMessage(e.getMessage());
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(e.getMessage());
 		}
 
-		return tableResultSet.toJson();
+		
+		return resultSet.toJson();
 	}
 
 }

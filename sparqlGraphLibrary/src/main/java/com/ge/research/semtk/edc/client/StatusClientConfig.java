@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.edc.client;
 
+import java.util.UUID;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
@@ -26,8 +28,15 @@ public class StatusClientConfig extends RestClientConfig {
 
 	private String jobId;		
 
-	public StatusClientConfig(String serviceProtocol,String serviceServer, int servicePort, 
-							  String jobId) throws Exception {
+	/**
+	 * Constructor which uses provided jobId
+	 * @param serviceProtocol
+	 * @param serviceServer
+	 * @param servicePort
+	 * @param jobId
+	 * @throws Exception
+	 */
+	public StatusClientConfig(String serviceProtocol,String serviceServer, int servicePort, String jobId) throws Exception {
 		
 		super(serviceProtocol, serviceServer, servicePort, "fake");
 		this.setServiceEndpoint(null); // TODO this is a wonky way to circumvent the service endpoint -PEC
@@ -36,6 +45,22 @@ public class StatusClientConfig extends RestClientConfig {
 		this.jobId = jobId;
 	}
 	
+	/**
+	 * Constructor which generates a new jobId
+	 * @param serviceProtocol
+	 * @param serviceServer
+	 * @param servicePort
+	 * @throws Exception
+	 */
+	public StatusClientConfig(String serviceProtocol,String serviceServer, int servicePort) throws Exception {
+
+		super(serviceProtocol, serviceServer, servicePort, "fake");
+		this.setServiceEndpoint(null); // TODO this is a wonky way to circumvent the service endpoint -PEC
+
+		// set non-inherited members
+		this.jobId = "job_" + UUID.randomUUID().toString();
+	}
+
 	public String getJobId() {
 		return jobId;
 	}
