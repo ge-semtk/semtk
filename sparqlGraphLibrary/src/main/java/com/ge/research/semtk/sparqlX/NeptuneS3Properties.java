@@ -56,7 +56,7 @@ public class NeptuneS3Properties extends Properties {
 		noValidate("s3ClientRegion", s3ClientRegion);
 		noValidate("s3BucketName", s3BucketName);
 		noValidate("s3AccessId", s3AccessId);
-		noValidate("s3Secret", s3Secret);
+		noValidateNoPrint("s3Secret", s3Secret);
 		noValidate("awsIamRoleArn", awsIamRoleArn);
 		
 	}

@@ -67,8 +67,21 @@ public class Properties {
 		outputProperty(name, s);
 	}
 	
+	protected void notEmptyNoPrint(String name, String s) throws Exception {
+		if (s == null) {
+			throw new Exception(this.prefix + name + " is null");
+		} else if (s.isEmpty()) {
+			throw new Exception(this.prefix + name + " is empty");
+		}
+		outputProperty(name, "xxxxxx");
+	}
+	
 	protected void noValidate(String name, String s) { 
 		outputProperty(name, s);
+	}
+	
+	protected void noValidateNoPrint(String name, String s) { 
+		outputProperty(name, "xxxxxx");
 	}
 	
 	private void outputProperty(String name, Object s) {
