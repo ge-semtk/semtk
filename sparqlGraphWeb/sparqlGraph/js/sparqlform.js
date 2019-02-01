@@ -632,6 +632,9 @@ require([	'local/sparqlformconfig',
                     filterItem = childSNode;
                 }
 
+
+
+
 			} else {
 				childSNode = null;
 				filterItem = item;
