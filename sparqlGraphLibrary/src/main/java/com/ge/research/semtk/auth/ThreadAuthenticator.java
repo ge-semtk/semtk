@@ -61,17 +61,19 @@ public class ThreadAuthenticator {
 	 * @param headerTable - can be null (equivalent to un-authenticated)
 	 */
 	public static void authenticateThisThread(HeaderTable headerTable) {
-		
-		/******* logging ********/		
-		String oldName = getThreadUserName();
+		final boolean LOG_TEST = false;
 		
 		/****** real work ********/
 		threadHeaderTables.set(headerTable);
 		threadJobAdmins.set(false);
 		
-		/******* logging ********/		
-		LocalLogger.logToStdErr(Thread.currentThread().getName() + 
-								" has authenticated  from: " + oldName + "  to: " + getThreadUserName());
+		/******* logging ********/	
+		/** getting overwhelming, so left just for manual debugging **/
+		if (LOG_TEST) {
+			String oldName = getThreadUserName();
+			LocalLogger.logToStdErr(Thread.currentThread().getName() + 
+									" has authenticated  from: " + oldName + "  to: " + getThreadUserName());
+		}
 	}
 	
 	public static void authenticateThisThread(String userName) {
