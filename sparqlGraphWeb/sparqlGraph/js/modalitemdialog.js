@@ -152,7 +152,7 @@ define([	// properly require.config'ed
 				// uncheck "optional"
 				var optMinSelect = this.getFieldElement(ModalItemDialog.OPTIONAL);
 				if (optMinSelect != null) {
-                    IIDX.selectFirstMatchingText(optMinSelect,
+                    IIDXHelper.selectFirstMatchingText(optMinSelect,
                                                  this.getOptMinusText(PropertyItem.OPT_MINUS_NONE));
             	}
 
