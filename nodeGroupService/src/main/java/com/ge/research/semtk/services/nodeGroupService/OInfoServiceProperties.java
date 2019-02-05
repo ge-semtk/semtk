@@ -1,12 +1,11 @@
-package com.ge.research.semtk.services.ingestion;
+package com.ge.research.semtk.services.nodeGroupService;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.ge.research.semtk.properties.ServiceProperties;
-
 @Configuration
-@ConfigurationProperties(prefix="ingestion.status", ignoreUnknownFields = true)
-public class StatusServiceProperties extends ServiceProperties {
+@ConfigurationProperties(prefix="query.oinfo", ignoreUnknownFields = true)
+public class OInfoServiceProperties extends ServiceProperties {
 
 }

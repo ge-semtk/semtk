@@ -23,13 +23,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ge.research.semtk.belmont.*;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutilib.requests.ConnectionUriRequest;
-import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 
 import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -51,6 +53,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 
+
 import io.swagger.annotations.ApiOperation;
 
 @RestController
@@ -65,8 +68,11 @@ public class NodeGroupServiceRestController {
 
 	public static final String RET_KEY_NODEGROUP = "nodegroup";
 	public static final String RET_KEY_SPARQLID = "sparqlID";
+		
+	@Autowired
+	OInfoServiceProperties oinfo_props;
 	
-	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);   // 5 seconds.  TODO make this a property
+    OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);   // 5 seconds.  TODO make this a property
 
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
@@ -620,8 +626,7 @@ public class NodeGroupServiceRestController {
 		try {
 			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
 			
-			SparqlConnection conn = requestBody.getSparqlConnection();
-			OntologyInfo oInfo = oInfoCache.get(conn);
+			OntologyInfo oInfo = retrieveOInfo(requestBody.getSparqlConnection());
 			
 			NodeGroup ret = new NodeGroup();
 			Node newNode = ret.addNode(requestBody.getNodeUri(), oInfo);
@@ -640,32 +645,6 @@ public class NodeGroupServiceRestController {
 
 
 	@ApiOperation(
-			value="Refresh cached ontology"
-			)
-	@CrossOrigin
-	@RequestMapping(value="/clearCachedOntology", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public JSONObject clearCachedOntology(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
-		HeadersManager.setHeaders(headers);
-		final String ENDPOINT_NAME = "clearCachedOntology";
-		SimpleResultSet retval = new SimpleResultSet(false);
-
-		try {
-			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
-			
-			SparqlConnection conn = requestBody.getSparqlConnection();
-			oInfoCache.remove(conn);
-			
-			retval.setSuccess(true);
-		}
-		catch (Exception e) {
-			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
-			retval.setSuccess(false);
-			LocalLogger.printStackTrace(e);
-		}
-
-		return retval.toJson();		
-	}
-	@ApiOperation(
 			value="Adds a new node to an existing nodeGroup"
 	)
 	@CrossOrigin
@@ -678,8 +657,8 @@ public class NodeGroupServiceRestController {
 		try {
 			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
 
-			SparqlConnection conn = requestBody.getConnection();
-			OntologyInfo oInfo = oInfoCache.get(conn);
+			OntologyInfo oInfo = retrieveOInfo(requestBody.getConnection());
+			
 			String newNodeUri = requestBody.getNewNodeUri();
 			String existingNodeSparqlId = requestBody.getExistingNodeSparqlId();
 
@@ -705,6 +684,26 @@ public class NodeGroupServiceRestController {
 		}
 
 		return retval.toJson();
+	}
+	
+	/**
+	 * Retrieve oInfo.
+	 * @param conn
+	 * @return
+	 * @throws Exception
+	 */
+	private OntologyInfo retrieveOInfo(SparqlConnection conn) throws Exception {
+//		/* This option is slower
+//		 * But cache is cleared when owl is loaded or model might have changed
+//		 * Reality: if you're working on a nodegroup this might not matter.  Performance could be more important.
+//		 */
+//		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+//		return oClient.getOntologyInfo(conn);
+		
+		/* Faster option: Local cache
+		 * It doensn't get cleared if model changes
+		 */
+		return oInfoCache.get(conn);
 	}
 
 }

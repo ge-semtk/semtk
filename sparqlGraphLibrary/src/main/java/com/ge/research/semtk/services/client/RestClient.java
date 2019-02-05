@@ -67,6 +67,7 @@ public abstract class RestClient extends Client implements Runnable {
 	protected HeaderTable headerTable = null;
 	protected String putContent = null;
 	protected File fileParameter = null;
+	protected String fileParameterName = "file";
 	protected HttpResponse httpResponse = null;
 	
 	/** 
@@ -168,7 +169,9 @@ public abstract class RestClient extends Client implements Runnable {
 	/**
 	 * Abstract method to handle an empty response from the service
 	 */
-	public abstract void handleEmptyResponse() throws Exception;
+	public void handleEmptyResponse() throws Exception {
+		throw new Exception("Received empty response: " + this.httpResponse.toString());
+	}
 	
 	/**
 	 * Execute and get result as SimpleResultSet
@@ -239,7 +242,7 @@ public abstract class RestClient extends Client implements Runnable {
 			// add the file
 			FileBody bin = new FileBody(fileParameter);
 			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-			builder.addPart("file", bin);
+			builder.addPart(this.fileParameterName, bin);
 			
 			// add parametersJSON as StringBody
 			for (Object k : parametersJSON.keySet()) {

@@ -652,7 +652,7 @@ require([	'local/sparqlformconfig',
 			}
 			filterItem.setIsReturned(true);
 
-			addFormRow(itemSNode, item.getKeyName(), childSNode);
+			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 
 		itemDialogCallback = function(item, sparqlID, returnFlag, optMinus, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {

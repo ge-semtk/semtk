@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.edc;
+package com.ge.research.semtk.properties;
 
 // meant to be inherited into a spring boot properties object needing database connection info
 

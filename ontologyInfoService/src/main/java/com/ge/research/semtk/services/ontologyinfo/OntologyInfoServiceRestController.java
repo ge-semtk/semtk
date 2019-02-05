@@ -20,8 +20,11 @@ package com.ge.research.semtk.services.ontologyinfo;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +37,10 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
+
+import io.swagger.annotations.ApiOperation;
 
 @CrossOrigin
 @RestController
@@ -56,7 +62,8 @@ public class OntologyInfoServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getDataDictionary", method=RequestMethod.POST)
-	public JSONObject getDataDictionary(@RequestBody SparqlConnectionRequestBody requestBody) {
+	public JSONObject getDataDictionary(@RequestBody SparqlConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
 	
     	TableResultSet res = new TableResultSet();	
 	    try {
@@ -75,7 +82,8 @@ public class OntologyInfoServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getRdfOWL", method=RequestMethod.POST)
-	public JSONObject getRdfOWL(@RequestBody OntologyInfoJsonRequest requestBody){
+	public JSONObject getRdfOWL(@RequestBody OntologyInfoJsonRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -95,7 +103,8 @@ public class OntologyInfoServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getSADL", method=RequestMethod.POST)
-	public JSONObject getSADL(@RequestBody OntologyInfoJsonRequest requestBody){
+	public JSONObject getSADL(@RequestBody OntologyInfoJsonRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -116,7 +125,8 @@ public class OntologyInfoServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getOntologyInfo", method=RequestMethod.POST)
-	public JSONObject getOntologyInfo(@RequestBody OntologyInfoRequestBody requestBody){
+	public JSONObject getOntologyInfo(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -139,7 +149,8 @@ public class OntologyInfoServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/getOntologyInfoJson", method=RequestMethod.POST)
-	public JSONObject getOntologyInfoJson(@RequestBody OntologyInfoRequestBody requestBody){
+	public JSONObject getOntologyInfoJson(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -160,4 +171,29 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
+	@ApiOperation(
+			value="Un-cache any oInfo that was built from any model dataset in the given connection."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/uncacheChangedModel", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject uncacheChangedModel(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "uncacheChangedModel";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {			
+			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			
+			oInfoCache.removeSimilar(conn);
+			
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
 }

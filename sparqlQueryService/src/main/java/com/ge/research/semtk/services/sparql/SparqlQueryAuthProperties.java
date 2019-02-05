@@ -8,4 +8,8 @@ import com.ge.research.semtk.auth.AuthorizationProperties;
 @Configuration
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class SparqlQueryAuthProperties extends AuthorizationProperties {
+	public SparqlQueryAuthProperties() {
+		super();
+		this.setPrefix("auth");
+	}
 }

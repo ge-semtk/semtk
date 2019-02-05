@@ -25,8 +25,6 @@ import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionCli
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationProperties;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
-import com.ge.research.semtk.edc.EndpointProperties;
-import com.ge.research.semtk.edc.SemtkEndpointProperties;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
@@ -38,6 +36,8 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.properties.EndpointProperties;
+import com.ge.research.semtk.properties.SemtkEndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.resultSet.TableResultSet;
