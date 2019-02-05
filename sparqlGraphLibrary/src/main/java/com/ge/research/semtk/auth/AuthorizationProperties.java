@@ -49,8 +49,8 @@ public class AuthorizationProperties extends Properties {
 	
 	public void validate() throws Exception {
 		super.validate();
-		rangeInclusive("refreshFreqSeconds", refreshFreqSeconds, 1, 3600);
-		noValidate("settingsFilePath", settingsFilePath);
-		noValidate("logPath", logPath);
+		checkRangeInclusive("refreshFreqSeconds", refreshFreqSeconds, 1, 3600);
+		checkNone("settingsFilePath", settingsFilePath);
+		checkNone("logPath", logPath);
 	}
 }

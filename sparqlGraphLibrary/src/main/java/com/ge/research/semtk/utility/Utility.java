@@ -462,7 +462,11 @@ public abstract class Utility {
 	/**
 	 * Print all properties.  Validate all properties and exit if any are invalid.
 	 * @param properties keys are property names, values are property values
+	 * 
+	 * @deprecated
+	 * Use newer pattern in package com.ge.research.semtk.properties
 	 */
+	@Deprecated
 	public static void validatePropertiesAndExitOnFailure(TreeMap<String,String> properties){
 		validatePropertiesAndExitOnFailure(properties, new HashSet<String>());
 	}

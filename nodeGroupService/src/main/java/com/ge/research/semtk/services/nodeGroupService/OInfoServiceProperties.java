@@ -8,4 +8,9 @@ import com.ge.research.semtk.properties.ServiceProperties;
 @ConfigurationProperties(prefix="query.oinfo", ignoreUnknownFields = true)
 public class OInfoServiceProperties extends ServiceProperties {
 
+	public OInfoServiceProperties() {
+		super();
+		this.setPrefix("query.oinfo");
+	}
+	
 }

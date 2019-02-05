@@ -13,6 +13,19 @@ import com.ge.research.semtk.utility.LocalLogger;
  *          
  *          Check out SparqlQueryServiceRestController for usage.
  *          
+ *          Sub-classes should
+ *          	- define attributes
+ *          	- override validate() with 
+ *          		+ super()
+ *          		+ check...() for each attribute
+ *          Bottom level subclass should
+ *          	@Configuation
+ *          	@ConfigurationProperties(prefix="hello")
+ *          	have a constructor with setPrefix("hello")
+ *          
+ *          RestController should have @PostConstruct function 
+ *          	call validateWithExit()
+ *          
  * @author 200001934
  *
  */
@@ -56,7 +69,7 @@ public class Properties {
 	
 	/****** Individual field validators *******/
 	
-	protected void notEmpty(String name, Integer i) throws Exception {
+	protected void checkNotEmpty(String name, Integer i) throws Exception {
 		if (i == null) {
 			throw new Exception(this.getPrefixedName(name) + " is null");
 		}
@@ -64,7 +77,15 @@ public class Properties {
 
 	}
 	
-	protected void notEmpty(String name, String s) throws Exception {
+	protected void checkNotEmpty(String name, Boolean b) throws Exception {
+		if (b == null) {
+			throw new Exception(this.getPrefixedName(name) + " is null");
+		}
+		outputProperty(name, (Object) b);
+
+	}
+	
+	protected void checkNotEmpty(String name, String s) throws Exception {
 		if (s == null) {
 			throw new Exception(this.getPrefixedName(name) + " is null");
 		} else if (s.isEmpty()) {
@@ -73,7 +94,7 @@ public class Properties {
 		outputProperty(name, s);
 	}
 	
-	protected void notEmptyNoPrint(String name, String s) throws Exception {
+	protected void checkNotEmptyMaskValue(String name, String s) throws Exception {
 		if (s == null) {
 			throw new Exception(this.getPrefixedName(name) + " is null");
 		} else if (s.isEmpty()) {
@@ -82,17 +103,17 @@ public class Properties {
 		outputProperty(name, "xxxxxx");
 	}
 	
-	protected void rangeInclusive(String name, int val, int min, int max) throws Exception {
+	protected void checkRangeInclusive(String name, int val, int min, int max) throws Exception {
 		if (val < min || val > max) {
 			throw new Exception(this.getPrefixedNameValue(name, (Integer) val) + " must be between " + String.valueOf(min) + " and " + String.valueOf(max));
 		} 
 		outputProperty(name, val);
 	}
-	protected void noValidate(String name, String s) { 
-		outputProperty(name, s);
+	protected void checkNone(String name, Object o) { 
+		outputProperty(name, o);
 	}
 	
-	protected void noValidateNoPrint(String name, String s) { 
+	protected void checkNoneMaskValue(String name, Object o) { 
 		outputProperty(name, "xxxxxx");
 	}
 	
@@ -104,7 +125,15 @@ public class Properties {
 		return this.prefix + name;
 	}
 	
+	/**
+	 * Get printable prevfix.name=value
+	 * Blocks out "password" fields' values
+	 * @param name
+	 * @param v
+	 * @return
+	 */
 	private String getPrefixedNameValue(String name, Object v) {
+		
 		return this.prefix + name + "=" + (v == null ? "<null>" : v.toString());
 	}
 	

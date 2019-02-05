@@ -21,16 +21,31 @@ package com.ge.research.semtk.services.results;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.ge.research.semtk.properties.Properties;
 import com.ge.research.semtk.properties.SemtkEndpointProperties;
 
 @Configuration
 @ConfigurationProperties(prefix="results", ignoreUnknownFields = true)
-public class ResultsProperties {
+public class ResultsProperties extends Properties {
 	private String fileLocation = "";
 	private String baseURL = "";
 	private int sampleLines = 1;
 	private Boolean cleanUpThreadEnabled = true;
 	private Integer cleanUpThreadFrequency;
+	
+	public ResultsProperties() {
+		super();
+		setPrefix("results");
+	}
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkNotEmpty("fileLocation", fileLocation);
+		checkNotEmpty("baseURL", baseURL);
+		checkNone("sampleLines", sampleLines);
+		checkNotEmpty("cleanUpThreadEnabled", cleanUpThreadEnabled);
+		checkNotEmpty("cleanUpThreadFrequency", cleanUpThreadFrequency);
+	}
 	
 	public String getBaseURL() {
 		return baseURL;

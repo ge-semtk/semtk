@@ -25,6 +25,13 @@ public abstract class ServiceProperties extends Properties {
 	private int    port;
 	private String protocol;
 
+	public void validate() throws Exception {
+		super.validate();
+		checkNotEmpty("server", server);
+		checkNotEmpty("port", port);
+		checkNotEmpty("protocol", protocol);
+	}
+	
 	public String getServer() {
 		return server;
 	}
@@ -44,11 +51,6 @@ public abstract class ServiceProperties extends Properties {
 		this.protocol = protocol;
 	}
 	
-	public void validate() throws Exception {
-		super.validate();
-		notEmpty("server", server);
-		notEmpty("port", port);
-		notEmpty("protocol", protocol);
-	}
+	
 	
 }

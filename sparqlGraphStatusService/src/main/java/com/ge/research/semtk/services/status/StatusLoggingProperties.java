@@ -27,5 +27,7 @@ import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
 @Configuration
 @ConfigurationProperties(prefix="status.logging", ignoreUnknownFields = true)
 public class StatusLoggingProperties extends EasyLogEnabledConfigProperties {
-
+	public StatusLoggingProperties() {
+		setPrefix("status.logging");
+	}
 }

@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.status;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,10 +29,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
@@ -39,6 +42,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -59,7 +63,25 @@ public class StatusServiceRestController {
 	StatusSemtkEndpointProperties edc_prop;
 	@Autowired
 	StatusLoggingProperties log_prop;
+	@Autowired
+	StatusAuthProperties auth_prop;
+	@Autowired 
+	private ApplicationContext appContext;
 	
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		
+		prop.validateWithExit();
+		edc_prop.validateWithExit();
+		log_prop.validateWithExit();
+		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	@RequestMapping(value="/headers", method=RequestMethod.GET)
 	public String getPercentComplete(@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);

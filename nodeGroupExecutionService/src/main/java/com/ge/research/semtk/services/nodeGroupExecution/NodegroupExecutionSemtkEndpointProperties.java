@@ -29,4 +29,9 @@ import com.ge.research.semtk.properties.SemtkEndpointProperties;
 @ConfigurationProperties(prefix="node-group-execution.edc.services", ignoreUnknownFields = true)
 public class NodegroupExecutionSemtkEndpointProperties extends SemtkEndpointProperties {
 
+	public NodegroupExecutionSemtkEndpointProperties() {
+		super();
+		setPrefix("node-group-execution.edc.services");
+	}
+	
 }

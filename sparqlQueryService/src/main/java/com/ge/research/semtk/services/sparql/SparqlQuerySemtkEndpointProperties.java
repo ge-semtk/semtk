@@ -9,4 +9,9 @@ import com.ge.research.semtk.properties.SemtkEndpointProperties;
 @ConfigurationProperties(prefix="results.edc.services", ignoreUnknownFields = true)
 public class SparqlQuerySemtkEndpointProperties extends SemtkEndpointProperties {
 
+	public SparqlQuerySemtkEndpointProperties() {
+		super();
+		setPrefix("results.edc.services");
+	}
+
 }

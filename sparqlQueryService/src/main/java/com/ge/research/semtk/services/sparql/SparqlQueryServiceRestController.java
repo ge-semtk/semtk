@@ -102,8 +102,9 @@ public class SparqlQueryServiceRestController {
 	
 	@PostConstruct
     public void init() {
-		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.STANDARD_PROPERTIES);
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
+		
 		oinfo_props.validateWithExit();
 		serviceProps.validateWithExit();
 		auth_prop.validateWithExit();

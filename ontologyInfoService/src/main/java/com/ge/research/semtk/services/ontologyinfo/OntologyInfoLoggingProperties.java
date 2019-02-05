@@ -26,5 +26,7 @@ import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
 @Configuration
 @ConfigurationProperties(prefix="ontologyinfo.logging", ignoreUnknownFields = true)
 public class OntologyInfoLoggingProperties extends EasyLogEnabledConfigProperties {
-
+	public OntologyInfoLoggingProperties() {
+		setPrefix("ontologyinfo.logging");
+	}
 }

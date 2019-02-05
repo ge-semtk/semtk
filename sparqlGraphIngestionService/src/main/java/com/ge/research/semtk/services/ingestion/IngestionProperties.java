@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.services.ingestion;
 
+import org.hibernate.validator.internal.constraintvalidators.bv.notempty.NotEmptyValidatorForMap;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +31,11 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	private String sparqlUserName = "";
 	private String sparqlPassword = "";
 	private int batchSize = 50;
+	
+	public IngestionProperties() {
+		super();
+		setPrefix("ingestion");
+	}
 	
 	// get, set, etc
 	public String getSparqlUserName(){
@@ -54,5 +60,12 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	
 	public int getBatchSize(){
 		return this.batchSize;
+	}
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkNotEmpty("sparqlUserName", sparqlUserName);
+		checkNotEmptyMaskValue("sparqlPassword", sparqlPassword);
+		checkNone("batchSize", batchSize);
 	}
 }

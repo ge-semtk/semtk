@@ -34,11 +34,9 @@ import com.ge.research.semtk.utility.Utility;
 public class ResultsServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
 	private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
-
+	
 	@Autowired
 	ResultsSemtkEndpointProperties edc_prop;
-	@Autowired
-	ResultsAuthProperties auth_prop;
 	
 	/**
 	 * Code to run after the service starts up.
@@ -46,37 +44,10 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	@Override
 	public void onApplicationEvent(final ApplicationReadyEvent event) {
 
-		// print and validate properties - and exit if invalid
-		String[] propertyNames = {
-				"ssl.enabled",
-				"results.baseURL",
-				"results.fileLocation",
-				"results.edc.services.jobEndpointType",
-				"results.edc.services.jobEndpointDomain",
-				"results.edc.services.jobEndpointServerUrl",
-				"results.edc.services.jobEndpointDataset",
-				//"results.edc.services.jobEndpointUsername",
-				//"results.edc.services.jobEndpointPassword",
-				"results.cleanUpThreadEnabled",
-				"results.cleanUpThreadFrequency"
-		};
-		TreeMap<String,String> properties = new TreeMap<String,String>();
-		for(String propertyName : propertyNames){
-			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-		}
-		Utility.validatePropertiesAndExitOnFailure(properties); 
-
 		// initialize and clean up results location
 		initializeResultsLocation(event);
 		cleanUpFileLocation(event);
 		
-		// start AuthorizationManager for all threads
-		try {
-			AuthorizationManager.authorize(auth_prop);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
 		return;
 	}
 

@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,11 +49,13 @@ import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 import io.swagger.annotations.ApiOperation;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
@@ -78,6 +82,9 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 public class IngestionRestController {
  
 	@Autowired
+	IngestionAuthProperties auth_prop;
+	
+	@Autowired
 	IngestionProperties prop;
 	
 	@Autowired
@@ -85,13 +92,32 @@ public class IngestionRestController {
 	
 	@Autowired
 	StatusServiceProperties status_prop;
-			
+		
+	@Autowired 
+	private ApplicationContext appContext;
+	
 	static final String SERVICE_NAME = "ingestion";
 	
 	static final String ASYNC_NOTES = "Success returns a jobId.\n" +
 			"* check for that job's status of success with status message" +
 			"* if job's status is failure then fetch a results table with ingestion errors" + 
 			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
+	
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		
+		prop.validateWithExit();
+		results_prop.validateWithExit();
+		status_prop.validateWithExit();
+		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
+	
 	/**
 	 * Load data from CSV
 	 */

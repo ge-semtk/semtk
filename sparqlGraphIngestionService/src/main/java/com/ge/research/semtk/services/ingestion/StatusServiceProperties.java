@@ -9,4 +9,9 @@ import com.ge.research.semtk.properties.ServiceProperties;
 @ConfigurationProperties(prefix="ingestion.status", ignoreUnknownFields = true)
 public class StatusServiceProperties extends ServiceProperties {
 
+	public StatusServiceProperties() {
+		super();
+		setPrefix("ingestion.status");
+	}
+
 }

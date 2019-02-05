@@ -9,4 +9,9 @@ import com.ge.research.semtk.auth.AuthorizationProperties;
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class NodegroupExecutionAuthProperties extends AuthorizationProperties {
 
+	public NodegroupExecutionAuthProperties() {
+		super();
+		setPrefix("auth");
+	}
+
 }

@@ -29,6 +29,7 @@ package com.ge.research.semtk.services.results;
  */
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -45,12 +46,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.JobFileInfo;
@@ -75,6 +78,7 @@ import com.ge.research.semtk.services.results.requests.ResultsRequestBodyMaxRows
 import com.ge.research.semtk.services.results.requests.ResultsRequestBodyPath;
 import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -98,7 +102,24 @@ public class ResultsServiceRestController {
 	ResultsSemtkEndpointProperties edc_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
+	@Autowired
+	ResultsAuthProperties auth_prop; 
+	@Autowired 
+	private ApplicationContext appContext;
 	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		
+		prop.validateWithExit();
+		edc_prop.validateWithExit();
+		log_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	@CrossOrigin
 	@RequestMapping(value="/storeJsonLdResults", method=RequestMethod.POST)
 	public JSONObject storeJsonLdResults(@RequestBody JsonLdStoreRequestBody requestBody, @RequestHeader HttpHeaders headers) {

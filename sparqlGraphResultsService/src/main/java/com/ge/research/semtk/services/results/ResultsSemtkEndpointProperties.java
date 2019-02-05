@@ -29,4 +29,9 @@ import com.ge.research.semtk.properties.SemtkEndpointProperties;
 @ConfigurationProperties(prefix="results.edc.services", ignoreUnknownFields = true)
 public class ResultsSemtkEndpointProperties extends SemtkEndpointProperties {
 
+	public ResultsSemtkEndpointProperties() {
+		super();
+		setPrefix("results.edc.services");
+	}
+
 }
