@@ -262,6 +262,14 @@ public class SparqlConnection {
 		}
 	}
 	
+	public SparqlEndpointInterface getDeleteInterface() throws Exception {
+		if (this.dataInterfaces.size() == 1) {
+			return this.dataInterfaces.get(0);
+		} else {
+			throw new Exception("Expecting one data endpoint for DELETE.  Found " + this.dataInterfaces.size());
+		}
+	}
+	
 	// Is number of endpoint serverURLs == 1
 	public boolean isSingleServerURL() {
 		String url = "";
