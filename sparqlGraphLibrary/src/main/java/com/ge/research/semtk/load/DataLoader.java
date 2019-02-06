@@ -297,7 +297,7 @@ public class DataLoader implements Runnable {
 					// calculate percent complete
 					double fraction = (double)startingRow / Math.max(1, this.datasetRows);
 					int percent = this.percentStart + (int) Math.floor((this.percentEnd - this.percentStart) * fraction); 
-					LocalLogger.logToStdOutNoEOL("..." + percent);
+					LocalLogger.logToStdOutNoEOL("..." + startingRow);
 					lastMillis = nowMillis;
 					
 					// tell status client if there is one set up
@@ -308,7 +308,7 @@ public class DataLoader implements Runnable {
 			}
 		}
 		
-		LocalLogger.logToStdOutNoEOL("...100 (" + startingRow + ")\n");
+		LocalLogger.logToStdOutNoEOL("..." + startingRow + "\n");
 		
 		
 		// join all remaining threads
