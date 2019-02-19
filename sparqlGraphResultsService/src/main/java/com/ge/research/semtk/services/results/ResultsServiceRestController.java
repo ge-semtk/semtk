@@ -768,7 +768,7 @@ public class ResultsServiceRestController {
 		outPrint.close();
 	}
 
-	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception, Exception{
+	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception {
 		
 		PrintWriter outPrint = resp.getWriter();
 		
