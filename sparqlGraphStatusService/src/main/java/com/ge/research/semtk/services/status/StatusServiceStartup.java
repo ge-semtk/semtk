@@ -31,42 +31,11 @@ import com.ge.research.semtk.utility.Utility;
 @Component
 public class StatusServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-	@Autowired
-	StatusSemtkEndpointProperties edc_prop;
-	@Autowired
-	StatusAuthProperties auth_prop;
-
 	/**
 	 * Code to run after the service starts up.
 	 */
 	@Override
 	public void onApplicationEvent(final ApplicationReadyEvent event) {
-
-
-		// print and validate properties - and exit if invalid
-		String[] propertyNames = {
-				"ssl.enabled",
-				"status.edc.services.jobEndpointType",
-				"status.edc.services.jobEndpointDomain",
-				"status.edc.services.jobEndpointServerUrl",
-				"status.edc.services.jobEndpointDataset",
-				//"status.edc.services.jobEndpointUsername",
-				//"status.edc.services.jobEndpointPassword"
-		};
-		TreeMap<String,String> properties = new TreeMap<String,String>();
-		for(String propertyName : propertyNames){
-			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-		}
-		Utility.validatePropertiesAndExitOnFailure(properties); 
-
-		// start AuthorizationManager for all threads
-		
-		try {
-			AuthorizationManager.authorize(auth_prop);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
 		
 		return;
 	}

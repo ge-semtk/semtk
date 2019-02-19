@@ -20,7 +20,10 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 import java.net.URL;
 import java.util.ArrayList;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +36,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
@@ -68,6 +72,7 @@ import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryT
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -84,12 +89,30 @@ public class NodeGroupExecutionRestController {
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
  	static final String JOB_ID_RESULT_KEY = SimpleResultSet.JOB_ID_RESULT_KEY;
  	
+ 	@Autowired
+	private NodegroupExecutionAuthProperties auth_prop;
 	@Autowired
 	NodegroupExecutionProperties prop;
 	@Autowired
 	NodegroupExecutionSemtkEndpointProperties edc_prop;
 	@Autowired
 	NodegroupExecutionLoggingProperties log_prop;
+	@Autowired 
+	private ApplicationContext appContext;
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+
+		// these are still in the older NodegroupExecutionServiceStartup
+		// prop
+		edc_prop.validateWithExit();
+		log_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	
 	@ApiOperation(
 			value="Get job status",

@@ -26,5 +26,7 @@ import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
 @Configuration
 @ConfigurationProperties(prefix="results.logging", ignoreUnknownFields = true)
 public class ResultsLoggingProperties extends EasyLogEnabledConfigProperties {
-
+	public ResultsLoggingProperties() {
+		setPrefix("results.logging");
+	}
 }

@@ -21,11 +21,24 @@ package com.ge.research.semtk.services.status;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.ge.research.semtk.properties.Properties;
+
 @Configuration
 @ConfigurationProperties(prefix="status.service", ignoreUnknownFields = true)
-public class StatusProperties {
+public class StatusProperties extends Properties {
 
 	private int jobMaxWaitMsec = 1000 * 60 * 5;
+	
+	
+	public StatusProperties() {
+		super();
+		setPrefix("status.service");
+	}
+
+	public void validate() throws Exception {
+		super.validate();
+		checkNone("jobMaxWaitMsec", jobMaxWaitMsec);
+	}
 	
 	public int getJobMaxWaitMsec() {
 		return jobMaxWaitMsec;

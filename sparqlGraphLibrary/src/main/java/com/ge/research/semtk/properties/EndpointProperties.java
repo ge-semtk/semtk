@@ -20,7 +20,7 @@ package com.ge.research.semtk.properties;
 
 // meant to be inherited into a spring boot microservice property object
 // properties for a triple-store endpoint
-public class EndpointProperties {
+public class EndpointProperties extends Properties {
 	private String jobEndpointType = "";
 	private String jobEndpointServerUrl = "";
 	private String jobEndpointUsername = "";
@@ -51,6 +51,14 @@ public class EndpointProperties {
 	}
 	public void setJobEndpointServerUrl(String jobEndpointServerUrl) {
 		this.jobEndpointServerUrl = jobEndpointServerUrl;
+	}
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkNotEmpty("jobEndpointType", jobEndpointType);
+		checkNotEmpty("jobEndpointServerUrl", jobEndpointServerUrl);
+		checkNone("jobEndpointUsername", jobEndpointUsername);
+		checkNone("jobEndpointPassword", jobEndpointPassword);
 	}
 	
 }

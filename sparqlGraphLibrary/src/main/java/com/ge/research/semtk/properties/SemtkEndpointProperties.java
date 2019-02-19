@@ -38,4 +38,10 @@ public class SemtkEndpointProperties extends EndpointProperties {
 	public void setJobEndpointDataset(String jobEndpointDataset) {
 		this.jobEndpointDataset = jobEndpointDataset;
 	}
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkNotEmpty("jobEndpointDomain", jobEndpointDomain);
+		checkNotEmpty("jobEndpointDataset", jobEndpointDataset);
+	}
 }

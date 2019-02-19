@@ -8,4 +8,9 @@ import com.ge.research.semtk.properties.ServiceProperties;
 @ConfigurationProperties(prefix="ingestion.results", ignoreUnknownFields = true)
 public class ResultsServiceProperties extends ServiceProperties {
 
+	public ResultsServiceProperties() {
+		super();
+		setPrefix("ingestion.results");
+	}
+
 }

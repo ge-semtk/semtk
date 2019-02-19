@@ -53,11 +53,11 @@ public class NeptuneS3Properties extends Properties {
 	
 	public void validate() throws Exception {
 		super.validate();
-		noValidate("s3ClientRegion", s3ClientRegion);
-		noValidate("s3BucketName", s3BucketName);
-		noValidate("s3AccessId", s3AccessId);
-		noValidateNoPrint("s3Secret", s3Secret);
-		noValidate("awsIamRoleArn", awsIamRoleArn);
+		checkNone("s3ClientRegion", s3ClientRegion);
+		checkNone("s3BucketName", s3BucketName);
+		checkNone("s3AccessId", s3AccessId);
+		checkNoneMaskValue("s3Secret", s3Secret);
+		checkNone("awsIamRoleArn", awsIamRoleArn);
 		
 	}
 }

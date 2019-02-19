@@ -203,7 +203,7 @@ public class DataLoader implements Runnable {
 		
 		// next pass, if any, is all the remaining weight
 		this.percentStart = this.percentEnd;
-		this.percentEnd = 100;
+		this.percentEnd = 99;
 		
 		
 		// NOTE: when create-URI-if-lookup-fails exists is implemented,
@@ -297,7 +297,8 @@ public class DataLoader implements Runnable {
 					// calculate percent complete
 					double fraction = (double)startingRow / Math.max(1, this.datasetRows);
 					int percent = this.percentStart + (int) Math.floor((this.percentEnd - this.percentStart) * fraction); 
-					LocalLogger.logToStdOutNoEOL("..." + percent);
+					percent = Math.min(99, percent);  // don't let it hit 100 due to rounding.  100 will fail in status service.
+					LocalLogger.logToStdOutNoEOL("..." + startingRow);
 					lastMillis = nowMillis;
 					
 					// tell status client if there is one set up
@@ -308,7 +309,7 @@ public class DataLoader implements Runnable {
 			}
 		}
 		
-		LocalLogger.logToStdOutNoEOL("...100 (" + startingRow + ")\n");
+		LocalLogger.logToStdOutNoEOL("..." + startingRow + "\n");
 		
 		
 		// join all remaining threads
