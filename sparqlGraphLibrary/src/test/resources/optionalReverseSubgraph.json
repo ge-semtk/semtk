@@ -1,0 +1,513 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "revopt light",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server-test.crd.ge.com:2420",
+				"dataset": "http://research.ge.com/revopt/light/model"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server-test.crd.ge.com:2420",
+				"dataset": "http://research.ge.com/revopt/light/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "namespace",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#namespace",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?namespace_0",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "propertyName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#propertyName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?propertyName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "propertyType",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#propertyType",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "ComponentProperty",
+				"fullURIName": "http://semtk.org/revopt#ComponentProperty",
+				"subClassNames": [],
+				"SparqlID": "?ComponentProperty",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "componentName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#componentName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?componentName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "namespace",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#namespace",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Component",
+				"fullURIName": "http://semtk.org/revopt#Component",
+				"subClassNames": [],
+				"SparqlID": "?Component",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Component"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "poComponent",
+						"ValueType": "Component",
+						"UriValueType": "http://semtk.org/revopt#Component",
+						"ConnectBy": "poComponent",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#poComponent"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?ComponentProperty"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "poProperty",
+						"ValueType": "ComponentProperty",
+						"UriValueType": "http://semtk.org/revopt#ComponentProperty",
+						"ConnectBy": "poProperty",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#poProperty"
+					}
+				],
+				"NodeName": "PropertyOf",
+				"fullURIName": "http://semtk.org/revopt#PropertyOf",
+				"subClassNames": [],
+				"SparqlID": "?PropertyOf",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "MyPlan",
+				"fullURIName": "http://semtk.org/revopt#MyPlan",
+				"subClassNames": [],
+				"SparqlID": "?MyPlan",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "reqName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#reqName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?reqName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?PropertyOf"
+						],
+						"OptionalMinus": [
+							"0"
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "controlProperty",
+						"ValueType": "PropertyOf",
+						"UriValueType": "http://semtk.org/revopt#PropertyOf",
+						"ConnectBy": "controlProperty",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#controlProperty"
+					}
+				],
+				"NodeName": "Request",
+				"fullURIName": "http://semtk.org/revopt#Request",
+				"subClassNames": [],
+				"SparqlID": "?Request",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "MyBlanketAmount",
+				"fullURIName": "http://semtk.org/revopt#MyBlanketAmount",
+				"subClassNames": [],
+				"SparqlID": "?MyBlanketAmount",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?MyBlanketAmount"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "coverageAmount",
+						"ValueType": "MyBlanketAmount",
+						"UriValueType": "http://semtk.org/revopt#MyBlanketAmount",
+						"ConnectBy": "coverageAmount",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#coverageAmount"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Request"
+						],
+						"OptionalMinus": [
+							"-1"
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "coverageRequest",
+						"ValueType": "Request",
+						"UriValueType": "http://semtk.org/revopt#Request",
+						"ConnectBy": "coverageRequest",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#coverageRequest"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?MyPlan"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "coveragePlan",
+						"ValueType": "MyPlan",
+						"UriValueType": "http://semtk.org/revopt#MyPlan",
+						"ConnectBy": "coveragePlan",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#coveragePlan"
+					}
+				],
+				"NodeName": "MyBlanket",
+				"fullURIName": "http://semtk.org/revopt#MyBlanket",
+				"subClassNames": [],
+				"SparqlID": "?MyBlanket",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "testFileName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/revopt#testFileName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?testFileName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?MyBlanket"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "testFileBlanket",
+						"ValueType": "MyBlanket",
+						"UriValueType": "http://semtk.org/revopt#MyBlanket",
+						"ConnectBy": "testFileBlanket",
+						"Connected": true,
+						"UriConnectBy": "http://semtk.org/revopt#testFileBlanket"
+					}
+				],
+				"NodeName": "MyFile",
+				"fullURIName": "http://semtk.org/revopt#MyFile",
+				"subClassNames": [],
+				"SparqlID": "?MyFile",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "http://semtk.org/revopt/data/component",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "component"
+			},
+			{
+				"colId": "col_1",
+				"colName": "namespace"
+			},
+			{
+				"colId": "col_2",
+				"colName": "property"
+			},
+			{
+				"colId": "col_3",
+				"colName": "question"
+			},
+			{
+				"colId": "col_4",
+				"colName": "type"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?MyFile",
+				"type": "http://semtk.org/revopt#MyFile",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?MyBlanket",
+				"type": "http://semtk.org/revopt#MyBlanket",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?MyBlanketAmount",
+				"type": "http://semtk.org/revopt#MyBlanketAmount",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Request",
+				"type": "http://semtk.org/revopt#Request",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?MyPlan",
+				"type": "http://semtk.org/revopt#MyPlan",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?PropertyOf",
+				"type": "http://semtk.org/revopt#PropertyOf",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Component",
+				"type": "http://semtk.org/revopt#Component",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://semtk.org/revopt#componentName",
+						"URILookup": [
+							"?Component"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk.org/revopt#namespace",
+						"URILookup": [
+							"?Component"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?ComponentProperty",
+				"type": "http://semtk.org/revopt#ComponentProperty",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://semtk.org/revopt#namespace",
+						"URILookup": [
+							"?ComponentProperty"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk.org/revopt#propertyName",
+						"URILookup": [
+							"?ComponentProperty"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk.org/revopt#propertyType",
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

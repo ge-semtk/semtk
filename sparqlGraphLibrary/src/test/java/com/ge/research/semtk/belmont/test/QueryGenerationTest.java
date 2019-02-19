@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -500,6 +501,30 @@ public class QueryGenerationTest {
 		
 		assertTrue(sparql.replaceAll("\\s+","").toLowerCase().contains(expected.replaceAll("\\s+","").toLowerCase()));
 		// see NOTE at top of this test class definition
+	}
+	
+	@Test 
+	public void generateComplexOptionalReverse() throws Exception {
+		
+		
+		// load a v6 nodegroup containing this.limit
+		JSONObject json = Utility.getJSONObjectFromFilePath("src/test/resources/optionalReverseSubgraph.json");
+		SparqlGraphJson sgJson = new SparqlGraphJson(json);
+		NodeGroup ng = sgJson.getNodeGroup();
+			
+		// generate query with optional reverse sub-graph
+		String sparql = ng.generateSparqlSelect();
+		sparql = sparql.replaceAll("\\s+"," ");
+		assertEquals("Did not generate exactly one optional: " + sparql, StringUtils.countMatches(sparql, "optional"), 1);
+		
+		int openPos = sparql.indexOf("optional");
+		int closePos = sparql.indexOf("}", sparql.indexOf("optional"));
+		int pos = sparql.indexOf("?MyBlanket revopt:");
+		assertTrue("?MyBlanket is not inside reverse optional: " + sparql, pos > openPos && pos < closePos);
+		
+		pos = sparql.indexOf("?MyFile revopt:");
+		assertTrue("?MyFile is not inside reverse optional: " + sparql, pos > openPos && pos < closePos);
+
 	}
 	
 }
