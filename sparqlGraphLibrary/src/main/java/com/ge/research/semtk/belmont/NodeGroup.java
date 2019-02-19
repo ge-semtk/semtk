@@ -2459,7 +2459,7 @@ public class NodeGroup {
 						// increment every node on the optional side of the nodeItem
 						for (Node k : subGraph) {
 							int val = optHash.get(k.getSparqlID());
-							optHash.put(k.getSparqlID(), val);
+							optHash.put(k.getSparqlID(), val + 1);
 						}	
 					}
 				}
