@@ -288,7 +288,7 @@ public class HiveServiceRestController {
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);
 			resultSet.setSuccess(false);
-			resultSet.addRationaleMessage(e.getMessage());
+			resultSet.addRationaleMessage("Failed executing query " + query + ": " + e.getMessage());
 		}
 
 		
