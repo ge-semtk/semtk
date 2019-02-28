@@ -55,14 +55,10 @@ public class CSVDataLoaderRunner {
 		
 	/**
 	 * Main method
-	 * @param args
-	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception{
 		
 		try{
-		
-			// get arguments
 			if(args.length != 5 && args.length != 6){
 				throw new Exception("Invalid argument list.  Usage: main(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, batchSize, connectionOverrideFilePath (optional))");
 			}
@@ -76,28 +72,11 @@ public class CSVDataLoaderRunner {
 				connectionOverrideFilePath = args[5]; 	// override the connection in the template JSON with the provided connection
 			}
 			
-			// validate arguments
-			if(!templateJSONFilePath.endsWith(".json")){
-				throw new Exception("Error: Template file " + templateJSONFilePath + " is not a JSON file");
-			}
-			if(!dataCSVFilePath.endsWith(".csv")){
-				throw new Exception("Error: Data file " + dataCSVFilePath + " is not a CSV file");
-			}
-			
 			try{
-				int batchSizeInt = Integer.parseInt(batchSize);
-				if(batchSizeInt < 1 || batchSizeInt > 100){
-					throw (new Exception(""));
-				}
+				Integer.parseInt(batchSize);
 			}catch(Exception e){
-				throw new Exception("Error: Invalid batch size: " + batchSize);
+				throw new Exception("Error: Cannot parse batch size to int: '" + batchSize + "'");
 			}
-					
-			LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
-			LocalLogger.logToStdOut("Template:   " + templateJSONFilePath);
-			LocalLogger.logToStdOut("CSV file:   " + dataCSVFilePath);
-			LocalLogger.logToStdOut("Batch size: " + batchSize);	
-			LocalLogger.logToStdOut("Connection override: " + connectionOverrideFilePath);	// may be null if no override connection provided
 			
 			try{
 				new CSVDataLoaderRunner().loadData(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, Integer.parseInt(batchSize), connectionOverrideFilePath);
@@ -115,7 +94,7 @@ public class CSVDataLoaderRunner {
 	
 
 	public CSVDataLoaderRunner(){
-
+				
 		// get the config for logging stuff needed from the config file on the classpath.
 		try {
 			InputStream in = this.getClass().getClassLoader().getResourceAsStream("LoaderConfig.conf");
@@ -134,11 +113,9 @@ public class CSVDataLoaderRunner {
             	else if(currKV[0].equalsIgnoreCase("loggerAPILocation")) { this.loggerAPILocation = currKV[1]; }
             	else{
             		//huh? that's new
-            	}
-            	
+            	}            	
                 line = reader.readLine();
             }      
-
 			if(this.loggerAPILocation != null && this.loggerPort != null && this.loggerProtocol != null && this.loggerServer != null){
 				lg = new LoggerRestClient(new LoggerClientConfig("CSVDataLoaderStandalone", loggerProtocol, loggerServer, Integer.parseInt(loggerPort), loggerAPILocation));
 			}
@@ -159,8 +136,25 @@ public class CSVDataLoaderRunner {
 	 * @param connectionOverrideFilePath null to use the connection in the template json, or a SPARQL connection to override it
 	 * @throws Exception
 	 */
-	private void loadData(String templateJSONFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, String dataCSVFilePath, int batchSize, String connectionOverrideFilePath) throws Exception{
+	public void loadData(String templateJSONFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, String dataCSVFilePath, int batchSize, String connectionOverrideFilePath) throws Exception{
+
+		// validate arguments
+		if(!templateJSONFilePath.endsWith(".json")){
+			throw new Exception("Error: Template file " + templateJSONFilePath + " is not a JSON file");
+		}
+		if(!dataCSVFilePath.endsWith(".csv")){
+			throw new Exception("Error: Data file " + dataCSVFilePath + " is not a CSV file");
+		}		
+		if(batchSize < 1 || batchSize > 100){
+			throw new Exception("Error: Invalid batch size: " + batchSize);
+		}
 		
+		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
+		LocalLogger.logToStdOut("Template:   " + templateJSONFilePath);
+		LocalLogger.logToStdOut("CSV file:   " + dataCSVFilePath);
+		LocalLogger.logToStdOut("Batch size: " + batchSize);	
+		LocalLogger.logToStdOut("Connection override: " + connectionOverrideFilePath);	// may be null if no override connection provided
+				
 		// load the JSON template
 		JSONObject templateJSON = Utility.getJSONObjectFromFilePath(templateJSONFilePath);
 		
@@ -198,7 +192,6 @@ public class CSVDataLoaderRunner {
 			
 			// if the logger fully qualified name was not null (assuming the port and the logging service location are included), log this attempt:
 			if(lg != null ){
-
 				ArrayList<DetailsTuple> dt = new ArrayList<DetailsTuple>();
 				dt.add(new DetailsTuple("records added", recordsAdded + "" ));
 				dt.add(new DetailsTuple("target graph", loader.getDatasetGraphName() ));
