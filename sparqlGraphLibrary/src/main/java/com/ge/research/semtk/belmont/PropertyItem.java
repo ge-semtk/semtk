@@ -69,10 +69,16 @@ public class PropertyItem extends Returnable {
 		
 		this.keyName = jObj.get("KeyName").toString();
 		
-		int i=1;
 		String typeStr = (String) (jObj.get("ValueType"));
-		XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
-		this.valueType = typeVal;
+		
+		try {
+			XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
+			this.valueType = typeVal;
+		} catch (Exception e) {
+			throw new Exception("Can't find property item " + (String)(jObj.get("UriRelationship")) + "'s range: " + (String)(jObj.get("relationship")) + " in the ontology");
+		}
+		
+		
 		this.valueTypeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
 		this.uriRelationship = jObj.get("UriRelationship").toString();
 		

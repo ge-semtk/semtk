@@ -238,13 +238,20 @@ OntologyInfo.prototype = {
 		var ret = [];
 		var superclasses = [];
 
+        // find each parent
         var parentNames = this.classHash[subclassName].getParentNameStrs(false);
         for (var i=0; i < parentNames.length; i++) {
             var currParentName = parentNames[i];
             ret.push(currParentName);
-            superclasses.push(this.classHash[currParentName]);
+
+            if (currParentName in this.classHash) {
+                superclasses.push(this.classHash[currParentName]);
+            } else {
+                throw new Error("Class " + subclassName + "'s superclass " + currParentName + " is not found in the ontology.");
+            }
         }
 
+        // recursively add parents of parents
         for (var i=0; i < superclasses.length; i++) {
             var currParentClass = superclasses[i];
             ret = ret.concat(this.getSuperclassNames(currParentClass.getNameStr(false)));

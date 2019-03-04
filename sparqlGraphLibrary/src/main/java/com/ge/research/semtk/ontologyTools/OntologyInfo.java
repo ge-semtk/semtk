@@ -831,6 +831,25 @@ public class OntologyInfo {
 	}
 
 	/**
+	 * Check validity of the OntologyInfo
+	 * @throws Exception
+	 */
+	public void validate() throws Exception {
+		
+		// Superclass names must be valid
+		for (String className : this.classHash.keySet()) {
+			OntologyClass c = this.classHash.get(className);
+			for (String superClassName : c.getParentNameStrings(false)) {
+				if (! this.classHash.containsKey(superClassName)) {
+					throw new Exception("Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
+				}
+			}
+		}
+		
+		// Note: Range names don't necessarily need to be valid.  As long as they aren't used.
+	}
+	
+	/**
 	 * Returns true/false to indicate whether the given class is a known enumeration.
 	 * @param classURI
 	 * @return
@@ -1098,6 +1117,7 @@ public class OntologyInfo {
 		endpoint.executeQuery(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Comment"));
 		
+		this.validate();
 	}
 	
 	/**
@@ -1128,6 +1148,8 @@ public class OntologyInfo {
 		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
+		
+		this.validate();
 	}
 		
 	/*
