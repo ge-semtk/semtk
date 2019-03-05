@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +74,9 @@ public class OntologyInfo {
 	// be de-serializing a json blob.
 	private SparqlConnection modelConnection;
 	
+	private ArrayList<String> loadWarnings = new ArrayList<String>();
+	private ArrayList<String> importedGraphs = new ArrayList<String>();
+	
 	/**
 	 * Default constructor
 	 */
@@ -102,6 +107,14 @@ public class OntologyInfo {
 		this.addJson(json);
 	}
 	
+	public ArrayList<String> getLoadWarnings() {
+		return loadWarnings;
+	}
+
+	public ArrayList<String> getImportedGraphs() {
+		return importedGraphs;
+	}
+
 	/**
 	 * Load directly from model sparql endpoint interfaces
 	 * @param conn
@@ -116,7 +129,7 @@ public class OntologyInfo {
 		}
 		
 		for (int i = 0; i < modelInterfaces.size(); i++) {
-    		this.load(modelInterfaces.get(i), conn.getDomain());
+    		this.load(modelInterfaces.get(i), conn.getDomain(), conn.isOwlImportsEnabled());
     	}
     }
 
@@ -145,12 +158,10 @@ public class OntologyInfo {
 				this.load(new SparqlQueryClient( (SparqlQueryAuthClientConfig)curr ), conn.getDomain()); 
 			}
 			else{ 
-				this.load(new SparqlQueryClient(curr), conn.getDomain()); 
+				this.load(new SparqlQueryClient(curr), conn.getDomain(), conn.isOwlImportsEnabled()); 
 			}
     	}
     }
-	
-	
 	
 	/**
 	 * add a new class to the ontology info object. this includes information on super/sub classes
@@ -529,6 +540,99 @@ public class OntologyInfo {
 		return null;
 	}
 	
+
+	/**
+	 * returns the sparql for getting the sub and super-class relationships for known classes.
+	 **/
+	private static String getOwlImportsQuery(String graphName){
+		
+		
+		String retval = "select distinct ?importee from <" + graphName + "> where { " +
+						"<" + graphName + "> <http://www.w3.org/2002/07/owl#imports> ?importee. }";
+		
+		return retval;
+	}
+	
+	/**
+	 * Load owl imports if they aren't already loaded
+	 * and add loadWarning if the graph is empty
+	 * @param sei
+	 * @param imports
+	 * @throws Exception
+	 */
+	private void loadOwlImports(SparqlEndpointInterface sei, String [] imports) throws Exception {
+		// for each import
+		if (imports != null) {
+			for (int i=0; i < imports.length; i++) {
+				
+				if (! this.importedGraphs.contains(imports[i])) {
+					// create an sei
+					SparqlEndpointInterface importSei = SparqlEndpointInterface.getInstance(
+															sei.getServerType(),
+															sei.getServerAndPort(),
+															imports[i],
+															sei.getUserName(),
+															sei.getPassword()
+															);
+					
+					// save state
+					int numClasses = this.getNumberOfClasses();
+					int numEnums = this.getNumberOfEnum();
+					int numProperties = this.getNumberOfProperties();
+					
+					// load
+					this.load(importSei, imports[i]);
+					this.importedGraphs.add(imports[i]);
+					
+					// check for changes
+					if (numClasses == this.getNumberOfClasses() &&
+					    numEnums == this.getNumberOfEnum() &&
+					    numProperties == this.getNumberOfProperties()) {
+						this.loadWarnings.add("Import graph has no ontology data or doesn't exist: " + imports[i]);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Load owl imports if they aren't already loaded
+	 * and add loadWarning if the graph is empty
+	 * @param client
+	 * @param imports
+	 * @throws Exception
+	 */
+	private void loadOwlImports(SparqlQueryClient client, String [] imports) throws Exception {
+		if (imports != null) {
+			// for each import
+			for (int i=0; i < imports.length; i++) {
+				
+				if (! this.importedGraphs.contains(imports[i])) {
+					// create a client
+					SparqlQueryAuthClientConfig importClientConfig = new SparqlQueryAuthClientConfig(client.getConfig());
+					importClientConfig.setGraph(imports[i]);
+					SparqlQueryClient importClient = new SparqlQueryClient(importClientConfig);
+					
+					// save current state
+					int numClasses = this.getNumberOfClasses();
+					int numEnums = this.getNumberOfEnum();
+					int numProperties = this.getNumberOfProperties();
+					
+					// load
+					this.load(importClient, imports[i]);
+					this.importedGraphs.add(imports[i]);
+					
+					// check for changes
+					if (numClasses == this.getNumberOfClasses() &&
+					    numEnums == this.getNumberOfEnum() &&
+					    numProperties == this.getNumberOfProperties()) {
+						this.loadWarnings.add("Import graph has no ontology data or doesn't exist: " + imports[i]);
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * returns the sparql for getting the sub and super-class relationships for known classes.
 	 **/
@@ -1098,6 +1202,15 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
+		this.load(endpoint, domain, false);
+	}
+	
+	public void load(SparqlEndpointInterface endpoint, String domain, boolean owlImportFlag) throws Exception {
+		
+		if (owlImportFlag) {
+			endpoint.executeQuery(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()), SparqlResultTypes.TABLE);
+			this.loadOwlImports(endpoint, endpoint.getStringResultsColumn("importee"));
+		}
 		// execute each sub-query in order
 		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
@@ -1127,10 +1240,20 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlQueryClient client, String domain) throws Exception {
+		this.load(client, domain, false);
+	}
 		
-		// execute each sub-query in order
+	public void load(SparqlQueryClient client, String domain, boolean owlImportFlag) throws Exception {
 		TableResultSet tableRes;
 		String graphName = client.getConfig().getGraph();
+		
+		if (owlImportFlag) {
+			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName), SparqlResultTypes.TABLE);
+			this.loadOwlImports(client, tableRes.getTable().getColumn("importee"));
+		}
+		
+		// execute each sub-query in order
+		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
 		

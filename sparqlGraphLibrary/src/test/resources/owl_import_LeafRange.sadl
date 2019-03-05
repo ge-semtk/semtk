@@ -1,0 +1,6 @@
+uri "http://semtk.junit/leafrange" alias leafrange.
+
+import "http://semtk.junit/imported".
+
+LeafRange is a class,
+	described by prop with a single value of type Imported.
