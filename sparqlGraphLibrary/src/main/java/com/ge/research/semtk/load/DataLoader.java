@@ -1,5 +1,5 @@
 /**
- ** Copyright 2018 General Electric Company
+ ** Copyright 2019 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
 package com.ge.research.semtk.load;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 import org.json.simple.JSONObject;
 
@@ -28,13 +27,16 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * Imports a dataset into a triple store.
@@ -463,6 +465,79 @@ public class DataLoader implements Runnable {
 			// we're out of luck if we can't tell the status service what happened
 			LocalLogger.logToStdErr("Exception when trying to report to Status Service:");
 			LocalLogger.printStackTrace(ee);
+		}
+	}
+	
+	/**
+	 * Same as method below, but with no connection override
+	 */
+	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize) throws Exception{
+		return loadFromCsv(loadTemplateFilePath, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, batchSize, null);
+	}
+	
+	/**
+	 * Utility method to load data given a template file, CSV file, and SPARQL connection
+	 * @param loadTemplateFilePath 		path to the JSON file containing the load template
+	 * @param csvFilePath 				path to the CSV data file
+	 * @param sparqlEndpointUser 		username for SPARQL endpoint
+	 * @param sparqlEndpointPassword 	password for SPARQL endpoint
+	 * @param batchSize					loading batch size
+	 * @param connectionOverride 		a SPARQL connection to override the connection in the template (use null to not override)
+	 * @return							total CSV records processed
+	 */
+	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
+
+		// validate arguments
+		if(!loadTemplateFilePath.endsWith(".json")){
+			throw new Exception("Error: Template file " + loadTemplateFilePath + " is not a JSON file");
+		}
+		if(!csvFilePath.endsWith(".csv")){
+			throw new Exception("Error: Data file " + csvFilePath + " is not a CSV file");
+		}		
+		if(batchSize < 1 || batchSize > 100){
+			throw new Exception("Error: Invalid batch size: " + batchSize);
+		}
+		
+		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
+		LocalLogger.logToStdOut("Template:   " + loadTemplateFilePath);
+		LocalLogger.logToStdOut("CSV file:   " + csvFilePath);
+		LocalLogger.logToStdOut("Batch size: " + batchSize);	
+		LocalLogger.logToStdOut("Connection override: " + connectionOverride);	// may be null if no override connection provided
+				
+		// get a SparqlGraphJson object, override connection if needed
+		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(loadTemplateFilePath));
+		if(connectionOverride != null){	
+			sgJson.setSparqlConn(connectionOverride);
+		}
+					
+		// get needed column names from the JSON template
+		String[] colNamesToIngest = sgJson.getImportSpec().getColNamesUsed();		
+		LocalLogger.logToStdOut("Num columns to ingest: " + colNamesToIngest.length);
+		
+		// open the dataset, using only the needed column names
+		Dataset dataset = null;
+		try{
+			dataset = new CSVDataset(csvFilePath, colNamesToIngest);
+		}catch(Exception e){
+			String s = "Could not instantiate CSV dataset: " + e.getMessage();
+			LocalLogger.logToStdErr(s);
+			throw new Exception(s);
+		}
+		
+		// load the data
+		try{
+			DataLoader loader = new DataLoader(sgJson.getJson(), batchSize, dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			int recordsAdded = loader.importData(true);
+			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
+			if(loader.getLoadingErrorReport().getNumRows() > 0){
+				// e.g. URI lookup errors may appear here
+				LocalLogger.logToStdOut("Error report:\n" + loader.getLoadingErrorReportBrief());
+				throw new Exception("Could not load data: loading errors");
+			}
+			return recordsAdded;
+		}catch(Exception e){
+			LocalLogger.printStackTrace(e);
+			throw new Exception("Could not load data: " + e.getMessage());
 		}
 	}
 
