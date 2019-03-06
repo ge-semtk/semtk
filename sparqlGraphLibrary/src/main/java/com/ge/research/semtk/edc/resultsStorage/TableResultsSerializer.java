@@ -21,15 +21,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
-import java.util.ArrayList;
-
-import javax.activation.UnsupportedDataTypeException;
-import javax.lang.model.type.UnknownTypeException;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.SystemMenuBar;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -96,8 +88,6 @@ public class TableResultsSerializer {
 	
 	private void writeCSV( PrintWriter aOutputStream, Integer stopRowNumber ) throws UnsupportedOperationException, IOException{
 		
-		String quote = "\"";
-		
 		if(this.headerInfo == null){ throw new UnsupportedOperationException("cannot return info when metadata is empty or nonexistent"); }
 		// open the data file
 		if(!this.dataFile.exists()){ throw new UnsupportedOperationException("cannot return info when data file is nonexistent"); }
@@ -154,8 +144,7 @@ public class TableResultsSerializer {
 	}
 	
 	private void writeJSON( PrintWriter aOutputStream, Integer stopRowNumber) throws UnsupportedOperationException, IOException{
-		boolean done = false;
-		
+
 		String quote = "\"";
 		
 		if(this.headerInfo == null){ throw new UnsupportedOperationException("cannot return info when metadata is empty or nonexistent"); }
@@ -202,17 +191,21 @@ public class TableResultsSerializer {
 		int processedRows = 0;
 		
 		FileReader fr = new FileReader(dataFile);
+		if(fr == null){	throw new IOException("FileReader is null for " + dataFile.getAbsolutePath()); }		// TODO troubleshooting NullPointerException - delete if fixed
 		BufferedReader bfr = new BufferedReader(fr);
+		if(bfr == null){ throw new IOException("BufferedReader is null for " + dataFile.getAbsolutePath()); }	// TODO troubleshooting NullPointerException - delete if fixed
 		
 		// fast foward
 		bfr = this.fastForwardResultsFile(bfr);
-				
+		if(bfr == null){ throw new IOException("BufferedReader is null after fastForwardResults() for " + dataFile.getAbsolutePath()); }	// TODO troubleshooting NullPointerException - delete if fixed	 
+		
 		while(processedRows < stopRowNumber){
 			// read the next row from the data set and write to the stream. 
 			
 			String currRow = bfr.readLine();
+			if(currRow == null){ throw new IOException("currRow is null from " + dataFile.getAbsolutePath()); }	// TODO troubleshooting NullPointerException - delete if fixed	 
 			// conversion should not be required in this case as it was read as written.
-			aOutputStream.write(currRow);
+			aOutputStream.write(currRow); 					// TODO NullPointerException is happening here - delete above troubleshooting throws if fixed							
 			
 			// add the comma, if needed.
 			if(processedRows < stopRowNumber -1){  aOutputStream.write(","); }
