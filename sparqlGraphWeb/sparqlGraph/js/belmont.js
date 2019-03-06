@@ -449,7 +449,7 @@ NodeItem.prototype = {
 
     // deprecated
     setSNodeOptional(snode, optional) {
-        setOptionalMinus(snode, optional);
+        this.setOptionalMinus(snode, optional);
     },
 
 	setOptionalMinus(snode, optionalMinus) {
@@ -2988,6 +2988,8 @@ SemanticNodeGroup.prototype = {
 				var normItems = [];
 				var optOutItems = [];
 				var optInItems= [];
+                var optOutMinusCount = 0;
+				var optOutOptionalCount = 0;
 
 				// outgoing nodes
 				var nItems = snode.getNodeList();
@@ -3004,7 +3006,10 @@ SemanticNodeGroup.prototype = {
 
 							} else if (opt == NodeItem.OPTIONAL_TRUE) {
 								optOutItems.push([nItem, target]);
-
+                                optOutOptionalCount += 1;
+                            } else if (opt == NodeItem.MINUS_TRUE) {
+                                optOutItems.push([nItem, target]);
+                                optOutMinusCount += 1;
 							} else {// OPTIONAL_REVERSE
 								optInItems.push([nItem, target]);
 							}
@@ -3022,7 +3027,7 @@ SemanticNodeGroup.prototype = {
 					if (opt == NodeItem.OPTIONAL_FALSE) {
 						normItems.push([nItem, snode]);
 
-					} else if (opt == NodeItem.OPTIONAL_REVERSE) {
+					} else if (opt == NodeItem.OPTIONAL_REVERSE || opt == NodeItem.MINUS_REVERSE) {
 						optOutItems.push([nItem, snode]);
 
 					} else {// OPTIONAL_TRUE
@@ -3037,23 +3042,26 @@ SemanticNodeGroup.prototype = {
 				// no optional in connections AND
 				if (nonOptReturnCount == 0 && normItems.length == 1 && optOutItems.length >= 1 && optInItems.length == 0) {
 
-					// set the single normal nodeItem to incoming optional
-					var nItem = normItems[0][0];
-					var target = normItems[0][1];
-					if (target != snode) {
-						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_REVERSE);
-					} else {
-						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_TRUE);
-					}
+                    // also can't do anything if there's a mix of OPTIONAL and MINUS outgoing
+                    if (optOutOptionalCount == 0 || optOutMinusCount == 0) {
+    					// set the single normal nodeItem to incoming optional
+    					var nItem = normItems[0][0];
+    					var target = normItems[0][1];
+    					if (target != snode) {
+    						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_REVERSE);
+    					} else {
+    						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_TRUE);
+    					}
 
-					// if there is only one outgoing optional, than it can be set to non-optional for performance
-					if (optOutItems.length == 1 && optPropCount == 0) {
-						var oItem = optOutItems[0][0];
-						var oTarget = optOutItems[0][1];
-						oItem.setOptionalMinus(oTarget, NodeItem.OPTIONAL_FALSE);
-					}
+    					// if there is only one outgoing optional, than it can be set to non-optional for performance
+    					if (optOutItems.length == 1 && optPropCount == 0) {
+    						var oItem = optOutItems[0][0];
+    						var oTarget = optOutItems[0][1];
+    						oItem.setOptionalMinus(oTarget, NodeItem.OPTIONAL_FALSE);
+    					}
 
-					changedFlag = true;
+    					changedFlag = true;
+                    }
 				}
 			}
 		}

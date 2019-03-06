@@ -1535,6 +1535,8 @@ public class NodeGroup {
 				ArrayList<Node>     optOutItems1 = new ArrayList<Node>();
 				ArrayList<NodeItem> optInItems= new ArrayList<NodeItem>();
 				ArrayList<Node>     optInItems1 = new ArrayList<Node>();
+				int optOutMinusCount = 0;
+				int optOutOptionalCount = 0;
 				
 				// outgoing nodes
 				ArrayList<NodeItem> nItems = snode.getNodeItemList();
@@ -1550,6 +1552,12 @@ public class NodeGroup {
 							} else if (opt == NodeItem.OPTIONAL_TRUE) {
 								optOutItems.add(nItem);
 								optOutItems1.add(target);
+								optOutOptionalCount += 1;
+								
+							} else if (opt == NodeItem.MINUS_TRUE) {
+								optOutItems.add(nItem);
+								optOutItems1.add(target);
+								optOutMinusCount += 1;
 								
 							} else { // OPTIONAL_REVERSE
 								optInItems.add(nItem);
@@ -1568,7 +1576,7 @@ public class NodeGroup {
 						normItems.add(nItem);
 						normItems1.add(snode);
 	
-					} else if (opt == NodeItem.OPTIONAL_REVERSE) {
+					} else if (opt == NodeItem.OPTIONAL_REVERSE || opt == NodeItem.MINUS_REVERSE) {
 						optOutItems.add(nItem);
 						optOutItems1.add(snode);
 							
@@ -1585,25 +1593,28 @@ public class NodeGroup {
 				// no optional in connections AND
 				if (nonOptReturnCount == 0 && normItems.size() == 1 && optOutItems.size() >= 1 && optInItems.size() == 0) {
 				
-					// set the single normal nodeItem to incoming optional
-					NodeItem nItem = normItems.get(0);
-					Node target = normItems1.get(0);
-					
-					if (target != snode) {
-						nItem.setOptionalMinus(target,  NodeItem.OPTIONAL_REVERSE);
-					} else {
-						nItem.setOptionalMinus(target, NodeItem.OPTIONAL_TRUE);
-					}
-
-					// if there is only one outgoing optional, and no optional props here, 
-					// then outgoing optional can be set to non-optional for performance
-					if (optOutItems.size() == 1 && optPropCount == 0) {
-						NodeItem oItem = optOutItems.get(0);
-						Node oTarget = optOutItems1.get(0);
-						oItem.setOptionalMinus(oTarget, NodeItem.OPTIONAL_FALSE);
-					}
-					 
-					changedFlag = true;
+					// also can't do anything if there's a mix of OPTIONAL and MINUS outgoing
+                    if (optOutOptionalCount == 0 || optOutMinusCount == 0) {
+						// set the single normal nodeItem to incoming optional
+						NodeItem nItem = normItems.get(0);
+						Node target = normItems1.get(0);
+						
+						if (target != snode) {
+							nItem.setOptionalMinus(target,  NodeItem.OPTIONAL_REVERSE);
+						} else {
+							nItem.setOptionalMinus(target, NodeItem.OPTIONAL_TRUE);
+						}
+	
+						// if there is only one outgoing optional, and no optional props here, 
+						// then outgoing optional can be set to non-optional for performance
+						if (optOutItems.size() == 1 && optPropCount == 0) {
+							NodeItem oItem = optOutItems.get(0);
+							Node oTarget = optOutItems1.get(0);
+							oItem.setOptionalMinus(oTarget, NodeItem.OPTIONAL_FALSE);
+						}
+						 
+						changedFlag = true;
+                    }
 				}
 			}
 		}

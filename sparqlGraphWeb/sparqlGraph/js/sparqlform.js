@@ -674,13 +674,24 @@ require([	'local/sparqlformconfig',
 
 	    	} else {
 	    		// "SemanticNode"
-	    		if (optionalFlag != null) {
+	    		if (optMinus != null) {
 	    			var singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
 	    			if (singleNodeItem != null) {
+                        var flag = optMinus;
+
+
 	    				if (item.ownsNodeItem(singleNodeItem)) {
-	    					singleNodeItem.setSNodeOptional(item.getSNodes()[0], optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE);
+                            if (flag == PropertyItem.OPT_MINUS_NONE) { flag = NodeItem.OPTIONAL_FALSE; }
+                            else if (flag == PropertyItem.OPT_MINUS_OPTIONAL) { flag = NodeItem.OPTIONAL_REVERSE; }
+                            else if (flag == PropertyItem.OPT_MINUS_MINUS) { flag = NodeItem.MINUS_REVERSE; }
+
+	    					singleNodeItem.setOptionalMinus(item.getSNodes()[0], flag);
 						} else {
-							singleNodeItem.setSNodeOptional(item, optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE);
+                            if (flag == PropertyItem.OPT_MINUS_NONE) { flag = NodeItem.OPTIONAL_FALSE; }
+                            else if (flag == PropertyItem.OPT_MINUS_OPTIONAL) { flag = NodeItem.OPTIONAL_TRUE; }
+                            else if (flag == PropertyItem.OPT_MINUS_MINUS) { flag = NodeItem.MINUS_TRUE; }
+
+							singleNodeItem.setOptionalMinus(item, flag);
 						}
 	    			}
 	    		}

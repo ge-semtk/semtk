@@ -619,18 +619,19 @@ define([	// properly require.config'ed
 
 				// optional select
 				if (optionalFlag) {
-                    var optMinusText = this.getOptMinusText(this.item.getOptMinus());
+                    var optMinusText = "";
                     if (this.item.getItemType() == "PropertyItem") {
                         optMinusText = this.getOptMinusText(this.item.getOptMinus());
 					} else {
-						// nodeItem is optional if INCOMING optional
-						if (this.item.ownsNodeItem(singleNodeItem)) {
-							var targetNode = singleNodeItem.getSNodes()[0];
-							optMinusText = (singleNodeItem.getSNodeOptional(targetNode) == NodeItem.OPTIONAL_REVERSE) ? this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL) : this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
-						} else {
-							var targetNode = this.item;
-							optMinusText = (singleNodeItem.getSNodeOptional(targetNode) == NodeItem.OPTIONAL_TRUE) ? this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL) : this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
-						}
+                        var targetNode = singleNodeItem.getSNodes()[0];
+                        var optMinus = singleNodeItem.getOptionalMinus(targetNode);
+                        if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
+                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL);
+                        } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
+                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS);
+                        } else {
+                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
+                        }
 					}
 
                     optMinSelect = IIDXHelper.createSelect(
