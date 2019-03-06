@@ -35,7 +35,7 @@ public class SparqlConnection {
  * 
  */
 	
-	private final String KEY_FOLLOW_OWL_IMPORTS = "enableOwlImports";
+	private final String KEY_ENABLE_OWL_IMPORTS = "enableOwlImports";
 	
 	private String name = null;
 	private String domain = null;
@@ -98,7 +98,7 @@ public class SparqlConnection {
 		jObj.put("model", model);
 		jObj.put("data", data);
 		
-		jObj.put(KEY_FOLLOW_OWL_IMPORTS, this.enableOwlImports);
+		jObj.put(KEY_ENABLE_OWL_IMPORTS, this.enableOwlImports);
 		return jObj;
 	}
 	
@@ -143,8 +143,8 @@ public class SparqlConnection {
 	    	}
 		}
 		
-		this.enableOwlImports = (boolean) jObj.getOrDefault(KEY_FOLLOW_OWL_IMPORTS, false);
-	
+		this.enableOwlImports = (Boolean) jObj.getOrDefault(KEY_ENABLE_OWL_IMPORTS, false);
+		
 		// no deprecated field-handling
 	}
 
