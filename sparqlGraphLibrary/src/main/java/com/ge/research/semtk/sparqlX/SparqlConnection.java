@@ -404,6 +404,7 @@ public class SparqlConnection {
 		for (int i=0; i < modelKeys.length; i++) {
 			ret.append(modelKeys[i] + ";");
 		}
+		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
 		return ret.toString();
 	}
 }

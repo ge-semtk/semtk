@@ -191,7 +191,7 @@ SparqlConnection.prototype = {
 	},
 
     isOwlImportsEnabled : function() {
-        return this.owlImportsEnabled;
+        return this.enableOwlImports;
     },
 
     setOwlImportsEnabled : function(enableOwlImports) {

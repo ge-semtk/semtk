@@ -25,8 +25,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.UUID;
 
-import javax.swing.text.TabExpander;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -64,7 +62,17 @@ public class NodeGroup {
 	private ArrayList<Node> orphanOnCreate = new ArrayList<Node>();
 	private HashMap<String, String> prefixHash = new HashMap<String, String>();
 	private int prefixNumberStart = 0;
+	
+	// used for sparql generation
 	private SparqlConnection conn = null;
+	
+	// BIG design question with a long complex history.
+	// oInfo is now needed to generate SPARQL if SparqlConnection has owlImports, 
+	//    because only oInfo knows all the graphs it imported.
+	// oInfo is therefore grabbed whenever one is sent in for validation or inflating.
+	// For historical reasons, many functions require oInfo params. 
+	//    These could be deprecated in favor of simpler signatures with no oInfo.
+	private OntologyInfo oInfo = null;
 	
 	public NodeGroup(){
 		this.sparqlNameHash = new HashMap<String, String>();
@@ -627,6 +635,7 @@ public class NodeGroup {
 	}
 	
 	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception {
+		this.oInfo = uncompressOInfo;
 		HashMap<String, String> changedHash = new HashMap<String, String>();
 		this.resolveSparqlIdCollisions(jobj, changedHash);
 		int version = Integer.parseInt(jobj.get("version").toString());
@@ -669,6 +678,7 @@ public class NodeGroup {
 	 * @
 	 */
 	public void addJson(JSONArray nodeArr, OntologyInfo uncompressOInfo) throws Exception  {
+		this.oInfo = uncompressOInfo;
 		for (int j = 0; j < nodeArr.size(); ++j) {
 			JSONObject nodeJson = (JSONObject) nodeArr.get(j);
 			
@@ -1124,19 +1134,30 @@ public class NodeGroup {
 	 * Generates clauses if this.conn has
 	 *     - exactly 1 serverURL
 	 */		
-	private String generateSparqlFromOrUsing(String tab, String fromOrUsing) {
+	private String generateSparqlFromOrUsing(String tab, String fromOrUsing) throws Exception {
 		
 		// do nothing if no conn
 		if (this.conn == null) return "";
+		if (this.conn.isOwlImportsEnabled() && this.oInfo == null) {
+			throw new Exception("Internal error: Can't generate SPARQL for owlImport-enabled connection and no OntologyInfo.  Validate or inflate nodegroup first.");
+		}
 		
 		// multiple ServerURLs is not implemented
 		if (! this.conn.isSingleDataServerURL() ) {
 			throw new Error("SPARQL generation across multiple data servers is not yet supported.");
 		}
 		
-		// get datasets for first model server.  All others must be equal
+		// get graphs/datasets for first model server.  All others must be equal
 		ArrayList<String> datasets = this.conn.getAllDatasetsForServer(this.conn.getDataInterface(0).getServerAndPort());
 		
+		// add graphs from owlImports
+		if (this.oInfo != null) {
+			ArrayList<String> owlImports = this.oInfo.getImportedGraphs();
+			for (String g : owlImports) {
+				datasets.add(g);
+			}
+		}
+				
 		StringBuilder sparql = new StringBuilder().append("\n");
 		// No optimization: always "from" all datasets
 		tab = tabIndent(tab);
@@ -2019,6 +2040,7 @@ public class NodeGroup {
 		// PAUL NOTE: this used to be in graphGlue.js
 		// But there is no value in keeping oInfo and belmont separate, and
 		// combining is elegant.
+		this.oInfo = oInfo;
 		OntologyClass oClass = oInfo.getClass(classUri);
 		if (oClass == null) {
 			throw new Exception("Can't find class '" + classUri + "' in the ontology");
@@ -2153,6 +2175,7 @@ public class NodeGroup {
 		// return null if there are no paths
 
 		// get first path from classURI to this nodeGroup
+		this.oInfo = oInfo;
 		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getArrayOfURINames(), domain);
 		if (paths.size() == 0) {
 			return null;
@@ -2183,6 +2206,7 @@ public class NodeGroup {
 		// if optOptionalFlag: ONLY if node is added, change first nodeItem connection in path's isOptional to true
 		
 		// if gNodeGroup is empty: simple add
+		this.oInfo = oInfo;
 		Node sNode;
 		
 		if (this.getNodeCount() == 0) {
@@ -2882,6 +2906,7 @@ public class NodeGroup {
 	}
 	
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception  {
+		this.oInfo = oInfo;
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
 			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
 		}
@@ -2892,6 +2917,7 @@ public class NodeGroup {
 	}
 	
 	public void validateAgainstModel(OntologyInfo oInfo) throws Exception  {
+		this.oInfo = oInfo;
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
 			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
 		}
@@ -2899,5 +2925,14 @@ public class NodeGroup {
 		for (Node n : this.getNodeList()) {
 			n.validateAgainstModel(oInfo);
 		}
+	}
+	
+	/**
+	 * Associate an oInfo for sparql generation without any validation or inflation
+	 * @param oInfo
+	 * @throws Exception
+	 */
+	public void noInflateNorValidate(OntologyInfo oInfo) throws Exception  {
+		this.oInfo = oInfo;
 	}
 }

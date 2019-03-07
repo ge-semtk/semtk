@@ -56,6 +56,7 @@ define([	// properly require.config'ed
 			 this.dataFile = null;
 
 			 this.nodegroup = null;
+             this.oInfo = null;
 			 this.inputURI = null;
 			 this.owlFile = null;
 
@@ -391,6 +392,30 @@ define([	// properly require.config'ed
 							vals.push("m"+i);  // lookup code
 						}
 					}
+
+                    // loop through importedGraphs
+                    var importList = (this.oInfo != null) ? this.oInfo.getImportedGraphs() : [];
+                    var defaultSei = this.conn.getModelInterface(0);
+
+					for (var i=0; i < importList.length; i++) {
+						var sei = new SparqlServerInterface(defaultSei.getServerType(), defaultSei.getServerURL(), importList[i]);
+
+						// search already-added sei's
+						var found = -1;
+						for (var j=0; j < seis.length; j++) {
+							if (seis[j].equals(sei)) {
+								found = j;
+								break;
+							}
+						}
+						// if not found
+						if (found == -1) {
+							seis.push(sei);    // add sei
+							src.push("model"); // string for output
+							vals.push("m"+i);  // lookup code
+						}
+					}
+
 					// loop through data sei's
 					for (var i=0; i < dCount; i++) {
 						var sei = this.conn.getDataInterface(i);
@@ -798,7 +823,7 @@ define([	// properly require.config'ed
 			/**
 			 * Set up the connection and nodegroup
 			 */
-			setNodeGroup : function (conn, nodegroup, importTab, oInfoLoadTime) {
+			setNodeGroup : function (conn, nodegroup, oInfo, importTab, oInfoLoadTime) {
 
 				if (importTab !== null && nodegroup !== null && conn !== null) {
 					// set json, data, and suggested Prefix
@@ -823,6 +848,7 @@ define([	// properly require.config'ed
 				}
 
 	    		this.nodegroup = nodegroup;
+                this.oInfo = oInfo;
 
 	    		// was a new oInfo loaded?
 	    		if (oInfoLoadTime !== this.oInfoLoadTime) {

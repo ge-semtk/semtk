@@ -22,10 +22,17 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * For service calls needing SPARQL connection and domain
  */
 public class OntologyInfoRequestBody {
+	@ApiModelProperty(
+			value = "jsonRenderedSparqlConnection",
+			required = true,
+			example = 	"{ \"name\":\"my-conn\",\"serverType\":\"virtuoso\",\"dataServerUrl\": ... }"
+			           )	
 	private String jsonRenderedSparqlConnection = "";
 	
 	public void setJsonRenderedSparqlConnection(String jsonRenderedSparqlConnection) {

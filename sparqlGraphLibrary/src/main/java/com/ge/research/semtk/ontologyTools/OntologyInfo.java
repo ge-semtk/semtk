@@ -588,7 +588,7 @@ public class OntologyInfo {
 					if (numClasses == this.getNumberOfClasses() &&
 					    numEnums == this.getNumberOfEnum() &&
 					    numProperties == this.getNumberOfProperties()) {
-						this.loadWarnings.add("Import graph has no ontology data or doesn't exist: " + imports[i]);
+						this.loadWarnings.add(imports[i] + " - nothing to import");
 					}
 				}
 			}
@@ -1289,6 +1289,8 @@ public class OntologyInfo {
     	JSONArray annotationLabelList = new JSONArray();
     	JSONArray annotationCommentList = new JSONArray();
     	JSONObject prefixes =  new JSONObject();
+    	JSONArray importedGraphsList = new JSONArray();
+    	JSONArray loadWarningsList = new JSONArray();
         
         HashMap<String,String> prefixToIntHash = new HashMap<String, String>();
 
@@ -1377,6 +1379,14 @@ public class OntologyInfo {
             prefixes.put(prefixToIntHash.get(p), p);
         }
         
+        for (String s : this.importedGraphs) {
+        	importedGraphsList.add(s);
+        }
+        
+        for (String s : this.loadWarnings) {
+        	loadWarningsList.add(s);
+        }
+        
         json.put("version", OntologyInfo.JSON_VERSION);
         json.put("topLevelClassList", topLevelClassList);
     	json.put("subClassSuperClassList", subClassSuperClassList);
@@ -1385,6 +1395,8 @@ public class OntologyInfo {
     	json.put("annotationLabelList", annotationLabelList);
     	json.put("annotationCommentList", annotationCommentList);
     	json.put("prefixes", prefixes);
+    	json.put("importedGraphsList", importedGraphsList);
+    	json.put("loadWarningsList", loadWarningsList);
     	
         return json;
     }
@@ -1434,12 +1446,27 @@ public class OntologyInfo {
 	        					 		Utility.getJsonTableColumn(     annotationLabelList, 1)
 	                            	 );
         }
-        // annotationList is optional for backwards compatibility
+        // optional for backwards compatibility
         JSONArray annotationCommentList = (JSONArray)json.get("annotationCommentList");
         if (annotationCommentList != null) {
 	        this.loadAnnotationComments(Utility.unPrefixJsonTableColumn(annotationCommentList, 0, intToPrefixHash),
 	        					 		Utility.getJsonTableColumn(     annotationCommentList, 1)
 	                            	   );
+        }
+        // optional for backwards compatibility
+        JSONArray importedGraphsList = (JSONArray)json.get("importedGraphsList");
+        if (importedGraphsList != null) {
+	        for (Object obj : importedGraphsList) {
+		        this.importedGraphs.add((String) obj);
+	        }
+        }
+     
+        // optional for backwards compatibility
+        JSONArray loadWarningsList = (JSONArray)json.get("loadWarningsList");
+        if (loadWarningsList != null) {
+	        for (Object obj : loadWarningsList) {
+		        this.loadWarnings.add((String) obj);
+	        }
         }
     }
     

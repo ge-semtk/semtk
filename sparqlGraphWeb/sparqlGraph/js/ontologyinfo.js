@@ -42,6 +42,9 @@ var OntologyInfo = function(optJson) {
 
     this.getFlag = false;
 
+    this.loadWarnings = [];
+    this.importedGraphs = [];
+
     this.asyncDomain = null;
     this.asyncSei = null;
     this.asyncStatusCallback = null;
@@ -258,6 +261,14 @@ OntologyInfo.prototype = {
         }
 		return ret;
 	},
+
+    getImportedGraphs : function() {
+        return this.importedGraphs;
+    },
+
+    getLoadWarnings : function() {
+        return this.loadWarnings;
+    },
 
 	getPropNames : function() {
 		// returns an array of all known properties
@@ -1189,7 +1200,9 @@ OntologyInfo.prototype = {
             "classEnumValList" : [],
             "annotationLabelList" : [],
             "annotationCommentList" : [],
-            "prefixes" : {}
+            "prefixes" : {},
+            "importedGraphsList" : [],
+            "loadWarningsList" : [],
         };
 
         var prefixToIntHash = {};
@@ -1260,6 +1273,14 @@ OntologyInfo.prototype = {
             json.prefixes[prefixToIntHash[p]] = p;
         }
 
+        for (var s in this.importedGraphs) {
+            json.importedGraphsList.push(s);
+        }
+
+        for (var s in this.loadWarnings) {
+            json.loadWarningsList.push(s);
+        }
+
         return json;
     },
 
@@ -1311,6 +1332,15 @@ OntologyInfo.prototype = {
             this.loadAnnotationComments(getColumn(json.annotationCommentList, 0),
                                       getColumn(json.annotationCommentList, 1));
         }
+
+        if (json.hasOwnProperty("importedGraphsList")) {
+            this.importedGraphs =  this.importedGraphs.concat(json.importedGraphsList);
+        }
+
+        if (json.hasOwnProperty("loadWarningsList")) {
+            this.loadWarnings = this.loadWarnings.concat(json.loadWarningsList);
+        }
+
     },
 
     /* =========== Edit functions =============== */
