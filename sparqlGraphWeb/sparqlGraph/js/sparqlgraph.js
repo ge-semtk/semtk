@@ -629,7 +629,11 @@
 	    	if (gConn != null) {
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
-                gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                oInfoClient.execUncacheOntology(gConn,
+                    function() {
+                        gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                    }
+                );
 	    	}
     	});
     };

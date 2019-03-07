@@ -84,7 +84,7 @@ public class OntologyInfoClientTest_IT {
 	}
 	
 	@Test
-	public void testUncache() throws Exception {
+	public void testUncacheChangedModel() throws Exception {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
@@ -102,6 +102,30 @@ public class OntologyInfoClientTest_IT {
 		
 		// clear cache and the clearGraph should have taken effect
 		client.uncacheChangedModel(conn);
+		oInfo = client.getOntologyInfo(conn);
+		assertEquals("uncacheChangedModel didn't clear the cache", 0, oInfo.getNumberOfClasses());
+		
+	}
+	
+	@Test
+	public void testUncacheConn() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+		SparqlConnection conn = sgJson.getSparqlConn();
+		
+		OntologyInfoClient client = this.getClient();
+		client.uncacheOntology(conn);
+		OntologyInfo oInfo = client.getOntologyInfo(conn);
+		assertEquals("uploadOwl didn't result in correct number of classes", 3, oInfo.getNumberOfClasses());
+		
+		// clear graph without re-caching should give old results
+		TestGraph.clearGraph();
+		oInfo = client.getOntologyInfo(conn);
+		assertEquals("clear graph took effect without updating the cache", 3, oInfo.getNumberOfClasses());
+		
+		// clear cache and the clearGraph should have taken effect
+		client.uncacheOntology(conn);
 		oInfo = client.getOntologyInfo(conn);
 		assertEquals("uncacheChangedModel didn't clear the cache", 0, oInfo.getNumberOfClasses());
 		
