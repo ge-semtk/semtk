@@ -228,9 +228,17 @@ public class SparqlConnection {
 	}
 	
 	public void clearInterfaces() {
-		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+		this.clearDataInterfaces();
+		this.clearModelInterfaces();
+	}
+	
+	public void clearDataInterfaces() {
 		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
 	}
+	public void clearModelInterfaces() {
+		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+	}
+	
 	public String getDomain() {
 		return this.domain;
 	}

@@ -1,0 +1,80 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "ASKE leaf",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"dataset": "http://semtk.org/leaf"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"dataset": "http://semtk.org/leaf/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "importedName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk.org/imported#importedName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?importedName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Imported",
+				"fullURIName": "http://semtk.org/imported#Imported",
+				"subClassNames": [
+					"http://semtk.org/leaf#Leaf"
+				],
+				"SparqlID": "?Imported",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "name"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Imported",
+				"type": "http://semtk.org/imported#Imported",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

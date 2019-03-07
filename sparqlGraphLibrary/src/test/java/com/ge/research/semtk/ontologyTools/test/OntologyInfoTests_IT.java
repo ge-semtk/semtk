@@ -33,6 +33,7 @@ import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
@@ -43,11 +44,12 @@ public class OntologyInfoTests_IT {
 		IntegrationTestUtility.authenticateJunit();
 		
 		// upload the "http://semtk.junit/*  graphs
-		TestGraph.uploadOwlToItsGraph("src/test/resources/owl_import_Imported.owl");
-		TestGraph.uploadOwlToItsGraph("src/test/resources/owl_import_Leaf.owl");
-		TestGraph.uploadOwlToItsGraph("src/test/resources/owl_import_LeafRange.owl");
+		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_Imported.owl");
+		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_Leaf.owl");
+		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_LeafRange.owl");
 		
 	}
+
 	
 	@Test
 	public void testFullLoad() throws Exception {
@@ -342,6 +344,28 @@ public class OntologyInfoTests_IT {
 		assertTrue("No warnings were found for empty default graphs such as sadlbasemodel", loadWarnings.size() > 0);
 	}
 	
+	@Test
+	public void testOwlImportRoundTrip() throws Exception {
+		// clear data
+		TestGraph.clearGraph();
+		
+		// load against owl import model pre-setup in @beforeClass, but use test graph for data
+		TestGraph.ingest("src/test/resources/owl_import_leaf.json", "src/test/resources/owl_import_leaf.csv");
+		
+		// run query
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_leaf.json");
+		String query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
+		Table table = TestGraph.execTableSelect(query);
+	
+		assertEquals("wrong number of rows returned", 5, table.getNumRows());
+		
+		// now try using superclass from import in the query (makes sure we got the superclass/subclass from an owl import)
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_imported_select.json");
+		query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
+		table = TestGraph.execTableSelect(query);
+	
+		assertEquals("wrong number of rows returned", 5, table.getNumRows());
+	}
 	@Test
 	/**
 	 * Owl import from the leaf graph

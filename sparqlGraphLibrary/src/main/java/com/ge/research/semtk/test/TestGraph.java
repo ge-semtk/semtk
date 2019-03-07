@@ -155,6 +155,9 @@ public class TestGraph {
 		getSei().clearGraph();
 	}
 	
+	public static void clearPrefix(String prefix) throws Exception {
+		getSei().clearPrefix(prefix);
+	}
 	/**
 	 * Drop the test graph (DROP lets the graph be CREATEd again, whereas CLEAR does not)
 	 */
@@ -213,7 +216,7 @@ public class TestGraph {
 	 * @param owlFilename
 	 * @throws Exception
 	 */
-	public static void uploadOwlToItsGraph(String owlFilename) throws Exception {
+	public static void syncOwlToItsGraph(String owlFilename) throws Exception {
 		
 		String base = Utility.getXmlBaseFromOwlRdf(owlFilename);
 		
@@ -287,7 +290,8 @@ public class TestGraph {
 	}	
 	
 	/**
-	 * Get SparqlGraphJson modified with Test connection
+	 * Get SparqlGraphJson modified with Test connection.
+	 * If owl imports are enabled, only swaps the data connection.
 	 * @param jsonObject
 	 */	
 	@SuppressWarnings("unchecked")
@@ -295,11 +299,16 @@ public class TestGraph {
 		
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
 		
-		// swap out connection
+		// swap out data interfaces
 		SparqlConnection conn = s.getSparqlConn();
-		conn.clearInterfaces();
+		conn.clearDataInterfaces();
 		conn.addDataInterface(getSei());
-		conn.addModelInterface(getSei());
+		
+		// swap out model interfaces
+		if (! conn.isOwlImportsEnabled()) {
+			conn.clearModelInterfaces();
+			conn.addModelInterface(getSei());
+		}
 		s.setSparqlConn(conn);
 		
 		return s;

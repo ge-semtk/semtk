@@ -513,6 +513,17 @@ public abstract class SparqlEndpointInterface {
         }
 	}
 	
+	public void clearPrefix(String prefix) throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDeletePrefixQuery(this, prefix), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
+		
+        String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (sLower.contains("fail") || sLower.contains("error")){
+        	throw new Exception(s);
+        }
+	}
+	
 	/**
 	 * It has been observed that this behaves differently on different triple-stores.
 	 * e.g. virtuoso throws an error if you create a graph that already exists
