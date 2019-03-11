@@ -99,6 +99,7 @@
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"),
 	    								document.getElementById("uploadtoolsdiv"),
+                                        document.getElementById("uploadmiscdiv"),
 	    								doLoadConnection,
 	    			                    g.service.ingestion.url,
 	    			                    g.service.sparqlQuery.url);

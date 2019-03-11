@@ -218,7 +218,7 @@ public class TestGraph {
 	 */
 	public static void syncOwlToItsGraph(String owlFilename) throws Exception {
 		
-		String base = Utility.getXmlBaseFromOwlRdf(owlFilename);
+		String base = Utility.getXmlBaseFromOwlRdf(new FileInputStream(owlFilename));
 		
 		SparqlEndpointInterface sei = getSei();
 		

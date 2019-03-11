@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,13 @@ define([	// properly require.config'ed   bootstrap-modal
         	'jquery',
         	'bootstrap/bootstrap-modal',
          	'bootstrap/bootstrap-transition',
-         	
+
 			// shimmed
             // 'logconfig',
 		],
 
 	function(IIDXHelper, $) {
-	
+
 		/*
 		 *    A column name or text or some item used to build a triple value
 		 */
@@ -35,19 +35,19 @@ define([	// properly require.config'ed   bootstrap-modal
 			// optUniqueId is the html element id.  Only needed if there is a conflict or nested modals.
 			this.id = (typeof optUniqueId !== "undefined") ? optUniqueId : "myModal";
 			this.div = null;
-            
+
             this.butCallbacks = [];
 		};
-		
+
 		ModalIidx.CONSTANT = "text";
-		
+
 		ModalIidx.HTML_SAFE = true;      // flag: disrespect anything that looks like html markup.  Show raw tag characters
 		ModalIidx.HTML_ALLOW = false;    //       respect html markup.
-		
+
 		ModalIidx.alert = function (titleTxt, msgHtml, cleanHtmlFlag, optHideCallback) {
 			// clean up the html tags if flag is set
 			var msgHtml2 = (typeof cleanHtmlFlag === "undefined" || ! cleanHtmlFlag) ? msgHtml : IIDXHelper.htmlSafe(msgHtml);
-			
+
 			// simple alert dialog
 		    kdlLogEvent("Alert", "title", titleTxt, "message", msgHtml);
 
@@ -57,7 +57,7 @@ define([	// properly require.config'ed   bootstrap-modal
             m.onHide(optHideCallback);
 			m.showOK(titleTxt, div, function(){});
 		};
-		
+
 		ModalIidx.okCancel = function (titleTxt, msgHtml, okCallback, optOkButtonText, optCancelCallback) {
 			// ok cancel
 		    kdlLogEvent("OkCancel", "title", titleTxt, "message", msgHtml);
@@ -65,15 +65,15 @@ define([	// properly require.config'ed   bootstrap-modal
 			var m = new ModalIidx("ModalIidxOkCancel");
 			var div = document.createElement("div");
 			div.innerHTML = msgHtml;
-			m.showOKCancel(	titleTxt, 
-							div, 
+			m.showOKCancel(	titleTxt,
+							div,
 							function() {return null;}, // always validate
-							okCallback, 
+							okCallback,
 							optCancelCallback,
 							optOkButtonText
 							);
 		};
-		
+
 		// untested
 		ModalIidx.prompt = function (titleText, msgHtml, okCallback) {
 			kdlLogEvent("prompt", "title", titleTxt, "message", msgHtml);
@@ -81,33 +81,33 @@ define([	// properly require.config'ed   bootstrap-modal
 			var m = new ModalIidx("ModalIidxPrompt");
 			var div = document.createElement("div");
 			div.innerHTML = msgHtml + " " + '<input type="text" class="input-xlarge" id="modalIidxPrompt" >';
-			m.showOKCancel(	titleTxt, 
-							div, 
+			m.showOKCancel(	titleTxt,
+							div,
 							function() {return null;}, // always validate
-							okCallback(document.getElementById("modalIidxPrompt").value), 
+							okCallback(document.getElementById("modalIidxPrompt").value),
 							function () {},    // no cancel callback
 							optOkButtonText
 							);
 		};
-		
+
 		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent) {
-			
+
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
 
 			var div = document.createElement("div");
 			div.appendChild(dom);
-			
+
 			var m = new ModalIidx("clearCancelSubmit");
-			m.showClearCancelSubmit(titleTxt, 
-									div, 
+			m.showClearCancelSubmit(titleTxt,
+									div,
 									function() {return null;},     // validation is not implemented for this one
-									clearCallback, 
+									clearCallback,
 									submitCallback,
 									optOKButText,
 									optWidthPercent
 									);
 		};
-		
+
 		/**
 		 * Show a select,
 		 * submitCallback(v)  where v is selected value or null.
@@ -119,7 +119,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			select.size="20";
 			select.style.width = "95%";
 			div.appendChild(select);
-			
+
 			var m = new ModalIidx("selectOption");
 			m.showClearCancelSubmit(titleTxt,
 									div,
@@ -133,12 +133,12 @@ define([	// properly require.config'ed   bootstrap-modal
 									optWidthPercent
 									);
 		};
-    
+
         ModalIidx.choose = function (headerText, msgHtml, buttonNameList, callbackList, optWidthPercent) {
             kdlLogEvent("choicesDialog", "title", headerText);
 			var div = document.createElement("div");
             div.innerHTML = msgHtml;
-            
+
             var m = new ModalIidx("ModalIidx_choicesDialog");
             m.showChoices(headerText, div, buttonNameList, callbackList, optWidthPercent);
         };
@@ -155,20 +155,20 @@ define([	// properly require.config'ed   bootstrap-modal
         ModalIidx.multiListDialog = function (headerText, buttonLabel, textValArray, selTextsList, valListCallback, optMultiFlag, optHideCallback, optSize, optWidthPercent) {
             var multiFlag = (typeof optMultiFlag != "undefined") ? optMultiFlag          : true;
             var size = (typeof optSize != "undefined") ? optSize                         : "6";
-        
+
             var div = document.createElement("div");
             div.align = "center";
-            
+
             var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, selTextsList, multiFlag);
             select.size = size;
             select.style.width = "100%";
             div.appendChild(select);
 
             // callbacks
-            var listDialogSubmit = function (sel, cback) {	
+            var listDialogSubmit = function (sel, cback) {
                 cback(IIDXHelper.getSelectValues(sel));
             }.bind(this, select, valListCallback);
-            
+
             var listDialogValidate = function (sel) {
                 if (sel.selectedIndex == -1) {
                     return "Nothing is selected";
@@ -176,35 +176,35 @@ define([	// properly require.config'ed   bootstrap-modal
                     return null;
                 }
             }.bind(this, select);
-            
+
             var m = new ModalIidx("ModalIidx_multiListDialog");
             m.onHide(optHideCallback);
             m.showOKCancel(headerText, div, listDialogValidate, listDialogSubmit, function(){}, buttonLabel, optWidthPercent);
 
         };
-    
+
         // old ModalDialog.listDialog
         ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent) {
 
             var div = document.createElement("div");
             div.align = "center";
-            
+
             // create the select
             var textValArray = [];
             for (var i=0; i < nameArray.length; i++) {
                 textValArray.push([nameArray[i], i.toString()]);
             }
-            
+
             var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, [nameArray[defaultIndex]]);
             select.size = "6";
             select.style.width = "100%";
             div.appendChild(select);
 
             // callbacks
-            var listDialogSubmit = function (sel, vArr, cback) {		
+            var listDialogSubmit = function (sel, vArr, cback) {
                 cback(vArr[sel.selectedIndex]);
             }.bind(this, select, valArray, callback);
-            
+
             var listDialogValidate = function (sel) {
                 if (sel.selectedIndex == -1) {
                     return "Nothing is selected";
@@ -212,14 +212,18 @@ define([	// properly require.config'ed   bootstrap-modal
                     return null;
                 }
             }.bind(this, select);
-            
+
             var m = new ModalIidx("ModalIidx_listDialog");
             m.showOKCancel(headerText, div, listDialogValidate, listDialogSubmit, function(){}, buttonLabel, optWidthPercent);
 
         };
-		
+
+        ModalIidx.createInfoButton = function(helpHTML) {
+            return IIDXHelper.createIconButton("icon-info-sign", ModalIidx.alert.bind(this, "Info", helpHTML, false, function(){}), ["icon-white", "btn-small", "btn-info"]);
+        };
+
 		ModalIidx.prototype = {
-                
+
             showOK : function (headerText, bodyDOM, callback, optWidthPercent) {
                 // show a modal with header, body and callback.
 
@@ -288,7 +292,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 $(this.div).modal('show');
             },
-            
+
             showClearCancelValSubmit : function (headerText, bodyDOM, clearCallback, valSubmitCallback, optSubmitButtonText, optWidthPercent) {
                 // show a modal with header, body and callback.
                 // valSubmitCallback(closeModalCallback) - is responsible for validating, acting, and closing the modal (or not) all in one
@@ -327,7 +331,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 body.appendChild(bodyDOM);
                 this.div.appendChild(body);
 
-                
+
                 // make the last button the default and "cancel" danger style
                 var classList = [];
                 for (var i=0; i < buttonNameList.length; i++) {
@@ -339,7 +343,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         classList.push("");
                     }
                 }
-                
+
                 // ----- footer -----
                 var footer = this.createChoicesFooter(buttonNameList, callbackList, classList);
                 this.div.appendChild(footer);
@@ -377,7 +381,7 @@ define([	// properly require.config'ed   bootstrap-modal
             hide : function () {
                 $(this.div).modal('hide');
             },
-            
+
             createHeader : function(title) {
                 //----- header -----
                 var header = document.createElement("div");
@@ -399,7 +403,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     cb();
                     this.hide();
                 }.bind(this, callback);
-                
+
                 var a = IIDXHelper.createButton("OK", callback1, ["btn-primary"]);
                 footer.appendChild(a);
 
@@ -429,10 +433,10 @@ define([	// properly require.config'ed   bootstrap-modal
                 var submitButText = typeof optSubmitButText != "undefined" ? optSubmitButText : "Submit";
                 var a3 = IIDXHelper.createButton(submitButText, callback3, ["btn-primary"]);
                 footer.appendChild(a3);
-                
+
                 return footer;
             },
-            
+
             createClearCancelSubmitFooter : function(clearCallback, validateCallback, submitCallback, optSubmitButText) {
                 //----- footer -----
                 var footer = document.createElement("div");
@@ -460,14 +464,14 @@ define([	// properly require.config'ed   bootstrap-modal
                         this.hide();
                     }
                 }.bind(this, validateCallback, submitCallback);
-                
+
                 var submitButText = typeof optSubmitButText != "undefined" ? optSubmitButText : "Submit";
                 var a3 = IIDXHelper.createButton(submitButText, callback3, ["btn-primary"]);
                 footer.appendChild(a3);
-                
+
                 return footer;
             },
-            
+
             createClearCancelValSubmitFooter : function(clearCallback, valSubmitCallback, optSubmitButText) {
                 //----- footer -----
                 var footer = document.createElement("div");
@@ -489,11 +493,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 var callback3 = function (vsCb) {
                         vsCb(   this.hide.bind(this) );
                 }.bind(this, valSubmitCallback);
-                
+
                 var submitButText = typeof optSubmitButText != "undefined" ? optSubmitButText : "Submit";
                 var a3 = IIDXHelper.createButton(submitButText, callback3, ["btn-primary"]);
                 footer.appendChild(a3);
-                
+
                 return footer;
             },
 
@@ -515,7 +519,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         this.hide();
                     }
                 }.bind(this);
-                
+
                 var a2 = IIDXHelper.createButton(but2text, callback1, ["btn-primary"]);
                 footer.appendChild(a2);
 
@@ -540,17 +544,17 @@ define([	// properly require.config'ed   bootstrap-modal
                         callback();
                         this.hide();
                     }.bind(this, callbackList[i]);
-                    
+
                     var butClassList = (classList.length > i  && classList[i] != "") ? [classList[i]] : undefined;
                     var a1 = IIDXHelper.createButton(buttonNameList[i], click, butClassList);
                     a1.setAttribute("data-dismiss", "modal");
-                    
+
                     footer.appendChild(a1);
                 }
 
                 return footer;
             },
-            
+
             /*
              * Disable everything that looks like a button
              * Since <a> can be class "btn" the only way to disable is to remove the callback
@@ -564,7 +568,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     butList[i].onclick = function(){};
                 }
             },
-            
+
             /*
              * Undo disableButtons()
              */
@@ -576,18 +580,18 @@ define([	// properly require.config'ed   bootstrap-modal
                     butList[i].onclick = this.butCallbacks[i]
                 }
             },
-            
+
             /*
              * Call this callback when modal finishes, no matter what
              */
             onHide : function(optCallback) {
-                
+
                 if (typeof optCallback != "undefined" && optCallback) {
                     $(document).on('hide', '#'+this.id, optCallback);
                 }
             }
 		};
-	
+
 		return ModalIidx;            // return the constructor
 	}
 );

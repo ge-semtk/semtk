@@ -41,9 +41,10 @@ define([	// properly require.config'ed
 		/*
 		 *    A column name or text or some item used to build a triple value
 		 */
-		var UploadTab = function (parentDiv, toolsDiv, reloadCallback, ingestionServiceURL, sparqlQueryServiceURL) {
+		var UploadTab = function (parentDiv, toolsDiv, miscDiv, reloadCallback, ingestionServiceURL, sparqlQueryServiceURL) {
 			 this.parentDiv = parentDiv;
 			 this.toolsDiv = toolsDiv;
+             this.miscDiv = miscDiv;
 			 this.reloadCallback = reloadCallback;
 			 this.ingestionServiceURL = ingestionServiceURL;
 			 this.sparqlQueryServiceURL = sparqlQueryServiceURL;
@@ -78,6 +79,7 @@ define([	// properly require.config'ed
 			draw : function () {
 				if (this.toolsDiv.innerHTML.indexOf("<") == -1) {
 					this.drawTools();
+                    this.drawMiscTools();
 					this.fillSelectChooseDataset();     // fill in nodegroup-specific the first time
 				}
 
@@ -343,6 +345,8 @@ define([	// properly require.config'ed
 				button.innerHTML = "Upload Owl";
 				button.onclick = this.toolsUploadOwl.bind(this);
 				td2.appendChild(button);
+                td2.appendChild(IIDXHelper.createNbspText());
+                td2.appendChild(ModalIidx.createInfoButton("Adds triples from an owl/rdf file to the selected graph."));
 				tr.appendChild(td2);
 				table.appendChild(tr);
 
@@ -354,6 +358,57 @@ define([	// properly require.config'ed
 				this.toolsDiv.appendChild(div);
 			},
 
+            /**
+             * Draw the tools section
+             */
+            drawMiscTools : function() {
+                // --- button ---
+                var table = document.createElement("table");
+                table.classList.add("table");
+                //table.border = "1";
+                var tr;
+                var td1;
+                var td2;
+                var col;
+                var button;
+                var select;
+                var option;
+                var input;
+                var controlGroupDiv;
+                var div;
+
+                // set column widths
+                col = document.createElement("col");
+                col.style.width = "50%";
+                table.appendChild(col);
+
+                col = document.createElement("col");
+                col.style.width = "50%";
+                table.appendChild(col);
+
+                // ===== sync owl row =====
+                tr = document.createElement("tr");
+                td1 = document.createElement("td");
+                td1.id = "tdSyncOwl1";
+                td1.appendChild(IIDXHelper.createDropzone("icon-sitemap", "Drop OWL file", function(e) {return true;}, this.toolsDropSyncOwlFile.bind(this)));
+                tr.appendChild(td1);
+
+                // button cell
+                td2 = document.createElement("td");
+                button = document.createElement("button");
+                button.id = "butSyncOwl";
+                button.classList.add("btn");
+                button.innerHTML = "Sync Owl";
+                button.onclick = this.toolsSyncOwl.bind(this);
+                td2.appendChild(button);
+                td2.appendChild(IIDXHelper.createNbspText());
+                td2.appendChild(ModalIidx.createInfoButton("Finds graph based on rdf:RDF xml:base in the rdf/owl file.<br>Clears the graph.<br>Uploads the owl file."));
+                tr.appendChild(td2);
+                table.appendChild(tr);
+
+                this.miscDiv.appendChild(table);
+
+            },
 			// fill and reset the dataset select dropdown
 			// Build a unique list of options.
 			// Precede by "model" "data" or "both"
@@ -701,6 +756,21 @@ define([	// properly require.config'ed
 				}
 			},
 
+            /**
+             * Owl drop callback
+             */
+            toolsDropSyncOwlFile : function (ev) {
+                this.owlFile = null;
+
+                if (ev.dataTransfer.files.length != 1) {
+                    this.logAndAlert("Error dropping OWL file", "Only single file drops are supported.");
+                } else if (ev.dataTransfer.files[0].name.slice(-4).toLowerCase() != ".owl") {
+                    this.logAndAlert("Error dropping OWL file", "Only OWL file drops are supported.");
+                } else {
+                    this.readSyncOwlAsync(ev.dataTransfer.files[0]);
+                }
+            },
+
 			/**
 			 * Upload owl button callback
 			 */
@@ -738,6 +808,36 @@ define([	// properly require.config'ed
 
 			},
 
+            /**
+			 * Upload owl button callback
+			 */
+			toolsSyncOwl : function() {
+				kdlLogEvent("SG: import upload owl", "filename", this.owlFile);
+
+				var successCallback = function (mq, resultSet) {
+					IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+
+					if (! resultSet.isSuccess()) {
+						this.logAndAlert("'Sync owl' Service failed", mq.getDropGraphResultHtml(resultSet));
+					} else {
+
+						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
+					}
+					IIDXHelper.progressBarRemove(this.progressDiv);
+					this.fillAll();
+				};
+
+				IIDXHelper.progressBarCreate(this.progressDiv, "progress-success progress-striped active");
+				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
+
+                if (this.conn == null) {
+                    ModalIidx.alert("No endpoint", "No connection is loaded. <br>Don't know where to find the triplestore.");
+                } else {
+                    var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.conn.getDefaultQueryInterface(), this.msiFailureCallback.bind(this));
+                    mq.execSyncOwl(this.syncOwlFile, successCallback.bind(this, mq));
+                }
+
+			},
 			/**
 			 * Clear graph button callback
 			 */
@@ -954,6 +1054,41 @@ define([	// properly require.config'ed
 				}
 			},
 
+            /**
+             * Read an owl file
+             */
+            readSyncOwlAsync : function (f) {
+                //Retrieve the first (and only!) File from the FileList object
+
+                if (f) {
+                    this.disableAll();
+                    IIDXHelper.progressBarCreate(this.progressDiv, "progress-success progress-striped active");
+                    IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
+
+                    var r = new FileReader();
+                    r.onload = function(e) {
+                        kdlLogEvent("SG: Import Read Owl", "filename", f.name);
+                        this.syncOwlFile = f;
+
+                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+                        IIDXHelper.progressBarRemove(this.progressDiv);
+                        this.fillAll();
+
+                    }.bind(this);
+
+                    try {
+                        r.readAsText(f);
+                    } catch (e) {
+                        logAndAlert("Error loading OWL file", err.message);
+
+                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+                        IIDXHelper.progressBarRemove(this.progressDiv);
+                        this.fillAll();
+                    }
+                } else {
+                    alert("Failed to load file");
+                }
+            },
 			/**
 			 * Read a data (CSV) file
 			 */

@@ -465,26 +465,25 @@ public abstract class Utility {
 		// Replace ENV and trim()
 		return envSubstitutor.replace(ret).trim();
 	}	
-
-	public static String getXmlBaseFromOwlRdf(String owlFilename) throws Exception {
-		Path path = Paths.get(owlFilename);
-		File file = path.toFile();
-		String base = null;
+	
+	public static String getXmlBaseFromOwlRdf(InputStream is) throws Exception {
+		String ret;
+		
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document document = db.parse(file);
+			Document document = db.parse(is);
 			NodeList nList = document.getElementsByTagName("rdf:RDF");
 			Node rdfNode = nList.item(0);
 			Element rdfElem = (Element) rdfNode;
-			base = rdfElem.getAttribute("xml:base");
-			if (base == null || base.isEmpty()) {
+			ret = rdfElem.getAttribute("xml:base");
+			if (ret == null || ret.isEmpty()) {
 				throw new Exception("xml:base not found or empty");
 			}
 		} catch (Exception e) {
-			throw new Exception("Error pulling <rdf:RDF xml:base from file: " + owlFilename, e);
+			throw new Exception("Error pulling <rdf:RDF xml:base from file ", e);
 		}
-		return base;
+		return ret;
 	}
 	
 	/**
