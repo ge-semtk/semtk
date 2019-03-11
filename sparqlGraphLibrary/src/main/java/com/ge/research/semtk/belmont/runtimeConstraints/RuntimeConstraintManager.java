@@ -211,8 +211,11 @@ public class RuntimeConstraintManager {
 	public void applyConstraint(String sparqlId, SupportedOperations operation, ArrayList<String> operands) throws Exception{
 		String id = BelmontUtil.formatSparqlId(sparqlId);
 		// find the appropriate constrained object and then pass along the work
-		this.rtcObjectHash.get(id).applyConstraint(operation, operands);
-		
+		if(rtcObjectHash.containsKey(id)){
+			this.rtcObjectHash.get(id).applyConstraint(operation, operands);
+		}else{
+			throw new Exception(id + " does not exist in the available runtime constrained items.");
+		}	
 	}
 	
 	/**
