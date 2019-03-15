@@ -27,6 +27,7 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
@@ -364,6 +365,11 @@ public class OntologyInfoTests_IT {
 		query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
 		table = TestGraph.execTableSelect(query);
 	
+		NodeGroup ng = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
+		SparqlConnection c = ng.getSparqlConnection();
+		OntologyInfo oInfo = ng.getOInfo();
+		System.out.println("conn:\n" + c.toString());
+		System.out.println("OInfo:\n" + oInfo.toJson().toJSONString());
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 	}
 	@Test

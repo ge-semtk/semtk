@@ -153,6 +153,7 @@ public class TestGraph {
 	// PEC TODO:  clear model and data graph
 	public static void clearGraph() throws Exception {
 		getSei().clearGraph();
+		IntegrationTestUtility.getOntologyInfoClient().uncacheOntology(TestGraph.getSparqlConn("http"));
 	}
 	
 	public static void clearPrefix(String prefix) throws Exception {

@@ -2112,6 +2112,14 @@ public class NodeGroup {
 		this.conn = sparqlConn;
 	}
 	
+	public SparqlConnection getSparqlConnection() {
+		return this.conn;
+	}
+	
+	public OntologyInfo getOInfo() {
+		return this.oInfo;
+	}
+	
 	public int getNodeCount() {
 		return this.nodes.size();
 	}
