@@ -777,11 +777,13 @@ public class OntologyInfo {
 				e = this.propertyHash.get(elemList[i]);
 			} 
 			if (e == null)  {
-				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
-			}
+				// until we understand this better, throw out annotation comments on unknown elements
+				// throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			} else {
 			
-			// add the annotations (empties and duplicates are handled downstream)
-			e.addAnnotationLabel(labelList[i]);
+				// add the annotations (empties and duplicates are handled downstream)
+				e.addAnnotationLabel(labelList[i]);
+			}
 		}
 	}
 	private static String getAnnotationCommentsQuery(String graphName, String domain) {
@@ -811,11 +813,13 @@ public class OntologyInfo {
 				e = this.propertyHash.get(elemList[i]);
 			} 
 			if (e == null)  {
-				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
-			}
+				// until we understand this better, throw out annotation comments on unknown elements
+				//throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			} else {
 			
-			// add the annotations (empties and duplicates are handled downstream)
-			e.addAnnotationComment(commentList[i]);
+				// add the annotations (empties and duplicates are handled downstream)
+				e.addAnnotationComment(commentList[i]);
+			}
 		}
 	}
 	

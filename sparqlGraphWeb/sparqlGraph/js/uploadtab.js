@@ -60,6 +60,7 @@ define([	// properly require.config'ed
              this.oInfo = null;
 			 this.inputURI = null;
 			 this.owlFile = null;
+             this.syncOwlFiles = [];
 
 			 this.progressDiv = null;
 
@@ -177,6 +178,7 @@ define([	// properly require.config'ed
 
 			fillAll : function () {
 				this.fillBody();
+                this.fillMiscTools();
 				this.fillTools();
 			},
 
@@ -390,7 +392,7 @@ define([	// properly require.config'ed
                 tr = document.createElement("tr");
                 td1 = document.createElement("td");
                 td1.id = "tdSyncOwl1";
-                td1.appendChild(IIDXHelper.createDropzone("icon-sitemap", "Drop OWL file", function(e) {return true;}, this.toolsDropSyncOwlFile.bind(this)));
+                td1.appendChild(IIDXHelper.createDropzone("icon-sitemap", "Drop OWL file(s)", function(e) {return true;}, this.toolsDropSyncOwlFile.bind(this)));
                 tr.appendChild(td1);
 
                 // button cell
@@ -624,6 +626,44 @@ define([	// properly require.config'ed
 				}
 			},
 
+            /**
+			 * Fill in values in the tools section
+			 */
+			fillMiscTools : function () {
+
+				// sync owl
+				var dropzone = document.getElementById("tdSyncOwl1").childNodes[0];
+                var syncButton = document.getElementById("butSyncOwl");
+				var msgTxt = "";
+				if (this.syncOwlFiles.length > 0) {
+					syncButton.disabled = false;
+                    dropzone.disabled = false;
+                    msgTxt = "";
+                    for (var i=0; i < this.syncOwlFiles.length; i++) {
+                        msgTxt += " " + this.syncOwlFiles[i].name;
+                        if (i == 3) {
+                            msgTxt += "...";
+                            break;
+                        }
+                    }
+					IIDXHelper.setDropzoneLabel(dropzone, msgTxt, IIDXHelper.DROPZONE_FULL);
+
+				} else if (this.conn != null) {
+                    syncButton.disabled = true;
+                    dropzone.disabled = false;
+					document.getElementById("butSyncOwl").disabled = true;
+					msgTxt = "Drop OWL file";
+					IIDXHelper.setDropzoneLabel(dropzone, msgTxt, IIDXHelper.DROPZONE_EMPTY);
+
+				} else {
+                    syncButton.disabled = true;
+                    dropzone.disabled = true;
+					document.getElementById("butSyncOwl").disabled = true;
+					msgTxt = "<no connection loaded>";
+					IIDXHelper.setDropzoneLabel(dropzone, msgTxt, IIDXHelper.DROPZONE_EMPTY);
+				}
+            },
+
             generateDataDictionary : function() {
                 var successCallback = function(res) {
                     if (! res.isSuccess()) {
@@ -757,18 +797,39 @@ define([	// properly require.config'ed
 			},
 
             /**
-             * Owl drop callback
+             * SyncOwl drop callback
              */
             toolsDropSyncOwlFile : function (ev) {
-                this.owlFile = null;
+                this.syncOwlFiles = [];
+                var files = ev.dataTransfer.files;
 
-                if (ev.dataTransfer.files.length != 1) {
-                    this.logAndAlert("Error dropping OWL file", "Only single file drops are supported.");
-                } else if (ev.dataTransfer.files[0].name.slice(-4).toLowerCase() != ".owl") {
-                    this.logAndAlert("Error dropping OWL file", "Only OWL file drops are supported.");
-                } else {
-                    this.readSyncOwlAsync(ev.dataTransfer.files[0]);
-                }
+                readNext = function(index) {
+                    // done
+                    if (index >= files.length) {
+                        this.fillAll();
+                        return;
+                    }
+
+                    // error
+                    var file = files[index];
+                    if (file.name.slice(-4) != ".owl") {
+                        this.logAndAlert("Error dropping data file", "Not an owl file: " + file.name);
+                        this.fillAll();
+                        return;
+                    }
+
+                    // normal
+                    var reader = new FileReader();
+                    reader.onload = function(f) {
+                        console.log(file.name);
+                        this.syncOwlFiles.push(file);
+                        // chain next read
+                        readNext(index+1);
+                    }.bind(this);
+                    reader.readAsText(file);
+                }.bind(this);
+
+                readNext(0);
             },
 
 			/**
@@ -812,29 +873,45 @@ define([	// properly require.config'ed
 			 * Upload owl button callback
 			 */
 			toolsSyncOwl : function() {
-				kdlLogEvent("SG: import upload owl", "filename", this.owlFile);
+				kdlLogEvent("SG: import upload owl");
 
-				var successCallback = function (mq, resultSet) {
-					IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+				var successCallback = function (mq, index, resultSet) {
 
 					if (! resultSet.isSuccess()) {
 						this.logAndAlert("'Sync owl' Service failed", mq.getDropGraphResultHtml(resultSet));
+                        // finish
+                        IIDXHelper.progressBarRemove(this.progressDiv);
+    					this.fillAll();
+
 					} else {
 
-						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
+                        var percentEach = 100 / this.syncOwlFiles.length;
+                        var newIndex = index + 1;
+                        IIDXHelper.progressBarSetPercent(this.progressDiv, percentEach * (newIndex));
+
+                        if (newIndex < this.syncOwlFiles.length) {
+
+                            IIDXHelper.progressBarSetPercent(this.progressDiv, percentEach * (newIndex + 0.5));
+                            mq.execSyncOwl(this.syncOwlFiles[newIndex], successCallback.bind(this, mq, newIndex));
+                        } else {
+                            // finish
+                            IIDXHelper.progressBarRemove(this.progressDiv);
+        					this.fillAll();
+                        }
 					}
-					IIDXHelper.progressBarRemove(this.progressDiv);
-					this.fillAll();
+
 				};
 
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-success progress-striped active");
-				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
+
 
                 if (this.conn == null) {
                     ModalIidx.alert("No endpoint", "No connection is loaded. <br>Don't know where to find the triplestore.");
                 } else {
                     var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.conn.getDefaultQueryInterface(), this.msiFailureCallback.bind(this));
-                    mq.execSyncOwl(this.syncOwlFile, successCallback.bind(this, mq));
+                    var percentEach = 100 / this.syncOwlFiles.length;
+                    IIDXHelper.progressBarSetPercent(this.progressDiv, percentEach * 0.5);
+                    mq.execSyncOwl(this.syncOwlFiles[0], successCallback.bind(this, mq, 0));
                 }
 
 			},
@@ -1032,6 +1109,7 @@ define([	// properly require.config'ed
 					var r = new FileReader();
 					r.onload = function(e) {
 						kdlLogEvent("SG: Import Read Owl", "filename", f.name);
+
 						this.owlFile = f;
 
 						IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
@@ -1067,7 +1145,8 @@ define([	// properly require.config'ed
 
                     var r = new FileReader();
                     r.onload = function(e) {
-                        kdlLogEvent("SG: Import Read Owl", "filename", f.name);
+                        kdlLogEvent("SG: Sync Read Owl", "filename", f.name);
+                        // PEC HERE
                         this.syncOwlFile = f;
 
                         IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
