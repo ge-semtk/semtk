@@ -1,0 +1,6 @@
+uri "http://semtk.junit/leaf" alias leaf.
+
+import "http://semtk.junit/imported".
+
+Leaf is a type of Imported,
+	described by leafName with a single value of type string.

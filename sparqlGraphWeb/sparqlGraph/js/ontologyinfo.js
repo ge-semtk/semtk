@@ -42,6 +42,9 @@ var OntologyInfo = function(optJson) {
 
     this.getFlag = false;
 
+    this.loadWarnings = [];
+    this.importedGraphs = [];
+
     this.asyncDomain = null;
     this.asyncSei = null;
     this.asyncStatusCallback = null;
@@ -238,19 +241,34 @@ OntologyInfo.prototype = {
 		var ret = [];
 		var superclasses = [];
 
+        // find each parent
         var parentNames = this.classHash[subclassName].getParentNameStrs(false);
         for (var i=0; i < parentNames.length; i++) {
             var currParentName = parentNames[i];
             ret.push(currParentName);
-            superclasses.push(this.classHash[currParentName]);
+
+            if (currParentName in this.classHash) {
+                superclasses.push(this.classHash[currParentName]);
+            } else {
+                throw new Error("Class " + subclassName + "'s superclass " + currParentName + " is not found in the ontology.");
+            }
         }
 
+        // recursively add parents of parents
         for (var i=0; i < superclasses.length; i++) {
             var currParentClass = superclasses[i];
             ret = ret.concat(this.getSuperclassNames(currParentClass.getNameStr(false)));
         }
 		return ret;
 	},
+
+    getImportedGraphs : function() {
+        return this.importedGraphs;
+    },
+
+    getLoadWarnings : function() {
+        return this.loadWarnings;
+    },
 
 	getPropNames : function() {
 		// returns an array of all known properties
@@ -1182,7 +1200,9 @@ OntologyInfo.prototype = {
             "classEnumValList" : [],
             "annotationLabelList" : [],
             "annotationCommentList" : [],
-            "prefixes" : {}
+            "prefixes" : {},
+            "importedGraphsList" : [],
+            "loadWarningsList" : [],
         };
 
         var prefixToIntHash = {};
@@ -1253,6 +1273,14 @@ OntologyInfo.prototype = {
             json.prefixes[prefixToIntHash[p]] = p;
         }
 
+        for (var s in this.importedGraphs) {
+            json.importedGraphsList.push(s);
+        }
+
+        for (var s in this.loadWarnings) {
+            json.loadWarningsList.push(s);
+        }
+
         return json;
     },
 
@@ -1304,6 +1332,15 @@ OntologyInfo.prototype = {
             this.loadAnnotationComments(getColumn(json.annotationCommentList, 0),
                                       getColumn(json.annotationCommentList, 1));
         }
+
+        if (json.hasOwnProperty("importedGraphsList")) {
+            this.importedGraphs =  this.importedGraphs.concat(json.importedGraphsList);
+        }
+
+        if (json.hasOwnProperty("loadWarningsList")) {
+            this.loadWarnings = this.loadWarnings.concat(json.loadWarningsList);
+        }
+
     },
 
     /* =========== Edit functions =============== */

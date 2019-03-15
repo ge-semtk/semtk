@@ -35,16 +35,20 @@ public class SparqlConnection {
  * 
  */
 	
+	private final String KEY_ENABLE_OWL_IMPORTS = "enableOwlImports";
+	
 	private String name = null;
 	private String domain = null;
 	private ArrayList<SparqlEndpointInterface> modelInterfaces = null;
 	private ArrayList<SparqlEndpointInterface> dataInterfaces = null;
+	private boolean enableOwlImports = false;
 	
 	public SparqlConnection () {
 		this.name = "";
 		this.domain = "";
 		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
 		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
+		this.enableOwlImports = false;
 	}
 	
 	public SparqlConnection(String jsonText) throws Exception {
@@ -94,6 +98,7 @@ public class SparqlConnection {
 		jObj.put("model", model);
 		jObj.put("data", data);
 		
+		jObj.put(KEY_ENABLE_OWL_IMPORTS, this.enableOwlImports);
 		return jObj;
 	}
 	
@@ -137,6 +142,8 @@ public class SparqlConnection {
 	    		this.addDataInterface((String)(d.get("type")), (String)(d.get("url")), (String)(d.get("dataset")));
 	    	}
 		}
+		
+		this.enableOwlImports = (Boolean) jObj.getOrDefault(KEY_ENABLE_OWL_IMPORTS, false);
 		
 		// no deprecated field-handling
 	}
@@ -221,9 +228,17 @@ public class SparqlConnection {
 	}
 	
 	public void clearInterfaces() {
-		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+		this.clearDataInterfaces();
+		this.clearModelInterfaces();
+	}
+	
+	public void clearDataInterfaces() {
 		this.dataInterfaces = new ArrayList<SparqlEndpointInterface>();
 	}
+	public void clearModelInterfaces() {
+		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
+	}
+	
 	public String getDomain() {
 		return this.domain;
 	}
@@ -270,6 +285,18 @@ public class SparqlConnection {
 		}
 	}
 	
+	public boolean isOwlImportsEnabled() {
+		return enableOwlImports;
+	}
+
+	/**
+	 * Default is false for backwards-compatibility reasons
+	 * @param enableOwlImports
+	 */
+	public void setOwlImportsEnabled(boolean enableOwlImports) {
+		this.enableOwlImports = enableOwlImports;
+	}
+
 	// Is number of endpoint serverURLs == 1
 	public boolean isSingleServerURL() {
 		String url = "";
@@ -385,6 +412,7 @@ public class SparqlConnection {
 		for (int i=0; i < modelKeys.length; i++) {
 			ret.append(modelKeys[i] + ";");
 		}
+		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
 		return ret.toString();
 	}
 }

@@ -1,0 +1,5 @@
+uri "http://semtk.junit/imported" alias imported.
+
+ImportedSuper is a class.
+Imported is a type of ImportedSuper,
+	described by importedName with a single value of type string.

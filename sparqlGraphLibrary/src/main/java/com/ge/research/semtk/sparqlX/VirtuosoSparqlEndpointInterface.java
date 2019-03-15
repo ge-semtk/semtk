@@ -90,6 +90,14 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		return "virtuoso";
 	}
 	
+	@Override
+	protected void throwExceptionIfClearGraphFailed(SimpleResultSet res) throws Exception {
+		String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (!sLower.startsWith("clear ") || !sLower.endsWith("-- done")){
+        	throw new Exception(s);
+        }
+	}
 	/**
 	 * Build a GET URL
 	 */

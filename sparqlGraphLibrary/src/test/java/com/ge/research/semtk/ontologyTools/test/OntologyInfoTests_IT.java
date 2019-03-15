@@ -18,6 +18,8 @@ package com.ge.research.semtk.ontologyTools.test;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -25,17 +27,30 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 
 public class OntologyInfoTests_IT {
 	@BeforeClass
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
+		
+		// upload the "http://semtk.junit/*  graphs
+		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_Imported.owl");
+		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_Leaf.owl");
+		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_LeafRange.owl");
+		
 	}
+
+	
 	@Test
 	public void testFullLoad() throws Exception {
 
@@ -262,4 +277,126 @@ public class OntologyInfoTests_IT {
         
 	}
 
+	@Test
+	/**
+	 * Superclass is not in the ontology
+	 * @throws Exception
+	 */
+	public void testMissingImportSuperClass() throws Exception {
+
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/owl_import_Leaf.owl");		
+
+		// load should fail
+		try {
+			OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn("http://semtk.junit"));
+			fail("Missing exception for unknown superclass");
+		} catch (Exception e) {
+			assertTrue("Unknown superclass exception doesn't contain name of missing class",
+					e.getMessage().contains("#Imported"));
+		}
+	}
+	
+	@Test
+	/**
+	 * Property range is not in the ontology
+	 */
+	public void testMissingRangeClass() throws Exception {
+
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/owl_import_LeafRange.owl");		
+
+		// load should succeed
+		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn("http://semtk.junit"));
+		
+		OntologyClass oClass = oInfo.getClass("http://semtk.junit/leafrange#LeafRange");
+		OntologyProperty prop = oClass.getProperties().get(0);
+		OntologyRange oRange = prop.getRange();
+		
+		OntologyClass errClass = oInfo.getClass(oRange.getFullName());
+		assertTrue("Non-existent range class 'Imported' did not come back null", errClass == null);
+	}
+	
+	@Test
+	/**
+	 * Owl import from the leaf graph
+	 */
+	public void testOwlImport() throws Exception {
+
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		sei.setGraph("http://semtk.junit/leaf");
+
+		// load should succeed
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(sei, "http://semtk.junit", true);
+		
+		OntologyClass oClass = oInfo.getClass("http://semtk.junit/imported#Imported");
+		
+		assertTrue("http://semtk.junit/imported#Imported was not imported by owl import", oClass != null);
+		
+		ArrayList<String> loadWarnings = oInfo.getLoadWarnings();
+		ArrayList<String> importedGraphs = oInfo.getImportedGraphs();
+		
+		assertTrue("http://semtk.junit/imported#Imported is not in importedGraphs list", importedGraphs.contains("http://semtk.junit/imported"));
+		assertEquals("Graph was either not imported or double imported", 4, importedGraphs.size());
+		assertTrue("No warnings were found for empty default graphs such as sadlbasemodel", loadWarnings.size() > 0);
+	}
+	
+	@Test
+	public void testOwlImportRoundTrip() throws Exception {
+		// clear data
+		TestGraph.clearGraph();
+		
+		// load against owl import model pre-setup in @beforeClass, but use test graph for data
+		TestGraph.ingest("src/test/resources/owl_import_leaf.json", "src/test/resources/owl_import_leaf.csv");
+		
+		// run query
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_leaf.json");
+		String query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
+		Table table = TestGraph.execTableSelect(query);
+	
+		assertEquals("wrong number of rows returned", 5, table.getNumRows());
+		
+		// now try using superclass from import in the query (makes sure we got the superclass/subclass from an owl import)
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_imported_select.json");
+		query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
+		table = TestGraph.execTableSelect(query);
+	
+		assertEquals("wrong number of rows returned", 5, table.getNumRows());
+	}
+	@Test
+	/**
+	 * Owl import from the leaf graph
+	 */
+	public void testOwlImportConnection() throws Exception {
+
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		sei.setGraph("http://semtk.junit/leaf");
+
+		SparqlConnection conn = new SparqlConnection();
+		conn.setName("junit testOwlImportConnection");
+		conn.setDomain("http://semtk.junit");
+		conn.addDataInterface(sei);
+		conn.addModelInterface(sei);
+		
+		// load should fail without owl imports
+		try {
+			OntologyInfo oInfo = new OntologyInfo();
+			oInfo.loadSparqlConnection(conn);
+			
+			fail("No failure was encountered when followOwlImports wasn't set to true.");
+		} catch (Exception e) {}
+		
+		// now set owl imports and it should succeed and class should be imported
+		conn.setOwlImportsEnabled(true);
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.loadSparqlConnection(conn);
+		OntologyClass oClass = oInfo.getClass("http://semtk.junit/imported#Imported");
+		
+		// run just the basic test on loadSparqlConnection
+		assertTrue("http://semtk.junit/imported#Imported was not imported by owl import", oClass != null);
+
+	}
 }

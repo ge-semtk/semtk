@@ -88,7 +88,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		SparqlConnection nodegroupConn = sgJson.getSparqlConn();
 		this.domain = nodegroupConn.getDomain();
 		this.oInfo = oInfoClient.getOntologyInfo(nodegroupConn);
-
+		this.queryNodeGroup.validateAgainstModel(oInfo);
 		if(queryClient.getConfig() instanceof SparqlQueryAuthClientConfig){
 			LocalLogger.logToStdErr("Dispatcher exec config WAS an instance of the auth query client");
 			

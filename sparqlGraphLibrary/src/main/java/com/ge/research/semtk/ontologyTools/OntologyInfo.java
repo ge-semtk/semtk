@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +74,9 @@ public class OntologyInfo {
 	// be de-serializing a json blob.
 	private SparqlConnection modelConnection;
 	
+	private ArrayList<String> loadWarnings = new ArrayList<String>();
+	private ArrayList<String> importedGraphs = new ArrayList<String>();
+	
 	/**
 	 * Default constructor
 	 */
@@ -102,6 +107,14 @@ public class OntologyInfo {
 		this.addJson(json);
 	}
 	
+	public ArrayList<String> getLoadWarnings() {
+		return loadWarnings;
+	}
+
+	public ArrayList<String> getImportedGraphs() {
+		return importedGraphs;
+	}
+
 	/**
 	 * Load directly from model sparql endpoint interfaces
 	 * @param conn
@@ -116,7 +129,7 @@ public class OntologyInfo {
 		}
 		
 		for (int i = 0; i < modelInterfaces.size(); i++) {
-    		this.load(modelInterfaces.get(i), conn.getDomain());
+    		this.load(modelInterfaces.get(i), conn.getDomain(), conn.isOwlImportsEnabled());
     	}
     }
 
@@ -145,12 +158,10 @@ public class OntologyInfo {
 				this.load(new SparqlQueryClient( (SparqlQueryAuthClientConfig)curr ), conn.getDomain()); 
 			}
 			else{ 
-				this.load(new SparqlQueryClient(curr), conn.getDomain()); 
+				this.load(new SparqlQueryClient(curr), conn.getDomain(), conn.isOwlImportsEnabled()); 
 			}
     	}
     }
-	
-	
 	
 	/**
 	 * add a new class to the ontology info object. this includes information on super/sub classes
@@ -529,6 +540,99 @@ public class OntologyInfo {
 		return null;
 	}
 	
+
+	/**
+	 * returns the sparql for getting the sub and super-class relationships for known classes.
+	 **/
+	private static String getOwlImportsQuery(String graphName){
+		
+		
+		String retval = "select distinct ?importee from <" + graphName + "> where { " +
+						"<" + graphName + "> <http://www.w3.org/2002/07/owl#imports> ?importee. }";
+		
+		return retval;
+	}
+	
+	/**
+	 * Load owl imports if they aren't already loaded
+	 * and add loadWarning if the graph is empty
+	 * @param sei
+	 * @param imports
+	 * @throws Exception
+	 */
+	private void loadOwlImports(SparqlEndpointInterface sei, String [] imports) throws Exception {
+		// for each import
+		if (imports != null) {
+			for (int i=0; i < imports.length; i++) {
+				
+				if (! this.importedGraphs.contains(imports[i])) {
+					// create an sei
+					SparqlEndpointInterface importSei = SparqlEndpointInterface.getInstance(
+															sei.getServerType(),
+															sei.getServerAndPort(),
+															imports[i],
+															sei.getUserName(),
+															sei.getPassword()
+															);
+					
+					// save state
+					int numClasses = this.getNumberOfClasses();
+					int numEnums = this.getNumberOfEnum();
+					int numProperties = this.getNumberOfProperties();
+					
+					// load
+					this.load(importSei, imports[i]);
+					this.importedGraphs.add(imports[i]);
+					
+					// check for changes
+					if (numClasses == this.getNumberOfClasses() &&
+					    numEnums == this.getNumberOfEnum() &&
+					    numProperties == this.getNumberOfProperties()) {
+						this.loadWarnings.add(imports[i] + " - nothing to import");
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Load owl imports if they aren't already loaded
+	 * and add loadWarning if the graph is empty
+	 * @param client
+	 * @param imports
+	 * @throws Exception
+	 */
+	private void loadOwlImports(SparqlQueryClient client, String [] imports) throws Exception {
+		if (imports != null) {
+			// for each import
+			for (int i=0; i < imports.length; i++) {
+				
+				if (! this.importedGraphs.contains(imports[i])) {
+					// create a client
+					SparqlQueryAuthClientConfig importClientConfig = new SparqlQueryAuthClientConfig(client.getConfig());
+					importClientConfig.setGraph(imports[i]);
+					SparqlQueryClient importClient = new SparqlQueryClient(importClientConfig);
+					
+					// save current state
+					int numClasses = this.getNumberOfClasses();
+					int numEnums = this.getNumberOfEnum();
+					int numProperties = this.getNumberOfProperties();
+					
+					// load
+					this.load(importClient, imports[i]);
+					this.importedGraphs.add(imports[i]);
+					
+					// check for changes
+					if (numClasses == this.getNumberOfClasses() &&
+					    numEnums == this.getNumberOfEnum() &&
+					    numProperties == this.getNumberOfProperties()) {
+						this.loadWarnings.add("Import graph has no ontology data or doesn't exist: " + imports[i]);
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * returns the sparql for getting the sub and super-class relationships for known classes.
 	 **/
@@ -673,11 +777,13 @@ public class OntologyInfo {
 				e = this.propertyHash.get(elemList[i]);
 			} 
 			if (e == null)  {
-				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
-			}
+				// until we understand this better, throw out annotation comments on unknown elements
+				// throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			} else {
 			
-			// add the annotations (empties and duplicates are handled downstream)
-			e.addAnnotationLabel(labelList[i]);
+				// add the annotations (empties and duplicates are handled downstream)
+				e.addAnnotationLabel(labelList[i]);
+			}
 		}
 	}
 	private static String getAnnotationCommentsQuery(String graphName, String domain) {
@@ -707,11 +813,13 @@ public class OntologyInfo {
 				e = this.propertyHash.get(elemList[i]);
 			} 
 			if (e == null)  {
-				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
-			}
+				// until we understand this better, throw out annotation comments on unknown elements
+				//throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			} else {
 			
-			// add the annotations (empties and duplicates are handled downstream)
-			e.addAnnotationComment(commentList[i]);
+				// add the annotations (empties and duplicates are handled downstream)
+				e.addAnnotationComment(commentList[i]);
+			}
 		}
 	}
 	
@@ -830,6 +938,25 @@ public class OntologyInfo {
 		}
 	}
 
+	/**
+	 * Check validity of the OntologyInfo
+	 * @throws Exception
+	 */
+	public void validate() throws Exception {
+		
+		// Superclass names must be valid
+		for (String className : this.classHash.keySet()) {
+			OntologyClass c = this.classHash.get(className);
+			for (String superClassName : c.getParentNameStrings(false)) {
+				if (! this.classHash.containsKey(superClassName)) {
+					throw new Exception("Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
+				}
+			}
+		}
+		
+		// Note: Range names don't necessarily need to be valid.  As long as they aren't used.
+	}
+	
 	/**
 	 * Returns true/false to indicate whether the given class is a known enumeration.
 	 * @param classURI
@@ -1079,6 +1206,15 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
+		this.load(endpoint, domain, false);
+	}
+	
+	public void load(SparqlEndpointInterface endpoint, String domain, boolean owlImportFlag) throws Exception {
+		
+		if (owlImportFlag) {
+			endpoint.executeQuery(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()), SparqlResultTypes.TABLE);
+			this.loadOwlImports(endpoint, endpoint.getStringResultsColumn("importee"));
+		}
 		// execute each sub-query in order
 		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
@@ -1098,6 +1234,7 @@ public class OntologyInfo {
 		endpoint.executeQuery(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Comment"));
 		
+		this.validate();
 	}
 	
 	/**
@@ -1107,10 +1244,20 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlQueryClient client, String domain) throws Exception {
+		this.load(client, domain, false);
+	}
 		
-		// execute each sub-query in order
+	public void load(SparqlQueryClient client, String domain, boolean owlImportFlag) throws Exception {
 		TableResultSet tableRes;
 		String graphName = client.getConfig().getGraph();
+		
+		if (owlImportFlag) {
+			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName), SparqlResultTypes.TABLE);
+			this.loadOwlImports(client, tableRes.getTable().getColumn("importee"));
+		}
+		
+		// execute each sub-query in order
+		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
 		
@@ -1128,6 +1275,8 @@ public class OntologyInfo {
 		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
+		
+		this.validate();
 	}
 		
 	/*
@@ -1144,6 +1293,8 @@ public class OntologyInfo {
     	JSONArray annotationLabelList = new JSONArray();
     	JSONArray annotationCommentList = new JSONArray();
     	JSONObject prefixes =  new JSONObject();
+    	JSONArray importedGraphsList = new JSONArray();
+    	JSONArray loadWarningsList = new JSONArray();
         
         HashMap<String,String> prefixToIntHash = new HashMap<String, String>();
 
@@ -1232,6 +1383,14 @@ public class OntologyInfo {
             prefixes.put(prefixToIntHash.get(p), p);
         }
         
+        for (String s : this.importedGraphs) {
+        	importedGraphsList.add(s);
+        }
+        
+        for (String s : this.loadWarnings) {
+        	loadWarningsList.add(s);
+        }
+        
         json.put("version", OntologyInfo.JSON_VERSION);
         json.put("topLevelClassList", topLevelClassList);
     	json.put("subClassSuperClassList", subClassSuperClassList);
@@ -1240,6 +1399,8 @@ public class OntologyInfo {
     	json.put("annotationLabelList", annotationLabelList);
     	json.put("annotationCommentList", annotationCommentList);
     	json.put("prefixes", prefixes);
+    	json.put("importedGraphsList", importedGraphsList);
+    	json.put("loadWarningsList", loadWarningsList);
     	
         return json;
     }
@@ -1289,12 +1450,27 @@ public class OntologyInfo {
 	        					 		Utility.getJsonTableColumn(     annotationLabelList, 1)
 	                            	 );
         }
-        // annotationList is optional for backwards compatibility
+        // optional for backwards compatibility
         JSONArray annotationCommentList = (JSONArray)json.get("annotationCommentList");
         if (annotationCommentList != null) {
 	        this.loadAnnotationComments(Utility.unPrefixJsonTableColumn(annotationCommentList, 0, intToPrefixHash),
 	        					 		Utility.getJsonTableColumn(     annotationCommentList, 1)
 	                            	   );
+        }
+        // optional for backwards compatibility
+        JSONArray importedGraphsList = (JSONArray)json.get("importedGraphsList");
+        if (importedGraphsList != null) {
+	        for (Object obj : importedGraphsList) {
+		        this.importedGraphs.add((String) obj);
+	        }
+        }
+     
+        // optional for backwards compatibility
+        JSONArray loadWarningsList = (JSONArray)json.get("loadWarningsList");
+        if (loadWarningsList != null) {
+	        for (Object obj : loadWarningsList) {
+		        this.loadWarnings.add((String) obj);
+	        }
         }
     }
     
