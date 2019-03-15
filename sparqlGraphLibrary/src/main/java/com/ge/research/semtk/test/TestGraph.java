@@ -309,6 +309,11 @@ public class TestGraph {
 		if (! conn.isOwlImportsEnabled()) {
 			conn.clearModelInterfaces();
 			conn.addModelInterface(getSei());
+		} else {
+			// make sure all connection server and ports are the same
+			for (int i=0; i < conn.getModelInterfaceCount(); i++) {
+				conn.getModelInterface(i).setServerAndPort(conn.getDataInterface(i).getServerAndPort());
+			}
 		}
 		s.setSparqlConn(conn);
 		
