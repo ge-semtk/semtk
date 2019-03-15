@@ -357,14 +357,14 @@ public class OntologyInfoTests_IT {
 		String query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
 		Table table = TestGraph.execTableSelect(query);
 	
-		assertEquals("wrong number of rows returned", 5, table.getNumRows());
+		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 		
 		// now try using superclass from import in the query (makes sure we got the superclass/subclass from an owl import)
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_imported_select.json");
 		query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
 		table = TestGraph.execTableSelect(query);
 	
-		assertEquals("wrong number of rows returned", 5, table.getNumRows());
+		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 	}
 	@Test
 	/**
