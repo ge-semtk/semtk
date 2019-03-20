@@ -45,7 +45,11 @@ public class NodegroupRequest {
 
 
 	public SparqlConnection getConnection() throws Exception {
-		return getSparqlGraphJsonWithConn().getSparqlConn();
+		SparqlConnection conn = getSparqlGraphJsonWithConn().getSparqlConn();
+		if (conn == null) { 
+			throw new Exception("Operation requires a connection, not a legacy plain nodegroup json");
+		}
+		return conn;
 	}
 	
 	/**

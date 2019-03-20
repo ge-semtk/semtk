@@ -97,5 +97,20 @@ public class OntologyInfoClient extends RestClient {
 		}
 	}
 	
+	public void uncacheOntology(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.put("jsonRenderedSparqlConnection", conn.toJson().toJSONString());
+		conf.setServiceEndpoint("ontologyinfo/uncacheOntology");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			
+		} finally {
+			// reset conf and parametersJSON
+			this.parametersJSON.remove("jsonRenderedSparqlConnection");
+			conf.setServiceEndpoint(null);
+		}
+	}
+	
 
 }

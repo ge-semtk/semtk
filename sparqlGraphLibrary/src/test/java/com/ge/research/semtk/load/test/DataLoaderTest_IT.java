@@ -129,7 +129,7 @@ public class DataLoaderTest_IT {
 			DataLoader.loadFromCsv(templateFilePath, "file.csv", TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
 		}catch(Exception e){
 			exceptionThrown = true;
-			assertTrue(e.getMessage().contains("Could not instantiate CSV dataset: file.csv (No such file or directory)"));
+			assertTrue(e.getMessage().contains("file.csv"));
 		}
 		assertTrue(exceptionThrown);
 		

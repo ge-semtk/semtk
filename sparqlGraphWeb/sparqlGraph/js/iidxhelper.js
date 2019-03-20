@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,16 @@
  */
 
 define([	// properly require.config'ed
-        	
+
         	'jquery',
 			// shimmed
-        	'datagrids', 
+        	'datagrids',
         	'col-reorder-amd',
             'bootstrap/bootstrap-dropdown'
 
 		],
         function($) {
-		
+
     var IIDXHelper = function () {
     };
 
@@ -70,16 +70,16 @@ define([	// properly require.config'ed
         horizForm.appendChild(fieldset);
         return fieldset;
     };
-    
+
     IIDXHelper.fsAddTextInput = function (fieldSet, label, optId, optClassName, optInitValue, optDisabled) {
         var id = (typeof optId != "undefined" && optId != null) ? optId : null;
         var className = (typeof optClassName != "undefined" && optClassName != null) ? optClassName : undefined;
         var input = IIDXHelper.createTextInput(id, className);
-        
+
         if (typeof optInitValue != undefined && optInitValue != null) {
             input.value = optInitValue;
         }
-        
+
         if (typeof optDisabled != undefined && optDisabled != null) {
             input.disabled = optDisabled;
         }
@@ -93,23 +93,23 @@ define([	// properly require.config'ed
     IIDXHelper.createTextInput = function (id, optClassName, optDatalist) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("input");
-        if (typeof id != "undefined" && id != null) { 
+        if (typeof id != "undefined" && id != null) {
             elem.id = id;
         }
         elem.type = "text";
         elem.classList.add(className);
-        
+
         if (typeof optDatalist !== "undefined") {
             elem.setAttribute("list", optDatalist.id);
             elem.setAttribute("autocomplete", "off");
         }
         return elem;
     };
-    
+
     IIDXHelper.createDataList = function (id, valList) {
         var elem = document.createElement("datalist");
         elem.id = id;
-        
+
         for (var i=0; i < valList.length; i++) {
             var option = document.createElement("option");
             option.innerHTML = valList[i];
@@ -121,7 +121,7 @@ define([	// properly require.config'ed
     IIDXHelper.createTextArea = function (id, rows, optClassName) {
         var className = (typeof optClassName !== "undefined") ? optClassName : "input-xlarge";
         var elem = document.createElement("textarea");
-        if (typeof id != "undefined" && id != null) { 
+        if (typeof id != "undefined" && id != null) {
             elem.id = id;
         }
         elem.rows = rows;
@@ -132,7 +132,7 @@ define([	// properly require.config'ed
     IIDXHelper.removeMargins = function(e) {
         e.style.margin = "0px 0px 0px 0px";
     };
-    
+
     IIDXHelper.createVAlignedCheckbox = function () {
         var checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -172,11 +172,11 @@ define([	// properly require.config'ed
      */
     IIDXHelper.createSelect = function (id, textValArray, selectedTexts, optMultiFlag, optClassName) {
         var select =  document.createElement("select");
-        
+
         if (typeof id != "undefined" && id != null && id != "") {
             select.id = id;
         }
-        
+
         if(typeof optClassName != "undefined"){
             select.className = optClassName;
         }
@@ -186,7 +186,7 @@ define([	// properly require.config'ed
         var val;
         for (var i=0; i < textValArray.length; i++) {
             option = document.createElement("option");
-            
+
             if (typeof textValArray[i] == "string") {
                 text = textValArray[i];
                 val = textValArray[i];
@@ -215,10 +215,10 @@ define([	// properly require.config'ed
         var innerDiv = document.createElement("div");
         var but = document.createElement("a");
         var icon = document.createElement("icon");
-        
+
         innerDiv.appendChild(innerDom);
         innerDiv.appendChild(document.createElement("hr"));
-        
+
         but.onclick = function(div, ic) {
             if (ic.className.endsWith("right")) {
                 div.style.display = "inline";
@@ -228,7 +228,7 @@ define([	// properly require.config'ed
                 ic.className = "icon-chevron-right";
             }
         }.bind(this, innerDiv, icon);
-        
+
         but.classList.add("btn");
         but.appendChild(icon);
         but.onclick(innerDiv, icon);
@@ -240,19 +240,19 @@ define([	// properly require.config'ed
         outerDiv.appendChild(document.createTextNode(" " + title));
         outerDiv.appendChild(document.createElement("br"));
         outerDiv.appendChild(innerDiv);
-        
+
         return outerDiv;
     };
-    
+
     /*
      * Get list of values for each selected option
      *
-     * Handle performance and compatibility. 
+     * Handle performance and compatibility.
      * Work for single or multi-select.
      */
     IIDXHelper.getSelectValues = function (select) {
         var ret = [];
-        
+
         // fast but not universally supported
         if (select.selectedOptions != undefined) {
             for (var i=0; i < select.selectedOptions.length; i++) {
@@ -269,7 +269,7 @@ define([	// properly require.config'ed
         }
         return ret;
     };
-    
+
     /*
      * Set a select's selectedIndex to the first option with given text
      * If none, de-select all
@@ -284,7 +284,7 @@ define([	// properly require.config'ed
             }
         }
     };
-    
+
     /*
      * does a select contain an option with given text
      * @returns {boolean}
@@ -297,7 +297,7 @@ define([	// properly require.config'ed
         }
         return false;
     };
-    
+
     /* Creates a label element with the given text.  Optionally provide a tooltip. */
     IIDXHelper.createLabel = function (labelText, optTooltip) {
         var labelElem = document.createElement("label");
@@ -308,7 +308,7 @@ define([	// properly require.config'ed
         }
         return labelElem;
     };
-    
+
     IIDXHelper.createButton = function (text, callback, optClassList, optId) {
         var butElem = document.createElement("a");
         butElem.innerHTML = text;
@@ -324,21 +324,21 @@ define([	// properly require.config'ed
         }
         return butElem;
     };
-    
-    
+
+
     IIDXHelper.createIconButtonOLD = function(iconClass, optCallback) {
         var ret = document.createElement("a");
         ret.classList.add("btn");
         var icon = document.createElement("icon");
         icon.className = iconClass;
         ret.appendChild(icon);
-        
+
         if (typeof optCallback != undefined) {
             ret.onclick = optCallback;
         }
         return ret;
     };
-    
+
     IIDXHelper.createIconButton = function(iconClass, callback, optClassList, optId) {
         var butElem = document.createElement("button");
         butElem.appendChild(IIDXHelper.createIcon(iconClass));
@@ -353,28 +353,28 @@ define([	// properly require.config'ed
         }
         return butElem;
     };
-    
+
     IIDXHelper.createIcon = function(iconClass) {
         var icon = document.createElement("icon");
         icon.className = iconClass;
         return icon;
     };
-    
+
     IIDXHelper.createNbspText = function() {
         return document.createTextNode("\u00A0");
     };
-    
+
     IIDXHelper.createBoldText = function(text) {
         var b = document.createElement("b");
         b.appendChild(document.createTextNode(text));
         return b
     };
-    
+
     IIDXHelper.appendTextLine = function(elem, text) {
         elem.appendChild(document.createTextNode(text));
         elem.appendChild(document.createElement("br"));
     };
-    
+
     /*
      * Create a button group.
      * optDataToggleAttribute can be set to "buttons-radio" (single-select) or "buttons-checkbox" (multi-select)
@@ -419,11 +419,11 @@ define([	// properly require.config'ed
         controlGroupDiv.appendChild(controlsDiv);
         return controlGroupDiv;
     };
-    
+
     IIDXHelper.changeControlGroupHelpText = function (controlGroupDiv, text, elemClass) {
         // elemClass can be: "", "warning", "error", "success"
         controlGroupDiv.className = "control-group " + elemClass;
-        
+
         var cntlDiv = controlGroupDiv.getElementsByTagName("div")[0];
         var span = cntlDiv.getElementsByTagName("span")[0];
         span.innerHTML = text;
@@ -443,7 +443,7 @@ define([	// properly require.config'ed
             IIDXHelper.downloadUrl(url, filename);
         }
     };
-    
+
     IIDXHelper.downloadUrl = function (url, optFilename) {
 
         var a = document.createElement("a");
@@ -455,9 +455,9 @@ define([	// properly require.config'ed
         a.click();
         setTimeout(function() {
             document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);  
-        }, 0); 
-        
+            window.URL.revokeObjectURL(url);
+        }, 0);
+
     };
 
     IIDXHelper.downloadFileOLD = function (data, filename) {
@@ -479,21 +479,21 @@ define([	// properly require.config'ed
     };
 
     IIDXHelper.fileDialog = function (callback) {
-        
+
         var input = document.createElement("input");
         input.type = "file";
         input.style = "display:none";
         document.body.appendChild(input);
-        
+
         var cb = function(elem, userCallback, e) {
             userCallback(e.target.files[0]);
             input.parentElement.removeChild(input);
         }.bind(this, input, callback);
-        
+
         input.addEventListener('change', cb, false);
         input.click();
     };
-    
+
     IIDXHelper.setControlGroupState = function (group, state) {
         // state can be "error" "warning" "success" or ""
 
@@ -512,8 +512,8 @@ define([	// properly require.config'ed
     IIDXHelper.htmlSafe = function(str) {
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&percnt;");
     },
-    
-    /** 
+
+    /**
       * if str is ONLY a URL then change to an anchor
       * otherwise return as-is
       */
@@ -524,7 +524,7 @@ define([	// properly require.config'ed
             return str;
         }
     },
-        
+
     IIDXHelper.removeHtml = function(str) {
         return String(str).replace(/<(br|p|h1|h2|h3)>/g, '\n').replace(/<[^>]+>/g, '').replace("&nbsp", ' ');
     },
@@ -567,7 +567,7 @@ define([	// properly require.config'ed
         center.appendChild(icon);
 
         var br = document.createElement("br");
-        br.style.color = "orange";    // NOTE: hide the color on the <BR> element 
+        br.style.color = "orange";    // NOTE: hide the color on the <BR> element
         center.appendChild(br);
 
         var label = document.createTextNode(labelText);
@@ -588,11 +588,11 @@ define([	// properly require.config'ed
             ev.stopPropagation();
         };
 
-        div.ondragover = function (ev) { 
+        div.ondragover = function (ev) {
             if (ev.target.nodeType == 1) {
                 if (isDroppableCallback(ev)) {
-                    center.style.color = "blue"; 
-                    icon.style.color = "blue"; 
+                    center.style.color = "blue";
+                    icon.style.color = "blue";
                     ev.preventDefault();
                 }
 
@@ -600,7 +600,7 @@ define([	// properly require.config'ed
             }
         };
 
-        div.ondragleave = function (ev) { 
+        div.ondragleave = function (ev) {
             center.style.color = br.style.color;
             icon.style.color = br.style.color;
 
@@ -676,26 +676,26 @@ define([	// properly require.config'ed
     }
 
     IIDXHelper.buildUserIdButton = function (userId, logoutURL) {
-        
+
         var div = document.createElement("div");
         div.classList.add("btn-group");
-        
+
         var but1 = document.createElement("button");
         but1.classList.add("btn");
         but1.classList.add("btn-info");
         but1.appendChild(IIDXHelper.createIcon("icon-user"));
         but1.appendChild(document.createTextNode(" " + userId));
         div.appendChild(but1);
-        
+
         var but2 = document.createElement("button");
         but2.classList.add("btn");
         but2.classList.add("btn-info");
         but2.classList.add("dropdown-toggle");
         but2.setAttribute("data-toggle", "dropdown");
-        
+
         but2.appendChild(IIDXHelper.createIcon("icon-chevron-down"));
         div.appendChild(but2);
-        
+
         var ul = document.createElement("ul");
         ul.classList.add("dropdown-menu");
         var item = document.createElement("li");
@@ -705,7 +705,7 @@ define([	// properly require.config'ed
         item.appendChild(a);
         ul.appendChild(item);
         div.appendChild(ul);
-        
+
         return div;
     };
 
@@ -767,7 +767,7 @@ define([	// properly require.config'ed
 
         var finishedCallback = (typeof optFinishedCallback == 'undefined' || optFinishedCallback == null) ? function(){} : optFinishedCallback;
         var sortList = (typeof optSortList == 'undefined') ? [[ 0, 'asc' ]] : optSortList;
-        
+
         // search (moved into the grid)
         // var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
 
@@ -809,15 +809,15 @@ define([	// properly require.config'ed
         gridTable.setAttribute("data-table-name", dataTableName);
         div.appendChild(gridTable);
 
-        // define a variable since 'this' isn't legal inside the require js function / function 
+        // define a variable since 'this' isn't legal inside the require js function / function
         // add the data to the table and set it up as a datagrid
         var me = this;  // work-around require scoping
 
-        // fix numeric sorts so 
+        // fix numeric sorts so
         //   (1) ints and floats co-exist:  parseFloat handles ints, floats, strings
         //   (2) numbers and blanks co-exist  (zero > NaN)
         $.fn.dataTableExt.oSort['numeric-asc'] = function(a,b) {
-            var x = parseFloat(a);   
+            var x = parseFloat(a);
             var y = parseFloat(b);
             return ((isNaN(x) || x < y) ? -1 : ((isNaN(y) || x > y) ? 1 : 0));
         };
@@ -856,7 +856,7 @@ define([	// properly require.config'ed
 
         return gridTable;
     };
-    
+
     /**
      * For an IIDX datagrid table (e.g. created by buildDatagridInDiv())
      * return a list containing column[colname].innerText of every selected row.
@@ -887,23 +887,23 @@ define([	// properly require.config'ed
         return ret;
 
     };
-    
+
     IIDXHelper.buildTabs = function(nameList, divList) {
         var panel = IIDXHelper.getNextId("panel");
         var ret = document.createElement("span");
-        
+
         var ul = document.createElement("ul");
         ul.classList.add("nav");
         ul.classList.add("nav-tabs");
         ul.classList.add("nav-justified");
         ret.appendChild(ul);
-        
+
         for (var i=0; i < nameList.length; i++) {
             var li = document.createElement("li");
             li.classList.add("nav-item");
             if (i==0) li.classList.add("active");
             ul.appendChild(li);
-            
+
             var a = document.createElement("a");
             a.classList.add("nav-link");
             if (i==0) a.classList.add("active");
@@ -917,34 +917,34 @@ define([	// properly require.config'ed
             };
             li.appendChild(a);
         }
-        
+
         var div = document.createElement("div");
         div.classList.add("tab-content");
         div.classList.add("card");
         ret.appendChild(div);
-        
+
         for (var i=0; i < divList.length; i++) {
             var pdiv = document.createElement("div");
             pdiv.classList.add("tab-pane");
             pdiv.classList.add("fade");
-            
+
             if (i==0) {
                 pdiv.classList.add("in");
                 pdiv.classList.add("show");
                 pdiv.classList.add("active");
             }
-            
+
             pdiv.id = panel + String(i);
             pdiv.role = "tabpanel";
             pdiv.appendChild(document.createElement("br"));
             pdiv.appendChild(divList[i]);
             div.appendChild(pdiv);
         }
-        
-        
+
+
         return ret;
     };
-    
+
     IIDXHelper.buildSelectDatagridInDiv = function (div, colsCallback, dataCallback, optFinishedCallback) {
         //
         // PARAMS:
@@ -978,11 +978,11 @@ define([	// properly require.config'ed
         gridTable.setAttribute("data-table-name", dataTableName);
         div.appendChild(gridTable);
 
-        // fix numeric sorts so 
+        // fix numeric sorts so
         //   (1) ints and floats co-exist:  parseFloat handles ints, floats, strings
         //   (2) numbers and blanks co-exist  (zero > NaN)
         $.fn.dataTableExt.oSort['numeric-asc'] = function(a,b) {
-            var x = parseFloat(a);   
+            var x = parseFloat(a);
             var y = parseFloat(b);
             return ((isNaN(x) || x < y) ? -1 : ((isNaN(y) || x > y) ? 1 : 0));
         };
@@ -1005,5 +1005,5 @@ define([	// properly require.config'ed
 
         return gridTable;
     };
-    return IIDXHelper;            
+    return IIDXHelper;
 });

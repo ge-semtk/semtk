@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.ge.research.semtk.properties.ServiceProperties;
 @Configuration
-@ConfigurationProperties(prefix="query.oinfo", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="nodegroup.oinfo", ignoreUnknownFields = true)
 public class OInfoServiceProperties extends ServiceProperties {
 
 	public OInfoServiceProperties() {

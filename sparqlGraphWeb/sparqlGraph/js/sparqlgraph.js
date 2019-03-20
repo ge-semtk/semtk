@@ -99,6 +99,7 @@
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"),
 	    								document.getElementById("uploadtoolsdiv"),
+                                        document.getElementById("uploadmiscdiv"),
 	    								doLoadConnection,
 	    			                    g.service.ingestion.url,
 	    			                    g.service.sparqlQuery.url);
@@ -559,10 +560,16 @@
     //**** Start new load code *****//
     var doLoadOInfoSuccess = function() {
 
-        // Connection is empty: spin off a warning but continue
+        var warnings = gOInfo.getLoadWarnings().slice();
         if (gOInfo.getClassNames().length < 1) {
+            warnings.unshift("Warning: connection doesn't contain any classes.");
+        }
+        // Connection is empty: spin off a warning but continue
+        if (warnings.length > 0) {
             require(['sparqlgraph/js/modaliidx'], function(ModalIidx) {
-                ModalIidx.alert("No Ontology Found", "Warning: connection doesn't contain any classes.");
+                ModalIidx.alert("Ontology loaded with warnings", "Load warnings were encountered<br><list><li>" +
+                                                 warnings.join("</li><li>") +
+                                                 "</li></list>");
             });
         }
 
@@ -578,7 +585,7 @@
 		guiTreeNonEmpty();
 		//gNodeGroup.setCanvasOInfo(gOInfo);
 		gMappingTab.updateNodegroup(gNodeGroup);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 		logEvent("SG Load Success");
     };
@@ -596,7 +603,7 @@
             gEditTab.setOInfo(gOInfo);
             gEditTab.draw();
 	    	gMappingTab.updateNodegroup(gNodeGroup);
-			gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
     	});
  		// retains gConn
@@ -623,7 +630,11 @@
 	    	if (gConn != null) {
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
-                gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                oInfoClient.execUncacheOntology(gConn,
+                    function() {
+                        gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                    }
+                );
 	    	}
     	});
     };
@@ -1402,7 +1413,7 @@
     	clearEverything();
 
     	gMappingTab.updateNodegroup(gNodeGroup);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
     };
 
     var doSearch = function() {
@@ -1868,6 +1879,6 @@
 		 this.document.getElementById("mapping-tab-but").disabled = false;
 		 this.document.getElementById("upload-tab-but").disabled = true;
 
-		 gUploadTab.setNodeGroup(gConn, gNodeGroup, gMappingTab, gOInfoLoadTime);
+		 gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 	};

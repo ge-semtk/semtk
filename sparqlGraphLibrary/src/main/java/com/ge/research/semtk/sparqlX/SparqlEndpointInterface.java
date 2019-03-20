@@ -505,6 +505,21 @@ public abstract class SparqlEndpointInterface {
 	public void clearGraph() throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateClearGraphSparql(this), SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
+		this.throwExceptionIfClearGraphFailed(res);
+        
+	}
+	
+	protected void throwExceptionIfClearGraphFailed(SimpleResultSet res) throws Exception {
+		String s = res.getMessage();
+        String sLower = s.toLowerCase();
+        if (sLower.contains("fail") || sLower.contains("error")){
+        	throw new Exception(s);
+        }
+	}
+	
+	public void clearPrefix(String prefix) throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDeletePrefixQuery(this, prefix), SparqlResultTypes.CONFIRM);
+		res.throwExceptionIfUnsuccessful();
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();

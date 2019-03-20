@@ -196,4 +196,30 @@ public class OntologyInfoServiceRestController {
 
 		return retval.toJson();		
 	}
+	
+	@ApiOperation(
+			value="Un-cache the ontology loaded by given connection."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/uncacheOntology", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject uncacheOntology(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "uncacheChangedModel";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {			
+			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			
+			oInfoCache.remove(conn);
+			
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
 }

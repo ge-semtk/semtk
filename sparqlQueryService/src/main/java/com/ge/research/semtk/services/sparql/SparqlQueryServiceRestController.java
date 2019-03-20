@@ -31,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 
@@ -58,6 +60,9 @@ import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
+
+import io.swagger.annotations.ApiOperation;
 
 /**
  * Service to execute SPARQL queries
@@ -420,7 +425,9 @@ public class SparqlQueryServiceRestController {
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
     // We can't use a @RequestBody with a @RequestParam,
 	// So the SparqlAuthRequestBody is broken into individual string @RequestParams
-
+	@ApiOperation(
+			value="Upload owl to specified connection information"
+			)
 	@CrossOrigin
 	@RequestMapping(value="/uploadOwl", method= RequestMethod.POST)
 	public JSONObject uploadOwl(@RequestParam("serverAndPort") String serverAndPort, 
@@ -475,9 +482,72 @@ public class SparqlQueryServiceRestController {
 		
 		return simpleResultSetJson;	
 	}	
+	
+
+	@ApiOperation(
+			value="Using graph in owl's rdf:RDF xml:base, clear graph and (re-)import owl" 
+			)
+	@CrossOrigin
+	@RequestMapping(value="/syncOwl", method= RequestMethod.POST)
+	public JSONObject syncOwl(@RequestParam(  required=true,  name="serverAndPort") String serverAndPort, 
+								@RequestParam(required=true,  name="serverType") String serverType, 
+								@RequestParam(required=false, name="user") String user, 
+								@RequestParam(required=false, name="password") String password, 
+								@RequestParam(required=true,  name="owlFile") MultipartFile owlFile, 
+								@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "syncOwl";
+		SimpleResultSet resultSet = null;
+		JSONObject simpleResultSetJson = null;
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start uploadOwl");
+
+		
+		try {	
+			// monkey around with optional stuff
+			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
+			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
+			
+			// get graphName from owl
+			byte [] owlBytes = owlFile.getBytes();
+			String graphName = Utility.getXmlBaseFromOwlRdf(new ByteArrayInputStream(owlBytes));
+			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graphName, user, password);
+						
+			if (sei instanceof NeptuneSparqlEndpointInterface) {
+				// S3 bucket is option.  It can be filled with blanks and nulls
+				S3BucketConfig s3Config= new S3BucketConfig(
+						serviceProps.getS3ClientRegion(), 
+						serviceProps.getS3BucketName(), 
+						serviceProps.getAwsIamRoleArn(), 
+						serviceProps.getS3AccessId(), 
+						serviceProps.getS3Secret());
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
+			}
+			
+			if (! sei.isAuth()) { 
+				throw new Exception("Required SPARQL endpoint user/password weren't provided.");
+			}
+			
+			// clear the graph, upload owl, uncache the ontology
+			sei.clearGraph();
+			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
+			uncacheChangedModel(sei);
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+		
+		return simpleResultSetJson;	
+	}	
 	 
 	/**
-	 * Clear a model
+	 * Remove ontology and anything that looks like it from SemTK cache
 	 * @param sei
 	 * @throws Exception
 	 */
