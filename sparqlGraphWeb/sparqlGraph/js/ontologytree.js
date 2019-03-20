@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,36 +38,36 @@ var OntologyTree = function(dynaTree, optEnumFlag, optCollapseNamespaceList) {
 	this.specialClasses = [];
 	this.oInfo = null;
 	this.subsetURIs = null;
-	
+
 	this.enumFlag = (typeof optEnumFlag === 'undefined') ? true : optEnumFlag;
 	this.collapseList = (typeof optCollapseNamespaceList === 'undefined') ? [] : optCollapseNamespaceList;
 };
 
-	
+
 OntologyTree.prototype = {
-	
+
 	setSpecialClassFormat : function(htmlStart, htmlEnd) {
 		// special classes have html tags before and after them in their title
 		this.HTMLOpenHighlight = htmlStart;
 		this.specialClassHTML1 = htmlEnd;
 	},
-	
+
 	addSpecialClass : function(fullName) {
 		this.specialClasses.push(fullName);
 	},
-	
+
 	getSpecialClasses : function() {
 		return this.specialClasses;
 	},
-	
+
 	addSpecialClasses : function(nameList) {
 		this.specialClasses = this.specialClasses.concat(nameList);
 	},
-	
+
 	classIsSpecial : function (fullName) {
 		return (this.specialClasses.indexOf(fullName) > -1);
 	},
-	
+
     //
     // delete old oInfo and put noOInfo into the tree
     //
@@ -94,56 +94,56 @@ OntologyTree.prototype = {
                 slist.push(val);
 			}
 		}.bind(this,expandList,selectList));
-        
+
         // reset oInfo
         this.setOInfo(newOInfo);
         this.showAll();
-        
+
         // restore expanded and selected nodes
         this.tree.getRoot().visit(function(elist, slist, node){
             node.expand(elist.indexOf(node.data.tooltip) > -1);
             node.select(slist.indexOf(node.data.tooltip) > -1);
 		}.bind(this,expandList,selectList));
     },
-    
+
     activateByValue : function (val) {
         this.tree.getRoot().visit(function(v, node) {
-            if (node.data.value == v) {    
+            if (node.data.value == v) {
                 node.activate();
             }
         }.bind(this, val))
     },
-    
+
 	setOInfo : function (ontInfo) {
-		// associate an OntologyInfo		
+		// associate an OntologyInfo
 		this.oInfo = ontInfo;
 	},
-	
+
 	showAll : function() {
-		
+
 		// populate all info from the saved this.oInfo into the dynatree
 		this.subsetURIs = null;
-		
+
 		var names = this.oInfo.getClassNames();
 		this.tree.enableUpdate(false);
     	this.tree.getRoot().removeChildren();
-    	
-		
+
+
 		for (var i=0; i < names.length; i++) {
 			var c = this.oInfo.getClass(names[i]);
-			if (	this.enumFlag || 
-					c.getProperties().length > 0 || 
+			if (	this.enumFlag ||
+					c.getProperties().length > 0 ||
 					this.oInfo.getDescendantProperties(c).length > 0 ||
 					this.oInfo.getInheritedProperties(c).length > 0     ) {
 				this.addOntClass(c);
 			}
 		}
-		
-		
+
+
 		this.tree.getRoot().sortChildren(this.cmp, true);
     	this.tree.enableUpdate(true);
 	},
-	
+
 	showSubset : function(names) {
 		// add a list of classes to the tree
 		this.subsetURIs = names;
@@ -151,145 +151,178 @@ OntologyTree.prototype = {
 		for (var i=0; i < names.length; i++) {
 			this.addOntClass(this.oInfo.getClass(names[i]));
 		}
-		
+
 		this.tree.getRoot().sortChildren(this.cmp, true);
 		this.tree.enableUpdate(true);
 	},
-	
-	
+
+
 	addOntClass : function(ontClass, optOntPropList) {
 		// Add a class to the tree.
 		//     -> silently ignores request to add duplicate classes or properties
 		// optOntPropList - if this OntologyProperty is not null, then add only this property
-		
+
 		// find the parent
 		var className = ontClass.getNameStr();
 		var classNameLocal = ontClass.getNameStr(true);
 		var parentName;
 		var parentNameLocal;
-    	var parentNode;
+    	var parentNodes = [];
     	var newNode;
     	var list = [];
-    	
+        var retNodes = [];
+
     	// do nothing if ontClass's namespace is in the collapseList
     	if (this.collapseList.indexOf(ontClass.getNamespaceStr()) > -1) {
     		return;
     	}
-    	
-    	// get class parent.  Keep walking up until null, or until namespace is not in this.collpaseList
-    	var ontParents = this.oInfo.getClassParents(ontClass);
-        
-        // PEC TODO: ontologyTree needs to handle multiple inheritence
-        var ontParent = ontParents.length > 0 ? ontParents[0] : null;
-        
-        if (ontParents.length > 1) {
-            throw new Error("OntologyTree does not yet support classes with multiple parents: " + ontClass.getNameStr());
-        }
-        
-    	while (ontParent && this.collapseList.indexOf(ontParent.getNamespaceStr()) > -1) {
-    		ontParents = this.oInfo.getClassParents(ontParent);
-            
-            // PEC TODO: ontologyTree needs to handle multiple inheritence
-            ontParent = ontParents.length > 0 ? ontParents[0] : null;
-    	}
-    	
-    	if (ontParent) {
-    		parentName =      ontParent.getNameStr();
-    		parentNameLocal = ontParent.getNameStr(true);
 
-    	} else {
-    		// no parent: use the namespace string
-    		parentName = ontClass.getNamespaceStr();
+    	// get class parents
+    	var ontParents = this.getUncollapsedParents(ontClass);
+
+        // does ontClass have any parents in its namespace
+        var parentInNamespaceFlag = false;
+        for (var i=0; i < ontParents.length && !parentInNamespaceFlag; i++) {
+            if (ontParents[i].getNamespaceStr() == ontClass.getNamespaceStr()) {
+                parentInNamespaceFlag = true;
+            }
+        }
+
+        // add namespace as parentNode if it has not parent in it's own namespace
+        if (! parentInNamespaceFlag) {
+            parentName = ontClass.getNamespaceStr();
     		parentNameLocal = parentName.substring(parentName.lastIndexOf('/')+1);
-        } 
-    	
-    	// Check if parent is in the tree
-    	list = this.getNodesByURI(parentName);
-    	if (list.length == 0) {
-    		parentNode = null;
-    	} else if (list.length > 1) {
-    		throw "Internal error in OntologyTree.addOntClass(): found parent class more than once in the tree: " + parentName;
-    	} else {
-    		parentNode = list[0];
-    	}
-    		
-    	// recursively add parents
-        if (parentNode == null) { 
-        	var parentClass = this.oInfo.getClass(parentName);
-        	if (parentClass) {
-        		// if only adding specific property (ies)
-        		if (typeof optOntPropList !== 'undefined') {
-        			// add just the parent class with no properties
-        			parentNode = this.addOntClass(parentClass, []);
-        		} else {
-        			// normally: add the entire parent class
-        			parentNode = this.addOntClass(parentClass);
-        		}
-        		
-        		
-        	// break the recursion when we get to the namespace node.  This one is not a class.
+
+            var nsNodes = this.getNodesByURI(ontClass.getNamespaceStr());
+            if (nsNodes.length == 0) {
+                // create non-existent namespace parent
+                parentNodes.push(this.addNamespace(parentName, parentNameLocal));
+            }
+            else {
+                // add existing namespace parent
+                parentNodes = parentNodes.concat(nsNodes);
+            }
+        }
+
+        // for each parent class, collect all nodes into ParentNodes
+        for (var i=0; i < ontParents.length; i++) {
+
+    		parentName =      ontParents[i].getNameStr();
+    		parentNameLocal = ontParents[i].getNameStr(true);
+
+        	// Check if parent is in the tree
+        	var parentNodeList = this.getNodesByURI(parentName);
+        	if (parentNodeList.length == 0) {
+
+                var parentClass = this.oInfo.getClass(parentName);
+            	if (parentClass) {
+            		// if only adding specific property (ies)
+            		if (typeof optOntPropList !== 'undefined') {
+            			// add just the parent class with no properties
+            			parentNodes = parentNodes.concat(this.addOntClass(parentClass, []));
+            		} else {
+            			// normally: add the entire parent class
+            			parentNodes = parentNodes.concat(this.addOntClass(parentClass));
+            		}
+
+            	// break the recursion when we get to the namespace node.  This one is not a class.
+            	} else {
+            		parentNodes.push(this.addNamespace(parentName, parentNameLocal));
+            	}
         	} else {
-        		parentNode = this.addNamespace(parentName, parentNameLocal);
-        	}
+                parentNodes = parentNodes.concat(parentNodeList);
+            }
         }
-        
-        // add self if class doens't exist
-    	list = this.getNodesByURI(className);
-    	if (list.length == 0) {
-    		newNode = null;
-    	} else if (list.length > 1) {
-    		throw "Internal error in OntologyTree.addOntClass(): found class more than once in the tree: " + className;
-    	} else {
-    		newNode = list[0];
-    	}
-        if (newNode == null) {
-	        // add the node
-        	var title = classNameLocal;
-        	if (this.classIsSpecial(className)) {
-        		title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
+
+        // find or create a new node under each parentNode
+        for (var i=0; i < parentNodes.length; i++) {
+            list = this.getNodesByURIAndParent(className, parentNodes[i].data.value);
+            if (list.length == 0) {
+        		newNode = null;
+        	} else if (list.length > 1) {
+        		throw "Internal error in OntologyTree.addOntClass(): found class more than once under same parent: " + className + " under " + parentNodes[i].data.value;
+        	} else {
+        		newNode = list[0];
         	}
-        	
-	        newNode = parentNode.addChild({
-	    		title: title,
-	    		//key: classKey,
-	    		tooltip: className,
-	    		isFolder: true,
-	    	});
-	        newNode.data.value = className;
-		}
-        
-        // Check if we're adding a specific optOntProp, or defaulting to add all of them
-        var props = null;
-        if (typeof(optOntPropList) !== 'undefined') {
-        	props = optOntPropList;
-        } else {
-        	props = this.oInfo.getInheritedProperties(ontClass);
+
+            // add node if needed
+            if (newNode == null) {
+    	        // add the node
+            	var title = classNameLocal;
+            	if (this.classIsSpecial(className)) {
+            		title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
+            	}
+
+    	        newNode = parentNodes[i].addChild({
+    	    		title: title,
+    	    		//key: classKey,
+    	    		tooltip: className,
+    	    		isFolder: true,
+    	    	});
+    	        newNode.data.value = className;
+    		}
+
+            // Add props
+            // Check if we're adding a specific optOntProp, or defaulting to add all of them
+            var props = null;
+            if (typeof(optOntPropList) !== 'undefined') {
+            	props = optOntPropList;
+            } else {
+            	props = this.oInfo.getInheritedProperties(ontClass);
+            }
+
+            this.addNodeProps(newNode, ontClass, props);
+            retNodes.push(newNode);
         }
-        
-        this.addNodeProps(newNode, ontClass, props);
-        
-        return newNode;
+
+        return retNodes;
 	},
+
+    getUncollapsedParents : function(oClass) {
+        // get class parents
+    	var ontParentList = this.oInfo.getClassParents(oClass);
+        var ret = [];
+
+        // loop through all parents
+        for (var i=0; i < ontParentList.length; i++) {
+            var parent = ontParentList[i];
+            var parentFullName = parent.getNameStr();
+            var parentNamespace = parent.getNamespaceStr();
+
+            // if parent is not already in ret
+            if (ret.filter(function(oClass) {return oClass.getNameStr() == parentFullName; }).length == 0) {
+
+                // if it's in the collapseList, then uncollapse
+                if (this.collapseList.indexOf(parentNamespace) > -1) {
+                    ret = ret.concat(this.getUncollapsedParents(parent));
+                } else {
+                    ret.push(parent);
+                }
+            }
+        }
+
+    	return ret;
+    },
 
     addNamespace : function(fullName, localName) {
         var parentNode = this.tree.getRoot().addChild({
             title: localName,
             tooltip: fullName,
             isFolder: true});
-        
+
         parentNode.data.value = fullName;
-        
+
         return parentNode
     },
-    
+
 	addNodeProps : function(node, ontClass, propList) {
 		// add propList to node if they are not already there
-		
+
         var localProps = ontClass.getProperties();
         var title = "";
         for (var i=0; i < propList.length; i++) {
         	var propName = propList[i].getNameStr();
-        	
+
         	// add property if it don't exist yet under this class
         	var nodeList = this.getNodesByURI(propName);
         	var propNode = null;
@@ -299,7 +332,7 @@ OntologyTree.prototype = {
         			propNode = nodeList[j];
         		}
         	}
-        	
+
         	if (propNode == null ) {
         		// format local properties different than inherited
         		if (localProps.indexOf(propList[i]) > -1) {
@@ -309,12 +342,12 @@ OntologyTree.prototype = {
     	        	title = propList[i].getNameStr(true) + ": " + propList[i].getRangeStr(true);
 
         		}
-	        	
+
 	        	// highlight if range is a special class
 	        	if (this.classIsSpecial(propList[i].getRangeStr(false))) {
 	        		title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
 	        	}
-	        	
+
 	        	var child = node.addChild({
 	        		title: title,
 	        		//key: propName,
@@ -324,9 +357,9 @@ OntologyTree.prototype = {
 	        	child.data.value = propName;
         	}
         }
-		
+
 	},
-	
+
 	// keys are now randomly generated
 	// URI is stored in node.data.value
 	getNodeByKey : function(keyName) {
@@ -344,7 +377,7 @@ OntologyTree.prototype = {
 		// Use getNodesByURI() instead, and check the length of the return list.
 		alert("Internal error: called deprecated function OntologyTree.getNodeByURI()");
 	},
-	
+
 	getNodesByURI : function(uri) {
 		// uri can be a class or property
 		// find all tree nodes that match
@@ -356,10 +389,22 @@ OntologyTree.prototype = {
 		});
 		return ret;
 	},
-	
+
+    getNodesByURIAndParent: function(uri, parentUri) {
+		// uri can be a class or property
+		// find all tree nodes that match
+		var ret = [];
+		this.tree.getRoot().visit(function(node){
+			if (node.data.value == uri && node.getParent().data.value == parentUri) {
+				ret.push(node);
+			}
+		});
+		return ret;
+	},
+
 	nodeGetURI : function(node, optLocalFlag) {
 		var localFlag = (typeof optLocalFlag === 'undefined') ? false : optLocalFlag;
-		
+
 		if (localFlag) {
 			return new OntologyName(node.data.value).getLocalName();
 		}
@@ -367,25 +412,25 @@ OntologyTree.prototype = {
 			return node.data.value;
 		}
 	},
-	
+
     nodeIsClass : function(node) {
     	return this.oInfo.containsClass(this.nodeGetURI(node));
     },
-    
+
     nodeIsProperty : function(node) {
     	return this.oInfo.containsProperty(this.nodeGetURI(node));
     },
-    
+
     nodeIsNamespace : function(node) {
         return (this.node.value.indexOf('#') == -1);
     },
-    
+
     nodeGetParent : function(node) {
     	return node.getParent();
     },
 
 	find : function(pattern) {
-		
+
 		// There is a bug in dynatree that I can't quite nail down.
 		// Running these four lines prevents it.
 		// This is only necessary once, after classes are loaded
@@ -395,14 +440,14 @@ OntologyTree.prototype = {
     	this.collapseAll();
     	this.tree.enableUpdate(true);
     	// ---------------------------------------
-    	
+
 		// opens and highlights all matches
 		try {
 			this.tree.getRoot().find(pattern);
 		} catch (err) {
 			alert("Attempt to avoid dynatree/jquery error failed.  \n To recover, reload your data and expand/collapse the tree.");
 		}
-	},	
+	},
     collapseAll : function() {
     	this.tree.getRoot().visit(function(node){node.expand(false);});
 	},
@@ -419,35 +464,35 @@ OntologyTree.prototype = {
     	this.tree.getRoot().sortChildren(this.cmp, true);
     	this.tree.enableUpdate(true);
     },
-    
+
     powerSearch : function(pattern) {
     	// perform a search that removes any non-matches from the dynatree
     	// any matching prop is added
     	// any matching class is added with all its props
-    	
+
     	this.tree.enableUpdate(false);
     	this.removeAll();
-    	
+
     	var names = (this.subsetURIs !== null) ? this.subsetURIs : this.oInfo.getClassNames();
-		
+
 		for (var i=0; i < names.length; i++) {
 			var c = this.oInfo.getClass(names[i]);
 			var plist;
-			
+
 			// get all properties if class matches, otherwise only matching properties
 			if (c.powerMatch(pattern)) {
 				plist = this.oInfo.getInheritedProperties(c);
 			} else {
 				plist = [];
 				var props = this.oInfo.getInheritedProperties(c);
-				
+
 				for (var p=0; p < props.length; p++) {
 					if (props[p].powerMatch(pattern)) {
 						plist.push(props[p]);
 					}
 				}
 			}
-			
+
 			// add to the tree
 			for (var j=0; j < plist.length; j++) {
 				this.addOntClass(c, [plist[j]]);
@@ -455,25 +500,25 @@ OntologyTree.prototype = {
 			}
 		}
 		this.tree.enableUpdate(true);
-		
+
 		this.sortAll();
 		// do the traditional "find" to get the high-lighting
 		this.find(pattern);
-		
 
-    }, 
-    
+
+    },
+
     cmp : function(a,b) {
     	if (a.hasChildren() && !b.hasChildren())
     		return 1;
     	else if (b.hasChildren() && !a.hasChildren())
     		return -1;
-    	else if (a.data.value < b.data.value) 
+    	else if (a.data.value < b.data.value)
     		return -1;
     	else if (a.data.value > b.data.value)
     		return 1;
     	else
     		return 0;
     },
-    
+
 };

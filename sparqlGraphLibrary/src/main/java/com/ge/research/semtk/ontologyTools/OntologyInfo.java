@@ -776,11 +776,8 @@ public class OntologyInfo {
 			if (e == null) {
 				e = this.propertyHash.get(elemList[i]);
 			} 
-			if (e == null)  {
-				// until we understand this better, throw out annotation comments on unknown elements
-				// throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
-			} else {
-			
+			// if found (e.g. it isn't a property annotation)
+			if (e != null)  {
 				// add the annotations (empties and duplicates are handled downstream)
 				e.addAnnotationLabel(labelList[i]);
 			}
@@ -812,11 +809,8 @@ public class OntologyInfo {
 			if (e == null) {
 				e = this.propertyHash.get(elemList[i]);
 			} 
-			if (e == null)  {
-				// until we understand this better, throw out annotation comments on unknown elements
-				//throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
-			} else {
-			
+			// if found (e.g. it isn't a property comment)
+			if (e != null)  {
 				// add the annotations (empties and duplicates are handled downstream)
 				e.addAnnotationComment(commentList[i]);
 			}
