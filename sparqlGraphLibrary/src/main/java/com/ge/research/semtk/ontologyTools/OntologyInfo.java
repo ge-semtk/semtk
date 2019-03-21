@@ -574,7 +574,7 @@ public class OntologyInfo {
 					int numProperties = this.getNumberOfProperties();
 					
 					// load
-					this.load(importSei, imports[i]);
+					this.load(importSei, true);
 					this.importedGraphs.add(imports[i]);
 					
 					// check for changes
@@ -1210,16 +1210,36 @@ public class OntologyInfo {
 	 * @param domain
 	 * @throws Exception
 	 */
+	@Deprecated
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
 		this.load(endpoint, domain, false);
 	}
 	
+	/**
+	 * Preferred method of loading an oInfo
+	 * @param endpoint
+	 * @param owlImportFlag
+	 * @throws Exception
+	 */
+	public void load(SparqlEndpointInterface endpoint, boolean owlImportFlag) throws Exception {
+		this.load(endpoint, "", owlImportFlag);
+	}
+	
+	/**
+	 * Not-quite-deprecated but not recommended function signature
+	 * @param endpoint
+	 * @param domain - only remains for backwards compatibility
+	 * @param owlImportFlag
+	 * @throws Exception
+	 */
 	public void load(SparqlEndpointInterface endpoint, String domain, boolean owlImportFlag) throws Exception {
 		
+		// find, then recursively load owl imports
 		if (owlImportFlag) {
 			endpoint.executeQuery(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()), SparqlResultTypes.TABLE);
 			this.loadOwlImports(endpoint, endpoint.getStringResultsColumn("importee"));
 		}
+		
 		// execute each sub-query in order
 		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
