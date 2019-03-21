@@ -33,6 +33,9 @@ public class OwlLoader {
 	
 	/**
 	 * Main method
+	 * 
+	 * Note: this does not clear the ontology cache.
+	 *       To do so, change so it knows and uses the queryClient instead of going directly to the triplestore
 	 */
 	public static void main(String[] args) throws Exception{
 		

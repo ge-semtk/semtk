@@ -21,7 +21,7 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.edc.SemtkEndpointProperties;
+import com.ge.research.semtk.properties.SemtkEndpointProperties;
 
 // subclass simply adds spring annotations including locations
 
@@ -29,4 +29,9 @@ import com.ge.research.semtk.edc.SemtkEndpointProperties;
 @ConfigurationProperties(prefix="node-group-execution.edc.services", ignoreUnknownFields = true)
 public class NodegroupExecutionSemtkEndpointProperties extends SemtkEndpointProperties {
 
+	public NodegroupExecutionSemtkEndpointProperties() {
+		super();
+		setPrefix("node-group-execution.edc.services");
+	}
+	
 }

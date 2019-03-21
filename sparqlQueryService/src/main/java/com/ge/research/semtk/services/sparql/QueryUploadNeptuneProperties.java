@@ -25,5 +25,8 @@ import com.ge.research.semtk.sparqlX.NeptuneS3Properties;
 @Configuration
 @ConfigurationProperties(prefix="query.neptuneupload", ignoreUnknownFields = true)
 public class QueryUploadNeptuneProperties extends NeptuneS3Properties {
-	
+	public void validate() throws Exception {
+		this.setPrefix("query.neptuneupload");
+		super.validate();
+	}
 }

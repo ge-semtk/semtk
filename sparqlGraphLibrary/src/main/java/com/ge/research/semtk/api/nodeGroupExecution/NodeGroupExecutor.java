@@ -52,11 +52,11 @@ public class NodeGroupExecutor {
 	public static final String USE_NODEGROUP_CONN_STR_SHORT = "NODEGROUP_DEFAULT";
 		
 	// all the internal instances needed to manage external communications
-	private NodeGroupStoreRestClient ngsrc = null;
-	private DispatchRestClient drc = null;
-	private ResultsClient rc = null;
-	private StatusClient sc = null;
-	private IngestorRestClient irc = null;
+	private NodeGroupStoreRestClient storeClient = null;
+	private DispatchRestClient dispatchClient = null;
+	private ResultsClient resultsClient = null;
+	private StatusClient statusClient = null;
+	private IngestorRestClient ingestClient = null;
 	// internal data.
 	private String currentJobId = null;
 	
@@ -66,11 +66,11 @@ public class NodeGroupExecutor {
 	public NodeGroupExecutor(NodeGroupStoreRestClient nodegroupstoreclient, DispatchRestClient dispatchclient,
 			ResultsClient resultsclient, StatusClient statusclient, IngestorRestClient ingestorClient){
 		
-		this.ngsrc = nodegroupstoreclient;
-		this.drc   = dispatchclient;
-		this.rc    = resultsclient;
-		this.sc    = statusclient;
-		this.irc   = ingestorClient;
+		this.storeClient = nodegroupstoreclient;
+		this.dispatchClient   = dispatchclient;
+		this.resultsClient    = resultsclient;
+		this.statusClient    = statusclient;
+		this.ingestClient   = ingestorClient;
 	}
 	
 	public NodeGroupExecutor(String jobID, NodeGroupStoreRestClient nodegroupstoreclient, DispatchRestClient dispatchclient,
@@ -82,7 +82,7 @@ public class NodeGroupExecutor {
 		// we can put that explicit check in later.
 
 		this.currentJobId = jobID;
-		this.sc.setJobId(jobID);
+		this.statusClient.setJobId(jobID);
 	}
 	
 	public static SparqlConnection get_USE_NODEGROUP_CONN() throws Exception {
@@ -96,7 +96,7 @@ public class NodeGroupExecutor {
 	
 	public void setJobID(String jobID){
 		this.currentJobId = jobID;
-		this.sc.setJobId(jobID);
+		this.statusClient.setJobId(jobID);
 	}
 	
 	// Status Information
@@ -108,9 +108,23 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobPercentCompletion -- the current job ID is null. unable to get completion on nonexistent job.");
 		}
 		else{
-			retval = this.sc.execGetPercentComplete();
+			retval = this.statusClient.execGetPercentComplete();
 		}
 		return retval;
+	}
+	
+	// Status Information
+	public void incrementPercentComplete(int increment, int max) throws Exception{
+		int retval = 0;
+		
+		// get the reported completion percentage of the Job referenced by the currentJobId 
+		if(this.currentJobId == null){
+			throw new Exception("StoredQueryExecutor::getJobPercentCompletion -- the current job ID is null. unable to get completion on nonexistent job.");
+		}
+		else{
+			this.statusClient.execIncrementPercentComplete(increment, max);
+		}
+		return;
 	}
 	
 	public String getJobStatus() throws Exception{
@@ -121,7 +135,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobStatus -- the current job ID is null. unable to get status on nonexistent job.");
 		}
 		else{
-			retval = this.sc.execGetStatus();
+			retval = this.statusClient.execGetStatus();
 		}
 		return retval;
 	}
@@ -134,7 +148,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobStatus -- the current job ID is null. unable to get status on nonexistent job.");
 		}
 		else{
-			retval = this.sc.execGetStatusMessage();
+			retval = this.statusClient.execGetStatusMessage();
 		}
 		return retval;
 	}
@@ -147,7 +161,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobCompletion -- the current job ID is null. unable to get info on nonexistent job.");
 		}
 		else{
-			int percent = this.sc.execGetPercentComplete();
+			int percent = this.statusClient.execGetPercentComplete();
 			if(percent != 100){ 	// not 100%? incomplete
 				retval = false;
 			}
@@ -185,7 +199,7 @@ public class NodeGroupExecutor {
 			if (maxMsec > 0 && elapsedMsec > maxMsec) {
 				throw new Exception("Job did not complete within " + maxMinutes + " minutes");
 			}
-			percentComplete = this.sc.execWaitForPercentOrMsec(100, sleepMsec);
+			percentComplete = this.statusClient.execWaitForPercentOrMsec(100, sleepMsec);
 			elapsedMsec += sleepMsec;
 		}
 		
@@ -201,7 +215,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getResultsLocation -- the current job ID is null. unable to get info on nonexistent job.");
 		}
 		else{
-			retval = this.rc.execGetResults(currentJobId);
+			retval = this.resultsClient.execGetResults(currentJobId);
 		}
 		return retval;
 	}
@@ -213,7 +227,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getTableResults -- the current job ID is null. unable to get info on nonexistent job.");
 		}
 		else{
-			retval = this.rc.getTableResultsJson(this.currentJobId, null);
+			retval = this.resultsClient.getTableResultsJson(this.currentJobId, null);
 		}
 		return retval;
 		
@@ -227,7 +241,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getTableResults -- the current job ID is null. unable to get info on nonexistent job.");
 		}
 		else{
-			retval = this.rc.execGetGraphResult(this.currentJobId);
+			retval = this.resultsClient.execGetGraphResult(this.currentJobId);
 		}
 		return retval;
 	}
@@ -237,7 +251,7 @@ public class NodeGroupExecutor {
 	
 		SimpleResultSet simpleRes = null;
 		
-		simpleRes = this.drc.executeRawSparqlQuery(sc, sparqlQuery);
+		simpleRes = this.dispatchClient.executeRawSparqlQuery(sc, sparqlQuery);
 		
 		// set up the Job ID
 		this.setJobID(simpleRes.getResult("requestID"));
@@ -301,24 +315,24 @@ public class NodeGroupExecutor {
 		
 		// select the appropriate type and try to dispatch the job.
 		if(qt.equals(DispatcherSupportedQueryTypes.SELECT_DISTINCT)){
-			simpleRes = this.drc.executeSelectQueryFromNodeGroup(sendable, externalConstraints, flags);
+			simpleRes = this.dispatchClient.executeSelectQueryFromNodeGroup(sendable, externalConstraints, flags);
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.COUNT)){
-			simpleRes = this.drc.executeCountQueryFromNodeGroup(sendable, externalConstraints);			
+			simpleRes = this.dispatchClient.executeCountQueryFromNodeGroup(sendable, externalConstraints);			
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){			
 			LocalLogger.logToStdOut("Setting targetObjectSparqlID: " + targetObjectSparqlID);
 			sendable.put("targetObjectSparqlID", targetObjectSparqlID);			
-			simpleRes = this.drc.executeFilterQueryFromNodeGroup(sendable, targetObjectSparqlID, externalConstraints);			
+			simpleRes = this.dispatchClient.executeFilterQueryFromNodeGroup(sendable, targetObjectSparqlID, externalConstraints);			
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.DELETE)){
-			simpleRes = this.drc.executeDeleteQueryFromNodeGroup(sendable, externalConstraints);			
+			simpleRes = this.dispatchClient.executeDeleteQueryFromNodeGroup(sendable, externalConstraints);			
 		}	
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT)){
-			simpleRes = this.drc.executeConstructQueryFromNodeGroup(sendable, externalConstraints);
+			simpleRes = this.dispatchClient.executeConstructQueryFromNodeGroup(sendable, externalConstraints);
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION)){
-			simpleRes = this.drc.executeConstructQueryForInstanceManipulationFromNodeGroup(sendable, externalConstraints);
+			simpleRes = this.dispatchClient.executeConstructQueryForInstanceManipulationFromNodeGroup(sendable, externalConstraints);
 		}
 		else{
 			throw new Exception("NodeGroupExecutor:dispatchJob :: DispatcherSupportedQueryTypes type " + qt.name() + " is not currently supported.");
@@ -344,7 +358,7 @@ public class NodeGroupExecutor {
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, String storedNodeGroupId, JSONObject externalConstraints, QueryFlags flags, JSONArray runtimeConstraints, int limitOverride, int offsetOverride, String targetObjectSparqlID) throws Exception{
 		
 		// get the node group from the remote store
-		TableResultSet trs = this.ngsrc.executeGetNodeGroupById(storedNodeGroupId);
+		TableResultSet trs = this.storeClient.executeGetNodeGroupById(storedNodeGroupId);
 		Table t = trs.getResults();
 		
 		if(t.getNumRows() < 1){ 
@@ -465,7 +479,7 @@ public class NodeGroupExecutor {
 	
 	private SparqlGraphJson getSparqlGraphJson(String storedNodeGroupId) throws Exception {
 		// get the node group from the remote store
-		TableResultSet trs = this.ngsrc.executeGetNodeGroupById(storedNodeGroupId);
+		TableResultSet trs = this.storeClient.executeGetNodeGroupById(storedNodeGroupId);
 		Table t = trs.getResults();
 
 		if(t.getNumRows() < 1){ 
@@ -499,8 +513,8 @@ public class NodeGroupExecutor {
 		
 		String sgjStr = sparqlGraphJson.getJson().toJSONString();
 		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
-		this.irc.execIngestionFromCsv(sgjStr, csvContents, connStr);
-		retval = this.irc.getLastResult();
+		this.ingestClient.execIngestionFromCsv(sgjStr, csvContents, connStr);
+		retval = this.ingestClient.getLastResult();
 
 		LocalLogger.logToStdOut("Ingestion results: " + retval.toJson().toJSONString());
 		
@@ -526,7 +540,7 @@ public class NodeGroupExecutor {
 		String sgjStr = sparqlGraphJson.getJson().toJSONString();
 		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
 		
-		return this.irc.execIngestionFromCsvAsync(sgjStr, csvContents, connStr);
+		return this.ingestClient.execIngestionFromCsvAsync(sgjStr, csvContents, connStr);
 	}
 	
 	/**

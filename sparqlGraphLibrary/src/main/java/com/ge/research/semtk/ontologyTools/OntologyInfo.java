@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +74,9 @@ public class OntologyInfo {
 	// be de-serializing a json blob.
 	private SparqlConnection modelConnection;
 	
+	private ArrayList<String> loadWarnings = new ArrayList<String>();
+	private ArrayList<String> importedGraphs = new ArrayList<String>();
+	
 	/**
 	 * Default constructor
 	 */
@@ -102,6 +107,14 @@ public class OntologyInfo {
 		this.addJson(json);
 	}
 	
+	public ArrayList<String> getLoadWarnings() {
+		return loadWarnings;
+	}
+
+	public ArrayList<String> getImportedGraphs() {
+		return importedGraphs;
+	}
+
 	/**
 	 * Load directly from model sparql endpoint interfaces
 	 * @param conn
@@ -111,12 +124,8 @@ public class OntologyInfo {
     	
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
 		
-		if (conn.getDomain().isEmpty()) {
-			throw new Exception("OntologyInfo can not load a connection with an empty domain.");
-		}
-		
 		for (int i = 0; i < modelInterfaces.size(); i++) {
-    		this.load(modelInterfaces.get(i), conn.getDomain());
+    		this.load(modelInterfaces.get(i), conn.getDomain(), conn.isOwlImportsEnabled());
     	}
     }
 
@@ -133,9 +142,6 @@ public class OntologyInfo {
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
 		ArrayList<SparqlQueryClientConfig> configs = clientConfig.getArrayForEndpoints(modelInterfaces);
 		
-		if (conn.getDomain().isEmpty()) {
-			throw new Exception("OntologyInfo can not load a connection with an empty domain.");
-		}
 		for (int i = 0; i < configs.size(); i++) {
 			
 			// check if this is an authorized connection or not. this can be done by looking at the config files.
@@ -145,12 +151,10 @@ public class OntologyInfo {
 				this.load(new SparqlQueryClient( (SparqlQueryAuthClientConfig)curr ), conn.getDomain()); 
 			}
 			else{ 
-				this.load(new SparqlQueryClient(curr), conn.getDomain()); 
+				this.load(new SparqlQueryClient(curr), conn.getDomain(), conn.isOwlImportsEnabled()); 
 			}
     	}
     }
-	
-	
 	
 	/**
 	 * add a new class to the ontology info object. this includes information on super/sub classes
@@ -529,6 +533,99 @@ public class OntologyInfo {
 		return null;
 	}
 	
+
+	/**
+	 * returns the sparql for getting the sub and super-class relationships for known classes.
+	 **/
+	private static String getOwlImportsQuery(String graphName){
+		
+		
+		String retval = "select distinct ?importee from <" + graphName + "> where { " +
+						"<" + graphName + "> <http://www.w3.org/2002/07/owl#imports> ?importee. }";
+		
+		return retval;
+	}
+	
+	/**
+	 * Load owl imports if they aren't already loaded
+	 * and add loadWarning if the graph is empty
+	 * @param sei
+	 * @param imports
+	 * @throws Exception
+	 */
+	private void loadOwlImports(SparqlEndpointInterface sei, String [] imports) throws Exception {
+		// for each import
+		if (imports != null) {
+			for (int i=0; i < imports.length; i++) {
+				
+				if (! this.importedGraphs.contains(imports[i])) {
+					// create an sei
+					SparqlEndpointInterface importSei = SparqlEndpointInterface.getInstance(
+															sei.getServerType(),
+															sei.getServerAndPort(),
+															imports[i],
+															sei.getUserName(),
+															sei.getPassword()
+															);
+					
+					// save state
+					int numClasses = this.getNumberOfClasses();
+					int numEnums = this.getNumberOfEnum();
+					int numProperties = this.getNumberOfProperties();
+					
+					// load
+					this.load(importSei, true);
+					this.importedGraphs.add(imports[i]);
+					
+					// check for changes
+					if (numClasses == this.getNumberOfClasses() &&
+					    numEnums == this.getNumberOfEnum() &&
+					    numProperties == this.getNumberOfProperties()) {
+						this.loadWarnings.add(imports[i] + " - nothing to import");
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Load owl imports if they aren't already loaded
+	 * and add loadWarning if the graph is empty
+	 * @param client
+	 * @param imports
+	 * @throws Exception
+	 */
+	private void loadOwlImports(SparqlQueryClient client, String [] imports) throws Exception {
+		if (imports != null) {
+			// for each import
+			for (int i=0; i < imports.length; i++) {
+				
+				if (! this.importedGraphs.contains(imports[i])) {
+					// create a client
+					SparqlQueryAuthClientConfig importClientConfig = new SparqlQueryAuthClientConfig(client.getConfig());
+					importClientConfig.setGraph(imports[i]);
+					SparqlQueryClient importClient = new SparqlQueryClient(importClientConfig);
+					
+					// save current state
+					int numClasses = this.getNumberOfClasses();
+					int numEnums = this.getNumberOfEnum();
+					int numProperties = this.getNumberOfProperties();
+					
+					// load
+					this.load(importClient, imports[i]);
+					this.importedGraphs.add(imports[i]);
+					
+					// check for changes
+					if (numClasses == this.getNumberOfClasses() &&
+					    numEnums == this.getNumberOfEnum() &&
+					    numProperties == this.getNumberOfProperties()) {
+						this.loadWarnings.add("Import graph has no ontology data or doesn't exist: " + imports[i]);
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * returns the sparql for getting the sub and super-class relationships for known classes.
 	 **/
@@ -543,13 +640,38 @@ public class OntologyInfo {
 				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 				       	"select distinct ?x ?y from <" + graphName + "> where { " +
 				       	"?x rdfs:subClassOf ?y " +
-				       	" filter regex(str(?x),'^" + domain + "') " +
-				        " filter regex(str(?y),'^" + domain + "') " + 
+				       	getDomainFilterStatement("x", domain) +
+				       	getDomainFilterStatement("y", domain) + 
 				        " filter (?x != ?y). } order by ?x";
 		
 		return retval;
 	}
 
+	private static String getDomainFilterStatement(String varName, String domain) {
+		return getDomainFilterStatement(varName, domain, "");
+	}
+	
+	/**
+	 * Generate the domain filter clause.  If none (the new normal) filter out blank nodes.
+	 * @param varName
+	 * @param domain
+	 * @param clause
+	 * @return
+	 */
+	private static String getDomainFilterStatement(String varName, String domain, String clause) {
+		if (domain == null || domain.isEmpty()) {
+			// remove blank nodes
+			String ret = "filter (!regex(str(?" + varName + "),'^nodeID://') " + clause + ") ";
+			return ret;
+			
+		} else {
+			// old-fashioned domain filter
+			String ret = "filter (regex(str(?" + varName + "),'^" + domain + "') " + clause + ") ";
+			return ret;
+			
+		}
+	}
+	
 	/**
 	 * process the results of the query to get all of the sub- and super-class query and loads
 	 * them into the OntologyInfo object.
@@ -587,10 +709,10 @@ public class OntologyInfo {
 		       			"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
 		       			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 		       			"select distinct ?Class from <" + graphName + "> { " +
-		       			"?Class rdf:type owl:Class filter regex(str(?Class),'^" + domain + "') . " +
+		       			"?Class rdf:type owl:Class " + getDomainFilterStatement("Class", domain) + ". " +
 		       			"MINUS " +
 		       			"{?Class rdfs:subClassOf ?Sup " +
-		       		    "  filter regex(str(?Sup),'^" + domain + "') " +
+		       			getDomainFilterStatement("Sup", domain) +
 		       			"   filter (?Class != ?Sup).} }";
 		
 		return retval; 
@@ -615,7 +737,7 @@ public class OntologyInfo {
 	 **/
 	private static String getEnumQuery(String graphName, String domain){
 		String retval = "select ?Class ?EnumVal from <" + graphName + "> where { " +
-				"  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec filter regex(str(?Class),'^" + domain + "'). " + 
+				"  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec " + getDomainFilterStatement("Class", domain) +". " + 
 				"  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . " +
 				"  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. " +
 				"}";
@@ -656,8 +778,7 @@ public class OntologyInfo {
 				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"\n" + 
 				"select distinct ?Elem ?Label from <" + graphName + "> where {\n" + 
-				" ?Elem a ?p.\r\n" + 
-				" filter regex(str(?Elem),'^" + domain + "'). " + 
+				" ?Elem a ?p " + getDomainFilterStatement("Elem", domain) + ".\r\n" + 
 				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
 				"    optional { ?Elem rdfs:label ?Label. }\n" + 
 				"}";
@@ -672,12 +793,11 @@ public class OntologyInfo {
 			if (e == null) {
 				e = this.propertyHash.get(elemList[i]);
 			} 
-			if (e == null)  {
-				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			// if found (e.g. it isn't a property annotation)
+			if (e != null)  {
+				// add the annotations (empties and duplicates are handled downstream)
+				e.addAnnotationLabel(labelList[i]);
 			}
-			
-			// add the annotations (empties and duplicates are handled downstream)
-			e.addAnnotationLabel(labelList[i]);
 		}
 	}
 	private static String getAnnotationCommentsQuery(String graphName, String domain) {
@@ -689,10 +809,9 @@ public class OntologyInfo {
 		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
 				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"\n" + 
-				"select distinct ?Elem ?Comment from <" + graphName + "> where {\n" + 
-				" ?Elem a ?p.\r\n" + 
-				" filter regex(str(?Elem),'^" + domain + "'). " + 
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
+				"select distinct ?Elem ?Comment from <" + graphName + "> where { \n" + 
+				" ?Elem a ?p " + getDomainFilterStatement("Elem", domain) + ". \n" + 
+				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}. \n" + 
 				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
 				"}";
 		return retval;
@@ -706,12 +825,11 @@ public class OntologyInfo {
 			if (e == null) {
 				e = this.propertyHash.get(elemList[i]);
 			} 
-			if (e == null)  {
-				throw new Exception("Cannot find element " + elemList[i] + " in the ontology");
+			// if found (e.g. it isn't a property comment)
+			if (e != null)  {
+				// add the annotations (empties and duplicates are handled downstream)
+				e.addAnnotationComment(commentList[i]);
 			}
-			
-			// add the annotations (empties and duplicates are handled downstream)
-			e.addAnnotationComment(commentList[i]);
 		}
 	}
 	
@@ -719,64 +837,59 @@ public class OntologyInfo {
 	 * returns the sparql query used to get all of the properties in scope.
 	 */
 	private static String getLoadPropertiesQuery(String graphName, String domain){
+		
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 						"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
 						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
 						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 						"PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " +
-						"select distinct ?Class ?Property ?Range from <" + graphName + "> { " +
+						"select distinct ?Class ?Property ?Range from <" + graphName + "> { " + 
 						"{" +
-							"?Property rdfs:domain ?Class filter regex(str(?Class),'^" + domain + "'). " + 
-							"?Property rdfs:range ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-						"} UNION {" +
-							"?Property rdfs:domain ?x. " +
-							"?x owl:unionOf ?y. " +
-							buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "')") +
+							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
+							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+						"} UNION { \n" +
+							"?Property rdfs:domain ?x. \n" +
+							"?x owl:unionOf ?y. \n" +
+							buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +
 							//"?y list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
-							"?Property rdfs:range ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-						"} UNION {" +
-							"?Property rdfs:domain ?Class filter regex(str(?Class),'^" + domain + "')." +
-							"?Property rdfs:range ?x. " +
-							"?x owl:unionOf ?y. " +
-					        buildListMemberSPARQL("?y", "?Range", "filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML'))") + 
-							//"?y list:member ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-						"} UNION {" +
-							"?Property rdfs:domain ?x. " +
-							"?x owl:unionOf ?y. " +
-							buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "')") +
-							//"?y list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
-							"?Property rdfs:range ?x1. " +
-							"?x1 owl:unionOf ?y1. " +
-					        buildListMemberSPARQL("?y1", "?Range", "filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML'))") + 
-							//"?y1 list:member ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-						"} UNION {" +
-							"?Class rdfs:subClassOf ?x filter regex(str(?Class),'^" + domain + "'). " +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. " +
-							"?x owl:onClass ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-						"} UNION {" +
-							"?Class rdfs:subClassOf ?x filter regex(str(?Class),'^" + domain + "'). " +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. " +
-							"?y owl:unionOf ?z. " +
-					        buildListMemberSPARQL("?z", "?Range", "filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML'))") + 
-							//"?z list:member ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-				        "} UNION {" +
-							"?x1 owl:unionOf ?x2. " + 
-					        buildListMemberSPARQL("?x2", "?Class", "filter regex(str(?Class),'^" + domain + "')" ) +
-					        //"?x2 list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
-					        "?x1 rdfs:subClassOf ?x . " +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. " +
-					        "?y owl:unionOf ?z. " +
-					        buildListMemberSPARQL("?z", "?Range", "filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML'))") + 
-							//"?z list:member ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')). " +
-						"} UNION { " +
-					        "?Class rdfs:subClassOf ?x filter regex(str(?Class),'^" + domain + "'). " +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. " +
-					        "?x owl:someValuesFrom ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML'))." +
-						"} UNION {" +
-					        "?Class rdfs:subClassOf ?x filter regex(str(?Class),'^" + domain + "'). " +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. " +
-					        "?x owl:allValuesFrom ?Range filter (regex(str(?Range),'^" + domain + "') || regex(str(?Range),'XML')).} " +
-						"}";
+							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+						"} UNION { \n" +
+							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?Property rdfs:range ?x.  \n" +
+							"?x owl:unionOf ?y. \n" +
+					        buildListMemberSPARQL("?y", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n"  + 
+						"} UNION { \n" +
+							"?Property rdfs:domain ?x. \n" +
+							"?x owl:unionOf ?y. \n" +
+							buildListMemberSPARQL("?y", "?Class", getDomainFilterStatement("Class", domain)) + " .\n" +
+							"?Property rdfs:range ?x1. \n" +
+							"?x1 owl:unionOf ?y1. \n" +
+					        buildListMemberSPARQL("?y1", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + 
+						"} UNION { \n" +
+							"?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
+							"?x owl:onClass ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+						"} UNION { \n" +
+							"?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n" +
+							"?y owl:unionOf ?z. \n" +
+					        buildListMemberSPARQL("?z", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
+				        "} UNION { \n" +
+							"?x1 owl:unionOf ?x2. \n" + 
+					        buildListMemberSPARQL("?x2", "?Class", getDomainFilterStatement("Class", domain) ) + " .\n" +
+					        "?x1 rdfs:subClassOf ?x . \n" +
+							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n" +
+					        "?y owl:unionOf ?z. \n" +
+					        buildListMemberSPARQL("?z", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
+						"} UNION { \n" +
+					        "?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
+					        "?x owl:someValuesFrom ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+						"} UNION { \n" +
+					        "?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
+					        "?x owl:allValuesFrom ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+						"} \n }";
 		return retval;
 	}
 	
@@ -830,6 +943,25 @@ public class OntologyInfo {
 		}
 	}
 
+	/**
+	 * Check validity of the OntologyInfo
+	 * @throws Exception
+	 */
+	public void validate() throws Exception {
+		
+		// Superclass names must be valid
+		for (String className : this.classHash.keySet()) {
+			OntologyClass c = this.classHash.get(className);
+			for (String superClassName : c.getParentNameStrings(false)) {
+				if (! this.classHash.containsKey(superClassName)) {
+					throw new Exception("Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
+				}
+			}
+		}
+		
+		// Note: Range names don't necessarily need to be valid.  As long as they aren't used.
+	}
+	
 	/**
 	 * Returns true/false to indicate whether the given class is a known enumeration.
 	 * @param classURI
@@ -1078,7 +1210,36 @@ public class OntologyInfo {
 	 * @param domain
 	 * @throws Exception
 	 */
+	@Deprecated
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
+		this.load(endpoint, domain, false);
+	}
+	
+	/**
+	 * Preferred method of loading an oInfo
+	 * @param endpoint
+	 * @param owlImportFlag
+	 * @throws Exception
+	 */
+	public void load(SparqlEndpointInterface endpoint, boolean owlImportFlag) throws Exception {
+		this.load(endpoint, "", owlImportFlag);
+	}
+	
+	/**
+	 * Not-quite-deprecated but not recommended function signature
+	 * @param endpoint
+	 * @param domain - only remains for backwards compatibility
+	 * @param owlImportFlag
+	 * @throws Exception
+	 */
+	public void load(SparqlEndpointInterface endpoint, String domain, boolean owlImportFlag) throws Exception {
+		
+		// find, then recursively load owl imports
+		if (owlImportFlag) {
+			endpoint.executeQuery(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()), SparqlResultTypes.TABLE);
+			this.loadOwlImports(endpoint, endpoint.getStringResultsColumn("importee"));
+		}
+		
 		// execute each sub-query in order
 		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
@@ -1098,6 +1259,7 @@ public class OntologyInfo {
 		endpoint.executeQuery(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Comment"));
 		
+		this.validate();
 	}
 	
 	/**
@@ -1107,10 +1269,20 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlQueryClient client, String domain) throws Exception {
+		this.load(client, domain, false);
+	}
 		
-		// execute each sub-query in order
+	public void load(SparqlQueryClient client, String domain, boolean owlImportFlag) throws Exception {
 		TableResultSet tableRes;
 		String graphName = client.getConfig().getGraph();
+		
+		if (owlImportFlag) {
+			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName), SparqlResultTypes.TABLE);
+			this.loadOwlImports(client, tableRes.getTable().getColumn("importee"));
+		}
+		
+		// execute each sub-query in order
+		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
 		
@@ -1128,6 +1300,8 @@ public class OntologyInfo {
 		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
+		
+		this.validate();
 	}
 		
 	/*
@@ -1144,6 +1318,8 @@ public class OntologyInfo {
     	JSONArray annotationLabelList = new JSONArray();
     	JSONArray annotationCommentList = new JSONArray();
     	JSONObject prefixes =  new JSONObject();
+    	JSONArray importedGraphsList = new JSONArray();
+    	JSONArray loadWarningsList = new JSONArray();
         
         HashMap<String,String> prefixToIntHash = new HashMap<String, String>();
 
@@ -1232,6 +1408,14 @@ public class OntologyInfo {
             prefixes.put(prefixToIntHash.get(p), p);
         }
         
+        for (String s : this.importedGraphs) {
+        	importedGraphsList.add(s);
+        }
+        
+        for (String s : this.loadWarnings) {
+        	loadWarningsList.add(s);
+        }
+        
         json.put("version", OntologyInfo.JSON_VERSION);
         json.put("topLevelClassList", topLevelClassList);
     	json.put("subClassSuperClassList", subClassSuperClassList);
@@ -1240,6 +1424,8 @@ public class OntologyInfo {
     	json.put("annotationLabelList", annotationLabelList);
     	json.put("annotationCommentList", annotationCommentList);
     	json.put("prefixes", prefixes);
+    	json.put("importedGraphsList", importedGraphsList);
+    	json.put("loadWarningsList", loadWarningsList);
     	
         return json;
     }
@@ -1289,12 +1475,27 @@ public class OntologyInfo {
 	        					 		Utility.getJsonTableColumn(     annotationLabelList, 1)
 	                            	 );
         }
-        // annotationList is optional for backwards compatibility
+        // optional for backwards compatibility
         JSONArray annotationCommentList = (JSONArray)json.get("annotationCommentList");
         if (annotationCommentList != null) {
 	        this.loadAnnotationComments(Utility.unPrefixJsonTableColumn(annotationCommentList, 0, intToPrefixHash),
 	        					 		Utility.getJsonTableColumn(     annotationCommentList, 1)
 	                            	   );
+        }
+        // optional for backwards compatibility
+        JSONArray importedGraphsList = (JSONArray)json.get("importedGraphsList");
+        if (importedGraphsList != null) {
+	        for (Object obj : importedGraphsList) {
+		        this.importedGraphs.add((String) obj);
+	        }
+        }
+     
+        // optional for backwards compatibility
+        JSONArray loadWarningsList = (JSONArray)json.get("loadWarningsList");
+        if (loadWarningsList != null) {
+	        for (Object obj : loadWarningsList) {
+		        this.loadWarnings.add((String) obj);
+	        }
         }
     }
     

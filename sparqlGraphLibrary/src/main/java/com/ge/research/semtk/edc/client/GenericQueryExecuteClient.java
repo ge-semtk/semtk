@@ -66,16 +66,7 @@ public class GenericQueryExecuteClient extends QueryExecuteClient {
 		throw new Exception("Received empty response");
 	}
 	
-	/**
-	 * Execute a query
-	 */
-	public TableResultSet execute(String query) throws Exception{		
-		parametersJSON.put("query", query);		
-		JSONObject resultJSON = (JSONObject)super.execute();					
-		TableResultSet retval = new TableResultSet();
-		retval.readJson(resultJSON);
-		return retval;
-	}
+	
 
 }
 

@@ -121,6 +121,15 @@ public class AuthorizationManager {
 		return true;
 	}
 	
+	public static void authorizeWithExit(AuthorizationProperties authProps) {
+		try {
+			authorize(authProps);
+		} catch (Exception e) {
+			LocalLogger.printStackTrace(e);
+			System.exit(1);;
+		}
+	}
+	
 	/** 
 	 * Exposed for testing.
 	 * @return - never null

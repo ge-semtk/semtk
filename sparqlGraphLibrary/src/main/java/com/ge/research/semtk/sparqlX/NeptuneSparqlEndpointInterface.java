@@ -372,8 +372,14 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	@Override
 	public boolean isExceptionRetryAble(Exception e) {
 		String msg = e.getMessage();
-		return super.isExceptionRetryAble(e) &&
-				! msg.contains("Malformed query");
+		
+		if (msg.contains("Malformed query")) {
+			return false;
+		}
+		
+		else {
+			return super.isExceptionRetryAble(e);
+		}
 				
 	}
 	

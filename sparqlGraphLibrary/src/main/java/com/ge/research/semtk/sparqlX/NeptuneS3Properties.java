@@ -1,6 +1,8 @@
 package com.ge.research.semtk.sparqlX;
 
-public class NeptuneS3Properties {
+import com.ge.research.semtk.properties.Properties;
+
+public class NeptuneS3Properties extends Properties {
 
 	// optional for Neptune upload Owl
 	private String s3ClientRegion;   
@@ -48,6 +50,15 @@ public class NeptuneS3Properties {
 	public void setS3Secret(String s3Secret) {
 		this.s3Secret = s3Secret;
 	}
-
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkNone("s3ClientRegion", s3ClientRegion);
+		checkNone("s3BucketName", s3BucketName);
+		checkNone("s3AccessId", s3AccessId);
+		checkNoneMaskValue("s3Secret", s3Secret);
+		checkNone("awsIamRoleArn", awsIamRoleArn);
+		
+	}
 }
 

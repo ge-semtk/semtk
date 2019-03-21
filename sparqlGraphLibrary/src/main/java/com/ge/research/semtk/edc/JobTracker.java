@@ -44,6 +44,7 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.properties.SemtkEndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -167,6 +168,14 @@ public class JobTracker {
 	    	}
 		    return ret;
 	    }
+	}
+	
+	public void incrementPercentComplete(String jobId, int increment, int max) throws AuthorizationException, Exception {
+		int currentPercent = this.getJobPercentComplete(jobId);
+		int newPercentComplete = currentPercent + increment;
+		if (newPercentComplete < max && newPercentComplete < 100) {
+			this.setJobPercentComplete(jobId, newPercentComplete);
+		}
 	}
 	
 	/**

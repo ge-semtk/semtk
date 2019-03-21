@@ -16,7 +16,9 @@
  */
 package com.ge.research.semtk.auth;
 
-public class AuthorizationProperties {
+import com.ge.research.semtk.properties.Properties;
+
+public class AuthorizationProperties extends Properties {
 	int refreshFreqSeconds = 300;
 	String settingsFilePath = "";
 	String logPath = "";
@@ -43,5 +45,12 @@ public class AuthorizationProperties {
 
 	public void setRefreshFreqSeconds(int refreshFreqSeconds) {
 		this.refreshFreqSeconds = refreshFreqSeconds;
+	}
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkRangeInclusive("refreshFreqSeconds", refreshFreqSeconds, 1, 3600);
+		checkNone("settingsFilePath", settingsFilePath);
+		checkNone("logPath", logPath);
 	}
 }

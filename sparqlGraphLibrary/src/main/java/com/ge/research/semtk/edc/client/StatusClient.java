@@ -211,6 +211,25 @@ public class StatusClient extends RestClient {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	public void execIncrementPercentComplete(int increment, int max) throws ConnectException, EndpointNotFoundException, Exception {
+		conf.setServiceEndpoint("status/incrementPercentComplete");
+		this.parametersJSON.put("increment", increment);
+		this.parametersJSON.put("max", max);
+
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return;
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("increment");
+			this.parametersJSON.remove("max");
+
+		}
+	}
+	
 	/**
 	 * 
 	 * @throws Exception
@@ -285,5 +304,33 @@ public class StatusClient extends RestClient {
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
 		}
+	}
+	
+	/**
+	 * Create a copy with a new jobId
+	 * @return
+	 * @throws Exception
+	 */
+	public StatusClient cloneWithNewJobId() throws Exception {
+		// clone the config with a new jobId
+		StatusClientConfig newConfig = new StatusClientConfig(	this.conf.getServiceProtocol(), 
+																this.conf.getServiceServer(), 
+																this.conf.getServicePort());
+		return new StatusClient(newConfig);
+	}
+	
+	/**
+	 * Create a copy with the given jobId
+	 * @param jobId
+	 * @return
+	 * @throws Exception
+	 */
+	public StatusClient cloneWithNewJobId(String jobId) throws Exception {
+		// clone the config with a new jobId
+		StatusClientConfig newConfig = new StatusClientConfig(	this.conf.getServiceProtocol(), 
+																this.conf.getServiceServer(), 
+																this.conf.getServicePort(),
+																jobId);
+		return new StatusClient(newConfig);
 	}
 }

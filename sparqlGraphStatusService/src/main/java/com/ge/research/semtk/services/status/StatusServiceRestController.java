@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.status;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,10 +29,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
@@ -39,6 +42,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -59,7 +63,25 @@ public class StatusServiceRestController {
 	StatusSemtkEndpointProperties edc_prop;
 	@Autowired
 	StatusLoggingProperties log_prop;
+	@Autowired
+	StatusAuthProperties auth_prop;
+	@Autowired 
+	private ApplicationContext appContext;
 	
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		
+		prop.validateWithExit();
+		edc_prop.validateWithExit();
+		log_prop.validateWithExit();
+		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	@RequestMapping(value="/headers", method=RequestMethod.GET)
 	public String getPercentComplete(@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -70,6 +92,7 @@ public class StatusServiceRestController {
 	/**
 	 * Get percentComplete
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/getPercentComplete", method= RequestMethod.POST)
 	public JSONObject getPercentComplete(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -108,6 +131,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return status
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/getStatus", method= RequestMethod.POST)
 	public JSONObject getStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
@@ -146,6 +170,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return statusMessage
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/getStatusMessage", method= RequestMethod.POST)
 	public JSONObject getStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -212,6 +237,7 @@ public class StatusServiceRestController {
 	/**
 	 * Block until status is percent complete is reached
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/waitForPercentComplete", method= RequestMethod.POST)
 	public JSONObject waitForPercentComplete(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -248,6 +274,7 @@ public class StatusServiceRestController {
 	/**
 	 * Block until status is percent complete is reached or Msec have elapsed
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
 	public JSONObject waitForPercentOrMsec(@RequestBody StatusRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -287,6 +314,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setName", method= RequestMethod.POST)
 	public JSONObject setName(@RequestBody @Valid StatusRequestBodyName requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -318,12 +346,53 @@ public class StatusServiceRestController {
 	}
 	
 	/**
+	 * increment percentage up to max
+	 * @param requestBody
+	 * @return
+	 */
+	@ApiOperation(
+			value=	"Increment percent complete within specified maximum"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/incrementPercentComplete", method= RequestMethod.POST)
+	public JSONObject incrementPercentComplete(@RequestBody StatusRequestBodyIncrement requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT = "incrementPercentComplete";
+		HeadersManager.setHeaders(headers);
+		try {
+		    String jobId = requestBody.jobId;
+		    
+		    SimpleResultSet res = new SimpleResultSet();
+		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LocalLogger.logToStdOut("Status Service/" + ENDPOINT + " increment=" + requestBody.increment + " JobId=" + jobId);
+	
+		    try {
+		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	tracker.incrementPercentComplete(jobId, requestBody.increment, requestBody.max);
+			    res.setSuccess(true);
+			    
+		    } catch (Exception e) {
+		    	res.setSuccess(false);
+		    	res.addRationaleMessage(SERVICE_NAME, ENDPOINT, e);
+			    LoggerRestClient.easyLog(logger, "Status Service", ENDPOINT + " exception", "message", e.toString());
+			    LocalLogger.logToStdOut("Status Service " + ENDPOINT + " exception message=" + e.toString());
+		    } 
+		    
+		    return res.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+		    
+	}
+	
+	/**
 	 * set job to a given percent complete
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setPercentComplete", method= RequestMethod.POST)
-	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercent requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject setPercentComplete(@RequestBody StatusRequestBodyPercentMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
 		    String jobId = requestBody.jobId;
@@ -357,6 +426,7 @@ public class StatusServiceRestController {
 	 * @param requestBodyMessage
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setSuccess", method= RequestMethod.POST)
 	public JSONObject setSuccess(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -392,6 +462,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/setFailure", method= RequestMethod.POST)
 	public JSONObject setFailure(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -429,6 +500,7 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
+	@CrossOrigin
 	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)
 	public JSONObject deleteJob(@RequestBody StatusRequestBodyMessage requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);

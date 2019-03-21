@@ -33,8 +33,16 @@ public class UtilityTest {
 
 	@Test
 	public void testFormatDateTime() throws Exception{
-		assertEquals(Utility.formatDateTime("02/05/2018 4:33:10 AM", Utility.DATETIME_FORMATTER_MMddyyyyKmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 04:33:10");
-		assertEquals(Utility.formatDateTime("02/05/2018 4:33:10 PM", Utility.DATETIME_FORMATTER_MMddyyyyKmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 16:33:10");
+		assertEquals(Utility.formatDateTime("02/05/2018 4:33:10 AM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 04:33:10");
+		assertEquals(Utility.formatDateTime("02/05/2018 4:33:10 PM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 16:33:10");		
+		assertEquals(Utility.formatDateTime("02/05/2018 00:00:00 AM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 00:00:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 00:30:00 AM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 00:30:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 00:00:00 PM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 12:00:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 00:30:00 PM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 12:30:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 10:30:00 PM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 22:30:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 12:00:00 AM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 00:00:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 12:00:00 PM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 12:00:00"); 
+		assertEquals(Utility.formatDateTime("02/05/2018 12:30:00 PM", Utility.DATETIME_FORMATTER_MMddyyyyhmmssa, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss), "2018-02-05 12:30:00"); 
 	}
 	
 	@Test

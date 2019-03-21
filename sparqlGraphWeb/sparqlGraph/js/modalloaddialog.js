@@ -1,14 +1,14 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-19 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,14 +17,14 @@
  */
 
 /*
- *  
+ *
  *  A complicated HTML modal dialog for loading an ontology.
  *
  *
  * In your HTML, you need:
  * 		1) the stylesheet
  * 			<link rel="stylesheet" type="text/css" href="../css/modaldialog.css" />
- * 
+ *
  * 		2) an empty div named "modaldialog"
  * 			<div id="modaldialog"></div>
  *
@@ -35,10 +35,10 @@
 
 
 define([	// properly require.config'ed
-         	
+
             'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/modaliidx',
-            
+
          	'jquery',
             'sparqlgraph/js/cookiemanager',
             'sparqlgraph/js/sparqlconnection',
@@ -87,9 +87,10 @@ define([	// properly require.config'ed
                     <form class="form-horizontal"> </form> \
                     <form class="form-horizontal">\
                     <fieldset> \
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Name</label>     <div class="controls"><input type="text" class="input-xlarge" id="mdName"></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;">                  <label class="control-label">Name:</label>                 <div class="controls">                 <input type="text" class="input-xlarge" id="mdName"></div></div>\
                         </div> \
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Domain:</label>          <div class="controls"><input title="URI prefix of model" rel="tooltip" type="text" class="input-xlarge"  id="mdDomain"></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;" id="mdDomainDiv"> <label class="control-label">Domain:</label>               <div class="controls"><input type="text" class="input-medium"  id="mdDomain"> <button id="mdDomainClearBut" class="btn">Clear</button> <button id="mdDomainInfoBut" class="icon-white btn-small btn-info"><icon class="icon-info-sign"></icon></button></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;">                  <label class="control-label">Enable OWL imports:</label>   <div class="controls">                 <input type="checkbox" class="input-xlarge" id="mdOwlImports"></div></div>\
                         <hr style="margin-top: 1ch; margin-bottom: 1ch;">\
                         <table width="100%"><tr>\
                             <td style="padding: 1ch;"><h3>Graphs: </td> \
@@ -133,18 +134,22 @@ define([	// properly require.config'ed
     ModalLoadDialog.prototype = {
 
         loadDialog : function (curConn, callback) {
-            // load dialog   
+            // load dialog
             // callback(sparqlconnection)
             this.callback = callback;
             this.div.innerHTML = this.html;
 
-            $("[rel='tooltip']").tooltip();		
+            $("[rel='tooltip']").tooltip();
 
             this.show();
 
             // ==== Callbacks that don't use the (ahem) %VAR trick ====
             document.getElementById("mdName").onchange         =this.callbackChangedName.bind(this);
             document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);
+            document.getElementById("mdDomainClearBut").onclick   =this.callbackDomainClear.bind(this);
+            document.getElementById("mdDomainInfoBut").onclick =this.callbackDomainInfo.bind(this);
+            document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);
+            document.getElementById("mdOwlImports").onchange   =this.callbackChangedOwlImports.bind(this);
             document.getElementById("mdServerURL").onchange    =this.callbackChangedServerURL.bind(this);
             document.getElementById("mdSelectSeiType").onchange=this.callbackChangedSelectSeiType.bind(this);
             document.getElementById("mdDataset").onchange      =this.callbackChangedDataset.bind(this);
@@ -166,6 +171,20 @@ define([	// properly require.config'ed
 
         },
 
+        callbackDomainClear : function() {
+            document.getElementById("mdDomain").value="";
+            return false;
+        },
+
+        callbackDomainInfo : function() {
+            var msgHtml = "Domain is a deprecated regex matching URI prefixes of T-box classes<br>" +
+                          "Domains are still honored by SemTK but can no longer be created.<br>" +
+                          "It is recommended that you click <strong>Clear</strong> to clear the domain.";
+
+            ModalIidx.alert("Domain is deprecated", msgHtml, false, function(){});
+            return false;
+        },
+
         // changes don't store anything
         callbackChangedName : function() {
             var select = this.document.getElementById("mdSelectProfiles");
@@ -176,6 +195,11 @@ define([	// properly require.config'ed
             return false;
         },
         callbackChangedDomain : function() {
+            this.changed(true);
+            return false;
+        },
+        callbackChangedOwlImports : function() {
+
             this.changed(true);
             return false;
         },
@@ -210,7 +234,7 @@ define([	// properly require.config'ed
             conn.setName("-new-");
             conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
             conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
-
+            conn.setOwlImportsEnabled(true);
             this.appendAndSelectProfile(conn);
             return false;
         },
@@ -236,7 +260,7 @@ define([	// properly require.config'ed
             var success = function () {
                 this.hide();
                 this.writeProfiles();
-                this.callback(this.conn); 
+                this.callback(this.conn);
             }.bind(this);
 
             this.storeDisplayedProfile();
@@ -256,18 +280,18 @@ define([	// properly require.config'ed
 
         callbackSelectionChange : function () {
             // selection changes, including to -1
-            
+
             var success = function () {
                 this.displaySelectedProfile();
             }.bind(this);
-            
+
             var cancel = function () {
                 var select = this.document.getElementById("mdSelectProfiles");
                 IIDXHelper.selectFirstMatchingText(select, this.conn.getName());
             }.bind(this);
-            
+
             this.storeDisplayedProfile();
-            
+
             // nothing to do unless there is a connection in the select
             if (this.conn != null) {
                 this.validateThisConnAsync(success, cancel);
@@ -290,7 +314,7 @@ define([	// properly require.config'ed
                     var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
                     button.parentNode.removeChild(button);
                     this.currSeiIndex = this.conn.getModelInterfaceCount() - 1;
-                } 
+                }
 
             } else {
                 this.conn.delDataInterface(this.currSeiIndex);
@@ -305,12 +329,12 @@ define([	// properly require.config'ed
                     var button = document.getElementById("mdSeiButton_"+ this.currSeiType + this.currSeiIndex);
                     button.parentNode.removeChild(button);
                     this.currSeiIndex = this.conn.getDataInterfaceCount() - 1;
-                } 
+                }
             }
 
             // tell storeDisplayedSei() there's nothing on the screen to save
             var saveType = this.currSeiType;
-            this.currSeiType = null;  
+            this.currSeiType = null;
 
             // change to new index
             this.callbackChangeSei(saveType, this.currSeiIndex);
@@ -321,7 +345,7 @@ define([	// properly require.config'ed
 
         // pressed "+" button
         callbackAddSei : function(seiType) {
-            var div; 
+            var div;
             var plusBut;
 
             // create new button
@@ -351,7 +375,7 @@ define([	// properly require.config'ed
 
         },
 
-        // 
+        //
         // save current screen     - unless this.currSeiType is null
         // show the new sei        - (null,-1) just clears everything
         callbackChangeSei : function(seiType, seiIndex) {
@@ -390,7 +414,7 @@ define([	// properly require.config'ed
                 	case SparqlConnection.VIRTUOSO_SERVER:
                 		document.getElementById("mdSelectSeiType").selectedIndex = 2;
                 		break;
-                }	
+                }
                 document.getElementById("mdServerURL").value = sei.getServerURL();
                 document.getElementById("mdDataset").value = sei.getDataset();
 
@@ -492,7 +516,7 @@ define([	// properly require.config'ed
                 var select = this.document.getElementById("mdSelectProfiles");
                 select.selectedIndex = select.options.length-1;
                 this.sortProfiles();
-                
+
                 this.displaySelectedProfile();
                 this.changed(true);
             }.bind(this);
@@ -519,7 +543,7 @@ define([	// properly require.config'ed
                         this.writeCurrProfile();
                     }
                     return other.getName();
-                } 
+                }
             }
             return false;
         },
@@ -567,7 +591,7 @@ define([	// properly require.config'ed
             for (var i=0; i < select.length; i++) {
                 if (select.options[i].label == label) {
                     return i;
-                } 
+                }
             }
             return -1;
         },
@@ -598,16 +622,27 @@ define([	// properly require.config'ed
 
                 document.getElementById("mdName").value = this.conn.getName();
                 document.getElementById("mdDomain").value = this.conn.getDomain();
+                document.getElementById("mdOwlImports").checked = this.conn.isOwlImportsEnabled();
                 document.getElementById("mdName").disabled = false;
-                document.getElementById("mdDomain").disabled = false;
+                document.getElementById("mdDomain").disabled = true;    // deprecated, always disabled
+                document.getElementById("mdOwlImports").disabled = false;
+
             } else {
                 this.conn = null;
                 document.getElementById("mdName").value = "";
                 document.getElementById("mdDomain").value = "";
+                document.getElementById("mdOwlImports").value = false;
                 document.getElementById("mdName").disabled = true;
                 document.getElementById("mdDomain").disabled = true;
+                document.getElementById("mdOwlImports").disabled = true;
             }
 
+            var domain = this.conn.getDomain();
+            if (domain && domain.length > 0) {
+                document.getElementById("mdDomainDiv").style.display="";
+            } else {
+                document.getElementById("mdDomainDiv").style.display="none";
+            }
             this.displayProfileSei();
         },
 
@@ -704,7 +739,7 @@ define([	// properly require.config'ed
         validateThisConnAsync : function (successCallback, optCancelCallback) {
             var errHTML = "";
             var header = "<b>Connection error:</b><br>";
-            
+
             if (this.conn == null) {
                 errHTML = "No connections have been built.<br>";
             } else {
@@ -713,10 +748,6 @@ define([	// properly require.config'ed
                     errHTML += "Name is empty. <br>";
                 } else {
                     header = "<b>Connection '" + this.conn.getName() + "' has the following errors:</b><br>";
-                }
-
-                if (this.conn.getDomain() == "") {
-                    errHTML += "Domain is empty. <br>";
                 }
 
                 for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
@@ -744,7 +775,7 @@ define([	// properly require.config'ed
                     }
                 }
             }
-            
+
             // call one of the callbacks
             if (errHTML == "") {
                 successCallback();
@@ -768,6 +799,7 @@ define([	// properly require.config'ed
             // put non-sei fields into this.conn
             this.conn.setName(this.document.getElementById("mdName").value.trim());
             this.conn.setDomain(this.document.getElementById("mdDomain").value.trim());
+            this.conn.setOwlImportsEnabled(this.document.getElementById("mdOwlImports").checked);
 
             // put sei into this.conn
             this.storeDisplayedSei();
@@ -820,7 +852,7 @@ define([	// properly require.config'ed
             var origName = conn.getName();
             var name = origName;
             var i=0;
-            
+
             while (IIDXHelper.selectContainsText(select, name)) {
                 i += 1;
                 name = origName + i;
@@ -869,7 +901,7 @@ define([	// properly require.config'ed
 
                     i = i+ 1;
                     cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
-                } 
+                }
             }
             /**** end deprecation handling ****/
 
@@ -903,7 +935,7 @@ define([	// properly require.config'ed
 
                 for (var i=0; i < select.options.length; i++) {
                     var opt = new SparqlConnection(select.options[i].value);
-                    if (conn.equals(opt, true)) { 
+                    if (conn.equals(opt, true)) {
                         select.selectedIndex = i;
                         return true;
                     }
@@ -918,7 +950,7 @@ define([	// properly require.config'ed
             var select = this.document.getElementById("mdSelectProfiles");
 
             // check for selectedIndex
-            var selectedValue = null; 
+            var selectedValue = null;
             if (select.selectedIndex > -1) {
                 selectedValue = select[select.selectedIndex].value;
             }
@@ -970,7 +1002,7 @@ define([	// properly require.config'ed
                 this.writeProfiles();
                 this.changed(false);
             }.bind(this);
-            
+
             this.storeDisplayedProfile();
             this.validateThisConnAsync(success);
         },
@@ -1002,7 +1034,7 @@ define([	// properly require.config'ed
             while (cookieStr != null) {
                 conn = new SparqlConnection(cookieStr);
 
-                // does this cookied profile match curConn.  
+                // does this cookied profile match curConn.
                 // 'True' indicates we want to ignore the curConn profile name.
                 if (curConn && curConn.equals(conn, true)) {
                     curIndex = i;
@@ -1011,7 +1043,7 @@ define([	// properly require.config'ed
 
                 i += 1;
                 cookieStr = this.cookieManager.getIndexedCookie(ModalLoadDialog.COOKIE_NAME, i);
-            } 
+            }
 
             this.sortProfiles();
 
@@ -1058,7 +1090,7 @@ define([	// properly require.config'ed
             this.cookieManager.setCookie(ModalLoadDialog.COOKIE_NAME_INDEX, select.selectedIndex);
 
             this.changed(false);
-        }, 
+        },
 
         /***** End DEPRECATED COOKIES *****/
 
@@ -1072,7 +1104,7 @@ define([	// properly require.config'ed
             localStorage.setItem("SPARQLgraph_allProfiles", this.getAllProfilesString());
 
             this.writeCurrProfile();
-        }, 
+        },
 
         writeCurrProfile : function () {
             if (this.conn != null) {
@@ -1138,6 +1170,6 @@ define([	// properly require.config'ed
             parent.removeChild(child);
         },
     };
-    
+
     return ModalLoadDialog;            // return the constructor
 });

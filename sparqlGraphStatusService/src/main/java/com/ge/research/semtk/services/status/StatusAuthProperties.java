@@ -8,4 +8,10 @@ import com.ge.research.semtk.auth.AuthorizationProperties;
 @Configuration
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class StatusAuthProperties extends AuthorizationProperties {
+
+	public StatusAuthProperties() {
+		super();
+		setPrefix("auth");
+	}
+	
 }

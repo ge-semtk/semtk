@@ -41,15 +41,13 @@ function hostip
 ## Determine current host name
 function sethostname
 {
-        case "${OPERATING_SYSTEM}" in
-        "Linux")
+        if command -v host > /dev/null 2>&1; then
                 export HOST_NAME="$(host $HOST_IP | awk '{print substr($NF, 1, length($NF)-1)}')" # Linux
-                ;;
-        *)
+        else
                 export HOST_NAME=$(hostname)
-                ;;
-        esac
+        fi
 }
+
 ## End hostname function
 
 

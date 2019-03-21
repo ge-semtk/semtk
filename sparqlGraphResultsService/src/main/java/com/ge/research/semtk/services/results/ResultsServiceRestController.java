@@ -29,6 +29,7 @@ package com.ge.research.semtk.services.results;
  */
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -45,12 +46,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.JobFileInfo;
@@ -75,6 +78,7 @@ import com.ge.research.semtk.services.results.requests.ResultsRequestBodyMaxRows
 import com.ge.research.semtk.services.results.requests.ResultsRequestBodyPath;
 import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -98,7 +102,24 @@ public class ResultsServiceRestController {
 	ResultsSemtkEndpointProperties edc_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
+	@Autowired
+	ResultsAuthProperties auth_prop; 
+	@Autowired 
+	private ApplicationContext appContext;
 	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		
+		prop.validateWithExit();
+		edc_prop.validateWithExit();
+		log_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	@CrossOrigin
 	@RequestMapping(value="/storeJsonLdResults", method=RequestMethod.POST)
 	public JSONObject storeJsonLdResults(@RequestBody JsonLdStoreRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -568,7 +589,9 @@ public class ResultsServiceRestController {
 	 */
 	@ApiOperation(
 			value="Get CSV table",
-			notes="Too large a file can fail.  GET /getTableResultsCsvForWebClient is safer."
+			notes="Too large a file can fail.  <br>" +
+				  "This is good for a preview, for example, in a browser with limited memory.<br>" +
+			      "GET /getTableResultsCsvForWebClient safely retrieves entire large files."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
@@ -610,7 +633,7 @@ public class ResultsServiceRestController {
 
 	@ApiOperation(
 			value="Get JSON table results",
-			notes=""
+			notes="GET triggers browser MIME type handling"
 			)
 	@CrossOrigin
 	@RequestMapping(value= "/getTableResultsJsonForWebClient" , method= RequestMethod.GET)
@@ -639,7 +662,7 @@ public class ResultsServiceRestController {
 
 	@ApiOperation(
 			value="Get CSV table results",
-			notes=""
+			notes="GET triggers browser MIME type handling"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
@@ -705,8 +728,9 @@ public class ResultsServiceRestController {
 	
 	@ApiOperation(
 			value="Get JSON table",
-			notes="Too large a file can fail.  GET /getTableResultsJsonForWebClient is safer."
-			)
+			notes="Too large a file can fail.  <br>" +
+					  "This is good for a preview, for example, in a browser with limited memory.<br>" +
+				      "GET /getTableResultsCsvForWebClient safely retrieves entire large files.")
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
 	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
@@ -733,17 +757,18 @@ public class ResultsServiceRestController {
 	
 	// PEC TODO: shouldn't this be a TableResultSet.toJson()
 	private void writeError(Exception e, String endpoint, HttpServletResponse resp) throws Exception {
-		TableResultSet res = new TableResultSet();
-		res.setSuccess(false);
-		res.addRationaleMessage(SERVICE_NAME, endpoint, e);
+		
 		PrintWriter outPrint = resp.getWriter();
 		
-		outPrint.write(res.toJson().toJSONString());
+		outPrint.write("\n\n==============\nInternal error in " + SERVICE_NAME + "/" + endpoint + "\n==============\n" );
+		e.printStackTrace(outPrint);
+		outPrint.write("\n==============\n" );
+
 		outPrint.flush();
 		outPrint.close();
 	}
 
-	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception, Exception{
+	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception {
 		
 		PrintWriter outPrint = resp.getWriter();
 		

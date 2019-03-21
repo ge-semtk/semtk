@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.sparqlX.client;
 
+import java.io.File;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -61,7 +63,11 @@ public class SparqlQueryClient extends RestClient {
 		// all queries will have these
 		parametersJSON.put("serverAndPort", ((SparqlQueryClientConfig)this.conf).getSparqlServerAndPort());
 		parametersJSON.put("serverType", ((SparqlQueryClientConfig)this.conf).getSparqlServerType());
-		parametersJSON.put("dataset", ((SparqlQueryClientConfig)this.conf).getSparqlDataset());
+		
+		// everyone except syncOwl uses this
+		if (! this.conf.getServiceEndpoint().endsWith("syncOwl")) {
+			parametersJSON.put("dataset", ((SparqlQueryClientConfig)this.conf).getSparqlDataset());
+		}
 		
 		// auth queries will have these as well
 		if(this.conf instanceof SparqlQueryAuthClientConfig){		
@@ -114,10 +120,28 @@ public class SparqlQueryClient extends RestClient {
 		return retval;
 	}
 	
-	public SimpleResultSet uploadOwl(byte [] owlContents) throws Exception{
+	public SimpleResultSet uploadOwl(File owlFile) throws Exception{
 		if(conf.getServiceEndpoint().indexOf("uploadOwl") == -1){
 			throw new Exception("To upload owl, must use the uploadOwl endpoint");
 		}
+		
+		this.fileParameter = owlFile;
+		this.fileParameterName = "owlFile";
+		
+		JSONObject resultJSON = (JSONObject)super.execute();
+		SimpleResultSet retval = new SimpleResultSet(true);
+		retval.readJson(resultJSON);
+		return retval;
+	}
+	
+	public SimpleResultSet syncOwl(File owlFile) throws Exception{
+		if(conf.getServiceEndpoint().indexOf("syncOwl") == -1){
+			throw new Exception("To upload owl, must use the syncOwl endpoint");
+		}
+		
+		this.fileParameter = owlFile;
+		this.fileParameterName = "owlFile";
+		
 		JSONObject resultJSON = (JSONObject)super.execute();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.readJson(resultJSON);

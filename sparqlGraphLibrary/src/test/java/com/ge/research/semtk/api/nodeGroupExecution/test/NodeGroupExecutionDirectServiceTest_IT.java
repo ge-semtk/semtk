@@ -57,10 +57,6 @@ public class NodeGroupExecutionDirectServiceTest_IT {
 			RestClient genericClient = new RestClient(nodeGroupExecutionClientConfig) {
 				
 				@Override
-				public void handleEmptyResponse() throws Exception {				
-				}
-				
-				@Override
 				public void buildParametersJSON() throws Exception {		
 					//  not sending nodegroup id
 					this.parametersJSON.put("sparqlConnection", "WSOIFWE");												
@@ -83,10 +79,7 @@ public class NodeGroupExecutionDirectServiceTest_IT {
 			
 			// a generic client with bad parameter(s)
 			RestClient genericClient = new RestClient(nodeGroupExecutionClientConfig) {
-				
-				@Override
-				public void handleEmptyResponse() throws Exception {				
-				}
+
 				
 				@Override
 				public void buildParametersJSON() throws Exception {								

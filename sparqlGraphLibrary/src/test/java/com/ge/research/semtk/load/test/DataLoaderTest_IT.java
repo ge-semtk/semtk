@@ -1,5 +1,5 @@
 /**
- ** Copyright 2018 General Electric Company
+ ** Copyright 2019 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,6 +40,7 @@ import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -79,6 +80,64 @@ public class DataLoaderTest_IT {
 		}
 		assertEquals(dl.getTotalRecordsProcessed(), 3);
 	}	
+	
+	@Test
+	public void testLoadFromCsv() throws Exception {
+
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		SparqlConnection conn = TestGraph.getSparqlConn("http://");
+		
+		String templateFilePath = "src/test/resources/testTransforms.json";
+		String csvFilePath = "src/test/resources/testTransforms.csv";
+		
+		boolean exceptionThrown = false;
+		
+		// confirm errors if not a json file
+		exceptionThrown = false;
+		try{
+			DataLoader.loadFromCsv("file.notjson", csvFilePath, TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("file.notjson is not a JSON file"));
+		}
+		assertTrue(exceptionThrown);
+		
+		// confirm errors if json file not found
+		exceptionThrown = false;
+		try{
+			DataLoader.loadFromCsv("file.json", csvFilePath, TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("Could not load JSON from file file.json"));
+		}
+		assertTrue(exceptionThrown);
+		
+		// confirm errors if not a csv file
+		exceptionThrown = false;
+		try{
+			DataLoader.loadFromCsv(templateFilePath, "file.notcsv", TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("file.notcsv is not a CSV file"));
+		}
+		assertTrue(exceptionThrown);
+		
+		// confirm errors if csv file not found
+		exceptionThrown = false;
+		try{
+			DataLoader.loadFromCsv(templateFilePath, "file.csv", TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("file.csv"));
+		}
+		assertTrue(exceptionThrown);
+		
+		// confirm works, using connection override
+		int numRecordsAdded = DataLoader.loadFromCsv(templateFilePath, csvFilePath, TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
+		assertEquals(numRecordsAdded, 3);	// loaded 3 csv rows
+		assertEquals(TestGraph.execTableSelect("select count(*) where {?x ?y ?z}").getCell(0, 0),"147");  // confirmed that the graph got some data
+	}
 	
 	@Test
 	public void testTransforms() throws Exception {
@@ -364,12 +423,17 @@ public class DataLoaderTest_IT {
 		StatusClient sClient = IntegrationTestUtility.getStatusClient(jobId);
 		ResultsClient rClient = IntegrationTestUtility.getResultsClient();
 		try {
-			dl.setupAsyncRun(true, false, sClient, rClient);
-			dl.run();
-			int percent = sClient.execWaitForPercentOrMsec(100, 60000);
-			assertTrue("ingest did not complete in 60 seconds", percent == 100);
-			assertTrue("ingest failed", sClient.execIsSuccess());
-			System.out.println(sClient.execGetStatusMessage());
+			dl.runAsync(true, false, sClient, rClient);
+			
+			int percent = 1;
+			int lastPercent = 0;
+			while (percent < 100 && percent > lastPercent) {
+				lastPercent = percent;
+				percent = sClient.execWaitForPercentOrMsec(100, 60000);
+			}
+			
+			assertTrue("ingest bogged down for 60 seconds. Percent complete stuck at: " + String.valueOf(percent), percent == 100);
+			assertTrue("ingest failed: " + sClient.execGetStatusMessage(), sClient.execIsSuccess());
 		} finally {
 			sClient.execDeleteJob();
 		}
@@ -417,10 +481,16 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, DEFAULT_BATCH_SIZE, ds, TestGraph.getUsername(), TestGraph.getPassword());
 
 		try {
-			dl.setupAsyncRun(true, false, sClient, rClient);
-			dl.run();
-			int percent = sClient.execWaitForPercentOrMsec(100, 60000);
-			assertTrue("ingest did not complete in 60 seconds", percent == 100);
+			dl.runAsync(true, false, sClient, rClient);
+
+			int percent = 1;
+			int lastPercent = 0;
+			while (percent < 100 && percent > lastPercent) {
+				lastPercent = percent;
+				percent = sClient.execWaitForPercentOrMsec(100, 60000);
+			}
+			
+			assertTrue("ingest bogged down for 60 seconds. Percent complete stuck at: " + String.valueOf(percent), percent == 100);
 			assertTrue("ingest succeeded unexpectedly", !sClient.execIsSuccess());
 			
 			Table err = rClient.getTableResultsJson(jobId, 10000);

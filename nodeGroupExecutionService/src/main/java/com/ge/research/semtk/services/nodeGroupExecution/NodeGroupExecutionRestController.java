@@ -20,7 +20,10 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 import java.net.URL;
 import java.util.ArrayList;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +36,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
@@ -68,6 +72,7 @@ import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryT
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -84,12 +89,30 @@ public class NodeGroupExecutionRestController {
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
  	static final String JOB_ID_RESULT_KEY = SimpleResultSet.JOB_ID_RESULT_KEY;
  	
+ 	@Autowired
+	private NodegroupExecutionAuthProperties auth_prop;
 	@Autowired
 	NodegroupExecutionProperties prop;
 	@Autowired
 	NodegroupExecutionSemtkEndpointProperties edc_prop;
 	@Autowired
 	NodegroupExecutionLoggingProperties log_prop;
+	@Autowired 
+	private ApplicationContext appContext;
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+
+		// these are still in the older NodegroupExecutionServiceStartup
+		// prop
+		edc_prop.validateWithExit();
+		log_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	
 	@ApiOperation(
 			value="Get job status",
@@ -246,6 +269,7 @@ public class NodeGroupExecutionRestController {
 			notes="Returns as soon as the requested Msec elapses or percent complete is reached<br>" +
 			      "whichever comes first."
 			)
+	@CrossOrigin
 	@RequestMapping(value="/waitForPercentOrMsec", method= RequestMethod.POST)
 	public JSONObject waitForPercentOrMsec(@RequestBody NodegroupRequestBodyPercentMsec requestBody, @RequestHeader HttpHeaders headers) {
 		// NOTE: May 2018 Paul
@@ -423,10 +447,8 @@ public class NodeGroupExecutionRestController {
 			// make sure the request has the needed parameters
 			requestBody.validate();
 			
-			// create a new StoredQueryExecutor
 			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
-			// try to create a sparql connection
-
+			
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
@@ -469,6 +491,7 @@ public class NodeGroupExecutionRestController {
 		try{
 			// create a new StoredQueryExecutor
 			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+
 			// try to create a sparql connection
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
@@ -854,6 +877,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				// create a new StoredQueryExecutor
 				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.getSparqlConnection();			
 	
@@ -899,6 +923,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -931,6 +956,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
 			}catch(Exception e){
@@ -966,6 +992,7 @@ public class NodeGroupExecutionRestController {
 			SimpleResultSet retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
 				retval = new SimpleResultSet(true);
@@ -1001,6 +1028,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -1034,6 +1062,7 @@ public class NodeGroupExecutionRestController {
 			SimpleResultSet retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+
 				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);

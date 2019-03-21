@@ -63,6 +63,7 @@ public class OntologyInfoClient extends RestClient {
 			return res.getResultJSON("ontologyInfo");
 		} finally {
 			// reset conf and parametersJSON
+			this.parametersJSON.remove("jsonRenderedSparqlConnection");
 			conf.setServiceEndpoint(null);
 		}
 	}
@@ -70,15 +71,46 @@ public class OntologyInfoClient extends RestClient {
 	/**
 	 * Highest level: get oInfo from a SparqlConn
 	 * Note that oInfo service has several optimizations including a cache.
-	 * @param sparqlConn
+	 * @param conn
 	 * @return
 	 * @throws ConnectException
 	 * @throws EndpointNotFoundException
 	 * @throws Exception
 	 */
-	public OntologyInfo getOntologyInfo(SparqlConnection sparqlConn) throws ConnectException, EndpointNotFoundException, Exception {
+	public OntologyInfo getOntologyInfo(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
 		
-		return new OntologyInfo(this.execGetOntologyInfoJson(sparqlConn));
+		return new OntologyInfo(this.execGetOntologyInfoJson(conn));
 	}
 	
+	public void uncacheChangedModel(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.put("jsonRenderedSparqlConnection", conn.toJson().toJSONString());
+		conf.setServiceEndpoint("ontologyinfo/uncacheChangedModel");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			
+		} finally {
+			// reset conf and parametersJSON
+			this.parametersJSON.remove("jsonRenderedSparqlConnection");
+			conf.setServiceEndpoint(null);
+		}
+	}
+	
+	public void uncacheOntology(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.put("jsonRenderedSparqlConnection", conn.toJson().toJSONString());
+		conf.setServiceEndpoint("ontologyinfo/uncacheOntology");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			
+		} finally {
+			// reset conf and parametersJSON
+			this.parametersJSON.remove("jsonRenderedSparqlConnection");
+			conf.setServiceEndpoint(null);
+		}
+	}
+	
+
 }

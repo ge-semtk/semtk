@@ -31,8 +31,7 @@ import com.ge.research.semtk.utility.Utility;
 @Component
 public class NodegroupExecutionServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-	@Autowired
-	private NodegroupExecutionAuthProperties auth_prop;
+	
 	
   /**
    * Code to run after the service starts up.
@@ -42,7 +41,6 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 
 		// print and validate properties - and exit if invalid
 		String[] propertyNames = {
-				"ssl.enabled",
 				"node-group-execution.ngStoreProtocol",
 				"node-group-execution.ngStoreServer",
 				"node-group-execution.ngStorePort",
@@ -68,12 +66,6 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 		}
 		Utility.validatePropertiesAndExitOnFailure(properties); 
 
-		try {
-			AuthorizationManager.authorize(auth_prop);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
 		return;
 	}
  

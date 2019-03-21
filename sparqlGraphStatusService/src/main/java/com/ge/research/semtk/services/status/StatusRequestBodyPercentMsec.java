@@ -18,7 +18,6 @@
 
 package com.ge.research.semtk.services.status;
 
-public class StatusRequestBodyPercentMsec extends StatusRequestBody {
-	public int percentComplete;
+public class StatusRequestBodyPercentMsec extends StatusRequestBodyPercent {
 	public int maxWaitMsec;
 }

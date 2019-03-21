@@ -18,8 +18,9 @@
 
 package com.ge.research.semtk.logging.easyLogger;
 
+import com.ge.research.semtk.properties.Properties;
 
-public class EasyLogEnabledConfigProperties {
+public class EasyLogEnabledConfigProperties extends Properties {
 
 	private Boolean loggingEnabled = false;
 	private String loggingProtocol = "HTTP";
@@ -41,4 +42,14 @@ public class EasyLogEnabledConfigProperties {
 	public String getLoggingPort(){ return this.loggingPort; }
 	public String getLoggingServiceLocation(){ return this.loggingServiceLocation; }
 	public String getApplicationLogName(){ return this.applicationLogName; }
+	
+	public void validate() throws Exception {
+		super.validate();
+		checkNone("loggingEnabled", loggingEnabled);
+		checkNone("loggingProtocol", loggingProtocol);
+		checkNone("loggingServer", loggingServer);
+		checkNone("loggingPort", loggingPort);
+		checkNone("loggingServiceLocation", loggingServiceLocation);
+		checkNone("applicationLogName", applicationLogName);
+	}
 }

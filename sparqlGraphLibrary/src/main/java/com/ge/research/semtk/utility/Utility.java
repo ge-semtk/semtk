@@ -31,6 +31,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,6 +50,9 @@ import java.util.UUID;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
@@ -56,10 +61,13 @@ import org.apache.commons.lang.text.StrSubstitutor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 
 /*
@@ -73,8 +81,10 @@ public abstract class Utility {
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");	// e.g. 2014-12-01 00:00:00 
-	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyKmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy K:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
+	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyhmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
 	public static final DateTimeFormatter DATETIME_FORMATTER_ISO8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");     // e.g. 2017-09-16T13:37:04Z
+	
+	public static final DateTimeFormatter DATE_FORMATTER_yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");	// e.g. 20141031 
 	
 	private static StrSubstitutor envSubstitutor = new StrSubstitutor(System.getenv());
 	public static final Boolean ENV_TEST = ! envSubstitutor.replace("${HOST_IP}").equals("${HOST_IP}");
@@ -457,12 +467,35 @@ public abstract class Utility {
 		// Replace ENV and trim()
 		return envSubstitutor.replace(ret).trim();
 	}	
-
+	
+	public static String getXmlBaseFromOwlRdf(InputStream is) throws Exception {
+		String ret;
+		
+		try {
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			Document document = db.parse(is);
+			NodeList nList = document.getElementsByTagName("rdf:RDF");
+			Node rdfNode = nList.item(0);
+			Element rdfElem = (Element) rdfNode;
+			ret = rdfElem.getAttribute("xml:base");
+			if (ret == null || ret.isEmpty()) {
+				throw new Exception("xml:base not found or empty");
+			}
+		} catch (Exception e) {
+			throw new Exception("Error pulling <rdf:RDF xml:base from file ", e);
+		}
+		return ret;
+	}
 	
 	/**
 	 * Print all properties.  Validate all properties and exit if any are invalid.
 	 * @param properties keys are property names, values are property values
+	 * 
+	 * @deprecated
+	 * Use newer pattern in package com.ge.research.semtk.properties
 	 */
+	@Deprecated
 	public static void validatePropertiesAndExitOnFailure(TreeMap<String,String> properties){
 		validatePropertiesAndExitOnFailure(properties, new HashSet<String>());
 	}

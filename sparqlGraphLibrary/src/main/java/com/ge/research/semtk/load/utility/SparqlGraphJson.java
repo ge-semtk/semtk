@@ -24,6 +24,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -196,13 +197,61 @@ public class SparqlGraphJson {
 	// new convenience functions not in javascript
 	
 	/**
+	 * Get a plain nodegroup without oInfo or conn associated so it won't generate sparql, etc.
+	 * This the "old version" but
+	 * it is the most efficient way to do simple mods on a nodegroup without worrying about validating, inflating, generating SPARQL.
 	 * 
+	 * If you need to generate sparql, use one of the other three forms which loads the oInfo:
+	 *    getNodeGroupNoInflateNorValidate()
+	 *    getNodeGroupValidate()
+	 *    getNodeGroupInflateAndValidate()
+	 * 
+	 * Note there is still a lot of older code that uses this function and manually loads the oInfo and validates, etc.
+	 * This is newer and simpler.
+	 *    
 	 * @return NodeGroup - could be null
 	 * @throws Exception
 	 */
 	public NodeGroup getNodeGroup() throws Exception {
 		return this.getNodeGroup(null);
 	}
+	
+	/**
+	 * Get the nodegroup loaded with it's conn and oInfo
+	 * @param oClient
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup getNodeGroupNoInflateNorValidate(OntologyInfoClient oClient) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.noInflateNorValidate(this.getOntologyInfo(oClient));
+		return ng;
+	}
+	
+	/**
+	 * Get the validated nodegroup loaded with it's conn and oInfo
+	 * @param oClient
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup getNodeGroupValidate(OntologyInfoClient oClient) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.validateAgainstModel(this.getOntologyInfo(oClient));
+		return ng;
+	}
+	
+	/**
+	 * Get the inflated and validated nodegroup loaded with it's conn and oInfo
+	 * @param oClient
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup getNodeGroupInflateAndValidate(OntologyInfoClient oClient) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.inflateAndValidate(this.getOntologyInfo(oClient));
+		return ng;
+	}
+
 	
 	/**
 	 * Gets nodegroup regardless of whether sgJson is a whole sgJson or just a nodegroup
@@ -231,7 +280,22 @@ public class SparqlGraphJson {
 	
 	public OntologyInfo getOntologyInfo() throws Exception {
 		if (oInfo == null) {
+			SparqlConnection conn = this.getSparqlConn();
+			if (conn == null) {
+				throw new Exception("Can't load nodegroup and oInfo with old-fashioned plain nodegroup json");
+			}
 			oInfo = new OntologyInfo(this.getSparqlConn());
+		}
+		return oInfo;
+	}
+	
+	public OntologyInfo getOntologyInfo(OntologyInfoClient oClient) throws Exception {
+		if (oInfo == null) {
+			SparqlConnection conn = this.getSparqlConn();
+			if (conn == null) {
+				throw new Exception("Can't load nodegroup and oInfo with old-fashioned plain nodegroup json");
+			}
+			oInfo = oClient.getOntologyInfo(this.getSparqlConn());
 		}
 		return oInfo;
 	}
