@@ -68,6 +68,8 @@ SparqlConnection.prototype = {
 
 		var jObj = {
 			name: this.name,
+            // this is no longer editable in SPARQLgraph and defaults to ""
+            // it is retained for backwards compatibility
 			domain: this.domain,
             enableOwlImports: this.enableOwlImports,
 			model: [],
@@ -101,6 +103,8 @@ SparqlConnection.prototype = {
 
 		this.name = jObj.name;
 		this.domain = jObj.domain;
+        // be extra-safe as this is removed except for backwards-compatibility
+        if (! this.domain) { this.domain = ""; }   
 
 		this.modelInterfaces = [];
     	this.modelDomains = [];

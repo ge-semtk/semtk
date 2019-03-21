@@ -58,7 +58,11 @@ public class OntologyName {
 	}
 	
 	public Boolean isInDomain(String domain){
-		int i = this.name.indexOf(domain);
-		return(i == 0);
+		if (domain == null || domain.isEmpty()) {
+			return true;
+		} else {
+			int i = this.name.indexOf(domain);
+			return(i == 0);
+		}
 	}
 }

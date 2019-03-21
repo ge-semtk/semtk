@@ -87,10 +87,10 @@ define([	// properly require.config'ed
                     <form class="form-horizontal"> </form> \
                     <form class="form-horizontal">\
                     <fieldset> \
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Name:</label>                 <div class="controls"><input type="text" class="input-xlarge" id="mdName"></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;">                  <label class="control-label">Name:</label>                 <div class="controls">                 <input type="text" class="input-xlarge" id="mdName"></div></div>\
                         </div> \
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Domain:</label>               <div class="controls"><input type="text" class="input-xlarge"  id="mdDomain"></div></div>\
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Enable OWL imports:</label>   <div class="controls"><input type="checkbox" class="input-xlarge" id="mdOwlImports"></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;" id="mdDomainDiv"> <label class="control-label">Domain:</label>               <div class="controls"><input type="text" class="input-medium"  id="mdDomain"> <button id="mdDomainClearBut" class="btn">Clear</button> <button id="mdDomainInfoBut" class="icon-white btn-small btn-info"><icon class="icon-info-sign"></icon></button></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;">                  <label class="control-label">Enable OWL imports:</label>   <div class="controls">                 <input type="checkbox" class="input-xlarge" id="mdOwlImports"></div></div>\
                         <hr style="margin-top: 1ch; margin-bottom: 1ch;">\
                         <table width="100%"><tr>\
                             <td style="padding: 1ch;"><h3>Graphs: </td> \
@@ -146,6 +146,9 @@ define([	// properly require.config'ed
             // ==== Callbacks that don't use the (ahem) %VAR trick ====
             document.getElementById("mdName").onchange         =this.callbackChangedName.bind(this);
             document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);
+            document.getElementById("mdDomainClearBut").onclick   =this.callbackDomainClear.bind(this);
+            document.getElementById("mdDomainInfoBut").onclick =this.callbackDomainInfo.bind(this);
+            document.getElementById("mdDomain").onchange       =this.callbackChangedDomain.bind(this);
             document.getElementById("mdOwlImports").onchange   =this.callbackChangedOwlImports.bind(this);
             document.getElementById("mdServerURL").onchange    =this.callbackChangedServerURL.bind(this);
             document.getElementById("mdSelectSeiType").onchange=this.callbackChangedSelectSeiType.bind(this);
@@ -166,6 +169,20 @@ define([	// properly require.config'ed
 
             this.changed(false);
 
+        },
+
+        callbackDomainClear : function() {
+            document.getElementById("mdDomain").value="";
+            return false;
+        },
+
+        callbackDomainInfo : function() {
+            var msgHtml = "Domain is a deprecated regex matching URI prefixes of T-box classes<br>" +
+                          "Domains are still honored by SemTK but can no longer be created.<br>" +
+                          "It is recommended that you click <strong>Clear</strong> to clear the domain.";
+
+            ModalIidx.alert("Domain is deprecated", msgHtml, false, function(){});
+            return false;
         },
 
         // changes don't store anything
@@ -217,7 +234,7 @@ define([	// properly require.config'ed
             conn.setName("-new-");
             conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
             conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
-
+            conn.setOwlImportsEnabled(true);
             this.appendAndSelectProfile(conn);
             return false;
         },
@@ -607,7 +624,7 @@ define([	// properly require.config'ed
                 document.getElementById("mdDomain").value = this.conn.getDomain();
                 document.getElementById("mdOwlImports").checked = this.conn.isOwlImportsEnabled();
                 document.getElementById("mdName").disabled = false;
-                document.getElementById("mdDomain").disabled = false;
+                document.getElementById("mdDomain").disabled = true;    // deprecated, always disabled
                 document.getElementById("mdOwlImports").disabled = false;
 
             } else {
@@ -620,6 +637,12 @@ define([	// properly require.config'ed
                 document.getElementById("mdOwlImports").disabled = true;
             }
 
+            var domain = this.conn.getDomain();
+            if (domain && domain.length > 0) {
+                document.getElementById("mdDomainDiv").style.display="";
+            } else {
+                document.getElementById("mdDomainDiv").style.display="none";
+            }
             this.displayProfileSei();
         },
 
@@ -725,10 +748,6 @@ define([	// properly require.config'ed
                     errHTML += "Name is empty. <br>";
                 } else {
                     header = "<b>Connection '" + this.conn.getName() + "' has the following errors:</b><br>";
-                }
-
-                if (this.conn.getDomain() == "") {
-                    errHTML += "Domain is empty. <br>";
                 }
 
                 for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {

@@ -218,8 +218,8 @@ define([	// properly require.config'ed   bootstrap-modal
 
         };
 
-        ModalIidx.createInfoButton = function(helpHTML) {
-            return IIDXHelper.createIconButton("icon-info-sign", ModalIidx.alert.bind(this, "Info", helpHTML, false, function(){}), ["icon-white", "btn-small", "btn-info"]);
+        ModalIidx.createInfoButton = function(helpHTML, optId) {
+            return IIDXHelper.createIconButton("icon-info-sign", ModalIidx.alert.bind(this, "Info", helpHTML, false, function(){}), ["icon-white", "btn-small", "btn-info"], optId);
         };
 
 		ModalIidx.prototype = {

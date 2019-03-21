@@ -97,10 +97,21 @@ public class TestGraph {
 		return ret;
 	}
 	
+	public static SparqlConnection getSparqlConn() throws Exception {
+		SparqlConnection conn = new SparqlConnection();
+		conn.setName("JUnitTest");
+		
+		SparqlEndpointInterface sei = getSei();
+		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
+		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
+		return conn;
+	}
+	
+	@Deprecated
 	public static SparqlConnection getSparqlConn(String domain) throws Exception {
 		SparqlConnection conn = new SparqlConnection();
 		conn.setName("JUnitTest");
-		conn.setDomain(domain);
+		conn.setDomain(domain);   
 		
 		SparqlEndpointInterface sei = getSei();
 		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getGraph());

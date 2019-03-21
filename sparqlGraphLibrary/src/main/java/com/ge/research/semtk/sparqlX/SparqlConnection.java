@@ -38,7 +38,7 @@ public class SparqlConnection {
 	private final String KEY_ENABLE_OWL_IMPORTS = "enableOwlImports";
 	
 	private String name = null;
-	private String domain = null;
+	private String domain = "";  // deprecated
 	private ArrayList<SparqlEndpointInterface> modelInterfaces = null;
 	private ArrayList<SparqlEndpointInterface> dataInterfaces = null;
 	private boolean enableOwlImports = false;
@@ -56,10 +56,32 @@ public class SparqlConnection {
 	    this.fromString(jsonText);
 	}
 	
+	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset) throws Exception{
+		this();
+		this.name = name;
+		this.addDataInterface(serverType, 
+				dataServicetURL,
+				dataset);
+		this.addModelInterface(serverType, 
+				dataServicetURL,
+				dataset);
+	}
+	
+	/**
+	 * Old constructor including "domain"
+	 * @param name
+	 * @param serverType
+	 * @param dataServicetURL
+	 * @param knowledgeServiceURL
+	 * @param dataset
+	 * @param domain
+	 * @throws Exception
+	 */
+	@Deprecated
 	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset, String domain) throws Exception{
 		this();
 		this.name = name;
-		this.domain = domain;
+		this.domain = (domain == null) ? "" : domain;
 		this.addDataInterface(serverType, 
 				dataServicetURL,
 				dataset);
@@ -72,7 +94,7 @@ public class SparqlConnection {
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
 		jObj.put("name", name);
-		jObj.put("domain", domain);
+		jObj.put("domain", (domain == null) ? "" : domain);
 		
 		JSONArray model = new JSONArray();
 		JSONArray data = new JSONArray();
@@ -110,6 +132,7 @@ public class SparqlConnection {
 		
 		this.name = (String) jObj.get("name");
 		this.domain = (String) jObj.get("domain");
+		this.domain = (this.domain == null) ? "" : this.domain;
 		
 		this.modelInterfaces = new ArrayList<SparqlEndpointInterface>();
 		
@@ -192,7 +215,7 @@ public class SparqlConnection {
 	}
 	
 	public void setDomain (String domain) {
-		this.domain = domain;
+		this.domain = (domain == null) ? "" : domain;
 	}
 	
 	public void addModelInterface(SparqlEndpointInterface sei) {
