@@ -25,14 +25,16 @@
  *         - stopPropagation will stop the question from being bubbled up to a parent.
  */
 
+//  https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css
+
 define([	// properly require.config'ed
          	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/modaliidx',
             'sparqlgraph/js/ontologyinfo',
 
          	'jquery',
-            'cytoscape/dist/cytoscape.umd',
-            'cytoscape/../node_modules/cytoscape-cola/cytoscape-cola',
+
+            'visjs/vis.min',
 
 			// shimmed
          	'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
@@ -41,12 +43,17 @@ define([	// properly require.config'ed
 
 		],
 
-	function(IIDXHelper, ModalIidx, OntologyInfo, $, cytoscape, cola) {
+	function(IIDXHelper, ModalIidx, OntologyInfo, $, vis) {
 
 
 		//============ local object  ExploreTab =============
 		var ExploreTab = function(treediv, canvasdiv, buttondiv, searchtxt) {
-		    this.treediv = treediv;
+		    this.treediv = document.createElement("div");
+            this.treediv.id = "etTreeDiv";
+            this.configdiv = document.createElement("div");
+            treediv.appendChild(this.treediv);
+            treediv.appendChild(document.createElement("hr"));
+            treediv.appendChild(this.configdiv);
 
             this.canvasdiv = document.createElement("div");
             this.canvasdiv.style.margin="1ch";
@@ -55,16 +62,13 @@ define([	// properly require.config'ed
             this.canvasdiv.style.width="100%";
             canvasdiv.appendChild(this.canvasdiv);
 
-            new ResizeObserver(this.resize.bind(this)).observe(canvasdiv);
-
-            this.cy = null;
-
             this.buttondiv = buttondiv;
             this.buttonspan = document.createElement("span");
             this.buttonspan.style.marginRight = "3ch";
             this.searchtxt = searchtxt;
             this.oInfo = null;
             this.oTree = null;
+            this.network = null;
 
             this.largeLayoutFlag = false;
             this.largeLayoutParams={};
@@ -81,6 +85,7 @@ define([	// properly require.config'ed
             setOInfo : function (oInfo) {
                 this.oInfo = new OntologyInfo(oInfo.toJson());  // deepCopy
                 this.oTree.setOInfo(this.oInfo);
+                this.setModeToOntology();
             },
 
             /*
@@ -106,17 +111,11 @@ define([	// properly require.config'ed
 
                     dnd: {
                         onDragStart: function(node) {
-                        /** This function MUST be defined to enable dragging for the tree.
-                         *  Return false to cancel dragging of node.
-                         */
-                           // console.log("dragging " + gOTree.nodeGetURI(node));
-                           // gDragLabel = gOTree.nodeGetURI(node);
                             return true;
                         }.bind(this),
 
                         onDragStop: function(node, x, y, z, aa) {
-                           // console.log("dragging " + gOTree.nodeGetURI(node) + " stopped.");
-                           // gDragLabel = null;
+
                         }.bind(this)
                     },
 
@@ -130,177 +129,19 @@ define([	// properly require.config'ed
             },
 
             initCanvas : function() {
-                cytoscape.use(cola);
-                //cytoscape.use(euler)
-
-                this.cy = cytoscape({
-                    container: this.canvasdiv,
-                    elements: [ // list of graph elements to start with
-                        { // node a
-                            data: { id: 'a' }
-                        },
-                        { // node b
-                            data: { id: 'b' }
-                        },
-                        { // node b
-                            data: { id: 'c' }
-                        },
-                        { // node b
-                            data: { id: 'd' }
-                        },
-                        { // node b
-                            data: { id: 'e' }
-                        },
-                        { // edge ab
-                            data: { id: 'ab', source: 'a', target: 'b' }
-                        },
-                        { // edge ab
-                            data: { id: 'ac', source: 'a', target: 'c' }
-                        },
-                        { // edge ab
-                            data: { id: 'ad', source: 'a', target: 'd' }
-                        },
-                        { // edge ab
-                            data: { id: 'de', source: 'd', target: 'e' }
-                        }
-                    ],
-                    style: [ // the stylesheet for the graph
-                        {
-                            selector: 'node',
-                            style: {
-                                'background-color': '#666',
-                                //'label': 'data(id)'
-                            }
-                        },
-                        {
-                            selector: 'edge',
-                            style: {
-                                'width': 3,
-                                'line-color': '#ccc',
-                                'target-arrow-color': '#ccc',
-                                'target-arrow-shape': 'triangle'
-                            }
-                        }
-                    ],
-
-                    // initial viewport state:
-                    zoom: 1,
-                    pan: { x: 10, y: 10 },
-
-                    // interaction options:
-                    minZoom: 1e-50,
-                    maxZoom: 1e50,
-                    zoomingEnabled: true,
-                    userZoomingEnabled: true,
-                    panningEnabled: true,
-                    userPanningEnabled: true,
-                    boxSelectionEnabled: false,
-                    selectionType: 'single',
-                    touchTapThreshold: 8,
-                    desktopTapThreshold: 4,
-                    autolock: false,
-                    autoungrabify: false,
-                    autounselectify: false,
-
-                    //rendering options:
-                    headless: false,
-                    styleEnabled: true,
-                    hideEdgesOnViewport: false,
-                    hideLabelsOnViewport: false,
-                    textureOnViewport: false,
-                    motionBlur: false,
-                    motionBlurOpacity: 0.2,
-                    wheelSensitivity: 1,
-                    pixelRatio: 'auto'
-                });
-
-                this.cy.resize();
-                this.cy.fit();
-                this.layout();
-
-            },
-
-            resize : function() {
-                this.cy.resize();
-                this.cy.fit();
-            },
-
-            layout : function() {
-                if (this.cy.elements().size() > ExploreTab.MAX_LAYOUT_ELEMENTS) {
-                    // large layout
-                    this.layoutLarge(ExploreTab.MAX_LAYOUT_ELEMENTS);
-                } else {
-
-                    // normal layout
-                    var layout = this.cy.layout({
-                        name: 'cola',
-                        animate: true,
-                        maxSimulationTime: 3000,
-                        ready: this.preLayout.bind(this),
-                        stop: this.postLayout.bind(this),
-                    });
-
-                    layout.run();
-                }
-
-            },
-
-            preLayout : function() {
-                this.cy.edges().style({visibility: "hidden"});
-            },
-
-            postLayout : function() {
-                this.cy.edges().style({visibility: "visible"});
-            },
-
-            layoutLarge : function(targetNodes) {
-                // https://github.com/cytoscape/cytoscape.js-cola
-                this.largeLayoutParams = {
-                    name: 'cola',
-                    animate: false,
-                    fit: false,
-                    maxSimulationTime: 3000,
-                    ready: function(){console.log("ready");},
-                    stop: function() {console.log("stop");},
+                // create an array with nodes
+                var data = {};
+                var options = {
+                    configure: {
+                        enabled: true,
+                        container: this.configdiv,
+                        filter: "layout physics",
+                    },
+                    groups: {
+                        useDefaultGroups: true,
+                    }
                 };
-                this.largeLayoutFlag = true;
-                document.getElementById("butStopLayout").disabled = false;
-                setStatus("layout..");
-
-                this.largeLayoutIteration(targetNodes);
-
-            },
-
-            sleep : function(ms) {
-              return new Promise(resolve => setTimeout(resolve, ms));
-            },
-
-            largeLayoutIteration : function(targetNodes) {
-
-
-                this.cy.center();
-                this.cy.fit();
-                this.sleep(250);
-
-                if (this.largeLayoutFlag) {
-                    console.log("layout iteration");
-                    var size = this.cy.elements().size();
-                    // get random group of elements approximately targetNodes
-                    var eles = this.cy.elements().filter((x)=>Math.random()*size/targetNodes <= 1);
-                    this.cy.batch(
-                        function(eles){
-                            eles.style({'background-color': '#600'});
-                        }.bind(this, eles)
-                    );
-                    eles.layout(this.largeLayoutParams).run();
-                }
-
-            },
-
-            largeLayoutStop : function() {
-                this.largeLayoutFlag = false;
-                document.getElementById("butStopLayout").disabled = true;
-                setStatus("");
+                this.network = new vis.Network(this.canvasdiv, data, options);
             },
 
             initButtonDiv : function() {
@@ -341,11 +182,15 @@ define([	// properly require.config'ed
                 var div3 = document.createElement("div");
                 td3.appendChild(div3);
                 td3.align="right";
-                td3.appendChild(IIDXHelper.createBoldText("Download: "));
+                var select = IIDXHelper.createSelect("etSelect", ["Ontology", "Instance Data"], ["Ontology"]);
+                select.onchange = this.draw.bind(this);
+                td3.appendChild(select);
+                td3.appendChild(IIDXHelper.createNbspText());
+
 
                 var but1 = IIDXHelper.createButton("layout", this.butLayout.bind(this));
                 td3.appendChild(but1);
-                var but2 = IIDXHelper.createButton("stop layout", this.butStopLayout.bind(this));
+                var but2 = IIDXHelper.createButton("stop layout", this.stopLayout.bind(this));
                 but2.id = "butStopLayout";
                 but2.disabled = true;
 
@@ -356,12 +201,32 @@ define([	// properly require.config'ed
                 td3.appendChild(but3);
             },
 
-            butLayout : function() {
-                this.layout();;
+            // get the etSelect value "Ontology", or "Instance Data"
+            getMode : function() {
+                var sel = document.getElementById("etSelect");
+                var value = sel.options[sel.selectedIndex].text;
+                return value;
             },
 
-            butStopLayout : function() {
-                this.largeLayoutStop();
+            setModeToOntology : function() {
+                var sel = document.getElementById("etSelect");
+                sel.selectedIndex = 0;
+            },
+
+            butLayout : function() {
+                this.startLayout();
+            },
+
+            startLayout : function() {
+                if (this.network) {
+                    this.network.startSimulation();
+                }
+            },
+
+            stopLayout : function() {
+                if (this.network) {
+                    this.network.stopSimulation();
+                }
             },
 
             butRight3 : function() {
@@ -385,46 +250,143 @@ define([	// properly require.config'ed
                 this.oTree.expandAll();
             },
 
-            draw : function () {
+            // Redraws the entire graph (presuming there's new data)
+            // This can be processor-intensive,
+            // so, when needed, send in msec of layout time to stop it
+            draw : function (stopAfterMsec) {
                 this.oTree.showAll();
-                this.cy.resize();
-                this.cy.fit();
+
+                if (this.getMode() == "Ontology") {
+                    this.drawOntology();
+                } else {
+                    this.drawInstanceData();
+                }
+
+                // stop the layout after stopAfterMsec
+                if (typeof stopAfterMsec != "undefined") {
+                    setTimeout(this.stopLayout.bind(this), stopAfterMsec);
+                }
+            },
+
+            drawOntology : function () {
+                this.network.body.data.nodes.clear();
+                this.network.body.data.edges.clear();
+                var nodeData = [];
+                var edgeData = [];
+
+                // namespace nodes
+                for (var namespace of this.oInfo.getNamespaceNames()) {
+                    nodeData.push({id: namespace, label: namespace, group: namespace , shape: 'box'});
+                }
+
+                // class nodes
+                for (var className of this.oInfo.getClassNames()) {
+                    var oClass = this.oInfo.getClass(className);
+                    var localName = oClass.getNameStr(true);
+                    var namespace = oClass.getNamespaceStr();
+
+                    nodeData.push({id: className, label: localName, group: namespace });
+                }
+
+                // edges
+                for (var className of this.oInfo.getClassNames()) {
+                    // namespace members
+                    var namespace = this.oInfo.getClass(className).getNamespaceStr();
+                    edgeData.push({from: className, to: namespace, label: '', arrows: 'to'});
+
+                    var blackObj = {
+                        color:'black',
+                        highlight:'black',
+                        hover: 'black',
+                        inherit: false,
+                        opacity:1.0
+                    }
+                    // subclassof
+                    for (var subclassName of this.oInfo.getSubclassNames(className)) {
+                        edgeData.push({from: subclassName, to: className, label: 'subClassOf', arrows: 'to', color: blackObj, dashes: true});
+                    }
+                }
+
+                // add any left-over data
+                this.network.body.data.nodes.add(nodeData);
+                this.network.body.data.edges.add(edgeData);
+
+                var options = {
+                  "layout": {
+                    "hierarchical": {
+                      "enabled": true,
+                      "levelSeparation": -150,
+                      "direction": "DU",
+                      "sortMethod": "directed"
+                    }
+                  },
+                  "physics": {
+                    "hierarchicalRepulsion": {
+                      "centralGravity": 0
+                    },
+                    "minVelocity": 0.75,
+                    "solver": "hierarchicalRepulsion"
+                  }
+                }
+                this.network.setOptions(options);
+            },
+
+            drawInstanceData : function () {
+                var SIZE = 1000;
+                var SQRT = Math.floor(Math.sqrt(SIZE));
+                var BATCH = 100;
+
+                this.network.body.data.nodes.clear();
+                this.network.body.data.edges.clear();
+
+                this.network.setOptions({
+                    layout: {
+                        hierarchical: false,
+                    },
+                    physics: {
+                        enabled: false,
+                    }
+                });
+
+                // add a group of nodes
+                addToNetwork = function(i0, i1) {
+                    var nodeData = [];
+                    var edgeData = [];
+
+                    for (var i=i0; i < i1; i++) {
+
+                        var groupName = (i<SQRT) ? "group1" : "group2";
+
+                        nodeData.push({id: "id_"+i, label: "Node_" + i, group: groupName});
+                        edgeData.push({from: "id_"+i, to: "id_"+Math.floor(Math.random() * SQRT)});
+                    }
+
+                    this.network.body.data.nodes.add(nodeData);
+                    this.network.body.data.edges.add(edgeData);
+                };
+
+                // add nodes a batch at a time...threaded so they render
+                var msec = 0;
+                for (i=0; i < SIZE; i += BATCH) {
+                    var bot = i;
+                    var top = Math.min(SIZE-1, i + BATCH - 1);
+                    setTimeout(addToNetwork.bind(this, bot, top), msec += 250);
+                }
+
+                this.network.setOptions({
+                    physics: {
+                        enabled: true,
+                        solver: "forceAtlas2Based",
+                    },
+                });
             },
 
             selectedNodeCallback : function (node) {
-                // add a node
-                var first = Math.floor(Math.random() * 100000).toString();
-                this.addRandomNode(first, 'a');
 
-                // add a hundred nodes attached to first
-                for (var i=0; i < 100; i++) {
-                    var target = Math.floor(Math.random() * 100000).toString();
-                    this.addRandomNode(target, first);
-
-                    // add 0 to 10 attached to node i
-                    for (var j=Math.floor(Math.random() * 10); j >0; j--) {
-                        var id = Math.floor(Math.random() * 100000).toString();
-                        this.addRandomNode(id, target);
-                    }
-                }
-                console.log(this.cy.nodes().length.toString() + " nodes");
-                console.log(this.cy.elements().length.toString() + " elements");
 
 
             },
-            addRandomNode : function (id, target) {
 
-                this.cy.add([
-                  { group: 'nodes', data: { id: id }, position: { x: 100, y: 100 } }
-                ]);
-                // link to target
-                if (typeof target !== 'undefined') {
-                    this.cy.add([
-                      { group: 'edges', data: { id: id + "_" + target, source: id, target: target } }
-                    ]);
-                }
-                return id;
-            },
 
             leftButton1 : function () {
 

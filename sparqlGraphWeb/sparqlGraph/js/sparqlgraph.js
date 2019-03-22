@@ -590,7 +590,7 @@
         gEditTab.setOInfo(gOInfo);
         gEditTab.draw();
 
-        gExploreTab.setOInfo(gOInfo);
+        gExploreTab.setOInfo(gOInfo, gCurrentTab == g.tab.explore);
         gExploreTab.draw();
 
 		setStatus("");
@@ -615,7 +615,7 @@
             gEditTab.setOInfo(gOInfo);
             gEditTab.draw();
 
-            gExploreTab.setOInfo(gOInfo);
+            gExploreTab.setOInfo(gOInfo, gCurrentTab == g.tab.explore);
             gExploreTab.draw();
 
 	    	gMappingTab.updateNodegroup(gNodeGroup);
@@ -1828,7 +1828,8 @@
     	clearTree();
     	gOInfo = new OntologyInfo();
         gEditTab.setOInfo(gOInfo);
-        gEditTab.draw();
+        gExploreTab.setOInfo(gOInfo, gCurrentTab == g.tab.explore);
+        gExploreTab.draw();
     	gConn = null;
 	    gOInfoLoadTime = new Date();
     };
@@ -1859,12 +1860,13 @@
 
 	var tabSparqlGraphActivated = function() {
 		gCurrentTab = g.tab.query;
-		this.document.getElementById("query-tab-but").disabled = true;
+        this.document.getElementById("query-tab-but").disabled = true;
         this.document.getElementById("edit-tab-but").disabled = false;
         this.document.getElementById("explore-tab-but").disabled = false;
  		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = false;
 
+        gExploreTab.stopLayout();
 	};
 
 	var tabEditActivated = function() {
@@ -1875,6 +1877,7 @@
         this.document.getElementById("explore-tab-but").disabled = false;
  		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = false;
+        gExploreTab.stopLayout();
 
 	};
 
@@ -1887,8 +1890,7 @@
 		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = false;
 
-        gExploreTab.draw();
-
+        gExploreTab.startLayout();
 	};
 
     var tabMappingActivated = function() {
@@ -1899,6 +1901,8 @@
         this.document.getElementById("explore-tab-but").disabled = false;
  		this.document.getElementById("mapping-tab-but").disabled = true;
 		this.document.getElementById("upload-tab-but").disabled = false;
+
+        gExploreTab.stopLayout();
 
 		// PEC TODO: this overwrites everything each time
 		gMappingTab.updateNodegroup(gNodeGroup);
@@ -1915,6 +1919,8 @@
   		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = true;
 
-		 gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+        gExploreTab.stopLayout();
+
+		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 	};
