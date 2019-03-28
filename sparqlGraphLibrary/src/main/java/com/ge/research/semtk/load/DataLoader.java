@@ -469,33 +469,19 @@ public class DataLoader implements Runnable {
 	}
 	
 	/**
-	 * Same as method below, but with no connection override
+	 * Variant with no connection override
 	 */
 	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize) throws Exception{
 		return loadFromCsv(loadTemplateFilePath, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, batchSize, null);
 	}
 	
 	/**
-	 * Utility method to load data given a template file, CSV file, and SPARQL connection
-	 * @param loadTemplateFilePath 		path to the JSON file containing the load template
-	 * @param csvFilePath 				path to the CSV data file
-	 * @param sparqlEndpointUser 		username for SPARQL endpoint
-	 * @param sparqlEndpointPassword 	password for SPARQL endpoint
-	 * @param batchSize					loading batch size
-	 * @param connectionOverride 		a SPARQL connection to override the connection in the template (use null to not override)
-	 * @return							total CSV records processed
+	 * Variant with loading template file path instead of JSON object
 	 */
 	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
 
-		// validate arguments
 		if(!loadTemplateFilePath.endsWith(".json")){
 			throw new Exception("Error: Template file " + loadTemplateFilePath + " is not a JSON file");
-		}
-		if(!csvFilePath.endsWith(".csv")){
-			throw new Exception("Error: Data file " + csvFilePath + " is not a CSV file");
-		}		
-		if(batchSize < 1 || batchSize > 100){
-			throw new Exception("Error: Invalid batch size: " + batchSize);
 		}
 		
 		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
@@ -504,8 +490,31 @@ public class DataLoader implements Runnable {
 		LocalLogger.logToStdOut("Batch size: " + batchSize);	
 		LocalLogger.logToStdOut("Connection override: " + connectionOverride);	// may be null if no override connection provided
 				
-		// get a SparqlGraphJson object, override connection if needed
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(loadTemplateFilePath));
+		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, batchSize, connectionOverride);
+	}
+		
+	/**
+	 * Utility method to load data given a template json, CSV file, and SPARQL connection
+	 * @param loadTemplateJson 			the JSON containing the load template
+	 * @param csvFilePath 				path to the CSV data file
+	 * @param sparqlEndpointUser 		username for SPARQL endpoint
+	 * @param sparqlEndpointPassword 	password for SPARQL endpoint
+	 * @param batchSize					loading batch size
+	 * @param connectionOverride 		a SPARQL connection to override the connection in the template (use null to not override)
+	 * @return							total CSV records processed
+	 */
+	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
+				
+		// validate arguments
+		if(!csvFilePath.endsWith(".csv")){
+			throw new Exception("Error: Data file " + csvFilePath + " is not a CSV file");
+		}		
+		if(batchSize < 1 || batchSize > 100){
+			throw new Exception("Error: Invalid batch size: " + batchSize);
+		}
+		
+		// create SparqlGraphJson, override connection if needed
+		SparqlGraphJson sgJson = new SparqlGraphJson(loadTemplateJson);
 		if(connectionOverride != null){	
 			sgJson.setSparqlConn(connectionOverride);
 		}
