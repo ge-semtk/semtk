@@ -659,11 +659,14 @@ define([	// properly require.config'ed
         var bar = document.getElementById(IIDXHelper.idHash[emptyDivWithId.id]);
         bar.style.width = String(percent) + "%";
 
-        if (typeof message !== "undefined") {
-            bar.innerHTML = "<b>" + optMessage + "</b>";
+        var html = "<b><font color='" + ((percent < 20) ? "black" : "grey") + "'>";
+        if (typeof optMessage !== "undefined") {
+            html += optMessage;
         } else {
-            bar.innerHTML = "<b>" + String(percent) + "% </b>";
+            html += String(percent) + "%";
         }
+        html += "</font></b>"
+        bar.innerHTML = html;
     }
 
     /**

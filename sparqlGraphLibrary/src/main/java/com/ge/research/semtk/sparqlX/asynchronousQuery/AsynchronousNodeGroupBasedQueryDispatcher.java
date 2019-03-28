@@ -180,7 +180,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		catch(Exception e){
 			this.statusClient.execSetFailure("Failed to write results: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
-			throw new Exception("Unable to write results");
+			throw new Exception("Unable to write results", e);
 		}
 	}
 	
@@ -193,7 +193,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		catch(Exception e){
 			this.statusClient.execSetFailure("Failed to write results: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
-			throw new Exception("Unable to write results");
+			throw new Exception("Unable to write results", e);
 		}
 	}
 

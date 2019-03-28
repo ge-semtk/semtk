@@ -22,6 +22,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 import io.swagger.annotations.ApiModelProperty;
 
+// TODO: note there is a newer SparqlConnectionRequest in the springutil that has conflicting names.
 public class SparqlConnRequestBody {
 	
 	@ApiModelProperty(

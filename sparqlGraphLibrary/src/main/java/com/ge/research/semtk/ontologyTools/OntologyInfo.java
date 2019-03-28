@@ -404,6 +404,19 @@ public class OntologyInfo {
 		return retval;
 	}
 	
+	public ArrayList<String> getRangeNames() {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (String k : this.propertyHash.keySet()) {
+			OntologyProperty oProp = this.propertyHash.get(k);
+			String range = oProp.getRangeStr();
+			if (!ret.contains(range)) {
+				ret.add(range);
+			}
+		}
+		return ret;
+	}
+	
 	/**
 	 * for a given class, return all of the known parent classes
 	 **/

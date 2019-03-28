@@ -590,7 +590,8 @@
         gEditTab.setOInfo(gOInfo);
         gEditTab.draw();
 
-        gExploreTab.setOInfo(gOInfo, gCurrentTab == g.tab.explore);
+        gExploreTab.setOInfo(gOInfo);
+        gExploreTab.setConn(gConn);
         gExploreTab.draw();
 
 		setStatus("");
@@ -615,7 +616,8 @@
             gEditTab.setOInfo(gOInfo);
             gEditTab.draw();
 
-            gExploreTab.setOInfo(gOInfo, gCurrentTab == g.tab.explore);
+            gExploreTab.setOInfo(gOInfo);
+            gExploreTab.setConn(gConn);
             gExploreTab.draw();
 
 	    	gMappingTab.updateNodegroup(gNodeGroup);
@@ -1828,7 +1830,8 @@
     	clearTree();
     	gOInfo = new OntologyInfo();
         gEditTab.setOInfo(gOInfo);
-        gExploreTab.setOInfo(gOInfo, gCurrentTab == g.tab.explore);
+        gExploreTab.setOInfo(gOInfo);
+        gExploreTab.setConn(gConn);
         gExploreTab.draw();
     	gConn = null;
 	    gOInfoLoadTime = new Date();

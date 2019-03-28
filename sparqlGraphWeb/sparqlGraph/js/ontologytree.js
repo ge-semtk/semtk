@@ -390,6 +390,36 @@ OntologyTree.prototype = {
 		return ret;
 	},
 
+    getSelectedClassNames : function() {
+        var selected = this.tree.getSelectedNodes();
+        var ret = [];
+        // add if selected and not found already
+        for (var node of selected) {
+            if (this.nodeIsClass(node)) {
+                var name = this.nodeGetURI(node);
+                if (ret.indexOf(name) == -1) {
+                    ret.push(name);
+                }
+            }
+        }
+		return ret;
+    },
+
+    getSelectedPropertyNames : function() {
+        var selected = this.tree.getSelectedNodes();
+        var ret = [];
+        // add if selected and not found already
+        for (var node of selected) {
+            if (this.nodeIsProperty(node)) {
+                var name = this.nodeGetURI(node);
+                if (ret.indexOf(name) == -1) {
+                    ret.push(name);
+                }
+            }
+        }
+		return ret;
+    },
+
     getNodesByURIAndParent: function(uri, parentUri) {
 		// uri can be a class or property
 		// find all tree nodes that match

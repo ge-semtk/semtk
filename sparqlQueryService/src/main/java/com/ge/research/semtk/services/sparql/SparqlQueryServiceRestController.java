@@ -65,7 +65,9 @@ import com.ge.research.semtk.utility.Utility;
 import io.swagger.annotations.ApiOperation;
 
 /**
- * Service to execute SPARQL queries
+ * Service to execute SPARQL queries.
+ * All Synchronous.
+ * Async wrappers are found in the Dispatch and NodeGroupExecution servers, et. al.
  * 
  * 
  * Sample select query response:
