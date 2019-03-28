@@ -164,10 +164,8 @@ public class DataLoader implements Runnable {
 		// set up information for percent complete
 		this.datasetRows = batchHandler.getDsRows();
 		
-		// check the nodegroup for consistency before continuing.		
-		LocalLogger.logToStdErr("about to validate against model.");		
+		// check the nodegroup for consistency before continuing.			
 		this.master.validateAgainstModel(this.oInfo);
-		LocalLogger.logToStdErr("validation completed.");
 		
 		Boolean precheckFailed = false;
 		this.totalRecordsProcessed = 0;	// reset the counter.
@@ -247,7 +245,7 @@ public class DataLoader implements Runnable {
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
-		LocalLogger.logToStdOutNoEOL("Records processed:" + (skipIngest ? " (no ingest)" : ""));
+		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : ""), true, false);
 		long lastMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 		
 		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
@@ -300,7 +298,7 @@ public class DataLoader implements Runnable {
 					double fraction = (double)startingRow / Math.max(1, this.datasetRows);
 					int percent = this.percentStart + (int) Math.floor((this.percentEnd - this.percentStart) * fraction); 
 					percent = Math.min(99, percent);  // don't let it hit 100 due to rounding.  100 will fail in status service.
-					LocalLogger.logToStdOutNoEOL("..." + recordsProcessed);
+					LocalLogger.logToStdOut("..." + recordsProcessed, false, false);
 					lastMillis = nowMillis;
 					
 					// tell status client if there is one set up
@@ -311,14 +309,14 @@ public class DataLoader implements Runnable {
 			}
 		}
 		
-		LocalLogger.logToStdOutNoEOL("..." + recordsProcessed);
+		LocalLogger.logToStdOut("..." + recordsProcessed, false, false);
 		
 		// join all remaining threads
 		for(int i = 0; i < wrkrs.size(); i++){
 			this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
 		}
 		
-		LocalLogger.logToStdOut(" (DONE)");
+		LocalLogger.logToStdOut(" (DONE)", false, true);
 		
 		// tell status client if there is one set up
 		if (this.sClient != null) {

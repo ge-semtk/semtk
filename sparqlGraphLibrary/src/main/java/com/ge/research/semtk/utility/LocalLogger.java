@@ -20,14 +20,36 @@ public class LocalLogger {
 
 	/**
 	 * Log to standard out.
-	 * @throws Exception 
 	 */
 	public static void logToStdOut(String s) {
-		System.out.println(getTimestampPrefix() + s);
+		logToStdOut(s, true, true);
 	}
 	
+	/**
+	 * Log to standard out.
+	 * Deprecated because replaced with more flexible method below.
+	 */
+	@Deprecated
 	public static void logToStdOutNoEOL(String s) {
 		System.out.print(s);
+	}
+	
+	/**
+	 * Log to standard out.
+	 * @param s					the string to log
+	 * @param printTimestamp 	true to print the timestamp
+	 * @param printEOL			true to print EOL
+	 */
+	public static void logToStdOut(String s, boolean printTimestamp, boolean printEOL){
+		if(printTimestamp && printEOL){
+			System.out.println(getTimestampPrefix() + s);
+		}else if(printTimestamp && !printEOL){
+			System.out.print(getTimestampPrefix() + s);
+		}else if(!printTimestamp && printEOL){
+			System.out.println(s);
+		}else{
+			System.out.print(s);
+		}
 	}
 	
 	/**
