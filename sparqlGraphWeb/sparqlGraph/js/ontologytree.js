@@ -390,6 +390,14 @@ OntologyTree.prototype = {
 		return ret;
 	},
 
+    selectNodesByURI : function(uri, flag) {
+        this.tree.getRoot().visit(function(node){
+			if (node.data.value == uri) {
+				node.select(flag);
+			}
+		});
+    },
+
     getSelectedClassNames : function() {
         var selected = this.tree.getSelectedNodes();
         var ret = [];
@@ -414,6 +422,27 @@ OntologyTree.prototype = {
                 var name = this.nodeGetURI(node);
                 if (ret.indexOf(name) == -1) {
                     ret.push(name);
+                }
+            }
+        }
+		return ret;
+    },
+
+    // list of [[domainURI, propURI],  ]
+    //
+    getSelectedPropertyPairs : function() {
+        var selected = this.tree.getSelectedNodes();
+        var ret = [];
+        var repeatHash = {};
+        // add if selected and not found already
+        for (var node of selected) {
+            if (this.nodeIsProperty(node)) {
+                var propURI = this.nodeGetURI(node);
+                var domainURI = this.nodeGetURI(node.getParent());
+                var hash = domainURI + ":" + propURI;
+                if (! (hash in repeatHash)) {
+                    ret.push([domainURI, propURI]);
+                    repeatHash[hash] = 1;
                 }
             }
         }
@@ -478,6 +507,44 @@ OntologyTree.prototype = {
 			alert("Attempt to avoid dynatree/jquery error failed.  \n To recover, reload your data and expand/collapse the tree.");
 		}
 	},
+
+    // like find, but changes color instead of selecting
+    // sorry about the in-code formatting
+    search : function(pattern) {
+
+        // collapse everything
+		this.tree.enableUpdate(false);
+    	this.expandAll();
+    	this.collapseAll();
+    	this.tree.enableUpdate(true);
+    	// ---------------------------------------
+
+        var lowPattern = pattern.toLowerCase();
+        var tag0 = "<font color=green>";
+        var tag1 = "</font>";
+
+        mysearch=function(node) {
+            // remove tags if any
+            if (node.data.title.indexOf(tag0) == 0) {
+                node.data.title = node.data.title.slice(tag0.length, -tag1.length);
+                node.setTitle(node.data.title);
+            }
+            // if match
+            if (pattern.length > 0 && node.data.title.toLowerCase().indexOf(lowPattern) > -1) {
+                // add tags
+                node.data.title = tag0 + node.data.title + tag1;
+                node.setTitle(node.data.title);
+                // expand
+                for (p = node.getParent(); p != null; p = p.getParent()) {
+                    p.expand();
+                }
+            }
+        }
+
+		this.tree.getRoot().visit(mysearch);
+
+	},
+
     collapseAll : function() {
     	this.tree.getRoot().visit(function(node){node.expand(false);});
 	},

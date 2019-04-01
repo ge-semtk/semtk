@@ -233,6 +233,14 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.runAsyncNodegroupInstanceData("dispatchSelectInstanceData",
                                          conn, classValues, predicateValues, limitOverride, offsetOverride, countOnly, jobIdCallback, failureCallback);
             },
+            execAsyncDispatchSelectInstanceDataSubjects : function(conn, classValues, limitOverride, offsetOverride, countOnly, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupInstanceDataSubjects("dispatchSelectInstanceDataSubjects",
+                                         conn, classValues, limitOverride, offsetOverride, countOnly, jobIdCallback, failureCallback);
+            },
+            execAsyncDispatchSelectInstanceDataPredicates : function(conn, predicateList, limitOverride, offsetOverride, countOnly, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupInstanceDataPredicates("dispatchSelectInstanceDataPredicates",
+                                         conn, predicateList, limitOverride, offsetOverride, countOnly, jobIdCallback, failureCallback);
+            },
 
             execAsyncDispatchRawSparql : function(sparql, conn, jobIdCallback, failureCallback) {
                 this.runAsyncSparql("dispatchRawSparql",
@@ -339,6 +347,52 @@ define([	// properly require.config'ed   bootstrap-modal
                     data.countOnly = countOnly;
                 }
 
+
+				this.runAsync(endpoint, JSON.stringify(data), jobIdCallback, failureCallback);
+			},
+
+            runAsyncNodegroupInstanceDataSubjects : function (endpoint, conn, classValues, limit, offset, countOnly, jobIdCallback, failureCallback) {
+
+                var data = {}
+				data.conn = JSON.stringify(conn.toJson());
+
+                if (typeof classValues != "undefined" && classValues.length > 0) {
+                    data.classValues = classValues;
+                }
+                if (typeof limit != "undefined") {
+                    data.limitOverride = limit;
+                }
+                if (typeof offset != "undefined") {
+                    data.offsetOverride = offset;
+                }
+                if (typeof countOnly != "undefined") {
+                    data.countOnly = countOnly;
+                }
+
+				this.runAsync(endpoint, JSON.stringify(data), jobIdCallback, failureCallback);
+			},
+
+            runAsyncNodegroupInstanceDataPredicates : function (endpoint, conn, predicateList, limit, offset, countOnly, jobIdCallback, failureCallback) {
+
+                var data = {}
+				data.conn = JSON.stringify(conn.toJson());
+
+                if (typeof predicateList != "undefined" && predicateList.length > 0) {
+                    var sendPredList = [];
+                    for (var pair of predicateList) {
+                        sendPredList.push({domainURI: pair[0], predicateURI: pair[1]});
+                    }
+                    data.predicateList = sendPredList;
+                }
+                if (typeof limit != "undefined") {
+                    data.limitOverride = limit;
+                }
+                if (typeof offset != "undefined") {
+                    data.offsetOverride = offset;
+                }
+                if (typeof countOnly != "undefined") {
+                    data.countOnly = countOnly;
+                }
 
 				this.runAsync(endpoint, JSON.stringify(data), jobIdCallback, failureCallback);
 			},

@@ -429,6 +429,31 @@ define([	// properly require.config'ed
         span.innerHTML = text;
     };
 
+    // search callback takes elem param - so it can ask elem.value to get search pattern
+    IIDXHelper.createSearchForm = function (searchCallback, searchThis) {
+        var form = document.createElement("form");
+
+        form.classList.add("form-search");
+        form.style.marginBottom="1ch";
+
+        var div = document.createElement("div");
+        form.appendChild(div);
+        div.classList.add("input-append");
+
+        var input = document.createElement("input");
+        div.appendChild(input);
+        input.type="text";
+        input.classList.add("input-medium");
+        input.classList.add("search-query");
+        input.align="left";
+
+        var searchbut = IIDXHelper.createIconButton("icon-search", searchCallback.bind(searchThis, input), ["btn", "btn-icon"]);
+        div.appendChild(searchbut);
+        searchbut.type="submit";
+
+        return form;
+    }
+
     IIDXHelper.downloadFile = function (data, filename, mimetype) {
         // http://stackoverflow.com/questions/13405129/javascript-create-and-save-file
         // This handles bigger files than the OLD version

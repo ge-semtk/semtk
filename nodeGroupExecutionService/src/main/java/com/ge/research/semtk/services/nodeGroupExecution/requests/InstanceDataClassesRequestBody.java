@@ -15,7 +15,7 @@ import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class InstanceDataRequestBody extends SparqlConnectionLimitOffsetCountRequestBody {
+public class InstanceDataClassesRequestBody extends SparqlConnectionLimitOffsetCountRequestBody {
 	
 	
 	@ApiModelProperty(
@@ -24,19 +24,10 @@ public class InstanceDataRequestBody extends SparqlConnectionLimitOffsetCountReq
 			example = "[\"http:/namespace#class1\", \"http:/namespace#class2\"]")
 	private String [] classValues = new String[0];
 	
-	@ApiModelProperty(
-			value = "Predicate values",
-			required = false,
-			example = "[\"http:/namespace#predicate1\", \"http:/namespace#predicate2\"]")
-	private String [] predicateValues = new String[0];
 	
 
 	public ArrayList<String> getClassValues() {
 		return new ArrayList<String> ( Arrays.asList(this.classValues));
-	}
-	
-	public ArrayList<String> getPredicateValues() {
-		return new ArrayList<String> ( Arrays.asList(this.predicateValues));
 	}
 	
 }

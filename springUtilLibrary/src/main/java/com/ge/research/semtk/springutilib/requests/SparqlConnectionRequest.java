@@ -29,17 +29,6 @@ public class SparqlConnectionRequest {
 		example = "{\"name\": \"%NODEGROUP%\",\"domain\": \"%NODEGROUP%\",\"model\": [],\"data\": []}"
 	)	
 	private String conn;
-	
-	/**
-	 * Get just the nodegroup out of the json
-	 * @return
-	 * @throws Exception
-	 */
-	public SparqlConnection getSparqlConnection() throws Exception {
-		SparqlConnection ret = new SparqlConnection();
-		ret.fromString(this.conn);
-		return ret;
-	}
 
 	public String getConn() {
 		return conn;
@@ -47,6 +36,10 @@ public class SparqlConnectionRequest {
 
 	public void setConn(String conn) {
 		this.conn = conn;
+	}
+	
+	public SparqlConnection buildSparqlConnection() throws Exception {
+		return new SparqlConnection(this.conn);
 	}
 	
 }

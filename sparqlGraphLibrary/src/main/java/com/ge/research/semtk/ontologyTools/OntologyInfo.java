@@ -441,6 +441,22 @@ public class OntologyInfo {
 	}
 	
 	/**
+	 * Get all pairs of DomainURI, PropURI
+	 * @return
+	 */
+	public ArrayList<String[]> getPropertyPairs() {
+		ArrayList<String[]> ret = new ArrayList<String[]>();
+		
+		for (String cName : this.getClassNames()) {
+			OntologyClass oClass = this.getClass(cName);
+			for (OntologyProperty oProp : this.getInheritedProperties(oClass)) {
+				ret.add(new String[] {cName, oProp.getNameStr()});
+			}
+		}
+		return ret;
+	}
+	
+	/**
 	 * return the complete list of single-hop connections between the given class and all
 	 * of the other known classes.
 	 **/
