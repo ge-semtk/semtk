@@ -90,7 +90,7 @@ public class RuntimeConstraintMetaData{
 		}
 		
 		else{
-			throw new Exception("RuntimConstrainedItems.selectAndSetConstraint :: Operation " + operation.name() + " has no mapped operations.");
+			throw new Exception("RuntimeConstrainedItems.selectAndSetConstraint :: Operation " + operation.name() + " has no mapped operations.");
 		}
 				
 	}
@@ -125,7 +125,6 @@ public class RuntimeConstraintMetaData{
 	private void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
 		String constraintStr = ValueConstraint.buildValuesConstraint(sparqlId, inputs, getType(sparqlId));
-		LocalLogger.logToStdOut("======= setMatchesConstraint for " + sparqlId + " to " + constraintStr);
 		this.setValueConstraint(constraintStr);
 	}
 	
