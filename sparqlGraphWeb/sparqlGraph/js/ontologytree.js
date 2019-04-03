@@ -114,6 +114,36 @@ OntologyTree.prototype = {
         }.bind(this, val))
     },
 
+    activateByPropertyPair : function (pair) {
+        var domainURI = pair[0];
+        var propURI = pair[1];
+        this.tree.getRoot().visit(function(dURI, pURI, node) {
+            if (node.data.value == pURI) {
+                if (node.getParent() && node.getParent().data.value == dURI) {
+                    node.activate();
+                }
+            }
+        }.bind(this, domainURI, propURI));
+    },
+
+    getPropertyPair : function (node) {
+        if (this.nodeIsClass(node)) {
+            return [node.data.value];
+        } else {
+            return [node.getParent().data.value, node.data.value];
+        }
+    },
+
+    getPropertyPairsFamily : function (node) {
+        var ret = [this.getPropertyPair(node)];
+
+        node.visit(function(ret, child){
+			ret.push(this.getPropertyPair(child));
+		}.bind(this, ret));
+
+        return ret;
+    },
+
 	setOInfo : function (ontInfo) {
 		// associate an OntologyInfo
 		this.oInfo = ontInfo;
@@ -390,12 +420,41 @@ OntologyTree.prototype = {
 		return ret;
 	},
 
+    selectAll : function(flag) {
+        this.tree.getRoot().visit(function(node){
+            node.select(flag);
+        });
+    },
+
+    setAllSelectable : function(flag) {
+        this.tree.getRoot().visit(function(node){
+            node.data.unselectable = !flag;
+        });
+    },
+
     selectNodesByURI : function(uri, flag) {
         this.tree.getRoot().visit(function(node){
 			if (node.data.value == uri) {
 				node.select(flag);
 			}
 		});
+    },
+
+    selectIdenticalNodes : function (node, flag) {
+        var nodeURI = node.data.value;
+        var parentURI = node.getParent() ? node.getParent().data.value : "";
+
+        this.tree.getRoot().visit(function(n){
+			if (n.data.value == nodeURI) {
+                if (this.nodeIsClass(n)) {
+                    // classes match automatically
+				    n.select(flag);
+                } else if (this.nodeIsProperty(n) && n.getParent().data.value == parentURI) {
+                    // properties must share parent
+                    n.select(flag);
+                }
+			}
+		}.bind(this));
     },
 
     getSelectedClassNames : function() {

@@ -292,6 +292,7 @@ public class SparqlToXUtils {
 	}
 	
 	public static boolean isLegalURI(String uri) {
+		if (uri == null) return false;
 		
 		// special case: virtuoso silently chokes on these
 		Matcher m = SparqlToXUtils.PATTERN_BAD_FIRST_CHAR.matcher(uri);
@@ -503,6 +504,9 @@ public class SparqlToXUtils {
 	public static String generateSelectInstanceDataPredicates(SparqlConnection conn, OntologyInfo oInfo, ArrayList<String[]> predicatePairs, int limitOverride, int offsetOverride, boolean countQuery) throws Exception {
 		StringBuilder sparql = new StringBuilder();
 		
+		if (predicatePairs.size() == 0) {
+			throw new Exception("[domainURI predicateURI] predicate pairs list is empty");
+		}
 		// Start the query
 		if (countQuery) {
 			sparql.append("SELECT (COUNT(*) as ?count) \n");
@@ -525,7 +529,7 @@ public class SparqlToXUtils {
 		for (int i=0; i < predicatePairs.size(); i++) {
 			sparql.append("	?s <" + predicatePairs.get(i)[1] + "> ?o." + "\n");
 			sparql.append("	?s ?p ?o." + "\n");
-			sparql.append("	?s a <" + predicatePairs.get(i)[0] + ">." +  "\n");
+			sparql.append("	BIND ( <" + predicatePairs.get(i)[0] + "> as ?s_class) ." +  "\n");
 			sparql.append("	?s a ?s_class. " + "\n");  // optional class names
 			sparql.append("	optional { ?o a ?o_class. }" + "\n");
 			
@@ -574,7 +578,11 @@ public class SparqlToXUtils {
 		
 		String sClassValuesClause;
 		
-		sClassValuesClause =  ValueConstraint.buildValuesConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) + " . ";
+		if (classValues.size() == 0) {
+			throw new Exception("class values list is empty");
+		}
+		
+		sClassValuesClause =  ValueConstraint.buildValuesConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) ;
 
 		// Start the query
 		if (countQuery) {
@@ -590,7 +598,7 @@ public class SparqlToXUtils {
 		}
 		
 		sparql.append("WHERE {" + "\n");
-		sparql.append("	" + sClassValuesClause + "\n");
+		sparql.append("	" + sClassValuesClause + ". \n");
 		sparql.append("	?s a ?s_class." + "\n");
 			
 		// finsh it up

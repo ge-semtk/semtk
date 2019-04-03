@@ -17,6 +17,10 @@ import io.swagger.annotations.ApiModelProperty;
 
 public class InstanceDataPredicatesRequestBody extends SparqlConnectionLimitOffsetCountRequestBody {
 	
+	@ApiModelProperty(
+			value = "list of domainURI, predicateURI pairs",
+			required = true,
+			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
 	private ArrayList<InstanceDataPredicate> predicateList;
 
 	public ArrayList<InstanceDataPredicate> getPredicateList() {

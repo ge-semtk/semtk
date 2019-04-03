@@ -96,8 +96,8 @@ define([	// properly require.config'ed
             this.oTree = null;
             this.network = null;
 
-            this.largeLayoutFlag = false;
-            this.largeLayoutParams={};
+            this.busyFlag = false;
+            this.ignoreSelectFlag = false;
 
             this.cancelFlag = false;
 
@@ -158,6 +158,7 @@ define([	// properly require.config'ed
                     persist: true,
                     selectMode: 2,    // 1 single, 2 multi, 3 multi hierarchical
                     checkbox: true,
+
                 });
 
                 this.oTree = new OntologyTree($(treeSelector).dynatree("getTree"));
@@ -165,36 +166,29 @@ define([	// properly require.config'ed
             },
 
             selectedNodeCallback : function (flag, node) {
-                this.oTree.selectNodesByURI(this.oTree.nodeGetURI(node), flag);
+                this.oTree.selectIdenticalNodes(node, flag);
+
+                if (this.ignoreSelectFlag) return;
+
+                if (this.getMode() != "Instance Data") return;
+
+                var workList = [];
+
+                if (this.oTree.tree.options.selectMode == 3) {
+                    workList = this.oTree.getPropertyPairsFamily(node);
+                } else {
+                    workList.push(this.oTree.getPropertyPair(node));
+                }
+
+                if (flag) {
+                    this.addInstanceData(workList);
+                } else {
+                    this.deleteInstanceData(workList);
+                }
             },
 
             initCanvas : function() {
-                // create an array with nodes
-                var options = {
-                    configure: {
-                        enabled: true,
-                        container: this.configdiv,
-                        filter: "layout physics",
-                        showButton: true
-                    },
-                    groups: {
-                        useDefaultGroups: true,
-                        data: {color:{background:'white'}, shape: 'box'}
-                    },
-                    interaction: {
-                        multiselect: true,
-                    },
-                    manipulation: {
-                        initiallyActive: false,
-                        addNode: false,
-                        addEdge: false,
-                        editNode: false,
-                        editEdge: false,
-                        deleteNode: true,
-                        deleteEdge: true,
-                    }
-                };
-                this.network = new vis.Network(this.canvasdiv, {}, options);
+                this.clearNetwork();
             },
 
             // little div sitting on top of the otree
@@ -214,14 +208,21 @@ define([	// properly require.config'ed
                 formhoriz1.appendChild(IIDXHelper.createNbspText());
                 formhoriz1.appendChild(IIDXHelper.createButton("Collapse", this.doCollapse.bind(this)));
 
+                var formhoriz2 = IIDXHelper.buildHorizontalForm(true);
+                div.appendChild(formhoriz2);
 
-                var select = IIDXHelper.createSelect("etTreeSelect", [["multi",2], ["heirarchy",3]], ["multi"], false, "input-small");
+                var select = IIDXHelper.createSelect("etTreeSelect", [["single",2], ["sub-tree",3]], ["multi"], false, "input-small");
                 select.onchange = function() {
                     this.oTree.tree.options.selectMode = parseInt(document.getElementById("etTreeSelect").value);
                 }.bind(this);
 
-                formhoriz1.appendChild(document.createTextNode(" select mode:"));
-                formhoriz1.appendChild(select);
+                formhoriz2.appendChild(document.createTextNode(" select mode:"));
+                formhoriz2.appendChild(select);
+
+                formhoriz2.appendChild(IIDXHelper.createNbspText());
+                formhoriz2.appendChild(IIDXHelper.createButton("Select all", this.treeSelectAll.bind(this, true)));
+                formhoriz2.appendChild(IIDXHelper.createNbspText());
+                formhoriz2.appendChild(IIDXHelper.createButton("Clear all", this.treeSelectAll.bind(this, false)));
 
                 var hr = document.createElement("hr");
                 hr.style.marginTop="4px";
@@ -262,10 +263,6 @@ define([	// properly require.config'ed
                 td1.appendChild(IIDXHelper.createNbspText());
                 td1.appendChild(IIDXHelper.createButton("redraw", this.drawCanvas.bind(this)));
 
-                // add button
-                td1.appendChild(IIDXHelper.createNbspText());
-                td1.appendChild(IIDXHelper.createButton("add", this.addInstanceData.bind(this)));
-
                 // cell 2/3
                 var td2 = document.createElement("td");
                 tr.appendChild(td2);
@@ -293,6 +290,13 @@ define([	// properly require.config'ed
                 td3.appendChild(IIDXHelper.createNbspText());
                 td3.appendChild(but2);
 
+            },
+
+            treeSelectAll : function(flag) {
+                this.ignoreSelectFlag = true;
+                this.oTree.selectAll(flag);
+                this.ignoreSelectFlag = false;
+                this.drawCanvas();
             },
 
             // get the etSelect value "Ontology", or "Instance Data"
@@ -357,7 +361,9 @@ define([	// properly require.config'ed
                     this.drawOntology();
                 } else {
                     this.clearNetwork();
-                    this.addInstanceData();
+                    var workList = this.oTree.getSelectedPropertyPairs()
+                                        .concat(this.oTree.getSelectedClassNames());
+                    this.addInstanceData(workList);
                 }
             },
 
@@ -451,8 +457,12 @@ define([	// properly require.config'ed
                         return "";
                     }
                 };
-                var nodetitle = function (uri, classname) {
-                    return "<strong>" + local(classname) + "</strong><br>" + local(uri);
+                var nodetitle = function (uri, classnames) {
+                    var classList = classnames.split(',');
+                    for (var i=0; i < classList.length; i++) {
+                        classList[i] = local(classList[i]);
+                    }
+                    return "<strong>" + classList.toString() + "</strong><br>" + local(uri);
                 };
 
 
@@ -470,6 +480,7 @@ define([	// properly require.config'ed
                 var o = 3;
                 var o_class = 4;
                 var nodeList = [];
+                var nodeHash = {};
                 var edgeList = [];
 
                 console.log("Adding to nodeJs START");
@@ -478,7 +489,25 @@ define([	// properly require.config'ed
                     var s = rows[i][0];
                     var s_class = (rows[i][1] == "") ? "data" : rows[i][1];
 
+                    // --- handle multiple classes ---
+                    var classList = [];
+                    var existsNode =  this.network.body.data.nodes.get(s);
+                    if (existsNode) {
+                        classList = classList.concat(existsNode.group.split(","));
+                    }
+                    if (s in nodeHash) {
+                        classList = classList.concat(nodeHash[s].split(","));
+                    }
+                    // got list of existing classes.
+                    // if non-empty: uniquify, sort, stringify
+                    if (classList.length > 0) {
+                        var classSet = new Set(classList);
+                        classSet.add(s_class);
+                        s_class = Array.from(classSet).sort().toString();
+                    }
+
                     nodeList.push({id: s, label: nodelabel(s, s_class), title: nodetitle(s, s_class), group: s_class});
+                    nodeHash[s] = s_class;
 
                     // if this row also has predicate and object
                     if (rows[i].length > 2) {
@@ -489,7 +518,7 @@ define([	// properly require.config'ed
                         nodeList.push({id: o, label: nodelabel(o, o_class), title: nodetitle(o, o_class), group: o_class});
 
                         // add the predicate
-                        var p_id = s + "_" + p + "_" + o;
+                        var p_id = s + "," + p + "," + o;
                         if (this.network.body.data.edges.get(p_id) == null) {
                             edgeList.push({  id: p_id, from: s, to: o, label: local(p),
                                                                 arrows: 'to',
@@ -505,39 +534,127 @@ define([	// properly require.config'ed
 
             },
 
+            // delete worklist items from the Network
+            //
+            deleteInstanceData(workList) {
+                var vNodesLostEdgesList = new Set();
+
+                // first pass: remove edges
+                for (var w of workList) {
+                    if (Array.isArray(w)) {
+                        // delete edges
+                        var domainUri = w[0];
+                        var predicateUri = w[1];
+                        var vEdgeList = this.network.body.data.edges.get();
+                        // for all edges
+                        for (vEdge of vEdgeList) {
+                            // for all potential matches
+                            if (vEdge.id.indexOf(predicateUri > -1)) {
+                                var spo = vEdge.id.split(',');
+                                // if predicate matches
+                                if (spo[1] == predicateUri) {
+                                    // if fromNode is a member of domainUri
+                                    var fromNode = this.network.body.data.nodes.get(spo[0]);
+                                    if (fromNode.group.split(",").indexOf(domainUri) > -1) {
+                                        vNodesLostEdgesList.add(vEdge.from);
+                                        vNodesLostEdgesList.add(vEdge.to);
+                                        this.network.body.data.edges.remove(vEdge.id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // count edges for each node
+                var edgeCountHash = {};
+                for (var vEdge of this.network.body.data.edges.get()) {
+                    edgeCountHash[vEdge.from] = (edgeCountHash[vEdge.from] ? edgeCountHash[vEdge.from] : 0) + 1;
+                    edgeCountHash[vEdge.to] = (edgeCountHash[vEdge.to] ? edgeCountHash[vEdge.to] : 0) + 1;
+                }
+
+                // second pass: remove nodes (must also have no edges)
+                for (var w of workList){
+                    // delete nodes
+                    var classUri = w;
+                    var vNodeList = this.network.body.data.nodes.get();
+                    for (var vNode of vNodeList) {
+                        if (vNode.group == classUri) {
+                            // simple single-class exact match if no edges remain
+                            if (!(vNode.id in edgeCountHash)) {
+                                this.network.body.data.nodes.remove(vNode.id);
+                            }
+                        } else if (vNode.group.indexOf(classUri) > -1) {
+                            // remove class from multi-class nodes
+                            vNode.group = vNode.group.split(",").filter(function(uri, x) {return x != uri;}.bind(this, classUri)).toString();
+                            this.network.body.data.nodes.update(vNode);
+                        }
+                    }
+                }
+
+                // third pass: remove orphan nodes
+                var selectedClasses = this.oTree.getSelectedClassNames();
+                for (var vNodeId of vNodesLostEdgesList) {
+                    var vNode = this.network.body.data.nodes.get(vNodeId);
+                    // remove iff still exists, only one class, class is not selected in oTree, no edges
+                    if (vNode && vNode.group.split(",").length == 1 && !(vNode.id in edgeCountHash) && selectedClasses.indexOf(vNode.group) == -1) {
+                        this.network.body.data.nodes.remove(vNode.id);
+                    }
+                }
+            },
+
+            busy : function (flag) {
+                this.oTree.setAllSelectable(!flag);
+            },
+
             clearNetwork : function() {
-                this.network.body.data.nodes.clear();
-                this.network.body.data.edges.clear();
+                this.configdiv.innerHTML = "";
+                // create an array with nodes
+                var options = {
+                    configure: {
+                        enabled: true,
+                        container: this.configdiv,
+                        filter: "layout physics",
+                        showButton: true
+                    },
+                    groups: {
+                        useDefaultGroups: true,
+                        data: {color:{background:'white'}, shape: 'box'}
+                    },
+                    interaction: {
+                        multiselect: true,
+                    },
+                    manipulation: {
+                        initiallyActive: false,
+                        addNode: false,
+                        addEdge: false,
+                        editNode: false,
+                        editEdge: false,
+                        deleteNode: true,
+                        deleteEdge: true,
+                    }
+                };
+                this.network = new vis.Network(this.canvasdiv, {}, options);
             },
 
             // query and add instance data based on the ontologyTree
-            addInstanceData : function () {
+            // worklist: list of class uris and/or property pairs
+            addInstanceData : function (workList) {
                 var LIMIT = 1000;
                 var OFFSET = 0;
                 var CALL_NOW = 0;
 
-                this.cancelFlag = false;
-
                 this.updateInfo();
 
-                this.network.setOptions({
-                    layout: {
-                        hierarchical: false,
-                    },
-                    physics: {
-                        enabled: true,
-                        solver: "barnesHut",
-                    }
-                });
-
-                // get list with items either class name or [domain, prop]
-                var workList = this.oTree.getSelectedPropertyPairs()
-                                    .concat(this.oTree.getSelectedClassNames());
-
-                if (workList.length == 0) {
-                    workList = this.oInfo.getPropertyPairs()
-                                        .concat(this.oInfo.getClassNames());
+                if (!workList || workList.length == 0) {
+                    return;
                 }
+
+                this.cancelFlag = false;
+                this.busy(true);
+
+
+
                 var workIndex = 0;
 
                 var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
@@ -546,6 +663,7 @@ define([	// properly require.config'ed
                     ModalIidx.alert("Instance data property retrieval", messageHTML);
                     IIDXHelper.progressBarRemove(this.progressDiv);
                     this.cancelFlag = true;
+                    this.busy(false);
                 }.bind(this);
 
                 var checkForCancelCallback = function() {
@@ -580,9 +698,11 @@ define([	// properly require.config'ed
                         CALL_NOW = performance.now();
 
                         if (Array.isArray(workList[workIndex])) {
-                            client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, 0, false, asyncCallback0, failureCallback.bind(this));
+                            this.oTree.activateByPropertyPair(workList[workIndex]);
+                            client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback0, failureCallback.bind(this));
                         } else {
-                            client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex]], LIMIT, 0, false, asyncCallback0, failureCallback.bind(this));
+                            this.oTree.activateByValue(workList[workIndex]);
+                            client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback0, failureCallback.bind(this));
                         }
 
                     } else {
@@ -590,6 +710,8 @@ define([	// properly require.config'ed
                         // handle predicates
                         IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
                         setTimeout(IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv), 1000);
+                        this.busy(false);
+                        this.cancelFlag = false;
                     }
                 };
 
@@ -606,123 +728,15 @@ define([	// properly require.config'ed
                 CALL_NOW = performance.now();
 
                 if (Array.isArray(workList[workIndex])) {
-                    client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, 0, false, asyncCallback, failureCallback.bind(this));
+                    this.oTree.activateByPropertyPair(workList[workIndex]);
+                    client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback, failureCallback.bind(this));
                 } else {
-                    client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex]], LIMIT, 0, false, asyncCallback, failureCallback.bind(this));
+                    this.oTree.activateByValue(workList[workIndex]);
+                    client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback, failureCallback.bind(this));
                 }
-
-
-            },
-            // query and add instance data based on the ontologyTree
-            addInstanceDataPREVIOUS : function () {
-                var LIMIT = 1000;
-                var CALL_NOW = 0;
-
-                this.cancelFlag = false;
 
                 this.updateInfo();
 
-                var selectedClassNames = this.oTree.getSelectedClassNames();
-                var selectedPredicateNames = this.oTree.getSelectedPropertyNames();
-
-                this.network.setOptions({
-                    layout: {
-                        hierarchical: false,
-                    },
-                    physics: {
-                        enabled: false,
-                    }
-                });
-
-                var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
-
-                var failureCallback = function(messageHTML) {
-                    ModalIidx.alert("Instance data retrieval", messageHTML);
-                    IIDXHelper.progressBarRemove(this.progressDiv);
-                    this.cancelFlag = true;
-                };
-
-                var checkForCancelCallback = function() {
-                    return this.cancelFlag;
-                };
-
-                var instanceDataCallback = function(total, offset, tableRes) {
-                    var elapsed = performance.now() - CALL_NOW;
-                    console.log("query: " + elapsed);
-                    if (total < 0) {
-                        // first call: grab the count
-                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                        IIDXHelper.progressBarRemove(this.progressDiv);
-                        total = tableRes.getRsData(0,0);
-
-                        // pick some almost arbitrary warning colors for large queries
-                        var classStr = "progress-striped active";
-                        if (total < 10000) {
-                            classStr += "progress progress-success progress-striped active";
-                        } else if (total < 15000){
-                            classStr += "progress progress-warning progress-striped active";
-                        } else {
-                            classStr += "progress progress-danger progress-striped active";
-                        }
-                        IIDXHelper.progressBarCreate(this.progressDiv, classStr);
-                        IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "Querying instance data");
-
-                    } else {
-                        // other calls: add data
-                        this.addToNetwork(tableRes);
-                        offset += tableRes.getRowCount();
-                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100 * offset / total, "Querying instance data");
-                    }
-                    elapsed = performance.now() - CALL_NOW;
-                    console.log("query & work: " + elapsed);
-
-                    // decide whether to make more queries
-                    if (offset < total && ! this.cancelFlag) {
-                        var asyncCallback1 = MsiClientNodeGroupExec.buildFullJsonCallback(
-                                                                                             instanceDataCallback.bind(this, total, offset),
-                                                                                             failureCallback.bind(this),
-                                                                                             function(){},
-                                                                                             checkForCancelCallback.bind(this),
-                                                                                             g.service.status.url,
-                                                                                             g.service.results.url);
-
-
-                        CALL_NOW = performance.now();
-                        client.execAsyncDispatchSelectInstanceData(this.conn, selectedClassNames, selectedPredicateNames, LIMIT, offset, false,
-                                                                    asyncCallback1,
-                                                                    failureCallback.bind(this));
-                    } else {
-                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                        setTimeout(IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv), 1000);
-                    }
-
-                };
-
-                var countStatusCallback = function(percent) {
-                    IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Counting instance data");
-                };
-
-                var asyncCallback = MsiClientNodeGroupExec.buildFullJsonCallback(
-                                                                                     instanceDataCallback.bind(this, -1, 0),
-                                                                                     failureCallback.bind(this),
-                                                                                     countStatusCallback.bind(this),
-                                                                                     checkForCancelCallback.bind(this),
-                                                                                     g.service.status.url,
-                                                                                     g.service.results.url);
-
-                IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active");
-                countStatusCallback.bind(this)(0);
-                CALL_NOW = performance.now();
-                client.execAsyncDispatchSelectInstanceData(this.conn, selectedClassNames, selectedPredicateNames, -1, -1, true, asyncCallback, failureCallback.bind(this));
-
-                // TODO: this currently resets with every new queryText
-                //       should somehow save user's preferences
-                this.network.setOptions({
-                    physics: {
-                        enabled: true,
-                        solver: "barnesHut",
-                    },
-                });
             },
 
             updateInfo : function () {
