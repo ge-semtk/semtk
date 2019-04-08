@@ -537,70 +537,127 @@ define([	// properly require.config'ed
             // delete worklist items from the Network
             //
             deleteInstanceData(workList) {
-                var vNodesLostEdgesList = new Set();
 
+
+                this.updateInfo();
+                this.stopLayout();
+
+                if (!workList || workList.length == 0) {
+                    return;
+                }
+
+                IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active");
+                IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "");
+                this.busy(true);
+
+                var vNodesLostEdgesList = [];
+                var vEdgesToDelete = [];
+
+                var START = performance.now();
+                var i = 0;
                 // first pass: remove edges
                 for (var w of workList) {
-                    if (Array.isArray(w)) {
+                    var vEdgeList = this.network.body.data.edges.get();
+                    if (w.length == 2) {
                         // delete edges
                         var domainUri = w[0];
                         var predicateUri = w[1];
-                        var vEdgeList = this.network.body.data.edges.get();
                         // for all edges
                         for (vEdge of vEdgeList) {
+
+                            if (++i % 100 == 1) {
+                                var percent = 0 + 40 * i++ / (workList.length * vEdgeList.length);
+
+                                console.log("first pass " + percent + "%");
+                                IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Removing_edges");
+                            }
+
                             // for all potential matches
-                            if (vEdge.id.indexOf(predicateUri > -1)) {
-                                var spo = vEdge.id.split(',');
-                                // if predicate matches
-                                if (spo[1] == predicateUri) {
-                                    // if fromNode is a member of domainUri
-                                    var fromNode = this.network.body.data.nodes.get(spo[0]);
-                                    if (fromNode.group.split(",").indexOf(domainUri) > -1) {
-                                        vNodesLostEdgesList.add(vEdge.from);
-                                        vNodesLostEdgesList.add(vEdge.to);
-                                        this.network.body.data.edges.remove(vEdge.id);
-                                    }
+
+                            var spo = vEdge.id.split(',');
+                            // if predicate matches
+                            if (spo[1] == predicateUri) {
+                                // if fromNode is a member of domainUri
+                                var fromNode = this.network.body.data.nodes.get(spo[0]);
+                                if (fromNode.group.split(",").indexOf(domainUri) > -1) {
+                                    vNodesLostEdgesList.push(vEdge.from);
+                                    vNodesLostEdgesList.push(vEdge.to);
+                                    vEdgesToDelete.push(vEdge);
                                 }
                             }
                         }
                     }
                 }
+                this.network.body.data.edges.remove(vEdgesToDelete);
+
+                console.log("1st pass time: " + (performance.now() - START));
+                START = performance.now();
 
                 // count edges for each node
                 var edgeCountHash = {};
                 for (var vEdge of this.network.body.data.edges.get()) {
+                    console.log("edge hash");
                     edgeCountHash[vEdge.from] = (edgeCountHash[vEdge.from] ? edgeCountHash[vEdge.from] : 0) + 1;
                     edgeCountHash[vEdge.to] = (edgeCountHash[vEdge.to] ? edgeCountHash[vEdge.to] : 0) + 1;
                 }
 
                 // second pass: remove nodes (must also have no edges)
+                i=0;
                 for (var w of workList){
+                    console.log("remove nodes");
                     // delete nodes
-                    var classUri = w;
-                    var vNodeList = this.network.body.data.nodes.get();
-                    for (var vNode of vNodeList) {
-                        if (vNode.group == classUri) {
-                            // simple single-class exact match if no edges remain
-                            if (!(vNode.id in edgeCountHash)) {
-                                this.network.body.data.nodes.remove(vNode.id);
+                    if (w.length == 1) {
+                        var classUri = w[0];
+                        var vNodeList = this.network.body.data.nodes.get();
+                        for (var vNode of vNodeList) {
+
+                            if (++i % 200 == 1) {
+                                var percent = 40 + 40 * i++ / (workList.length * vNodeList.length);
+                                IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Removing_nodes");
                             }
-                        } else if (vNode.group.indexOf(classUri) > -1) {
-                            // remove class from multi-class nodes
-                            vNode.group = vNode.group.split(",").filter(function(uri, x) {return x != uri;}.bind(this, classUri)).toString();
-                            this.network.body.data.nodes.update(vNode);
+
+                            if (vNode.group == classUri) {
+                                // simple single-class exact match if no edges remain
+                                if (!(vNode.id in edgeCountHash)) {
+                                    this.network.body.data.nodes.remove(vNode.id);
+                                }
+                            } else if (vNode.group.indexOf(classUri) > -1) {
+                                // remove class from multi-class nodes
+                                vNode.group = vNode.group.split(",").filter(function(uri, x) {return x != uri;}.bind(this, classUri)).toString();
+                                this.network.body.data.nodes.update(vNode);
+                            }
                         }
                     }
                 }
 
+                console.log("2nd pass time: " + (performance.now() - START));
+                START = performance.now();
+
+                var vNodesToRemove = [];
+                var vNodesLostEdgesSet = new Set(vNodesLostEdgesList);
                 // third pass: remove orphan nodes
                 var selectedClasses = this.oTree.getSelectedClassNames();
-                for (var vNodeId of vNodesLostEdgesList) {
+                i=0;
+                for (var vNodeId of vNodesLostEdgesSet) {
+                    if (++i % 200 == 1) {
+                        var percent = 80 + 20 * i / vNodesLostEdgesSet.size;
+                        console.log("third pass " + percent + "%");
+                        IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Removing_orphans");
+                    }
                     var vNode = this.network.body.data.nodes.get(vNodeId);
                     // remove iff still exists, only one class, class is not selected in oTree, no edges
                     if (vNode && vNode.group.split(",").length == 1 && !(vNode.id in edgeCountHash) && selectedClasses.indexOf(vNode.group) == -1) {
-                        this.network.body.data.nodes.remove(vNode.id);
+                        vNodesToRemove.push(vNode);
                     }
                 }
+                this.network.body.data.nodes.remove(vNodesToRemove);
+                console.log("3rd pass time: " + (performance.now() - START));
+
+                IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+                IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv);
+                this.busy(false);
+                this.updateInfo();
+                this.startLayout();
             },
 
             busy : function (flag) {
@@ -626,10 +683,6 @@ define([	// properly require.config'ed
                     },
                     manipulation: {
                         initiallyActive: false,
-                        addNode: false,
-                        addEdge: false,
-                        editNode: false,
-                        editEdge: false,
                         deleteNode: true,
                         deleteEdge: true,
                     }
@@ -697,19 +750,19 @@ define([	// properly require.config'ed
 
                         CALL_NOW = performance.now();
 
-                        if (Array.isArray(workList[workIndex])) {
+                        if (workList[workIndex].length == 2) {
                             this.oTree.activateByPropertyPair(workList[workIndex]);
                             client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback0, failureCallback.bind(this));
                         } else {
-                            this.oTree.activateByValue(workList[workIndex]);
-                            client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback0, failureCallback.bind(this));
+                            this.oTree.activateByValue(workList[workIndex][0]);
+                            client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex][0]], LIMIT, OFFSET, false, asyncCallback0, failureCallback.bind(this));
                         }
 
                     } else {
                         // done
                         // handle predicates
                         IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                        setTimeout(IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv), 1000);
+                        IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv);
                         this.busy(false);
                         this.cancelFlag = false;
                     }
@@ -727,12 +780,12 @@ define([	// properly require.config'ed
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "Querying instance data");
                 CALL_NOW = performance.now();
 
-                if (Array.isArray(workList[workIndex])) {
+                if (workList[workIndex].length == 2) {
                     this.oTree.activateByPropertyPair(workList[workIndex]);
                     client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback, failureCallback.bind(this));
                 } else {
-                    this.oTree.activateByValue(workList[workIndex]);
-                    client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback, failureCallback.bind(this));
+                    this.oTree.activateByValue(workList[workIndex][0]);
+                    client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex][0]], LIMIT, OFFSET, false, asyncCallback, failureCallback.bind(this));
                 }
 
                 this.updateInfo();

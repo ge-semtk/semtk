@@ -527,7 +527,7 @@ public class SparqlToXUtils {
 		}
 		
 		for (int i=0; i < predicatePairs.size(); i++) {
-			sparql.append("	?s <" + predicatePairs.get(i)[1] + "> ?o." + "\n");
+			sparql.append("	BIND ( <" + predicatePairs.get(i)[1] + "> as ?p) ." +  "\n");
 			sparql.append("	?s ?p ?o." + "\n");
 			sparql.append("	BIND ( <" + predicatePairs.get(i)[0] + "> as ?s_class) ." +  "\n");
 			sparql.append("	?s a ?s_class. " + "\n");  // optional class names

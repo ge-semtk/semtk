@@ -57,6 +57,7 @@ COPYDIRS=( "iidx-oss"
            "sparqlGraph/jquery"
            "sparqlGraph/js"
            "sparqlGraph/main-oss"
+           "vis-4.21.0"
          )
 cd "${SCRIPT_HOME}"
 
