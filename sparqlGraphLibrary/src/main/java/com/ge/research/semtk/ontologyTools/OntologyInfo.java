@@ -404,6 +404,19 @@ public class OntologyInfo {
 		return retval;
 	}
 	
+	public ArrayList<String> getRangeNames() {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (String k : this.propertyHash.keySet()) {
+			OntologyProperty oProp = this.propertyHash.get(k);
+			String range = oProp.getRangeStr();
+			if (!ret.contains(range)) {
+				ret.add(range);
+			}
+		}
+		return ret;
+	}
+	
 	/**
 	 * for a given class, return all of the known parent classes
 	 **/
@@ -425,6 +438,22 @@ public class OntologyInfo {
 		ArrayList<String> retval = new ArrayList<String>();
 		retval.addAll(this.propertyHash.keySet());
 		return retval;
+	}
+	
+	/**
+	 * Get all pairs of DomainURI, PropURI
+	 * @return
+	 */
+	public ArrayList<String[]> getPropertyPairs() {
+		ArrayList<String[]> ret = new ArrayList<String[]>();
+		
+		for (String cName : this.getClassNames()) {
+			OntologyClass oClass = this.getClass(cName);
+			for (OntologyProperty oProp : this.getInheritedProperties(oClass)) {
+				ret.add(new String[] {cName, oProp.getNameStr()});
+			}
+		}
+		return ret;
 	}
 	
 	/**

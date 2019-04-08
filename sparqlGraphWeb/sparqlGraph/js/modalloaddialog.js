@@ -627,6 +627,12 @@ define([	// properly require.config'ed
                 document.getElementById("mdDomain").disabled = true;    // deprecated, always disabled
                 document.getElementById("mdOwlImports").disabled = false;
 
+                var domain = this.conn.getDomain();
+                if (domain && domain.length > 0) {
+                    document.getElementById("mdDomainDiv").style.display="";
+                } else {
+                    document.getElementById("mdDomainDiv").style.display="none";
+                }
             } else {
                 this.conn = null;
                 document.getElementById("mdName").value = "";
@@ -635,14 +641,11 @@ define([	// properly require.config'ed
                 document.getElementById("mdName").disabled = true;
                 document.getElementById("mdDomain").disabled = true;
                 document.getElementById("mdOwlImports").disabled = true;
-            }
 
-            var domain = this.conn.getDomain();
-            if (domain && domain.length > 0) {
-                document.getElementById("mdDomainDiv").style.display="";
-            } else {
                 document.getElementById("mdDomainDiv").style.display="none";
             }
+
+
             this.displayProfileSei();
         },
 

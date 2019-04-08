@@ -114,6 +114,36 @@ OntologyTree.prototype = {
         }.bind(this, val))
     },
 
+    activateByPropertyPair : function (pair) {
+        var domainURI = pair[0];
+        var propURI = pair[1];
+        this.tree.getRoot().visit(function(dURI, pURI, node) {
+            if (node.data.value == pURI) {
+                if (node.getParent() && node.getParent().data.value == dURI) {
+                    node.activate();
+                }
+            }
+        }.bind(this, domainURI, propURI));
+    },
+
+    getPropertyPair : function (node) {
+        if (this.nodeIsClass(node)) {
+            return [node.data.value];
+        } else {
+            return [node.getParent().data.value, node.data.value];
+        }
+    },
+
+    getPropertyPairsFamily : function (node) {
+        var ret = [this.getPropertyPair(node)];
+
+        node.visit(function(ret, child){
+			ret.push(this.getPropertyPair(child));
+		}.bind(this, ret));
+
+        return ret;
+    },
+
 	setOInfo : function (ontInfo) {
 		// associate an OntologyInfo
 		this.oInfo = ontInfo;
@@ -390,6 +420,94 @@ OntologyTree.prototype = {
 		return ret;
 	},
 
+    selectAll : function(flag) {
+        this.tree.getRoot().visit(function(node){
+            node.select(flag);
+        });
+    },
+
+    setAllSelectable : function(flag) {
+        this.tree.getRoot().visit(function(node){
+            node.data.unselectable = !flag;
+        });
+    },
+
+    selectNodesByURI : function(uri, flag) {
+        this.tree.getRoot().visit(function(node){
+			if (node.data.value == uri) {
+				node.select(flag);
+			}
+		});
+    },
+
+    selectIdenticalNodes : function (node, flag) {
+        var nodeURI = node.data.value;
+        var parentURI = node.getParent() ? node.getParent().data.value : "";
+
+        this.tree.getRoot().visit(function(n){
+			if (n.data.value == nodeURI) {
+                if (this.nodeIsClass(n)) {
+                    // classes match automatically
+				    n.select(flag);
+                } else if (this.nodeIsProperty(n) && n.getParent().data.value == parentURI) {
+                    // properties must share parent
+                    n.select(flag);
+                }
+			}
+		}.bind(this));
+    },
+
+    getSelectedClassNames : function() {
+        var selected = this.tree.getSelectedNodes();
+        var ret = [];
+        // add if selected and not found already
+        for (var node of selected) {
+            if (this.nodeIsClass(node)) {
+                var name = this.nodeGetURI(node);
+                if (ret.indexOf(name) == -1) {
+                    ret.push(name);
+                }
+            }
+        }
+		return ret;
+    },
+
+    getSelectedPropertyNames : function() {
+        var selected = this.tree.getSelectedNodes();
+        var ret = [];
+        // add if selected and not found already
+        for (var node of selected) {
+            if (this.nodeIsProperty(node)) {
+                var name = this.nodeGetURI(node);
+                if (ret.indexOf(name) == -1) {
+                    ret.push(name);
+                }
+            }
+        }
+		return ret;
+    },
+
+    // list of [[domainURI, propURI],  ]
+    //
+    getSelectedPropertyPairs : function() {
+        var selected = this.tree.getSelectedNodes();
+        var ret = [];
+        var repeatHash = {};
+        // add if selected and not found already
+        for (var node of selected) {
+            if (this.nodeIsProperty(node)) {
+                var propURI = this.nodeGetURI(node);
+                var domainURI = this.nodeGetURI(node.getParent());
+                var hash = domainURI + ":" + propURI;
+                if (! (hash in repeatHash)) {
+                    ret.push([domainURI, propURI]);
+                    repeatHash[hash] = 1;
+                }
+            }
+        }
+		return ret;
+    },
+
     getNodesByURIAndParent: function(uri, parentUri) {
 		// uri can be a class or property
 		// find all tree nodes that match
@@ -448,6 +566,44 @@ OntologyTree.prototype = {
 			alert("Attempt to avoid dynatree/jquery error failed.  \n To recover, reload your data and expand/collapse the tree.");
 		}
 	},
+
+    // like find, but changes color instead of selecting
+    // sorry about the in-code formatting
+    search : function(pattern) {
+
+        // collapse everything
+		this.tree.enableUpdate(false);
+    	this.expandAll();
+    	this.collapseAll();
+    	this.tree.enableUpdate(true);
+    	// ---------------------------------------
+
+        var lowPattern = pattern.toLowerCase();
+        var tag0 = "<font color=green>";
+        var tag1 = "</font>";
+
+        mysearch=function(node) {
+            // remove tags if any
+            if (node.data.title.indexOf(tag0) == 0) {
+                node.data.title = node.data.title.slice(tag0.length, -tag1.length);
+                node.setTitle(node.data.title);
+            }
+            // if match
+            if (pattern.length > 0 && node.data.title.toLowerCase().indexOf(lowPattern) > -1) {
+                // add tags
+                node.data.title = tag0 + node.data.title + tag1;
+                node.setTitle(node.data.title);
+                // expand
+                for (p = node.getParent(); p != null; p = p.getParent()) {
+                    p.expand();
+                }
+            }
+        }
+
+		this.tree.getRoot().visit(mysearch);
+
+	},
+
     collapseAll : function() {
     	this.tree.getRoot().visit(function(node){node.expand(false);});
 	},

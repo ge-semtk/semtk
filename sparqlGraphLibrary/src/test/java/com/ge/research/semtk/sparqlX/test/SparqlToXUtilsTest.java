@@ -17,6 +17,7 @@
 
 package com.ge.research.semtk.sparqlX.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -24,8 +25,13 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 
@@ -80,5 +86,38 @@ public class SparqlToXUtilsTest {
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
 		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
 
+	}
+	
+	@Test
+	public void testGetInstanceData_IT() throws Exception {
+		TestGraph.clearGraph();
+		SparqlGraphJson sgJson = TestGraph.initGraphWithData("sampleBattery");
+		SparqlConnection conn = sgJson.getSparqlConn();
+		OntologyInfo oInfo = sgJson.getOntologyInfo(IntegrationTestUtility.getOntologyInfoClient());
+		
+		// run with no constraints on classes or predicates
+		String query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, new ArrayList<String>(), new ArrayList<String>(), -1, -1, false);
+		Table resTab = TestGraph.execTableSelect(query);
+		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 8, resTab.getNumRows());
+		
+		// constrain classes
+		ArrayList<String> classes = new ArrayList<String>();
+		classes.add("http://kdl.ge.com/batterydemo#Battery");
+		query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, classes, new ArrayList<String>(), -1, -1, false);
+		resTab = TestGraph.execTableSelect(query);
+		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 4, resTab.getNumRows());
+		
+		// constrain predicates
+		ArrayList<String> predicates = new ArrayList<String>();
+		predicates.add("http://kdl.ge.com/batterydemo#cell");
+		query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, new ArrayList<String>(), predicates, -1, -1, false);
+		resTab = TestGraph.execTableSelect(query);
+		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 4, resTab.getNumRows());
+		
+		// add limit and offset
+		query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, new ArrayList<String>(), predicates, 2, 2, false);
+		resTab = TestGraph.execTableSelect(query);
+		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 2, resTab.getNumRows());
+		
 	}
 }

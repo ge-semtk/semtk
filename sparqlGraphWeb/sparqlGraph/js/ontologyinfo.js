@@ -210,6 +210,22 @@ OntologyInfo.prototype = {
 		return Object.keys(this.classHash);
 	},
 
+    // get list of pairs [ [domainURI, propURI],   ]
+    getPropertyPairs : function() {
+        var classNameList = this.getClassNames();
+        var ret = [];
+        for (var cName of classNameList) {
+            var propList = this.getInheritedProperties(this.getClass(cName));
+            for (var prop of propList) {
+                ret.push([cName, prop.getNameStr()]);
+            }
+        }
+        return ret;
+    },
+
+    //
+    // Get direct parents (not recursive)
+    //
 	getClassParents : function (ontClass) {
         var ret = [];
 		var names = ontClass.getParentNameStrs();
@@ -219,8 +235,8 @@ OntologyInfo.prototype = {
 		return ret;
 	},
 
+    // Recursively find all sub-classes
 	getSubclassNames : function (classNameStr) {
-		// recursively find all subclasses
 		var ret = [];
 
 		// get list of subclasses (or undefined)

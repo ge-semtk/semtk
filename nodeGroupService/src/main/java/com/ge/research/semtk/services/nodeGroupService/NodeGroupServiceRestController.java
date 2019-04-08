@@ -640,7 +640,7 @@ public class NodeGroupServiceRestController {
 		try {
 			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
 			
-			OntologyInfo oInfo = retrieveOInfo(requestBody.getSparqlConnection());
+			OntologyInfo oInfo = retrieveOInfo(requestBody.buildSparqlConnection());
 			
 			NodeGroup ret = new NodeGroup();
 			Node newNode = ret.addNode(requestBody.getNodeUri(), oInfo);

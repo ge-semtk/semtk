@@ -19,6 +19,7 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.annotation.PostConstruct;
 
@@ -41,6 +42,8 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -51,6 +54,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -65,9 +69,13 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatch
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByConnIdCsvStrRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvStrRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByNodegroupCsvStrRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataClassesRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataPredicatesRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.NodegroupRequestBodyPercentMsec;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.StatusRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
@@ -99,6 +107,8 @@ public class NodeGroupExecutionRestController {
 	NodegroupExecutionLoggingProperties log_prop;
 	@Autowired 
 	private ApplicationContext appContext;
+	@Autowired
+	OInfoServiceProperties oinfo_props;
 	
 	@PostConstruct
     public void init() {
@@ -822,6 +832,170 @@ public class NodeGroupExecutionRestController {
 	}
 
 	@ApiOperation(
+			value=	"get instance data",
+			notes=	"returns job id.  Resulting table will have columns: ?s ?s_class ?p ?o ?o_class" + 
+			        "<br>Experimental and still confusing"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchSelectInstanceData", method=RequestMethod.POST)
+	public JSONObject dispatchSelectInstanceData(@RequestBody InstanceDataRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchSelectInstanceData";
+		HeadersManager.setHeaders(headers);	
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+		
+    	try {		    
+
+    		SimpleResultSet retval = new SimpleResultSet();
+
+    		try {
+    			SparqlConnection conn = new SparqlConnection(requestBody.getConn());
+    			OntologyInfo oInfo = retrieveOInfo(conn);
+    			String sparql = SparqlToXUtils.generateSelectInstanceData(	
+			    					conn, oInfo,
+			    					requestBody.getClassValues(),
+			    					requestBody.getPredicateValues(),
+			    					requestBody.getLimitOverride(),
+			    					requestBody.getOffsetOverride(),
+			    					requestBody.getCountOnly());
+
+    			// execute
+    			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );		
+    			ngExecutor.dispatchRawSparql(conn, sparql);
+    			String id = ngExecutor.getJobID();
+
+    			retval.setSuccess(true);
+    			retval.addResult(JOB_ID_RESULT_KEY, id);
+
+    		}
+    		catch(Exception e){
+    			LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+    			LocalLogger.printStackTrace(e);
+    			retval = new SimpleResultSet();
+    			retval.setSuccess(false);
+    			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+    		} 
+
+    		return retval.toJson();
+
+    	} finally {
+    		HeadersManager.clearHeaders();
+    	}
+	}
+    	
+	@ApiOperation(
+			value=	"get instance data predicates",
+			notes=	"returns job id.  Resulting table will have columns: ?s ?s_class ?p ?o ?o_class"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchSelectInstanceDataPredicates", method=RequestMethod.POST)
+	public JSONObject dispatchSelectInstanceDataPredicates(@RequestBody InstanceDataPredicatesRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchSelectInstanceDataPredicates";
+		HeadersManager.setHeaders(headers);	
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+
+		try {		    
+
+			SimpleResultSet retval = new SimpleResultSet();
+
+			try {
+    			SparqlConnection conn = new SparqlConnection(requestBody.getConn());
+    			OntologyInfo oInfo = retrieveOInfo(conn);
+    			ArrayList<String[]> pairsList = requestBody.buildPredicateListPairs();
+    			if (pairsList.size() == 0) {
+    				pairsList = oInfo.getPropertyPairs();
+    			}
+				String sparql = SparqlToXUtils.generateSelectInstanceDataPredicates(	
+						conn, 
+						oInfo,
+						pairsList,
+						requestBody.getLimitOverride(),
+						requestBody.getOffsetOverride(),
+						requestBody.getCountOnly());
+
+				// execute
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );		
+				ngExecutor.dispatchRawSparql(conn, sparql);
+				String id = ngExecutor.getJobID();
+
+				retval.setSuccess(true);
+				retval.addResult(JOB_ID_RESULT_KEY, id);
+
+			}
+			catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			} 
+
+			return retval.toJson();
+
+		} finally {
+			HeadersManager.clearHeaders();
+		}
+
+	}
+	
+	@ApiOperation(
+			value=	"get instance data subjects",
+			notes=	"returns job id.  Resulting table will have columns: ?s ?s_class " 
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchSelectInstanceDataSubjects", method=RequestMethod.POST)
+	public JSONObject dispatchSelectInstanceDataSubjects(@RequestBody InstanceDataClassesRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchSelectInstanceDataSubjects";
+		HeadersManager.setHeaders(headers);	
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+
+		try {		    
+
+			SimpleResultSet retval = new SimpleResultSet();
+
+			try {
+    			SparqlConnection conn = new SparqlConnection(requestBody.getConn());
+    			OntologyInfo oInfo = retrieveOInfo(conn);
+    			ArrayList<String> classList = requestBody.getClassValues();
+    			if (classList.size() == 0) {
+    				classList = oInfo.getClassNames();
+    			}
+				String sparql = SparqlToXUtils.generateSelectInstanceDataSubjects(	
+						conn, 
+						oInfo,
+						classList,
+						requestBody.getLimitOverride(),
+						requestBody.getOffsetOverride(),
+						requestBody.getCountOnly());
+
+				// execute
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );		
+				ngExecutor.dispatchRawSparql(conn, sparql);
+				String id = ngExecutor.getJobID();
+
+				retval.setSuccess(true);
+				retval.addResult(JOB_ID_RESULT_KEY, id);
+
+			}
+			catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+				LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			} 
+
+			return retval.toJson();
+
+		} finally {
+			HeadersManager.clearHeaders();
+		}
+
+	}
+
+	@ApiOperation(
 			value=	"DELETE query nodegroup id",
 			notes=	"result has 'JobId' field"
 			)
@@ -1209,6 +1383,17 @@ public class NodeGroupExecutionRestController {
 		return retval;
 	}		
 	
+	/**
+	 * Retrieve oInfo.
+	 * @param conn
+	 * @return
+	 * @throws Exception
+	 */
+	private OntologyInfo retrieveOInfo(SparqlConnection conn) throws Exception {
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		return oClient.getOntologyInfo(conn);
+		
+	}
 }
 
 

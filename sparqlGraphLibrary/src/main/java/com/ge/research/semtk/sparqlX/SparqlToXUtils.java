@@ -21,9 +21,14 @@ package com.ge.research.semtk.sparqlX;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.ge.research.semtk.belmont.NodeItem;
+import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.belmont.XSDSupportedType;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -287,6 +292,7 @@ public class SparqlToXUtils {
 	}
 	
 	public static boolean isLegalURI(String uri) {
+		if (uri == null) return false;
 		
 		// special case: virtuoso silently chokes on these
 		Matcher m = SparqlToXUtils.PATTERN_BAD_FIRST_CHAR.matcher(uri);
@@ -310,5 +316,309 @@ public class SparqlToXUtils {
 	 */
 	private static String generateWithDeleteWhereClause(SparqlEndpointInterface sei, String deletePhrase) {
 		return "WITH <" + sei.getGraph() + "> DELETE " + deletePhrase + " WHERE {";
+	}
+
+	/**
+	 * FROM or USING clause logic
+	 * Generates clauses if this.conn has
+	 *     - exactly 1 serverURL
+	 */		
+	public static String generateSparqlFromOrUsing(String tab, String fromOrUsing, SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		
+		// do nothing if no conn
+		if (conn == null) return "";
+		if (conn.isOwlImportsEnabled() && oInfo == null) {
+			throw new Exception("Internal error: Can't generate SPARQL for owlImport-enabled connection and no OntologyInfo.  Validate or inflate nodegroup first.");
+		}
+		
+		// multiple ServerURLs is not implemented
+		if (! conn.isSingleDataServerURL() ) {
+			throw new Error("SPARQL generation across multiple data servers is not yet supported.");
+		}
+		
+		// get graphs/datasets for first model server.  All others must be equal
+		ArrayList<String> datasets = conn.getAllDatasetsForServer(conn.getDataInterface(0).getServerAndPort());
+		
+		// add graphs from owlImports
+		if (oInfo != null) {
+			ArrayList<String> owlImports = oInfo.getImportedGraphs();
+			for (String g : owlImports) {
+				datasets.add(g);
+			}
+		}
+				
+		StringBuilder sparql = new StringBuilder().append("\n");
+		// No optimization: always "from" all datasets
+		tab = tabIndent(tab);
+		for (int i=0; i < datasets.size(); i++) {
+			sparql.append(tab + fromOrUsing + " <" + datasets.get(i) + ">\n");
+		}
+		tab = tabOutdent(tab);
+		
+		return sparql.toString();
+	}
+	
+	public static String tabIndent(String tab) {
+		return tab.concat("\t");
+	}
+	
+	public static String tabOutdent(String tab) {
+		return tab.substring(0, tab.length()-1);
+	}
+	
+	/**
+	 * Generate select instance
+	 * 
+	 * Return ?s ?s_class ?p ?o ?o_class
+	 * ?s_class is in classValues and ?p is in predicateValues
+	 * Confusing:
+	 *     classValues & predicateValues :  must match both
+	 *     classValues only              :  no predicates returned
+	 *     predicateValues only          :  subject and object values and classes returned 
+	 *     neither                       :  everything in oInfo
+	 * @param conn
+	 * @param oInfo
+	 * @param classValues
+	 * @param predicateValues
+	 * @param limitOverride
+	 * @param offsetOverride
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateSelectInstanceData(SparqlConnection conn, OntologyInfo oInfo, ArrayList<String> classValues, ArrayList<String> predicateValues, int limitOverride, int offsetOverride, boolean countQuery) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		
+		// Predicate Values clause
+		String predicateValuesClause = "";
+		String sClassValuesClause = "";
+		String oClassValuesClause = "";
+
+		final boolean VARISH_DEMO = false;
+		
+		if (!VARISH_DEMO && (predicateValues == null || predicateValues.size() == 0) && (classValues == null || classValues.size() == 0)) {
+			// caller sent nothing, use everything in oInfo
+			sClassValuesClause = ValueConstraint.buildValuesConstraint("?s_class", oInfo.getClassNames(), XSDSupportedType.NODE_URI);
+			oClassValuesClause = ValueConstraint.buildValuesConstraint("?o_class", oInfo.getClassNames(), XSDSupportedType.NODE_URI);
+			predicateValuesClause = ValueConstraint.buildValuesConstraint("?p", oInfo.getPropertyNames(), XSDSupportedType.NODE_URI);
+		} 
+
+		if (predicateValues != null && predicateValues.size() > 0) {
+			// caller sent in predicates, so use them
+			predicateValuesClause =  ValueConstraint.buildValuesConstraint("?p", predicateValues, XSDSupportedType.NODE_URI) + " . ";
+		} 
+
+		if (classValues != null && classValues.size() > 0) {
+			// caller sent in classes, so use them
+			sClassValuesClause =  ValueConstraint.buildValuesConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) + " . ";
+			oClassValuesClause = ValueConstraint.buildValuesConstraint("?o_class", classValues, XSDSupportedType.NODE_URI) + " . ";
+		}
+		
+		// Start the query
+		if (countQuery) {
+			sparql.append("SELECT (COUNT(*) as ?count) \n");
+			sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+			sparql.append("{ \n");
+		}
+		// select FROM WHERE
+		sparql.append("SELECT DISTINCT ?s ?s_class ?p ?o ?o_class \n");
+		
+		if (! countQuery) {
+			sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		}
+		sparql.append("WHERE {" + "\n");
+		
+		if ((predicateValues == null || predicateValues.size() == 0) && (classValues == null || classValues.size() == 0)) {
+			// if caller sent in nothing
+			sparql.append("{\n");
+			sparql.append("	" + predicateValuesClause + "\n");    // every triple matching predicate
+			sparql.append("	?s ?p ?o." + "\n");
+			sparql.append("	optional { ?s a ?s_class. }" + "\n");  // optional class names
+			sparql.append("	optional { ?o a ?o_class. }" + "\n");
+			sparql.append("} UNION {" + "\n");
+			sparql.append("	" + sClassValuesClause + "\n");        // any subject that isn't in a triple
+			sparql.append("	?s a ?s_class." + "\n");
+			if (!predicateValuesClause.equals("")) {
+				sparql.append("	MINUS { ?s ?p ?x. " + predicateValuesClause + "} \n");
+				sparql.append("	MINUS { ?s ?p ?s. " + predicateValuesClause + "} \n");
+			}
+			sparql.append("}\n");
+			
+		}
+		else if (!sClassValuesClause.equals("") && !predicateValuesClause.equals("")) {
+			// caller sent classes and predicates clauses
+			sparql.append("	" + predicateValuesClause + "\n");
+			sparql.append("	" + sClassValuesClause + "\n");   // any triple with subject and pred
+			sparql.append("	?s a ?s_class." + "\n");  
+			sparql.append("	?s ?p ?o." + "\n");
+			sparql.append("	optional { ?o a ?o_class.}" + "\n");
+
+			
+		} else if (!sClassValuesClause.equals("")) {
+			// if we have only class values
+			sparql.append("	?s a ?s_class." + "\n");
+			sparql.append("	" + sClassValuesClause + "\n");
+			
+			
+		} else if (!predicateValuesClause.equals("")) {
+			// if we have only predicates clause
+			sparql.append("	" + predicateValuesClause + ".\n");
+			sparql.append("	?s ?p ?o." + "\n");
+			sparql.append("	optional { ?s a ?s_class. }" + "\n");  // optional class names
+			sparql.append("	optional { ?o a ?o_class. }" + "\n");
+		}
+
+		
+		// finsh it up
+		
+		if (countQuery) {
+			sparql.append("}}\n");
+		} else {
+			sparql.append("} ORDER BY ?s, ?p, ?o " + "\n");
+		}
+		
+		// offset and limit
+		if (limitOverride != -1) {
+			sparql.append("LIMIT " + String.valueOf(limitOverride) + "\n");
+		}
+		if (offsetOverride != -1) {
+			sparql.append("OFFSET " + String.valueOf(offsetOverride) + "\n");
+		}
+		
+		return sparql.toString();
+	}
+	
+	
+	/**
+	 * Generate query to retrieve ?s ?s_class ?p ?o ?o_class 
+     * where the ?s_class ?p pair is in predicatePairs
+	 * @param conn
+	 * @param oInfo
+	 * @param predicatePairs
+	 * @param limitOverride
+	 * @param offsetOverride
+	 * @param countQuery
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateSelectInstanceDataPredicates(SparqlConnection conn, OntologyInfo oInfo, ArrayList<String[]> predicatePairs, int limitOverride, int offsetOverride, boolean countQuery) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		if (predicatePairs.size() == 0) {
+			throw new Exception("[domainURI predicateURI] predicate pairs list is empty");
+		}
+		// Start the query
+		if (countQuery) {
+			sparql.append("SELECT (COUNT(*) as ?count) \n");
+			sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+			sparql.append("{ \n");
+		}
+		// select FROM WHERE
+		sparql.append("SELECT DISTINCT ?s ?s_class ?p ?o ?o_class \n");
+		
+		if (! countQuery) {
+			sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		}
+		
+		sparql.append("WHERE {" + "\n");
+		
+		if (predicatePairs.size() > 1) {
+			sparql.append("{\n");
+		}
+		
+		for (int i=0; i < predicatePairs.size(); i++) {
+			sparql.append("	BIND ( <" + predicatePairs.get(i)[1] + "> as ?p) ." +  "\n");
+			sparql.append("	?s ?p ?o." + "\n");
+			sparql.append("	BIND ( <" + predicatePairs.get(i)[0] + "> as ?s_class) ." +  "\n");
+			sparql.append("	?s a ?s_class. " + "\n");  // optional class names
+			sparql.append("	optional { ?o a ?o_class. }" + "\n");
+			
+			if (i < predicatePairs.size() - 1) {
+				sparql.append("} UNION {\n");
+			} else if (i != 0) {
+				sparql.append("} \n");
+			}
+		}
+			
+		// finsh it up
+		
+		if (countQuery) {
+			sparql.append("}}\n");
+		} else {
+			sparql.append("}\n");
+		}
+		
+		// offset and limit
+		if (limitOverride != -1) {
+			sparql.append("ORDER BY ?s, ?p, ?o " + "\n");
+			sparql.append("LIMIT " + String.valueOf(limitOverride) + "\n");
+		}
+		if (offsetOverride != -1) {
+			sparql.append("OFFSET " + String.valueOf(offsetOverride) + "\n");
+		}
+		
+		System.out.println(sparql.toString());
+		return sparql.toString();
+	}
+	
+	/**
+	 * Generate query to return ?s ?s_class
+	 * where ?s_class is in classValues
+	 * @param conn
+	 * @param oInfo
+	 * @param classValues
+	 * @param limitOverride
+	 * @param offsetOverride
+	 * @param countQuery
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateSelectInstanceDataSubjects(SparqlConnection conn, OntologyInfo oInfo, ArrayList<String> classValues, int limitOverride, int offsetOverride, boolean countQuery) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		String sClassValuesClause;
+		
+		if (classValues.size() == 0) {
+			throw new Exception("class values list is empty");
+		}
+		
+		sClassValuesClause =  ValueConstraint.buildValuesConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) ;
+
+		// Start the query
+		if (countQuery) {
+			sparql.append("SELECT (COUNT(*) as ?count) \n");
+			sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+			sparql.append("{ \n");
+		}
+		// select FROM WHERE
+		sparql.append("SELECT DISTINCT ?s ?s_class \n");
+		
+		if (! countQuery) {
+			sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		}
+		
+		sparql.append("WHERE {" + "\n");
+		sparql.append("	" + sClassValuesClause + ". \n");
+		sparql.append("	?s a ?s_class." + "\n");
+			
+		// finsh it up
+		
+		if (countQuery) {
+			sparql.append("}}\n");
+		} else {
+			sparql.append("}\n");
+		}
+		
+		// offset and limit
+		if (limitOverride != -1) {
+			sparql.append("ORDER BY ?s " + "\n");
+			sparql.append("LIMIT " + String.valueOf(limitOverride) + "\n");
+		}
+		if (offsetOverride != -1) {
+			sparql.append("OFFSET " + String.valueOf(offsetOverride) + "\n");
+		}
+		
+		System.out.println(sparql.toString());
+		return sparql.toString();
 	}
 }

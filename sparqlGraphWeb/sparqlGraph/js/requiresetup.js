@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@
 //	<script type="text/javascript" src="../sparqlGraph/js/requiresetup.js"></script>   <-- find this file relative to your app
 //
 //	<script>
-//	    requireConfigSparqlgraph( 
+//	    requireConfigSparqlgraph(
 //			"../sparqlGraph",                                <-- path of sparqlGraph relative to the baseURL
 //
 //			{                                                <--------- standard require.js config object ----------
@@ -35,13 +35,13 @@
 var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	// attach needed paths and shims to sparqlgraph
 	var p = pathRelativeToBase;
-	
+
 	if (! config.hasOwnProperty("paths")) { config.paths = {}; }
 	if (! config.hasOwnProperty("shim")) { config.shim = {}; }
 
 	config.paths["jsonp"] = p + "/jquery/jquery.jsonp-2.3.0.min";
 	config.paths["sparqlgraph"] = p;
-	
+
 	// shims
 
 	config.shim['ge-bootstrap'] = {
@@ -77,13 +77,13 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.shim['sparqlgraph/js/belmont'] =  {
 			deps : [ 'sparqlgraph/js/dracula_graph']
 		};
-    
+
     // special logic to include sparql generation for legacy
     // set gVERSION to 2 or more before requiresetup.js is included to stop this.
     if (typeof gVERSION == "undefined" || gVERSION < 2) {
         config.shim['sparqlgraph/js/belmont'].deps.push('sparqlgraph/js/belmont_v1');
     };
-    
+
 	config.shim['sparqlgraph/js/dracula_graffle'] =  {
 			deps : [ 'sparqlgraph/js/raphael-min' ]
 		};
@@ -92,9 +92,9 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 		};
 	config.shim['sparqlgraph/js/htmlform'] = {
 		deps: [
-		          'sparqlgraph/js/sparqlconnection', 
-		          'sparqlgraph/js/ontologyinfo', 
-		          'sparqlgraph/js/belmont', 
+		          'sparqlgraph/js/sparqlconnection',
+		          'sparqlgraph/js/ontologyinfo',
+		          'sparqlgraph/js/belmont',
 		      ]
 		};
 	config.shim['sparqlgraph/js/sparqlconnection'] =  {
@@ -110,18 +110,18 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 			       ],
 			exports: 'OntologyInfo',
 		};
-	
+
 	config.waitseconds = 45;
-	
+
 	require.config(config);
 
 	requirejs.onError = function (err) {
 	    if (err.requireType === 'timeout') {
 	        alert("Require.js page loading time-out. (Try reloading the page)  \nError: "+err);
-	    } 
+	    }
 	    else {
 	    	console.log(err.stack);
 	        throw err;
-	    }   
+	    }
 	};
 };
