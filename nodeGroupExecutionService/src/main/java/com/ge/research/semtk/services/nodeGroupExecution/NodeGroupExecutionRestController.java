@@ -831,57 +831,6 @@ public class NodeGroupExecutionRestController {
 
 	}
 
-	@ApiOperation(
-			value=	"get instance data",
-			notes=	"returns job id.  Resulting table will have columns: ?s ?s_class ?p ?o ?o_class" + 
-			        "<br>Experimental and still confusing"
-			)
-	@CrossOrigin
-	@RequestMapping(value="/dispatchSelectInstanceData", method=RequestMethod.POST)
-	public JSONObject dispatchSelectInstanceData(@RequestBody InstanceDataRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		final String ENDPOINT_NAME="dispatchSelectInstanceData";
-		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
-		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
-		
-    	try {		    
-
-    		SimpleResultSet retval = new SimpleResultSet();
-
-    		try {
-    			SparqlConnection conn = new SparqlConnection(requestBody.getConn());
-    			OntologyInfo oInfo = retrieveOInfo(conn);
-    			String sparql = SparqlToXUtils.generateSelectInstanceData(	
-			    					conn, oInfo,
-			    					requestBody.getClassValues(),
-			    					requestBody.getPredicateValues(),
-			    					requestBody.getLimitOverride(),
-			    					requestBody.getOffsetOverride(),
-			    					requestBody.getCountOnly());
-
-    			// execute
-    			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );		
-    			ngExecutor.dispatchRawSparql(conn, sparql);
-    			String id = ngExecutor.getJobID();
-
-    			retval.setSuccess(true);
-    			retval.addResult(JOB_ID_RESULT_KEY, id);
-
-    		}
-    		catch(Exception e){
-    			LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    			LocalLogger.printStackTrace(e);
-    			retval = new SimpleResultSet();
-    			retval.setSuccess(false);
-    			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
-    		} 
-
-    		return retval.toJson();
-
-    	} finally {
-    		HeadersManager.clearHeaders();
-    	}
-	}
     	
 	@ApiOperation(
 			value=	"get instance data predicates",

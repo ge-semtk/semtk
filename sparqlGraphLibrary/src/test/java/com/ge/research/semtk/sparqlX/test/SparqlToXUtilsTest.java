@@ -95,29 +95,32 @@ public class SparqlToXUtilsTest {
 		SparqlConnection conn = sgJson.getSparqlConn();
 		OntologyInfo oInfo = sgJson.getOntologyInfo(IntegrationTestUtility.getOntologyInfoClient());
 		
-		// run with no constraints on classes or predicates
-		String query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, new ArrayList<String>(), new ArrayList<String>(), -1, -1, false);
+		// get color classes
+		ArrayList<String> classList = new ArrayList<String>();
+		classList.add("http://kdl.ge.com/batterydemo#Color");
+		String query = SparqlToXUtils.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, false);
 		Table resTab = TestGraph.execTableSelect(query);
-		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 8, resTab.getNumRows());
+		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 3, resTab.getNumRows());
 		
-		// constrain classes
-		ArrayList<String> classes = new ArrayList<String>();
-		classes.add("http://kdl.ge.com/batterydemo#Battery");
-		query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, classes, new ArrayList<String>(), -1, -1, false);
+		// count query
+		query = SparqlToXUtils.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, true);
 		resTab = TestGraph.execTableSelect(query);
-		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 4, resTab.getNumRows());
+		assertEquals("wrong subject count", 3, resTab.getCellAsInt(0, 0));
 		
-		// constrain predicates
-		ArrayList<String> predicates = new ArrayList<String>();
-		predicates.add("http://kdl.ge.com/batterydemo#cell");
-		query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, new ArrayList<String>(), predicates, -1, -1, false);
-		resTab = TestGraph.execTableSelect(query);
-		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 4, resTab.getNumRows());
 		
-		// add limit and offset
-		query = SparqlToXUtils.generateSelectInstanceData(conn, oInfo, new ArrayList<String>(), predicates, 2, 2, false);
+		// try retrieving predicates
+		ArrayList<String[]> predList = new ArrayList<String[]>();
+		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#cell"});
+		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#name"});
+		query = SparqlToXUtils.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, false);
 		resTab = TestGraph.execTableSelect(query);
-		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 2, resTab.getNumRows());
+		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 6, resTab.getNumRows());
+		
+		// get just the count
+		query = SparqlToXUtils.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, true);
+		resTab = TestGraph.execTableSelect(query);
+		assertEquals("wrong predicate count", 6, resTab.getCellAsInt(0, 0));
+		
 		
 	}
 }
