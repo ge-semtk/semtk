@@ -361,8 +361,13 @@ define([	// properly require.config'ed
                     this.drawOntology();
                 } else {
                     this.clearNetwork();
-                    var workList = this.oTree.getSelectedPropertyPairs()
-                                        .concat(this.oTree.getSelectedClassNames());
+                    var workList = this.oTree.getSelectedPropertyPairs();
+
+                    // add selected classes as lists [className]
+                    var classList = this.oTree.getSelectedClassNames();
+                    for (var c of classList) {
+                        workList.push([c]);
+                    }
                     this.addInstanceData(workList);
                 }
             },
@@ -654,7 +659,7 @@ define([	// properly require.config'ed
                 console.log("3rd pass time: " + (performance.now() - START));
 
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv);
+                IIDXHelper.progressBarRemove(this.progressDiv);
                 this.busy(false);
                 this.updateInfo();
                 this.startLayout();
@@ -762,7 +767,7 @@ define([	// properly require.config'ed
                         // done
                         // handle predicates
                         IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                        IIDXHelper.progressBarRemove.bind(IIDXHelper, this.progressDiv);
+                        IIDXHelper.progressBarRemove(this.progressDiv);
                         this.busy(false);
                         this.cancelFlag = false;
                     }
