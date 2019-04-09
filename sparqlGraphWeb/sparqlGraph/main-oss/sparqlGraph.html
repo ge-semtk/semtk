@@ -59,14 +59,15 @@
 	<script src="../../iidx-oss/js/require.config.js"></script>
     <script type="text/javascript" src="../js/requiresetup.js"></script>
 
-	<script>
+  <script>
 	    requireConfigSparqlgraph(
 			"../sparqlGraph",
 			{
-				baseUrl : '../../iidx-oss',
+				baseUrl : '../../iidx-2.0.3',
 				paths : {
 					"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
-                    "local" :      "../sparqlGraph/main-oss"
+          "local" :      "../sparqlGraph/main-GE",
+          "visjs" :      "../vis-4.21.0/dist",
 			    }
 	        });
 	</script>
@@ -421,6 +422,30 @@
                             <form class="form-horizontal"></form>
                         </div>
                     </section>
+
+            </div>
+        </div>
+
+        <!-- Explore Tab ------>
+        <div id="tabs-x" >
+          <br>
+    			<div style="margin: 4ch; width=100%;">
+
+              <div id="exploretTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden; resize: vertical;">
+                  <div id="exploreTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
+                      <div id="exploreTreeDiv" ></div>
+                  </div>
+                  <div id="exploreCanvasWrapper" class="canvaswrap" style="overflow:hidden;">
+                      <div id="exploreCanvasDiv" style="height:100%; width:100%" class="canvas ui-widget-content">
+                      </div>
+                  </div>
+              </div>
+
+              <section class="module">
+                  <div id="exploreButtonDiv">
+                      <form class="form-horizontal"></form>
+                  </div>
+              </section>
 
             </div>
         </div>
