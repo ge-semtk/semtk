@@ -88,39 +88,4 @@ public class SparqlToXUtilsTest {
 
 	}
 	
-	@Test
-	public void testGetInstanceData_IT() throws Exception {
-		TestGraph.clearGraph();
-		SparqlGraphJson sgJson = TestGraph.initGraphWithData("sampleBattery");
-		SparqlConnection conn = sgJson.getSparqlConn();
-		OntologyInfo oInfo = sgJson.getOntologyInfo(IntegrationTestUtility.getOntologyInfoClient());
-		
-		// get color classes
-		ArrayList<String> classList = new ArrayList<String>();
-		classList.add("http://kdl.ge.com/batterydemo#Color");
-		String query = SparqlToXUtils.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, false);
-		Table resTab = TestGraph.execTableSelect(query);
-		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 3, resTab.getNumRows());
-		
-		// count query
-		query = SparqlToXUtils.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, true);
-		resTab = TestGraph.execTableSelect(query);
-		assertEquals("wrong subject count", 3, resTab.getCellAsInt(0, 0));
-		
-		
-		// try retrieving predicates
-		ArrayList<String[]> predList = new ArrayList<String[]>();
-		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#cell"});
-		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#name"});
-		query = SparqlToXUtils.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, false);
-		resTab = TestGraph.execTableSelect(query);
-		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 6, resTab.getNumRows());
-		
-		// get just the count
-		query = SparqlToXUtils.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, true);
-		resTab = TestGraph.execTableSelect(query);
-		assertEquals("wrong predicate count", 6, resTab.getCellAsInt(0, 0));
-		
-		
-	}
 }
