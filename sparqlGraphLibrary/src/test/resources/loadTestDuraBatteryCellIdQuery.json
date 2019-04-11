@@ -1,0 +1,153 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "fuseki junit",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test",
+				"dataset": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test",
+				"dataset": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "cellId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#cellId",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?cellId",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Cell",
+				"fullURIName": "http://kdl.ge.com/durabattery#Cell",
+				"subClassNames": [],
+				"SparqlID": "?Cell",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "uri://durabattery/data",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": " cell1_color"
+			},
+			{
+				"colId": "col_1",
+				"colName": " cell2_ID_opt"
+			},
+			{
+				"colId": "col_2",
+				"colName": " cell2_color"
+			},
+			{
+				"colId": "col_3",
+				"colName": " cell3_ID_opt"
+			},
+			{
+				"colId": "col_4",
+				"colName": "assembly_date_opt"
+			},
+			{
+				"colId": "col_5",
+				"colName": "batt_ID"
+			},
+			{
+				"colId": "col_6",
+				"colName": "cell1_ID_opt"
+			},
+			{
+				"colId": "col_7",
+				"colName": "cell3_color"
+			},
+			{
+				"colId": "col_8",
+				"colName": "cell4_ID_opt"
+			},
+			{
+				"colId": "col_9",
+				"colName": "cell4_color"
+			},
+			{
+				"colId": "col_10",
+				"colName": "description_opt"
+			}
+		],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "Batt"
+			},
+			{
+				"textId": "text_1",
+				"text": "_"
+			},
+			{
+				"textId": "text_2",
+				"text": "cell"
+			}
+		],
+		"transforms": [
+			{
+				"transId": "trans_0",
+				"name": "alphanum",
+				"transType": "replaceAll",
+				"arg1": "[^a-zA-Z0-9]",
+				"arg2": "_"
+			},
+			{
+				"transId": "trans_1",
+				"name": "hash",
+				"transType": "hashCode",
+				"arg1": "",
+				"arg2": ""
+			},
+			{
+				"transId": "trans_2",
+				"name": "upper",
+				"transType": "toUpperCase",
+				"arg1": "",
+				"arg2": ""
+			}
+		],
+		"nodes": [
+			{
+				"sparqlID": "?Cell",
+				"type": "http://kdl.ge.com/durabattery#Cell",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

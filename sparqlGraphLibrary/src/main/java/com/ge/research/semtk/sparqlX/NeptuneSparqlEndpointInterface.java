@@ -97,7 +97,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	/**
 	 * Build a POST URL
 	 */
-	public String getPostURL(){
+	public String getPostURL(SparqlResultTypes resultType) {
 		return String.format("%s:%s/sparql", this.server, this.port);
 	}
 
@@ -389,8 +389,13 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * @throws Exception 
 	 */
 	@Override
-	public void handleEmptyResponse() throws Exception {
+	public JSONObject handleEmptyResponse(SparqlResultTypes resultType) throws Exception {
 		throw new Exception("Neptune returned empty response");	
+	}
+	
+	@Override 
+	public JSONObject handleNonJSONResponse(String responseTxt, SparqlResultTypes resulttype) throws DontRetryException, Exception {
+		throw new Exception ("Neptune returned non-json: " + responseTxt);
 	}
 
 	@Override

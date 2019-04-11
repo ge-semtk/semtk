@@ -50,7 +50,8 @@ public class NgStoreSparqlGenerator {
 		ret.add(query);
 		
 		query = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-				"SELECT distinct ?NodeGroup ?counter WHERE { " +
+				"SELECT distinct ?NodeGroup ?counter " +
+				"FROM <" + this.dataGraph + "> WHERE { " +
 				"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
 				"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 				"VALUES ?ID {\"" + id + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . " +
@@ -135,6 +136,7 @@ public class NgStoreSparqlGenerator {
 
 	public  String deleteNodeGroup(String jobId) {
 		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 				"WITH <" + this.dataGraph + "> DELETE { " +
 				"  ?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup." +
 				"  ?PrefabNodeGroup prefabNodeGroup:ID \"" + jobId + "\"^^<http://www.w3.org/2001/XMLSchema#string> ." +
@@ -162,7 +164,7 @@ public class NgStoreSparqlGenerator {
 	}
 	
 	public ArrayList<String> insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator) throws Exception {
-		final int SPLIT = 25000;
+		final int SPLIT = 20000;
 		
 		// extract the connJson
 		SparqlConnection conn = new SparqlConnection();

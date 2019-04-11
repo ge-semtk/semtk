@@ -732,4 +732,11 @@ public abstract class Utility {
 	public static String generateRandomURI() {
 		return "r" + UUID.randomUUID().toString();
 	}
+	
+	public static String htmlToPlain(String html) {
+		return html.replaceAll("(<[Bb][Rr]>|<[Pp]>)", "\n")
+				.replaceAll("\\s*<[^>]+>\\s*", " ")
+				.replaceAll(" +", " ")
+				.replaceAll("\n+", "\n");
+	}
 }

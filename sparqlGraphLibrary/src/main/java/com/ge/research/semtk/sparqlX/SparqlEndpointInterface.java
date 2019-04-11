@@ -111,7 +111,9 @@ public abstract class SparqlEndpointInterface {
 	protected String password = null;
 	protected String server = null;
 	protected String port = null;
+	protected String endpoint = null;    // null or everything "end/point" if url looks like http://server:8000/end/point
 	protected String graph = "";
+	
 
 
 	/**
@@ -145,7 +147,11 @@ public abstract class SparqlEndpointInterface {
 	}
 
 	public String getServerAndPort() {		
-		return this.server + ":" + this.port;
+		String ret = this.server + ":" + this.port;
+		if (this.endpoint != null) {
+			ret += "/" + this.endpoint;
+		}
+		return ret;
 	}
 	
 	public void setServerAndPort(String serverAndPort) throws Exception {
@@ -161,6 +167,10 @@ public abstract class SparqlEndpointInterface {
 		
 		String[] portandendpoint = serverAndPortSplit[2].split("/");
 		this.port = portandendpoint[0];
+		
+		if (serverAndPortSplit[2].contains("/")) {
+			this.endpoint = serverAndPortSplit[2].substring(serverAndPortSplit[2].indexOf('/')+1);
+		}
 	}
 	
 	public String getServer() {
@@ -176,6 +186,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	// deprecated
+	@Deprecated
 	public String getDataset() {
 		return this.graph;
 	}
@@ -203,7 +214,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Build a GET URL (implementation-specific)
 	 */
-	public abstract String getPostURL();
+	public abstract String getPostURL(SparqlResultTypes resultType);
 	
 	/**
 	 * Build an upload URL (implementation-specific)
@@ -220,17 +231,19 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Handle an empty response (implementation-specific)
 	 */
-	public abstract void handleEmptyResponse() throws Exception;
+	public abstract JSONObject handleEmptyResponse(SparqlResultTypes resultType) throws Exception;
 	
+
 	/**
 	 * Override in order to separate out DontRetryException from regular ones
-	 * and add in anyknown SemTK explanation
+	 * and add in any known SemTK explanation
 	 * @param responseTxt
-	 * @throws Exception
+	 * @param resulttype
+	 * @return (JSONObject) version of an acceptable result
+	 * @throws DontRetryException - don't retry
+	 * @throws Exception - might retry
 	 */
-	public void handleNonJSONResponse(String responseTxt) throws DontRetryException, Exception {
-		throw new Exception("Cannot parse query result into JSON: " + responseTxt);
-	}
+	public abstract JSONObject handleNonJSONResponse(String responseTxt, SparqlResultTypes resulttype) throws DontRetryException, Exception;
 
 
 	/**
@@ -440,10 +453,31 @@ public abstract class SparqlEndpointInterface {
 		}
 	}
 
+	/**
+	 * Run a test query depending on isAuth()
+	 * @return
+	 * @throws Exception
+	 */
 	public JSONObject executeTestQuery() throws Exception {
-		final String sparql = "select ?Concept where {[] a ?Concept} LIMIT 1";
+		String sparql;
+		SparqlResultTypes resType;
+		
+		if (this.isAuth()) {
+			// nonsense legal delete query for auth connection
+			sparql = "delete { ?x ?y ?z } where {\r\n" + 
+					"?x a <nothing>.\r\n" + 
+					"MINUS { ?x ?y ?z . }\r\n" + 
+					"}";
+			resType = SparqlResultTypes.CONFIRM;
+			
+		} else {
+			// quick select for non-auth
+			sparql = "select ?Concept where {[] a ?Concept} LIMIT 1";
+			resType = SparqlResultTypes.TABLE;
+		}
+		
 		try {
-			return executeQuery(sparql, SparqlResultTypes.TABLE);
+			return executeQuery(sparql, resType);
 		} catch (Exception e) {
 			throw new Exception("Failure executing test query.", e);
 		}
@@ -480,7 +514,7 @@ public abstract class SparqlEndpointInterface {
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
      
 		// create the HttpPost
-		HttpPost httppost = new HttpPost(this.getPostURL());
+		HttpPost httppost = new HttpPost(this.getPostURL(resultType));
 		this.addHeaders(httppost, resultType);
 		this.addParams(httppost, query, resultType);
 		
@@ -674,29 +708,26 @@ public abstract class SparqlEndpointInterface {
 		
 		Object responseObj = null;
 		
-		// handle empty text
 		if(responseTxt == null || responseTxt.trim().isEmpty()) {
-			this.handleEmptyResponse(); 
+			// empty
+			return this.handleEmptyResponse(resultType); 
 		}
 		
-		// parse with error handling
 		try {
 			responseObj = new JSONParser().parse(responseTxt);
 		} catch(Exception e) {
-			this.handleNonJSONResponse(responseTxt);
+			
+			// non-JSON
+			return this.handleNonJSONResponse(responseTxt, resultType);
 		}
 
-		// handle empty JSON
 		if (responseObj == null) {
-			this.handleNonJSONResponse(responseTxt);
+			// empty JSON
+			return this.handleNonJSONResponse(responseTxt, resultType);
 
-			return null;
-			
 		} else {
-			
 			// Normal path: get results
-			JSONObject procResp = this.getResultsFromResponse(responseObj, resultType);
-			return procResp;
+			return this.getResultsFromResponse(responseObj, resultType);
 		}
 	}
 

@@ -10,9 +10,9 @@
   xml:base="http://semtk.junit/leaf">
   <owl:Ontology rdf:about="">
     <owl:imports rdf:resource="imported"/>
-    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
-    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
-    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <owl:imports rdf:resource="http://sadl.junit.empty/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.junit.empty/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.junit.empty/sadlbasemodel"/>
     <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'owl_import_Leaf.sadl' and should not be directly edited.</rdfs:comment>
   </owl:Ontology>
   <owl:Class rdf:ID="Leaf">

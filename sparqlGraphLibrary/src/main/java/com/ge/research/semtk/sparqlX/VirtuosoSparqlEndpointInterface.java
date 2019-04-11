@@ -112,7 +112,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	/**
 	 * Build a POST URL
 	 */
-	public String getPostURL(){
+	public String getPostURL(SparqlResultTypes resultType) {
 		if(this.isAuth()){
 			return String.format("%s:%s/sparql-auth", this.server, this.port);
 		}else{
@@ -205,14 +205,14 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * @throws Exception 
 	 */
 	@Override
-	public void handleEmptyResponse() throws Exception {
+	public JSONObject handleEmptyResponse(SparqlResultTypes resultType) throws Exception {
 		throw new Exception("Virtuoso returning empty response (could be wrong username/password)");	
 	}
 
 	static Pattern pSP031 = Pattern.compile("Error SP031");
 	static Pattern pVirtuosoError = Pattern.compile("Virtuoso [0-9]+ Error ");
 	@Override
-	public void handleNonJSONResponse(String responseTxt) throws DontRetryException, Exception {
+	public JSONObject handleNonJSONResponse(String responseTxt, SparqlResultTypes resulttype) throws DontRetryException, Exception {
 		
 		// explain SP031
 		if ( pSP031.matcher(responseTxt).find()) {

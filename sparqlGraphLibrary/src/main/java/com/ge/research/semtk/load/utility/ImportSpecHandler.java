@@ -431,6 +431,7 @@ public class ImportSpecHandler {
 	private NodeGroup getLookupNodegroup(int nodeIndex) throws Exception {
 		NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeIndex)); 
 		lookupNodegroup.setSparqlConnection(this.lookupConn);
+		lookupNodegroup.noInflateNorValidate(this.oInfo);
 		return lookupNodegroup;
 	}
 	

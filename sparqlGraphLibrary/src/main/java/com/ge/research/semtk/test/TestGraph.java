@@ -69,9 +69,12 @@ public class TestGraph {
 	public TestGraph() {
 	}
 	
-	// PEC TODO:  specify model or data graph
 	public static SparqlEndpointInterface getSei() throws Exception {
-		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(getSparqlServerType(), getSparqlServer(), generateDatasetName("both"), getUsername(), getPassword());
+		return getSei(generateGraphName("both"));
+	}
+	
+	public static SparqlEndpointInterface getSei(String graphName) throws Exception {
+		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(getSparqlServerType(), getSparqlServer(), graphName, getUsername(), getPassword());
 		
 		try{
 			sei.executeTestQuery();
@@ -204,6 +207,7 @@ public class TestGraph {
 		Table table = TestGraph.execTableSelect(sparql); 
 		return (new Integer(table.getCell(0, 0))).intValue(); // this cell contains the count
 	}
+
 	
 	/**
 	 * Upload owl file to the test graph
@@ -322,8 +326,15 @@ public class TestGraph {
 			conn.addModelInterface(getSei());
 		} else {
 			// make sure all connection server and ports are the same
+			String [] graphs = new String[conn.getModelInterfaceCount()];
+			
 			for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-				conn.getModelInterface(i).setServerAndPort(conn.getDataInterface(i).getServerAndPort());
+				graphs[i] = conn.getModelInterface(i).getGraph();
+			}
+			
+			conn.clearModelInterfaces();
+			for (int i=0; i < graphs.length; i++) {
+				conn.addModelInterface(getSei(graphs[i]));
 			}
 		}
 		s.setSparqlConn(conn);
@@ -335,9 +346,6 @@ public class TestGraph {
 	 * Generate a dataset name (unique per user)
 	 */
 	public static String generateGraphName(String sub) {
-		return generateDatasetName(sub);
-	}
-	public static String generateDatasetName(String sub) {
 		String user = System.getProperty("user.name");
 		
 		String machine = null;
@@ -348,6 +356,10 @@ public class TestGraph {
 		}
 		
 		return String.format("http://junit/%s/%s/%s", machine, user, sub);
+	}
+	@Deprecated
+	public static String generateDatasetName(String sub) {
+		return generateGraphName(sub);
 	}	
 	
 	/**

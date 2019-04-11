@@ -55,6 +55,10 @@ public class SimpleResultSet extends GeneralResultSet{
 		return this.getResult(SimpleResultSet.MESSAGE_JSONKEY);		
 	}
 	
+	public void setMessage(String msg) {
+		this.addResult(SimpleResultSet.MESSAGE_JSONKEY, msg);
+	}
+	
 	/**
 	 * Return results in a hashmap
 	 */

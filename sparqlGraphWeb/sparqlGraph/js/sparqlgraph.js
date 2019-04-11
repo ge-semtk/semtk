@@ -648,8 +648,10 @@
 	    	if (gConn != null) {
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
+                setStatus("clearing ontology cache");
                 oInfoClient.execUncacheOntology(gConn,
                     function() {
+                        setStatus("");
                         gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
                     }
                 );

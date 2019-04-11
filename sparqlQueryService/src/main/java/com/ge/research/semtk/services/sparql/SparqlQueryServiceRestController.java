@@ -470,7 +470,10 @@ public class SparqlQueryServiceRestController {
 			}
 			
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
-			uncacheChangedModel(sei);
+			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
+			if (sResult.getSuccess()) {
+				uncacheChangedModel(sei);
+			}
 			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);

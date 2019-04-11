@@ -197,7 +197,7 @@ public class SparqlToXUtils {
 	  return "CLEAR GRAPH <" + sei.getGraph() + ">";
   }
   public static String generateCountTriplesSparql(SparqlEndpointInterface sei) {
-	  return "SELECT (COUNT(*) as ?count) from <" + sei.getDataset() + "> WHERE { ?x ?y ?z. }";
+	  return "SELECT (COUNT(*) as ?count) from <" + sei.getGraph() + "> WHERE { ?x ?y ?z. }";
   }
   
   public static String generateDropGraphSparql(SparqlEndpointInterface sei) {

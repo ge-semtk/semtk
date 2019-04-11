@@ -8,14 +8,14 @@
 			{
 				"type": "virtuoso",
 				"url": "http://vesuvius-test.crd.ge.com:2420",
-				"dataset": "http://semtk.org/leaf"
+				"dataset": "http://semtk.junit/leaf"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
 				"url": "http://vesuvius-test.crd.ge.com:2420",
-				"dataset": "http://semtk.org/leaf/data"
+				"dataset": "http://semtk.junit/leaf/data"
 			}
 		]
 	},
@@ -30,7 +30,7 @@
 						"KeyName": "importedName",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://semtk.org/imported#importedName",
+						"UriRelationship": "http://semtk.junit/imported#importedName",
 						"Constraints": "",
 						"fullURIName": "",
 						"SparqlID": "?importedName",
@@ -43,9 +43,9 @@
 				],
 				"nodeList": [],
 				"NodeName": "Imported",
-				"fullURIName": "http://semtk.org/imported#Imported",
+				"fullURIName": "http://semtk.junit/imported#Imported",
 				"subClassNames": [
-					"http://semtk.org/leaf#Leaf"
+					"http://semtk.junit/leaf#Leaf"
 				],
 				"SparqlID": "?Imported",
 				"isReturned": false,
@@ -71,7 +71,7 @@
 		"nodes": [
 			{
 				"sparqlID": "?Imported",
-				"type": "http://semtk.org/imported#Imported",
+				"type": "http://semtk.junit/imported#Imported",
 				"mapping": [],
 				"props": []
 			}

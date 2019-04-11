@@ -321,7 +321,7 @@ public class OntologyInfoTests_IT {
 		ArrayList<String> importedGraphs = oInfo.getImportedGraphs();
 		
 		assertTrue("http://semtk.junit/imported#Imported is not in importedGraphs list", importedGraphs.contains("http://semtk.junit/imported"));
-		assertEquals("Graph was either not imported or double imported", 5, importedGraphs.size());
+		assertEquals("Graph was either not imported or double imported", 4, importedGraphs.size());
 		assertTrue("No warnings were found for empty default graphs such as sadlbasemodel", loadWarnings.size() > 0);
 	}
 	

@@ -191,9 +191,13 @@ public class NodeGroup {
 		        // e.g. KEY=http://research.ge.com/print/testconfig#material VALUE=[{"@value":"Red Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"} {"@value":"Blue Paste","@type":"http:\/\/www.w3.org\/2001\/XMLSchema#string"}]
 		        		         
 		        JSONArray valueArray = NodeGroup.getAsArray(nodeJson, key);
-	        	if(!((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if no @type then this is not a primitive property   
-	        		continue;  
-	        	}		        
+		        try {
+		        	if(!((JSONObject)((valueArray).get(0))).containsKey("@type")){  
+		        		continue;  // no @type then this is not a primitive property   
+		        	}	
+		        } catch (ClassCastException e) {
+		        	continue;    // can't be cast to JSONObject then it's also a primitive
+		        }
 	        	
 		        PropertyItem property = null;
 		        for(int j = 0; j < valueArray.size(); j++){ 
@@ -245,9 +249,13 @@ public class NodeGroup {
 		        // e.g. KEY=http://research.ge.com/print/testconfig#screenPrinting VALUE=[{"@id":"http:\/\/research.ge.com\/print\/data#ScrnPrnt_ABC"}]        		        
 		        
 		        JSONArray valueArray = NodeGroup.getAsArray(nodeJson, key);
-	        	if(((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if has @type then this is not a node item
-	        		continue;  
-	        	}
+		        try {
+		        	if(((JSONObject)((valueArray).get(0))).containsKey("@type")){  // check the first element - if has @type then this is not a node item
+		        		continue;  
+		        	}
+		        } catch (ClassCastException e) {
+		        	continue;    // can't be cast to JSONObject then not a node item
+		        }
 		        
 		        NodeItem nodeItem = null;
 		        for(int j = 0; j < valueArray.size(); j++){
@@ -568,6 +576,7 @@ public class NodeGroup {
 		this.addToPrefixHash(UriResolver.DEFAULT_URI_PREFIX);   // make sure to force the inclusion of the old ones.
 		this.addToPrefixHash("http://www.w3.org/2001/XMLSchema#");
 		this.addToPrefixHash("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns");
+		this.addToPrefixHash("rdfs", "http://www.w3.org/2000/01/rdf-schema");
 		
 		for(Node n : this.nodes){
 
