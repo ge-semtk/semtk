@@ -37,7 +37,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.data = {};
 			this.data.serverAndPort = ssinterface.serverURL;
 			this.data.serverType = ssinterface.serverType;
-			this.data.dataset = ssinterface.dataset;
+			this.data.graph = ssinterface.graph;
 			this.data.user = "dba";
 			this.data.password = "dba";
 
@@ -92,7 +92,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				var formdata = new FormData();
 				formdata.append("serverAndPort", this.data.serverAndPort);
 				formdata.append("serverType",    this.data.serverType);
-				formdata.append("dataset",       this.data.dataset);
+				formdata.append("dataset",       this.data.graph);
 				formdata.append("user",          this.data.user);
 				formdata.append("password",      this.data.password);
 				formdata.append("owlFile",       owlFile);

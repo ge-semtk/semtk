@@ -104,7 +104,7 @@ public class SparqlConnection {
 			JSONObject inner = new JSONObject();
 			inner.put("type", mi.getServerType());
 			inner.put("url", mi.getServerAndPort());
-			inner.put("dataset", mi.getGraph());
+			inner.put("graph", mi.getGraph());
 			model.add(inner);
 		}
 		
@@ -113,7 +113,7 @@ public class SparqlConnection {
 			JSONObject inner = new JSONObject();
 			inner.put("type", di.getServerType());
 			inner.put("url", di.getServerAndPort());
-			inner.put("dataset", di.getGraph());
+			inner.put("graph", di.getGraph());
 			data.add(inner);
 		}
 		
@@ -157,12 +157,14 @@ public class SparqlConnection {
 			// read model interfaces
 	    	for (int i=0; i < ((JSONArray)(jObj.get("model"))).size(); i++) {
 	    		JSONObject m = (JSONObject)((JSONArray)jObj.get("model")).get(i);
-	    		this.addModelInterface((String)(m.get("type")), (String)(m.get("url")), (String)(m.get("dataset")));
+	    		String graph = m.containsKey("dataset") ? (String)(m.get("dataset")) : (String)(m.get("graph"));
+	    		this.addModelInterface((String)(m.get("type")), (String)(m.get("url")), graph);
 	    	}
 	    	// read data interfaces
 	    	for (int i=0; i < ((JSONArray)(jObj.get("data"))).size(); i++) {
 	    		JSONObject d = (JSONObject)((JSONArray)jObj.get("data")).get(i);
-	    		this.addDataInterface((String)(d.get("type")), (String)(d.get("url")), (String)(d.get("dataset")));
+	    		String graph = d.containsKey("dataset") ? (String)(d.get("dataset")) : (String)(d.get("graph"));
+	    		this.addDataInterface((String)(d.get("type")), (String)(d.get("url")), graph);
 	    	}
 		}
 		
@@ -221,22 +223,22 @@ public class SparqlConnection {
 	public void addModelInterface(SparqlEndpointInterface sei) {
 		this.modelInterfaces.add(sei);
 	}
-	public void addModelInterface(String sType, String url, String dataset) throws Exception {
-		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset));
+	public void addModelInterface(String sType, String url, String graph) throws Exception {
+		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, graph));
 	}
 	
-	public void addDataInterface(String sType, String url, String dataset) throws Exception {
-		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset));
+	public void addDataInterface(String sType, String url, String graph) throws Exception {
+		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, graph));
 	}
-	public void addModelInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
-		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset, user, passwd));
+	public void addModelInterface(String sType, String url, String graph, String user, String passwd) throws Exception {
+		this.modelInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, graph, user, passwd));
 	}
 	
 	public void addDataInterface(SparqlEndpointInterface sei) {
 		this.dataInterfaces.add(sei);
 	}
-	public void addDataInterface(String sType, String url, String dataset, String user, String passwd) throws Exception {
-		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, dataset, user, passwd));
+	public void addDataInterface(String sType, String url, String graph, String user, String passwd) throws Exception {
+		this.dataInterfaces.add(SparqlEndpointInterface.getInstance(sType, url, graph, user, passwd));
 	}
 	public int getModelInterfaceCount() {
 		return this.modelInterfaces.size();
@@ -372,8 +374,8 @@ public class SparqlConnection {
 		}
 	}
 	
-	// get list of datasets for a given serverURL
-	public ArrayList<String> getAllDatasetsForServer(String serverURL) {
+	// get list of graphs for a given serverURL
+	public ArrayList<String> getAllGraphsForServer(String serverURL) {
 		ArrayList<String> ret = new ArrayList<String>();
 		
 		ret.addAll(this.getDataDatasetsForServer(serverURL));

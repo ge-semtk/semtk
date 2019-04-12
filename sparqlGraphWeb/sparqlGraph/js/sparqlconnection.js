@@ -1,4 +1,4 @@
-/**
+graph/**
  ** Copyright 2016-17 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
@@ -82,7 +82,7 @@ SparqlConnection.prototype = {
 			jObj.model.push({
 					type: mi.getServerType(),
 					url: mi.getServerURL(),
-					dataset: mi.getDataset()
+					graph: mi.getGraph()
 			});
 		}
 
@@ -92,7 +92,7 @@ SparqlConnection.prototype = {
 			jObj.data.push({
 					type: di.getServerType(),
 					url: di.getServerURL(),
-					dataset: di.getDataset()
+					graph: di.getGraph()
 			});
 		}
 
@@ -104,7 +104,7 @@ SparqlConnection.prototype = {
 		this.name = jObj.name;
 		this.domain = jObj.domain;
         // be extra-safe as this is removed except for backwards-compatibility
-        if (! this.domain) { this.domain = ""; }   
+        if (! this.domain) { this.domain = ""; }
 
 		this.modelInterfaces = [];
     	this.modelDomains = [];
@@ -133,12 +133,14 @@ SparqlConnection.prototype = {
 			// read model interfaces
 	    	for (var i=0; i < jObj.model.length; i++) {
 	    		var m = jObj.model[i];
-	    		this.addModelInterface(m.type, m.url, m.dataset);
+                var graph = m.hasOwnProperty("dataset") ? m.dataset : m.graph;
+	    		this.addModelInterface(m.type, m.url, graph);
 	    	}
 	    	// read data interfaces
 	    	for (var i=0; i < jObj.data.length; i++) {
 	    		var d = jObj.data[i];
-	    		this.addDataInterface(d.type, d.url, d.dataset);
+                var graph = d.hasOwnProperty("dataset") ? d.dataset : d.graph;
+	    		this.addDataInterface(d.type, d.url, graph);
 	    	}
 		}
 
@@ -178,12 +180,12 @@ SparqlConnection.prototype = {
 		this.domain = domain
 	},
 
-	addModelInterface : function (sType, url, dataset) {
-		this.modelInterfaces.push(this.createInterface(sType, url, dataset));
+	addModelInterface : function (sType, url, graph) {
+		this.modelInterfaces.push(this.createInterface(sType, url, graph));
 	},
 
-	addDataInterface : function (sType, url, dataset) {
-		this.dataInterfaces.push(this.createInterface(sType, url, dataset));
+	addDataInterface : function (sType, url, graph) {
+		this.dataInterfaces.push(this.createInterface(sType, url, graph));
 	},
 
 	delModelInterface : function (i) {
@@ -275,21 +277,21 @@ SparqlConnection.prototype = {
 		}
 	},
 
-	// get list of datasets for a given serverURL
-	getDatasetsForServer : function(serverURL) {
+	// get list of graphs for a given serverURL
+	getGraphsForServer : function(serverURL) {
 		var ret = [];
 
 		for (var i=0; i < this.modelInterfaces.length; i++) {
 			var e =  this.modelInterfaces[i];
-			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getDataset()) == -1) {
-				ret.push(e.getDataset());
+			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getGraph()) == -1) {
+				ret.push(e.getGraph());
 			}
 		}
 
 		for (var i=0; i < this.dataInterfaces.length; i++) {
 			var e =  this.dataInterfaces[i];
-			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getDataset()) == -1) {
-				ret.push(e.getDataset());
+			if (e.getServerURL() == serverURL &&  ret.indexOf(e.getGraph()) == -1) {
+				ret.push(e.getGraph());
 			}
 		}
 
@@ -297,13 +299,13 @@ SparqlConnection.prototype = {
 	},
 
 	//---------- private function
-	createInterface : function (stype, url, dataset) {
+	createInterface : function (stype, url, graph) {
 		if (stype == SparqlConnection.FUSEKI_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, dataset);
+			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, graph);
 		} else if (stype == SparqlConnection.NEPTUNE_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.NEPTUNE_SERVER, url, dataset);
+			return new SparqlServerInterface(SparqlServerInterface.NEPTUNE_SERVER, url, graph);
 		} else if (stype == SparqlConnection.VIRTUOSO_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, dataset);
+			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, graph);
 		} else {
 			throw new Error("Unsupported SparqlConnection server type: " + stype);
 		}

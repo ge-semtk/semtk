@@ -204,7 +204,7 @@ public abstract class SparqlEndpointInterface {
 		this.graph = graph;
 	}
 	
-	// deprecated
+	@Deprecated
 	public void setDataset(String graph) {
 		this.graph = graph;
 	}

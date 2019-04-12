@@ -81,7 +81,7 @@ define([	// properly require.config'ed
 				if (this.toolsDiv.innerHTML.indexOf("<") == -1) {
 					this.drawTools();
                     this.drawMiscTools();
-					this.fillSelectChooseDataset();     // fill in nodegroup-specific the first time
+					this.fillSelectChooseGraph();     // fill in nodegroup-specific the first time
 				}
 
 				// draw body only if it's never been done before
@@ -273,13 +273,13 @@ define([	// properly require.config'ed
 				tr = document.createElement("tr");
 
 				td1 = document.createElement("td");
-				td1.id = "tdChooseDataset1";
+				td1.id = "tdChooseGraph1";
 				tr.appendChild(td1);
 
 				td2 = document.createElement("td");
 				tr.appendChild(td2);
 				select = document.createElement("select");
-				select.id="selectChooseDataset";
+				select.id="selectChooseGraph";
 				td2.appendChild(select);
 				select.onchange = this.fillTools.bind(this);
 
@@ -415,8 +415,8 @@ define([	// properly require.config'ed
 			// Build a unique list of options.
 			// Precede by "model" "data" or "both"
 			// Set option value to a lookup code "m1" (model 1) or ("d0" data 0) etc.
-			fillSelectChooseDataset : function() {
-				var select = document.getElementById("selectChooseDataset");
+			fillSelectChooseGraph : function() {
+				var select = document.getElementById("selectChooseGraph");
 
 				// clear all options
 				while (select.options.length > 0) {
@@ -507,7 +507,7 @@ define([	// properly require.config'ed
 						var sei = seis[i];
 
 						option = document.createElement("option");
-						option.text = src[i] + ": " + sei.getDataset();      // could add sei.getServerURL()
+						option.text = src[i] + ": " + sei.getGraph();      // could add sei.getServerURL()
 						option.value = vals[i];
 						select.add(option);
 					}
@@ -554,8 +554,8 @@ define([	// properly require.config'ed
 				var connFlag = (this.getSelectedSei() != null);
 
 				// choose dataset
-				document.getElementById("tdChooseDataset1").innerHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br>" +
-																		"<b>Dataset: </b>" + this.getGraphDataset();
+				document.getElementById("tdChooseGraph1").innerHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br>" +
+																		"<b>Graph: </b>" + this.getGraphGraph();
 
 				// clear graph
 				document.getElementById("butClearGraph").disabled = (! connFlag);
@@ -680,7 +680,7 @@ define([	// properly require.config'ed
 
 			// get SparqlEndpointInterface or null
 			getSelectedSei : function () {
-				var val = document.getElementById("selectChooseDataset").value;
+				var val = document.getElementById("selectChooseGraph").value;
 				if (val == "" || this.conn == null) {
 					return null;
 				} else if (val.charAt(0) == "m") {
@@ -706,20 +706,20 @@ define([	// properly require.config'ed
 			/**
 			 * Get dataset for the selected connection (data or model)
 			 */
-			getGraphDataset : function () {
+			getGraphGraph : function () {
 				var sei = this.getSelectedSei();
 
 				if (sei == null) {
 					return "";
 				} else {
-					return sei.getDataset();
+					return sei.getGraph();
 				}
 			},
 
 			/**
 			 * Is the model dataset selecte   OR  data is selected but it is identical
 			 */
-			isModelDatasetSelected : function () {
+			isModelGraphSelected : function () {
 				var sei = this.getSelectedSei();
 				if (this.conn != null) {
 					for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
@@ -738,7 +738,7 @@ define([	// properly require.config'ed
 
 				var prefix = document.getElementById("inputClearPrefix").value;
 				var targetHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br>";
-				targetHTML += "<b>Dataset: </b> "+ this.getGraphDataset()+ "<br>";
+				targetHTML += "<b>Graph: </b> "+ this.getGraphGraph()+ "<br>";
 				targetHTML += "<b>URI Prefix:</b>" + prefix;
 				ModalIidx.okCancel("Confirm",
 						           "Are you sure you want to clear these triples: <br><br>" + targetHTML,
@@ -763,7 +763,7 @@ define([	// properly require.config'ed
 						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
 
 						// set modelChangedFlag
-						if (this.isModelDatasetSelected()) {
+						if (this.isModelGraphSelected()) {
 							this.modelChangedFlag = true;
 							this.draw();
 						}
@@ -848,7 +848,7 @@ define([	// properly require.config'ed
 						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
 
 						// set modelChangedFlag
-						if (this.isModelDatasetSelected()) {
+						if (this.isModelGraphSelected()) {
 							this.modelChangedFlag = true;
 							this.draw();
 						}
@@ -925,7 +925,7 @@ define([	// properly require.config'ed
 
 					return;
 				}
-				var targetHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br><b>Dataset: </b>" + this.getGraphDataset();
+				var targetHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br><b>Graph: </b>" + this.getGraphGraph();
 				ModalIidx.okCancel("Confirm",
 						           "Are you sure you want to clear the graph: <br><br>" + targetHTML,
 						            this.toolsClearGraphOK.bind(this));
@@ -947,7 +947,7 @@ define([	// properly require.config'ed
 						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
 
 						// set modelChangedFlag
-						if (this.isModelDatasetSelected()) {
+						if (this.isModelGraphSelected()) {
 							this.modelChangedFlag = true;
 							this.draw();
 						}
@@ -1033,7 +1033,7 @@ define([	// properly require.config'ed
 	    			this.oInfoLoadTime = oInfoLoadTime;
 	    		}
 	    		this.draw();
-	    		this.fillSelectChooseDataset();
+	    		this.fillSelectChooseGraph();
 			},
 
 			clearDataFile : function () {

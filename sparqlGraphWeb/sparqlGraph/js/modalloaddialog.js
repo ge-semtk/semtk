@@ -1,4 +1,4 @@
-/**
+graphs/**
  ** Copyright 2016-19 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
@@ -106,7 +106,7 @@ define([	// properly require.config'ed
                                 <option value="V" selected>virtuoso</label></option>\
                             </select> \
                         </div></div> \
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Dataset:</label><div class="controls"><input type="text" class="input-xlarge" id="mdDataset" list="mdDatalistDatasets" ></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Graph:</label><div class="controls"><input type="text" class="input-xlarge" id="mdGraph" list="mdDatalistGraphs" ></div></div>\
                         <div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
                             <button type="button" class="btn" id="mdSeiDelete">Delete</button>\
                         </div>\
@@ -122,7 +122,7 @@ define([	// properly require.config'ed
         </center>\
         </div>\
         <datalist id="mdDatalistServers"></datalist>\
-        <datalist id="mdDatalistDatasets"></datalist>\
+        <datalist id="mdDatalistGraphs"></datalist>\
         '.replace(/%VAR/g, varNameOBSOLETE);
 
         this.hide();
@@ -152,7 +152,7 @@ define([	// properly require.config'ed
             document.getElementById("mdOwlImports").onchange   =this.callbackChangedOwlImports.bind(this);
             document.getElementById("mdServerURL").onchange    =this.callbackChangedServerURL.bind(this);
             document.getElementById("mdSelectSeiType").onchange=this.callbackChangedSelectSeiType.bind(this);
-            document.getElementById("mdDataset").onchange      =this.callbackChangedDataset.bind(this);
+            document.getElementById("mdGraph").onchange      =this.callbackChangedGraph.bind(this);
 
             document.getElementById("loadDialogForm")  .onsubmit=this.callbackSubmit.bind(this);
             document.getElementById("mdSeiDelete")     .onclick =this.callbackDeleteSei.bind(this);
@@ -211,7 +211,7 @@ define([	// properly require.config'ed
             this.changed(true);
             return false;
         },
-        callbackChangedDataset : function() {
+        callbackChangedGraph : function() {
             this.changed(true);
             return false;
         },
@@ -416,66 +416,66 @@ define([	// properly require.config'ed
                 		break;
                 }
                 document.getElementById("mdServerURL").value = sei.getServerURL();
-                document.getElementById("mdDataset").value = sei.getDataset();
+                document.getElementById("mdGraph").value = sei.getGraph();
 
                 document.getElementById("mdSelectSeiType").disabled=false;
                 document.getElementById("mdServerURL").disabled=false;
-                document.getElementById("mdDataset").disabled=false;
+                document.getElementById("mdGraph").disabled=false;
             } else {
                 document.getElementById("mdSelectSeiType").selectedIndex = 1;
                 document.getElementById("mdServerURL").value = "";
-                document.getElementById("mdDataset").value = "";
+                document.getElementById("mdGraph").value = "";
 
                 document.getElementById("mdSelectSeiType").disabled=true;
                 document.getElementById("mdServerURL").disabled=true;
-                document.getElementById("mdDataset").disabled=true;
+                document.getElementById("mdGraph").disabled=true;
             }
 
             this.updateDatalists();
             return false;
         },
 
-        // update the datalists for serverURL and Dataset
+        // update the datalists for serverURL and Graph
         // with the values from the other Sei's
         updateDatalists : function () {
             var servers = document.getElementById("mdDatalistServers");
-            var datasets = document.getElementById("mdDatalistDatasets");
+            var graphs = document.getElementById("mdDatalistGraphs");
             var serverArr = [];
-            var datasetArr = [];
+            var graphArr = [];
 
             // clear lists
             servers.innerHTML = "";
-            datasets.innerHTML = "";
+            graphs.innerHTML = "";
 
             if (this.conn != null) {
-                // add all Model Interfaces' ServerURL's and Datasets
+                // add all Model Interfaces' ServerURL's and Graphs
                 for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
                     var s = this.conn.getModelInterface(i).getServerURL();
-                    var d = this.conn.getModelInterface(i).getDataset();
+                    var d = this.conn.getModelInterface(i).getGraph();
 
                     if (s!= null && s != "" && serverArr.indexOf(s) == -1) {
                         serverArr.push(s);
                         servers.innerHTML += '<option value="' + s + '">';
                     }
 
-                    if (d != null && d != "" && datasetArr.indexOf(d) == -1) {
-                        datasetArr.push(d);
-                        datasets.innerHTML += '<option value="' + d + '">';
+                    if (d != null && d != "" && graphArr.indexOf(d) == -1) {
+                        graphArr.push(d);
+                        graphs.innerHTML += '<option value="' + d + '">';
                     }
                 }
                 // repeat for Data Interfaces
                 for (var i=0; i < this.conn.getDataInterfaceCount(); i++) {
                     var s = this.conn.getDataInterface(i).getServerURL();
-                    var d = this.conn.getDataInterface(i).getDataset();
+                    var d = this.conn.getDataInterface(i).getGraph();
 
                     if (s!= null && s != "" && serverArr.indexOf(s) == -1) {
                         serverArr.push(s);
                         servers.innerHTML += '<option value="' + s + '">';
                     }
 
-                    if (d != null && d != "" && datasetArr.indexOf(d) == -1) {
-                        datasetArr.push(d);
-                        datasets.innerHTML += '<option value="' + d + '">';
+                    if (d != null && d != "" && graphArr.indexOf(d) == -1) {
+                        graphArr.push(d);
+                        graphs.innerHTML += '<option value="' + d + '">';
                     }
                 }
             }
@@ -713,22 +713,22 @@ define([	// properly require.config'ed
         cleanupConnection : function (cn) {
             // If dataInterface[0] is empty then duplicate modelInterface[0]
             var data0 = cn.getDataInterface(0);
-            if (data0.getServerURL() == "" && data0.getDataset() == "") {
+            if (data0.getServerURL() == "" && data0.getGraph() == "") {
                 var model0 = cn.getModelInterface(0);
                 data0.setServerURL(model0.getServerURL());
-                data0.setDataset(model0.getDataset());
+                data0.setGraph(model0.getGraph());
             };
 
             // remove empty sei's with indices > 0
             for (var i=cn.getDataInterfaceCount()-1; i > 0; i--) {
                 var sei = cn.getDataInterface(i);
-                if (sei.getServerURL() == "" && sei.getDataset() == "") {
+                if (sei.getServerURL() == "" && sei.getGraph() == "") {
                     cn.delDataInterface(i);
                 }
             }
             for (var i=cn.getModelInterfaceCount()-1; i > 0; i--) {
                 var sei = cn.getModelInterface(i);
-                if (sei.getServerURL() == "" && sei.getDataset() == "") {
+                if (sei.getServerURL() == "" && sei.getGraph() == "") {
                     cn.delModelInterface(i);
                 }
             }
@@ -758,10 +758,10 @@ define([	// properly require.config'ed
                     if (sei.getServerURL() == "") {
                         errHTML += "Ontology endpoint " + i + " server URL is empty. <br>";
                     }
-                    if (sei.getDataset() == "") {
-                        errHTML += "Ontology endpoint " + i + " dataset is empty. <br>";
-                    } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER ) {
-                        errHTML += "Ontology endpoint " + i + " dataset does not contain ':'<br>";
+                    if (sei.getGraph() == "") {
+                        errHTML += "Ontology endpoint " + i + " graph is empty. <br>";
+                    } else if (sei.getGraph().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER ) {
+                        errHTML += "Ontology endpoint " + i + " graph does not contain ':'<br>";
                     }
                 }
 
@@ -771,10 +771,10 @@ define([	// properly require.config'ed
                         errHTML += "Data endpoint " + i + " server URL is empty. <br>";
                     }
 
-                    if (sei.getDataset() == "") {
-                        errHTML += "Data endpoint " + i + " dataset is empty. <br>";
-                    } else if (sei.getDataset().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER  ) {
-                        errHTML += "Data endpoint " + i + " dataset does not contain ':'<br>";
+                    if (sei.getGraph() == "") {
+                        errHTML += "Data endpoint " + i + " graph is empty. <br>";
+                    } else if (sei.getGraph().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER  ) {
+                        errHTML += "Data endpoint " + i + " graph does not contain ':'<br>";
                     }
                 }
             }
@@ -835,13 +835,13 @@ define([	// properly require.config'ed
                 		break;
                 }
                 sei.setServerURL(this.document.getElementById("mdServerURL").value.trim());
-                sei.setDataset(this.document.getElementById("mdDataset").value.trim());
+                sei.setGraph(this.document.getElementById("mdGraph").value.trim());
 
                 // of Other type of sei's 0th entry is empty, copy this one in.
-                if (oppSei0.getServerURL() == "" && oppSei0.getDataset() == "") {
+                if (oppSei0.getServerURL() == "" && oppSei0.getGraph() == "") {
                     oppSei0.setServerURL(sei.getServerURL());
                     oppSei0.setServerType(sei.getServerType());
-                    oppSei0.setDataset(sei.getDataset());
+                    oppSei0.setGraph(sei.getGraph());
 
                 }
             }

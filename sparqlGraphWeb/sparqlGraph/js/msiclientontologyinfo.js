@@ -38,9 +38,9 @@ define([	// properly require.config'ed   bootstrap-modal
 		MsiClientOntologyInfo.prototype = {
 
 
-			execRetrieveDetailedOntologyInfo : function (dataset, domain, servertype, url, successCallback) {
+			execRetrieveDetailedOntologyInfo : function (graph, domain, servertype, url, successCallback) {
 				var myData = JSON.stringify ({
-					"dataset" : dataset,
+					"dataset" : graph,
 					"domain" : domain,
 					"serverType" : servertype,
 					"url" : url,

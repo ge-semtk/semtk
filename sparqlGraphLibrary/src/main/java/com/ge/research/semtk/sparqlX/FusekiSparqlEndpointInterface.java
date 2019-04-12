@@ -226,6 +226,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		} else {
 			if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);
+			} else if (responseTxt.contains("Error 404")) {
+				throw new DontRetryException(responseTxt + " server=" + this.getServerAndPort());
 			}
 			throw new Exception("Fuseki non-JSON response: " + responseTxt);
 		}

@@ -337,7 +337,7 @@ public class SparqlToXUtils {
 		}
 		
 		// get graphs/datasets for first model server.  All others must be equal
-		ArrayList<String> datasets = conn.getAllDatasetsForServer(conn.getDataInterface(0).getServerAndPort());
+		ArrayList<String> datasets = conn.getAllGraphsForServer(conn.getDataInterface(0).getServerAndPort());
 		
 		// add graphs from owlImports
 		if (oInfo != null) {
