@@ -429,7 +429,7 @@ public class SparqlToXUtils {
 		
 		// offset and limit
 		if (limitOverride != -1) {
-			sparql.append("ORDER BY ?s, ?p, ?o " + "\n");
+			sparql.append("ORDER BY ?s ?p ?o " + "\n");
 			sparql.append("LIMIT " + String.valueOf(limitOverride) + "\n");
 		}
 		if (offsetOverride != -1) {
