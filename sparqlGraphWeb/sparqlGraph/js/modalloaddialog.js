@@ -1,4 +1,4 @@
-graphs/**
+/**
  ** Copyright 2016-19 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
