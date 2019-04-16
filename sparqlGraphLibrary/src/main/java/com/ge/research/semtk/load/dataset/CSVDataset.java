@@ -209,7 +209,7 @@ public class CSVDataset extends Dataset {
 	public ArrayList<String> getColumnNamesinOrder() throws Exception {
 		ArrayList<String> retval = new ArrayList<String>();
 		for(String curr : this.headers){
-			retval.add(curr.toLowerCase());
+			retval.add(curr.toLowerCase().trim());
 		}
 		return retval;
 	}

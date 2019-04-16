@@ -27,6 +27,7 @@ public class PerformanceTest {
 	private static String taskName;
 	private static long startTime;
 	private static SparqlEndpointInterface sei;
+	private final static boolean NO_PRECHECK = false;
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
@@ -48,7 +49,8 @@ public class PerformanceTest {
 		
 		try {
 			
-			addSimpleRows();
+			addSimpleRows(100); 
+			addBatteryDescriptions(100);
 			
 		} finally {
 			sei.clearGraph();
@@ -58,7 +60,7 @@ public class PerformanceTest {
 		log("fine.");
 	}
 	
-	private static void addSimpleRows() throws Exception {
+	private static void addSimpleRows(int passes) throws Exception {
 		
 		// setup
 		sei.clearGraph();
@@ -67,33 +69,89 @@ public class PerformanceTest {
 		
 		int pass = -1;
 		long triples = 0;
+		final int PASS_SIZE = 1000;
 		
-		while (++pass < 100) {
+		while (++pass < passes) {
 			// build 10,000 rows
 			int i = 0;
+
 			StringBuilder content = new StringBuilder();
 			content.append("battery name, cell id, color\n");
-			for (i=0; i < 10000; i++) {
-				content.append("name_" + i + ",cell_" + i + ",red\n");
+			for (i=0; i < PASS_SIZE; i++) {
+				int index = pass * PASS_SIZE + i;
+				content.append("name_" + index + ",cell_" + index + ",red\n");
 			}
 			
 			Dataset ds0 = new CSVDataset(content.toString(), true);
 	
 			DataLoader dl0 = new DataLoader(sgJson, 30, ds0, "dba", "dba");
-			startTask("load 10000 rows totaling " + (pass + 1) * 10000);
-			dl0.importData(true);
+			startTask("load " + PASS_SIZE + "  totaling," + (pass + 1) * PASS_SIZE);
+			dl0.importData(NO_PRECHECK);
 			endTask();
 			
-			// get new total triples
+			// get new total triples twice
 			triples += sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-
-			startTask("count triples when " + triples);
+			startTask("count triples, " + triples);
 			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			
 			endTask();
 		}
 
 	}
+	
+	/**
+	 
+	 * @param passes
+	 * @throws Exception
+	 */
+	private static void addBatteryDescriptions(int passes) throws Exception {
+		
+		// setup
+		SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
+		SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
+		
+		sei.clearGraph();
+		uploadOwl(sei, "/loadTestDuraBattery.owl");
+		final int PASS_SIZE = 1000;
+		long triples = 0;
+
+		int pass = -1;
+		
+		while (++pass < passes) {
+			// build 10,000 rows
+			int i = 0;
+			StringBuilder content1 = new StringBuilder();
+			StringBuilder content2 = new StringBuilder();
+
+			content1.append("description_opt, batt_ID\n");
+			content2.append("description, batt_ID\n");
+			for (i=0; i < PASS_SIZE; i++) {
+				int index = pass * PASS_SIZE + i;
+				content1.append(",id_" + index + "\n");
+				content2.append("description_" + index + ",id_" + index + "\n");
+			}
+			
+			Dataset ds1 = new CSVDataset(content1.toString(), true);
+			DataLoader dl1 = new DataLoader(sgJson1, 30, ds1, "dba", "dba");
+			startTask("load simple " + PASS_SIZE + " total," + (pass + 1) * PASS_SIZE);
+			dl1.importData(NO_PRECHECK);
+			endTask();
+			
+			Dataset ds2 = new CSVDataset(content2.toString(), true);
+			DataLoader dl2 = new DataLoader(sgJson2, 30, ds2, "dba", "dba");
+			startTask("load lookup " + PASS_SIZE + "total," + (pass + 1) * PASS_SIZE);
+			dl2.importData(NO_PRECHECK);
+			endTask();
+			
+			// get new total triples twice
+			triples += sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+			startTask("count triples," + triples );
+			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+			endTask();
+
+		}
+
+	}
+
 	private static void log(String s) {
 		System.err.println(s);
 	}
