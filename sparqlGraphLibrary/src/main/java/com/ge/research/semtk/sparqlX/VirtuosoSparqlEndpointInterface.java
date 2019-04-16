@@ -210,6 +210,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 
 	static Pattern pSP031 = Pattern.compile("Error SP031");
+	static Pattern pVirtuosoRetry = Pattern.compile("Virtuoso .*(Transaction deadlocked)");
 	static Pattern pVirtuosoError = Pattern.compile("Virtuoso [0-9]+ Error ");
 	@Override
 	public JSONObject handleNonJSONResponse(String responseTxt, SparqlResultTypes resulttype) throws DontRetryException, Exception {
@@ -218,7 +219,11 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		if ( pSP031.matcher(responseTxt).find()) {
 			throw new DontRetryException("SemTk says: Virtuoso query may be too large or complex.\n" + responseTxt);
 		
-		// avoid retrying if Virtuoso threw a recognizable error
+		// Virtuoso threw a retry-able error
+		} else if (pVirtuosoRetry.matcher(responseTxt).find()) {
+			throw new DontRetryException(responseTxt);
+			
+		// Remaining virtuoso errors are non-retryable
 		} else if (pVirtuosoError.matcher(responseTxt).find()) {
 			throw new DontRetryException(responseTxt);
 			
