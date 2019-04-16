@@ -1,4 +1,4 @@
-description_opt,batt_id,assembly_date_opt,cell1_id_opt," cell1_color"," cell2_id_opt"," cell2_color"," cell3_id_opt",cell3_color,cell4_id_opt,cell4_color,Failure Cause,Failure Record Number
+description_opt,batt_id,assembly_date_opt,cell1_id_opt,cell1_color,cell2_id_opt,cell2_color,cell3_id_opt,cell3_color,cell4_id_opt,cell4_color,Failure Cause,Failure Record Number
 "",id_733344685,,id1_646135965,white,id2_957917158,white,id3_903697719,blue,id4_982587889,white,URI lookup found multiple URI's,1
 "",id_372942307,,id1_460261650,white,id2_863783956,blue,id3_779418008,red,id4_457337622,red,URI lookup found multiple URI's,2
 "",id_411321736,,id1_569220613,white,id2_78842122,blue,id3_172576603,blue,id4_32633260,white,URI lookup found multiple URI's,3
