@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
@@ -24,6 +27,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class PerformanceTest {
 
+	private static String resourceFolder;
 	private static String taskName;
 	private static long startTime;
 	private static SparqlEndpointInterface sei;
@@ -31,14 +35,18 @@ public class PerformanceTest {
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		if (args.length != 2) {
-			throw new Exception("Usage: PerformanceTest server_type server_url");
+		if (args.length != 3) {
+			throw new Exception("Usage: PerformanceTest server_type server_url resource_folder");
 		}
 		
 		
 		String graph = "http://performance_test";
 		sei = SparqlEndpointInterface.getInstance(args[0], args[1], graph, "dba", "dba");
 		log("graph: " + graph);
+		resourceFolder = args[2];
+		if (!Files.exists(Paths.get(resourceFolder))) {
+			throw new Exception("Resource folder doesn't exist: " + resourceFolder);
+		}
 		
 		Table table = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei));
 		long triples = table.getCellAsLong(0, 0);
@@ -49,8 +57,8 @@ public class PerformanceTest {
 		
 		try {
 			
-			addSimpleRows(100); 
-			addBatteryDescriptions(100);
+			addSimpleRows(1000); 
+			addBatteryDescriptions(1000);
 			
 		} finally {
 			sei.clearGraph();
@@ -167,13 +175,13 @@ public class PerformanceTest {
 	}
 	
 	public static void uploadOwl(SparqlEndpointInterface sei, String filename) throws Exception {
-		File f = new File(PerformanceTest.class.getResource(filename).getFile());
+		File f = Paths.get(resourceFolder + "/" + filename).toFile();
 		byte [] owl =  FileUtils.readFileToByteArray(f);
 		sei.executeAuthUpload(owl);
 	}
 	
 	public static SparqlGraphJson getSparqlGraphJsonFromFile(String jsonFilename, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {	
-		InputStream is = PerformanceTest.class.getResourceAsStream(jsonFilename);
+		InputStream is = Files.newInputStream(Paths.get(resourceFolder,jsonFilename));
 		InputStreamReader reader = new InputStreamReader(is);
 		JSONObject jObj = (JSONObject) (new JSONParser()).parse(reader);	
 		
