@@ -47,6 +47,9 @@ public class CSVDataset extends Dataset {
 	private Iterator<CSVRecord> recordIterator;	// iterator of CSV records
 	private String[] headers;					// ordered list of headers to return
 	
+	private CSVParser parser;
+	private Reader reader;
+	
 	/**
 	 * Constructor that takes a path to a CSV file
 	 * 
@@ -88,7 +91,8 @@ public class CSVDataset extends Dataset {
 				this.csvString = this.csvString.substring(1);
 			}
 		}
-		CSVParser parser = getParser(new StringReader(this.csvString));
+		this.reader = new StringReader(this.csvString);
+		this.parser = getParser();
 		this.recordIterator = parser.iterator();
 		
 		// get and set the headr info
@@ -129,9 +133,10 @@ public class CSVDataset extends Dataset {
 	 */
 	private void initialize(String path, String[] headers) throws Exception {
 		this.csvPath = path;
-		CSVParser parser = getParser(new FileReader(path));
+		this.reader = new FileReader(path);
+		this.parser = getParser();
 		this.recordIterator = parser.iterator();
-		this.headers = headers;				
+		this.headers = headers;			
 		
 		// confirm that headers passed in are available in the CSVParser (case-insensitive)
 		boolean found;
@@ -153,7 +158,7 @@ public class CSVDataset extends Dataset {
 		Set<String> parserHeaders = parser.getHeaderMap().keySet();
 	}
 	
-	private CSVParser getParser(Reader reader) throws Exception{
+	private CSVParser getParser() throws Exception{
 		// return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).parse(reader));
 		return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).withQuote('"').withEscape('\\').withIgnoreEmptyLines(true).parse(reader)); // changed toward handling quotes in stream. the were breaking
 																										// solution suggestion: http://stackoverflow.com/questions/26729799/invalid-char-between-encapsulated-token-and-delimiter-in-apache-commons-csv-libr
@@ -219,20 +224,30 @@ public class CSVDataset extends Dataset {
 	 */
 	@Override
 	public void reset() throws Exception {
+		if(this.reader != null){
+			this.reader.close();  // need this
+		}
 		if(csvPath != null){
-			this.recordIterator = getParser(new FileReader(this.csvPath)).iterator();
+			this.reader = new FileReader(this.csvPath);
 		}else if(csvString != null){
-			this.recordIterator = getParser(new StringReader(this.csvString)).iterator();
+			this.reader = new StringReader(this.csvString);
 		}else{
 			throw new Exception("No CSV path or content available");
 		}
+		this.parser = getParser();
+		this.recordIterator = parser.iterator();
 	}	
 	
 	/**
 	 * Close the dataset
 	 */
-	public void close(){
-		// no action needed
+	public void close() throws Exception{
+		if(this.parser != null) {
+			this.parser.close();
+		}
+		if(this.reader != null){
+			this.reader.close();
+		}
 	}
 
 }

@@ -21,9 +21,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -84,8 +86,10 @@ public class DataLoaderTest_IT {
 	@Test
 	public void testLoadFromCsv() throws Exception {
 
+		String owlFile = "src/test/resources/testTransforms.owl";
+		
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwl(owlFile);
 		SparqlConnection conn = TestGraph.getSparqlConn("http://");
 		
 		String templateFilePath = "src/test/resources/testTransforms.json";
@@ -137,6 +141,18 @@ public class DataLoaderTest_IT {
 		int numRecordsAdded = DataLoader.loadFromCsv(templateFilePath, csvFilePath, TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
 		assertEquals(numRecordsAdded, 3);	// loaded 3 csv rows
 		assertEquals(TestGraph.getNumTriples(), 147);  // confirmed that the graph got some data
+		
+		// confirm can delete a directory containing a CSV file that has been loaded
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl(owlFile);
+		String tmpDirToDelete = "src/test/resources/tmpToDelete/";     			// create a directory that we can later delete
+		String csvFileToDelete = tmpDirToDelete + "testTransforms.csv";
+		FileUtils.copyFile(new File(csvFilePath),new File(csvFileToDelete));	// copy a CSV file here
+		numRecordsAdded = DataLoader.loadFromCsv(templateFilePath, csvFileToDelete, TestGraph.getUsername(), TestGraph.getPassword(), DEFAULT_BATCH_SIZE, conn);
+		assertEquals(numRecordsAdded, 3);	// loaded 3 csv rows
+		assertEquals(TestGraph.getNumTriples(), 147);  // confirmed that the graph got some data
+		FileUtils.deleteDirectory(new File(tmpDirToDelete));  // will throw exception if fails
+		
 	}
 	
 	@Test
