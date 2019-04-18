@@ -170,7 +170,7 @@ public abstract class RestClient extends Client implements Runnable {
 	 * Abstract method to handle an empty response from the service
 	 */
 	public void handleEmptyResponse() throws Exception {
-		throw new Exception("Received empty response: " + this.httpResponse.toString());
+		throw new Exception("Received empty response from " + conf.getServiceURL() + ": " + this.httpResponse.toString());
 	}
 	
 	/**
