@@ -31,12 +31,11 @@
     <!-- Include the required JavaScript libraries: -->
     <script type="text/javascript" src="../jquery/jquery.js"></script>
     <script type="text/javascript" src="../jquery/jquery-ui-1.10.4.min.js"></script>
-
 	<script type="text/javascript" src='../jquery/jquery.cookie.js'></script>
 	<script type="text/javascript" src='../jquery/jquery.jsonp-2.3.0.min.js'></script>
 
     <link rel='stylesheet' type='text/css' href='../dynatree-1.2.5/skin/ui.dynatree.css'>
-    <script src='../dynatree-1.2.5/jquery.dynatree.js' type="text/javascript"></script>
+    <!-- script src='../dynatree-1.2.5/jquery.dynatree.js' type="text/javascript"></script>
 
 	<!-- CSS stuff -->
 	<!--  PEC TODO use the iids modal dialog -->
@@ -213,7 +212,8 @@
             <button id="edit-tab-but" class="btn" onclick="anchorTabE.click();" disabled style="display: none;"><i class="icon-edit"></i> Edit Ontology</button>
 						<button id="mapping-tab-but" class="btn" onclick="anchorTab2.click();" disabled><i class="icon-table"></i> Map Input</button>
 						<button id="upload-tab-but" class="btn" onclick="anchorTab3.click();" disabled><i class="icon-cloud-upload"></i> Import</button>
-					</div>
+            <button id="explore-tab-but" class="btn" onclick="anchorTabX.click();" disabled><i class="icon-beaker"></i> Explore</button>
+          </div>
 
 				</span>
 			</div>
@@ -230,6 +230,7 @@
 			    <li><a id='anchorTabE' href="#tabs-e">Edit Ontology</a></li>
 			    <li><a id='anchorTab2' href="#tabs-2">Map Input</a></li>
 			    <li><a id='anchorTab3' href="#tabs-3">Import</a></li>
+          <li><a id='anchorTabX' href="#tabs-x">Explore</a></li>
 
 		</ul>
 		  <div id="tabs-1">
@@ -249,7 +250,7 @@
 						    <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
 						</td>
 						<td align="right">
-                            <button class="btn" id="btnCollapseUnused"   onclick="javascript:doCollapseUnused(); return false;" disabled><i class="icon-double-angle-down"></i></button>
+              <button class="btn" id="btnCollapseUnused"   onclick="javascript:doCollapseUnused(); return false;" disabled><i class="icon-double-angle-down"></i></button>
 							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
 							<button class="btn" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
 						</td>
@@ -384,71 +385,68 @@
 			</div>
 		</div>
 
-		<!------  Edit Ontology Tab ------>
-        <div id="tabs-e" >
-            <br>
+    <!-- Edit Import Tab ------>
+    <div id="tabs-e" >
+      <br>
 			<div class="container">
-		    	<!------------  button toolbar ------------>
-                <form class="form-search" action="javascript:gEditTab.doSearch()" style="margin-bottom:1ch;">
-                        <table width="100%"><tr>
-                            <td align="left">
-                                <div class="input-append">
-                                    <input type="text" id="editSearch" class="input-medium search-query" align="left">
-                                    <button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
-                                </div>
-                                <button class="btn" id="btnEditTreeExpand"   onclick="javascript:gEditTab.doExpand(); return false;" >Expand</button>
-                                <button class="btn" id="btnEditTreeCollapse" onclick="javascript:gEditTab.doCollapse(); return false;" >Collapse</button>
-                            </td>
-                            <td align="right">
+		      <!-- button toolbar ------------>
+          <form class="form-search" action="javascript:gEditTab.doSearch()" style="margin-bottom:1ch;">
+            <table width="100%"><tr>
+              <td align="left">
+                <div class="input-append">
+                  <input type="text" id="editSearch" class="input-medium search-query" align="left">
+                  <button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
+                </div>
+                <button class="btn" id="btnEditTreeExpand"   onclick="javascript:gEditTab.doExpand(); return false;" >Expand</button>
+                <button class="btn" id="btnEditTreeCollapse" onclick="javascript:gEditTab.doCollapse(); return false;" >Collapse</button>
+              </td>
+              <td align="right"> </td>
+            </tr></table>
+          </form>
 
-                            </td>
-                        </tr></table>
-                    </form>
-
-
-
-                    <div id="editTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
-                        <div id="editTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
-                            <div id="editTreeDiv" ></div>
-                        </div>
-                        <div id="editCanvasWrapper" class="canvaswrap">
-                            <div id="editCanvasDiv" style="" class="canvas ui-widget-content">
-                            </div>
-                        </div>
-                    </div>
-
-                    <section class="module">
-                        <div id="editButtonDiv">
-                            <form class="form-horizontal"></form>
-                        </div>
-                    </section>
-
-            </div>
-        </div>
-
-        <!-- Explore Tab ------>
-        <div id="tabs-x" >
-          <br>
-    			<div style="margin: 4ch; width=100%;">
-
-              <div id="exploretTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden; resize: vertical;">
-                  <div id="exploreTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
-                      <div id="exploreTreeDiv" ></div>
-                  </div>
-                  <div id="exploreCanvasWrapper" class="canvaswrap" style="overflow:hidden;">
-                      <div id="exploreCanvasDiv" style="height:100%; width:100%" class="canvas ui-widget-content">
-                      </div>
+          <div id="editTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
+              <div id="editTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
+                  <div id="editTreeDiv" ></div>
+              </div>
+              <div id="editCanvasWrapper" class="canvaswrap">
+                  <div id="editCanvasDiv" style="" class="canvas ui-widget-content">
                   </div>
               </div>
+          </div>
 
-              <section class="module">
-                  <div id="exploreButtonDiv">
-                      <form class="form-horizontal"></form>
-                  </div>
-              </section>
+          <section class="module">
+              <div id="editButtonDiv">
+                  <form class="form-horizontal"></form>
+              </div>
+          </section>
 
-            </div>
         </div>
+    </div>
+
+    <!-- Explore Tab ------>
+    <div id="tabs-x" >
+      <br>
+			<div style="margin: 4ch; width=100%;">
+
+          <div id="exploretTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden; resize: vertical;">
+              <div id="exploreTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
+                  <div id="exploreTreeDiv" ></div>
+              </div>
+              <div id="exploreCanvasWrapper" class="canvaswrap" style="overflow:hidden;">
+                  <div id="exploreCanvasDiv" style="height:100%; width:100%" class="canvas ui-widget-content">
+                  </div>
+              </div>
+          </div>
+
+          <section class="module">
+              <div id="exploreButtonDiv">
+                  <form class="form-horizontal"></form>
+              </div>
+          </section>
+
+        </div>
+    </div>
+
 
 		<!------  Data Import Tab ------>
 		<div id="tabs-2" >
@@ -483,8 +481,8 @@
 						<div id="uploadtoolsdiv" class="module-body collapse">
 						</div>
 				    </section>
-					<br>
-          <section class="module collapsible">
+            <br>
+            <section class="module collapsible">
 				    	<header class="module-header">Triplestore Tools</header>
 						<div id="uploadmiscdiv" class="module-body collapse">
 						</div>
