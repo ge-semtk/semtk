@@ -238,7 +238,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected void updateStatusToFailed(String rationale) throws UnableToSetStatusException{
 		try{
 			this.statusClient.execSetFailure(rationale != null ? rationale : "Exception with e.getMessage()==null");
-			LocalLogger.logToStdErr("attempted to write failure message to status service");
+			LocalLogger.logToStdErr("wrote failure message to status service");
 		}
 		catch(Exception eee){
 			LocalLogger.logToStdErr("failed to write failure message to status service");
