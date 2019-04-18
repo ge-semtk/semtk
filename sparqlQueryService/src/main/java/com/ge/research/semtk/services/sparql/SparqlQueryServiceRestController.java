@@ -151,7 +151,7 @@ public class SparqlQueryServiceRestController {
 		
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 			
-			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset);
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph());
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
@@ -193,7 +193,7 @@ public class SparqlQueryServiceRestController {
 			}
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
@@ -224,7 +224,7 @@ public class SparqlQueryServiceRestController {
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			uncacheChangedModel(sei);
 			String dropGraphQuery = SparqlToXUtils.generateDropGraphSparql(sei);
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
@@ -321,7 +321,7 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			query = SparqlToXUtils.generateDeletePrefixQuery(sei, requestBody.prefix);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
@@ -375,7 +375,7 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			uncacheChangedModel(sei);
 			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, requestBody.prefixes, deleteBlankNodes);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
@@ -407,7 +407,7 @@ public class SparqlQueryServiceRestController {
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.serverType, requestBody.serverAndPort, requestBody.dataset, requestBody.user, requestBody.password);	
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			sei.clearGraph();
 			uncacheChangedModel(sei);
 			resultSet = new SimpleResultSet(true);
@@ -434,7 +434,8 @@ public class SparqlQueryServiceRestController {
 	@RequestMapping(value="/uploadOwl", method= RequestMethod.POST)
 	public JSONObject uploadOwl(@RequestParam("serverAndPort") String serverAndPort, 
 								@RequestParam("serverType") String serverType, 
-								@RequestParam("dataset") String dataset, 
+								@RequestParam("dataset") String dataset, // deprecated in favor of graph
+								@RequestParam("graph") String graph, 
 								@RequestParam("user") String user, 
 								@RequestParam("password") String password, 
 								@RequestParam("owlFile") MultipartFile owlFile, 
@@ -450,9 +451,13 @@ public class SparqlQueryServiceRestController {
 		try {	
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
-			if (dataset == null || dataset.trim().isEmpty() ) throw new Exception("dataset is empty.");
+			
+			// handle deprecated dataset
+			if (graph == null || graph.trim().isEmpty() ) graph = dataset;
+			if (graph == null || graph.trim().isEmpty() ) throw new Exception("graph is empty.");
 
-			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, dataset, user, password);
+
+			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
 			
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
 				// S3 bucket is option.  It can be filled with blanks and nulls

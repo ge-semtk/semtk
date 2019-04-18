@@ -27,7 +27,8 @@ public class SparqlRequestBody {
 	
 	public String serverAndPort;  	// e.g. http://localhost:2420
 	public String serverType;		// e.g. virtuoso
-    public String dataset;			// e.g. http://research.ge.com/dataset
+    public String dataset;			// e.g. http://research.ge.com/dataset  DEPRECATED
+    public String graph;	        // newer
     
     /**
      * Validate request contents.  Throws an exception if validation fails.
@@ -39,8 +40,8 @@ public class SparqlRequestBody {
 		if(serverType == null || serverType.trim().isEmpty()){
 			throw new Exception("No server type specified");
 		}		
-		if(dataset == null || dataset.trim().isEmpty()){
-			throw new Exception("No dataset specified");
+		if ( (dataset == null || dataset.trim().isEmpty()) && (graph == null || graph.trim().isEmpty()) ) {
+			throw new Exception("No graph specified");
 		}		
     }
     
@@ -50,5 +51,25 @@ public class SparqlRequestBody {
     public void printInfo(){
 		LocalLogger.logToStdOut("Connect to " + serverAndPort + " (" + serverType + "), dataset " + dataset);
     }
+    
+    /** 
+     * handle "dataset" deprecation
+     * @return
+     */
+    public String getGraph() {
+		if (graph == null || graph.trim().isEmpty()) {
+			return this.dataset;
+		} else {
+			return this.graph;
+		}
+    }
+
+	public String getServerAndPort() {
+		return serverAndPort;
+	}
+
+	public String getServerType() {
+		return serverType;
+	}
     
 }

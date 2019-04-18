@@ -52,4 +52,14 @@ public class SparqlAuthRequestBody extends SparqlRequestBody {
     	super.printInfo();
     	LocalLogger.logToStdOut("User: " + user);
     }
+
+	public String getUser() {
+		return user;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+    
+    
 }

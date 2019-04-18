@@ -46,4 +46,8 @@ public class SparqlPrefixAuthRequestBody extends SparqlAuthRequestBody {
     	super.printInfo();
     	LocalLogger.logToStdOut("prefix: " + prefix);
     }
+    
+    public String getPrefix() {
+    	return this.prefix;
+    }
 }
