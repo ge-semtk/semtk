@@ -64,8 +64,11 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	
 	public void validate() throws Exception {
 		super.validate();
-		checkNotEmpty("sparqlUserName", sparqlUserName);
-		checkNotEmptyMaskValue("sparqlPassword", sparqlPassword);
+// Neptune uses empty.  Maybe fuseki too?
+//		checkNotEmpty("sparqlUserName", sparqlUserName);
+//		checkNotEmptyMaskValue("sparqlPassword", sparqlPassword);
+		checkNone("sparqlUserName", sparqlUserName);
+		checkNone("sparqlPassword", sparqlPassword);
 		checkNone("batchSize", batchSize);
 	}
 }
