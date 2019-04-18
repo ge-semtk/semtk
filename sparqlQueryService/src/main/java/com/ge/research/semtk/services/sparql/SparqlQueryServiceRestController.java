@@ -434,8 +434,8 @@ public class SparqlQueryServiceRestController {
 	@RequestMapping(value="/uploadOwl", method= RequestMethod.POST)
 	public JSONObject uploadOwl(@RequestParam("serverAndPort") String serverAndPort, 
 								@RequestParam("serverType") String serverType, 
-								@RequestParam("dataset") String dataset, // deprecated in favor of graph
-								@RequestParam("graph") String graph, 
+								@RequestParam(value="dataset", required=false) String dataset, // deprecated in favor of graph
+								@RequestParam(value="graph", required=false) String graph, 
 								@RequestParam("user") String user, 
 								@RequestParam("password") String password, 
 								@RequestParam("owlFile") MultipartFile owlFile, 
