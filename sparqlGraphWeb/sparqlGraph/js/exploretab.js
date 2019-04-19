@@ -48,7 +48,7 @@ define([	// properly require.config'ed
 
 
 		//============ local object  ExploreTab =============
-		var ExploreTab = function(treediv, canvasdiv, buttondiv) {
+		var ExploreTab = function(treediv, canvasdiv, buttondiv, searchForm) {
             this.treebuttondiv = document.createElement("div");
             this.treebuttondiv.id = "etTreeButtonDiv";
             treediv.appendChild(this.treebuttondiv);
@@ -89,6 +89,8 @@ define([	// properly require.config'ed
             canvasdiv.appendChild(this.canvasdiv);
 
             this.buttondiv = buttondiv;
+            this.searchForm = searchForm;
+
             this.infospan = document.createElement("span");
             this.infospan.style.marginRight = "3ch";
             this.oInfo = null;
@@ -101,7 +103,7 @@ define([	// properly require.config'ed
 
             this.cancelFlag = false;
 
-            this.initTreeButtonDiv();
+            this.initSearchForm();
             this.initDynaTree();
             this.initButtonDiv();
             this.initCanvas();
@@ -109,6 +111,8 @@ define([	// properly require.config'ed
             this.progressDiv = document.createElement("div");
             this.progressDiv.id = "etProgressDiv";
             this.buttondiv.appendChild(this.progressDiv);
+
+
         };
 
 		ExploreTab.MAX_LAYOUT_ELEMENTS = 100;
@@ -192,42 +196,26 @@ define([	// properly require.config'ed
             },
 
             // little div sitting on top of the otree
-            initTreeButtonDiv : function() {
+            initSearchForm : function() {
 
                 var div = this.treebuttondiv;
                 div.innerHTML = "";
                 div.style.padding="1ch";
 
+                var butTable = document.createElement("table");
+                this.searchForm.appendChild(butTable);
+                butTable.width="100%";
+                var tr = document.createElement("tr");
+                butTable.appendChild(tr);
 
-                var form = IIDXHelper.createSearchForm(this.doSearch, this);
-                div.appendChild(form);
+                var td = document.createElement("td");
+                tr.appendChild(td);
+                td.align="left";
+                td.appendChild(IIDXHelper.createSearchDiv(this.doSearch, this));
 
-                var formhoriz1 = IIDXHelper.buildHorizontalForm(true);
-                div.appendChild(formhoriz1);
-                formhoriz1.appendChild(IIDXHelper.createButton("Expand", this.doExpand.bind(this)));
-                formhoriz1.appendChild(IIDXHelper.createNbspText());
-                formhoriz1.appendChild(IIDXHelper.createButton("Collapse", this.doCollapse.bind(this)));
+                td.appendChild(IIDXHelper.createButton("Expand", this.doExpand.bind(this)));
+                td.appendChild(IIDXHelper.createButton("Collapse", this.doCollapse.bind(this)));
 
-                var formhoriz2 = IIDXHelper.buildHorizontalForm(true);
-                div.appendChild(formhoriz2);
-
-                var select = IIDXHelper.createSelect("etTreeSelect", [["single",2], ["sub-tree",3]], ["multi"], false, "input-small");
-                select.onchange = function() {
-                    this.oTree.tree.options.selectMode = parseInt(document.getElementById("etTreeSelect").value);
-                }.bind(this);
-
-                formhoriz2.appendChild(document.createTextNode(" select mode:"));
-                formhoriz2.appendChild(select);
-
-                formhoriz2.appendChild(IIDXHelper.createNbspText());
-                formhoriz2.appendChild(IIDXHelper.createButton("Select all", this.treeSelectAll.bind(this, true)));
-                formhoriz2.appendChild(IIDXHelper.createNbspText());
-                formhoriz2.appendChild(IIDXHelper.createButton("Clear all", this.treeSelectAll.bind(this, false)));
-
-                var hr = document.createElement("hr");
-                hr.style.marginTop="4px";
-                hr.style.marginBottom="4px";
-                div.appendChild(hr);
             },
 
             // main section of buttons
@@ -252,43 +240,64 @@ define([	// properly require.config'ed
                 var tr = document.createElement("tr");
                 tbody.appendChild(tr);
 
-                // cell 1/3
+                // -------- cell 1/3 --------
                 var td1 = document.createElement("td");
                 tr.appendChild(td1);
+                td1.align="left";
+                var hform1 = IIDXHelper.buildHorizontalForm(true)
+                td1.appendChild(hform1);
 
-                // network... button
-                td1.appendChild(IIDXHelper.createButton("network...", function() {$(this.configdiv).dialog("open")}.bind(this)));
+                var select = IIDXHelper.createSelect("etTreeSelect", [["single",2], ["sub-tree",3]], ["multi"], false, "input-small");
+                select.onchange = function() {
+                    this.oTree.tree.options.selectMode = parseInt(document.getElementById("etTreeSelect").value);
+                }.bind(this);
 
-                // redraw button
-                td1.appendChild(IIDXHelper.createNbspText());
-                td1.appendChild(IIDXHelper.createButton("redraw", this.drawCanvas.bind(this)));
+                hform1.appendChild(document.createTextNode(" select mode:"));
+                hform1.appendChild(select);
+                
+                hform1.appendChild(IIDXHelper.createNbspText());
+                hform1.appendChild(IIDXHelper.createButton("Select all", this.treeSelectAll.bind(this, true)));
 
-                // cell 2/3
+                hform1.appendChild(IIDXHelper.createNbspText());
+                hform1.appendChild(IIDXHelper.createButton("Clear all", this.treeSelectAll.bind(this, false)));
+
+                //  -------- cell 2/3 --------
                 var td2 = document.createElement("td");
                 tr.appendChild(td2);
-                td2.appendChild(this.infospan);
+                var hform2 = IIDXHelper.buildHorizontalForm(true)
+                td2.appendChild(hform2);
 
-                // cell 3/3
+                hform2.appendChild(this.infospan);
+
+                //  -------- cell 3/3 --------
                 var td3 = document.createElement("td");
                 tr.appendChild(td3);
-
-                var div3 = document.createElement("div");
-                td3.appendChild(div3);
                 td3.align="right";
+
+                var hform3 = IIDXHelper.buildHorizontalForm(true)
+                td3.appendChild(hform3);
+
+                // network... button
+                hform3.appendChild(IIDXHelper.createButton("network...", function() {$(this.configdiv).dialog("open")}.bind(this)));
+
+                // redraw button
+                hform3.appendChild(IIDXHelper.createNbspText());
+                hform3.appendChild(IIDXHelper.createButton("redraw", this.drawCanvas.bind(this)));
+
                 var select = IIDXHelper.createSelect("etSelect", ["Ontology", "Instance Data"], ["Ontology"]);
                 select.onchange = this.drawCanvas.bind(this);
-                td3.appendChild(select);
-                td3.appendChild(IIDXHelper.createNbspText());
-
+                hform3.appendChild(IIDXHelper.createNbspText());
+                hform3.appendChild(select);
 
                 var but1 = IIDXHelper.createButton("stop query", this.butSetCancelFlag.bind(this));
-                td3.appendChild(but1);
+                hform3.appendChild(IIDXHelper.createNbspText());
+                hform3.appendChild(but1);
 
                 var but2 = IIDXHelper.createButton("stop layout", this.stopLayout.bind(this));
                 but2.id = "butStopLayout";
                 but2.disabled = true;
-                td3.appendChild(IIDXHelper.createNbspText());
-                td3.appendChild(but2);
+                hform3.appendChild(IIDXHelper.createNbspText());
+                hform3.appendChild(but2);
 
             },
 

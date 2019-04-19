@@ -110,7 +110,7 @@
             gExploreTab = new ExploreTab( document.getElementById("exploreTreeDiv"),
                                        document.getElementById("exploreCanvasDiv"),
                                        document.getElementById("exploreButtonDiv"),
-                                       document.getElementById("exploreSearch")
+                                       document.getElementById("exploreSearchForm")
                                       );
             document.getElementById("explore-tab-but").disabled = false;
 

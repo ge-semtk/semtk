@@ -430,14 +430,9 @@ define([	// properly require.config'ed
     };
 
     // search callback takes elem param - so it can ask elem.value to get search pattern
-    IIDXHelper.createSearchForm = function (searchCallback, searchThis) {
-        var form = document.createElement("form");
-
-        form.classList.add("form-search");
-        form.style.marginBottom="1ch";
+    IIDXHelper.createSearchDiv = function (searchCallback, searchThis) {
 
         var div = document.createElement("div");
-        form.appendChild(div);
         div.classList.add("input-append");
 
         var input = document.createElement("input");
@@ -451,7 +446,7 @@ define([	// properly require.config'ed
         div.appendChild(searchbut);
         searchbut.type="submit";
 
-        return form;
+        return div;
     }
 
     IIDXHelper.downloadFile = function (data, filename, mimetype) {
