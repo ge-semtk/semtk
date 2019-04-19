@@ -49,7 +49,7 @@ public class SparqlRequestBody {
      * Print request info to console
      */
     public void printInfo(){
-		LocalLogger.logToStdOut("Connect to " + serverAndPort + " (" + serverType + "), dataset " + dataset);
+		LocalLogger.logToStdOut("Connect to " + serverAndPort + " (" + serverType + "), graph " + this.getGraph());
     }
     
     /** 
