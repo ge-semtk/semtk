@@ -454,15 +454,17 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			return "Succeeded in " + msec + " millisec";
 			
 		} catch (Exception e) {
+			JSONObject responseObj = null;
 			try {
-				JSONObject responseObj = (JSONObject) resp;
-				if (responseObj.containsKey("detailedMessage")) {
-					throw new Exception((String) responseObj.get("detailedMessage"));
-				} else {
-					throw new Exception("ee");
-				}
+				responseObj = (JSONObject) resp;
 			} catch (Exception ee) {
 				throw new Exception("Failed to parse Neptune confirm message: " + resp.toString());
+			}
+			
+			if (responseObj.containsKey("detailedMessage")) {
+				throw new Exception((String) responseObj.get("detailedMessage"));
+			} else {
+				throw new Exception("ee");
 			}
 		}
 	}
