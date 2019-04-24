@@ -111,7 +111,7 @@ public class PerformanceTest {
 			endTask();
 			
 			// get new total triples twice
-			triples += sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			startTask("count triples, " + triples);
 			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			endTask();
@@ -164,7 +164,7 @@ public class PerformanceTest {
 			endTask();
 			
 			// get new total triples twice
-			triples += sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			startTask("count triples," + triples );
 			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			endTask();
