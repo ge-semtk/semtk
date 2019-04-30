@@ -137,8 +137,15 @@ public class LoggerRestClient {
 
 		}
 	}
-	
+	public void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, String parent) throws Exception{
+		logEvent(action, details, tenants, highLevelTask, this.generateActionID(), parent);
+	}
+
 	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, Boolean useParent) throws Exception{
+		this.logEvent(action, details, tenants, highLevelTask, eventID, useParent ? this.parentEventStack.peek().toString() : null);
+	}
+	
+	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, String parent) throws Exception{
 		if (this.conf.getServerName().isEmpty()) {
 			LocalLogger.logToStdErr("logging is off.  action=" + action);
 			return;
@@ -178,14 +185,18 @@ public class LoggerRestClient {
 		paramsJson.put("Version", this.VERSION_IDENTIFIER);
 		paramsJson.put("URL", this.URL_PLACEHOLDER);
 		paramsJson.put("Main", action);
-		paramsJson.put("Details", bigDetailsString);
-		paramsJson.put("Tenants", bigTenantString);
+		if (bigDetailsString != null && !bigDetailsString.isEmpty()) {
+			paramsJson.put("Details", bigDetailsString);
+		}
+		if (bigTenantString != null && !bigTenantString.isEmpty()) {
+			paramsJson.put("Tenants", bigTenantString);
+		}
 		paramsJson.put("Session", this.sessionID);
 		paramsJson.put("EventID", eventID.toString());
 		paramsJson.put("Task", highLevelTask);
 		paramsJson.put("LogSeq", this.getNextSeqNumber() + "" );
-		if(useParent){
-			paramsJson.put("Parent", this.parentEventStack.peek().toString());
+		if(parent != null && !parent.equals("UNKNOWN")){
+			paramsJson.put("Parent", parent);
 		}
 		if (user != null) {
 			paramsJson.put("UserID", this.user);
