@@ -252,7 +252,11 @@ public class IntegrationTestUtility {
 		if (!Utility.ENV_TEST) {
 			throw new Exception(Utility.ENV_TEST_EXCEPTION_STRING);
 		}
-		return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
+		if (key.startsWith("integrationtest")) {
+			return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
+		} else {
+			return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest." + key);
+		}
 	}
 	
 	public static File getSampleFile(Object caller) throws Exception {

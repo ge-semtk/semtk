@@ -104,13 +104,15 @@ public class CSVDataset extends Dataset {
 			throw new Exception("Duplicate or empty column headers on CSV file");
 		}
 		
+		String ss = "";
 		try {
 			for (String s : headerMap.keySet()) {
+				ss = s;
 				int location = headerMap.get(s);		
 				this.headers[location] = s;
 			}	
 		} catch (Exception e) {
-			throw new Exception("Problem reading CSV headers", e);
+			throw new Exception((ss.isEmpty() ? "Empty CSV column header." : "Problem reading CSV headers."), e);
 		}
 	}
 	

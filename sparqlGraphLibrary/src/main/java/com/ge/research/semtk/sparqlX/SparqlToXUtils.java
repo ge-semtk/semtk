@@ -363,7 +363,11 @@ public class SparqlToXUtils {
 	}
 	
 	public static String tabOutdent(String tab) {
-		return tab.substring(0, tab.length()-1);
+		if (tab.length() < 1) {
+			return tab;
+		} else {
+			return tab.substring(0, tab.length()-1);
+		}
 	}
 	
 	

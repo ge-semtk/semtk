@@ -1391,10 +1391,11 @@ public class NodeGroup {
 					String propStr = this.applyPrefixing(nItem.getUriConnectBy());
 					propStr = this.applyQualifier(propStr, nItem.getQualifier(snode));
 					sparql.append(tab + incomingSNode.getSparqlID() + " " + propStr + " " + snode.getSparqlID() + " .\n");
-					//tab = tabIndent(tab);
+					
 				}
 				
 				// RECURSION
+				tab = SparqlToXUtils.tabIndent(tab);
 				sparql.append(this.generateSparqlSubgraphClauses(queryType, incomingSNode, nItem, snode, targetObj, doneNodes, tab));
 				tab = SparqlToXUtils.tabOutdent(tab);
 				
