@@ -17,6 +17,7 @@
 
 package com.ge.research.semtk.load.utility;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 import com.ge.research.semtk.belmont.XSDSupportedType;
@@ -134,8 +135,13 @@ public class ImportMapping {
 			
 		}
 		
+		String retStr = ret.toString();
+		
 		// build the return
-		return ret.toString();
+		if (! Charset.forName("US-ASCII").newEncoder().canEncode(retStr)) {
+			throw new Exception("Detected non-ascii character in input record: " + retStr);
+		}
+		return retStr;
 	}
 
 }
