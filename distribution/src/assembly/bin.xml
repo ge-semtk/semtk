@@ -13,10 +13,11 @@
             <outputDirectory>semtk-opensource/</outputDirectory>
             <includes>
                 <include>*/target/**/*.jar</include>
+                <include>**/pom.xml</include>               <!-- needed to run mvn tests -->
+                <include>*/target/classes/**</include>      <!-- needed to run mvn tests -->
+                <include>*/target/test-classes/**</include> <!-- needed to run mvn tests -->
+                <include>*/src/test/resources/**</include>  <!-- needed to run mvn tests -->
             </includes>
-			<excludes>
-                <exclude>sparqlGraphLibrary/target/**/*.jar</exclude>
-            </excludes>
         </fileSet>
         <fileSet>
             <directory>../sparqlGraphWeb/</directory>
