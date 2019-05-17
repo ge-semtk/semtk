@@ -20,6 +20,8 @@ package com.ge.research.semtk.sparqlX;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.http.HttpEntity;
@@ -35,6 +37,17 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
+// for the API version
+//import org.eclipse.rdf4j.model.Value;
+//import org.eclipse.rdf4j.query.BindingSet;
+//import org.eclipse.rdf4j.query.QueryLanguage;
+//import org.eclipse.rdf4j.query.TupleQuery;
+//import org.eclipse.rdf4j.query.TupleQueryResult;
+//import org.eclipse.rdf4j.query.Update;
+//import org.eclipse.rdf4j.repository.Repository;
+//import org.eclipse.rdf4j.repository.RepositoryConnection;
+//import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+//import org.eclipse.rdf4j.repository.sparql.query.SPARQLBooleanQuery;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -43,8 +56,19 @@ import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.aws.client.AwsS3Client;
 import com.ge.research.semtk.aws.client.AwsS3ClientConfig;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+//import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.javaquery.aws.AWSV4Auth;
+
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
@@ -59,6 +83,9 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	private S3BucketConfig s3Config = null;
 	
+	TreeMap<String,String> addedParams = new TreeMap<String,String>();
+	
+	private static final String SUCCESS = "succeeded";
 	/**
 	 * Constructor
 	 */
@@ -117,7 +144,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (!sLower.contains("succeeded")){
+        if (!sLower.contains(SUCCESS)){
         	throw new Exception(s);
         }
 	}
@@ -133,7 +160,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
         String s = res.getMessage();
         String sLower = s.toLowerCase();
-        if (!sLower.contains("succeeded")){
+        if (!sLower.contains(SUCCESS)){
         	throw new Exception(s);
         }
 	}
@@ -162,8 +189,19 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	public JSONObject executeUpload(byte[] owl) throws Exception {
 		return this.executeUpload(owl, "rdfxml");
 	}
-		
-	public JSONObject executeUpload(byte[] owl, String format) throws Exception {
+	
+	public JSONObject executeUpload(byte[] data, String format) throws Exception {
+		return this.executeUploadREST(data, format);
+	}
+	
+	/**
+	 * Does not use S3 Java API.  Raw REST.
+	 * @param owl
+	 * @param format
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject executeUploadREST(byte[] owl, String format) throws Exception {
 		
 		this.authorizeUpload();
 
@@ -174,13 +212,12 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		SimpleResultSet ret = new SimpleResultSet();
 		// upload file to S3
 		String keyName = UUID.randomUUID().toString() + "." + format;
-		AwsS3ClientConfig config = new AwsS3ClientConfig(
-				this.s3Config.getName(), this.s3Config.getAccessId(), this.s3Config.getSecret());
+		AwsS3ClientConfig config = new AwsS3ClientConfig(this.s3Config.getName());
         AwsS3Client s3Client = new AwsS3Client(config);
         
 		try {
 			
-	        s3Client.execUploadFile(new String(owl), keyName);
+	        s3Client.execUploadFileREST(new String(owl), keyName);
 	        
 	        // try loading from S3, while being a little careful about concurrent load limit
 	        String loadId = null;
@@ -237,7 +274,87 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	/**
-	 * 
+	 * S3 examples are from https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-s3-objects.html
+	 * NOTE: need to do the "Multiple Parts" example if the data is > 5meg or so
+	 * @param data
+	 * @param format
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject executeUploadAPI(byte[] data, String format) throws Exception {
+		
+		this.authorizeUpload();
+		
+		Region region = Region.of(this.s3Config.region);
+		S3Client s3 = S3Client.builder().region(region).build();	
+		String keyName = UUID.randomUUID().toString() + "." + format;
+		SimpleResultSet ret = new SimpleResultSet();
+
+		try {
+			
+			// put the file
+			s3.putObject(PutObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build(),
+					RequestBody.fromBytes(data));
+	        
+	        // try loading from S3, while being a little careful about concurrent load limit
+	        String loadId = null;
+	        int tries = 0;
+	        while (loadId == null) {
+		        try {
+		        	loadId = this.uploadFromS3(keyName, format);
+		        	
+		        } catch (Exception e) {
+		        	// take 20 shots at concurrent load limit, sleeping 0-2 seconds between
+		        	if (tries < 20 && e.getMessage().contains("concurrent load limit")) {
+		        		LocalLogger.logToStdOut("Retrying: " + e.getMessage());
+		        		tries += 1;
+		        		Thread.sleep((long)(2.0 * Math.random()));
+		        	} else {
+		        		// give up retrying
+		        		throw e;
+		        	}
+		        }
+	        }
+        	
+        	// Allow 20 seconds for load to start.
+        	// Clearly this should be configurable in the future
+        	tries = 0;
+        	while (this.getLoadStatus(loadId).equals(STATUS_NOT_STARTED)) {
+        		Thread.sleep(1000);
+        		if (++tries > 20) {
+        			throw new Exception("S3 load timed out");
+        		}
+        	}
+        	
+        	// wait for STATUS_COMPLETE 
+        	tries = 0;
+        	while (this.getLoadStatus(loadId).equals(STATUS_IN_PROGRESS)) {
+        		Thread.sleep(250);
+        		if (++tries > 80) {
+        			throw new Exception("S3 load timed out");
+        		}
+        	}
+        	
+        	ret.setSuccess(true);
+        	
+		} catch (Exception e) {
+			ret.setSuccess(false);
+			ret.addRationaleMessage("NeptuneSparqlEndpointInterface.executeUpload()", e);
+			
+        } finally {
+	        // delete the file from S3
+    		s3.deleteObject(DeleteObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build());
+        }
+        
+        // return something
+		return ret.toJson();
+	}
+	
+	/**
+	 * I can't find docs for using a Java API to do this.
+	 * https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load.html
+	 *    - doesn't have a 'Java' sub-bullet
+	 *    
 	 * @param keyName
 	 * @param format - https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-format.html
 	 * @return
@@ -317,41 +434,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		HttpEntity resp_entity = response_http.getEntity();
 		String responseTxt = EntityUtils.toString(resp_entity, "UTF-8");
 		JSONObject response = (JSONObject) new JSONParser().parse(responseTxt);
-		
-
-		
-		// {"payload":{
-		//     "feedCount":[{"LOAD_FAILED":1}],
-		//     "overallStatus":{
-		//       "totalRecords":1,
-		//       "totalTimeSpent":3,
-		//       "insertErrors":0,
-		//       "totalDuplicates":0,
-		//       "datatypeMismatchErrors":0,
-		//       "retryNumber":0,
-		//       "runNumber":1,
-		//       "fullUri":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl",
-		//       "parsingErrors":2,
-		//       "status":"LOAD_FAILED"
-		//     },
-		//     "errors":{
-		//       "startIndex":1,
-		//       "loadId":"1517eb74-4858-416e-8707-e64db46d3d8d",
-		//       "endIndex":2,
-		//       "errorLogs":[{
-		//          "fileName":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl",
-		//          "errorMessage":"Content is not allowed in prolog.",
-		//          "errorCode":"PARSING_ERROR",
-		//          "recordNum":1
-		//       },{
-		//          "fileName":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl",
-		//          "errorMessage":"Fatal parsing error: Content is not allowed in prolog. [line 1, column 1]",
-		//          "errorCode":"PARSING_ERROR",
-		//          "recordNum":0
-		//       }]
-		//     },
-		//     "failedFeeds":[{"totalRecords":1,"totalTimeSpent":3,"insertErrors":0,"totalDuplicates":0,"datatypeMismatchErrors":0,"retryNumber":0,"runNumber":1,"fullUri":"s3:\/\/blast-neptune\/94bb3c8d-c3ec-4aad-b402-2a72a5272b4e.owl","parsingErrors":2,"status":"LOAD_FAILED"}]},
-		//     "status":"200 OK"}
 
 		String status = null;
 		try {
@@ -402,18 +484,51 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
 		httppost.addHeader("Accept", this.getContentType(resultType));
+		
+		// AWS Auth
+		
+		TreeMap<String, String> awsHeaders = new TreeMap<String, String>();
+        awsHeaders.put("host", this.server);
+        
+        String region = new DefaultAwsRegionProviderChain().getRegion().id();
+        AwsCredentials cred = DefaultCredentialsProvider.create().resolveCredentials();
+        String key = cred.accessKeyId();
+        String secret = cred.secretAccessKey();
+       
+		AWSV4Auth aWSV4Auth = new AWSV4Auth.Builder(key, secret)
+                .regionName(region)
+                .serviceName("neptune-db") // es - elastic search. use your service name
+                .httpMethodName("POST") //GET, PUT, POST, DELETE, etc...
+                .canonicalURI("/sparql") //end point
+                .queryParametes(this.addedParams) //query parameters if any
+                .awsHeaders(awsHeaders) //aws header parameters
+                .payload(null) // payload if any
+                .debug() // turn on the debug mode
+                .build();
+
+		/* Get header calculated for request */
+		Map<String, String> header = aWSV4Auth.getHeaders();
+		for (Map.Entry<String, String> entrySet : header.entrySet()) {
+			String k = entrySet.getKey();
+			String val = entrySet.getValue();
+
+			httppost.addHeader(k, val);
+		}
 	}
 	
 	@Override
 	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
+		this.addedParams.clear();
 		
 		// PEC TODO: this might be tenuous: presuming all CONFIRM queries use "update"
 		//           But the fix in line is a re-design that could affect a lot
 		if (resultType == SparqlResultTypes.CONFIRM) {
+			this.addedParams.put("update", query);
 			params.add(new BasicNameValuePair("update", query));
 		} else {
+			this.addedParams.put("query", query);
 			params.add(new BasicNameValuePair("query", query));
 		}
 
@@ -540,4 +655,61 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
 		return clientBuilder.build();
 	}
+	
+	
+	
+	
+	/**
+	 * https://docs.aws.amazon.com/neptune/latest/userguide/access-graph-sparql-java.html
+	 * 
+	 * Currently unused.  Could @Override executeQueryPost()
+	 */
+//	public JSONObject executeQueryPostAPI(String query, SparqlResultTypes resultType) throws Exception{
+//		AuthorizationManager.authorizeQuery(this, query);
+//		
+//		Repository repo = new SPARQLRepository(this.getPostURL(SparqlResultTypes.TABLE));
+//        repo.initialize();
+//
+//        try (RepositoryConnection conn = repo.getConnection()) {
+//
+//        	if (resultType == SparqlResultTypes.TABLE) { 
+//        		
+//	        	TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+//	        
+//	        	try (TupleQueryResult result = tupleQuery.evaluate()) {
+//	        		
+//	        		// PEC HERE : really want the raw JSON just like I get from the REST call
+//	        		//            possible step: revert and view the JSON and re-make it
+//	        		//            hopefully get a better answer on stackoverflow
+//                  //           RUMOR has it that this doesn't do any IAM, so it may not be helpful
+//	        		
+//	        		String colNames[] = result.getBindingNames().toArray(new String[0]);
+//	        		String colTypes[] = new String[colNames.length];
+//	        		for (int i=0; i < colTypes.length; i++) {
+//	        			colTypes[i] = "string";
+//	        		}
+//	        		
+//	        		Table table = new Table(colNames, colTypes);
+//	        		String row[] = new String[colNames.length];
+//	        		while (result.hasNext()) {  // iterate over the result
+//	        			BindingSet bindingSet = result.next();
+//	        			for (int i=0; i < colNames.length; i++) {
+//	        				row[i] = bindingSet.getValue(colNames[i]).stringValue();
+//	        			}
+//	        		}
+//	        		return table.toJson();
+//	        	}
+//	  
+//        	} else if (resultType == SparqlResultTypes.CONFIRM) {
+//        		final Update update = conn.prepareUpdate(QueryLanguage.SPARQL, query);
+//        		update.execute();
+//        		
+//        		// return { "@message" : "succeeded" }
+//        		JSONObject ret = new JSONObject();
+//        		ret.put(SimpleResultSet.MESSAGE_JSONKEY, SUCCESS);
+//        		return ret;
+//        	}
+//        }
+//        return null;
+//	}
 }

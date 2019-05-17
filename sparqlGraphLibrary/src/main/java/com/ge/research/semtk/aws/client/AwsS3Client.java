@@ -18,34 +18,28 @@
 
 package com.ge.research.semtk.aws.client;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
-import com.ge.research.semtk.resultSet.NodeGroupResultSet;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.services.client.RestClientConfig;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.utility.LocalLogger;
+import com.javaquery.aws.AWSV4Auth;
+
+
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 
 /**
@@ -89,12 +83,12 @@ public class AwsS3Client extends RestClient {
 	 * @return JSONObject containing headers of return from PUT
 	 * @throws Exception - on any failure
 	 */
-	public JSONObject execUploadFile(String contents, String keyName) throws Exception {
+	public JSONObject execUploadFileREST(String contents, String keyName) throws Exception {
 		
 		this.conf.setServiceEndpoint(keyName); 
 		this.conf.setMethod(RestClientConfig.Methods.PUT);
 		
-		this.addAwsAuthPutHeaders(keyName, "text/plain");		//    application/octet-stream   ??   
+		this.addAwsAuthPutHeadersManualV3(keyName, "text/plain");		//    application/octet-stream   ??   
 
         this.putContent = contents;
         
@@ -115,6 +109,7 @@ public class AwsS3Client extends RestClient {
 		}
 	}	
 	
+	
 	/**
 	 * Delete file from S3.  Succeeds if file is already gone.
 	 * @param keyName
@@ -126,7 +121,7 @@ public class AwsS3Client extends RestClient {
 		this.conf.setServiceEndpoint(keyName); 
 		this.conf.setMethod(RestClientConfig.Methods.DELETE);
 		
-		this.addAwsAuthDeleteHeaders(keyName);
+		this.addAwsAuthDeleteHeadersManualV3(keyName);
         
         try {
 			JSONObject res = (JSONObject)execute(false);
@@ -162,8 +157,83 @@ public class AwsS3Client extends RestClient {
 			return "";
 		}
 	}
+
+	/**
+	 * Apparently S3 v4 signatures are a little different than neptune?   
+	 * Use manual v3 signatures instead.
+	 * @param keyName
+	 * @param contents
+	 */
+	private void addAwsAuthPutHeadersBROKEN(String keyName, String contents) {
+		String accessKey = ((AwsS3ClientConfig)this.conf).getAwsAccessKeyId();
+		String bucket = ((AwsS3ClientConfig)this.conf).getBucket();
+		String secret = ((AwsS3ClientConfig)this.conf).getAwsSecretAccessKey();
+		String region = new DefaultAwsRegionProviderChain().getRegion().id();
+		String relativePath = "/" + bucket + "/" + keyName;
+        
+		TreeMap<String, String> awsHeaders = new TreeMap<String, String>();
+		this.addHeader("Host", bucket);
+		this.addHeader("Content-Type", "text/plain");
+		
+		AWSV4Auth aWSV4Auth = new AWSV4Auth.Builder(accessKey, secret)
+                .regionName(region)
+                .serviceName("s3") // es - elastic search. use your service name
+                .httpMethodName("PUT") //GET, PUT, POST, DELETE, etc...
+                .canonicalURI(relativePath) //end point
+                .queryParametes(null) //query parameters if any
+                .awsHeaders(awsHeaders) //aws header parameters
+                .payload(contents) // payload if any
+                .debug() // turn on the debug mode
+                .build();
+
+		/* Get header calculated for request */
+		Map<String, String> header = aWSV4Auth.getHeaders();
+		for (Map.Entry<String, String> entrySet : header.entrySet()) {
+			String k = entrySet.getKey();
+			String val = entrySet.getValue();
+
+			this.addHeader(k, val);
+			LocalLogger.logToStdErr("PUT " + k + ":" + val);
+		}
+	}
+	/**
+	 * Apparently S3 v4 signatures are a little different than neptune?   
+	 * Use manual v3 signatures instead.
+	 * 
+	 */
+	private void addAwsAuthDeleteHeadersBROKEN(String keyName) {
+		String accessKey = ((AwsS3ClientConfig)this.conf).getAwsAccessKeyId();
+		String bucket = ((AwsS3ClientConfig)this.conf).getBucket();
+		String secret = ((AwsS3ClientConfig)this.conf).getAwsSecretAccessKey();
+		String region = new DefaultAwsRegionProviderChain().getRegion().id();
+		String relativePath = "/" + bucket + "/" + keyName;
+		
+		this.addHeader("Host", bucket);
+		
+		TreeMap<String, String> awsHeaders = new TreeMap<String, String>();
+		AWSV4Auth aWSV4Auth = new AWSV4Auth.Builder(accessKey, secret)
+                .regionName(region)
+                .serviceName("s3") // es - elastic search. use your service name
+                .httpMethodName("DELETE") //GET, PUT, POST, DELETE, etc...
+                .canonicalURI(relativePath) //end point
+                .queryParametes(null) //query parameters if any
+                .awsHeaders(awsHeaders) //aws header parameters
+                .payload(null) // payload if any
+                .debug() // turn on the debug mode
+                .build();
+
+		/* Get header calculated for request */
+		Map<String, String> header = aWSV4Auth.getHeaders();
+		for (Map.Entry<String, String> entrySet : header.entrySet()) {
+			String k = entrySet.getKey();
+			String val = entrySet.getValue();
+
+			this.addHeader(k, val);
+			LocalLogger.logToStdErr("DELETE " + k + ":" + val);
+		}
+	}
 	
-	private void addAwsAuthPutHeaders(String keyName, String contentType) {
+	private void addAwsAuthPutHeadersManualV3(String keyName, String contentType) {
 		String accessKey = ((AwsS3ClientConfig)this.conf).getAwsAccessKeyId();
 		String bucket = ((AwsS3ClientConfig)this.conf).getBucket();
 		String secret = ((AwsS3ClientConfig)this.conf).getAwsSecretAccessKey();
@@ -179,7 +249,7 @@ public class AwsS3Client extends RestClient {
         this.addHeader("Authorization", "AWS " + accessKey + ":" + signature);
 	}
 	
-	private void addAwsAuthDeleteHeaders(String keyName) {
+	private void addAwsAuthDeleteHeadersManualV3(String keyName) {
 		String accessKey = ((AwsS3ClientConfig)this.conf).getAwsAccessKeyId();
 		String bucket = ((AwsS3ClientConfig)this.conf).getBucket();
 		String secret = ((AwsS3ClientConfig)this.conf).getAwsSecretAccessKey();
@@ -200,70 +270,6 @@ public class AwsS3Client extends RestClient {
 		this.removeHeader("Content-Type");
 		this.removeHeader("Authorization");
 	}
-	
-	/**  Sample code using amazonaws sdk
-	     
-	   <dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk</artifactId>
-			<version>[1.11.461,)</version>
-		</dependency>
-		
-	import com.amazonaws.AmazonServiceException;
-	import com.amazonaws.SdkClientException;
-	import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-	import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-	import com.amazonaws.services.s3.AmazonS3;
-	import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-	import com.amazonaws.services.s3.model.DeleteObjectRequest;
-	import com.amazonaws.services.s3.transfer.TransferManager;
-	import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
-	import com.amazonaws.services.s3.transfer.Upload;
-	
-	   public void testS3Upload() throws Exception {
-		
-		String clientRegion = "us-east-1";
-        String bucketName =   "my-bucket";
-        String keyName =      "testS3Upload.csv";
-        String filePath =     "src/test/resources/test.csv";
-        
 
-        try {
-        	
-        	// https://stackoverflow.com/questions/40897548/aws-java-s3-uploading-error-profile-file-cannot-be-null
-            AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                    .withRegion(clientRegion)
-                    .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
-                    .build();
-            TransferManager tm = TransferManagerBuilder.standard()
-                    .withS3Client(s3Client)
-                    .build();
-            
-            // TransferManager processes all transfers asynchronously,
-            // so this call returns immediately.
-            Upload upload = tm.upload(bucketName, keyName, new File(filePath));
-            System.out.println("Object upload started");
-    
-            // Optionally, wait for the upload to finish before continuing.
-            upload.waitForCompletion();
-            System.out.println("Object upload complete");
-            
-            // delete
-            s3Client.deleteObject(new DeleteObjectRequest(bucketName, keyName));
-            System.out.println("Object delete complete");
-
-        }
-        catch(AmazonServiceException e) {
-            // The call was transmitted successfully, but Amazon S3 couldn't process 
-            // it, so it returned an error response.
-            e.printStackTrace();
-        }
-        catch(SdkClientException e) {
-            // Amazon S3 couldn't be contacted for a response, or the client
-            // couldn't parse the response from Amazon S3.
-            e.printStackTrace();
-        }
-    }
-	 */
 }
 

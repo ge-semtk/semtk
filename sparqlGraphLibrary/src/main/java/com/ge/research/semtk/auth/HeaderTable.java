@@ -16,6 +16,7 @@
  */
 package com.ge.research.semtk.auth;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,11 @@ import java.util.Set;
 public class HeaderTable {
 	Hashtable<String,List<String>> tab = new Hashtable<String,List<String>>();	
 	
+	public void put(String key, String val) {
+		ArrayList<String> list = new ArrayList<String>();
+		list.add(val);
+		this.put(key, list);
+	}
 	public void put(String key, List<String> vals) {
 		this.tab.put(key,vals);
 	}

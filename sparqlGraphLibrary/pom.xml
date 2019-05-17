@@ -127,13 +127,22 @@
               <artifactId>jena-arq</artifactId>
               <version>3.8.0</version>
        </dependency-->
-       
-       <!--  dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk</artifactId>
-			<version>[1.11.461,)</version>
-		</dependency-->
- 		
+       <!-- dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>[2.5.4.4,)</version>
+		</dependency -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>[2.5.4.4,)</version>
+		</dependency>
+		<!--  for commented-out API calls in NeptuneSparqlEndpointInterface.java -->
+		<!--  dependency>
+	      <groupId>org.eclipse.rdf4j</groupId>
+	      <artifactId>rdf4j-runtime</artifactId>
+	      <version>2.2</version>
+	    </dependency-->
 	</dependencies>
 
 	<properties>

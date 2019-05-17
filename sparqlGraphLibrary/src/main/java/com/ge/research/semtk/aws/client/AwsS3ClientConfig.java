@@ -18,10 +18,11 @@
 
 package com.ge.research.semtk.aws.client; 
 
-import java.util.ArrayList;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 /**
  * Configuration for SparqlQueryClient (non-auth query)
@@ -31,11 +32,13 @@ public class AwsS3ClientConfig extends RestClientConfig {
 	 String awsSecretAccessKey = null;
 	 String bucket = null;
 
-	 public AwsS3ClientConfig(String bucket, String accessKey, String secret) throws Exception {
+	 public AwsS3ClientConfig(String bucket) throws Exception {
 
 		 super("http", bucket + ".s3.amazonaws.com", 80, "fake");
-		 this.awsAccessKeyId = accessKey;
-		 this.awsSecretAccessKey = secret;
+		 
+		 AwsCredentials cred = DefaultCredentialsProvider.create().resolveCredentials();
+		 this.awsAccessKeyId = cred.accessKeyId();
+		 this.awsSecretAccessKey = cred.secretAccessKey();
 		 this.bucket = bucket;
 	 }
 
