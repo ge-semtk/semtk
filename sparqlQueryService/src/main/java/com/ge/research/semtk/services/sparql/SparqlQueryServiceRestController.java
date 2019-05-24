@@ -493,7 +493,74 @@ public class SparqlQueryServiceRestController {
 		return simpleResultSetJson;	
 	}	
 	
+	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
+    // We can't use a @RequestBody with a @RequestParam,
+	// So the SparqlAuthRequestBody is broken into individual string @RequestParams
+	@ApiOperation(
+			value="Upload turtle file to specified connection information"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/uploadTurtle", method= RequestMethod.POST)
+	public JSONObject uploadTurtle(@RequestParam("serverAndPort") String serverAndPort, 
+								@RequestParam("serverType") String serverType, 
+								@RequestParam(value="dataset", required=false) String dataset, // deprecated in favor of graph
+								@RequestParam(value="graph", required=false) String graph, 
+								@RequestParam("user") String user, 
+								@RequestParam("password") String password, 
+								@RequestParam("ttlFile") MultipartFile ttlFile, 
+								@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		
+		SimpleResultSet resultSet = null;
+		JSONObject simpleResultSetJson = null;
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start uploadTurtle");
+		
+		
+		try {	
+			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
+			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
+			
+			// handle deprecated dataset
+			if (graph == null || graph.trim().isEmpty() ) graph = dataset;
+			if (graph == null || graph.trim().isEmpty() ) throw new Exception("graph is empty.");
 
+
+			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
+			
+			if (sei instanceof NeptuneSparqlEndpointInterface) {
+				// S3 bucket is option.  It can be filled with blanks and nulls
+				S3BucketConfig s3Config= new S3BucketConfig(
+						serviceProps.getS3ClientRegion(), 
+						serviceProps.getS3BucketName(), 
+						serviceProps.getAwsIamRoleArn(), 
+						serviceProps.getS3AccessId(), 
+						serviceProps.getS3Secret());
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
+			}
+			
+			if (! sei.isAuth()) { 
+				throw new Exception("Required SPARQL endpoint user/password weren't provided.");
+			}
+			
+			simpleResultSetJson = sei.executeAuthUploadTurtle(ttlFile.getBytes());
+			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
+			if (sResult.getSuccess()) {
+				uncacheChangedModel(sei);
+			}
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "uploadTurtle", e);
+			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+		
+		return simpleResultSetJson;	
+	}	
 	@ApiOperation(
 			value="Using graph in owl's rdf:RDF xml:base, clear graph and (re-)import owl" 
 			)
