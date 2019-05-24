@@ -493,9 +493,7 @@ public class SparqlQueryServiceRestController {
 		return simpleResultSetJson;	
 	}	
 	
-	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
-    // We can't use a @RequestBody with a @RequestParam,
-	// So the SparqlAuthRequestBody is broken into individual string @RequestParams
+	
 	@ApiOperation(
 			value="Upload turtle file to specified connection information"
 			)
@@ -504,8 +502,8 @@ public class SparqlQueryServiceRestController {
 	public JSONObject uploadTurtle(@RequestParam(value="serverAndPort", required=true) String serverAndPort, 
 								@RequestParam(value="serverType", required=true) String serverType, 
 								@RequestParam(value="graph", required=true) String graph, 
-								@RequestParam("user") String user, 
-								@RequestParam("password") String password, 
+								@RequestParam(value="user", required=false) String user, 
+								@RequestParam(value="password", required=false) String password, 
 								@RequestParam(value="ttlFile", required=true) MultipartFile ttlFile, 
 								@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
