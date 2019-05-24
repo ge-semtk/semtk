@@ -501,13 +501,12 @@ public class SparqlQueryServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/uploadTurtle", method= RequestMethod.POST)
-	public JSONObject uploadTurtle(@RequestParam("serverAndPort") String serverAndPort, 
-								@RequestParam("serverType") String serverType, 
-								@RequestParam(value="dataset", required=false) String dataset, // deprecated in favor of graph
-								@RequestParam(value="graph", required=false) String graph, 
+	public JSONObject uploadTurtle(@RequestParam(value="serverAndPort", required=true) String serverAndPort, 
+								@RequestParam(value="serverType", required=true) String serverType, 
+								@RequestParam(value="graph", required=true) String graph, 
 								@RequestParam("user") String user, 
 								@RequestParam("password") String password, 
-								@RequestParam("ttlFile") MultipartFile ttlFile, 
+								@RequestParam(value="ttlFile", required=true) MultipartFile ttlFile, 
 								@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		
@@ -520,11 +519,6 @@ public class SparqlQueryServiceRestController {
 		try {	
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
-			
-			// handle deprecated dataset
-			if (graph == null || graph.trim().isEmpty() ) graph = dataset;
-			if (graph == null || graph.trim().isEmpty() ) throw new Exception("graph is empty.");
-
 
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
 			
