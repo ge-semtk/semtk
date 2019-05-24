@@ -23,6 +23,8 @@ import java.nio.file.Files;
 
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
@@ -37,7 +39,7 @@ public class OwlLoader {
 	 * Note: this does not clear the ontology cache.
 	 *       To do so, change so it knows and uses the queryClient instead of going directly to the triplestore
 	 */
-	public static void main(String[] args) throws Exception{
+public static void main(String[] args) throws Exception{
 		
 		try{
 		
@@ -54,8 +56,8 @@ public class OwlLoader {
 			if(!connectionJSONFilePath.endsWith(".json")){
 				throw new Exception("Error: Connection file " + connectionJSONFilePath + " is not a JSON file");
 			}
-			if(!owlFilePath.endsWith(".owl")){
-				throw new Exception("Error: Data file " + owlFilePath + " is not an OWL file");
+			if(!owlFilePath.endsWith(".owl") && !owlFilePath.endsWith(".ttl")){
+				throw new Exception("Error: Data file " + owlFilePath + " is not an OWL or TURTLE file");
 			}
 			
 			// get the SPARQL endpoint interface
@@ -67,14 +69,29 @@ public class OwlLoader {
 				
 				LocalLogger.logToStdOut("Ontology Dataset: " + sei.getGraph());
 			}catch(Exception e){
-				throw new Exception("Cannot get SPARQL connection: " + e.getMessage());
+				throw new Exception("Cannot get SPARQL connection: ", e);
+			}
+			
+			if (sei instanceof NeptuneSparqlEndpointInterface) {
+				S3BucketConfig s3Config= new S3BucketConfig(
+						System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION"),
+						System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME"),
+						System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN"),
+						System.getenv("NEPTUNE_UPLOAD_S3_ACCESS_ID"), 
+						System.getenv("NEPTUNE_UPLOAD_S3_SECRET"));
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 	
 			// upload the OWL
 			try{	
 				File owlFile = new File(owlFilePath);
 				byte[] owlFileBytes = Files.readAllBytes(owlFile.toPath());
-				sei.executeAuthUploadOwl(owlFileBytes);			
+				
+				if (owlFilePath.endsWith(".ttl")) {
+					sei.executeAuthUploadTurtle(owlFileBytes);
+				} else {
+					sei.executeAuthUploadOwl(owlFileBytes);	
+				}
 				LocalLogger.logToStdOut("Loaded OWL: " + owlFilePath);			
 			}catch(Exception e){
 				LocalLogger.printStackTrace(e);
