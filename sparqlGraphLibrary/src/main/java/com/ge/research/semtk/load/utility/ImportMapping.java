@@ -138,7 +138,7 @@ public class ImportMapping {
 		String retStr = ret.toString();
 		
 		// build the return
-		if (! Charset.forName("US-ASCII").newEncoder().canEncode(retStr)) {
+		if (false && ! Charset.forName("US-ASCII").newEncoder().canEncode(retStr)) {   // TODO remove "false &&" to re-enable this
 			throw new Exception("Detected non-ascii character in input record: " + retStr);
 		}
 		return retStr;
