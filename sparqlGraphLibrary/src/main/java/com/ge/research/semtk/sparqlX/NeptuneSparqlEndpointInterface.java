@@ -28,16 +28,24 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
-// for the API version
+
+// for the Neptune API version
 //import org.eclipse.rdf4j.model.Value;
 //import org.eclipse.rdf4j.query.BindingSet;
 //import org.eclipse.rdf4j.query.QueryLanguage;
@@ -48,27 +56,42 @@ import org.apache.http.util.EntityUtils;
 //import org.eclipse.rdf4j.repository.RepositoryConnection;
 //import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 //import org.eclipse.rdf4j.repository.sparql.query.SPARQLBooleanQuery;
+//import com.ge.research.semtk.resultSet.Table;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.amazonaws.auth.AWS4Signer;
+import com.amazonaws.auth.Signer;
+import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
+import com.ge.research.semtk.amazonaws.http.AWSSessionTokenApacheInterceptor;
+import com.ge.research.semtk.amazonaws.http.AwsCredentialsProviderAdaptor;
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.aws.client.AwsS3Client;
 import com.ge.research.semtk.aws.client.AwsS3ClientConfig;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
-//import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.javaquery.aws.AWSV4Auth;
+
+//import com.javaquery.aws.AWSV4Auth;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
+
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.sts.StsClient;
+import software.amazon.awssdk.services.sts.model.AssumeRoleRequest;
+import software.amazon.awssdk.services.sts.model.Credentials;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
@@ -77,10 +100,11 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	protected static final String CONTENTTYPE_LD_JSON = "application/ld+json";
 
+
 	private static String STATUS_COMPLETE = "LOAD_COMPLETED";
 	private static String STATUS_IN_PROGRESS = "LOAD_IN_PROGRESS";
 	private static String STATUS_NOT_STARTED = "LOAD_NOT_STARTED";
-
+	
 	private S3BucketConfig s3Config = null;
 	
 	TreeMap<String,String> addedParams = new TreeMap<String,String>();
@@ -191,22 +215,25 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	public JSONObject executeUpload(byte[] data, String format) throws Exception {
-		return this.executeUploadREST(data, format);
+		return this.executeUploadAPI(data, format);
 	}
 	
 	/**
-	 * Does not use S3 Java API.  Raw REST.
+	 * Does not use S3 Java API.  Raw REST.  Uses V3 or earlier signing
 	 * @param owl
 	 * @param format
 	 * @return
 	 * @throws Exception
 	 */
+	@Deprecated
 	public JSONObject executeUploadREST(byte[] owl, String format) throws Exception {
 		
 		this.authorizeUpload();
 
 		// throw some exceptions if setup looks sketchy
-		if (this.s3Config == null) throw new Exception ("No S3 bucket has been configured for owl upload to Neptune.");
+		if (this.s3Config == null) {
+			this.getEnvS3Config();
+		}
 		this.s3Config.verifySetup();
 		
 		SimpleResultSet ret = new SimpleResultSet();
@@ -285,6 +312,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
 		this.authorizeUpload();
 		
+		if (this.s3Config == null) {
+			this.getEnvS3Config();
+		}
+		
 		Region region = Region.of(this.s3Config.region);
 		S3Client s3 = S3Client.builder().region(region).build();	
 		String keyName = UUID.randomUUID().toString() + "." + format;
@@ -293,9 +324,13 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		try {
 			
 			// put the file
-			s3.putObject(PutObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build(),
+			PutObjectResponse res = s3.putObject(PutObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build(),
 					RequestBody.fromBytes(data));
 	        
+			if (res.sdkHttpResponse().isSuccessful() == false) {
+				throw new Exception("Error putting object into s3: " + res.sdkHttpResponse().statusText());
+			}
+			
 	        // try loading from S3, while being a little careful about concurrent load limit
 	        String loadId = null;
 	        int tries = 0;
@@ -338,16 +373,52 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
         	ret.setSuccess(true);
         	
 		} catch (Exception e) {
+			// this error should make it to the return value
 			ret.setSuccess(false);
 			ret.addRationaleMessage("NeptuneSparqlEndpointInterface.executeUpload()", e);
+			LocalLogger.logToStdErr("Exception during executeUploadAPI()");
+			LocalLogger.printStackTrace(e);
 			
         } finally {
-	        // delete the file from S3
-    		s3.deleteObject(DeleteObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build());
+        	// try to delete file from s3
+        	LocalLogger.logToStdErr("Attempting to delete file " + keyName + " from bucket " + this.s3Config.name);
+        	try {
+        		s3.deleteObject(DeleteObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build());
+        	} catch (Exception ee) {
+        		// if it fails, log it but don't mess up the return
+        		LocalLogger.printStackTrace(ee);
+        	}
         }
         
         // return something
 		return ret.toJson();
+	}
+	
+	/**
+	 * Read S3 Config from environment
+	 * @throws Exception
+	 */
+	private void getEnvS3Config() throws Exception {
+		String region = System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION");
+		String bucket = System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME");
+		String role = System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN");
+		String failedVariables = "";
+		
+		if (region == null || region.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_CLIENT_REGION ";
+		}
+		if (bucket == null || bucket.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_BUCKET_NAME ";
+		}
+		if (role == null || role.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN ";
+		}
+		if (!failedVariables.isEmpty()) {
+			throw new Exception("Config error: can't perform Neptune upload with blank variable(s) in SemTK service environment: \n" + failedVariables);
+		}
+		
+		this.s3Config = new S3BucketConfig(region, bucket, role);
+
 	}
 	
 	/**
@@ -455,7 +526,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	public boolean isExceptionRetryAble(Exception e) {
 		String msg = e.getMessage();
 		
-		if (msg.contains("Malformed query")) {
+		if (msg.contains("Malformed query") || msg.contains("temporary credentials")) {
 			return false;
 		}
 		
@@ -485,36 +556,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
 		httppost.addHeader("Accept", this.getContentType(resultType));
 		
-		// AWS Auth
-		
-		TreeMap<String, String> awsHeaders = new TreeMap<String, String>();
-        awsHeaders.put("host", this.server);
-        
-        String region = new DefaultAwsRegionProviderChain().getRegion().id();
-        AwsCredentials cred = DefaultCredentialsProvider.create().resolveCredentials();
-        String key = cred.accessKeyId();
-        String secret = cred.secretAccessKey();
-       
-		AWSV4Auth aWSV4Auth = new AWSV4Auth.Builder(key, secret)
-                .regionName(region)
-                .serviceName("neptune-db") // es - elastic search. use your service name
-                .httpMethodName("POST") //GET, PUT, POST, DELETE, etc...
-                .canonicalURI("/sparql") //end point
-                .queryParametes(this.addedParams) //query parameters if any
-                .awsHeaders(awsHeaders) //aws header parameters
-                .payload(null) // payload if any
-                .debug() // turn on the debug mode
-                .build();
-
-		/* Get header calculated for request */
-		Map<String, String> header = aWSV4Auth.getHeaders();
-		for (Map.Entry<String, String> entrySet : header.entrySet()) {
-			String k = entrySet.getKey();
-			String val = entrySet.getValue();
-
-			httppost.addHeader(k, val);
-		}
+		// Added for AWS V4 Signing
+		httppost.addHeader("Content-type", "application/x-www-form-urlencoded");
 	}
+
 	
 	@Override
 	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
@@ -535,6 +580,13 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
+	
+	/**
+	 *  This now happens automatically from environment variables
+	 *  
+	 *  Use this function only to override the environment.
+	 * @param s3Config
+	 */
 	
 	public void setS3Config(S3BucketConfig s3Config) {
 		this.s3Config = s3Config;
@@ -644,10 +696,28 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	@Override
 	protected CloseableHttpClient buildHttpClient(String schemeName) throws Exception {
 		
-		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+		HttpClientBuilder clientBuilder = HttpClients.custom();
 		
 		// skip  userName and password for Neptune
 		
+		String region = new DefaultAwsRegionProviderChain().getRegion().id();
+		
+		// AWS Neptune signer
+		AWS4Signer signer = new AWS4Signer();
+		signer.setServiceName("neptune-db");
+		signer.setRegionName(region);   
+		
+		// Interceptor to add credentials
+		StaticCredentialsProvider provider = SemtkAwsCredentialsProviderBuilder.getAWSCredentialsProvider();
+		AwsCredentials cred = provider.resolveCredentials();
+		
+		clientBuilder.addInterceptorFirst(new AWSRequestSigningApacheInterceptor("neptune-db", signer, new AwsCredentialsProviderAdaptor(provider)));
+		
+		// Interceptor to add token if the credentials-provider-hunting above found one and saved it
+		if (cred instanceof AwsSessionCredentials) {
+			clientBuilder.addInterceptorFirst(new AWSSessionTokenApacheInterceptor(((AwsSessionCredentials)cred).sessionToken()));
+		}
+
 		// if https, use SSL context that will not validate certificate
 		if(schemeName.equalsIgnoreCase("https")){
 			clientBuilder.setSSLContext(getTrustingSSLContext());
@@ -657,59 +727,4 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	
-	
-	
-	/**
-	 * https://docs.aws.amazon.com/neptune/latest/userguide/access-graph-sparql-java.html
-	 * 
-	 * Currently unused.  Could @Override executeQueryPost()
-	 */
-//	public JSONObject executeQueryPostAPI(String query, SparqlResultTypes resultType) throws Exception{
-//		AuthorizationManager.authorizeQuery(this, query);
-//		
-//		Repository repo = new SPARQLRepository(this.getPostURL(SparqlResultTypes.TABLE));
-//        repo.initialize();
-//
-//        try (RepositoryConnection conn = repo.getConnection()) {
-//
-//        	if (resultType == SparqlResultTypes.TABLE) { 
-//        		
-//	        	TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//	        
-//	        	try (TupleQueryResult result = tupleQuery.evaluate()) {
-//	        		
-//	        		// PEC HERE : really want the raw JSON just like I get from the REST call
-//	        		//            possible step: revert and view the JSON and re-make it
-//	        		//            hopefully get a better answer on stackoverflow
-//                  //           RUMOR has it that this doesn't do any IAM, so it may not be helpful
-//	        		
-//	        		String colNames[] = result.getBindingNames().toArray(new String[0]);
-//	        		String colTypes[] = new String[colNames.length];
-//	        		for (int i=0; i < colTypes.length; i++) {
-//	        			colTypes[i] = "string";
-//	        		}
-//	        		
-//	        		Table table = new Table(colNames, colTypes);
-//	        		String row[] = new String[colNames.length];
-//	        		while (result.hasNext()) {  // iterate over the result
-//	        			BindingSet bindingSet = result.next();
-//	        			for (int i=0; i < colNames.length; i++) {
-//	        				row[i] = bindingSet.getValue(colNames[i]).stringValue();
-//	        			}
-//	        		}
-//	        		return table.toJson();
-//	        	}
-//	  
-//        	} else if (resultType == SparqlResultTypes.CONFIRM) {
-//        		final Update update = conn.prepareUpdate(QueryLanguage.SPARQL, query);
-//        		update.execute();
-//        		
-//        		// return { "@message" : "succeeded" }
-//        		JSONObject ret = new JSONObject();
-//        		ret.put(SimpleResultSet.MESSAGE_JSONKEY, SUCCESS);
-//        		return ret;
-//        	}
-//        }
-//        return null;
-//	}
 }

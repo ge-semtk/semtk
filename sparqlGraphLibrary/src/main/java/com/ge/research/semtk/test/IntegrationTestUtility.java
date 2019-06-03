@@ -295,10 +295,8 @@ public class IntegrationTestUtility {
 		String region = getIntegrationTestProperty("integrationtest.neptuneupload.s3ClientRegion");
 		String iamRoleArn = getIntegrationTestProperty("integrationtest.neptuneupload.awsIamRoleArn");
 		String name =   getIntegrationTestProperty("integrationtest.neptuneupload.s3BucketName");
-        String accessId = getIntegrationTestProperty("integrationtest.neptuneupload.s3AccessId");
-        String secret = getIntegrationTestProperty("integrationtest.neptuneupload.s3Secret");
         
-        S3BucketConfig config = new S3BucketConfig(region, name, iamRoleArn, accessId, secret);
+        S3BucketConfig config = new S3BucketConfig(region, name, iamRoleArn);
         
         return config;
 	}

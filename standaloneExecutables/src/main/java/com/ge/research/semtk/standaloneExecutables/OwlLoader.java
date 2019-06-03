@@ -50,19 +50,20 @@ public static void main(String[] args) throws Exception{
 			String connectionJSONFilePath = args[0];  // this file is used to get the SPARQL connection info
 			String sparqlEndpointUser = args[1];
 			String sparqlEndpointPassword = args[2];
-			String owlFilePath = args[3];	
+			String dataFilePath = args[3];	
 			
 			// validate arguments
 			if(!connectionJSONFilePath.endsWith(".json")){
 				throw new Exception("Error: Connection file " + connectionJSONFilePath + " is not a JSON file");
 			}
-			if(!owlFilePath.endsWith(".owl") && !owlFilePath.endsWith(".ttl")){
-				throw new Exception("Error: Data file " + owlFilePath + " is not an OWL or TURTLE file");
+			if(!dataFilePath.endsWith(".owl") && !dataFilePath.endsWith(".ttl")){
+				throw new Exception("Error: Data file " + dataFilePath + " is not an OWL or TURTLE file");
 			}
 			
 			// get the SPARQL endpoint interface
 			SparqlEndpointInterface sei;
 			try{
+				
 				SparqlConnection conn = new SparqlConnection(Utility.getJSONObjectFromFilePath(connectionJSONFilePath).toJSONString());
 				sei = conn.getModelInterface(0);
 				sei.setUserAndPassword(sparqlEndpointUser, sparqlEndpointPassword);
@@ -72,27 +73,17 @@ public static void main(String[] args) throws Exception{
 				throw new Exception("Cannot get SPARQL connection: ", e);
 			}
 			
-			if (sei instanceof NeptuneSparqlEndpointInterface) {
-				S3BucketConfig s3Config= new S3BucketConfig(
-						System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION"),
-						System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME"),
-						System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN"),
-						System.getenv("NEPTUNE_UPLOAD_S3_ACCESS_ID"), 
-						System.getenv("NEPTUNE_UPLOAD_S3_SECRET"));
-				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
-			}
-	
 			// upload the OWL
 			try{	
-				File owlFile = new File(owlFilePath);
-				byte[] owlFileBytes = Files.readAllBytes(owlFile.toPath());
+				File dataFile = new File(dataFilePath);
+				byte[] owlFileBytes = Files.readAllBytes(dataFile.toPath());
 				
-				if (owlFilePath.endsWith(".ttl")) {
+				if (dataFilePath.endsWith(".ttl")) {
 					sei.executeAuthUploadTurtle(owlFileBytes);
 				} else {
 					sei.executeAuthUploadOwl(owlFileBytes);	
 				}
-				LocalLogger.logToStdOut("Loaded OWL: " + owlFilePath);			
+				LocalLogger.logToStdOut("Loaded data: " + dataFilePath);			
 			}catch(Exception e){
 				LocalLogger.printStackTrace(e);
 			}

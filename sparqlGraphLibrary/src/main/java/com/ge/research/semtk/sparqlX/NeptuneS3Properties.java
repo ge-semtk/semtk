@@ -7,8 +7,6 @@ public class NeptuneS3Properties extends Properties {
 	// optional for Neptune upload Owl
 	private String s3ClientRegion;   
 	private String s3BucketName;
-	private String s3AccessId;
-	private String s3Secret;
 	private String awsIamRoleArn;
 
 	public String getS3ClientRegion() {
@@ -34,29 +32,11 @@ public class NeptuneS3Properties extends Properties {
 	public void setAwsIamRoleArn(String awsIamRoleArn) {
 		this.awsIamRoleArn = awsIamRoleArn;
 	}
-
-	public String getS3AccessId() {
-		return s3AccessId;
-	}
-
-	public void setS3AccessId(String s3AccessId) {
-		this.s3AccessId = s3AccessId;
-	}
-
-	public String getS3Secret() {
-		return s3Secret;
-	}
-
-	public void setS3Secret(String s3Secret) {
-		this.s3Secret = s3Secret;
-	}
 	
 	public void validate() throws Exception {
 		super.validate();
 		checkNone("s3ClientRegion", s3ClientRegion);
 		checkNone("s3BucketName", s3BucketName);
-		checkNone("s3AccessId", s3AccessId);
-		checkNoneMaskValue("s3Secret", s3Secret);
 		checkNone("awsIamRoleArn", awsIamRoleArn);
 		
 	}

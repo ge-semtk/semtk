@@ -47,6 +47,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.auth.DigestScheme;
 import org.apache.http.impl.client.BasicAuthCache;
@@ -515,8 +516,9 @@ public abstract class SparqlEndpointInterface {
      
 		// create the HttpPost
 		HttpPost httppost = new HttpPost(this.getPostURL(resultType));
-		this.addHeaders(httppost, resultType);
 		this.addParams(httppost, query, resultType);
+		this.addHeaders(httppost, resultType);
+		
 		
 		// parse the response
 		HttpEntity entity = null;

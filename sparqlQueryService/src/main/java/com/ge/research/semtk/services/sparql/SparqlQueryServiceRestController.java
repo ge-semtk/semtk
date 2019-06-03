@@ -464,9 +464,7 @@ public class SparqlQueryServiceRestController {
 				S3BucketConfig s3Config= new S3BucketConfig(
 						serviceProps.getS3ClientRegion(), 
 						serviceProps.getS3BucketName(), 
-						serviceProps.getAwsIamRoleArn(), 
-						serviceProps.getS3AccessId(), 
-						serviceProps.getS3Secret());
+						serviceProps.getAwsIamRoleArn());
 				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 			
@@ -525,9 +523,7 @@ public class SparqlQueryServiceRestController {
 				S3BucketConfig s3Config= new S3BucketConfig(
 						serviceProps.getS3ClientRegion(), 
 						serviceProps.getS3BucketName(), 
-						serviceProps.getAwsIamRoleArn(), 
-						serviceProps.getS3AccessId(), 
-						serviceProps.getS3Secret());
+						serviceProps.getAwsIamRoleArn());
 				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 			
@@ -587,9 +583,7 @@ public class SparqlQueryServiceRestController {
 				S3BucketConfig s3Config= new S3BucketConfig(
 						serviceProps.getS3ClientRegion(), 
 						serviceProps.getS3BucketName(), 
-						serviceProps.getAwsIamRoleArn(), 
-						serviceProps.getS3AccessId(), 
-						serviceProps.getS3Secret());
+						serviceProps.getAwsIamRoleArn());
 				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 			

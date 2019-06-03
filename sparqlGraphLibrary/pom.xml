@@ -7,7 +7,6 @@
 		<version>2.1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>sparqlGraphLibrary</artifactId>
-	<version>2.1.1-SNAPSHOT</version>
 	
     <repositories>
 		<!-- need cloudera repository to retrieve hadoop-client 2.5.0-cdh5.3.0 -->
@@ -30,7 +29,6 @@
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.6</version>
 		</dependency>
 
 		<!-- added by paul and doesn't work. supposed to be for MultipartEntityBuilder -->
@@ -44,6 +42,8 @@
 		<dependency>
 		    <groupId>org.apache.httpcomponents</groupId>
 		    <artifactId>httpcore</artifactId>
+		    <!-- version is forced to fix AWS incompatibility.  see https://github.com/aws/aws-sdk-java-v2/issues/652 -->
+		    <version>4.4.9</version>
 		    </dependency>
 
 		<!--  End of additions by Justin -->
@@ -132,11 +132,34 @@
 			<artifactId>auth</artifactId>
 			<version>[2.5.4.4,)</version>
 		</dependency -->
+		
+		<!--  for com.amazonaws.http -->
+		<dependency>
+	      <groupId>com.amazonaws</groupId>
+	      <artifactId>aws-java-sdk-core</artifactId>
+	      <version>1.11.415</version>
+	      <scope>compile</scope>
+	    </dependency>
+		<dependency>
+		    <groupId>org.projectlombok</groupId>
+		    <artifactId>lombok</artifactId>
+		    <version>1.16.22</version>
+		    <scope>provided</scope>
+		</dependency>
+	    
+	    
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>[2.5.4.4,)</version>
+			<version>2.5.51</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>sts</artifactId>
+			<version>2.5.53</version>
+		</dependency>
+
 		<!--  for commented-out API calls in NeptuneSparqlEndpointInterface.java -->
 		<!--  dependency>
 	      <groupId>org.eclipse.rdf4j</groupId>

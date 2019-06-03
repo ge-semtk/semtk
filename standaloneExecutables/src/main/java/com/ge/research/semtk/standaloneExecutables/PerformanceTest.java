@@ -45,16 +45,6 @@ public class PerformanceTest {
 		String graph = "http://performance_test";
 		sei = SparqlEndpointInterface.getInstance(args[0], args[1], graph, "dba", "dba");
 		
-		if (args[0].equals("neptune")) {
-			((NeptuneSparqlEndpointInterface)sei).setS3Config(
-					new S3BucketConfig(
-							System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION"), 
-							System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME"), 
-							System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN"), 
-							System.getenv("NEPTUNE_UPLOAD_S3_ACCESS_ID"), 
-							System.getenv("NEPTUNE_UPLOAD_S3_SECRET")));
-		}
-		
 		log("graph: " + graph);
 		resourceFolder = args[2];
 		if (!Files.exists(Paths.get(resourceFolder))) {
