@@ -19,7 +19,6 @@ package com.amazonaws.http;
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.Signer;
-import com.ge.research.semtk.utility.LocalLogger;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntityEnclosingRequest;

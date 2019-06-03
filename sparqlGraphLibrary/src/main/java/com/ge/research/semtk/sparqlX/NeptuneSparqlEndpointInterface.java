@@ -20,7 +20,6 @@ package com.ge.research.semtk.sparqlX;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -28,16 +27,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
@@ -45,31 +38,17 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 
-// for the Neptune API version
-//import org.eclipse.rdf4j.model.Value;
-//import org.eclipse.rdf4j.query.BindingSet;
-//import org.eclipse.rdf4j.query.QueryLanguage;
-//import org.eclipse.rdf4j.query.TupleQuery;
-//import org.eclipse.rdf4j.query.TupleQueryResult;
-//import org.eclipse.rdf4j.query.Update;
-//import org.eclipse.rdf4j.repository.Repository;
-//import org.eclipse.rdf4j.repository.RepositoryConnection;
-//import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
-//import org.eclipse.rdf4j.repository.sparql.query.SPARQLBooleanQuery;
-//import com.ge.research.semtk.resultSet.Table;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.Signer;
 import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
 import com.ge.research.semtk.amazonaws.http.AWSSessionTokenApacheInterceptor;
 import com.ge.research.semtk.amazonaws.http.AwsCredentialsProviderAdaptor;
 import com.ge.research.semtk.auth.AuthorizationException;
-import com.ge.research.semtk.aws.client.AwsS3Client;
-import com.ge.research.semtk.aws.client.AwsS3ClientConfig;
+
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -78,8 +57,6 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
@@ -89,9 +66,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.sts.StsClient;
-import software.amazon.awssdk.services.sts.model.AssumeRoleRequest;
-import software.amazon.awssdk.services.sts.model.Credentials;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
@@ -115,7 +89,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public NeptuneSparqlEndpointInterface(String server, String graph)	throws Exception {
 		super(server, graph);
-		// TODO Auto-generated constructor stub
 	}
  
 	/**
@@ -123,7 +96,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public NeptuneSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
 		super(server, graph, user, pass);
-		// TODO Auto-generated constructor stub
 	}
 	
 	/**
@@ -218,87 +190,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		return this.executeUploadAPI(data, format);
 	}
 	
-	/**
-	 * Does not use S3 Java API.  Raw REST.  Uses V3 or earlier signing
-	 * @param owl
-	 * @param format
-	 * @return
-	 * @throws Exception
-	 */
-	@Deprecated
-	public JSONObject executeUploadREST(byte[] owl, String format) throws Exception {
-		
-		this.authorizeUpload();
-
-		// throw some exceptions if setup looks sketchy
-		if (this.s3Config == null) {
-			this.getEnvS3Config();
-		}
-		this.s3Config.verifySetup();
-		
-		SimpleResultSet ret = new SimpleResultSet();
-		// upload file to S3
-		String keyName = UUID.randomUUID().toString() + "." + format;
-		AwsS3ClientConfig config = new AwsS3ClientConfig(this.s3Config.getName());
-        AwsS3Client s3Client = new AwsS3Client(config);
-        
-		try {
-			
-	        s3Client.execUploadFileREST(new String(owl), keyName);
-	        
-	        // try loading from S3, while being a little careful about concurrent load limit
-	        String loadId = null;
-	        int tries = 0;
-	        while (loadId == null) {
-		        try {
-		        	loadId = this.uploadFromS3(keyName, format);
-		        	
-		        } catch (Exception e) {
-		        	// take 20 shots at concurrent load limit, sleeping 0-2 seconds between
-		        	if (tries < 20 && e.getMessage().contains("concurrent load limit")) {
-		        		LocalLogger.logToStdOut("Retrying: " + e.getMessage());
-		        		tries += 1;
-		        		Thread.sleep((long)(2.0 * Math.random()));
-		        	} else {
-		        		// give up retrying
-		        		throw e;
-		        	}
-		        }
-	        }
-        	
-        	// Allow 20 seconds for load to start.
-        	// Clearly this should be configurable in the future
-        	tries = 0;
-        	while (this.getLoadStatus(loadId).equals(STATUS_NOT_STARTED)) {
-        		Thread.sleep(1000);
-        		if (++tries > 20) {
-        			throw new Exception("S3 load timed out");
-        		}
-        	}
-        	
-        	// wait for STATUS_COMPLETE 
-        	tries = 0;
-        	while (this.getLoadStatus(loadId).equals(STATUS_IN_PROGRESS)) {
-        		Thread.sleep(250);
-        		if (++tries > 80) {
-        			throw new Exception("S3 load timed out");
-        		}
-        	}
-        	
-        	ret.setSuccess(true);
-        	
-		} catch (Exception e) {
-			ret.setSuccess(false);
-			ret.addRationaleMessage("NeptuneSparqlEndpointInterface.executeUpload()", e);
-			
-        } finally {
-	        // delete the file from S3
-	        s3Client.execDeleteFile(keyName);
-        }
-        
-        // return something
-		return ret.toJson();
-	}
+	
 	
 	/**
 	 * S3 examples are from https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/examples-s3-objects.html
