@@ -243,23 +243,22 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		        }
 	        }
         	
-        	// Allow 20 seconds for load to start.
-        	// Clearly this should be configurable in the future
+        	// wait for load to start.
         	tries = 0;
         	while (this.getLoadStatus(loadId).equals(STATUS_NOT_STARTED)) {
-        		Thread.sleep(1000);
-        		if (++tries > 20) {
-        			throw new Exception("S3 load timed out");
-        		}
+        		Thread.sleep(500);
         	}
         	
-        	// wait for STATUS_COMPLETE 
+        	// wait if IN_PROGRESS 
         	tries = 0;
         	while (this.getLoadStatus(loadId).equals(STATUS_IN_PROGRESS)) {
         		Thread.sleep(250);
-        		if (++tries > 80) {
-        			throw new Exception("S3 load timed out");
-        		}
+        	}
+        	
+        	// check for COMPLETE (docs state this means no errors)
+        	String finalStatus = this.getLoadStatus(loadId);
+        	if (! finalStatus.equals(STATUS_COMPLETE)) {
+        		throw new Exception("Neptune load from S3 failed to reach STATUS_COMPLETE: " + finalStatus);
         	}
         	
         	ret.setSuccess(true);
