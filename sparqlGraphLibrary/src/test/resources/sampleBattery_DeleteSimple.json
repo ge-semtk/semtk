@@ -59,7 +59,7 @@
 				"isReturned": false,
 				"isRuntimeConstrained": false,
 				"valueConstraint": "",
-				"deletionMode": "TYPE_INFO_ONLY",
+				"deletionMode": "FULL_DELETE",
 				"instanceValue": null
 			},
 			{

@@ -47,6 +47,29 @@ public class TableResultSet extends GeneralResultSet{
 		super();	
 	}
 	
+	/**
+	 * Convert a simple result to a table result with one row: one column per simple result
+	 * @param simpleRes
+	 * @throws Exception
+	 */
+	public TableResultSet(SimpleResultSet simpleRes) throws Exception {
+		super();
+		this.success = simpleRes.success;
+		this.rationale = simpleRes.rationale == null ? null : new ArrayList<String>(simpleRes.rationale);
+		
+		ArrayList<String> simpleCols = simpleRes.getResultsKeys();
+		ArrayList<String> simpleTypes = new ArrayList<String>();
+		ArrayList<String> simpleVals = new ArrayList<String>();
+		for (String k : simpleCols) {
+			simpleTypes.add("String");
+			simpleVals.add(simpleRes.getResult(k));
+		}
+		Table tab = new Table(simpleCols.toArray(new String[0]), simpleTypes.toArray(new String[0]));
+		tab.addRow(simpleVals);
+		this.addResults(tab);
+		
+	}
+	
 	@Override
 	public String getResultsBlockName() {
 		return RESULTS_BLOCK_NAME;

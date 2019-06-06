@@ -493,6 +493,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		return (SparqlEndpointInterface) retval;
 	}
 	
+	/**
+	 * return a successful confirm message otherwise
+	 * @exception - confirm message indicates failure
+	 */
 	@Override
 	protected String getConfirmMessage(Object resp) throws Exception {
 		
@@ -513,18 +517,9 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			return "Succeeded in " + msec + " millisec";
 			
 		} catch (Exception e) {
-			JSONObject responseObj = null;
-			try {
-				responseObj = (JSONObject) resp;
-			} catch (Exception ee) {
-				throw new Exception("Failed to parse Neptune confirm message: " + resp.toString());
-			}
-			
-			if (responseObj.containsKey("detailedMessage")) {
-				throw new Exception((String) responseObj.get("detailedMessage"));
-			} else {
-				throw new Exception("ee");
-			}
+			// could parse to JSON and pull out detailedMessage and code
+			// but extra error handling and code gets long-winded with very little advantage.
+			throw new Exception("Neptune failure: " + resp.toString());
 		}
 	}
 	

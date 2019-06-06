@@ -24,6 +24,7 @@ import org.junit.Test;
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
+import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -101,6 +102,7 @@ public class NodeGroupExecutionClientTest_IT {
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
 		
+		
 		/**
 		 * Test ingesting data using nodegroup connection
 		 */
@@ -163,7 +165,7 @@ public class NodeGroupExecutionClientTest_IT {
 		}
 		
 		@Test
-		public void testIngestByNodegroupIdAsync() throws Exception {	
+		public void testIngestByNodegroupIdAsyncAndDelete() throws Exception {	
 			// also tests waitForPercentOrMsec
 			// also tests getJobStatus
 			
@@ -187,9 +189,17 @@ public class NodeGroupExecutionClientTest_IT {
 				assertTrue("Ingestion didn't finish in 60 seconds", percent == 100);
 				assertTrue("Ingestion failed", nodeGroupExecutionClient.getJobSuccess(jobId));
 				
-				// select back the data
+				// select back the data post ingest
 				Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
-				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() > 0);
+				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
+				
+				// delete some
+				NodeGroup delNg = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery_DeleteSimple.json").getNodeGroup();
+				tab = nodeGroupExecutionClient.dispatchDeleteFromNodeGroup(delNg, TestGraph.getSparqlConn(), null, null);
+				
+				// select back the data post delete
+				tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
+				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 0);
 				
 			} finally {
 				nodeGroupStoreClient.deleteStoredNodeGroup(ID);

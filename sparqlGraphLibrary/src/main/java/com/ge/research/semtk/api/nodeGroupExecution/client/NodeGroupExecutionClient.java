@@ -867,7 +867,11 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		return this.waitForJobAndGetJsonLd(ret.getResult("JobId"));
 	}
-	
+	public Table dispatchDeleteFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
+		
+		SimpleResultSet ret = this.execDispatchDeleteFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints);
+		return this.waitForJobAndGetTable(ret.getResult("JobId"));
+	}
 	public Table dispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
 		
 		SimpleResultSet ret = this.execDispatchSelectFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints, null);

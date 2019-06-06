@@ -36,6 +36,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -281,7 +282,11 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				preRet = nodegroupQueryClient.execute(sparqlQuery, SparqlResultTypes.GRAPH_JSONLD);
 				retval = new TableResultSet(true);
 			}
-			else{
+			else if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE) {
+				SimpleResultSet simpleRes = (SimpleResultSet) nodegroupQueryClient.getSei().executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
+				retval = new TableResultSet(simpleRes);
+				
+			} else {
 				// all other types
 				preRet = nodegroupQueryClient.getSei().executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
 				retval = (TableResultSet) preRet;

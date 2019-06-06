@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.resultSet;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -73,6 +74,14 @@ public class SimpleResultSet extends GeneralResultSet{
 			key = (String)iter.next();
 			value = this.resultsContents.get(key);
 			ret.put(key, value);
+		}
+		return ret;
+	}
+	
+	public ArrayList<String> getResultsKeys() {
+		ArrayList<String> ret = new ArrayList<String>();
+		if (this.resultsContents != null) {
+			ret.addAll(this.resultsContents.keySet());
 		}
 		return ret;
 	}
