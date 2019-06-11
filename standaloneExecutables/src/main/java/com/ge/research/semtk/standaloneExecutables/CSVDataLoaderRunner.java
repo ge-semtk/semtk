@@ -48,7 +48,7 @@ public class CSVDataLoaderRunner {
 			String sparqlEndpointUser = args[1];
 			String sparqlEndpointPassword = args[2];
 			String dataCSVFilePath = args[3];	
-			String batchSize = args[4];
+			String batchSize = args[4];      // this should be deprecated
 			if(args.length == 6 ){
 				String connectionOverrideFilePath = args[5]; 	
 				connectionOverride = new SparqlConnection(Utility.getJSONObjectFromFilePath(connectionOverrideFilePath).toJSONString());	// override the connection	
@@ -61,6 +61,7 @@ public class CSVDataLoaderRunner {
 			}
 			
 			// perform the load
+			// TODO: use the version with no batch size and overrideMaxThread at the end (-1 or 0 does nothing)
 			DataLoader.loadFromCsv(templateJSONFilePath, dataCSVFilePath, sparqlEndpointUser, sparqlEndpointPassword, Integer.parseInt(batchSize), connectionOverride);
 			System.exit(0);  // explicitly exit to avoid maven exec:java error ("thread was interrupted but is still alive")
 		

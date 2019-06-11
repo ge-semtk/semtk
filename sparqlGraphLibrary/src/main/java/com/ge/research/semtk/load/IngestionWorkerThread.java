@@ -44,15 +44,15 @@ public class IngestionWorkerThread extends Thread {
 	HeaderTable headerTable = null;
 	
 	int maxQueryChars = 100000;    // Arbitrarily limit query size.  Virtuoso seems to lock up in the millions.  Only 10's of thousands are needed ususally.
-									// TODO: make this configurable instead of batch size
-    
 	int optimalQueryChars =  3500;   // Virtuoso is far more efficient around this size during large loads
-									 // TODO: make this configurable instead of batch size 3500
     
 	
 	public IngestionWorkerThread(SparqlEndpointInterface endpoint, DataLoadBatchHandler batchHandler, ArrayList<ArrayList<String>> dataSetRecords, int startingRowNum, OntologyInfo oInfo, Boolean skipChecks, Boolean skipIngest) throws Exception{
 		
 		this.endpoint = endpoint.copy();    // endpoint is not thread-safe as it contains query results
+		this.maxQueryChars = endpoint.getInsertQueryMaxSize();
+		this.optimalQueryChars = endpoint.getInsertQueryOptimalSize();
+		
 		this.batchHandler = batchHandler;
 		this.dataSetRecords = dataSetRecords;
 		this.startingRowNum = startingRowNum;
@@ -63,6 +63,9 @@ public class IngestionWorkerThread extends Thread {
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 	}
 	
+	public void setOptimalQueryChars(int val) {
+		this.optimalQueryChars = val;
+	}
 	
 	/**
 	 * Runs a thread.
@@ -80,7 +83,11 @@ public class IngestionWorkerThread extends Thread {
 				
 				// try to run one efficient query
 				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo, this.endpoint);
-				if (query.length() <= this.optimalQueryChars) {
+				int queryLen = query.length();
+				int targetMin = (int) (this.optimalQueryChars * 0.75);
+				int targetMax = (int) (this.optimalQueryChars * 1.25);
+				
+				if (queryLen >= targetMin && queryLen <= targetMax) {
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 					
 				} else {
@@ -110,9 +117,11 @@ public class IngestionWorkerThread extends Thread {
 	private ArrayList<String> splitIntoQueries(ArrayList<NodeGroup> nodeGroupList) throws Exception {
 		ArrayList<String> queryList = null;
 		int longestQueryLen = 0;
+		int targetMin = (int) (this.optimalQueryChars * 0.75);
+		int targetMax = (int) (this.optimalQueryChars * 1.25);
 		
-		// increment recommendedNumRecords so first iteration of loop puts it back
-		this.recommendedBatchSize += 1;
+		// start with entire list (plus one because loop will decrement)
+		this.recommendedBatchSize = nodeGroupList.size() + 1;
 		
 		// loop through starting at recommendedNumRecords decreasing each time
 		// until all queries are small enough
@@ -143,11 +152,15 @@ public class IngestionWorkerThread extends Thread {
 				indexN = Math.min(nodeGroupList.size(), indexN + this.recommendedBatchSize);
 			}
 			
-		} while (longestQueryLen > this.optimalQueryChars && this.recommendedBatchSize > 1);
+		} while (longestQueryLen > targetMax && this.recommendedBatchSize > 1);
 		
 		// check if we found a solution
 		if (this.recommendedBatchSize < 2 && longestQueryLen > this.maxQueryChars) {
 			throw new Exception("Query is too long: " + longestQueryLen);
+		}
+		
+		if (longestQueryLen < targetMin) {
+			this.recommendedBatchSize *= 2;
 		}
 		
 		return queryList;

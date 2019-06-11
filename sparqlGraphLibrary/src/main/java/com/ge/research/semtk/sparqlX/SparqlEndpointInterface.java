@@ -115,8 +115,8 @@ public abstract class SparqlEndpointInterface {
 	protected String endpoint = null;    // null or everything "end/point" if url looks like http://server:8000/end/point
 	protected String graph = "";
 	
-
-
+	protected int retries = 0;
+		
 	/**
 	 * Constructor
 	 * @param serverAndPort e.g. "http://localhost:2420"
@@ -138,6 +138,9 @@ public abstract class SparqlEndpointInterface {
 		this.setServerAndPort(serverAndPort);
 		
 	}
+	
+	public abstract int getInsertQueryMaxSize();
+	public abstract int getInsertQueryOptimalSize();
 	
 	/**
 	 * Can this endpoint run auth queries
@@ -445,6 +448,7 @@ public abstract class SparqlEndpointInterface {
 					// randomize sleepMsec from 75% to 125% in case threads are colliding at triplestore
 					sleepMsec = (int) ((sleepMsec * 0.75) + (Math.random() * sleepMsec * 0.5));
 					
+					this.retries += 1;
 					LocalLogger.logToStdOut (String.format("SPARQL query failed.  Sleeping %d millisec and trying again...", sleepMsec));
 					LocalLogger.logToStdErr(e.getMessage());
 					
@@ -483,7 +487,15 @@ public abstract class SparqlEndpointInterface {
 			throw new Exception("Failure executing test query.", e);
 		}
 	}
-
+	
+	/**
+	 * how many times has this interface encountered a retry-able error and retried
+	 * @return
+	 */
+	public int getRetries() {
+		return this.retries;
+	}
+	
 	/**
 	 * Deprecated in favor of executeQueryPost
 	 * Uses Authentication iff this.userName is not null.

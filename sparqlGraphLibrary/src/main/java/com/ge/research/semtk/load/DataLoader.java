@@ -44,20 +44,23 @@ import com.ge.research.semtk.utility.Utility;
 public class DataLoader implements Runnable {
 	// actually orchestrates the loading of data from a dataset based on a template.
 
+	public final static String FAILURE_CAUSE_COLUMN_NAME = "Failure Cause";
+	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
+	public final static int DEFAULT_BATCH_SIZE = 8;
+	
+
 	NodeGroup master = null;
 	ArrayList<NodeGroup> nodeGroupBatch = new ArrayList<NodeGroup>();     // stores the subgraphs to be loaded.  
 	SparqlEndpointInterface endpoint = null;
 	DataLoadBatchHandler batchHandler = null; 
-	int batchSize = 1;	// maximum batch size for insertion to the triple store
+	int batchSize = DEFAULT_BATCH_SIZE;
 	String username = null;
 	String password = null;
 	OntologyInfo oInfo = null;
 	
-	int MAX_WORKER_THREADS = 2; // 10;
+	int maxThreads = 3; // 10;
+	int insertQueryIdealSizeOverride = 0;
 	
-	public final static String FAILURE_CAUSE_COLUMN_NAME = "Failure Cause";
-	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
-
 	int totalRecordsProcessed = 0;
 	
 	// async information
@@ -74,10 +77,14 @@ public class DataLoader implements Runnable {
 		// default and does nothing special 
 	}
 	
-	public DataLoader(SparqlGraphJson sgJson, int bSize) throws Exception {
+	/* 
+	 * BATCH_SIZE is now automatic.  Suggesting one has minimal impact (and how would you know what to suggest?)
+	 * Constructors including batch size are now deprecated.
+	 */
+	public DataLoader(SparqlGraphJson sgJson) throws Exception {
 		// take a json object which encodes the node group, the import spec and the connection in one package. 
 		
-		this.batchSize = bSize;
+		this.batchSize = DEFAULT_BATCH_SIZE;
 		
 		this.endpoint = sgJson.getSparqlConn().getInsertInterface();
 		
@@ -88,21 +95,56 @@ public class DataLoader implements Runnable {
 		this.batchHandler = new DataLoadBatchHandler(sgJson, this.batchSize, endpoint);		
 	}
 	
-
-	public DataLoader(SparqlGraphJson sgJson, int bSize, Dataset ds, String username, String password) throws Exception{
-		this(sgJson, bSize);
+	@Deprecated
+	public DataLoader(SparqlGraphJson sgJson, int bSize) throws Exception {
+		this(sgJson);
+		this.batchSize = Math.min(100, bSize);
+		this.batchHandler.setBatchSize(this.batchSize);
+	}
+	
+	public DataLoader(SparqlGraphJson sgJson, Dataset ds, String username, String password) throws Exception{
+		this(sgJson);
 		this.setCredentials(username, password);
 		this.setDataset(ds);
 		this.validateColumns(ds);
+	}
+
+	@Deprecated
+	public DataLoader(SparqlGraphJson sgJson, int bSize, Dataset ds, String username, String password) throws Exception{
+		this(sgJson, ds, username, password);
+		this.batchSize = Math.min(100, bSize);
+		this.batchHandler.setBatchSize(this.batchSize);
 		
 	}
 	
-	public DataLoader(JSONObject json, int bSize) throws Exception {
-		this(new SparqlGraphJson(json), bSize);
+	public DataLoader(JSONObject json) throws Exception {
+		this(new SparqlGraphJson(json));
 	}
 	
+	@Deprecated
+	public DataLoader(JSONObject json, int bSize) throws Exception {
+		this(new SparqlGraphJson(json));
+		this.batchSize = Math.min(100, bSize);
+		this.batchHandler.setBatchSize(this.batchSize);
+	}
+	
+	public DataLoader(JSONObject json, Dataset ds, String username, String password) throws Exception{
+		this(new SparqlGraphJson(json), ds, username, password);
+	}
+	
+	@Deprecated
 	public DataLoader(JSONObject json, int bSize, Dataset ds, String username, String password) throws Exception{
-		this(new SparqlGraphJson(json), bSize, ds, username, password);
+		this(new SparqlGraphJson(json),  ds, username, password);
+		this.batchSize = Math.min(100, bSize);
+		this.batchHandler.setBatchSize(this.batchSize);
+	}
+	
+	/**
+	 * Override the ideal insert query size provided by the SparqlEndpointInterface
+	 * @param override
+	 */
+	public void overrideInsertQueryIdealSize(int override) {
+		this.insertQueryIdealSizeOverride = override;
 	}
 	
 	public String getDatasetGraphName(){
@@ -253,7 +295,6 @@ public class DataLoader implements Runnable {
 		ArrayList<ArrayList<String>> nextRecords = null;
 		
 		int numThreads = 2;    // first pass, run few threads to get recommendBatchSize
-		                                             // turns out that this hurt performance, set to MAX_WORKER_THREADS
 		while (true) {
 			// get the next set of records from the data set.
 			
@@ -267,6 +308,9 @@ public class DataLoader implements Runnable {
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
 				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
+				if (this.insertQueryIdealSizeOverride > 0) {
+					worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
+				}
 				startingRow += nextRecords.size();
 				wrkrs.add(worker);
 				worker.start();
@@ -277,18 +321,25 @@ public class DataLoader implements Runnable {
 			// and then we can start over.
 			// Over simplistic logic could be improved for performance.
 			if(wrkrs.size() == numThreads){
+				int retries = 0;
 				for(int i = 0; i < wrkrs.size(); i++){
 					IngestionWorkerThread thread = wrkrs.get(i);
 					this.joinAndThrowIfException(thread, exceptionHeader);
 					
 					// check recommended batch size
-					if (thread.getRecommendedBatchSize() < this.batchHandler.getBatchSize()) {
+					if (thread.getRecommendedBatchSize() != this.batchHandler.getBatchSize()) {
 						LocalLogger.logToStdOut("Changing batch size from " + this.batchHandler.getBatchSize() + " to " + thread.getRecommendedBatchSize()); 
 						this.batchHandler.setBatchSize(thread.getRecommendedBatchSize());
 					}
+					retries += thread.endpoint.getRetries();
 				}
 				wrkrs.clear();
-				numThreads = this.MAX_WORKER_THREADS;   // after first pass, go full speed with MAX_WORKER_THREADS
+				
+				if (retries > 1 && this.maxThreads > 1) {
+					this.maxThreads -= 1;
+					LocalLogger.logToStdErr("Reducing max threads to " + Integer.toString(this.maxThreads));
+				}
+				numThreads = this.maxThreads;   // after first pass, go full speed with maxThreads
 				
 				// log to stdout occasionally
 				long nowMillis = System.currentTimeMillis();
@@ -326,6 +377,18 @@ public class DataLoader implements Runnable {
 		return recordsProcessed;
 	}
 	
+	public int getMaxThreads() {
+		return maxThreads;
+	}
+
+	/**
+	 * Override the default max threads
+	 * @param maxThreads
+	 */
+	public void overrideMaxThreads(int maxThreads) {
+		this.maxThreads = maxThreads;
+	}
+
 	/**
 	 * Check completed thread for exceptions and failure information
 	 * @param worker
@@ -465,17 +528,34 @@ public class DataLoader implements Runnable {
 		}
 	}
 	
+	
 	/**
 	 * Variant with no connection override
+	 * Deprecated functions totally ignore batchSize.  It is now automatic.
 	 */
+	@Deprecated
 	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize) throws Exception{
-		return loadFromCsv(loadTemplateFilePath, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, batchSize, null);
+		return loadFromCsv(loadTemplateFilePath, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword);
+	}
+	
+	@Deprecated
+	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
+		return loadFromCsv(loadTemplateFilePath,csvFilePath,sparqlEndpointUser, sparqlEndpointPassword, connectionOverride);
+	}
+	
+	@Deprecated
+	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
+		return loadFromCsv(loadTemplateJson, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride);
+	}
+	
+	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword) throws Exception{
+		return loadFromCsv(loadTemplateFilePath, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, null);
 	}
 	
 	/**
 	 * Variant with loading template file path instead of JSON object
 	 */
-	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
+	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride) throws Exception{
 
 		if(!loadTemplateFilePath.endsWith(".json")){
 			throw new Exception("Error: Template file " + loadTemplateFilePath + " is not a JSON file");
@@ -484,31 +564,33 @@ public class DataLoader implements Runnable {
 		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
 		LocalLogger.logToStdOut("Template:   " + loadTemplateFilePath);
 		LocalLogger.logToStdOut("CSV file:   " + csvFilePath);
-		LocalLogger.logToStdOut("Batch size: " + batchSize);	
+		LocalLogger.logToStdOut("Batch size: " + DEFAULT_BATCH_SIZE);	
 		LocalLogger.logToStdOut("Connection override: " + connectionOverride);	// may be null if no override connection provided
 				
-		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, batchSize, connectionOverride);
+		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride);
 	}
-		
+	
+	
+	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride) throws Exception{
+		return loadFromCsv(loadTemplateJson, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride, -1);
+	}
+	
 	/**
 	 * Utility method to load data given a template json, CSV file, and SPARQL connection
 	 * @param loadTemplateJson 			the JSON containing the load template
 	 * @param csvFilePath 				path to the CSV data file
 	 * @param sparqlEndpointUser 		username for SPARQL endpoint
 	 * @param sparqlEndpointPassword 	password for SPARQL endpoint
-	 * @param batchSize					loading batch size
 	 * @param connectionOverride 		a SPARQL connection to override the connection in the template (use null to not override)
+	 * @param overrideMaxThreads	    set the number of threads max
 	 * @return							total CSV records processed
 	 */
-	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, int batchSize, SparqlConnection connectionOverride) throws Exception{
+	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride, int overrideMaxThreads) throws Exception{
 				
 		// validate arguments
 		if(!csvFilePath.endsWith(".csv")){
 			throw new Exception("Error: Data file " + csvFilePath + " is not a CSV file");
 		}		
-		if(batchSize < 1 || batchSize > 100){
-			throw new Exception("Error: Invalid batch size: " + batchSize);
-		}
 		
 		// create SparqlGraphJson, override connection if needed
 		SparqlGraphJson sgJson = new SparqlGraphJson(loadTemplateJson);
@@ -532,7 +614,10 @@ public class DataLoader implements Runnable {
 		
 		// load the data
 		try{
-			DataLoader loader = new DataLoader(sgJson.getJson(), batchSize, dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader loader = new DataLoader(sgJson.getJson(), dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			if (overrideMaxThreads > 0) {
+				loader.overrideMaxThreads(overrideMaxThreads);
+			}
 			int recordsAdded = loader.importData(true);
 			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
 			if(loader.getLoadingErrorReport().getNumRows() > 0){

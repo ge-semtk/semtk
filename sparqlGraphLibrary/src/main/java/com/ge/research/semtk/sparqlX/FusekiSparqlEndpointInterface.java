@@ -47,7 +47,6 @@ import com.ge.research.semtk.utility.Utility;
 
 /**
  * Interface to Fuseki SPARQL endpoint
- * TODO NOT TESTED!!!
  */
 public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
@@ -67,6 +66,9 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		}
 	}
 
+	public int getInsertQueryMaxSize()    { return 50000; }
+	public int getInsertQueryOptimalSize() { return 3500; }
+	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
 	 */

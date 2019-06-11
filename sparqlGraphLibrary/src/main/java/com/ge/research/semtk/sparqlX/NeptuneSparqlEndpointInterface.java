@@ -98,6 +98,9 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		super(server, graph, user, pass);
 	}
 	
+	public int getInsertQueryMaxSize()    { return 100000; }
+	public int getInsertQueryOptimalSize()  { return 5000; }
+	
 	/**
 	 * Neptune never requires username or password.  Always auth-capable.
 	 */

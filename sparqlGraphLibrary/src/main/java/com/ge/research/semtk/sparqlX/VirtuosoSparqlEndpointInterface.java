@@ -54,6 +54,10 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		super(server, graph, user, pass);
 		// TODO Auto-generated constructor stub
 	}
+	
+	public int getInsertQueryMaxSize()    { return 100000; }
+	public int getInsertQueryOptimalSize()  { return 3000; }
+	
 	/**
 	 * Success criteria: contains "done"
 	 * @throws Exception
