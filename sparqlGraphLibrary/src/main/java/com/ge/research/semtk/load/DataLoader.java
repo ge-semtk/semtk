@@ -335,7 +335,7 @@ public class DataLoader implements Runnable {
 				}
 				wrkrs.clear();
 				
-				if (retries > 1 && this.maxThreads > 1) {
+				if (retries != 0 && this.maxThreads != 1) {
 					this.maxThreads -= 1;
 					LocalLogger.logToStdErr("Reducing max threads to " + Integer.toString(this.maxThreads));
 				}

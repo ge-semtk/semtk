@@ -67,7 +67,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 
 	public int getInsertQueryMaxSize()    { return 50000; }
-	public int getInsertQueryOptimalSize() { return 3500; }
+	public int getInsertQueryOptimalSize() { return 5000; }
 	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
