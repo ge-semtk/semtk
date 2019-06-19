@@ -252,6 +252,11 @@ define([	// properly require.config'ed   bootstrap-modal
                                          nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 
+            execAsyncDispatchClearGraph : function(sei, jobIdCallback, failureCallback) {
+                this.runAsyncSei(   "dispatchClearGraph",
+                                    sei, jobIdCallback, failureCallback);
+            },
+
             /* ===================================================================================== */
 
             /*
@@ -267,6 +272,16 @@ define([	// properly require.config'ed   bootstrap-modal
                                         successCallback,
                                         failureCallback,
                                         this.optTimeout);
+            },
+
+            runAsyncSei : function (endpoint, sei, jobIdCallback, failureCallback) {
+                var data = JSON.stringify ({
+                    "graph":           sei.getGraph(),
+                    "serverAndPort":   sei.getServerURL(),
+                    "serverType" :     sei.getServerType()
+                });
+
+				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
             },
 
             runAsyncSparql : function (endpoint, sparql, conn, jobIdCallback, failureCallback) {

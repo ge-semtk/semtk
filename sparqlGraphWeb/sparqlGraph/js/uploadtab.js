@@ -23,6 +23,7 @@ define([	// properly require.config'ed
          	'sparqlgraph/js/iidxhelper',
          	'sparqlgraph/js/sparqlgraphjson',
          	'sparqlgraph/js/msiclientingestion',
+            'sparqlgraph/js/msiclientnodegroupexec',
          	'sparqlgraph/js/msiclientquery',
             'sparqlgraph/js/msiclientontologyinfo',
             'sparqlgraph/js/msiclientresults',
@@ -36,7 +37,7 @@ define([	// properly require.config'ed
          	//'logconfig',
 		],
 
-	function(ModalIidx, IIDXHelper, SparqlGraphJson, MsiClientIngestion, MsiClientQuery, MsiClientOntologyInfo, MsiClientResults, MsiClientStatus, MsiResultSet, SparqlGraphJson, $) {
+	function(ModalIidx, IIDXHelper, SparqlGraphJson, MsiClientIngestion, MsiClientNodeGroupExec, MsiClientQuery, MsiClientOntologyInfo, MsiClientResults, MsiClientStatus, MsiResultSet, SparqlGraphJson, $) {
 
 		/*
 		 *    A column name or text or some item used to build a triple value
@@ -937,31 +938,36 @@ define([	// properly require.config'ed
 			toolsClearGraphOK : function () {
 				kdlLogEvent("SG: import clear graph");
 
-				var successCallback = function (mq, resultSet) {
+				var successCallback = function (resultSet) {
 					IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+                    ModalIidx.alert("Success", resultSet.tableGetRows()[0][0], true);
 
-					if (! resultSet.isSuccess()) {
-						this.logAndAlert("'Clear All' Service failed", mq.getDropGraphResultHtml(resultSet));
-					} else {
-
-						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
-
-						// set modelChangedFlag
-						if (this.isModelGraphSelected()) {
-							this.modelChangedFlag = true;
-							this.draw();
-						}
+					// set modelChangedFlag
+					if (this.isModelGraphSelected()) {
+						this.modelChangedFlag = true;
+						this.draw();
 					}
 
 					this.fillAll();
 					IIDXHelper.progressBarRemove(this.progressDiv);
-				};
+				}.bind(this);
 
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-danger progress-striped active");
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
 
-				var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
-	    		mq.execClearAll(successCallback.bind(this, mq));
+                var checkForCancel = function() { return false; };
+                var statusCallback = function() {};
+                // Run nodegroup via Node Group Exec Svc
+                var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(successCallback,
+                                                                                 this.msiFailureCallback.bind(this),
+                                                                                 statusCallback,
+                                                                                 checkForCancel,
+                                                                                 g.service.status.url,
+                                                                                 g.service.results.url);
+                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
+
+
+                execClient.execAsyncDispatchClearGraph(this.getSelectedSei(), jsonCallback, this.msiFailureCallback.bind(this));
 			},
 
 			// shut off all stuff during an oper

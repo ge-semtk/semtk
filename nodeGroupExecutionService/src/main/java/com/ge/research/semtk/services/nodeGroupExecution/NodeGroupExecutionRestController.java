@@ -75,10 +75,12 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataRe
 import com.ge.research.semtk.services.nodeGroupExecution.requests.NodegroupRequestBodyPercentMsec;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.StatusRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
+import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -1006,6 +1008,54 @@ public class NodeGroupExecutionRestController {
 	
 				// dispatch the job. 
 				ngExecutor.dispatchRawSparql(connection, requestBody.getSparql());
+				String id = ngExecutor.getJobID();
+				
+				retval.setSuccess(true);
+				retval.addResult(JOB_ID_RESULT_KEY, id);
+	
+			}
+			catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
+			} 
+		
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+
+	}
+	
+	@ApiOperation(
+			value=	"clear graph",
+			notes=	"result a single cell with status message<br>that is redundant with job status."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchClearGraph", method=RequestMethod.POST)
+	public JSONObject dispatchClearGraph(@RequestBody SparqlEndpointRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchClearGraph";
+		HeadersManager.setHeaders(headers);
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
+			SimpleResultSet retval = new SimpleResultSet();
+			
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+
+				// add connection
+				SparqlEndpointInterface sei = requestBody.buildSei();
+				SparqlConnection conn = new SparqlConnection();
+				conn.addDataInterface(sei);
+				conn.addModelInterface(sei);		
+	
+				// dispatch the job. 
+				ngExecutor.dispatchRawSparql(conn, SparqlToXUtils.generateClearGraphSparql(sei));
 				String id = ngExecutor.getJobID();
 				
 				retval.setSuccess(true);
