@@ -25,6 +25,7 @@ public enum DispatcherSupportedQueryTypes {
 		DELETE,
 		CONSTRUCT,
 		RAW_SPARQL,
+		RAW_SPARQL_UPDATE,
 		CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION
 
 }

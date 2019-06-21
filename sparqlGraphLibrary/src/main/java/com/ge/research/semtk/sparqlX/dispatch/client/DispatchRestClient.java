@@ -270,6 +270,33 @@ public class DispatchRestClient extends RestClient{
 		
 		return retval;
 	}
+	
+	public SimpleResultSet executeRawSparqlUpdateQuery(SparqlConnection sc, String rawSparqlQuery) throws Exception{
+		SimpleResultSet retval = null;
+		
+		// setup the arguments we intend to send.
+		conf.setServiceEndpoint("dispatcher/asynchronousDirectUpdateQuery");
+		this.parametersJSON.put("sparqlConnectionJson", sc.toJson().toJSONString());
+		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
+	
+		
+		LocalLogger.logToStdErr("-- the outgoing connection json was: ---");
+		LocalLogger.logToStdErr(sc.toJson().toString());
+		LocalLogger.logToStdErr("-- the outgoing connection json closed ---");
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("sparqlConnectionJson");
+			this.parametersJSON.remove("rawSparqlQuery");
+		}
+		
+		return retval;
+	}
 
 	public TableResultSet executeGetConstraintInfo(JSONObject nodeGroup) throws Exception{
 		TableResultSet retval = new TableResultSet();

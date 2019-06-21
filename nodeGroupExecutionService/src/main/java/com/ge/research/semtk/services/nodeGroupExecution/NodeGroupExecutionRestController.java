@@ -986,7 +986,7 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	@ApiOperation(
-			value=	"raw SPARQL query",
+			value=	"raw SPARQL SELECT query",
 			notes=	"result has 'JobId' field"
 			)
 	@CrossOrigin
@@ -1019,7 +1019,52 @@ public class NodeGroupExecutionRestController {
 			    LocalLogger.printStackTrace(e);
 				retval = new SimpleResultSet();
 				retval.setSuccess(false);
-				retval.addRationaleMessage(SERVICE_NAME, "dispatchRawSparql", e);
+				retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			} 
+		
+			return retval.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+
+	}
+	
+	@ApiOperation(
+			value=	"raw SPARQL query performing an UPDATE, DELETE, CLEAR, etc.",
+			notes=	"result has 'JobId' field"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchRawSparqlUpdate", method=RequestMethod.POST)
+	public JSONObject dispatchRawSparqlUpdate(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="dispatchRawSparqlUpdate";
+		HeadersManager.setHeaders(headers);
+		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
+    	try {
+			SimpleResultSet retval = new SimpleResultSet();
+			
+			try{
+				// create a new StoredQueryExecutor
+				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+
+				// try to create a sparql connection
+				SparqlConnection connection = requestBody.getSparqlConnection();			
+	
+				// dispatch the job. 
+				ngExecutor.dispatchRawSparqlUpdate(connection, requestBody.getSparql());
+				String id = ngExecutor.getJobID();
+				
+				retval.setSuccess(true);
+				retval.addResult(JOB_ID_RESULT_KEY, id);
+	
+			}
+			catch(Exception e){
+				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
+				retval = new SimpleResultSet();
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 			} 
 		
 			return retval.toJson();
@@ -1055,7 +1100,7 @@ public class NodeGroupExecutionRestController {
 				conn.addModelInterface(sei);		
 	
 				// dispatch the job. 
-				ngExecutor.dispatchRawSparql(conn, SparqlToXUtils.generateClearGraphSparql(sei));
+				ngExecutor.dispatchRawSparqlUpdate(conn, SparqlToXUtils.generateClearGraphSparql(sei));
 				String id = ngExecutor.getJobID();
 				
 				retval.setSuccess(true);

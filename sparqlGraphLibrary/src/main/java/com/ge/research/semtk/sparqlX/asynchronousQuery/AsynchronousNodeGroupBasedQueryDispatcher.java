@@ -282,7 +282,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				preRet = nodegroupQueryClient.execute(sparqlQuery, SparqlResultTypes.GRAPH_JSONLD);
 				retval = new TableResultSet(true);
 			}
-			else if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE) {
+			else if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE || supportedQueryType == DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE) {
 				SimpleResultSet simpleRes = (SimpleResultSet) nodegroupQueryClient.getSei().executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
 				retval = new TableResultSet(simpleRes);
 				

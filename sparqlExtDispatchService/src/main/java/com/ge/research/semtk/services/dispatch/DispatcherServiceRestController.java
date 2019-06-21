@@ -133,6 +133,18 @@ public class DispatcherServiceRestController {
 	}
 	
 	@CrossOrigin
+	@RequestMapping(value="/asynchronousDirectUpdateQuery", method=RequestMethod.POST)
+	public JSONObject asynchronousDirectUpdateQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	@CrossOrigin
 	@RequestMapping(value="/queryConstructFromNodeGroup", method=RequestMethod.POST)
 	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
@@ -178,7 +190,7 @@ public class DispatcherServiceRestController {
 			
 			WorkThread thread = new WorkThread(dsp, null, null, qt);
 
-			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL)){
+			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL) || qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE)) {
 				// we are going to launch straight from the raw sparql
 				String qry = ((SparqlRequestBody)requestBody).getRawSparqlQuery();
 				thread.setRawSparqlSquery(qry);

@@ -257,6 +257,17 @@ public class NodeGroupExecutor {
 		this.setJobID(simpleRes.getResult("requestID"));
 	}
 	
+	// Dispatch actions
+	public void dispatchRawSparqlUpdate(SparqlConnection sc, String sparqlQuery) throws Exception {
+	
+		SimpleResultSet simpleRes = null;
+		
+		simpleRes = this.dispatchClient.executeRawSparqlUpdateQuery(sc, sparqlQuery);
+		
+		// set up the Job ID
+		this.setJobID(simpleRes.getResult("requestID"));
+	}
+	
 	public void dispatchJob(DispatcherSupportedQueryTypes qt, SparqlConnection sc, NodeGroup ng, JSONObject externalConstraints, JSONArray runtimeConstraints, String targetObjectSparqlID) throws Exception{
 		this.dispatchJob(qt, sc, ng, externalConstraints, null, runtimeConstraints, -1, -1, targetObjectSparqlID);
 	}
