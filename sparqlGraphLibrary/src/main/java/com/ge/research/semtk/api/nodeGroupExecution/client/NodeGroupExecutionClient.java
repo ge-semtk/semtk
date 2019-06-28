@@ -733,10 +733,14 @@ public class NodeGroupExecutionClient extends RestClient {
 		return ret.getResult("JobId");
 	}
 		
-	public boolean dispatchDeleteByIdToSuccess(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
+	public String dispatchDeleteByIdToSuccessMsg(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
 		String jobId = this.dispatchDeleteByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints);
 		this.waitForCompletion(jobId);
-		return this.getJobSuccess(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getResultsTable(jobId).getCell(0, 0);
+		} else {
+			throw new Exception(this.getJobStatusMessage(jobId));
+		}
 	}
 
 	@SuppressWarnings("unchecked")

@@ -237,8 +237,8 @@ public class NodeGroupExecutionClientTest_IT {
 				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
 				 
 				// delete some by nodegroup ID
-				boolean success = nodeGroupExecutionClient.dispatchDeleteByIdToSuccess(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
-				assertTrue("Delete failed", success);
+				String success = nodeGroupExecutionClient.dispatchDeleteByIdToSuccessMsg(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
+				System.out.println(success);
 				
 				// select back the data post delete
 				tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
