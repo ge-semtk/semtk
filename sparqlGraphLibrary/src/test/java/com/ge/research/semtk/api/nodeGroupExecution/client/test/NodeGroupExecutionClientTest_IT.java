@@ -193,13 +193,56 @@ public class NodeGroupExecutionClientTest_IT {
 				Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
 				
-				// delete some
+				// delete some by nodegroup
 				NodeGroup delNg = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery_DeleteSimple.json").getNodeGroup();
 				tab = nodeGroupExecutionClient.dispatchDeleteFromNodeGroup(delNg, TestGraph.getSparqlConn(), null, null);
 				
 				// select back the data post delete
 				tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
-				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 0);
+				assertTrue("Data remains after delete", tab.getNumRows() == 0);
+				
+			} finally {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			}
+		}
+		
+		@Test
+		public void testIngestByNodegroupAndDeleteById() throws Exception {	
+			// also tests waitForPercentOrMsec
+			// also tests getJobStatus
+			
+			// store a nodegroup (modified with the test graph)
+			SparqlGraphJson sgjSelectInsert = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			SparqlGraphJson sgjDelete = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery_DeleteSimple.json");
+
+			try {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			} catch (Exception e) {
+			}
+			
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "sampleBattery_deleteSimple", CREATOR, sgjDelete.toJson());
+			
+			try {
+				TestGraph.clearGraph();
+				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				
+				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+				
+				// perform ingestion
+				RecordProcessResults res = nodeGroupExecutionClient.execIngestionFromCsvStr(sgjSelectInsert, csvStr);
+				assertTrue("Ingestion failed", res.getSuccess());
+				
+				// select back the data post ingest
+				Table tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
+				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
+				 
+				// delete some by nodegroup ID
+				boolean success = nodeGroupExecutionClient.dispatchDeleteByIdToSuccess(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
+				assertTrue("Delete failed", success);
+				
+				// select back the data post delete
+				tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
+				assertTrue("Data remains after delete", tab.getNumRows() == 0);
 				
 			} finally {
 				nodeGroupStoreClient.deleteStoredNodeGroup(ID);

@@ -729,10 +729,16 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * @return
 	 */
 	public String dispatchDeleteByIdToJobId(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
-			SimpleResultSet ret =  this.execDispatchCountById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints);
-			return ret.getResult("JobId");
-		}
+		SimpleResultSet ret =  this.execDispatchDeleteById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints);
+		return ret.getResult("JobId");
+	}
 		
+	public boolean dispatchDeleteByIdToSuccess(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
+		String jobId = this.dispatchDeleteByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraints);
+		this.waitForCompletion(jobId);
+		return this.getJobSuccess(jobId);
+	}
+
 	@SuppressWarnings("unchecked")
 	public SimpleResultSet execDispatchDeleteById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
 			SimpleResultSet retval = null;
