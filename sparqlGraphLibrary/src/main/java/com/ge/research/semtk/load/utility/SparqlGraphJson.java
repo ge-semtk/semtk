@@ -26,8 +26,10 @@ import org.json.simple.parser.ParseException;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.Utility;
 
 /*
  * JSON handler for sparqlGraph.json files
@@ -343,4 +345,17 @@ public class SparqlGraphJson {
 	
 	// override the connection info in the SparqlGraphJson
 	
+	/**
+	 * Execute a select query from a JSON representation of SparqlGraphJson and an override connection
+	 * @param sgJsonJson
+	 * @param conn - override and default query sei
+	 * @return Table
+	 * @throws Exception
+	 */
+	public static Table executeSelectToTable(JSONObject sgJsonJson, SparqlConnection conn) throws Exception {
+		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
+		sgjson.setSparqlConn(conn);
+		String query = sgjson.getNodeGroup().generateSparqlSelect();
+		return conn.getDefaultQueryInterface().executeQueryToTable(query);
+	}
 }

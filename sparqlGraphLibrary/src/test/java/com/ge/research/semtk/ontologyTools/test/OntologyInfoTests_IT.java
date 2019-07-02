@@ -18,6 +18,7 @@ package com.ge.research.semtk.ontologyTools.test;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import org.junit.BeforeClass;
@@ -384,5 +385,18 @@ public class OntologyInfoTests_IT {
 		// run just the basic test on loadSparqlConnection
 		assertTrue("http://semtk.junit/imported#Imported was not imported by owl import", oClass != null);
 
+	}
+	
+	@Test
+	public void testContainsClassesWithBase() throws Exception {
+		TestGraph.clearGraph();
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		assertFalse("oInfo magically contains made-up-class", oInfo.containsClassWithBase("http://made/up"));
+		
+		TestGraph.uploadOwl("src/test/resources/Pet.owl");
+		oInfo.load(TestGraph.getSei(), false);
+		InputStream is = this.getClass().getResourceAsStream("/Pet.owl");
+		assertTrue("can't find class with base that was just loaded", oInfo.containsClassWithBase(is));
 	}
 }

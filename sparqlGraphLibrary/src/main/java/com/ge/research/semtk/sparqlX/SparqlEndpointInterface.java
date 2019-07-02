@@ -19,6 +19,8 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
@@ -36,6 +38,7 @@ import javax.net.ssl.X509TrustManager;
 import java.security.cert.X509Certificate;
 
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -64,6 +67,7 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -1286,6 +1290,28 @@ public abstract class SparqlEndpointInterface {
 		JSONObject tableJson = table.toJson();
 		return tableJson;
 	}	
+	
+	/**
+	 * Checks an sei to see if any version of the owl in owlInputStream is loaded
+	 * (any class with the base specified in the owl)
+	 * If owl is not loaded to the sei, then load it
+	 * @param sei
+	 * @param owlInputStream
+	 * @return True if load occurred, False if it wasn't needed
+	 * @throws Exception otherwise
+	 */
+	public boolean uploadOwlModelIfNeeded(InputStream owlInputStream) throws Exception {
+		
+		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("edcServices", this)); 
+
+		byte [] owl = IOUtils.toByteArray(owlInputStream);
+
+		if (! oInfo.containsClassWithBase(new ByteArrayInputStream(owl))) {
+			this.executeAuthUploadOwl(owl);
+			return true;
+		}
+		return false;
+	}
 
 	public abstract SparqlEndpointInterface copy() throws Exception;
 }

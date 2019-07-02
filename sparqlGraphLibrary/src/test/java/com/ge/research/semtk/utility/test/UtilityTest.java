@@ -149,7 +149,7 @@ public class UtilityTest {
 	}
 	
 	@Test
-	public void testGetResourceAsString(){
+	public void testGetResourceAsString() throws Exception {
 		String s = Utility.getResourceAsString(this, "/Pet.owl");
 		assertTrue(s.trim().startsWith("<rdf:RDF"));
 		assertTrue(s.trim().endsWith("</rdf:RDF>"));

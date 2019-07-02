@@ -20,6 +20,7 @@ package com.ge.research.semtk.ontologyTools;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,6 +98,7 @@ public class OntologyInfo {
 	 * @param conn
 	 * @throws Exception
 	 */
+	@Deprecated
 	public OntologyInfo(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception{
 		this.loadSparqlConnection(clientConfig, conn);
 		this.modelConnection = conn;
@@ -392,6 +394,33 @@ public class OntologyInfo {
 		OntologyClass retval = null;
 		if(this.classHash.containsKey(fullUriName)){ retval = this.classHash.get(fullUriName); }
 		return retval;
+	}
+	
+	/**
+	 * Does oInfo contain any classes starting with this owl file's base
+	 * In English: was any version of this owl file loaded into this graph
+	 * @param owlStream
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean containsClassWithBase(InputStream owlStream) throws Exception {
+		String base = Utility.getXmlBaseFromOwlRdf(owlStream);
+		return this.containsClassWithBase(base);
+	}
+	
+	/**
+	 * Does oInfo contain any classes starting with base.
+	 * In English: was any version of this owl file loaded into this graph
+	 * @param base
+	 * @return
+	 */
+	public boolean containsClassWithBase(String base) {
+		for (String className : this.classHash.keySet()) {
+			if (className.startsWith(base + "#")) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**

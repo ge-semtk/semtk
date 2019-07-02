@@ -56,6 +56,25 @@ public class SparqlConnection {
 	    this.fromString(jsonText);
 	}
 	
+	public SparqlConnection(String name, String serverType, String serverURL, String dataset) throws Exception{
+		this();
+		this.name = name;
+		this.addDataInterface(serverType, 
+				serverURL,
+				dataset);
+		this.addModelInterface(serverType, 
+				serverURL,
+				dataset);
+	}
+	
+	public SparqlConnection(String name, SparqlEndpointInterface sei) throws Exception {
+		this();
+		this.name = name;
+		this.addDataInterface(sei);
+		this.addModelInterface(sei);
+	}
+	
+	@Deprecated
 	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset) throws Exception{
 		this();
 		this.name = name;

@@ -19,6 +19,7 @@
 package com.ge.research.semtk.utility;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,8 +67,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 
 /*
@@ -662,29 +666,53 @@ public abstract class Utility {
 	 * @param fileName the name of the file resource.  May need to prepend this with /
 	 * @return the file contents
 	 */
-	public static String getResourceAsString(Object obj, String fileName) {
+	public static String getResourceAsString(Object obj, String fileName) throws Exception {
 		String ret = null;
-		try{
-			InputStream in = obj.getClass().getResourceAsStream(fileName);
-			ret = IOUtils.toString(in, StandardCharsets.UTF_8);
-		}catch(Exception e){
-			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
-			LocalLogger.printStackTrace(e);
+		
+		InputStream in = obj.getClass().getResourceAsStream(fileName);
+		if (in == null) {
+			throw new Exception("Could find resource file: " + fileName);
+		}
+		
+		ret = IOUtils.toString(in, StandardCharsets.UTF_8);
+		if (ret == null) {
+			throw new Exception("Resource file is empty: " + fileName);
+		}
+		
+		return ret;
+	}
+	
+	public static File getResourceAsFile(Object obj, String fileName) throws Exception {
+		File ret = null;
+		
+		URL url = obj.getClass().getResource(fileName);
+		if (url == null) {
+			throw new Exception("Could find resource file: " + fileName);
+		}
+		
+		ret = new File(url.getPath());
+		if (ret == null) {
+			throw new Exception("Resource file is empty: " + fileName);
+		}
+		
+		return ret;
+	}
+	
+	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception  {
+		byte [] ret = null;
+
+		InputStream in = obj.getClass().getResourceAsStream(fileName);
+		if (in == null) {
+			throw new Exception("Could find resource file: " + fileName);
+		}
+		
+		ret = IOUtils.toByteArray(in);
+		if (ret == null) {
+			throw new Exception("Resource file is empty: " + fileName);
 		}
 		return ret;
 	}
 	
-	public static File getResourceAsFile(Object obj, String fileName) {
-		File ret = null;
-		try{
-			URL url = obj.getClass().getResource(fileName);
-			ret = new File(url.getPath());
-		}catch(Exception e){
-			LocalLogger.logToStdErr("Cannot retrieve resource " + fileName + " from " + obj.toString());
-			LocalLogger.printStackTrace(e);
-		}
-		return ret;
-	}
 	
 	/**
 	 * Get a file resource as JSON
