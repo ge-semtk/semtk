@@ -63,10 +63,10 @@
 							</descriptorRefs>
 							<archive>
 								<manifest>
-									<mainClass>com.ge.research.semtk.standaloneExecutables.OwlLoader</mainClass>
+									<mainClass>com.ge.research.semtk.standaloneExecutables.BulkLoader</mainClass>
 								</manifest>
 							</archive>
-							<finalName>owlLoader</finalName>
+							<finalName>bulkLoader</finalName>
 						</configuration>
 						<phase>install</phase>
 						<goals>
