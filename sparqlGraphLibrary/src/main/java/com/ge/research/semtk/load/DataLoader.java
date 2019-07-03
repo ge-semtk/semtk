@@ -328,7 +328,7 @@ public class DataLoader implements Runnable {
 					
 					// check recommended batch size
 					if (thread.getRecommendedBatchSize() != this.batchHandler.getBatchSize()) {
-						LocalLogger.logToStdOut("Changing batch size from " + this.batchHandler.getBatchSize() + " to " + thread.getRecommendedBatchSize()); 
+						//LocalLogger.logToStdOut("Changing batch size from " + this.batchHandler.getBatchSize() + " to " + thread.getRecommendedBatchSize()); 
 						this.batchHandler.setBatchSize(thread.getRecommendedBatchSize());
 					}
 					retries += thread.endpoint.getRetries();
