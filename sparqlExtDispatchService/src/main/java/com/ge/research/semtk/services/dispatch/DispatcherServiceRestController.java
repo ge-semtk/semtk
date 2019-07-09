@@ -395,17 +395,15 @@ public class DispatcherServiceRestController {
 			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions, oClient);
 			
 		}catch(Exception e){
+			// log entire stack trace
 			LocalLogger.printStackTrace(e);
-			// Strange case I can't figure out.  Unpack exceptions. -Paul
-			String message = "";
+			
+			// find and throw only the causing exception
 			Throwable t = e;
-			while (t != null) {
-				if (t.getMessage() != null) {
-					message += t.getMessage() + ";";
-					t = t.getCause();
-				}
+			while (t.getCause() != null) {
+				t = t.getCause();
 			}
-			throw new Exception("Error instantiating dispatcher:" + message);
+			throw (Exception) t;
 		}
 		
 		LocalLogger.logToStdOut("initialized job: " + requestId);	
