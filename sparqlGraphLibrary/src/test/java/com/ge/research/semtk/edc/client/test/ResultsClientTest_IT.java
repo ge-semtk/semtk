@@ -26,19 +26,14 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.auth.AuthorizationException;
-import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
@@ -448,12 +443,11 @@ public class ResultsClientTest_IT {
 		
 		try {
 			final String fileName = "test.csv";
+			final String fileName2 = "test2.csv";
 			SimpleResultSet res = client.execStoreBinaryFile(jobId, testFile);
 			SimpleResultSet res2 = client.execStoreBinaryFile(jobId, testFile2);
 
-			
 			String fileId = (String) res.getResult("fileId");
-	 		
 			String fileContent = client.execReadBinaryFile(fileId);
 			
 			assertNotNull(fileContent);
@@ -461,9 +455,8 @@ public class ResultsClientTest_IT {
 			// check getting resultsURLs
 			Table urlTab = client.getResultsFiles(jobId);
 			assertEquals(2, urlTab.getNumRows());
-			assertEquals(fileName, urlTab.getCell(0, "name"));
-			urlTab.getCell(0, "fileId");
-		
+			assertTrue(urlTab.getCell(0, "name").equals(fileName) || urlTab.getCell(1, "name").equals(fileName));  		// entries may appear in any order
+			assertTrue(urlTab.getCell(0, "name").equals(fileName2) || urlTab.getCell(1, "name").equals(fileName2));  	// entries may appear in any order
 		} finally {
 			cleanup(client, jobId);
 		}
