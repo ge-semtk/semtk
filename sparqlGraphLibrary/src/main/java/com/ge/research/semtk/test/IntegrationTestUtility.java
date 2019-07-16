@@ -25,7 +25,6 @@ import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionCli
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationProperties;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
-import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
@@ -37,7 +36,6 @@ import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.properties.EndpointProperties;
-import com.ge.research.semtk.properties.SemtkEndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -195,6 +193,20 @@ public class IntegrationTestUtility {
 	}
 	public static String getHiveDatabase() throws Exception{
 		return getIntegrationTestProperty("integrationtest.hive.database");
+	}
+	
+	// ArangoDB
+	public static String getArangoDbServer() throws Exception{
+		return getIntegrationTestProperty("integrationtest.arangodb.server");
+	}
+	public static int getArangoDbPort() throws Exception{
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.arangodb.port")).intValue();
+	}
+	public static String getArangoDbUsername() throws Exception{
+		return getIntegrationTestProperty("integrationtest.arangodb.username");
+	}
+	public static String getArangoDbPassword() throws Exception{
+		return getIntegrationTestProperty("integrationtest.arangodb.password");
 	}
 	
 	/**
