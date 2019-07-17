@@ -225,6 +225,11 @@ define([	// properly require.config'ed
             validateValue : function (valueType, val, sparqlId) {
                 var valStr = val.toString().trim();
 
+                // empty: passes
+                if (valStr == "") {
+                    return null;
+                }
+
                 if (isNumericType(valueType)) {
                     if(isNaN(valStr)){
                         return "Error: invalid entry for " + sparqlId + ": entry must be numeric: " + valStr;
