@@ -15,24 +15,31 @@
  ** limitations under the License.
  */
 
+package com.ge.research.semtk.properties;
 
-package com.ge.research.semtk.springutilib.requests;
+// meant to be inherited into a spring boot properties object needing a user and password
 
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+public abstract class UserPasswordProperties extends Properties {
 
-public abstract class DatabaseRequest {
+	private String user;
+	private String password;
 	
-	@NotNull
-	@Size(min=5, message="host must be at least 5 characters in length")
-    public String host;
+	public void validate() throws Exception {
+		super.validate();
+		checkNotEmpty("user", user);
+		checkNoneMaskValue("password", password);
+	}	
 	
-	@NotNull
-	@Digits(integer=5, fraction=0)
-    public String port;
-	
-	@NotNull
-	@Size(min=2, message="database must be at least 2 characters in length")
-    public String database;
+	public String getUser() {
+		return user;
+	}
+	public void setUser(String user) {
+		this.user = user;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
 }

@@ -18,6 +18,12 @@
 
 package com.ge.research.semtk.springutilib.requests;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 public class DatabaseQueryRequest extends DatabaseRequest {
+	
+	@NotNull
+	@Size(min=5, message="query must be at least 5 characters in length")
     public String query;
 }
