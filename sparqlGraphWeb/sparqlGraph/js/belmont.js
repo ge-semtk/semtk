@@ -779,6 +779,10 @@ PropertyItem.prototype = {
 		return this.SparqlID;
 	},
 
+    getTypeSparqlID : function() {
+		return "type_" + this.SparqlID;
+	},
+
 	getKeyName : function() {
 		// return the name of the property
 		return this.KeyName;
@@ -796,6 +800,9 @@ PropertyItem.prototype = {
 	getIsReturned : function() {
 		return this.isReturned;
 	},
+    getIsTypeReturned : function () {
+        return false;
+    },
 	getIsOptional : function() {
 		return this.isOptional == PropertyItem.OPT_MINUS_OPTIONAL;
 	},
@@ -896,6 +903,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 				nodeGroup.sparqlNameHash); // always has SparqlID since it is
 											// always included in the query
 		this.isReturned = false;
+        this.isTypeReturned = false;
 		this.isRuntimeConstrained = false;
 		this.valueConstraint = "";
 		this.instanceValue = null;
@@ -947,6 +955,11 @@ SemanticNode.prototype = {
 			deletionMode :  getNodeDeletionTypeName(this.deletionMode),
 		};
 
+        // optional things
+        if (this.isTypeReturned) {
+            ret.isTypeReturned = true;
+        }
+
 		// add properties
 		for (var i = 0; i < this.propList.length; i++) {
 			var p = this.propList[i];
@@ -983,6 +996,13 @@ SemanticNode.prototype = {
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;
 		this.deletionMode = jObj.hasOwnProperty("deletionMode") ? getNodeDeletionTypeByName(jObj.deletionMode) : NodeDeletionTypes.NO_DELETE;
+
+        // optional things
+        if (jObj.hasOwnProperty("isTypeReturned")) {
+            this.isTypeReturned = jObj.isTypeReturned;
+        } else {
+            this.isTypeReturned = false;
+        }
 
 		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {
@@ -1168,8 +1188,16 @@ SemanticNode.prototype = {
 	getSparqlID : function() {
 		return this.SparqlID;
 	},
+
+    getTypeSparqlID : function() {
+        return this.SparqlID + "_type";
+    },
+
 	setIsReturned : function(val) {
 		this.isReturned = val;
+	},
+    setIsTypeReturned : function(val) {
+		this.isTypeReturned = val;
 	},
 	setIsRuntimeConstrained : function(val) {
 		this.isRuntimeConstrained = val;
@@ -1193,6 +1221,9 @@ SemanticNode.prototype = {
 	},
 	getIsReturned : function() {
 		return this.isReturned;
+	},
+    getIsTypeReturned : function() {
+		return this.isTypeReturned;
 	},
 	getIsRuntimeConstrained : function() {
 		return this.isRuntimeConstrained;
@@ -1237,13 +1268,13 @@ SemanticNode.prototype = {
 				}
 			}
 		} else {
-			// does this node or its properties have any constrants or isReturned()
-			if (this.getIsReturned() || this.hasConstraints() || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE ) {
+			// does this node or its properties have any constrants or isReturned() or isTypeReturned()
+			if (this.getIsReturned() || this.getIsTypeReturned() || this.hasConstraints() || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE ) {
                 return true;
             }
 
 			for (var i = 0; i < this.propList.length; i++) {
-				if (this.propList[i].getIsReturned() || this.propList[i].hasConstraints() || this.propList[i].instanceValues.length > 0 || this.propList[i].getIsRuntimeConstrained() || this.propList[i].getIsMarkedForDeletion()) {
+				if (this.propList[i].getIsReturned() || this.propList[i].getIsTypeReturned() || this.propList[i].hasConstraints() || this.propList[i].instanceValues.length > 0 || this.propList[i].getIsRuntimeConstrained() || this.propList[i].getIsMarkedForDeletion()) {
 					return true;
 				}
 			}
@@ -1253,6 +1284,7 @@ SemanticNode.prototype = {
 
 	countReturns : function () {
 		var ret = this.getIsReturned() ? 1 : 0;
+        ret += this.getIsTypeReturned() ? 1 : 0;
 
 		for (var i = 0; i < this.propList.length; i++) {
 			ret += (this.propList[i].getIsReturned() ? 1 : 0);
@@ -1286,6 +1318,9 @@ SemanticNode.prototype = {
 	getReturnedCount : function() {
 		var ret = 0;
 		if (this.getIsReturned()) {
+			ret += 1;
+		}
+        if (this.getTypeIsReturned()) {
 			ret += 1;
 		}
 		for (var i=0; i < this.propList.length; i++) {
@@ -1609,7 +1644,7 @@ SemanticNode.prototype = {
 	},
 	getDisplayOptions : function() {
 		var bitmap = 0;
-		if (this.getIsReturned())
+		if (this.getIsReturned() || this.getIsTypeReturned() )
 			bitmap += 1;
 		if (this.hasConstraints())
 			bitmap += 2;
@@ -2288,10 +2323,10 @@ SemanticNodeGroup.prototype = {
 
     removeInvalidOrderBy : function() {
         var keep = [];
-
+        var returnedSparqlIDs = this.getReturnedSparqlIDs();
         for (var i=0; i < this.orderBy.length; i++) {
             var e = this.orderBy[i];
-            if (this.getItemBySparqlID(e.getSparqlID()) != null) {
+            if (this.getItemBySparqlID(e.getSparqlID()) != null || returnedSparqlIDs.indexOf(e.getSparqlID()) != -1) {
                 keep.push(e);
             }
         }
@@ -2925,7 +2960,7 @@ SemanticNodeGroup.prototype = {
 
 			// count optional and non-optional returns properties
 			var optRet = 0;
-			var nonOptRet = snode.getIsReturned() ? 1 : 0;
+			var nonOptRet = (snode.getIsReturned() || snode.getIsTypeReturned) ? 1 : 0;
 			var retProps = snode.getReturnedPropertyItems();
 			for (var j=0; j < retProps.length; j++) {
 				var prop = retProps[j];
@@ -2972,7 +3007,7 @@ SemanticNodeGroup.prototype = {
 				var snode = this.SNodeList[i];
 
 				// count non-optional returns and optional properties
-				var nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				var nonOptReturnCount = (snode.getIsReturned() || snode.getIsTypeReturned()) ? 1 : 0;
 				var optPropCount = 0;
 				var retItems = snode.getReturnedPropertyItems();
 				for (var p=0; p < retItems.length; p++) {
@@ -3141,12 +3176,31 @@ SemanticNodeGroup.prototype = {
 
     },
 
+    getTypeReturnedItems : function () {
+        var ret = [];
+
+        var nList = this.getOrderedNodeList();
+        for(var i=0; i < nList.length; i++) {
+            var n = nList[i];
+            if (n.getIsTypeReturned()) {
+                ret.push(n);
+            }
+        }
+        return ret;
+    },
+
     getReturnedSparqlIDs : function() {
         var items = this.getReturnedItems();
         var ret = [];
         for (var i=0; i < items.length; i++) {
             ret.push(items[i].getSparqlID());
         }
+
+        items = this.getTypeReturnedItems();
+        for (var i=0; i < items.length; i++) {
+            ret.push(items[i].getTypeSparqlID());
+        }
+
         return ret;
     },
 
@@ -3182,6 +3236,7 @@ SemanticNodeGroup.prototype = {
 		// return the new id, which may be slightly different than the requested
 		// id.
         var oldID = obj.getSparqlID();
+        var oldTypeID = obj.getTypeSparqlID();
 
         // return if non-event
         if (requestID == oldID) {
@@ -3202,6 +3257,9 @@ SemanticNodeGroup.prototype = {
             for (var i=0; i < this.orderBy.length; i++) {
                 if (this.orderBy[i].getSparqlID() == oldID) {
                     this.orderBy[i].setSparqlID(newID);
+                }
+                if (this.orderBy[i].getSparqlID() == oldTypeID) {
+                    this.orderBy[i].setSparqlID(obj.getTypeSparqlID());
                 }
             }
         }

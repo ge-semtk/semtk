@@ -58,7 +58,7 @@ public class NodeGroupTest {
         SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json"));
 		NodeGroup ng = sgJson.getNodeGroup();
 		ng.appendOrderBy("?CellId", "DESC");
-		ng.appendOrderBy("?Color");
+		ng.appendOrderBy("?Name");
 		
 		ng.setLimit(100);
 		ng.setOffset(20);

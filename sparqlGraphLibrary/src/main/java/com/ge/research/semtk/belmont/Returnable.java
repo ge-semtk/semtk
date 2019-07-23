@@ -42,6 +42,7 @@ public abstract class Returnable {
 	public boolean getIsReturned() {
 		return this.isReturned;
 	}
+
 	public void setIsReturned(Boolean ret) {
 		this.isReturned = ret;
 	}

@@ -53,6 +53,7 @@ public class Node extends Returnable {
 	private String fullURIname = null;
 	private String instanceValue = null;
 	private NodeGroup nodeGroup = null;
+	private boolean isTypeReturned = false;
 	
 	private NodeDeletionTypes deletionMode = NodeDeletionTypes.NO_DELETE;
 	
@@ -183,6 +184,11 @@ public class Node extends Returnable {
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("deletionMode", this.deletionMode.name());
 		ret.put("subClassNames", scNames);
+		
+		// optional things
+		if (this.isTypeReturned) {
+			ret.put("isTypeReturned", true);
+		}
 		
 		return ret;
 	}
@@ -496,6 +502,13 @@ public class Node extends Returnable {
 			this.props.add(new PropertyItem(pIt.next()));
 		}
 		
+		// optional things
+		if (nodeEncoded.containsKey("isTypeReturned")) {
+			this.isTypeReturned = (Boolean)nodeEncoded.get("isTypeReturned");
+		} else {
+			this.isTypeReturned = false;
+		}
+		
 	}
 	
 	public NodeItem setConnection(Node curr, String connectionURI) throws Exception {
@@ -636,7 +649,7 @@ public class Node extends Returnable {
 	}
 	
 	public boolean isUsed() {
-		if (this.isReturned || this.constraints != null || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE) {
+		if (this.isReturned || this.isTypeReturned || this.constraints != null || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE) {
 			return true;
 		}
 		for (PropertyItem item : this.props) {
@@ -799,6 +812,18 @@ public class Node extends Returnable {
 		this.isReturned = b;
 	}
 	
+	public void setIsTypeReturned(boolean b){
+		this.isTypeReturned = b;
+	}
+	
+	public boolean getIsTypeReturned() {
+		return this.isTypeReturned;
+	}
+	
+	public String getTypeSparqlID() {
+        return this.sparqlID + "_type";
+    }
+	
 	public void setProperties(ArrayList<PropertyItem> p){
 		if(p != null){
 			this.props = p;
@@ -860,6 +885,9 @@ public class Node extends Returnable {
 	public int getReturnedCount () {
 		int ret = 0;
 		if (this.getIsReturned()) {
+			ret += 1;
+		}
+		if (this.getIsTypeReturned()) {
 			ret += 1;
 		}
 		for (PropertyItem p : this.getPropertyItems()) {

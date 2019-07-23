@@ -501,12 +501,13 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
         gNodeGroup.changeSparqlID(propItem, sparqlID);
         propItem.setIsReturned(returnFlag);
+        // returnTypeFlag is not used for properties
         propItem.setOptMinus(optMinus);
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
         propItem.setConstraints(constraintStr);
@@ -518,7 +519,7 @@
         nodeGroupChanged(true);
     };
 
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
     	// Note: ModalItemDialog validates that sparqlID is legal
 
         // don't allow removal of node item's sparqlID
@@ -527,6 +528,7 @@
         }
 
         snodeItem.setIsReturned(returnFlag);
+        snodeItem.setIsTypeReturned(returnTypeFlag);
 
     	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
 
@@ -1543,15 +1545,18 @@
 
     };
 
-    var buildQueryFailure = function (msgHtml, optNoValidSparqlMessage) {
+    var buildQueryFailure = function (msgHtml, param2NoSparqlOrCallback) {
+        // param2NoSparqlOrCallback is a hack due to bug found long after this was written
+        // second parameter by default might be a callback for after handling is done.
+        // seems like nodeGroupExecClient has a second parameter that explains why SPARQL is bad
         var sparql = "";
-        if (typeof optNoValidSparqlMessage != "undefined") {
-            sparql = "#" + optNoValidSparqlMessage.replace(/\n/g, '#');
+        if (typeof param2NoSparqlOrCallback == "string") {
+            sparql = "#" + param2NoSparqlOrCallback.replace(/\n/g, '#');
 
         } else {
             require(['sparqlgraph/js/modaliidx'],
     	         function (ModalIidx) {
-					ModalIidx.alert("Query Generation Failed", msgHtml);
+					ModalIidx.alert("Query Generation Failed", msgHtml, false, param2NoSparqlOrCallback);
 				});
 
         }

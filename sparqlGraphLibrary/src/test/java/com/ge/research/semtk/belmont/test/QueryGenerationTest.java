@@ -336,7 +336,7 @@ public class QueryGenerationTest {
 		SparqlGraphJson sgJson = new SparqlGraphJson(json);
 		NodeGroup ng = sgJson.getNodeGroup();
 		
-		ng.appendOrderBy("score");
+		ng.appendOrderBy("?score");
 		ng.appendOrderBy("?code", "DESC");
 		ng.setOffset(50);
 		

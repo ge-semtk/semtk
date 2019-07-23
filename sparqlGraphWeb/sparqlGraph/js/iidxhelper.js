@@ -133,12 +133,24 @@ define([	// properly require.config'ed
         e.style.margin = "0px 0px 0px 0px";
     };
 
-    IIDXHelper.createVAlignedCheckbox = function () {
+    IIDXHelper.appendCheckBox =  function(elem, checkbox, label) {
+        elem.appendChild(document.createTextNode( '\u00A0\u00A0' ) );
+        elem.appendChild(checkbox);
+        elem.appendChild(document.createTextNode(" " + label));
+    };
+
+    IIDXHelper.createVAlignedCheckbox = function (optId, optChecked, optClass, optOnclick) {
         var checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.style.verticalAlign = "middle";
         checkbox.style.position = "relative";
         checkbox.style.bottom = ".25em";
+
+        if (typeof optId != "undefined")      checkbox.id = optId;
+        if (typeof optChecked != "undefined") checkbox.checked = optChecked;
+        if (typeof optClass != "undefined")   checkbox.classList.add(optClass);
+        if (typeof optOnclick != "undefined") checkbox.onclick = optOnclick;
+
         return checkbox;
     };
 

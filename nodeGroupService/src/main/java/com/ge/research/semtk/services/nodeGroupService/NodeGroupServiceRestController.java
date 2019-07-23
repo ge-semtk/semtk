@@ -455,12 +455,12 @@ public class NodeGroupServiceRestController {
 			SparqlGraphJson sgJson = requestBody.getSparqlGraphJson();
 			NodeGroup ng = sgJson.getNodeGroup();
 			
-			ArrayList<Returnable> items = ng.getReturnedItems();
+			ArrayList<String> ids = ng.getReturnedSparqlIDs();
 			
 			// create a new table of sparqlId strings
 			Table table = new Table(new String[]{"sparqlId"}, new String[]{"string"});
-			for (Returnable item : items) {
-				table.addRow(new String[] { item.getSparqlID() } );
+			for (String id : ids) {
+				table.addRow(new String[] { id } );
 			}
 			retval.addResults(table);
 			retval.setSuccess(true);

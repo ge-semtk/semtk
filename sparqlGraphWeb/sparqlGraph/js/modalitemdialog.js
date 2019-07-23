@@ -82,7 +82,8 @@ define([	// properly require.config'ed
 		ModalItemDialog.RT_CONSTRAINED_CHECK = 7;
 		ModalItemDialog.DELETE_CHECK = 8;
 		ModalItemDialog.DELETE_SELECT = 9;
-
+        ModalItemDialog.RETURN_TYPE_CHECK = 10;
+        ModalItemDialog.SPARQL_ID_SPAN = 11;
 
 
 		ModalItemDialog.prototype = {
@@ -106,8 +107,6 @@ define([	// properly require.config'ed
 				var select = this.getFieldElement(ModalItemDialog.SELECT);
 				var opt;
 				var valList = IIDXHelper.getSelectValues(select);
-
-
 
 				// build new constraints
                 if (valList.length > this.maxValues) {
@@ -180,6 +179,7 @@ define([	// properly require.config'ed
 				var optMinSelectElem = this.getFieldElement(ModalItemDialog.OPTIONAL);
 
 				var returnChecked = this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked;
+                var returnTypeChecked = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK) ? this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK).checked : false;
 				var rtConstrainedChecked = this.getFieldElement(ModalItemDialog.RT_CONSTRAINED_CHECK).checked;
 				var constraintTxt = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
 
@@ -198,6 +198,7 @@ define([	// properly require.config'ed
 				this.callback(	this.item,
 								(returnChecked || rtConstrainedChecked || constraintTxt != "" || delMarker != null) ? sparqlID : "",
 								returnChecked,
+                                returnTypeChecked,
                                 (optMinSelectElem == null) ? null : parseInt(IIDXHelper.getSelectValues(optMinSelectElem)[0]),
 								delMarker,
 								rtConstrainedChecked,
@@ -447,6 +448,9 @@ define([	// properly require.config'ed
 
 			},
 
+            returnTypeCheckOnClick : function() {
+            },
+
 			returnCheckOnClick : function() {
 				// nothing to do any more
 			},
@@ -490,6 +494,10 @@ define([	// properly require.config'ed
 				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, retName.slice(1));
 
 				this.updateConstraintSparqlID(this.lastSparqlID, retName);
+
+                // update ruturn_type checkbox text
+                var span = this.getFieldElement(ModalItemDialog.SPARQL_ID_SPAN);
+                if (span) span.innerHTML = retName + "_type";
 			},
 
 			updateConstraintSparqlID : function(oldID, newID) {
@@ -516,6 +524,8 @@ define([	// properly require.config'ed
                 return optMinusText;
             },
 
+            //  Build the dialog.
+            //  300 line function probably needs fixing (ya think?)
 			show : function (optSparqlformFlag) {
 				if (typeof optSparqlformFlag != "undefined") {
 					this.sparqlformFlag = optSparqlformFlag;
@@ -523,19 +533,18 @@ define([	// properly require.config'ed
 
 				var dom = document.createElement("fieldset");
 				dom.id = "modalitemdialogdom";
-				var elem;
+
 				var title = this.item.getSparqlID().slice(1); // old: this.item.getKeyName();
 
-
-				// return button
+                var elem;
 				var returnCheck;
+                var returnClassCheck;
 				var runtimeConstrainedCheck;
 				var sparqlIDTxt;
 				var optMinSelect;
 				var table;
 				var tr;
 				var td;
-				var form;
 				var but;
 
 				// table for return items
@@ -581,29 +590,43 @@ define([	// properly require.config'ed
 				tr.appendChild(td);
 
 				// return checkbox
-				returnCheck = IIDXHelper.createVAlignedCheckbox();
-				returnCheck.classList.add("btn");
-				returnCheck.id = this.getFieldID(ModalItemDialog.RETURN_CHECK);
-				returnCheck.checked = this.item.getIsReturned();
-				returnCheck.onclick = this.returnCheckOnClick.bind(this);
+				returnCheck = IIDXHelper.createVAlignedCheckbox(
+                                this.getFieldID(ModalItemDialog.RETURN_CHECK),
+                                this.item.getIsReturned(),
+                                "btn",
+                                this.returnCheckOnClick.bind(this)
+                                );
 
-				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-				td.appendChild(returnCheck);
-				td.appendChild(document.createTextNode(" return"));
+                IIDXHelper.appendCheckBox(td, returnCheck, "return");
 
 				// row #2
 				tr = document.createElement("tr");
 				table.appendChild(tr);
 
-				// first cell row 3 is empty
+				// cell 2,1 is empty
 				td = document.createElement("td");
 				tr.appendChild(td);
 
-				// second cell row 3 is empty
+				// cell 2,2: class info if Semantic node
 				td = document.createElement("td");
 				tr.appendChild(td);
+                if (!this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
+                    returnClassCheck = IIDXHelper.createVAlignedCheckbox(
+                                            this.getFieldID(ModalItemDialog.RETURN_TYPE_CHECK),
+                                            this.item.getIsTypeReturned(),
+                                            "btn",
+                                            this.returnTypeCheckOnClick.bind(this)
+                                            );
 
-				// third cell row 3
+                    IIDXHelper.appendCheckBox(td, returnClassCheck, "return ");
+                    var span = document.createElement("span");
+                    span.id = this.getFieldID(ModalItemDialog.SPARQL_ID_SPAN);
+                    span.innerHTML = this.item.getTypeSparqlID();
+
+                    td.appendChild(span);
+                }
+
+				// cell 2,3: batch of controls:  opt/min, delete, runtime constrain
 				td = document.createElement("td");
 				td.style.verticalAlign = "top";
 				tr.appendChild(td);
@@ -648,11 +671,12 @@ define([	// properly require.config'ed
 
 				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 
-				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox();
-				runtimeConstrainedCheck.classList.add("btn");
-				runtimeConstrainedCheck.id = this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK);
-				runtimeConstrainedCheck.checked = this.item.getIsRuntimeConstrained();
-				runtimeConstrainedCheck.onclick = this.rtConstrainedCheckOnClick.bind(this);
+				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
+                                            this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
+                                            this.item.getIsRuntimeConstrained(),
+                                            "btn",
+                                            this.rtConstrainedCheckOnClick.bind(this)
+                                        );
 
 				// Top section is handled totally differently with sparqlformFlag
 				if (this.sparqlformFlag) {
@@ -679,16 +703,17 @@ define([	// properly require.config'ed
                         td.appendChild(document.createElement("br"));
 					}
 
-					// ****** test: deletion
-
+					// deletion
 					if (this.item.getItemType() == "PropertyItem") {
-						var deleteCheck = IIDXHelper.createVAlignedCheckbox();
-						deleteCheck.id = this.getFieldID(ModalItemDialog.DELETE_CHECK);
-						deleteCheck.checked = this.item.getIsMarkedForDeletion();
-                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-						td.appendChild(deleteCheck)
-						td.appendChild(document.createTextNode(" mark for delete"));
+                        // deleting a property is just a check box
+						var deleteCheck = IIDXHelper.createVAlignedCheckbox(
+                                            this.getFieldID(ModalItemDialog.DELETE_CHECK),
+						                    this.item.getIsMarkedForDeletion()
+                                        );
+                        IIDXHelper.appendCheckBox(td, deleteCheck, "mark for delete");
+
 					} else {
+                        // deleting a Semantic node has many options
 						var options = [];
                         var selectedText = [];
 						for (var key in NodeDeletionTypes) {
@@ -712,12 +737,8 @@ define([	// properly require.config'ed
 					}
 
 					td.appendChild(document.createElement("br"));
-					td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+                    IIDXHelper.appendCheckBox(td, runtimeConstrainedCheck, "runtime constrained");
 
-					// ******* end test
-
-					td.appendChild(runtimeConstrainedCheck)
-					td.appendChild(document.createTextNode(" runtime constrained"));
 				}
 
 				// regex button
@@ -774,7 +795,7 @@ define([	// properly require.config'ed
 			    but.onclick = this.toggleListElement.bind(this);
 
 			    // put auto-complete text and button on a search form
-			    form = document.createElement("form");
+			    var form = document.createElement("form");
 				form.classList.add("form-search");
 				form.style.margin = 0;
 				form.onsubmit = function(){return false;};    // NOTE: forms shouldn't submit automatically on ENTER
@@ -844,6 +865,190 @@ define([	// properly require.config'ed
 				// tooltips
 				$("#" + this.getFieldID(ModalItemDialog.OPTIONAL)).tooltip({placement: "left"});
 			},
+
+            showTopSection : function (dom, sparqlformFlag) {
+				var returnCheck;
+				var runtimeConstrainedCheck;
+				var sparqlIDTxt;
+				var optMinSelect;
+
+				// table for return items
+				var table = document.createElement("table");
+				dom.appendChild(table);
+
+				var tr = document.createElement("tr");
+				table.appendChild(tr);
+
+				// row 1 col 1:  "Name: "
+				var td = document.createElement("td");
+				td.style.verticalAlign = "top";
+				tr.appendChild(td);
+				var elem = document.createElement("b");
+				elem.appendChild(document.createTextNode("Name: " ) );
+				td.appendChild(elem);
+
+				// row 1 col 2   "text input box"
+				td = document.createElement("td");
+				tr.appendChild(td);
+
+				// return input
+				sparqlIDTxt = document.createElement("input");
+				sparqlIDTxt.type = "text";
+				sparqlIDTxt.style.margin = 0;
+				sparqlIDTxt.id = this.getFieldID(ModalItemDialog.SPARQL_ID_TEXT);
+				// get a legal sparqlID
+				var sparqlID = this.item.getSparqlID();
+				if (sparqlID === "") {
+					var f = new SparqlFormatter();
+					sparqlID = f.genSparqlID(this.item.getKeyName(), gNodeGroup.sparqlNameHash);
+				}
+				sparqlIDTxt.value = sparqlID.slice(1);
+
+				sparqlIDTxt.onfocus    = this.sparqlIDOnFocus.bind(this);
+				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
+				sparqlIDTxt.style.disabled = this.sparqlformFlag;
+				td.appendChild(sparqlIDTxt);
+
+				// row 1 col 3  "returned checkbox"
+				td = document.createElement("td");
+				td.style.verticalAlign = "top";
+				tr.appendChild(td);
+
+				// return checkbox
+				returnCheck = IIDXHelper.createVAlignedCheckbox(
+                                this.getFieldID(ModalItemDialog.RETURN_CHECK),
+                                this.item.getIsReturned(),
+                                "btn",
+                                this.returnCheckOnClick.bind(this)
+                            );
+
+                IIDXHelper.appendCheckBox(td, returnCheck, "return");
+				// row #2
+				tr = document.createElement("tr");
+				table.appendChild(tr);
+
+				// first cell row 3 is empty
+				td = document.createElement("td");
+				tr.appendChild(td);
+
+				// second cell row 3 is empty
+				td = document.createElement("td");
+				tr.appendChild(td);
+
+				// third cell row 3
+				td = document.createElement("td");
+				td.style.verticalAlign = "top";
+				tr.appendChild(td);
+
+				// if sparqlform and this is a node, look for singleNodeItem
+				var singleNodeItem = null;
+
+				if (this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
+					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
+				}
+				// is optional applicable to this item
+				var optionalFlag = (this.item.getItemType() == "PropertyItem" || singleNodeItem != null);
+
+				// optional select
+				if (optionalFlag) {
+                    var optMinusText = "";
+                    if (this.item.getItemType() == "PropertyItem") {
+                        optMinusText = this.getOptMinusText(this.item.getOptMinus());
+					} else {
+                        var targetNode = singleNodeItem.getSNodes()[0];
+                        var optMinus = singleNodeItem.getOptionalMinus(targetNode);
+                        if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
+                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL);
+                        } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
+                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS);
+                        } else {
+                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
+                        }
+					}
+
+                    optMinSelect = IIDXHelper.createSelect(
+                        this.getFieldID(ModalItemDialog.OPTIONAL),
+    					[  [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
+    					   [this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
+                           [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
+    					],
+    					[optMinusText]);
+
+					optMinSelect.disabled = false;
+
+				}
+
+				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+
+				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
+                                            this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
+                                            this.item.getIsRuntimeConstrained(),
+                                            "btn",
+                                            this.rtConstrainedCheckOnClick.bind(this)
+                                        );
+
+				// Top section is handled totally differently with sparqlformFlag
+				if (this.sparqlformFlag) {
+					// create a right-justified div just for optional
+					var div = document.createElement("div");
+					div.align = "right";
+
+					// assemble
+					if (optionalFlag) {
+						div.appendChild(optMinSelect);
+                        div.appendChild(document.createElement("br"));
+					}
+					div.appendChild(runtimeConstrainedCheck)
+					div.appendChild(document.createTextNode(" runtime constrained"));
+					dom.appendChild(div);
+
+					// make top table invisible
+					table.style.display = "none";
+
+				} else {
+					// normal operation: put optional check into the top table
+					if (optionalFlag) {
+						td.appendChild(optMinSelect);
+                        td.appendChild(document.createElement("br"));
+					}
+
+					// deletion
+					if (this.item.getItemType() == "PropertyItem") {
+                        // deleting a property is just a check box
+						var deleteCheck = IIDXHelper.createVAlignedCheckbox(
+                                            this.getFieldID(ModalItemDialog.DELETE_CHECK),
+                                            this.item.getIsMarkedForDeletion()
+                                        );
+                        IIDXHelper.appendCheckBox(td, deleteCheck, "mark for delete");
+
+					} else {
+                        // deleting a Semantic node has many options
+						var options = [];
+                        var selectedText = [];
+						for (var key in NodeDeletionTypes) {
+							options.push([key, NodeDeletionTypes[key]]);
+
+                            if (NodeDeletionTypes[key] == this.item.getDeletionMode()) {
+                                selectedText.push(key);
+                            }
+						}
+						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
+                                                                      options,
+                                                                      selectedText);
+						deleteSelect.classList.add("input-medium");
+
+                        // TODO: last two aren't implemented on the other end
+                        //       They probably shouldn't be in belmont.js
+                        deleteSelect.options[3].disabled = true;
+                        deleteSelect.options[4].disabled = true;
+
+						td.appendChild(deleteSelect);
+					}
+
+					td.appendChild(document.createElement("br"));
+                    IIDXHelper.appendCheckBox(td, runtimeConstrainedCheck, "runtime constrained");
+				}
+            },
 
 			// ------ manage unique id's ------
 			// would be actually unique if there were GUID in the constructor.  overkill.
