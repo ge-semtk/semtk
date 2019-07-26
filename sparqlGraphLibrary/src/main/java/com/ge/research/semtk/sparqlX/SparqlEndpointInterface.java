@@ -21,6 +21,7 @@ package com.ge.research.semtk.sparqlX;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
@@ -764,6 +765,9 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public boolean isExceptionRetryAble(Exception e) {
 		if (e instanceof AuthorizationException) {
+			return false;
+		} else if (e instanceof ConnectException) {
+			// if this connection timed out, caller is already in jeopardy of timing out
 			return false;
 		}
 		return true;
