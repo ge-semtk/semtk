@@ -39,6 +39,7 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
+import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -422,7 +423,35 @@ public class DataLoaderTest_IT {
 		
 	}
 	
-	
+	@Test
+	public void testLoadDataMessyBaseURI() throws Exception {
+		// baseURI ends with "#".  (caused a buggy ingest in the past)
+		
+		Dataset ds = new CSVDataset("src/test/resources/loadTestData.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestMessyBaseURI.json");
+		
+		// import 
+		DataLoader dl = new DataLoader(sgJson, 100, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		
+		LocalLogger.logToStdOut("Starting load");
+		dl.importData(true);
+		LocalLogger.logToStdOut("Finished with load");
+		
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		assertEquals(dl.getTotalRecordsProcessed(), 1998);
+		
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestResults.csv");
+		
+	}
 	@Test
 	public void testPrecheckOnly() throws Exception {
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDataShort.csv", false);

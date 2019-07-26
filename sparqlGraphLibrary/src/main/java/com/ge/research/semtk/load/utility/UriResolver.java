@@ -40,7 +40,7 @@ public class UriResolver {
 	
 	// constructor 
 	public UriResolver(String userUri, OntologyInfo oInf){
-		if(userUri != null && userUri.length() > 0 && userUri != ""){
+		if(userUri != null && userUri.length() > 0 && userUri != "" && !userUri.endsWith("#")){
 			userUri = userUri + "#";
 		}
 		
