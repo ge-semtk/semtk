@@ -17,6 +17,9 @@
 
 package com.ge.research.semtk.load.utility;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -39,6 +42,7 @@ public class MappingItem {
 	String textVal = null;
 	Transform transformList[] = null;
 	
+	public static final String TEXT_SPECIAL_INGEST_TIME="%ingestTime";
 
 	// copy deep enough for import spec.   Transforms don't need deep copying
 	public static MappingItem importSpecCopy(MappingItem other) {
@@ -166,6 +170,9 @@ public class MappingItem {
 	public String buildString(ArrayList<String> record) throws Exception {
 		
 		if (this.textVal != null) {
+			if (textVal.equals(TEXT_SPECIAL_INGEST_TIME)) {
+				return LocalDateTime.now().toString();
+			}
 			return this.textVal;
 			
 		} else {

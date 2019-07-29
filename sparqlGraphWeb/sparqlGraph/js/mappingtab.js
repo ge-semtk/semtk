@@ -531,7 +531,7 @@ define([	// properly require.config'ed
 
 				var elem;
 				elem = document.createElement("label");
-				elem.innerHTML = "Text:";
+				elem.innerHTML = "Text: ";
 				nameForm.appendChild(elem);
 
 				elem = document.createElement("input");
@@ -540,6 +540,13 @@ define([	// properly require.config'ed
 				elem.class = "input-small";
 				elem.value = (textElem != null) ? this.iSpecHash[textElem.id].getText() : "";
 				nameForm.appendChild(elem);
+
+                table = document.createElement("table");
+                body.appendChild(table);
+                table.classList.add("table");
+                table.classList.add("table-bordered");
+                IIDXHelper.tableAddRow(table, ["special value", "effect"]);
+                IIDXHelper.tableAddRow(table, ["%ingestTime", "local datetime of ingestion"]);
 
 				var modalValidate = function() {
 					var text = document.getElementById("modal_text").value;

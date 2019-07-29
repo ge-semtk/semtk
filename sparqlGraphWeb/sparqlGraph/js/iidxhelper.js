@@ -172,6 +172,17 @@ define([	// properly require.config'ed
         return table;
     };
 
+    IIDXHelper.tableAddRow = function (tableElem, rowArray) {
+        var tr = document.createElement("tr");
+        tableElem.appendChild(tr);
+
+        for (var i=0; i < rowArray.length; i++) {
+            var td = document.createElement("td");
+            tr.appendChild(td);
+            td.innerHTML = rowArray[i];
+        }
+    };
+
     /*
      * Create a dropdown element.
      * id is the element id
