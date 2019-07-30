@@ -546,7 +546,7 @@ define([	// properly require.config'ed
                 table.classList.add("table");
                 table.classList.add("table-bordered");
                 IIDXHelper.tableAddRow(table, ["special value", "effect"]);
-                IIDXHelper.tableAddRow(table, ["%ingestTime", "local datetime of ingestion"]);
+                IIDXHelper.tableAddRow(table, ["<button onclick='document.getElementById(\"modal_text\").value=\"%ingestTime\"'>%ingestTime</button>", "Insert local datetime of ingestion"]);
 
 				var modalValidate = function() {
 					var text = document.getElementById("modal_text").value;
