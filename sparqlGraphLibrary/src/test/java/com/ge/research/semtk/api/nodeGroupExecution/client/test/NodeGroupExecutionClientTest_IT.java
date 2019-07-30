@@ -250,6 +250,61 @@ public class NodeGroupExecutionClientTest_IT {
 		}
 		
 		@Test
+		public void testIngestByNodegroupByIdAsync() throws Exception {	
+			// tests "dispatch" version of call 
+			
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			SparqlGraphJson sgjSelectInsert = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "sampleBattery_deleteSimple", CREATOR, sgjSelectInsert.toJson());
+				
+			try {
+				TestGraph.clearGraph();
+				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				
+				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+				
+				// perform ingestion
+				nodeGroupExecutionClient.dispatchIngestFromCsvStringsByIdAsync(ID, csvStr);
+				
+				// select back the data post ingest
+				Table tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
+				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
+				
+			} finally {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			}
+		}
+		
+		@Test
+		public void testIngestByNodegroupByIdAsyncError() throws Exception {	
+			// tests "dispatch" version of call 
+			
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			SparqlGraphJson sgjSelectInsert = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "sampleBattery_deleteSimple", CREATOR, sgjSelectInsert.toJson());
+				
+			try {
+				TestGraph.clearGraph();
+				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				
+				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+				csvStr += "\ngarbage,garbage,";
+				
+				// perform ingestion
+				try {
+					nodeGroupExecutionClient.dispatchIngestFromCsvStringsByIdAsync(ID, csvStr);
+					fail("Expected ingest exception did not occur");
+				} catch (Exception e) {
+					
+				}
+				
+				
+			} finally {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			}
+		}
+		
+		@Test
 		public void testSelectByNodegroupIdSync() throws Exception {		
 			
 			// store a nodegroup (modified with the test graph)

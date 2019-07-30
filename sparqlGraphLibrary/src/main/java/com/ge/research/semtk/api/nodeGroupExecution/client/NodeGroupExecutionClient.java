@@ -19,6 +19,8 @@ package com.ge.research.semtk.api.nodeGroupExecution.client;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+
+import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -1147,7 +1149,12 @@ public class NodeGroupExecutionClient extends RestClient {
 	
 	
 	/**
-	 * Ingest CSV using a nodegroup ID.
+	 * execIngestFromCsvStringsByIdAsync
+	 * @param nodegroupAndTemplateId
+	 * @param csvContentStr
+	 * @param overrideConn
+	 * @return jobId string
+	 * @throws Exception if call is unsuccessful
 	 */
 	@SuppressWarnings("unchecked")
 	public String execIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn) throws Exception {
@@ -1168,6 +1175,28 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 	}
 
+	/**
+	 * Ingest a csv table asynchronously
+	 * @param nodegroupAndTemplateId
+	 * @param csvContentStr
+	 * @param overrideConn =
+	 * @return
+	 * @throws Exception
+	 */
+	public String dispatchIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn) throws Exception {
+		String jobId = this.execIngestFromCsvStringsByIdAsync(nodegroupAndTemplateId, csvContentStr, overrideConn);
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else {
+			throw new Exception("Ingestion failed:\n" + this.getResultsTable(jobId).toCSVString());
+		}
+	}
+	
+	public String dispatchIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr) throws Exception {
+		return this.dispatchIngestFromCsvStringsByIdAsync(nodegroupAndTemplateId, csvContentStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+	}
+	
 	/**
 	 * Ingest CSV using a nodegroup.
 	 */
