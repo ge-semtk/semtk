@@ -788,7 +788,7 @@ public class ImportSpecHandler {
 			} else if (tab.getNumRows() == 0) {
 				// zero found
 				if (this.getLookupMode(nodeIndex).equals(LOOKUP_MODE_NO_CREATE)) {
-					throw new Exception("URI lookup failed.");
+					throw new Exception("URI lookup failed on: " + String.join(",", builtStrings) );
 					
 				} else {
 					// set URI to NOT_FOUND
