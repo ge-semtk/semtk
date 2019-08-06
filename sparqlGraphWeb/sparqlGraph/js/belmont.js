@@ -2326,7 +2326,7 @@ SemanticNodeGroup.prototype = {
         var returnedSparqlIDs = this.getReturnedSparqlIDs();
         for (var i=0; i < this.orderBy.length; i++) {
             var e = this.orderBy[i];
-            if (this.getItemBySparqlID(e.getSparqlID()) != null || returnedSparqlIDs.indexOf(e.getSparqlID()) != -1) {
+            if (returnedSparqlIDs.indexOf(e.getSparqlID()) != -1) {
                 keep.push(e);
             }
         }

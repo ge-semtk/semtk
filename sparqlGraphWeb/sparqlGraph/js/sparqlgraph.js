@@ -513,6 +513,7 @@
         propItem.setConstraints(constraintStr);
         propItem.setIsMarkedForDeletion(delMarker);
 
+        gNodeGroup.removeInvalidOrderBy();
         // PEC TODO: pass draculaLabel through the dialog
         displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
 
