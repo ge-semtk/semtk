@@ -18,6 +18,7 @@
 package com.ge.research.semtk.load.utility;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ public class MappingItem {
 	Transform transformList[] = null;
 	
 	public static final String TEXT_SPECIAL_INGEST_TIME="%ingestTime";
+	public static final String TEXT_SPECIAL_INGEST_EPOCH="%ingestEpoch";
 
 	// copy deep enough for import spec.   Transforms don't need deep copying
 	public static MappingItem importSpecCopy(MappingItem other) {
@@ -172,6 +174,9 @@ public class MappingItem {
 		if (this.textVal != null) {
 			if (textVal.equals(TEXT_SPECIAL_INGEST_TIME)) {
 				return LocalDateTime.now().toString();
+				
+			} else if (textVal.equals(TEXT_SPECIAL_INGEST_EPOCH)) {
+				return Long.toString(Instant.now().getEpochSecond());
 			}
 			return this.textVal;
 			

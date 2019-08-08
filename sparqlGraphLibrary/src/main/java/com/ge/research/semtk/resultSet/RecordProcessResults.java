@@ -20,8 +20,10 @@ package com.ge.research.semtk.resultSet;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class RecordProcessResults extends GeneralResultSet{
 
@@ -122,6 +124,26 @@ public class RecordProcessResults extends GeneralResultSet{
 			return Table.fromJson((JSONObject) this.resultsContents.get("errorTable"));
 		} else {
 			return null;
+		}
+	}
+	
+	@Override
+	public void throwExceptionIfUnsuccessful () throws AuthorizationException, Exception {
+		this.throwExceptionIfUnsuccessful("");
+	}
+	
+	@Override
+	public void throwExceptionIfUnsuccessful (String msg) throws AuthorizationException, Exception {
+		if (success != true) {
+			String rationale = this.getRationaleAsString("\n");
+			String fullMessage = (msg != null && !msg.isEmpty()) ? msg + "\n" + rationale : rationale;
+			
+			if (rationale.contains("threw com.ge.research.semtk.auth.AuthorizationException")) {
+				throw new AuthorizationException(fullMessage);
+			} else {
+				LocalLogger.logToStdErr(this.getErrorTable().toCSVString());
+				throw new Exception(fullMessage);
+			}
 		}
 	}
 }

@@ -23,6 +23,7 @@ import java.net.ConnectException;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -107,6 +108,20 @@ public class IngestorRestClient extends RestClient{
 			this.parametersJSON.remove("data");
 			this.parametersJSON.remove("connectionOverride");
 		}
+	}
+	
+	/**
+	 * Simpler API with modern naming (not "exec" since it doesn't return a ResultSet)
+	 * Should be the default ingest function
+	 * @param sgJsonWithOverride
+	 * @param data
+	 * @return
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
+	public String ingestionFromCsvAsync(SparqlGraphJson sgJsonWithOverride, String data) throws ConnectException, EndpointNotFoundException, Exception {
+		return this.execIngestionFromCsvAsync(sgJsonWithOverride.toJson().toJSONString(), data, sgJsonWithOverride.getSparqlConnJson().toJSONString());
 	}
 	
 	/**

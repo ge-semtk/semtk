@@ -541,12 +541,14 @@ define([	// properly require.config'ed
 				elem.value = (textElem != null) ? this.iSpecHash[textElem.id].getText() : "";
 				nameForm.appendChild(elem);
 
-                table = document.createElement("table");
-                body.appendChild(table);
-                table.classList.add("table");
-                table.classList.add("table-bordered");
-                IIDXHelper.tableAddRow(table, ["special value", "effect"]);
-                IIDXHelper.tableAddRow(table, ["<button onclick='document.getElementById(\"modal_text\").value=\"%ingestTime\"'>%ingestTime</button>", "Insert local datetime of ingestion"]);
+                var datalist = IIDXHelper.createDataList("mappingtextlist", ['%ingestTime', '%ingestEpoch']);
+                elem.setAttribute("list", datalist.id);
+                body.appendChild(datalist);
+
+                body.appendChild(IIDXHelper.createNbspText());
+                body.appendChild(ModalIidx.createInfoButton("Enter plain text or one of these special texts: <list>" +
+                                                            "<li>%ingestTime - dateTime of ingestion</li>" +
+                                                            "<li>%ingestEpoch - ingestion time as epoch seconds</li></list>"));
 
 				var modalValidate = function() {
 					var text = document.getElementById("modal_text").value;

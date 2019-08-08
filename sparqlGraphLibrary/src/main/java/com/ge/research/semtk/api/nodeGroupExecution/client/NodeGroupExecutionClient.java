@@ -423,13 +423,14 @@ public class NodeGroupExecutionClient extends RestClient {
 	private void waitForCompletion(String jobId) throws Exception {
 		this.waitForCompletion(jobId, 9000, 40);
 	}
+	
 	/**
 	 * Given jobId, check til job is done, check for success, get table
 	 * @param jobId
 	 * @return
 	 * @throws Exception - if anything other than a valid table is returned
 	 */
-	private Table waitForJobAndGetTable(String jobId) throws Exception {
+	public Table waitForJobAndGetTable(String jobId) throws Exception {
 		// wait for completion
 		this.waitForCompletion(jobId);
 		
@@ -439,6 +440,25 @@ public class NodeGroupExecutionClient extends RestClient {
 		} else {
 			String msg = this.getJobStatusMessage(jobId);
 			throw new Exception(String.format("Job %s failed with message='%s'", jobId, msg));
+		}
+	}
+	
+	/**
+	 * Wait for (an ingestion) job that gives a message on success and table string on error
+	 * @param jobId
+	 * @return
+	 * @throws Exception
+	 */
+	public String waitForIngestionJob(String jobId) throws Exception {
+		// wait for completion
+		this.waitForCompletion(jobId);
+		
+		// check for success
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else {
+			String msg = this.getResultsTable(jobId).toCSVString();
+			throw new Exception(String.format("Job %s failed with error table:\n%s", jobId, msg));
 		}
 	}
 
