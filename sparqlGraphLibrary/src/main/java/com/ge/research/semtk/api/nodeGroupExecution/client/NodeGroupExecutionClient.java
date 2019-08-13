@@ -1284,9 +1284,11 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(jarObj, resourcePath));
 		NodeGroup ng = sgjson.getNodeGroup();
-		RuntimeConstraintManager manager = new RuntimeConstraintManager(ng);
-		manager.applyConstraintJson(runtimeConstraintsJson);
-		return this.execDispatchSelectFromNodeGroup(sgjson.getNodeGroup(), conn, null, null);
+		if (runtimeConstraintsJson != null) {
+			RuntimeConstraintManager manager = new RuntimeConstraintManager(ng);
+			manager.applyConstraintJson(runtimeConstraintsJson);
+		}
+		return this.execDispatchSelectFromNodeGroup(ng, conn, null, null);
 	}
 	
 	public Table dispatchSelectFromNodeGroupResourceToTable(String resourcePath, Object jarObj, SparqlConnection conn) throws Exception {
@@ -1295,5 +1297,16 @@ public class NodeGroupExecutionClient extends RestClient {
 		sgjson.setSparqlConn(conn);
 		return this.dispatchSelectFromNodeGroup(sgjson, null, null);
 		
+	}
+	
+public SimpleResultSet execDispatchDeleteFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn, JSONArray runtimeConstraintsJson) throws Exception {
+		
+		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(jarObj, resourcePath));
+		NodeGroup ng = sgjson.getNodeGroup();
+		if (runtimeConstraintsJson != null) {
+			RuntimeConstraintManager manager = new RuntimeConstraintManager(ng);
+			manager.applyConstraintJson(runtimeConstraintsJson);
+		}
+		return this.execDispatchDeleteFromNodeGroup(ng, conn, null, null);
 	}
 }
