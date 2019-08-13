@@ -42,7 +42,9 @@ public class RuntimeConstraintManager {
 	DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");
 	
 	public static enum SupportedTypes { NODE , PROPERTYITEM };
-	
+	public static String KEY_SPARQLID = "SparqlID";
+	public static String KEY_OPERATOR = "Operator";
+	public static String KEY_OPERANDS = "Operands";
 	private HashMap<String, RuntimeConstraintMetaData> rtcObjectHash;
 	
 	public RuntimeConstraintManager(NodeGroup ng){
@@ -100,8 +102,8 @@ public class RuntimeConstraintManager {
 	public static JSONObject buildRuntimeConstraintJson(String sparqlID, SupportedOperations operation, ArrayList<String> operandList ) throws Exception {
 		JSONObject ret = new JSONObject();
 		
-		ret.put("SparqlID", sparqlID);
-		ret.put("Operator", operation.name());
+		ret.put(KEY_SPARQLID, sparqlID);
+		ret.put(KEY_OPERATOR, operation.name());
 		
 		if (operandList.size() < operation.getMinOperands() || operandList.size() > operation.getMaxOperands()) {
 			throw new Exception(operation.name() + " does not support list of " + operandList.size() + " operands");
@@ -110,7 +112,7 @@ public class RuntimeConstraintManager {
 		for(String op : operandList){
 			operandArr.add(op);
 		}
-		ret.put("Operands", operandArr);
+		ret.put(KEY_OPERANDS, operandArr);
 		
 		return ret;
 	}
@@ -144,11 +146,8 @@ public class RuntimeConstraintManager {
 			JSONObject constraintJson = (JSONObject) curr; 	// just a shortcut to avoid a multitude of casts.
 			
 			// check that the sparqlID exists skipped because it will be checked when a direct assignment is made.
-			String sparqlId = constraintJson.get("SparqlID").toString();
-			if (!sparqlId.startsWith("?")) {
-				sparqlId = "?" + sparqlId;
-			}
-			String operator = constraintJson.get("Operator").toString();
+			String sparqlId = getConstraintSparqlId(constraintJson);
+			String operator = constraintJson.get(KEY_OPERATOR).toString();
 			XSDSupportedType operandType;
 			ArrayList<String> operands = new ArrayList<String>();   // however obvious, the operands will go here. 
 			
@@ -168,7 +167,7 @@ public class RuntimeConstraintManager {
 				throw new Exception("Can't apply runtime constraints to object type " + this.rtcObjectHash.get(sparqlId).getObjectType() + " for sparqlID: " + sparqlId);
 			}
 			
-			JSONArray opers = (JSONArray) constraintJson.get("Operands");
+			JSONArray opers = (JSONArray) constraintJson.get(KEY_OPERANDS);
 			
 			// step through the array and get the operands.
 			try{
@@ -291,6 +290,33 @@ public class RuntimeConstraintManager {
 		return retval;
 	}
 	
+	public static ArrayList<String> getConstraintSparqlIdList(JSONArray runtimeConstraintJson) throws Exception {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (Object constraint : runtimeConstraintJson) {
+			JSONObject constraintJson = (JSONObject) constraint;
+			ret.add(getConstraintSparqlId(constraintJson));
+		}
+		return ret;
+	}
+	
+	/**
+	 * get sparqlID (with leading '?')
+	 * @param constraintJson
+	 * @return
+	 * @throws Exception
+	 */
+	public static String getConstraintSparqlId(JSONObject constraintJson) throws Exception {
+		if (constraintJson.containsKey(KEY_SPARQLID)) {
+			String sparqlId = constraintJson.get(KEY_SPARQLID).toString();
+			if (!sparqlId.startsWith("?")) {
+				sparqlId = "?" + sparqlId;
+			}
+			return sparqlId;
+		} else {
+			throw new Exception("Runtime constraint contains no SparqlID: " + constraintJson.toJSONString());
+		}
+	}
 	
 
 }
