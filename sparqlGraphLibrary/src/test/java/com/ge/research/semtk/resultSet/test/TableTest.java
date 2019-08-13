@@ -567,4 +567,20 @@ public class TableTest {
 
 		
 	}
+	
+	@Test
+	public void testUniquify() throws Exception{
+		String jsonStr;
+		JSONObject jsonObj;
+		Table table;
+		
+		jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"],[\"\",\"tropicana\",\"chester\"],[\"apple\",\"banana\",\"non-match\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":4}";
+		jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
+		table = Table.fromJson(jsonObj);
+		assertEquals("4 row table was not created properly", 4, table.getNumRows());
+		
+		table.uniquify(new String [] {"colA", "colB"} );
+		assertEquals("uniquify did not remove last row", 3, table.getNumRows());
+
+	}
 }

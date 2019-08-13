@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -418,6 +419,37 @@ public class Table {
 			this.addRow(newRow);
 		}
 		
+	}
+	
+	/**
+	 * 
+	 * @param colNames
+	 * @throws Exception - bad value in colnames
+	 */
+	public void uniquify(String [] colNames) throws Exception {
+		
+		// get key colum indices, checking for errors
+		int [] keyCols = new int[colNames.length];
+		for (int i=0; i < colNames.length; i++) {
+			keyCols[i] = this.getColumnIndexOrError(colNames[i]);
+		}
+		
+		// use rowHash to add only unique rows to newRows
+		ArrayList<ArrayList<String>> newRows = new ArrayList<ArrayList<String>>();   
+		HashSet<String> rowHash = new HashSet<String>();
+		for (ArrayList<String> row : this.rows) {
+			String hashVal = "";
+			for (int i=0; i < keyCols.length; i++) {
+				hashVal += row.get(keyCols[i]) + "|";
+			}
+			if (! rowHash.contains(hashVal)) {
+				newRows.add(row);
+				rowHash.add(hashVal);
+			}
+		}
+		
+		// update rows
+		this.rows = newRows;
 	}
 		
 	
