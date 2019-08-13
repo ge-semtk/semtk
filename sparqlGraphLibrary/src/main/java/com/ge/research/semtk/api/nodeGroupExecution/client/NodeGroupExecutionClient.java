@@ -32,6 +32,7 @@ import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 public class NodeGroupExecutionClient extends RestClient {
 	
@@ -66,6 +67,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String ingestFromCsvStringsByIdEndpoint = "/ingestFromCsvStringsById";
 	private static final String ingestFromCsvStringsByIdAsyncEndpoint = "/ingestFromCsvStringsByIdAsync";
 	private static final String ingestFromCsvStringsAndTemplateNewConnectionEndpoint = "/ingestFromCsvStringsAndTemplateNewConnection";
+	private static final String ingestFromCsvStringsAndTemplateAsync = "/ingestFromCsvStringsAndTemplateAsync";
 	private static final String getResultsTableEndpoint = "/getResultsTable";
 	private static final String getResultsJsonLdEndpoint = "/getResultsJsonLd";
 	private static final String dispatchSelectByIdEndpoint = "/dispatchSelectById";
@@ -1194,6 +1196,30 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.reset();
 		}
 	}
+	
+	/**
+	 * Ingest from a template
+	 * @param sgjsonWithOverride
+	 * @param csvContentStr
+	 * @return
+	 * @throws Exception
+	 */
+	public String execIngestFromCsvStringsAndTemplateAsync(SparqlGraphJson sgjsonWithOverride, String csvContentStr) throws Exception {
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateAsync);
+		this.parametersJSON.put("template", sgjsonWithOverride.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sgjsonWithOverride.getSparqlConn().toJson().toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+	
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}
+		finally{
+			this.reset();
+		}
+	}
 
 	/**
 	 * Ingest a csv table asynchronously
@@ -1240,4 +1266,34 @@ public class NodeGroupExecutionClient extends RestClient {
 		return retval;
 	}
 
+	public SimpleResultSet execDispatchSelectFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn) throws Exception {
+		return this.execDispatchSelectFromNodeGroupResource(resourcePath, jarObj, conn, null);
+		
+	}
+	
+	/**
+	 * Read sgjson from disk, apply runtime constraints, execute select to a ResultSet
+	 * @param resourcePath
+	 * @param jarObj
+	 * @param conn
+	 * @param runtimeConstraintsJson
+	 * @return ResultSet
+	 * @throws Exception
+	 */
+	public SimpleResultSet execDispatchSelectFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn, JSONArray runtimeConstraintsJson) throws Exception {
+		
+		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(jarObj, resourcePath));
+		NodeGroup ng = sgjson.getNodeGroup();
+		RuntimeConstraintManager manager = new RuntimeConstraintManager(ng);
+		manager.applyConstraintJson(runtimeConstraintsJson);
+		return this.execDispatchSelectFromNodeGroup(sgjson.getNodeGroup(), conn, null, null);
+	}
+	
+	public Table dispatchSelectFromNodeGroupResourceToTable(String resourcePath, Object jarObj, SparqlConnection conn) throws Exception {
+		
+		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(jarObj, resourcePath));
+		sgjson.setSparqlConn(conn);
+		return this.dispatchSelectFromNodeGroup(sgjson, null, null);
+		
+	}
 }
