@@ -100,6 +100,7 @@ public class RetrieveFromStore {
 			// write local copy of nodegroup
 			SparqlGraphJson sgjson = client.executeGetNodeGroupByIdToSGJson(id);
 			Path jsonPath = Paths.get(folder, id + ".json");
+			Path jsonFilePath = Paths.get(    id + ".json");
 			Files.write(jsonPath, sgjson.toJson().toJSONString().getBytes());
 
 			// save metadata about nodegroup
@@ -109,7 +110,7 @@ public class RetrieveFromStore {
 			row.add(matchTable.getCell(i, "comments"));
 			row.add(matchTable.getCell(i, "creationDate"));
 			row.add(matchTable.getCell(i, "creator"));
-			row.add(jsonPath.toString());
+			row.add(jsonFilePath.toString());
 			outTable.addRow(row);
 		}
 

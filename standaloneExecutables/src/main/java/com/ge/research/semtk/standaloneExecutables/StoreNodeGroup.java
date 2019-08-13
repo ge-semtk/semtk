@@ -30,9 +30,11 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -108,6 +110,13 @@ public class StoreNodeGroup {
 					String ngFilePath = parsedLine[5]; // system full path of the file with json representation of the nodegroup
 					String endpointPart[] = endpointUrlWithPort.split(":/*");
 
+					// if nodegroup json path is bad, try same directory as csv file
+					if (!(new File(ngFilePath).exists())) {
+						String parent = (Paths.get(csvFile)).getParent().toString();
+						String fname =  (Paths.get(ngFilePath)).getFileName().toString();
+						ngFilePath = (Paths.get(parent, fname)).toString();
+					}
+					
 					if (endpointUrlWithPort != null && !"".equals(endpointUrlWithPort.trim())) {
 					    try {
                             storeSingeNodeGroup(endpointUrlWithPort, ngId, ngComments, ngOwner, ngFilePath, endpointPart);
