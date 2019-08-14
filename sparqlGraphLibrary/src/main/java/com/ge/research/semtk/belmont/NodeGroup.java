@@ -2710,7 +2710,7 @@ public class NodeGroup {
 			
 			// only add this node if the current instance should be included. 
 			if((!currIsEnum) || (currIsEnum && !currInstanceBlank)){   
-				if(!currIsEnum && currInstanceBlank){	// do not include type info when the target is an enum or looked up
+				if(!currIsEnum){	// do not include type info when the target is an enum 
 					retval += "\t" + sparqlID + " a " + this.applyPrefixing(curr.getFullUriName()) + " . \n";
 				}
 				// insert each property we know of. 
