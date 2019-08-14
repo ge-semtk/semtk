@@ -120,6 +120,7 @@ public class QueryGenerationTest {
 
 		String insertQuery = ng.generateSparqlInsert(oInfo, endpoint);
 		String expected = "INSERT { GRAPH <http://graph> {\n" +
+			"?testNode a http://knowledge.ge.com/bar . " +
 			"?testNode bar:foo \"2\"^^XMLSchema:int ." +
 			"?testNode bar:foo \"123543\"^^XMLSchema:int ." +
 			"?testNode bar:foostr \"testvalue\"^^XMLSchema:string ." +
