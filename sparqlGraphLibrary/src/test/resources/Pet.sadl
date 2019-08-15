@@ -1,12 +1,14 @@
 uri "http://research.ge.com/kdl/pet" alias pet version "1".
 
-Dog is a class,
+Pet is a class,
 	described by name with a single value of type string,
+	described by nickname with a single value of type string.
+	
+Dog is a type of Pet,
 	described by bark with a single value of type string,
 	described by walksPerWeek with a single value of type int.
 	
-Cat is a class,
-	described by name with a single value of type string,
+Cat is a type of Pet,
 	described by meow with a single value of type string,
 	described by scratchesPerDay with a single value of type int.
 	

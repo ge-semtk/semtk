@@ -64,15 +64,15 @@ public class OntologyInfoTests_IT {
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
 
 		assertTrue("Expecting 0 enums.  found: " + oInfo.getNumberOfEnum(),              oInfo.getNumberOfEnum() == 0);
-		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(),        oInfo.getNumberOfClasses() == 2);
-		assertTrue("Expecting 5 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 5);
+		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(),        oInfo.getNumberOfClasses() == 3);
+		assertTrue("Expecting 6 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 6);
 
 		OntologyClass cat = oInfo.getClass("http://research.ge.com/kdl/pet#Cat");
 		OntologyClass dog = oInfo.getClass("http://research.ge.com/kdl/pet#Dog");
 
-		// dog and cat each have three properties
-		assertTrue(oInfo.getInheritedProperties(dog).size() == 3);
-		assertTrue(oInfo.getInheritedProperties(cat).size() == 3);
+		// dog and cat each have four properties
+		assertTrue(oInfo.getInheritedProperties(dog).size() == 4);
+		assertTrue(oInfo.getInheritedProperties(cat).size() == 4);
 		// "name" is a property of dog and cat
 		assertTrue(oInfo.getInheritedPropertyByKeyname(dog, "name") != null);
 		assertTrue(oInfo.getInheritedPropertyByKeyname(cat, "name") != null);
@@ -183,15 +183,15 @@ public class OntologyInfoTests_IT {
 		OntologyInfo oInfo = new OntologyInfo(conf, TestGraph.getSparqlConn());
 
 		assertTrue("Expecting 0 enums.  found: " + oInfo.getNumberOfEnum(),              oInfo.getNumberOfEnum() == 0);
-		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(),        oInfo.getNumberOfClasses() == 2);
-		assertTrue("Expecting 5 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 5);
+		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(),        oInfo.getNumberOfClasses() == 3);
+		assertTrue("Expecting 6 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 6);
 
 		OntologyClass cat = oInfo.getClass("http://research.ge.com/kdl/pet#Cat");
 		OntologyClass dog = oInfo.getClass("http://research.ge.com/kdl/pet#Dog");
 
-		// dog and cat each have three properties
-		assertTrue(oInfo.getInheritedProperties(dog).size() == 3);
-		assertTrue(oInfo.getInheritedProperties(cat).size() == 3);
+		// dog and cat each have four properties
+		assertTrue(oInfo.getInheritedProperties(dog).size() == 4);
+		assertTrue(oInfo.getInheritedProperties(cat).size() == 4);
 		// "name" is a property of dog and cat
 		assertTrue(oInfo.getInheritedPropertyByKeyname(dog, "name") != null);
 		assertTrue(oInfo.getInheritedPropertyByKeyname(cat, "name") != null);
@@ -244,15 +244,15 @@ public class OntologyInfoTests_IT {
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
 
 		assertTrue("Expecting 0 enums.  found: " + oInfo.getNumberOfEnum(), oInfo.getNumberOfEnum() == 0);
-		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(), oInfo.getNumberOfClasses() == 2);
-		assertTrue("Expecting 5 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 5);
+		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(), oInfo.getNumberOfClasses() == 3);
+		assertTrue("Expecting 6 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 6);
 
 		OntologyClass cat = oInfo.getClass("http://research.ge.com/kdl/pet#Cat");
 		OntologyClass dog = oInfo.getClass("http://research.ge.com/kdl/pet#Dog");
 
-		// dog and cat each have three properties
-		assertTrue(oInfo.getInheritedProperties(dog).size() == 3);
-		assertTrue(oInfo.getInheritedProperties(cat).size() == 3);
+		// dog and cat each have four properties
+		assertTrue(oInfo.getInheritedProperties(dog).size() == 4);
+		assertTrue(oInfo.getInheritedProperties(cat).size() == 4);
 		// "name" is a property of dog and cat
 		assertTrue(oInfo.getInheritedPropertyByKeyname(dog, "name") != null);
 		assertTrue(oInfo.getInheritedPropertyByKeyname(cat, "name") != null);

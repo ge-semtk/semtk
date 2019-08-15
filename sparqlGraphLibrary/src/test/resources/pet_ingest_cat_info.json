@@ -1,0 +1,113 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/pet#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "scratchesPerDay",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/kdl/pet#scratchesPerDay",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Cat",
+				"fullURIName": "http://research.ge.com/kdl/pet#Cat",
+				"subClassNames": [],
+				"SparqlID": "?Cat",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "name"
+			},
+			{
+				"colId": "col_1",
+				"colName": "scratches"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Cat",
+				"type": "http://research.ge.com/kdl/pet#Cat",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/kdl/pet#name",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/kdl/pet#scratchesPerDay",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

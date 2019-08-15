@@ -68,6 +68,15 @@ public class UriCache {
 	}
 	
 	/**
+	 * Is the given URI in the cache and not generated, then it must have been looked up
+	 * @param uri
+	 * @return
+	 */
+	public boolean wasFound(String uri) {
+		return this.uriCache.contains(uri) && ! this.isGenerated(uri);
+	}
+	
+	/**
 	 * Declare a URI 'not found', possibly suggesting a new value
 	 * @param importNodeIndex
 	 * @param builtStrings

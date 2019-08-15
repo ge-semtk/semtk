@@ -678,7 +678,13 @@ public class ImportSpecHandler {
 		for (int i=0; i < importNg.getNodeCount(); i++) {
 			if (this.lookupMappings.containsKey(i)) {
 				String uri = this.lookupUri(i, record);
-				importNg.getNode(i).setInstanceValue(uri);
+				Node n = importNg.getNode(i);
+				n.setInstanceValue(uri);
+				
+				// save the fact that this uri was looked up and found
+				if (this.uriCache.wasFound(uri)) {
+					n.setInstanceLookedUp(true);
+				}
 			}
 		}	
 	}

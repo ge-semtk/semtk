@@ -1,0 +1,121 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/pet#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "nickname",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/pet#nickname",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?nickname",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Pet",
+				"fullURIName": "http://research.ge.com/kdl/pet#Pet",
+				"subClassNames": [
+					"http://research.ge.com/kdl/pet#Dog",
+					"http://research.ge.com/kdl/pet#Cat"
+				],
+				"SparqlID": "?Pet",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"isTypeReturned": true
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "name"
+			},
+			{
+				"colId": "col_1",
+				"colName": "nickname"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Pet",
+				"type": "http://research.ge.com/kdl/pet#Pet",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/kdl/pet#name",
+						"URILookup": [
+							"?Pet"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/kdl/pet#nickname",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

@@ -52,6 +52,7 @@ public class Node extends Returnable {
 	private String nodeName = null;
 	private String fullURIname = null;
 	private String instanceValue = null;
+	private boolean instanceLookedUp = false;
 	private NodeGroup nodeGroup = null;
 	private boolean isTypeReturned = false;
 	
@@ -193,6 +194,18 @@ public class Node extends Returnable {
 		return ret;
 	}
 	
+	/**
+	 * Instance was looked up and found
+	 * @return
+	 */
+	public boolean isInstanceLookedUp() {
+		return instanceLookedUp;
+	}
+
+	public void setInstanceLookedUp(boolean instanceLookedUp) {
+		this.instanceLookedUp = instanceLookedUp;
+	}
+
 	/**
 	 * Expand props to full set of properties for this classURI in oInfo 
 	 * and validates all props

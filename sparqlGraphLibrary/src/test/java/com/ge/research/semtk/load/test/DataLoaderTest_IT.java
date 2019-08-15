@@ -1025,6 +1025,44 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestLookupCreateResults.csv");
 	}
 	
+	@Test
+	public void testLookupSuperclass() throws Exception {
+		//  Load lookup by superclass
+		//  and make sure the superclass type is not ingested as a second type for the existing object
+		//  pet_ingest_pet_nicknames.json also tests the "return type" feature of the select query
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/Pet.owl");
+		SparqlGraphJson sgJson1 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/pet_ingest_cat_info.json");
+		SparqlGraphJson sgJson2 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/pet_ingest_pet_nicknames.json");
+		Dataset ds1 = new CSVDataset("src/test/resources/pet_cat_info.csv", false);
+		Dataset ds2 = new CSVDataset("src/test/resources/pet_nicknames.csv", false);
+
+		// import cat info using class "Cat"
+		DataLoader dl = new DataLoader(sgJson1, ds1, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// now add nicknames using URI lookup on superclass "Pet"
+		
+		dl = new DataLoader(sgJson2, ds2, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		// test that cat's don't have double type Pet
+		// sgJson2 does double-duty ingesting and this select query
+		TestGraph.queryAndCheckResults(sgJson2.getNodeGroup(), this, "/pet_nickname_results.csv");
+	}
+	
 	
 	@Test
 	public void testLookupCreatePartial() throws Exception {
