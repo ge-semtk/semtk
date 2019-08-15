@@ -1039,7 +1039,7 @@ public class DataLoaderTest_IT {
 		Dataset ds1 = new CSVDataset("src/test/resources/pet_cat_info.csv", false);
 		Dataset ds2 = new CSVDataset("src/test/resources/pet_nicknames.csv", false);
 
-		// import cat info using class "Cat"
+		// import cat info using class "Cat".  Unexplained test failure on next line
 		DataLoader dl = new DataLoader(sgJson1, ds1, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
