@@ -68,12 +68,12 @@ public class WorkThread extends Thread {
 		try {
 			if(this.rawSparqlQuery != null){
 				// a query was passed. use it.
-				TableResultSet trs = this.dsp.executePlainSparqlQuery(rawSparqlQuery, myQT);
+				this.dsp.executePlainSparqlQuery(rawSparqlQuery, myQT);
 			}
 			
 			else{
 				// query from the node group itself. 
-				TableResultSet trs = this.dsp.execute(externalConstraintsJson, queryFlags, this.myQT, targetObjectSparqlID);
+				this.dsp.execute(externalConstraintsJson, queryFlags, this.myQT, targetObjectSparqlID);
 			}	
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);		

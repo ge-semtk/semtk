@@ -333,4 +333,28 @@ public class StatusClient extends RestClient {
 																jobId);
 		return new StatusClient(newConfig);
 	}
+	
+	/**
+	 * Preferred way to wait for a job to complete
+	 * @param jobId
+	 * @param freqMsec - a ping freq such as 10,000.  Will return sooner if job finishes
+	 * @param maxTries - throw exception after this many tries
+	 * @throws Exception
+	 */
+	public void waitForCompletion(String jobId, int freqMsec, int maxTries ) throws Exception {
+		int percent = 0;
+		
+		for (int i=0; i < maxTries; i++) {
+			percent = this.execWaitForPercentOrMsec(100, freqMsec);
+			if (percent == 100) {
+				return;
+			}
+		}
+		throw new Exception("Job " + jobId + " is only " + String.valueOf(percent) + "% complete after " + String.valueOf(maxTries) + " tries.");
+	}
+	
+	// try for 6 minutes
+	public void waitForCompletion(String jobId) throws Exception {
+		this.waitForCompletion(jobId, 10000, 36);
+	}
 }

@@ -135,7 +135,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		return this.jobID;
 	}
 	
-	public abstract TableResultSet execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception;
+	public abstract void execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception;
 	
 	/**
 	 * send the collected results to the results service. 
@@ -262,7 +262,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public abstract String[] getConstraintVariableNames() throws Exception;
 	
-	public TableResultSet executePlainSparqlQuery(String sparqlQuery, DispatcherSupportedQueryTypes supportedQueryType) throws Exception{
+	public void executePlainSparqlQuery(String sparqlQuery, DispatcherSupportedQueryTypes supportedQueryType) throws Exception{
 		TableResultSet retval = null;
 		SparqlQueryClient nodegroupQueryClient = this.retrievalClient;
 		this.statusClient.execIncrementPercentComplete(1, 10);
@@ -321,7 +321,6 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			throw new Exception("Query failed: " + e.getMessage() );
 		}
 		
-		return retval;
 	}
 
 	protected String getSparqlQuery(DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception{

@@ -91,12 +91,11 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 	 * Simplest form of dispatcher execute:  get SPARQL and execute it.
 	 */
 	@Override
-	public TableResultSet execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception {
-	TableResultSet retval = null; // expect this to get instantiated with the appropriate subclass.		
+	public void execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) throws Exception {
 		
 		try{
 			String sparqlQuery = this.getSparqlQuery(qt, targetSparqlID);
-			retval = this.executePlainSparqlQuery(sparqlQuery, qt);
+			this.executePlainSparqlQuery(sparqlQuery, qt);
 		}
 		catch(Exception e){
 			// something went awry. set the job to failure. 
@@ -104,8 +103,6 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Query failed: " + e.getMessage() );
 		}
-		// ship the results.
-		return retval;		
 	}
 
 }
