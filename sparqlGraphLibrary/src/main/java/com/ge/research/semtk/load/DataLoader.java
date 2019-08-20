@@ -600,12 +600,15 @@ public class DataLoader implements Runnable {
 					
 		// get needed column names from the JSON template
 		String[] colNamesToIngest = sgJson.getImportSpec().getColNamesUsed();		
-		LocalLogger.logToStdOut("Num columns to ingest: " + colNamesToIngest.length);
 		
 		// open the dataset, using only the needed column names
 		Dataset dataset = null;
 		try{
 			dataset = new CSVDataset(csvFilePath, colNamesToIngest);
+			LocalLogger.logToStdOut("Ingest " + colNamesToIngest.length + " columns, " + dataset.getNumRows() + " rows");
+			if(dataset.getNumRows() == 0){
+				return 0;
+			}
 		}catch(Exception e){
 			String s = "Could not instantiate CSV dataset: " + e.getMessage();
 			LocalLogger.logToStdErr(s);
