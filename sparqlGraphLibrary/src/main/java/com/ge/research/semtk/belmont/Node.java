@@ -54,7 +54,6 @@ public class Node extends Returnable {
 	private String instanceValue = null;
 	private boolean instanceLookedUp = false;
 	private NodeGroup nodeGroup = null;
-	private boolean isTypeReturned = false;
 	
 	private NodeDeletionTypes deletionMode = NodeDeletionTypes.NO_DELETE;
 	
@@ -747,6 +746,20 @@ public class Node extends Returnable {
 		
 		return ret;
 	}
+	
+	/**
+	 * Get node item by predicateURI
+	 * @param predicateURI
+	 * @return might be null
+	 */
+	public NodeItem getNodeItem(String predicateURI) {
+		for (NodeItem n : this.nodes) {
+			if (n.getUriConnectBy().equals(predicateURI)) {
+				return n;
+			}
+		}
+		return null;
+	}
 
 	public ArrayList<PropertyItem> getPropertyItems() {
 		return this.props;
@@ -820,22 +833,6 @@ public class Node extends Returnable {
 	public void setInstanceValue(String value) {
 		this.instanceValue = value;
 	}
-
-	public void setIsReturned(boolean b){
-		this.isReturned = b;
-	}
-	
-	public void setIsTypeReturned(boolean b){
-		this.isTypeReturned = b;
-	}
-	
-	public boolean getIsTypeReturned() {
-		return this.isTypeReturned;
-	}
-	
-	public String getTypeSparqlID() {
-        return this.sparqlID + "_type";
-    }
 	
 	public void setProperties(ArrayList<PropertyItem> p){
 		if(p != null){

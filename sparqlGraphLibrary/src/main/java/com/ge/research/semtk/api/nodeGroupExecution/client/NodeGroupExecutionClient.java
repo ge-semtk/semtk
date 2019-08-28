@@ -97,6 +97,14 @@ public class NodeGroupExecutionClient extends RestClient {
 		this.conf = necc;
 	}
 	
+	public String getServiceUser() {
+		return ((NodeGroupExecutionClientConfig)this.conf).getServiceUser();
+	}
+	
+	public String getServicePassword() {
+		return ((NodeGroupExecutionClientConfig)this.conf).getServicePassword();
+	}
+	
 	public String getJobStatus(String jobId) throws Exception{
 		SimpleResultSet ret = this.execGetJobStatus(jobId);
 		return ret.getResult("status");

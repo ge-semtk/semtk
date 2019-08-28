@@ -194,7 +194,7 @@ public class AuthorizationManager {
 	
 	/**
 	 * Read user groups from triplestore
-	 * @param sei
+	 * @param querySei
 	 * @throws Exception
 	 */
 	private static void updateUserGroups(JSONObject authJson) throws Exception {
@@ -218,7 +218,7 @@ public class AuthorizationManager {
 	
 	/**
 	 * Read graph admin from triplestore
-	 * @param sei
+	 * @param querySei
 	 * @throws Exception
 	 */
 	private static void updateGraphAuthorization(JSONObject authJson) throws Exception {

@@ -81,6 +81,7 @@ public class IngestorRestClient extends RestClient{
 		}
 		
 		SimpleResultSet ret = SimpleResultSet.fromJson((JSONObject)super.execute());
+		ret.throwExceptionIfUnsuccessful("Ingestion error");
 		
 		return ret.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 	}

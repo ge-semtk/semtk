@@ -57,4 +57,8 @@ public class Triple {
 	public void setObject(String o){
 		this.triple[2] = o;
 	}
+	
+	public String toCsvString() {
+		return String.join(",", this.triple);
+	}
 }

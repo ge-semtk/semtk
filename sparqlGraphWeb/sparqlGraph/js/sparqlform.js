@@ -133,10 +133,10 @@ require([	'local/sparqlformconfig',
 					+ msg + "</font>";
 		};
 
-		setStatusProgressBar = function(msg, percent) {
-			var p = (typeof percent === 'undefined') ? 50 : percent;
-
-			document.getElementById("status").innerHTML = msg
+        var setStatusProgressBar = function(msg, percent, optMessageOverride) {
+    		var p = (typeof percent === 'undefined') ? 50 : percent;
+            var m = (typeof optMessageOverride === 'undefined' && optMessageOverride != "") ? msg : optMessageOverride;
+    		document.getElementById("status").innerHTML = m
 					+ '<div class="progress progress-striped active"> \n'
 					+ '  <div class="bar" style="width: ' + p
 					+ '%;"></div> \n' + '</div> \n';

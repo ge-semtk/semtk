@@ -494,10 +494,10 @@ public class NodeGroupExecutor {
 		Table t = trs.getResults();
 
 		if(t.getNumRows() < 1){ 
-			throw new Exception("StoredQueryExecutor::dispatchJob -- the ID passed to look up a remote node group (" + storedNodeGroupId + ") did not return any results.");
+			throw new Exception("Could not find stored nodegroup: " + storedNodeGroupId);
 		}
 		if(t.getNumRows() > 1){
-			throw new Exception("StoredQueryExecutor::dispatchJob -- the ID passed to look up a remote node group (" + storedNodeGroupId + ") returned more than one result. this is likely not good.");
+			throw new Exception("Multiple results found when retrieving stored nodegroup: " + storedNodeGroupId);
 		}
 
 		String serializedNodeGroup = t.getRow(0).get( t.getColumnIndex("NodeGroup") );		

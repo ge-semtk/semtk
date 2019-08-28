@@ -20,6 +20,8 @@ package com.ge.research.semtk.services.dispatch;
 import java.lang.reflect.Constructor;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -30,6 +32,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
@@ -48,6 +53,7 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 
@@ -56,8 +62,27 @@ import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryT
 public class DispatcherServiceRestController {
  	static final String SERVICE_NAME = "dispatcher";
  	
+ 	// old fashioned
 	@Autowired
 	DispatchProperties props;
+	
+	// new fangled
+	@Autowired
+	DispatcherNGEServiceProperties nge_props;
+	
+	@PostConstruct
+    public void init() {
+		nge_props.validateWithExit();
+		
+		// ---- still in old-fashioned DispatcherServiceStartup  ----
+		
+		//EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		//env_prop.validateWithExit();
+		
+		//auth_prop.validateWithExit();
+		//AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	
 	// select uses the original endpoint name for BC
 	@CrossOrigin
@@ -367,8 +392,10 @@ public class DispatcherServiceRestController {
 		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
 		StatusClient sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(props.getOinfoServiceProtocol(), props.getOinfoServiceServer(), props.getOinfoServicePort()));
-		sClient.execSetPercentComplete(0, "Job Initialized");
+		NodeGroupExecutionClient ngeClient = new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(nge_props.getProtocol(), nge_props.getServer(), nge_props.getPort(), props.getSparqlServiceUser(), props.getSparqlServicePass()));
 
+		sClient.execSetPercentComplete(0, "Job Initialized");
+		
 		// instantiate the dispatcher from the class name 
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 		try{
@@ -392,7 +419,8 @@ public class DispatcherServiceRestController {
 								}}}}
 				}
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions, oClient);
+			
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions, oClient, ngeClient);
 			
 		}catch(Exception e){
 			// log entire stack trace

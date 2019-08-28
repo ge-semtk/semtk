@@ -22,6 +22,7 @@ public abstract class Returnable {
 	
 	protected String sparqlID = null;
 	protected Boolean isReturned = false;
+	protected Boolean isTypeReturned = false;
 	protected Boolean isRuntimeConstrained = false;
 	
 	// the constraints which will be applied on qry
@@ -45,6 +46,18 @@ public abstract class Returnable {
 
 	public void setIsReturned(Boolean ret) {
 		this.isReturned = ret;
+	}
+	
+	public void setIsTypeReturned(boolean b){
+		this.isTypeReturned = b;
+	}
+	
+	public String getTypeSparqlID() {
+        return this.sparqlID + "_type";
+    }
+	
+	public boolean getIsTypeReturned() {
+		return this.isTypeReturned;
 	}
 	
 	public String getRuntimeConstraintID(){

@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,60 +20,60 @@ define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/microserviceinterface',
         	'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/modaliidx'
-        	
+
 			// shimmed
-			
+
 		],
 
 	function(MicroServiceInterface, MsiResultSet, ModalIidx) {
-	
-		
+
+
 		var MsiClientStatus = function (serviceURL, jobId, optFailureCallback, optTimeout) {
-			
+
 			this.msi = new MicroServiceInterface(serviceURL);
 			this.jobId = jobId;
 			this.optFailureCallback = optFailureCallback;
 			this.optTimeout = optTimeout;
-			
+
 		};
-		
-		
+
+
 		MsiClientStatus.prototype = {
-				
+
 			getJobIdData : function () {
 				return JSON.stringify ({
 					"jobId" : this.jobId,
-				});	
+				});
 			},
-			
-            /* 
+
+            /*
              * Old-fashioned successCallback(resultsSet)
              */
-			execGetPercentComplete : function (successCallback) {			
-				
+			execGetPercentComplete : function (successCallback) {
+
 				this.msi.postToEndpoint("getPercentComplete", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
-			
+
 			execGetStatus : function (successCallback) {
-				
+
 				this.msi.postToEndpoint("getStatus", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
-			
+
 			execGetStatusMessage : function (successCallback) {
-				
+
 				this.msi.postToEndpoint("getStatusMessage", this.getJobIdData(), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
-			
+
             execWaitForPercentComplete : function (percent, timeoutMsec, successCallback) {
 				var myData = JSON.stringify ({
 					"jobId" : this.jobId,
 					"maxWaitMsec" : timeoutMsec,
 					"percentComplete" : percent,
-				});				
-				
+				});
+
 				this.msi.postToEndpoint("waitForPercentComplete", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 5000);
 			},
-            
+
             /*
              * New-fashioned callbacks get success values
              * otherwise failureCallback
@@ -85,29 +85,29 @@ define([	// properly require.config'ed   bootstrap-modal
                     if (resultSet.isSuccess()) {
                         var thisPercent = resultSet.getSimpleResultField("percentComplete");
                         if (thisPercent == null) {
-                            this.doFailureCallback(resultSet, 
+                            this.doFailureCallback(resultSet,
                                                     "Status service getPercentComplete did not return a percent.");
                         } else {
                             percCallback(parseInt(thisPercent));
-                        } 
+                        }
                     } else {
                         this.doFailureCallback(resultSet, null);
                     }
                 }.bind(this, percentCallback);
-                
+
                 this.execGetPercentComplete(successCallback);
             },
-            
+
             execWaitForPercentOrMsec : function (percent, timeoutMsec, successCallback) {
 				var myData = JSON.stringify ({
 					"jobId" : this.jobId,
 					"maxWaitMsec" : timeoutMsec,
 					"percentComplete" : percent,
-				});				
-				
+				});
+
 				this.msi.postToEndpoint("waitForPercentOrMsec", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 5000);
 			},
-            
+
             /*
              * New-fashioned callbacks get success values
              * otherwise failureCallback
@@ -118,30 +118,32 @@ define([	// properly require.config'ed   bootstrap-modal
                 var successCallback = function(percCallback, resultSet) {
                     if (resultSet.isSuccess()) {
                         var thisPercent = resultSet.getSimpleResultField("percentComplete");
+                        var statusMessage = resultSet.getSimpleResultField("statusMessage");
+
                         if (thisPercent == null) {
-                            this.doFailureCallback(resultSet, 
+                            this.doFailureCallback(resultSet,
                                                     "Status service execWaitForPercentOrMsec did not return a percent.");
                         } else {
-                            percCallback(parseInt(thisPercent));
-                        } 
+                            percCallback(parseInt(thisPercent), statusMessage);
+                        }
                     } else {
                         this.doFailureCallback(resultSet, null);
                     }
                 }.bind(this, percentCallback);
-                
+
                 this.execWaitForPercentOrMsec(percent, timeoutMsec, successCallback);
             },
-            
+
             execGetStatusBoolean :  function(booleanCallback) {
-                
+
                 var successCallback = function(successBoolCallback0, resultSet) {
-                        
+
                     // job is finished
                     if (resultSet.isSuccess()) {
                         var status = resultSet.getSimpleResultField("status");
 
                         if ( status == null) {
-                            this.doFailureCallback(resultSet, 
+                            this.doFailureCallback(resultSet,
                                                    "Status service getStatus did not return a status."
                                                    );
                         } else if (status == "Success") {
@@ -153,20 +155,20 @@ define([	// properly require.config'ed   bootstrap-modal
                         this.doFailureCallback(resultSet, null);
                     }
                 }.bind(this, booleanCallback);
-                
+
                 this.execGetStatus(successCallback);
             },
-			
+
             execJobStatusMessageString :  function(messageCallback) {
-                
+
                 var successCallback = function(messageCallback0, resultSet) {
-                        
+
                     // job is finished
                     if (resultSet.isSuccess()) {
                         var message = resultSet.getSimpleResultField("statusMessage");
 
                         if ( message == null) {
-                            this.doFailureCallback(resultSet, 
+                            this.doFailureCallback(resultSet,
                                                    "Status service getStatusMessage did not return a statusMessage."
                                                    );
                         } else {
@@ -176,50 +178,50 @@ define([	// properly require.config'ed   bootstrap-modal
                         this.doFailureCallback(resultSet);
                     }
                 }.bind(this, messageCallback);
-                
+
                 this.execGetStatusMessage(successCallback);
             },
-            
+
             /**
               *  NEW: Call status at "long timeout" intervals but it returns sooner if status changed.
-              *  
+              *
               *  Letting status service make multiple checks each call results in fewer service calls.
               *
               */
             execAsyncWaitUntilDone : function (jobSuccessCallback, checkForCancelCallback, statusBarCallback) {
-   
-                this.execWaitForPercentOrMsecInt(5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
+
+                this.execWaitForPercentOrMsecInt(1, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
                                                                                 statusBarCallback,
                                                                                 checkForCancelCallback
                                                                                 ) );
             },
-            
+
             /*
              * execAsync chain's percent complete loop
              * @private
              */
-            execAsyncWaitUntilDoneCallback : function (jobSuccessCallback, statusBarCallback, checkForCancelCallback, thisPercent) {
+            execAsyncWaitUntilDoneCallback : function (jobSuccessCallback, statusBarCallback, checkForCancelCallback, thisPercent, optOverrideMsg) {
                 if (checkForCancelCallback()) {
                     this.doFailureCallbackHtml("Operation cancelled.");
-                    
+
                 } else if (thisPercent > 99) {
-                    
+
                     statusBarCallback(100);
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
 
                 } else {
 
-                    statusBarCallback(thisPercent);
-                    
-                    this.execWaitForPercentOrMsecInt(thisPercent + 5, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
+                    statusBarCallback(thisPercent, optOverrideMsg);
+
+                    this.execWaitForPercentOrMsecInt(thisPercent + 1, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
                                                                                 statusBarCallback,
                                                                                 checkForCancelCallback
                                                                                 ) );
-                } 
+                }
             },
-            
+
             /**
               *  OLD: synchronous calls to the status service
               *  handle the wait msec between calls here at the client
@@ -237,7 +239,7 @@ define([	// properly require.config'ed   bootstrap-modal
                                                                                 checkForCancelCallback
                                                                                 ) );
             },
-            
+
             /*
              * execAsync chain's percent complete loop
              * @private
@@ -245,9 +247,9 @@ define([	// properly require.config'ed   bootstrap-modal
             execAsyncPercentCallback : function (lastPercent, timeout, jobSuccessCallback, statusBarCallback, checkForCancelCallback, thisPercent) {
                 if (checkForCancelCallback()) {
                     this.doFailureCallbackHtml("Operation cancelled.");
-                    
+
                 } else if (thisPercent > 99) {
-                    
+
                     statusBarCallback(100);
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
 
@@ -255,14 +257,14 @@ define([	// properly require.config'ed   bootstrap-modal
 
                     statusBarCallback(thisPercent);
 
-                    // if percent just changed, reset timeout 
+                    // if percent just changed, reset timeout
                     var thisTimeout = (thisPercent == lastPercent) ? timeout : 50;
                     // next timeout should be 1.5 longer until we hit 5000
                     var nextTimeout = Math.min(Math.floor(thisTimeout * 1.5), 5000);
 
-                    setTimeout( this.execGetPercentCompleteInt.bind(this, 
-                                                                    this.execAsyncPercentCallback.bind( this, 
-                                                                                                        thisPercent, 
+                    setTimeout( this.execGetPercentCompleteInt.bind(this,
+                                                                    this.execAsyncPercentCallback.bind( this,
+                                                                                                        thisPercent,
                                                                                                         nextTimeout,
                                                                                                         jobSuccessCallback,
                                                                                                         statusBarCallback,
@@ -270,24 +272,24 @@ define([	// properly require.config'ed   bootstrap-modal
                                                                  ),
                                 thisTimeout
                               );
-                } 
+                }
             },
-            
+
             /*
              * execAsync chain's status callback
              * @private
              */
             execAsyncStatusCallback : function (jobSuccessCallback, boolSuccess) {
-                        
+
                 if (boolSuccess) {
                     jobSuccessCallback();
-                    
+
                 } else {
                     // failed: get the message
                     this.execJobStatusMessageString(this.execAsyncMessageCallback.bind(this));
                 }
             },
-            
+
             execAsyncMessageCallback : function (statusMessage) {
                 if (typeof this.optFailureCallback == "undefined") {
                     ModalIidx.alert(statusMessage);
@@ -295,16 +297,16 @@ define([	// properly require.config'ed   bootstrap-modal
                     this.optFailureCallback(statusMessage);
                 }
             },
-                
+
             // Add a header and run failure callback
             // or override it with another failure callback
             doFailureCallback : function (resultSet, optHeader) {
                 var html = (typeof optHeader == "undefined" || optHeader == null) ? "" : "<b>" + optHeader + "</b><hr>";
                 html += resultSet.getFailureHtml();
-                
+
                 this.doFailureCallbackHtml(html);
             },
-            
+
             doFailureCallbackHtml : function (html) {
                 if (typeof this.optFailureCallback == "undefined") {
                     ModalIidx.alert("Status Service Failure", html);
@@ -312,27 +314,27 @@ define([	// properly require.config'ed   bootstrap-modal
                     this.optFailureCallback(html);
                 }
             },
-                
+
             /*===================================================*/
-            
+
 			getFailedResultHtml : function (resultSet) {
 				return resultSet.getGeneralResultHtml();
 			},
-			
+
 			getSucceededPercentComplete : function (resultSet) {
 				return resultSet.getSimpleResultField("percentComplete");
 			},
-			
+
 			getStatusIsSuccess : function (resultSet) {
 				return (resultSet.getSimpleResultField("status") == "Success");
 			},
-			
+
 			getStatusMessageString : function (resultSet) {
 				return resultSet.getSimpleResultField("statusMessage");
 			},
-                
+
 		};
-	
+
 		return MsiClientStatus;            // return the constructor
 	}
 );

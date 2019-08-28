@@ -21,7 +21,11 @@ package com.ge.research.semtk.ontologyTools;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.ontologyTools.Triple;
+import com.google.gson.JsonObject;
 
 public class OntologyPath {
 
@@ -40,6 +44,14 @@ public class OntologyPath {
 		this.classHash.put(startClassname, "1");
 		this.startClassName = startClassname;
 		this.endClassName = startClassname;
+	}
+	
+	public void addJsonTriples(JSONArray j) throws Exception {
+		
+		for (Object o : j) {
+			JSONArray arr = (JSONArray) o;
+			this.addTriple((String)arr.get(0), (String)arr.get(1), (String)arr.get(2));
+		}
 	}
 	
 	public void addTriple(String className0, String attributename, String className1) throws PathException{
@@ -61,9 +73,15 @@ public class OntologyPath {
 		this.tripleList.add(new Triple(className0, attributename, className1));
 	}
 	
+	@Deprecated
 	public ArrayList<Triple> getAsList(){
 		return this.tripleList;
 	}
+	
+	public ArrayList<Triple> getTripleList(){
+		return this.tripleList;
+	}
+	
 	
 	// asOldFashionedList should be deprecated
 	
@@ -159,6 +177,16 @@ public class OntologyPath {
 			}
 		}
 		
+		return ret;
+	}
+	
+	public JSONObject toJson() {
+		JSONObject ret = new JSONObject();
+		JSONArray triples = new JSONArray();
+		for (Triple t : this.tripleList) {
+			triples.add(t.toCsvString());
+		}
+		ret.put("triples", triples);
 		return ret;
 	}
 }

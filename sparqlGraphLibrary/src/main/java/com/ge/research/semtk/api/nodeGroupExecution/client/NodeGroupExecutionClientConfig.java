@@ -22,7 +22,9 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.services.client.RestClientConfig;
 
 public class NodeGroupExecutionClientConfig  extends RestClientConfig{
-
+	protected String serviceUser = null; 
+	protected String servicePassword = null;
+	
 	public NodeGroupExecutionClientConfig(String serviceProtocol, String serviceServer,
 			int servicePort) throws Exception {
 		
@@ -30,9 +32,24 @@ public class NodeGroupExecutionClientConfig  extends RestClientConfig{
 		super(serviceProtocol, serviceServer, servicePort, "fake");
 		
 	}
+	
+	public NodeGroupExecutionClientConfig(String serviceProtocol, String serviceServer, int servicePort, String user, String password) throws Exception {
+		
+		super(serviceProtocol, serviceServer, servicePort, "fake");
+		serviceUser = user;
+		servicePassword = password;
+	}
 
 	@SuppressWarnings("unchecked")
 	public void addParameters(JSONObject param) {
+	}
+	
+	public String getServiceUser() {
+		return serviceUser;
+	}
+
+	public String getServicePassword() {
+		return servicePassword;
 	}
 	
 }

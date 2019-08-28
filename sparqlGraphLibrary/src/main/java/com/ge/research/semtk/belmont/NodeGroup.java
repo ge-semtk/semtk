@@ -42,6 +42,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.Triple;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -337,6 +338,9 @@ public class NodeGroup {
 			conn.fromJson(nodegroup.conn.toJson());
 			copy.setSparqlConnection(conn);
 		}
+		
+		// oInfo is a pointer.  It is the state of the nodegroup but not actually deep copied.
+		copy.oInfo = nodegroup.oInfo;
 		
 		return copy;
 	}
@@ -917,27 +921,138 @@ public class NodeGroup {
 	}
 
 	/**
+	 * Unset every isReturned in the nodegroup
+	 */
+	public void unsetAllReturns() throws Exception {
+		this.unsetAllReturns(null);
+		this.clearOrderBy();
+	}
+	
+	/**
+	 * Unset every isReturned in the nodegroup...
+	 * @param exceptThis - but not this one
+	 */
+	public void unsetAllReturns(Returnable exceptThis) throws Exception {
+		// get returned items
+		ArrayList<Returnable> items = this.getReturnedItems();
+		
+		// unset
+		for(Returnable item : items) {
+			if (item != exceptThis) {
+				this.setIsReturned(item, false);
+			}
+			item.setIsTypeReturned(false);
+		}
+	}
+	
+	/**
 	 * Get all returnable items in query "order"
 	 * @return
 	 */
 	
 	public ArrayList<String> getReturnedSparqlIDs() {
+		
+		// get returned items
+		ArrayList<Returnable> items = this.getReturnedItems();
 		ArrayList<String> ret = new ArrayList<String>();
+		
+		// build list of sparql ids
+		for(Returnable item : items) {
+			if (item.getIsReturned()) {
+				ret.add(item.getSparqlID());
+			}
+			if (item.getIsTypeReturned()) {
+				ret.add(item.getTypeSparqlID());
+			}
+		}
+		return ret;
+	}
+	
+	
+	public ArrayList<Returnable> getReturnedItems() {
+		ArrayList<Returnable> ret = new ArrayList<Returnable>();
 		for(Node n : this.getOrderedNodeList()) {
 			// check if node URI is returned
 			if (n.getIsReturned()) {
-				ret.add(n.getSparqlID());
-			}
-			if (n.getIsTypeReturned()) {
-				ret.add(n.getTypeSparqlID());
+				ret.add(n);
+			} else if (n.getIsTypeReturned()) {
+				ret.add(n);
 			}
 			
 			ArrayList<PropertyItem> retPropItems = n.getReturnedPropertyItems();
 			for (PropertyItem p : retPropItems) {
-				ret.add(p.getSparqlID());
+				ret.add(p);
 			}
 		}
 		return ret;
+	}
+	
+	/**
+	 * Find next node in path
+	 * @param startNode
+	 * @param t
+	 * @return
+	 * @throws Exception if there isn't exactly one path
+	 */
+	private Node getNode(Node startNode, Triple t) throws Exception {
+		String pred = t.getPredicate();
+		
+		if (t.getSubject().equals(startNode.getFullUriName())) {
+			
+			// outgoing predicate
+			NodeItem ni =  startNode.getNodeItem(pred);
+			
+			// check it
+			if (ni == null) {
+				throw new Exception ("Error following path. " + startNode.getSparqlID() + " does not have object property: " + pred);
+			} else if (ni.getNodeList().size() > 1) {
+				throw new Exception ("Error following path. " + startNode.getSparqlID() + " has more than one path along: " + pred);
+			} else if (ni.getNodeList().size() < 1) {
+				throw new Exception ("Error following path. " + startNode.getSparqlID() + " has more nothing connected to: " + pred);
+			}
+			return ni.getNodeList().get(0);
+			
+		} else if (t.getObject().equals(startNode.getFullUriName())) {
+			
+			// incoming predicate
+			ArrayList<NodeItem> niList = this.getConnectingNodeItems(startNode);
+			NodeItem ni = null;
+			for (NodeItem n : niList) {
+				if (n.getUriConnectBy().equals(pred)) {
+					if (ni != null) {
+						throw new Exception ("Error following path. " + startNode.getSparqlID() + " has multiple incoming: " + pred);
+					} else {
+						ni = n;
+					}
+				}
+			}
+			
+			// check it
+			if (ni == null) {
+				throw new Exception ("Error following path. " + startNode.getSparqlID() + " does not have incoming property: " + pred);
+			} 
+			return this.getNodeItemParentSNode(ni);
+			
+		} else {
+			
+			// got lost
+			throw new Exception ("Error following path. " + startNode.getSparqlID() + " can't find incoming or outgoing: " + pred);
+		}
+	}
+	
+	/**
+	 * Follow a path to a node
+	 * @param startNode - start here
+	 * @param path - follow this
+	 * @return final node in path
+	 * @throws Exception - if it gets confused at a branch
+	 */
+	public Node followPathToNode(Node startNode, OntologyPath path) throws Exception {
+		Node node = startNode;
+		for (Triple t : path.getTripleList()) {
+			node = this.getNode(node, t);
+		}
+		return node;
 	}
 	
 	/**
@@ -1664,6 +1779,7 @@ public class NodeGroup {
 		} 
 	}
 	
+	
 	/**
 	 * Prune subgraphs of node that don't have any nodes.isUsed()==true
 	 * @param node
@@ -1727,7 +1843,6 @@ public class NodeGroup {
 	}
 	
 	public void deleteNode (Node nd, boolean recurse) {
-		ArrayList<String> sparqlIDsToRemove = new ArrayList<String>();
 		ArrayList<Node> nodesToRemove = new ArrayList<Node>();
 		
 		// add the requested node
@@ -1735,37 +1850,49 @@ public class NodeGroup {
 		
 		// if appropriate, get the children recursively.
 		if (recurse) {
-			ArrayList<Node> tempVal = this.getSubNodes(nd);
-			nodesToRemove.addAll(tempVal);
-		} else {
-			// do nothing extra at all.
-		}
+			nodesToRemove.addAll(this.getSubNodes(nd));
+		} 
 		
 		for (int j=0; j < nodesToRemove.size(); j++) {
-			ArrayList<String> k = nodesToRemove.get(j).getSparqlIDList();
-			sparqlIDsToRemove.addAll(k);
-			// replaces tagging and removeTaggedNodes
 			this.removeNode(nodesToRemove.get(j));
 		}
 		
-		// free sparqlIDs
-		for (int i = 0; i < sparqlIDsToRemove.size(); i++) {
-			this.freeSparqlID(sparqlIDsToRemove.get(i));
+	}
+	
+	
+	/**
+	 * Delete a subgraph 
+	 * @param n - start deleting here
+	 * @param excludeNode - don't delete this one or "cross" it to find more nodes
+	 */
+	public void deleteSubGraph(Node n, ArrayList<Node> stopList) {
+		
+		for (Node i : this.getSubGraph(n, stopList)) {
+			this.removeNode(i);
 		}
 	}
 	
+	
+	/**
+	 * remove a node
+	 * @param node
+	 */
 	private void removeNode(Node node) {
-		// replaces removeTaggedNodes:  only removes one specific node
 		
 		// remove the current sNode from all links.
 		for (Node k : this.nodes) {
 			k.removeFromNodeList(node);
 		}
-		
+
+		// free sparql ids
+		for (String sparqlID : node.getSparqlIDList()) {
+			this.freeSparqlID(sparqlID);
+		}
+
 		// remove the sNode from the nodeGroup
 		this.nodes.remove(node);
 	}
-	
+
 	/**
 	 * Version for FILTER queries.  Make sure targetObj is also not optional.
 	 * @param targetObj
@@ -2091,6 +2218,13 @@ public class NodeGroup {
 
 	}
 	
+	public String setIsReturned(Returnable r, boolean val) throws Exception {
+		if (r instanceof PropertyItem) {
+			return this.setIsReturned((PropertyItem) r, val);
+		} else {
+			return this.setIsReturned((Node) r, val);
+		}
+	}
 	/**
 	 * Set a property item to be returned, giving it a SparqlID if needed
 	 * @param pItem
@@ -2100,10 +2234,11 @@ public class NodeGroup {
 	 */
 	public String setIsReturned(PropertyItem pItem, boolean val) throws Exception {
 		String ret = null;
-		pItem.setIsReturned(val);
 		if (val && pItem.getSparqlID().isEmpty()) {
 			ret = this.changeSparqlID(pItem, pItem.getKeyName());
-		}
+		} 
+		pItem.setIsReturned(val);
+		
 		return  ret;
 	}
 	
@@ -2115,10 +2250,11 @@ public class NodeGroup {
 	 */
 	public String setIsReturned(Node node, boolean val) {
 		String ret = null;
-		node.setIsReturned(val);
 		if (val && node.getSparqlID().isEmpty()) {
 			ret = this.changeSparqlID(node, node.getUri(true));
 		}
+		node.setIsReturned(val);
+		
 		return  ret;
 	}
 	

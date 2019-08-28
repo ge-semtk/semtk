@@ -35,8 +35,8 @@ define([	// properly require.config'ed   bootstrap-modal
             this.optTimeout = optTimeout;
 		};
 
-        MsiClientNodeGroupExec.scaleProgress = function(progressCallback, min, max, val) {
-            progressCallback(min + Math.floor((max - min) * val / 100));
+        MsiClientNodeGroupExec.scaleProgress = function(progressCallback, min, max, val, optMsgOverride) {
+            progressCallback(min + Math.floor((max - min) * val / 100), optMsgOverride);
         };
 
         MsiClientNodeGroupExec.USE_NODEGROUP_CONN = '{"name": "%NODEGROUP%","domain": "%NODEGROUP%","model": [],"data": []}';

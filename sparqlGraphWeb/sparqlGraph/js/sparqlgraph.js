@@ -1466,10 +1466,10 @@
     	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
     };
 
-    var setStatusProgressBar = function(msg, percent) {
+    var setStatusProgressBar = function(msg, percent, optMessageOverride) {
 		var p = (typeof percent === 'undefined') ? 50 : percent;
-
-		document.getElementById("status").innerHTML = msg
+        var m = (typeof optMessageOverride === 'undefined' && optMessageOverride != "") ? msg : optMessageOverride;
+		document.getElementById("status").innerHTML = m
 				+ '<div class="progress progress-info progress-striped active"> \n'
 				+ '  <div class="bar" style="width: ' + p
 				+ '%;"></div></div>';

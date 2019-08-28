@@ -30,8 +30,6 @@ public abstract class RestClientConfig {
 	protected String serviceServer; // may be either the FQDN or IP address.
 	protected int servicePort;
 	protected String serviceEndpoint; // the service endpoint (i.e "/Logging/LogEvent")
-	//protected String serviceUser; 	// TODO
-	//protected String servicePassword; // TODO
 	protected Methods method = Methods.POST;
 	
 	/**

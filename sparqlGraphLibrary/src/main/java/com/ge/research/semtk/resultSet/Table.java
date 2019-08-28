@@ -702,6 +702,9 @@ public class Table {
 		
 		// add rows to the table
 		int matchColIndex = getColumnIndex(matchColName);  // get the index of the column we need to match
+		if (matchColIndex < 0) {
+			throw new Exception("Can't find column in table: " + matchColName);
+		}
 		for(ArrayList<String> row : getRows()){
 			if(row.get(matchColIndex).equals(matchColValue)){  // met the match condition
 				ArrayList<String> newRow = new ArrayList<String>();  // assemble only the columns requested

@@ -27,6 +27,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.services.client.RestClientConfig;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class StatusClient extends RestClient {
 
@@ -200,6 +201,8 @@ public class StatusClient extends RestClient {
 		this.parametersJSON.put("percentComplete", percentComplete);
 		this.parametersJSON.put("message", message);
 
+		LocalLogger.logToStdErr("Set percent complete: " + String.valueOf(percentComplete) + "% " + message); // PEC TODO debugging only
+		
 		try {
 			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();

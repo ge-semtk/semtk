@@ -294,6 +294,7 @@ public class StatusServiceRestController {
 		    	JobTracker tracker = new JobTracker(edc_prop);
 		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
 			    res.addResult("percentComplete", String.valueOf(percentComplete));
+			    res.addResult("statusMessage", tracker.getJobStatusMessage(jobId));
 			    res.setSuccess(true);
 			    
 		    } catch (Exception e) {

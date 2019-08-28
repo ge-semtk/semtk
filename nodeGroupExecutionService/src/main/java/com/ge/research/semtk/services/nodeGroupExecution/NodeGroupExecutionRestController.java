@@ -1288,6 +1288,7 @@ public class NodeGroupExecutionRestController {
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new SimpleResultSet(false);
 				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
+				LocalLogger.printStackTrace(e);
 			} 
 			return retval.toJson();
 		    
