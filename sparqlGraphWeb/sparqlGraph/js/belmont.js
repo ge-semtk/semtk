@@ -3321,6 +3321,8 @@ SemanticNodeGroup.prototype = {
 		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.sparqlNameHash = {};
 		this.conn = null;
+        this.limit = 0;
+        this.offset = 0;
         this.orderBy = [];
 
 	},
