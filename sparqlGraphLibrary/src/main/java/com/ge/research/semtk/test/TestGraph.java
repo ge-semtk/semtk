@@ -199,6 +199,14 @@ public class TestGraph {
 		return res.getResults();
 	}
 	
+	public static Table execTableSelect(JSONObject sgJsonJson) throws Exception {
+		// execute a select query
+		// exception if there's any problem
+		// return the table
+		
+		return SparqlGraphJson.executeSelectToTable(sgJsonJson, getSparqlConn());
+	}
+	
 	/**
 	 * Get the number of triples in the test graph.
 	 */
@@ -383,11 +391,21 @@ public class TestGraph {
 	
 	public static SparqlGraphJson ingest(String jsonPath, String csvPath) throws Exception {
 
+		return ingestCsvString(jsonPath, csvPath, false);
+	}
+	
+	public static SparqlGraphJson ingestCsvString(String jsonPath, String data) throws Exception {
+
+		return ingestCsvString(jsonPath, data, true);
+	}
+	
+	public static SparqlGraphJson ingestCsvString(String jsonPath, String dataOrPath, boolean isData) throws Exception {
+
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath); 
 		
 		// load the data
-		Dataset ds = new CSVDataset(csvPath, false);
-		DataLoader dl = new DataLoader(sgJson, 2, ds, getUsername(), getPassword());
+		Dataset ds = new CSVDataset(dataOrPath, isData);
+		DataLoader dl = new DataLoader(sgJson, ds, getUsername(), getPassword());
 		dl.importData(true);
 		
 		return sgJson;

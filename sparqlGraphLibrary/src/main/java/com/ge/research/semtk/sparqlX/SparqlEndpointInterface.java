@@ -1311,7 +1311,9 @@ public abstract class SparqlEndpointInterface {
 		byte [] owl = IOUtils.toByteArray(owlInputStream);
 
 		if (! oInfo.containsClassWithBase(new ByteArrayInputStream(owl))) {
-			this.executeAuthUploadOwl(owl);
+			JSONObject retJson = this.executeAuthUploadOwl(owl);
+			SimpleResultSet res = SimpleResultSet.fromJson(retJson);
+			res.throwExceptionIfUnsuccessful();
 			return true;
 		}
 		return false;

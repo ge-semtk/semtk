@@ -39,6 +39,7 @@ import com.ge.research.semtk.properties.EndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
@@ -59,6 +60,10 @@ public class IntegrationTestUtility {
 	// protocol for all services
 	public static String getServiceProtocol() throws Exception{
 		return getIntegrationTestProperty("integrationtest.protocol");
+	}
+	
+	public static String getDispatcherClassName() throws Exception{
+		return getIntegrationTestProperty("integrationtest.dispatcherclassname");
 	}
 	
 	// sparql endpoint
@@ -131,6 +136,12 @@ public class IntegrationTestUtility {
 	}
 	public static int getResultsServicePort() throws Exception{
 		return Integer.valueOf(getIntegrationTestProperty("integrationtest.resultsservice.port")).intValue();
+	}
+	public static int getFdcSampleServicePort() throws Exception{
+		return Integer.valueOf(getIntegrationTestProperty("integrationtest.fdcsampleservice.port")).intValue();
+	}
+	public static String getFdcSampleServiceServer() throws Exception{
+		return getIntegrationTestProperty("integrationtest.fdcsampleservice.server");
 	}
 	
 	// dispatch service
@@ -230,6 +241,17 @@ public class IntegrationTestUtility {
 		return new SparqlQueryClient(new SparqlQueryClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset));
 	}
 	
+	/**
+	 * Get a SparqlQueryClient using the integration test properties.
+	 */
+	public static SparqlQueryClient getSparqlQueryAuthClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
+		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset, getSparqlServerUsername(), getSparqlServerPassword()));
+	}
+	
+	public static SparqlQueryClient getSparqlQueryAuthClient() throws Exception{
+		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), "/sparqlQueryService/query", getSparqlServer(), getSparqlServerType(), TestGraph.getDataset(), getSparqlServerUsername(), getSparqlServerPassword()));
+	}
+
 	public static OntologyInfoClient getOntologyInfoClient() throws Exception{
 		return new OntologyInfoClient(new OntologyInfoClientConfig(getServiceProtocol(), getOntologyInfoServiceServer(), getOntologyInfoServicePort()));
 	}
@@ -245,7 +267,7 @@ public class IntegrationTestUtility {
 	 * Get a NodeGroupStoreRestClient using the integration test properties.
 	 */
 	public static NodeGroupExecutionClient getNodeGroupExecutionRestClient() throws Exception{
-		return new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(getServiceProtocol(), getNodegroupExecutionServiceServer(), getNodegroupExecutionServicePort()));
+		return new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(getServiceProtocol(), getNodegroupExecutionServiceServer(), getNodegroupExecutionServicePort(), getSparqlServerUsername(), getSparqlServerPassword()));
 	}
 	
 	/**
@@ -313,6 +335,10 @@ public class IntegrationTestUtility {
         return config;
 	}
 	
+	public static void cleanupNodegroupStore(String creator) throws Exception {
+		cleanupNodegroupStore(getNodeGroupStoreRestClient(), creator);
+	}
+
 	public static void cleanupNodegroupStore(NodeGroupStoreRestClient nodeGroupStoreClient, String creator) throws Exception {
 		// Clean up old nodegroups.   Shouldn't happen but it seems to.
 		// So as not to interfere with others' testing, don't delete if creation date is today

@@ -343,6 +343,11 @@ public class SparqlGraphJson {
 		JSONObject jObj = (JSONObject) parser.parse(jsonString);
 	}
 	
+	public Table executeSelectToTable() throws Exception {
+		String query = this.getNodeGroup().generateSparqlSelect();
+		return this.getSparqlConn().getDefaultQueryInterface().executeQueryToTable(query);
+	}
+	
 	// override the connection info in the SparqlGraphJson
 	
 	/**
