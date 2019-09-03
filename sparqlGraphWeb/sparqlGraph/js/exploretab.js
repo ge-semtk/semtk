@@ -139,7 +139,6 @@ define([	// properly require.config'ed
 
                 $(treeSelector).dynatree({
                     onSelect: function(flag, node) {
-
                         this.selectedNodeCallback(flag, node);
                     }.bind(this),
 
@@ -170,9 +169,13 @@ define([	// properly require.config'ed
             },
 
             selectedNodeCallback : function (flag, node) {
-                this.oTree.selectIdenticalNodes(node, flag);
 
                 if (this.ignoreSelectFlag) return;
+
+                // tricky threading:  turn on ignoreSelectFlag while selecting duplicates
+                this.ignoreSelectFlag = true;
+                this.oTree.selectIdenticalNodes(node, flag);
+                this.ignoreSelectFlag = false;
 
                 if (this.getMode() != "Instance Data") return;
 
@@ -254,7 +257,7 @@ define([	// properly require.config'ed
 
                 hform1.appendChild(document.createTextNode(" select mode:"));
                 hform1.appendChild(select);
-                
+
                 hform1.appendChild(IIDXHelper.createNbspText());
                 hform1.appendChild(IIDXHelper.createButton("Select all", this.treeSelectAll.bind(this, true)));
 

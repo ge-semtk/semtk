@@ -445,7 +445,7 @@ OntologyTree.prototype = {
         var parentURI = node.getParent() ? node.getParent().data.value : "";
 
         this.tree.getRoot().visit(function(n){
-			if (n.data.value == nodeURI) {
+			if (n != node && n.data.value == nodeURI) {
                 if (this.nodeIsClass(n)) {
                     // classes match automatically
 				    n.select(flag);

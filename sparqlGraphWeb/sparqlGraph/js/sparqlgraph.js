@@ -691,9 +691,12 @@
                 runId = item.getSparqlID();
                 item.setSparqlID("");
             } else {
-                runNodegroup = ng;
+                runNodegroup = ng.deepCopy();
                 runId = item.getSparqlID();
             }
+
+            runNodegroup.setLimit(0);
+            runNodegroup.setOffset(0);
 
 
             if (getQuerySource() == "DIRECT") {
