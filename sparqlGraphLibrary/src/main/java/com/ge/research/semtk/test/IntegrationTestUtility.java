@@ -88,10 +88,10 @@ public class IntegrationTestUtility {
 	public static EndpointProperties getEndpointProperties() throws Exception {
 		EndpointProperties ret = new EndpointProperties();
 		
-		ret.setJobEndpointType(getSparqlServerType());
-		ret.setJobEndpointServerUrl(getSparqlServer());
-		ret.setJobEndpointUsername(getSparqlServerUsername());
-		ret.setJobEndpointPassword(getSparqlServerPassword());
+		ret.setEndpointType(getSparqlServerType());
+		ret.setEndpointServerUrl(getSparqlServer());
+		ret.setEndpointUsername(getSparqlServerUsername());
+		ret.setEndpointPassword(getSparqlServerPassword());
 		
 		return ret;
 	}

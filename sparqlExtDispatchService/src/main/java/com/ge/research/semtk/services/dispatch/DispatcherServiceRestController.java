@@ -362,7 +362,7 @@ public class DispatcherServiceRestController {
 
 		// get clients needed to instantiate the Dispatcher
 		SparqlQueryClientConfig queryConf = null;
-		SparqlQueryClient queryClient = null;
+		SparqlQueryClient servicesQueryClient = null;
 		if(useAuth){
 			queryConf = new SparqlQueryAuthClientConfig(	
 					props.getSparqlServiceProtocol(),
@@ -374,7 +374,7 @@ public class DispatcherServiceRestController {
 	                props.getEdcSparqlServerDataset(),
 					props.getSparqlServiceUser(),
 					props.getSparqlServicePass());
-			queryClient = new SparqlQueryClient(queryConf);
+			servicesQueryClient = new SparqlQueryClient(queryConf);
 			
 		}
 		else{
@@ -386,7 +386,7 @@ public class DispatcherServiceRestController {
 	                props.getEdcSparqlServerAndPort(), 
 	                props.getEdcSparqlServerType(), 
 	                props.getEdcSparqlServerDataset());
-			queryClient = new SparqlQueryClient(queryConf);
+			servicesQueryClient = new SparqlQueryClient(queryConf);
 		}		
 		
 		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
@@ -420,7 +420,7 @@ public class DispatcherServiceRestController {
 				}
 			}
 			
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, queryClient, heedRestrictions, oClient, ngeClient);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, servicesQueryClient, heedRestrictions, oClient, ngeClient);
 			
 		}catch(Exception e){
 			// log entire stack trace

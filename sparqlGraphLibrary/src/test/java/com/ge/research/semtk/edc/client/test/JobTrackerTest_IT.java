@@ -75,12 +75,12 @@ public class JobTrackerTest_IT {
 	
 	private static SemtkEndpointProperties getProp() throws Exception {
 		SemtkEndpointProperties prop = new SemtkEndpointProperties();
-		prop.setJobEndpointDataset(TestGraph.getDataset());
-		prop.setJobEndpointDomain("http//research.ge.com");
-		prop.setJobEndpointServerUrl(TestGraph.getSparqlServer());
-		prop.setJobEndpointType(TestGraph.getSparqlServerType());
-		prop.setJobEndpointPassword(TestGraph.getPassword());
-		prop.setJobEndpointUsername(TestGraph.getUsername());
+		prop.setEndpointDataset(TestGraph.getDataset());
+		prop.setEndpointDomain("http//research.ge.com");
+		prop.setEndpointServerUrl(TestGraph.getSparqlServer());
+		prop.setEndpointType(TestGraph.getSparqlServerType());
+		prop.setEndpointPassword(TestGraph.getPassword());
+		prop.setEndpointUsername(TestGraph.getUsername());
 		return prop;
 	}
 	

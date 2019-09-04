@@ -92,10 +92,10 @@ public class TestGraph {
 	public static EndpointProperties getEndpointProperties() throws Exception {
 		SparqlEndpointInterface sei = getSei();
 		EndpointProperties ret = new EndpointProperties();
-		ret.setJobEndpointType(sei.getServerType());
-		ret.setJobEndpointServerUrl(sei.getServerAndPort());
-		ret.setJobEndpointUsername(sei.getUserName());
-		ret.setJobEndpointPassword(sei.getPassword());
+		ret.setEndpointType(sei.getServerType());
+		ret.setEndpointServerUrl(sei.getServerAndPort());
+		ret.setEndpointUsername(sei.getUserName());
+		ret.setEndpointPassword(sei.getPassword());
 		
 		return ret;
 	}

@@ -21,44 +21,44 @@ package com.ge.research.semtk.properties;
 // meant to be inherited into a spring boot microservice property object
 // properties for a triple-store endpoint
 public class EndpointProperties extends Properties {
-	private String jobEndpointType = "";
-	private String jobEndpointServerUrl = "";
-	private String jobEndpointUsername = "";
-	private String jobEndpointPassword = "";
+	private String endpointType = "";
+	private String endpointUrl = "";
+	private String endpointUsername = "";
+	private String endpointPassword = "";
 	
-	public String getJobEndpointUsername() {
-		return jobEndpointUsername;
+	public String getEndpointUsername() {
+		return endpointUsername;
 	}
-	public void setJobEndpointUsername(String jobEndpointUsername) {
-		this.jobEndpointUsername = jobEndpointUsername;
+	public void setEndpointUsername(String jobEndpointUsername) {
+		this.endpointUsername = jobEndpointUsername;
 	}
-	public String getJobEndpointPassword() {
-		return jobEndpointPassword;
+	public String getEndpointPassword() {
+		return endpointPassword;
 	}
-	public void setJobEndpointPassword(String jobEndpointPassword) {
-		this.jobEndpointPassword = jobEndpointPassword;
-	}
-	
-	public String getJobEndpointType() {
-		return jobEndpointType;
-	}
-	public void setJobEndpointType(String jobEndpointType) {
-		this.jobEndpointType = jobEndpointType;
+	public void setEndpointPassword(String jobEndpointPassword) {
+		this.endpointPassword = jobEndpointPassword;
 	}
 	
-	public String getJobEndpointServerUrl() {
-		return jobEndpointServerUrl;
+	public String getEndpointType() {
+		return endpointType;
 	}
-	public void setJobEndpointServerUrl(String jobEndpointServerUrl) {
-		this.jobEndpointServerUrl = jobEndpointServerUrl;
+	public void setEndpointType(String jobEndpointType) {
+		this.endpointType = jobEndpointType;
+	}
+	
+	public String getEndpointServerUrl() {
+		return endpointUrl;
+	}
+	public void setEndpointServerUrl(String jobEndpointServerUrl) {
+		this.endpointUrl = jobEndpointServerUrl;
 	}
 	
 	public void validate() throws Exception {
 		super.validate();
-		checkNotEmpty("jobEndpointType", jobEndpointType);
-		checkNotEmpty("jobEndpointServerUrl", jobEndpointServerUrl);
-		checkNone("jobEndpointUsername", jobEndpointUsername);
-		checkNone("jobEndpointPassword", jobEndpointPassword);
+		checkNotEmpty("endpointType", endpointType);
+		checkNotEmpty("endpointServerUrl", endpointUrl);
+		checkNone("endpointUsername", endpointUsername);
+		checkNone("endpointPassword", endpointPassword);
 	}
 	
 }

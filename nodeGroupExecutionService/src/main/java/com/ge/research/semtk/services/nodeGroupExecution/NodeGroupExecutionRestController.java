@@ -99,10 +99,9 @@ public class NodeGroupExecutionRestController {
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
  	static final String JOB_ID_RESULT_KEY = SimpleResultSet.JOB_ID_RESULT_KEY;
  	
+ 	// updated
  	@Autowired
 	private NodegroupExecutionAuthProperties auth_prop;
-	@Autowired
-	NodegroupExecutionProperties prop;
 	@Autowired
 	NodegroupExecutionSemtkEndpointProperties edc_prop;
 	@Autowired
@@ -111,6 +110,16 @@ public class NodeGroupExecutionRestController {
 	private ApplicationContext appContext;
 	@Autowired
 	OInfoServiceProperties oinfo_props;
+	@Autowired
+	NodegroupExecutionStoreProperties ngstore_prop;
+	@Autowired
+	NodegroupExecutionDispatchProperties dispatch_prop;
+	@Autowired
+	NodegroupExecutionResultsProperties results_prop;
+	@Autowired
+	NodegroupExecutionStatusProperties status_prop;
+	@Autowired
+	NodegroupExecutionIngestProperties ingest_prop;
 	
 	@PostConstruct
     public void init() {
@@ -118,7 +127,13 @@ public class NodeGroupExecutionRestController {
 		env_prop.validateWithExit();
 
 		// these are still in the older NodegroupExecutionServiceStartup
-		// prop
+		ngstore_prop.validateWithExit();
+		dispatch_prop.validateWithExit();
+		results_prop.validateWithExit();
+		status_prop.validateWithExit();
+		ingest_prop.validateWithExit();
+
+
 		edc_prop.validateWithExit();
 		log_prop.validateWithExit();
 		auth_prop.validateWithExit();
@@ -142,7 +157,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{ 
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				NodeGroupExecutor ngExecutor = this.getExecutor(requestBody.getJobID() );
 				// try to get a job status
 				String results = ngExecutor.getJobStatus();
 				retval.setSuccess(true);
@@ -178,7 +193,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				NodeGroupExecutor ngExecutor = this.getExecutor(requestBody.getJobID() );
 				// try to get a job status
 				String results = ngExecutor.getJobStatusMessage();
 				retval.setSuccess(true);
@@ -214,7 +229,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				NodeGroupExecutor ngExecutor = this.getExecutor(requestBody.getJobID() );
 				// try to get a job status
 				Boolean results = ngExecutor.getJobCompletion();
 				retval.setSuccess(true);
@@ -255,7 +270,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				NodeGroupExecutor ngExecutor = this.getExecutor(requestBody.getJobID() );
 				// try to get a job status
 				int results = ngExecutor.getJobPercentCompletion();
 				retval.setSuccess(true);
@@ -332,7 +347,7 @@ public class NodeGroupExecutionRestController {
 			TableResultSet retval = new TableResultSet();
 			
 			try{
-				NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
+				NodeGroupExecutor nge = this.getExecutor(requestBody.getJobID());
 				Table retTable = nge.getTableResults();
 				retval.setSuccess(true);
 				retval.addResults(retTable);
@@ -362,7 +377,7 @@ public class NodeGroupExecutionRestController {
 			NodeGroupResultSet retval = new NodeGroupResultSet();
 			
 			try{
-				NodeGroupExecutor nge = this.getExecutor(prop, requestBody.getJobID());
+				NodeGroupExecutor nge = this.getExecutor(requestBody.getJobID());
 				JSONObject retLd = nge.getJsonLdResults();
 				retval.setSuccess(true);
 				retval.addResultsJSON(retLd);
@@ -400,7 +415,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, requestBody.getJobID() );
+				NodeGroupExecutor ngExecutor = this.getExecutor(requestBody.getJobID() );
 				// try to get a job status
 				URL[] results = ngExecutor.getResultsLocation();
 				retval.setSuccess(true);
@@ -459,7 +474,7 @@ public class NodeGroupExecutionRestController {
 			// make sure the request has the needed parameters
 			requestBody.validate();
 			
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+			NodeGroupExecutor ngExecutor = this.getExecutor(null );
 			
 			SparqlConnection connection = requestBody.getSparqlConnection();			
 			// create a json object from the external data constraints. 
@@ -502,7 +517,7 @@ public class NodeGroupExecutionRestController {
 		
 		try{
 			// create a new StoredQueryExecutor
-			NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+			NodeGroupExecutor ngExecutor = this.getExecutor(null );
 
 			// try to create a sparql connection
 			SparqlConnection connection = requestBody.getSparqlConnection();			
@@ -645,7 +660,7 @@ public class NodeGroupExecutionRestController {
 			    	}
 			    	
 			    	// get table
-			    	NodeGroupExecutor nge = this.getExecutor(prop, jobId);
+			    	NodeGroupExecutor nge = this.getExecutor(jobId);
 					Table retTable = nge.getTableResults();
 					ret = new TableResultSet(true);
 					ret.addResults(retTable);
@@ -866,7 +881,7 @@ public class NodeGroupExecutionRestController {
 						requestBody.getCountOnly());
 
 				// execute
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );		
+				NodeGroupExecutor ngExecutor = this.getExecutor(null );		
 				ngExecutor.dispatchRawSparql(conn, sparql);
 				String id = ngExecutor.getJobID();
 
@@ -922,7 +937,7 @@ public class NodeGroupExecutionRestController {
 						requestBody.getCountOnly());
 
 				// execute
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );		
+				NodeGroupExecutor ngExecutor = this.getExecutor(null );		
 				ngExecutor.dispatchRawSparql(conn, sparql);
 				String id = ngExecutor.getJobID();
 
@@ -1001,7 +1016,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+				NodeGroupExecutor ngExecutor = this.getExecutor(null );
 
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.getSparqlConnection();			
@@ -1046,7 +1061,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+				NodeGroupExecutor ngExecutor = this.getExecutor(null );
 
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.getSparqlConnection();			
@@ -1091,7 +1106,7 @@ public class NodeGroupExecutionRestController {
 			
 			try{
 				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(prop, null );
+				NodeGroupExecutor ngExecutor = this.getExecutor(null );
 
 				// add connection
 				SparqlEndpointInterface sei = requestBody.buildSei();
@@ -1140,7 +1155,7 @@ public class NodeGroupExecutionRestController {
     	try {
 			RecordProcessResults retval = null;
 			try{
-				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
@@ -1173,7 +1188,7 @@ public class NodeGroupExecutionRestController {
     	try {
 			RecordProcessResults retval = null;
 			try{
-				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
@@ -1209,7 +1224,7 @@ public class NodeGroupExecutionRestController {
     	try {
 			SimpleResultSet retval = null;
 			try{
-				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
 				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
@@ -1245,7 +1260,7 @@ public class NodeGroupExecutionRestController {
     	try {
 			RecordProcessResults retval = null;
 			try{
-				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 			}catch(Exception e){
@@ -1279,7 +1294,7 @@ public class NodeGroupExecutionRestController {
     	try {
 			SimpleResultSet retval = null;
 			try{
-				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(prop, null);		
+				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
 				retval = new SimpleResultSet(true);
@@ -1312,7 +1327,7 @@ public class NodeGroupExecutionRestController {
 			TableResultSet retval = null;
 			
 			try {
-				NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
+				NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
 				NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
 				retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
 			}
@@ -1383,12 +1398,12 @@ public class NodeGroupExecutionRestController {
 	}
 
 	// create the required StoredQueryExecutor
-	private NodeGroupExecutor getExecutor(NodegroupExecutionProperties prop, String jobID) throws Exception{
-		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(prop.getNgStoreProtocol(), prop.getNgStoreServer(), prop.getNgStorePort());
-		DispatchClientConfig dsConf  = new DispatchClientConfig(prop.getDispatchProtocol(), prop.getDispatchServer(), prop.getDispatchPort());
-		ResultsClientConfig  rConf   = new ResultsClientConfig(prop.getResultsProtocol(), prop.getResultsServer(), prop.getResultsPort());
-		StatusClientConfig   sConf   = new StatusClientConfig(prop.getStatusProtocol(), prop.getStatusServer(), prop.getStatusPort(), jobID);
-		IngestorClientConfig iConf   = new IngestorClientConfig(prop.getIngestProtocol(), prop.getIngestServer(), prop.getIngestPort());
+	private NodeGroupExecutor getExecutor(String jobID) throws Exception{
+		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
+		DispatchClientConfig dsConf  = new DispatchClientConfig(dispatch_prop.getProtocol(), dispatch_prop.getServer(), dispatch_prop.getPort());
+		ResultsClientConfig  rConf   = new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort());
+		StatusClientConfig   sConf   = new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobID);
+		IngestorClientConfig iConf   = new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort());
 		
 		// create the other components we need. 
 		NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);

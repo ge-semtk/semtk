@@ -39,33 +39,6 @@ public class NodegroupExecutionServiceStartup implements ApplicationListener<App
 	@Override
 	public void onApplicationEvent(final ApplicationReadyEvent event) {
 
-		// print and validate properties - and exit if invalid
-		String[] propertyNames = {
-				"node-group-execution.ngStoreProtocol",
-				"node-group-execution.ngStoreServer",
-				"node-group-execution.ngStorePort",
-				"node-group-execution.dispatchProtocol",
-				"node-group-execution.dispatchServer",
-				"node-group-execution.dispatchPort",
-				"node-group-execution.resultsProtocol",
-				"node-group-execution.resultsServer",
-				"node-group-execution.resultsPort",
-				"node-group-execution.statusProtocol",
-				"node-group-execution.statusServer",
-				"node-group-execution.statusPort",
-				"node-group-execution.edc.services.jobEndpointType",
-				"node-group-execution.edc.services.jobEndpointDomain",
-				"node-group-execution.edc.services.jobEndpointServerUrl",
-				"node-group-execution.edc.services.jobEndpointDataset",
-				//"node-group-execution.edc.services.jobEndpointUsername",
-				//"node-group-execution.edc.services.jobEndpointPassword"
-		};
-		TreeMap<String,String> properties = new TreeMap<String,String>();
-		for(String propertyName : propertyNames){
-			properties.put(propertyName, event.getApplicationContext().getEnvironment().getProperty(propertyName));
-		}
-		Utility.validatePropertiesAndExitOnFailure(properties); 
-
 		return;
 	}
  

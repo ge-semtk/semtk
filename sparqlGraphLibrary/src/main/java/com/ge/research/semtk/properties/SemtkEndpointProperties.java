@@ -21,27 +21,27 @@ package com.ge.research.semtk.properties;
 // meant to be inherited into a spring boot microservice property object
 // properties for a triple-store endpoint
 public class SemtkEndpointProperties extends EndpointProperties {
-	private String jobEndpointDomain = "";
-	private String jobEndpointDataset = "";
+	private String endpointDomain = "";
+	private String endpointDataset = "";
 	
 	
-	public String getJobEndpointDomain() {
-		return jobEndpointDomain;
+	public String getEndpointDomain() {
+		return endpointDomain;
 	}
-	public void setJobEndpointDomain(String jobEndpointDomain) {
-		this.jobEndpointDomain = jobEndpointDomain;
+	public void setEndpointDomain(String jobEndpointDomain) {
+		this.endpointDomain = jobEndpointDomain;
 	}
 	
-	public String getJobEndpointDataset() {
-		return jobEndpointDataset;
+	public String getEndpointDataset() {
+		return endpointDataset;
 	}
-	public void setJobEndpointDataset(String jobEndpointDataset) {
-		this.jobEndpointDataset = jobEndpointDataset;
+	public void setEndpointDataset(String jobEndpointDataset) {
+		this.endpointDataset = jobEndpointDataset;
 	}
 	
 	public void validate() throws Exception {
 		super.validate();
-		checkNone("jobEndpointDomain", jobEndpointDomain);
-		checkNotEmpty("jobEndpointDataset", jobEndpointDataset);
+		checkNone("endpointDomain", endpointDomain);
+		checkNotEmpty("endpointDataset", endpointDataset);
 	}
 }
