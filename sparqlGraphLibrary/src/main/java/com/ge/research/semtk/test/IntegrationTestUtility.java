@@ -38,6 +38,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.properties.EndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.S3BucketConfig;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
@@ -67,6 +68,16 @@ public class IntegrationTestUtility {
 	}
 	
 	// sparql endpoint
+	public static String getSparqlServerOnly() throws Exception {
+		String stripProtocol = getSparqlServer().split("://")[1];
+		String stripPort = stripProtocol.split(":")[0];
+		return stripPort;
+				
+	}
+	public static int getSparqlServerPort() throws Exception {
+		String [] serverUrl = getSparqlServer().split(":");
+		return Integer.valueOf(serverUrl[2]);
+	}
 	public static String getSparqlServer() throws Exception{
 		return getIntegrationTestProperty("integrationtest.sparqlendpoint.server");
 	}
@@ -234,6 +245,20 @@ public class IntegrationTestUtility {
 		return new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), jobId));
 	}	
 	
+	public static SparqlEndpointInterface getServicesSei() throws Exception {
+		return SparqlEndpointInterface.getInstance(
+				getSparqlServerType(), 
+				getServiceProtocol(), 
+				getSparqlServerOnly(), 
+				getSparqlServerPort(), 
+				getServicesGraph(), 
+				getSparqlServerUsername(), 
+				getSparqlServerPassword());
+	}
+	
+	public static String getServicesGraph() throws Exception {
+		return getIntegrationTestProperty("integrationtest.services.graph");
+	}
 	/**
 	 * Get a SparqlQueryClient using the integration test properties.
 	 */
@@ -279,7 +304,8 @@ public class IntegrationTestUtility {
 		StatusClient stc = new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), "totally fake"));
 		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
 		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(getServiceProtocol(), getIngestionServiceServer(), getIngestionServicePort()));		
-		return new NodeGroupExecutor(ngsrc, drc, rc, stc, ic);
+		SparqlEndpointInterface sei = getServicesSei();
+		return new NodeGroupExecutor(ngsrc, drc, rc, sei, ic);
 	}
 	
 	public static String getIntegrationTestProperty(String key) throws Exception{

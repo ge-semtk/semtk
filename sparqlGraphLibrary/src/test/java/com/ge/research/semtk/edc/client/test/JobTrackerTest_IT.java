@@ -62,7 +62,7 @@ public class JobTrackerTest_IT {
 	
 	@AfterClass
 	public static void done() throws Exception {
-		JobTracker tracker = new JobTracker(getProp());
+		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		for (String id : jobIds) {
 			tracker.deleteJob(id);
 		}
@@ -92,7 +92,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		int percent = 10;
 		
-		JobTracker tracker = new JobTracker(getProp());
+		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId, trstore);   // clean up mess of any previously failed test
 		tracker.createJob(jobId);
 		tracker.setJobPercentComplete(jobId, percent);
@@ -111,7 +111,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		int percent = 99;
 		
-		JobTracker tracker = new JobTracker(getProp());
+		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		tracker.setJobPercentComplete(jobId, percent);
 		int ret = tracker.getJobPercentComplete(jobId);
 		tracker.deleteJob(jobId, trstore);
@@ -126,7 +126,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId, trstore);
 		
 		try {
@@ -145,7 +145,7 @@ public class JobTrackerTest_IT {
 		String jobId = IntegrationTestUtility.generateJobId("test_bad_set_percent_complete");
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		registerJob(jobId);
 		tracker.deleteJob(jobId);
 		
@@ -175,7 +175,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 			
 		// create job if needed, and set success things
@@ -198,7 +198,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 		
 		URL FULL_URL = new URL("http://machine:80/fullResults.csv");
@@ -233,7 +233,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 		
 		JSONObject data = new JSONObject();
@@ -262,7 +262,7 @@ public class JobTrackerTest_IT {
 	public void test_get_jobs_info() throws Exception {
 		String jobId = IntegrationTestUtility.generateJobId("test_get_jobs_info" + UUID.randomUUID().toString());
 		registerJob(jobId);
-		JobTracker tracker =  new JobTracker(getProp());
+		JobTracker tracker =  new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 		tracker.createJob(jobId);
 		
@@ -286,7 +286,7 @@ public class JobTrackerTest_IT {
 	public void test_set_name() throws Exception {
 		String jobId = IntegrationTestUtility.generateJobId("test_set_name" + UUID.randomUUID().toString());
 		registerJob(jobId);
-		JobTracker tracker =  new JobTracker(getProp());
+		JobTracker tracker =  new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 		
 		tracker.setJobName(jobId, "test name");
@@ -307,7 +307,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		JobTracker tracker = null;
 
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 		
 		URL FULL_URL = new URL("http://machine:80/fullResults.csv");
@@ -339,7 +339,7 @@ public class JobTrackerTest_IT {
 		registerJob(jobId);
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 
 		final String STATUS_MESSAGE = "Failure status message";
@@ -363,7 +363,7 @@ public class JobTrackerTest_IT {
 		final String STATUS_MESSAGE = "Failure message. with 'quoted' and \"double-quoted\" and new\nlines\n";
 		JobTracker tracker = null;
 		
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 		
 		tracker.setJobFailure(jobId, STATUS_MESSAGE);
@@ -385,7 +385,7 @@ public class JobTrackerTest_IT {
 		String MESSAGE = "test failure";
 
 		JobTracker tracker = null;
-		tracker = new JobTracker(getProp());
+		tracker = new JobTracker(TestGraph.getSei());
 		tracker.deleteJob(jobId);
 
 		// create job if needed, and set success things

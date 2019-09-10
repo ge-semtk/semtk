@@ -35,6 +35,7 @@ import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -59,12 +60,10 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 	
 	protected NodeGroup queryNodeGroup;
-	protected SparqlQueryClient retrievalClient;   // the queryClient provided in the constructor, but with the sgjson's default Sei
-	protected ResultsClient resultsClient;
-	protected StatusClient statusClient;
 	protected OntologyInfoClient oInfoClient;
-	protected NodeGroupExecutionClient ngexecClient;
+	protected NodeGroupStoreRestClient ngStoreClient;
 	protected JobTracker jobTracker;
+	protected ResultsClient resultsClient;
 	
 	protected SparqlEndpointInterface querySei;
 
@@ -74,15 +73,13 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public final static String FLAG_DISPATCH_RETURN_QUERIES = "DISPATCH_RETURN_QUERIES";
 	
-	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, StatusClient sClient, SparqlQueryClient svcQueryClient, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupExecutionClient ngeClient) throws Exception{
+	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
 		this.jobID = jobId;
 		
-		this.resultsClient = rClient;
-		this.statusClient = sClient;
 		this.oInfoClient = oInfoClient;
-		this.ngexecClient = ngeClient;
-		// PEC HERE this.jobTracker = new JobTracker(svcQueryClient.getConfig());
-		
+		this.ngStoreClient = ngStoreClient;
+		this.jobTracker = new JobTracker(extConfigSei);
+		this.resultsClient = rClient;
 		// get nodegroup and sei from json
 		LocalLogger.logToStdErr("processing incoming nodegroup - in base class");
 
@@ -92,45 +89,16 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		LocalLogger.logToStdErr("about to get the default qry interface");
 		this.querySei = sgJson.getSparqlConn().getDefaultQueryInterface();
 		
+		// security question: for virtuoso sake, we pass on the authorization "dba" "dba" 
+		//     from extConfigSei to on the querySei in case it is an insert or delete
+		this.querySei.setUserAndPassword(extConfigSei.getUserName(), extConfigSei.getPassword());
+		
 		SparqlConnection nodegroupConn = sgJson.getSparqlConn();
 		this.domain = nodegroupConn.getDomain();
 		this.oInfo = oInfoClient.getOntologyInfo(nodegroupConn);
 		this.queryNodeGroup.validateAgainstModel(oInfo);
-		if(svcQueryClient.getConfig() instanceof SparqlQueryAuthClientConfig){
-			LocalLogger.logToStdErr("Dispatcher exec config WAS an instance of the auth query client");
-			
-			SparqlQueryAuthClientConfig old = (SparqlQueryAuthClientConfig)svcQueryClient.getConfig();
-			
-			SparqlQueryAuthClientConfig config = new SparqlQueryAuthClientConfig(	
-					old.getServiceProtocol(),
-					old.getServiceServer(), 
-					old.getServicePort(), 
-					old.getServiceEndpoint(),
-					querySei.getServerAndPort(),
-					querySei.getServerType(),
-					querySei.getGraph(),
-					old.getSparqlServerUser(),
-					old.getSparqlServerPassword());
-			
-			this.retrievalClient = new SparqlQueryClient(config );			
-		}
-		else{
-			LocalLogger.logToStdErr("Dispatcher exec config WAS NOT an instance of the auth query client");
-			
-			SparqlQueryClientConfig config = new SparqlQueryClientConfig(	
-				svcQueryClient.getConfig().getServiceProtocol(),
-				svcQueryClient.getConfig().getServiceServer(), 
-				svcQueryClient.getConfig().getServicePort(), 
-				svcQueryClient.getConfig().getServiceEndpoint(),
-				querySei.getServerAndPort(),
-				querySei.getServerType(),
-				querySei.getGraph());
 		
-		
-			this.retrievalClient = new SparqlQueryClient(config );
-		}
-		
-		this.statusClient.execSetPercentComplete(1);
+		this.jobTracker.setJobPercentComplete(this.jobID, 1);
 	}
 	
 	/**
@@ -185,7 +153,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			this.resultsClient.execStoreTableResults(this.jobID, resTable);
 		}
 		catch(Exception e){
-			this.statusClient.execSetFailure("Failed to write results: " + e.getMessage());
+			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Unable to write results", e);
 		}
@@ -198,7 +166,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			this.resultsClient.execStoreGraphResults(this.jobID, resJSON);
 		}
 		catch(Exception e){
-			this.statusClient.execSetFailure("Failed to write results: " + e.getMessage());
+			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Unable to write results", e);
 		}
@@ -215,11 +183,11 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		try {
 		// if statusPercentNumber >= 100, instead, set the success or failure.
 			if(statusPercentNumber >= 100){
-				this.statusClient.execSetSuccess();	
+				this.jobTracker.setJobSuccess(this.jobID);
 			}
 			// else, try to set a value.
 			else{
-				this.statusClient.execSetPercentComplete(statusPercentNumber);
+				this.jobTracker.setJobPercentComplete(this.jobID, statusPercentNumber);
 			}
 			
 		} catch (Exception e) {
@@ -230,7 +198,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected void incrementStatus(int increment, int max) throws UnableToSetStatusException{
 		
 		try {
-			this.statusClient.execIncrementPercentComplete(increment, max);
+			this.jobTracker.incrementPercentComplete(this.jobID, increment, max);
 		} catch (Exception e) {
 			throw new UnableToSetStatusException(e.getMessage());
 		}
@@ -244,7 +212,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	 */
 	protected void updateStatusToFailed(String rationale) { // throws UnableToSetStatusException {
 		try{
-			this.statusClient.execSetFailure(rationale != null ? rationale : "Exception with e.getMessage()==null");
+			this.jobTracker.setJobFailure(this.jobID, rationale != null ? rationale : "Exception with e.getMessage()==null");
 			LocalLogger.logToStdErr("wrote failure message to status service");
 		}
 		catch(Exception eee){
@@ -257,12 +225,10 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	 * used for testing the service/ probably not useful in practice
 	 * @return
 	 */
-	public StatusClient getStatusClient(){ return this.statusClient;}
 	/**
 	 * used for testing the service/ probably not useful in practice
 	 * @return
 	 */
-	public ResultsClient getResultsClient(){ return this.resultsClient;}
 	
 	public abstract String getConstraintType() throws Exception;
 	
@@ -270,8 +236,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public void executePlainSparqlQuery(String sparqlQuery, DispatcherSupportedQueryTypes supportedQueryType) throws Exception{
 		TableResultSet retval = null;
-		SparqlQueryClient nodegroupQueryClient = this.retrievalClient;
-		this.statusClient.execIncrementPercentComplete(1, 10);
+		this.jobTracker.incrementPercentComplete(this.jobID, 1, 10);
 
 		try{
 
@@ -285,16 +250,16 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			
 			if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT || supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION){
 				// constructs require particular support for a different result set.
-				preRet = nodegroupQueryClient.execute(sparqlQuery, SparqlResultTypes.GRAPH_JSONLD);
+				preRet = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.GRAPH_JSONLD);
 				retval = new TableResultSet(true);
 			}
 			else if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE || supportedQueryType == DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE) {
-				SimpleResultSet simpleRes = (SimpleResultSet) nodegroupQueryClient.getSei().executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
+				SimpleResultSet simpleRes = (SimpleResultSet) this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
 				retval = new TableResultSet(simpleRes);
 				
 			} else {
 				// all other types
-				preRet = nodegroupQueryClient.getSei().executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
+				preRet = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
 				retval = (TableResultSet) preRet;
 			}
 
@@ -367,6 +332,10 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		}
 		
 		return retval;
+	}
+	
+	public JobTracker getJobTracker() {
+		return this.jobTracker;
 	}
 
 }

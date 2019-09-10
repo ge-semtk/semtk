@@ -314,7 +314,7 @@ public class NodeGroupExecutionRestController {
     	
 		    try {
 		    	requestBody.validate();
-		    	JobTracker tracker = new JobTracker(edc_prop); 
+		    	JobTracker tracker = this.getJobTracker();
 		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
 		    	retval.addResult("percentComplete", String.valueOf(percentComplete));
 		    	retval.setSuccess(true);
@@ -648,7 +648,7 @@ public class NodeGroupExecutionRestController {
 				} else {
 					// wait for job to complete
 					String jobId = jobIdRes.getResult(JOB_ID_RESULT_KEY);
-					JobTracker tracker = new JobTracker(edc_prop); 
+			    	JobTracker tracker = this.getJobTracker();
 			    	int percentComplete = tracker.waitForPercentOrMsec(jobId, 100, TIMEOUT_SEC * 1000);
 			    	if (percentComplete < 100) {
 			    		throw new Exception("Job is only " + percentComplete + "% complete after" + TIMEOUT_SEC + "seconds.  Use /dispatchSelectById instead.");
@@ -1413,7 +1413,7 @@ public class NodeGroupExecutionRestController {
 		IngestorRestClient ingestClient = new IngestorRestClient(iConf);
 		
 		// create the actual executor
-		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, statusclient, ingestClient);
+		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, edc_prop.buildSei(), ingestClient);
 		if(jobID != null){ retval.setJobID(jobID); }
 		return retval;
 	}
@@ -1453,6 +1453,10 @@ public class NodeGroupExecutionRestController {
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		return oClient.getOntologyInfo(conn);
 		
+	}
+	
+	private JobTracker getJobTracker() throws Exception{
+		return new JobTracker(edc_prop.buildSei());
 	}
 }
 

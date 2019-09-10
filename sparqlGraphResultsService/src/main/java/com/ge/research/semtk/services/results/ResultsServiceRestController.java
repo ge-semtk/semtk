@@ -40,10 +40,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -879,7 +876,7 @@ public class ResultsServiceRestController {
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
-		return new JobTracker(edc_prop);
+		return new JobTracker(edc_prop.buildSei());
 	}
 	
 	private String getSampleJsonUserURL(String jobId) throws MalformedURLException {

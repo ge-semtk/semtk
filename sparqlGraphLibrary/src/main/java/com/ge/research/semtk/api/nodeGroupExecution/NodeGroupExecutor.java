@@ -26,6 +26,7 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
@@ -36,6 +37,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
@@ -55,7 +57,7 @@ public class NodeGroupExecutor {
 	private NodeGroupStoreRestClient storeClient = null;
 	private DispatchRestClient dispatchClient = null;
 	private ResultsClient resultsClient = null;
-	private StatusClient statusClient = null;
+	private JobTracker tracker = null;
 	private IngestorRestClient ingestClient = null;
 	// internal data.
 	private String currentJobId = null;
@@ -64,25 +66,24 @@ public class NodeGroupExecutor {
 	// all of the most important actions will occur in this class
 	
 	public NodeGroupExecutor(NodeGroupStoreRestClient nodegroupstoreclient, DispatchRestClient dispatchclient,
-			ResultsClient resultsclient, StatusClient statusclient, IngestorRestClient ingestorClient){
+			ResultsClient resultsclient, SparqlEndpointInterface jobsSei, IngestorRestClient ingestorClient) throws Exception {
 		
 		this.storeClient = nodegroupstoreclient;
 		this.dispatchClient   = dispatchclient;
 		this.resultsClient    = resultsclient;
-		this.statusClient    = statusclient;
+		this.tracker    = new JobTracker(jobsSei);
 		this.ingestClient   = ingestorClient;
 	}
 	
 	public NodeGroupExecutor(String jobID, NodeGroupStoreRestClient nodegroupstoreclient, DispatchRestClient dispatchclient,
-			ResultsClient resultsclient, StatusClient statusclient, IngestorRestClient ingestorClient){
+			ResultsClient resultsclient, SparqlEndpointInterface jobsSei, IngestorRestClient ingestorClient) throws Exception {
 
-		this(nodegroupstoreclient, dispatchclient, resultsclient, statusclient, ingestorClient); // call the other constructor
+		this(nodegroupstoreclient, dispatchclient, resultsclient, jobsSei, ingestorClient); // call the other constructor
 		// assume the given Job ID is actually a real one. if it is not, we will find out later... there is no good (read: "cheap") way to validate at this point. 
 		// the only truly meaningful way to check the existence of the a JobID is to check against the status service. if this seems error-prone or otherwise problematic,
 		// we can put that explicit check in later.
 
 		this.currentJobId = jobID;
-		this.statusClient.setJobId(jobID);
 	}
 	
 	public static SparqlConnection get_USE_NODEGROUP_CONN() throws Exception {
@@ -96,7 +97,6 @@ public class NodeGroupExecutor {
 	
 	public void setJobID(String jobID){
 		this.currentJobId = jobID;
-		this.statusClient.setJobId(jobID);
 	}
 	
 	// Status Information
@@ -108,7 +108,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobPercentCompletion -- the current job ID is null. unable to get completion on nonexistent job.");
 		}
 		else{
-			retval = this.statusClient.execGetPercentComplete();
+			retval = this.tracker.getJobPercentComplete(this.currentJobId);
 		}
 		return retval;
 	}
@@ -122,7 +122,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobPercentCompletion -- the current job ID is null. unable to get completion on nonexistent job.");
 		}
 		else{
-			this.statusClient.execIncrementPercentComplete(increment, max);
+			this.tracker.incrementPercentComplete(this.currentJobId, increment, max);
 		}
 		return;
 	}
@@ -135,7 +135,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobStatus -- the current job ID is null. unable to get status on nonexistent job.");
 		}
 		else{
-			retval = this.statusClient.execGetStatus();
+			retval = this.tracker.getJobStatus(this.currentJobId);
 		}
 		return retval;
 	}
@@ -148,7 +148,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobStatus -- the current job ID is null. unable to get status on nonexistent job.");
 		}
 		else{
-			retval = this.statusClient.execGetStatusMessage();
+			retval = this.tracker.getJobStatusMessage(this.currentJobId);
 		}
 		return retval;
 	}
@@ -161,7 +161,7 @@ public class NodeGroupExecutor {
 			throw new Exception("StoredQueryExecutor::getJobCompletion -- the current job ID is null. unable to get info on nonexistent job.");
 		}
 		else{
-			int percent = this.statusClient.execGetPercentComplete();
+			int percent = this.tracker.getJobPercentComplete(this.currentJobId);
 			if(percent != 100){ 	// not 100%? incomplete
 				retval = false;
 			}
@@ -199,7 +199,7 @@ public class NodeGroupExecutor {
 			if (maxMsec > 0 && elapsedMsec > maxMsec) {
 				throw new Exception("Job did not complete within " + maxMinutes + " minutes");
 			}
-			percentComplete = this.statusClient.execWaitForPercentOrMsec(100, sleepMsec);
+			percentComplete = this.tracker.waitForPercentOrMsec(this.currentJobId, 100, sleepMsec);
 			elapsedMsec += sleepMsec;
 		}
 		

@@ -61,8 +61,7 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class JobTracker {
-	SemtkEndpointProperties prop = null;
-	private String graphName = null;
+	SparqlEndpointInterface sei = null;
 	
 	public static String STATUS_SUCCESS = "Success";
 	public static String STATUS_IN_PROGRESS = "InProgress";
@@ -70,17 +69,19 @@ public class JobTracker {
 	
 	private static HashSet<String> checkedOwl = new HashSet<String>();
 
-	
-	public JobTracker (SemtkEndpointProperties edc_prop) throws Exception {
-		this.prop = edc_prop;
-		this.graphName = edc_prop.getJobEndpointDataset();
+	public JobTracker (SparqlEndpointInterface jobSei) throws Exception {
+		this.sei = jobSei;
 		
 		JobTracker.uploadOwlModelIfNeeded(this);
 	}
 	
+	/**
+	 * If needed, upload serviceJob.owl to given tracker's triplestore server/graph
+	 * @param tracker
+	 * @throws Exception
+	 */
 	private static void uploadOwlModelIfNeeded(JobTracker tracker) throws Exception {
-		SemtkEndpointProperties p = tracker.getProp();
-		String key = p.getJobEndpointServerUrl() + p.getJobEndpointDataset();
+		String key = tracker.sei.getServerAndPort() + tracker.sei.getGraph();
 		
 		if (! checkedOwl.contains(key)) {
 			checkedOwl.add(key);
@@ -92,9 +93,6 @@ public class JobTracker {
 		
 	}
 	
-	public SemtkEndpointProperties getProp() {
-		return this.prop;
-	}
 	/**
 	 * Create a jobs endpoint with one free superuser query
 	 * @return
@@ -104,11 +102,7 @@ public class JobTracker {
 		
 		AuthorizationManager.nextQuerySemtkSuper();
 	    
-		return SparqlEndpointInterface.getInstance(	this.prop.getJobEndpointType(),
-				this.prop.getJobEndpointServerUrl(), 
-				this.prop.getJobEndpointDataset(),
-				this.prop.getJobEndpointUsername(),
-				this.prop.getJobEndpointPassword());
+		return this.sei;
 		
 	}
 	
@@ -118,16 +112,10 @@ public class JobTracker {
 	 * @throws Exception
 	 */
 	private SparqlConnection createOverrideConnection() throws Exception {
-			    
-		SparqlEndpointInterface sei =  SparqlEndpointInterface.getInstance(	this.prop.getJobEndpointType(),
-				this.prop.getJobEndpointServerUrl(), 
-				this.prop.getJobEndpointDataset(),
-				this.prop.getJobEndpointUsername(),
-				this.prop.getJobEndpointPassword());
 		
 		SparqlConnection ret = new SparqlConnection();
-		ret.addDataInterface(sei);
-		ret.addModelInterface(sei);
+		ret.addDataInterface(this.sei);
+		ret.addModelInterface(this.sei);
 		return ret;
 		
 	}
@@ -156,7 +144,7 @@ public class JobTracker {
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
 	    	"	select distinct ?Job ?percentComplete ?userName \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
-	    	"   from <" + this.graphName + "> where { " +
+	    	"   from <" + this.sei.getGraph() + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 	    	"	   ?Job job:percentComplete ?percentComplete .  \n" +
@@ -227,7 +215,7 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "WITH <" + this.graphName + "> " +
+	        "WITH <" + this.sei.getGraph() + "> " +
 	        "DELETE { " +
 
 	        "   ?Job job:percentComplete ?percentComplete .\n" +
@@ -271,7 +259,7 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "WITH <" + this.graphName + "> " +
+	        "WITH <" + this.sei.getGraph() + "> " +
 	        "DELETE { " +
 			"   ?Job job:percentComplete ?percentComplete . \n" +
 			"   ?Job job:statusMessage ?statusMessage . \n" +
@@ -315,7 +303,7 @@ public class JobTracker {
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
 				"	select distinct ?status ?userName \n" +
-		        "   from <" + this.graphName + "> where { " +
+		        "   from <" + this.sei.getGraph() + "> where { " +
 				"	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:status ?status .  \n" +
@@ -356,7 +344,7 @@ public class JobTracker {
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 				"	  \n" +
 				"	SELECT DISTINCT ?statusMessage ?userName \n" +
-		        "   from <" + this.graphName + "> where { " +
+		        "   from <" + this.sei.getGraph() + "> where { " +
 		        "	   ?Job a job:Job.  \n" +
 				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
 				"	   ?Job job:statusMessage ?statusMessage .  \n" +
@@ -403,7 +391,7 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				" \n" +
-		        "WITH <" + this.graphName + "> " +
+		        "WITH <" + this.sei.getGraph() + "> " +
 		        "DELETE { " +
 				"   ?Job job:percentComplete ?percentComplete . \n" +
 				"   ?Job job:statusMessage ?statusMessage . \n" +
@@ -453,7 +441,7 @@ public class JobTracker {
 		        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 		        " \n" +
-		        "WITH <" + this.graphName + "> " +
+		        "WITH <" + this.sei.getGraph() + "> " +
 		        "DELETE { " +
 		        "   ?Job job:fullResultsURL ?fullURI. \n" +
 		        "   ?fullURI job:full ?fullURL .  \n" +
@@ -503,7 +491,7 @@ public class JobTracker {
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
 	    	"	SELECT DISTINCT ?fullUrl ?userName \n" +
-	        "   FROM <" + this.graphName + "> where { " +
+	        "   FROM <" + this.sei.getGraph() + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:fullResultsURL ?URL.  \n" +
@@ -556,7 +544,7 @@ public class JobTracker {
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
 	    	"	SELECT DISTINCT ?sampleUrl ?userName \n" +
-	        "   FROM <" + this.graphName + "> where { " +
+	        "   FROM <" + this.sei.getGraph() + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
 	    	"	   ?Job job:sampleResultsURL ?URL.  \n" +
@@ -611,7 +599,7 @@ public class JobTracker {
 	        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 	        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 	        " \n" +
-	        "WITH <" + this.graphName + "> " +
+	        "WITH <" + this.sei.getGraph() + "> " +
 	        "DELETE { " +
             "?job job:creationTime ?x. \n" +
 	        "?job job:percentComplete ?y. \n" +
@@ -652,7 +640,7 @@ public class JobTracker {
 		        "prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 		        " \n" +
-		        "WITH <" + this.graphName + "> " +
+		        "WITH <" + this.sei.getGraph() + "> " +
 		        "DELETE { " +
 	            "?job job:name ?x. \n" +
 		        "} \n" +
@@ -684,7 +672,7 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				" \n" +
-		        "WITH <" + this.graphName + "> " +
+		        "WITH <" + this.sei.getGraph() + "> " +
 		        "INSERT { " +
 				"?file a job:BinaryFile. \n" + 
 				"?job job:file ?file. \n" +
@@ -1118,7 +1106,7 @@ public class JobTracker {
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
 				"SELECT ?id ?userName \n" +
-		        "from <" + this.graphName + "> " +
+		        "from <" + this.sei.getGraph() + "> " +
 				"where { \n" +
 				"   ?Job a job:Job. \n" +
 				"   ?Job job:id ?id. \n" +

@@ -309,17 +309,13 @@ public class NodeGroupStoreRestController {
 	private SparqlEndpointInterface createSuperuserSei() throws Exception{
 
 		AuthorizationManager.nextQuerySemtkSuper();
-		SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance((SparqlQueryClientConfig)(new SparqlQueryAuthClientConfig(	
-				prop.getSparqlServiceProtocol(),
-				prop.getSparqlServiceServer(), 
-				prop.getSparqlServicePort(), 
-				prop.getSparqlServiceEndpoint(),
-				prop.getSparqlConnServerAndPort(), 
+		SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(	
 				prop.getSparqlConnType(), 
+				prop.getSparqlConnServerAndPort(), 
 				prop.getSparqlConnDataDataset(),
 				prop.getSparqlServiceUser(),
-				prop.getSparqlServicePass())
-				));
+				prop.getSparqlServicePass()
+				);
 
 		return ret;
 	}

@@ -15,33 +15,22 @@
  ** limitations under the License.
  */
 
+
 package com.ge.research.semtk.services.dispatch;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.Properties;
+import com.ge.research.semtk.properties.SemtkEndpointProperties;
+
+// subclass simply adds spring annotations including locations
 
 @Configuration
-@ConfigurationProperties(prefix="dispatch", ignoreUnknownFields = true)
-public class DispatchProperties extends Properties {	
-	private String dispatcherClassName;
-	
-	public DispatchProperties() {
-		super();
-		this.setPrefix("dispatch");
-	}
-	
-	public String getDispatcherClassName() {
-		return dispatcherClassName;
-	}
-	public void setDispatcherClassName(String dispatcherClassName) {
-		this.dispatcherClassName = dispatcherClassName;
-	}
+@ConfigurationProperties(prefix="dispatch.edc.services", ignoreUnknownFields = true)
+public class DispatchSemtkEndpointProperties extends SemtkEndpointProperties {
 
-	public void validate() throws Exception {
-		super.validate();
-		checkNotEmpty("dispatcherClassName", dispatcherClassName);
+	public DispatchSemtkEndpointProperties() {
+		super();
+		setPrefix("dispatch.edc.services");
 	}
-	
 }

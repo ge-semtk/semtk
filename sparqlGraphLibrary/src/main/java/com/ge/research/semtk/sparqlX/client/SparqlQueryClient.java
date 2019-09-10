@@ -76,14 +76,6 @@ public class SparqlQueryClient extends RestClient {
 		}
 	}
 	
-	/**
-	 * Get an SEI where this client would connect from it's config object
-	 * @return
-	 * @throws Exception
-	 */
-	public SparqlEndpointInterface getSei() throws Exception {
-		return SparqlEndpointInterface.getInstance(this.conf);
-	}
 
 	@Override
 	public void handleEmptyResponse() throws Exception {

@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,26 +33,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
-import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.edc.client.StatusClient;
-import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.dispatch.DispatchProperties;
 import com.ge.research.semtk.services.dispatch.NodegroupRequestBody;
 import com.ge.research.semtk.services.dispatch.WorkThread;
 import com.ge.research.semtk.sparqlX.BadQueryException;
-import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
-import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
-import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
@@ -62,25 +60,36 @@ import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryT
 public class DispatcherServiceRestController {
  	static final String SERVICE_NAME = "dispatcher";
  	
- 	// old fashioned
+	@Autowired
+	DispatcherAuthProperties auth_prop;
+	
 	@Autowired
 	DispatchProperties props;
-	
-	// new fangled
 	@Autowired
-	DispatcherNGEServiceProperties nge_props;
+	DispatchSemtkEndpointProperties edc_props;
+	@Autowired
+	DispatchNGStoreProperties store_props;
+	@Autowired
+	DispatchOInfoServiceProperties oinfo_props;
+	@Autowired
+	DispatchResultsServiceProperties results_props;
+	
+	@Autowired 
+	private ApplicationContext appContext;
 	
 	@PostConstruct
     public void init() {
-		nge_props.validateWithExit();
+		props.validateWithExit();
+		store_props.validateWithExit();
+		edc_props.validateWithExit();
+		oinfo_props.validateWithExit();
+		results_props.validateWithExit();
+				
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
 		
-		// ---- still in old-fashioned DispatcherServiceStartup  ----
-		
-		//EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
-		//env_prop.validateWithExit();
-		
-		//auth_prop.validateWithExit();
-		//AuthorizationManager.authorizeWithExit(auth_prop);
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 
 	}
 	
@@ -194,9 +203,9 @@ public class DispatcherServiceRestController {
 	}
 		
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
-		String requestId = this.generateJobId();
+		String jobId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
-		retval.addResult("requestID", requestId);
+		retval.addResult("requestID", jobId);
 		
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 		
@@ -210,8 +219,8 @@ public class DispatcherServiceRestController {
 			NodegroupRequestBody ngrb = new NodegroupRequestBody();
 			ngrb.setjsonRenderedNodeGroup(sgjson.getJson().toJSONString());
 			
-			dsp = getDispatcher(props, requestId, ngrb, true, true);
-			dsp.getStatusClient().execIncrementPercentComplete(1, 10);
+			dsp = getDispatcher(props, jobId, ngrb, true, true);
+			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
 			
 			WorkThread thread = new WorkThread(dsp, null, null, qt);
 
@@ -230,19 +239,11 @@ public class DispatcherServiceRestController {
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromSparql()", e);
 			
-			// claim a failure?
-			StatusClient sClient = null;
 			try {
-				sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
-			} catch (Exception e2) {
-				LocalLogger.printStackTrace(e2);
-			}
-			if(sClient != null){ 
-				try {
-					sClient.execSetFailure(e.getMessage());
-				} catch (Exception e1) {
-					LocalLogger.printStackTrace(e1);
-				}
+				JobTracker tracker = new JobTracker(edc_props.buildSei());
+				tracker.setJobFailure(jobId, e.getMessage());
+			} catch (Exception ee) {
+				LocalLogger.printStackTrace(ee);
 			}
 			
 		} 
@@ -259,9 +260,9 @@ public class DispatcherServiceRestController {
 	 * @return
 	 */
 	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody, DispatcherSupportedQueryTypes qt, Boolean useAuth){
-		String requestId = this.generateJobId();
+		String jobId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
-		retval.addResult("requestID", requestId);
+		retval.addResult("requestID", jobId);
 		
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
 		
@@ -269,8 +270,8 @@ public class DispatcherServiceRestController {
 		
 		// get the things we need for the dispatcher
 		try {
-			dsp = getDispatcher(props, requestId, (NodegroupRequestBody) requestBody, useAuth, true);
-			dsp.getStatusClient().execIncrementPercentComplete(1, 10);
+			dsp = getDispatcher(props, jobId, (NodegroupRequestBody) requestBody, useAuth, true);
+			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
 
 			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt);
 			
@@ -288,19 +289,11 @@ public class DispatcherServiceRestController {
 			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromNodegroup()", e);
 			
-			// claim a failure?
-			StatusClient sClient = null;
 			try {
-				sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
-			} catch (Exception e2) {
-				LocalLogger.printStackTrace(e2);
-			}
-			if(sClient != null){ 
-				try {
-					sClient.execSetFailure(e.getMessage());
-				} catch (Exception e1) {
-					LocalLogger.printStackTrace(e1);
-				}
+				JobTracker tracker = new JobTracker(edc_props.buildSei());
+				tracker.setJobFailure(jobId, e.getMessage());
+			} catch (Exception ee) {
+				LocalLogger.printStackTrace(ee);
 			}
 			
 		} 
@@ -350,7 +343,7 @@ public class DispatcherServiceRestController {
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String requestId, NodegroupRequestBody requestBody, Boolean useAuth, Boolean heedRestrictions) throws Exception{
+	private AsynchronousNodeGroupBasedQueryDispatcher getDispatcher(DispatchProperties prop, String jobId, NodegroupRequestBody requestBody, Boolean useAuth, Boolean heedRestrictions) throws Exception{
 		
 		// get the sgJson
 		SparqlGraphJson sgJson = null;		
@@ -361,40 +354,20 @@ public class DispatcherServiceRestController {
 		}
 
 		// get clients needed to instantiate the Dispatcher
-		SparqlQueryClientConfig queryConf = null;
-		SparqlQueryClient servicesQueryClient = null;
+		SparqlEndpointInterface servicesSei = null;
 		if(useAuth){
-			queryConf = new SparqlQueryAuthClientConfig(	
-					props.getSparqlServiceProtocol(),
-					props.getSparqlServiceServer(), 
-					props.getSparqlServicePort(), 
-					props.getSparqlServiceAuthEndpoint(),
-	                props.getEdcSparqlServerAndPort(), 
-	                props.getEdcSparqlServerType(), 
-	                props.getEdcSparqlServerDataset(),
-					props.getSparqlServiceUser(),
-					props.getSparqlServicePass());
-			servicesQueryClient = new SparqlQueryClient(queryConf);
-			
-		}
-		else{
-			queryConf = new SparqlQueryClientConfig(	
-					props.getSparqlServiceProtocol(),
-					props.getSparqlServiceServer(), 
-					props.getSparqlServicePort(), 
-					props.getSparqlServiceEndpoint(),
-	                props.getEdcSparqlServerAndPort(), 
-	                props.getEdcSparqlServerType(), 
-	                props.getEdcSparqlServerDataset());
-			servicesQueryClient = new SparqlQueryClient(queryConf);
+			servicesSei = SparqlEndpointInterface.getInstance(edc_props.getEndpointType(), edc_props.getEndpointServerUrl(), edc_props.getEndpointDataset(),
+					edc_props.getEndpointUsername(), edc_props.getEndpointPassword());
+		} else {
+			servicesSei = SparqlEndpointInterface.getInstance(edc_props.getEndpointType(), edc_props.getEndpointServerUrl(), edc_props.getEndpointDataset());
 		}		
 		
-		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(props.getResultsServiceProtocol(), props.getResultsServiceServer(), props.getResultsServicePort()));
-		StatusClient sClient = new StatusClient(new StatusClientConfig(props.getStatusServiceProtocol(), props.getStatusServiceServer(), props.getStatusServicePort(), requestId));
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(props.getOinfoServiceProtocol(), props.getOinfoServiceServer(), props.getOinfoServicePort()));
-		NodeGroupExecutionClient ngeClient = new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(nge_props.getProtocol(), nge_props.getServer(), nge_props.getPort(), props.getSparqlServiceUser(), props.getSparqlServicePass()));
+		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		NodeGroupStoreRestClient ngStoreClient = new NodeGroupStoreRestClient(new NodeGroupStoreConfig(store_props.getProtocol(), store_props.getServer(), store_props.getPort()));
 
-		sClient.execSetPercentComplete(0, "Job Initialized");
+		JobTracker tracker = new JobTracker(edc_props.buildSei());
+		tracker.setJobPercentComplete(jobId, 0, "Job Initialized");
 		
 		// instantiate the dispatcher from the class name 
 		AsynchronousNodeGroupBasedQueryDispatcher dsp = null;
@@ -410,17 +383,23 @@ public class DispatcherServiceRestController {
 			for (Constructor c : dspClass.getConstructors() ){
 				Class[] params = c.getParameterTypes();
 				// this is not a great way to get the constructor but the more traditional single call was failing pretty badly.
-				if(params[0].isAssignableFrom( String.class )) {
-					if(params[1].isAssignableFrom( SparqlGraphJson.class )) {
-						if(params[2].isAssignableFrom( ResultsClient.class )){
-							if( params[3].isAssignableFrom( StatusClient.class )){
-								if(params[4].isAssignableFrom( SparqlQueryClient.class )){
-									ctor = c;
-								}}}}
+				if(params[0].isAssignableFrom(      String.class) &&
+						params[1].isAssignableFrom( SparqlGraphJson.class)&&
+						params[2].isAssignableFrom( ResultsClient.class) &&
+						params[3].isAssignableFrom( SparqlEndpointInterface.class) &&
+						params[4].toString().equals("boolean" ) &&
+						params[5].isAssignableFrom( OntologyInfoClient.class) &&
+						params[6].isAssignableFrom( NodeGroupStoreRestClient.class)) {
+									
+					ctor = c;
 				}
+
 			}
 			
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(requestId, sgJson, rClient, sClient, servicesQueryClient, heedRestrictions, oClient, ngeClient);
+			if (ctor == null) {
+				throw new Exception("Could not find constructor for dispatcher");
+			}
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(jobId, sgJson, rClient, servicesSei, heedRestrictions, oClient, ngStoreClient);
 			
 		}catch(Exception e){
 			// log entire stack trace
@@ -434,7 +413,7 @@ public class DispatcherServiceRestController {
 			throw (Exception) t;
 		}
 		
-		LocalLogger.logToStdOut("initialized job: " + requestId);	
+		LocalLogger.logToStdOut("initialized job: " + jobId);	
 		return dsp;
 	}
 

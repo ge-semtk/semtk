@@ -634,5 +634,28 @@ public class DataLoader implements Runnable {
 			throw new Exception("Could not load data: " + e.getMessage());
 		}
 	}
+	
+	public static int loadFromCsvString(JSONObject sgjsonJson, String csvData, String sparqlEndpointUser, String sparqlEndpointPassword, boolean precheck) throws Exception{
+		
+		Dataset dataset = new CSVDataset(csvData, true);
+		
+		
+		// load the data
+		try{
+			DataLoader loader = new DataLoader(sgjsonJson, dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			
+			int recordsAdded = loader.importData(precheck);
+			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
+			if(loader.getLoadingErrorReport().getNumRows() > 0){
+				// e.g. URI lookup errors may appear here
+				LocalLogger.logToStdOut("Error report:\n" + loader.getLoadingErrorReportBrief());
+				throw new Exception("Could not load data: loading errors");
+			}
+			return recordsAdded;
+		}catch(Exception e){
+			LocalLogger.printStackTrace(e);
+			throw new Exception("Could not load data: " + e.getMessage());
+		}
+	}
 
 }

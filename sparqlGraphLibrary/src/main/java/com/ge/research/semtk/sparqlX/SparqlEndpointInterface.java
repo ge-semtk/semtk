@@ -278,32 +278,14 @@ public abstract class SparqlEndpointInterface {
 		this.password = (user != null && pass == null) ? "" : pass;
 	}	
 	
-	/**
-	 * Static method to get an instance of this abstract class
-	 * 
-	 * This one takes a query client config (historical fix-up reasons)
-	 */
-	public static SparqlEndpointInterface getInstance(RestClientConfig conf) throws Exception {
-		// auth queries will have these as well
-		if(conf instanceof SparqlQueryAuthClientConfig){	
-			return SparqlEndpointInterface.getInstance (
-					((SparqlQueryClientConfig)conf).getSparqlServerType(),
-					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
-					((SparqlQueryClientConfig)conf).getSparqlDataset(),
-					((SparqlQueryAuthClientConfig)conf).getSparqlServerUser(),
-					((SparqlQueryAuthClientConfig)conf).getSparqlServerPassword()
-					);			
-		} else if (conf instanceof SparqlQueryClientConfig) {
-			return SparqlEndpointInterface.getInstance (
-					((SparqlQueryClientConfig)conf).getSparqlServerType(),
-					((SparqlQueryClientConfig)conf).getSparqlServerAndPort(),
-					((SparqlQueryClientConfig)conf).getSparqlDataset()
-					);			
-		} else {
-			throw new Exception("Can't create SparqlEndpointInterface out of RestClient that is not SparqlQueryClientConfig or subclass");
-		}
+	
+	public static SparqlEndpointInterface getInstance(String serverType, String protocol, String server, int port, String graph, String user, String password) throws Exception {
+		return getInstance(serverType, protocol + "://" + server + ":" + String.valueOf(port), graph, user, password);
 	}
 	
+	public static SparqlEndpointInterface getInstance(String serverType, String protocol, String server, int port, String graph) throws Exception {
+		return getInstance(serverType, protocol + "://" + server + ":" + String.valueOf(port), graph);
+	}
 	/**
 	 * Static method to get an instance of this abstract class
 	 */

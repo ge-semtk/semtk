@@ -100,6 +100,16 @@ public class TestGraph {
 		return ret;
 	}
 	
+	public static SparqlConnection getSparqlAuthConn() throws Exception {
+		SparqlConnection conn = new SparqlConnection();
+		conn.setName("JUnitTest");
+		
+		SparqlEndpointInterface sei = getSei();
+		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getGraph(), getUsername(), getPassword());
+		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getGraph(), getUsername(), getPassword());
+		return conn;
+	}
+	
 	public static SparqlConnection getSparqlConn() throws Exception {
 		SparqlConnection conn = new SparqlConnection();
 		conn.setName("JUnitTest");

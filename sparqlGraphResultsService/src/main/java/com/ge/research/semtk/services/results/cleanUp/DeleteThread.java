@@ -28,6 +28,7 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.services.results.ResultsSemtkEndpointProperties;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class DeleteThread extends Thread {
@@ -44,7 +45,8 @@ public class DeleteThread extends Thread {
 		this.frequencyInMinutes = frequencyInMinutes;
 		this.trstore = new TableResultsStorage(fileStorageLocation);
 		try {
-			this.jTracker = new JobTracker(edcProp);
+			this.jTracker = new JobTracker(edcProp.buildSei());
+
 		} catch (Exception e) {
 			// something failed when getting the jobtracker. report it but continue anyway
 			LocalLogger.logToStdErr("unable to get a job tracker instance. reason given: " + e.getMessage());

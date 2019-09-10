@@ -4,15 +4,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.ge.research.semtk.properties.ServiceProperties;
-
-
 @Configuration
-@ConfigurationProperties(prefix="dispatch.nodegroupexec", ignoreUnknownFields = true)
-public class DispatcherNGEServiceProperties extends ServiceProperties {
+@ConfigurationProperties(prefix="dispatch.results", ignoreUnknownFields = true)
+public class DispatchResultsServiceProperties extends ServiceProperties {
 
-	public DispatcherNGEServiceProperties() {
+	public DispatchResultsServiceProperties() {
 		super();
-		setPrefix("dispatch.nodegroupexec");
+		this.setPrefix("dispatch.results");
 	}
-
+	
 }

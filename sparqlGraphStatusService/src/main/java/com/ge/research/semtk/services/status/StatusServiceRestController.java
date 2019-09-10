@@ -41,6 +41,7 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -105,7 +106,7 @@ public class StatusServiceRestController {
 	
 	
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    
 			    res.addResult("percentComplete", String.valueOf(tracker.getJobPercentComplete(jobId)));
 			    res.setSuccess(true);
@@ -146,7 +147,7 @@ public class StatusServiceRestController {
 	    	
 		    try {
 		    	
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    
 			    res.addResult("status", String.valueOf(tracker.getJobStatus(jobId)));
 			    res.setSuccess(true);
@@ -184,7 +185,7 @@ public class StatusServiceRestController {
 	
 	    	
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    
 			    res.addResult("statusMessage", tracker.getJobStatusMessage(jobId));
 			    res.setSuccess(true);
@@ -215,7 +216,7 @@ public class StatusServiceRestController {
 			final String ENDPOINT_NAME = "getJobsInfo";
 			TableResultSet res = null;
 			try{
-				JobTracker tracker = new JobTracker(edc_prop);
+				JobTracker tracker = this.getTracker();
 		    	Table jobInfoTable = tracker.getJobsInfo();
 				
 				res = new TableResultSet(true);
@@ -252,7 +253,7 @@ public class StatusServiceRestController {
 	    	
 	    	
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.waitForPercentComplete(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
 			    res.setSuccess(true);
 			    
@@ -291,7 +292,7 @@ public class StatusServiceRestController {
 	    	LocalLogger.logToStdErr(Thread.currentThread().getName() + " POST-LOG waitForPercentOrMsec sees user: " + ThreadAuthenticator.getThreadUserName());
 		    
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
 			    res.addResult("percentComplete", String.valueOf(percentComplete));
 			    res.addResult("statusMessage", tracker.getJobStatusMessage(jobId));
@@ -328,7 +329,7 @@ public class StatusServiceRestController {
 		    LocalLogger.logToStdOut("Status Service setName: " + requestBody.name );
 	
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.setJobName(jobId, requestBody.name);
 			    res.setSuccess(true);
 			    
@@ -367,7 +368,7 @@ public class StatusServiceRestController {
 		    LocalLogger.logToStdOut("Status Service/" + ENDPOINT + " increment=" + requestBody.increment + " JobId=" + jobId);
 	
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.incrementPercentComplete(jobId, requestBody.increment, requestBody.max);
 			    res.setSuccess(true);
 			    
@@ -403,7 +404,7 @@ public class StatusServiceRestController {
 		    LocalLogger.logToStdOut("Status Service setPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
 	
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.setJobPercentComplete(jobId, requestBody.percentComplete, requestBody.message);
 			    res.setSuccess(true);
 			    
@@ -440,7 +441,7 @@ public class StatusServiceRestController {
 	    	LocalLogger.logToStdOut("Status Service setSuccess start JobId=" + jobId);
 	    	try {
 		    	
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.setJobSuccess(jobId, requestBody.message);
 			    res.setSuccess(true);
 			    
@@ -477,7 +478,7 @@ public class StatusServiceRestController {
 	    	
 		    try {
 		    	
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.setJobFailure(jobId, requestBody.message);
 			    res.setSuccess(true);
 			    
@@ -513,7 +514,7 @@ public class StatusServiceRestController {
 	    	LoggerRestClient.easyLog(logger, "Status Service", "deleteJob start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service deleteJob start JobId=" + jobId);
 		    try {
-		    	JobTracker tracker = new JobTracker(edc_prop);
+		    	JobTracker tracker = this.getTracker();
 		    	tracker.deleteJob(jobId);
 			    res.setSuccess(true);
 			    
@@ -529,6 +530,10 @@ public class StatusServiceRestController {
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
+	}
+	
+	private JobTracker getTracker() throws Exception {
+		return new JobTracker(edc_prop.buildSei());
 	}
 	
 }
