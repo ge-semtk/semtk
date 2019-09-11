@@ -42,6 +42,7 @@ import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -1039,7 +1040,23 @@ public class DataLoaderTest_IT {
 		Dataset ds1 = new CSVDataset("src/test/resources/pet_cat_info.csv", false);
 		Dataset ds2 = new CSVDataset("src/test/resources/pet_nicknames.csv", false);
 
-		// import cat info using class "Cat".  Unexplained test failure on next line
+		// extra debugging
+		LocalLogger.logToStdErr("Extra: sgJson1 sparql conn ------------");
+		LocalLogger.logToStdErr(sgJson1.getSparqlConn().toString());
+		
+		LocalLogger.logToStdErr("Extra: TestGraph sparql conn ------------");
+		LocalLogger.logToStdErr(TestGraph.getSparqlConn().toString());
+		
+		LocalLogger.logToStdErr("Extra: sgJson1 classes  ------------");
+		OntologyInfo oInfo = new OntologyInfo(sgJson1.getSparqlConn());
+		LocalLogger.logToStdErr(oInfo.getClassNames().toString());
+		
+		LocalLogger.logToStdErr("Extra: TestGraph classes  ------------");
+		OntologyInfo oInfo1 = new OntologyInfo(TestGraph.getSparqlConn());
+		LocalLogger.logToStdErr(oInfo1.getClassNames().toString());
+		// end extra debugging
+		
+		// import cat info using class "Cat".  Unexplained test failure on next line on vesuvius-test
 		DataLoader dl = new DataLoader(sgJson1, ds1, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
