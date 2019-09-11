@@ -96,7 +96,7 @@ public class OntologyInfoClientTest_IT {
 		assertEquals("uploadOwl didn't result in correct number of classes", 3, oInfo.getNumberOfClasses());
 		
 		// clear graph without re-caching should give old results
-		TestGraph.clearGraph();
+		TestGraph.getSei().clearGraph();
 		oInfo = client.getOntologyInfo(conn);
 		assertEquals("clear graph took effect without updating the cache", 3, oInfo.getNumberOfClasses());
 		
@@ -120,7 +120,7 @@ public class OntologyInfoClientTest_IT {
 		assertEquals("uploadOwl didn't result in correct number of classes", 3, oInfo.getNumberOfClasses());
 		
 		// clear graph without re-caching should give old results
-		TestGraph.clearGraph();
+		TestGraph.getSei().clearGraph();
 		oInfo = client.getOntologyInfo(conn);
 		assertEquals("clear graph took effect without updating the cache", 3, oInfo.getNumberOfClasses());
 		

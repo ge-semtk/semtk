@@ -177,7 +177,7 @@ public class TestGraph {
 	// PEC TODO:  clear model and data graph
 	public static void clearGraph() throws Exception {
 		getSei().clearGraph();
-		IntegrationTestUtility.getOntologyInfoClient().uncacheOntology(TestGraph.getSparqlConn("http"));
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
 	}
 	
 	public static void clearPrefix(String prefix) throws Exception {

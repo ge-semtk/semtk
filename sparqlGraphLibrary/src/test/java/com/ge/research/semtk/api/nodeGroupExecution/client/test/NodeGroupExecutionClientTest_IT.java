@@ -27,6 +27,7 @@ import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionCli
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -80,6 +81,7 @@ public class NodeGroupExecutionClientTest_IT {
 			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 			
 			assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+		
 			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
 			assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 		}
@@ -159,6 +161,11 @@ public class NodeGroupExecutionClientTest_IT {
 			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 			
 			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+			
+			// test the test
+			OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
+			System.out.println(oInfo.getClassNames());
+			
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			
 			assert(true);
