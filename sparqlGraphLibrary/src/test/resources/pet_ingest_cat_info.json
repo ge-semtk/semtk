@@ -3,7 +3,7 @@
 	"sparqlConn": {
 		"name": "Junit laptop",
 		"domain": "http://",
-		"enableOwlImports": true,
+		"enableOwlImports": false,
 		"model": [
 			{
 				"type": "virtuoso",
