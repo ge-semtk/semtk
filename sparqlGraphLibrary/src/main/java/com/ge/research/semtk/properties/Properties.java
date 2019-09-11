@@ -41,7 +41,7 @@ public class Properties {
 		try {
 			this.validate();
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
+			System.err.println(e.toString());
 			System.err.println("exiting.");
 			System.exit(1);
 		}
