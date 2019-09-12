@@ -269,7 +269,7 @@ public class HiveServiceRestController {
 			HiveConnector oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password);
 			
 			// TODO decide on the mechanism to turn this on/off
-			boolean ASYNC = false;
+			boolean ASYNC = true;
 			if (ASYNC) {
 				LocalLogger.logToStdOut("Async Hive query: " + query);
 				HiveQueryThread queryThread = new HiveQueryThread(oc, query, statusProps, resultsProps);
