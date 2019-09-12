@@ -360,4 +360,15 @@ public class StatusClient extends RestClient {
 	public void waitForCompletion(String jobId) throws Exception {
 		this.waitForCompletion(jobId, 10000, 36);
 	}
+	
+	/**
+	 * Only returns cleanly on success
+	 * @throws Exception
+	 */
+	public void waitForCompletionSuccess() throws Exception {
+		this.waitForCompletion(this.getJobId(), 10000, 36);
+		if (!this.execIsSuccess()) {
+			throw new Exception(this.execGetStatusMessage());
+		}
+	}
 }
