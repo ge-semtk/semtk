@@ -1201,4 +1201,23 @@ public class JobTracker {
 		}
 		return actualPercent;
 	}
+	
+	/**
+	 * If it is possible to confirm that job failed, get message.
+	 * null means either job succeeded or unknown due to some other problem.
+	 * Meant for use during error handling.
+	 * @param jobId
+	 * @return
+	 */
+	public String tryForFailureMessage(String jobId) {
+		try {
+			if (this.jobSucceeded(jobId)) {
+				return null;
+			} else {
+				return this.getJobStatusMessage(jobId);
+			}
+		} catch (Exception e) {
+			return null;
+		}
+	}
 }
