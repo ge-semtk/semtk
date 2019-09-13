@@ -2,6 +2,10 @@ package com.ge.research.semtk.resultSet;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.utility.LocalLogger;
+
 /**
  * ResultSet type that could be either a table or a jobId (that could be used to get a table)
  * 
@@ -56,4 +60,43 @@ public class TableOrJobIdResultSet extends TableResultSet {
 		return (String) (this.resultsContents.get(JOB_ID_KEY));
 	}
 
+	@Override
+	public Table getResults() throws Exception {
+		if (this.isTable()) {
+			return super.getResults();
+		} else {
+			// if you see this error, use getResults(tracker, resultsClient);
+			throw new Exception("Can't get table from TableOrJobIdResultSet that has only jobId.");
+		}
+	}
+	
+	public Table getResults(JobTracker tracker, ResultsClient resultsClient) throws Exception {
+		if (this.isTable()) {
+			return this.getResults();
+		} else {
+			String jobId = this.getJobId();
+			// put new jobId into the status client
+			int percent = 0;
+			int totalSeconds = 0;
+			
+			// TODO: should this go forever?   What timeout is safe?
+			while (percent < 100) {
+				percent = tracker.waitForPercentOrMsec(jobId, 100, 27000);
+				totalSeconds += 27;
+				
+				if (percent < 100) {
+					LocalLogger.logToStdOut("Waiting for job " + String.valueOf(jobId) + " for " + String.valueOf(totalSeconds) + " sec");
+				}
+			}
+			
+			if (tracker.jobSucceeded(jobId)) {
+				// TODO: this allows a string overflow to happen and generate an error
+				//t = this.resultsClient.getTableResultsJson(jobId, Integer.MAX_VALUE);
+				return Table.fromJson(resultsClient.execGetBlobResult(jobId));
+			} else {
+				String msg = tracker.getJobStatusMessage(jobId);
+				throw new Exception(msg);
+			}
+		}
+	}
 }
