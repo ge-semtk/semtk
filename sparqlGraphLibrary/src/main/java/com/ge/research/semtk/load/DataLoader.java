@@ -626,7 +626,7 @@ public class DataLoader implements Runnable {
 			if(loader.getLoadingErrorReport().getNumRows() > 0){
 				// e.g. URI lookup errors may appear here
 				LocalLogger.logToStdOut("Error report:\n" + loader.getLoadingErrorReportBrief());
-				throw new Exception("Could not load data: loading errors");
+				throw new Exception("Could not load data: loading errors: " + loader.getLoadingErrorReportBrief());
 			}
 			return recordsAdded;
 		}catch(Exception e){
@@ -649,7 +649,7 @@ public class DataLoader implements Runnable {
 			if(loader.getLoadingErrorReport().getNumRows() > 0){
 				// e.g. URI lookup errors may appear here
 				LocalLogger.logToStdOut("Error report:\n" + loader.getLoadingErrorReportBrief());
-				throw new Exception("Could not load data: loading errors");
+				throw new Exception("Could not load data: loading errors: " + loader.getLoadingErrorReportBrief());
 			}
 			return recordsAdded;
 		}catch(Exception e){
