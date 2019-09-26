@@ -155,10 +155,10 @@ public class JobTracker {
 	    SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 	    
+	     
 	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
-	    
 	    this.checkEndpointUserNames(jobId, endpoint);
-	    
+	       
 	    if (trList.length > 1) {
 	    	LocalLogger.logToStdErr("getJobPercentComplete found multiple percentComplete entries:\n%s" + endpoint.getResponse());
 	    	throw new Exception(String.format("Job %s has %d percentComplete entries.  Expecting 1.", jobId, trList.length));
@@ -314,10 +314,10 @@ public class JobTracker {
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
 
-		this.checkEndpointUserNames(jobId, endpoint);
+	    String trList[] = endpoint.getStringResultsColumn("status");
+	    this.checkEndpointUserNames(jobId, endpoint);
 		
-		String trList[] = endpoint.getStringResultsColumn("status");
-
+		
 		if (trList.length > 1) {
 			throw new Exception(String.format("Job %s has %d status entries.  Expecting 1.", jobId, trList.length));
 		} else if (trList.length == 0) {
@@ -354,9 +354,9 @@ public class JobTracker {
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-		this.checkEndpointUserNames(jobId, endpoint);
 
 		String trList[] = endpoint.getStringResultsColumn("statusMessage");
+		this.checkEndpointUserNames(jobId, endpoint);
 
 		if (trList.length > 1) {
 			throw new Exception(String.format("Job %s has %d statusMessage entries.  Expecting 1.", jobId, trList.length));
@@ -502,10 +502,10 @@ public class JobTracker {
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-		this.checkEndpointUserNames(jobId, endpoint);
-
-	    String trList[] = endpoint.getStringResultsColumn("fullUrl");
 	    
+	    String trList[] = endpoint.getStringResultsColumn("fullUrl");
+	    this.checkEndpointUserNames(jobId, endpoint);
+
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full results URL entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
@@ -555,10 +555,10 @@ public class JobTracker {
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-		this.checkEndpointUserNames(jobId, endpoint);
-
+		
 	    String trList[] = endpoint.getStringResultsColumn("sampleUrl");
-	    
+	    this.checkEndpointUserNames(jobId, endpoint);
+
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full restults URL entries.  Expecting 1.", jobId, trList.length));
 	    } else if (trList.length == 0) {
