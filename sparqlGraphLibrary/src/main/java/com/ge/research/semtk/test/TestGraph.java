@@ -182,12 +182,14 @@ public class TestGraph {
 	
 	public static void clearPrefix(String prefix) throws Exception {
 		getSei().clearPrefix(prefix);
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
 	}
 	/**
 	 * Drop the test graph (DROP lets the graph be CREATEd again, whereas CLEAR does not)
 	 */
 	public static void dropGraph() throws Exception {
 		getSei().dropGraph();
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
 	}
 	
 	public static void execDeletionQuery(String query) throws Exception{
@@ -242,6 +244,7 @@ public class TestGraph {
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
 	}
 	
 	/**
