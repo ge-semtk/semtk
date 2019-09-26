@@ -24,6 +24,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
+import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**
@@ -83,7 +84,7 @@ public class HiveClient extends QueryExecuteClient {
 	/**
 	 * Execute a call to the stat endpoint
 	 */
-	public TableResultSet executeStat(String table, List<ColumnOperation> columnOperations) throws Exception{
+	public TableOrJobIdResultSet executeStat(String table, List<ColumnOperation> columnOperations) throws Exception{
 
 		parametersJSON.put("table", table);
 		JSONArray list = new JSONArray();
@@ -97,7 +98,7 @@ public class HiveClient extends QueryExecuteClient {
 
 		JSONObject resultJSON = (JSONObject)super.execute();	
 
-		TableResultSet retval = new TableResultSet();
+		TableOrJobIdResultSet retval = new TableOrJobIdResultSet();
 		retval.readJson(resultJSON);
 		return retval;
 	}	
