@@ -37,6 +37,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.api.nodeGroupExecution.SparqlExecutor;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
@@ -1105,21 +1106,29 @@ public class NodeGroupExecutionRestController {
 			SimpleResultSet retval = new SimpleResultSet();
 			
 			try{
-				// create a new StoredQueryExecutor
-				NodeGroupExecutor ngExecutor = this.getExecutor(null );
-
+				
 				// add connection
 				SparqlEndpointInterface sei = requestBody.buildSei();
-				SparqlConnection conn = new SparqlConnection();
-				conn.addDataInterface(sei);
-				conn.addModelInterface(sei);		
-	
-				// dispatch the job. 
-				ngExecutor.dispatchRawSparqlUpdate(conn, SparqlToXUtils.generateClearGraphSparql(sei));
-				String id = ngExecutor.getJobID();
+				SparqlEndpointInterface jobSei = edc_prop.buildSei();
 				
+				// PEC TODO security
+				// borrowing auth username password from the services graph
+				sei.setUserAndPassword(jobSei.getUserName(), jobSei.getPassword());
+				
+				ResultsClientConfig  rConf   = new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort());
+				ResultsClient resClient = new ResultsClient(rConf);
+				
+				// create a new StoredQueryExecutor
+				SparqlExecutor sparqlExec = new SparqlExecutor(
+						SparqlToXUtils.generateClearGraphSparql(sei), 
+						sei, 
+						edc_prop.buildSei(), 
+						resClient);
+				
+				sparqlExec.start();
+
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, sparqlExec.getJobId());
 				retval.setSuccess(true);
-				retval.addResult(JOB_ID_RESULT_KEY, id);
 	
 			}
 			catch(Exception e){

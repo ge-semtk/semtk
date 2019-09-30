@@ -15,6 +15,9 @@
  ** limitations under the License.
  */
 
+/* 
+ * Multi-client that orchestrates async calls across multiple other services
+ */
 package com.ge.research.semtk.api.nodeGroupExecution;
 
 import java.net.URL;
@@ -28,7 +31,6 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
