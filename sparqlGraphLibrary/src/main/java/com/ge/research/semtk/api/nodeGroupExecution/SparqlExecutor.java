@@ -3,6 +3,8 @@ package com.ge.research.semtk.api.nodeGroupExecution;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.resultSet.ResultType;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -39,10 +41,15 @@ public class SparqlExecutor extends Thread {
 		try {
 			
 			tracker.setJobPercentComplete(jobId, 5);
-			TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(this.sparql, SparqlResultTypes.TABLE);
+			SimpleResultSet res = (SimpleResultSet) sei.executeQueryAndBuildResultSet(this.sparql, SparqlResultTypes.CONFIRM);
 			
 			tracker.setJobPercentComplete(jobId, 80);
-			resClient.execStoreTableResults(jobId, res.getTable());
+			
+			// put a table in the results for legacy SPARQLgraph
+			Table t = new Table(new String [] {"message"}, new String [] {"string"});
+			t.addRow(new String [] {res.getResult("@message")});
+			resClient.execStoreTableResults(jobId, t);
+			
 			tracker.setJobSuccess(jobId);
 			
 		} catch (Exception e) {
