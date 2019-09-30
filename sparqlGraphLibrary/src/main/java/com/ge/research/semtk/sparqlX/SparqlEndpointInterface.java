@@ -471,7 +471,7 @@ public abstract class SparqlEndpointInterface {
 		try {
 			return executeQuery(sparql, resType);
 		} catch (Exception e) {
-			throw new Exception("Failure executing test query.", e);
+			throw new Exception("Failure executing test query: " + e.toString());
 		}
 	}
 	
