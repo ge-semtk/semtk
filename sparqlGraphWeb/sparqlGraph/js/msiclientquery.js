@@ -100,6 +100,18 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("uploadOwl", formdata, MicroServiceInterface.FORM_CONTENT, successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
+            execUploadTurtle : function (ttlFile, successCallback) {
+				var formdata = new FormData();
+				formdata.append("serverAndPort", this.data.serverAndPort);
+				formdata.append("serverType",    this.data.serverType);
+				formdata.append("graph",       this.data.graph);
+				formdata.append("user",          this.data.user);
+				formdata.append("password",      this.data.password);
+				formdata.append("ttlFile",        ttlFile);
+
+				this.msi.postToEndpoint("uploadTurtle", formdata, MicroServiceInterface.FORM_CONTENT, successCallback, this.optFailureCallback, this.optTimeout);
+			},
+
             execSyncOwl : function (owlFile, successCallback) {
 				var formdata = new FormData();
 				formdata.append("serverAndPort", this.data.serverAndPort);

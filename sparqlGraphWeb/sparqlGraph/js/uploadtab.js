@@ -60,7 +60,7 @@ define([	// properly require.config'ed
 			 this.nodegroup = null;
              this.oInfo = null;
 			 this.inputURI = null;
-			 this.owlFile = null;
+			 this.uploadFile = null;
              this.syncOwlFiles = [];
 
 			 this.progressDiv = null;
@@ -336,20 +336,20 @@ define([	// properly require.config'ed
 				// ===== upload owl row =====
 				tr = document.createElement("tr");
 				td1 = document.createElement("td");
-				td1.id = "tdUploadOwl1";
-				td1.appendChild(IIDXHelper.createDropzone("icon-sitemap", "Drop OWL file", function(e) {return true;}, this.toolsDropOwlFile.bind(this)));
+				td1.id = "tdUploadFile1";
+				td1.appendChild(IIDXHelper.createDropzone("icon-sitemap", "Drop OWL/TTL file", function(e) {return true;}, this.toolsDropOwlFile.bind(this)));
 				tr.appendChild(td1);
 
 				// button cell
 				td2 = document.createElement("td");
 				button = document.createElement("button");
-				button.id = "butUploadOwl";
+				button.id = "butUploadFile";
 				button.classList.add("btn");
-				button.innerHTML = "Upload Owl";
-				button.onclick = this.toolsUploadOwl.bind(this);
+				button.innerHTML = "Upload owl/ttl";
+				button.onclick = this.toolsUploadFile.bind(this);
 				td2.appendChild(button);
                 td2.appendChild(IIDXHelper.createNbspText());
-                td2.appendChild(ModalIidx.createInfoButton("Adds triples from an owl/rdf file to the selected graph."));
+                td2.appendChild(ModalIidx.createInfoButton("Adds triples from an owl/rdf or ttl file to the selected graph."));
 				tr.appendChild(td2);
 				table.appendChild(tr);
 
@@ -565,16 +565,16 @@ define([	// properly require.config'ed
 				this.fillClearPrefix();
 
 				// upload owl
-				var dropzone = document.getElementById("tdUploadOwl1").childNodes[0];
+				var dropzone = document.getElementById("tdUploadFile1").childNodes[0];
 				var msgTxt = "";
-				if (this.owlFile !== null) {
-					document.getElementById("butUploadOwl").disabled = false;
-					msgTxt = this.owlFile.name + " (" + Number(this.owlFile.size / 1024).toFixed(1) + " KB)";
+				if (this.uploadFile !== null) {
+					document.getElementById("butUploadFile").disabled = false;
+					msgTxt = this.uploadFile.name + " (" + Number(this.uploadFile.size / 1024).toFixed(1) + " KB)";
 					IIDXHelper.setDropzoneLabel(dropzone, msgTxt, IIDXHelper.DROPZONE_FULL);
 
 				} else {
-					document.getElementById("butUploadOwl").disabled = true;
-					msgTxt = "Drop OWL file";
+					document.getElementById("butUploadFile").disabled = true;
+					msgTxt = "Drop OWL/TTL file";
 					IIDXHelper.setDropzoneLabel(dropzone, msgTxt, IIDXHelper.DROPZONE_EMPTY);
 				}
 
@@ -786,14 +786,14 @@ define([	// properly require.config'ed
 			 * Owl drop callback
 			 */
 			toolsDropOwlFile : function (ev) {
-				this.owlFile = null;
+				this.uploadFile = null;
 
 				if (ev.dataTransfer.files.length != 1) {
 					this.logAndAlert("Error dropping OWL file", "Only single file drops are supported.");
-				} else if (ev.dataTransfer.files[0].name.slice(-4).toLowerCase() != ".owl") {
-					this.logAndAlert("Error dropping OWL file", "Only OWL file drops are supported.");
+				} else if (ev.dataTransfer.files[0].name.slice(-4).toLowerCase() != ".owl" && ev.dataTransfer.files[0].name.slice(-4).toLowerCase() != ".ttl") {
+					this.logAndAlert("Error dropping OWL file", "Only .owl and .ttl file drops are supported.");
 				} else {
-					this.readSingleOwlAsync(ev.dataTransfer.files[0]);
+					this.readSingleOwlTtlAsync(ev.dataTransfer.files[0]);
 				}
 			},
 
@@ -813,8 +813,8 @@ define([	// properly require.config'ed
 
                     // error
                     var file = files[index];
-                    if (file.name.slice(-4) != ".owl") {
-                        this.logAndAlert("Error dropping data file", "Not an owl file: " + file.name);
+                    if (file.name.slice(-4) != ".owl" && file.name.slice(-4) != ".ttl") {
+                        this.logAndAlert("Error dropping data file", "Only .owl and .ttl are supported: " + file.name);
                         this.fillAll();
                         return;
                     }
@@ -836,14 +836,14 @@ define([	// properly require.config'ed
 			/**
 			 * Upload owl button callback
 			 */
-			toolsUploadOwl : function() {
-				kdlLogEvent("SG: import upload owl", "filename", this.owlFile);
+			toolsUploadFile : function() {
+				kdlLogEvent("SG: import upload file", "filename", this.uploadFile);
 
 				var successCallback = function (mq, resultSet) {
 					IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
 
 					if (! resultSet.isSuccess()) {
-						this.logAndAlert("'Upload owl' Service failed", mq.getDropGraphResultHtml(resultSet));
+						this.logAndAlert("'Upload File' Service failed", mq.getDropGraphResultHtml(resultSet));
 					} else {
 
 						ModalIidx.alert("Success", mq.getSuccessMessageHTML(resultSet));
@@ -862,10 +862,15 @@ define([	// properly require.config'ed
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
 
                 if (this.getSelectedSei() == null) {
-                    ModalIidx.alert("No endpoint", "No endpoint/graph specified.<br>Don't know where to upload the owl.");
+                    ModalIidx.alert("No endpoint", "No endpoint/graph specified.<br>Don't know where to upload the file.");
                 } else {
                     var mq = new MsiClientQuery(this.sparqlQueryServiceURL, this.getSelectedSei(), this.msiFailureCallback.bind(this));
-                    mq.execUploadOwl(this.owlFile, successCallback.bind(this, mq));
+
+                    if (this.uploadFile.name.slice(-4).toLowerCase() == ".owl") {
+                        mq.execUploadOwl(this.uploadFile, successCallback.bind(this, mq));
+                    } else {
+                        mq.execUploadTurtle(this.uploadFile, successCallback.bind(this, mq));
+                    }
                 }
 
 			},
@@ -976,7 +981,7 @@ define([	// properly require.config'ed
 				this.button.disabled = true;
 				document.getElementById("butClearGraph").disabled = true;
 				document.getElementById("butClearPrefix").disabled = true;
-				document.getElementById("butUploadOwl").disabled = true;
+				document.getElementById("butUploadFile").disabled = true;
 			},
 
 			/**
@@ -1104,7 +1109,7 @@ define([	// properly require.config'ed
 			/**
 			 * Read an owl file
 			 */
-			readSingleOwlAsync : function (f) {
+			readSingleOwlTtlAsync : function (f) {
 				//Retrieve the first (and only!) File from the FileList object
 
 				if (f) {
@@ -1114,9 +1119,9 @@ define([	// properly require.config'ed
 
 					var r = new FileReader();
 					r.onload = function(e) {
-						kdlLogEvent("SG: Import Read Owl", "filename", f.name);
+						kdlLogEvent("SG: Import Read Owl/Ttl", "filename", f.name);
 
-						this.owlFile = f;
+						this.uploadFile = f;
 
 						IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
 						IIDXHelper.progressBarRemove(this.progressDiv);
