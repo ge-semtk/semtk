@@ -128,7 +128,7 @@ define([	// properly require.config'ed
 												  [[" "              , "false"],
 												   ["mark for delete", "true" ]
 												  ],
-												  [this.item.getSnodeDeletionMarker(this.targetSNode) ? "true":"false"]);
+												  [this.item.getSnodeDeletionMarker(this.targetSNode) ? "mark for delete":" "]);
 				select.style.width = "20ch";
 				fieldset.appendChild(IIDXHelper.buildControlGroup("Delete query: ", select));
 
