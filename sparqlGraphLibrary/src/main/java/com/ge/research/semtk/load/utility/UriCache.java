@@ -46,24 +46,48 @@ public class UriCache {
 		this.nodeGroup = nodeGroup;
 	}
 	
-	private String getKey(int importNodeIndex, ArrayList<String> builtStrings) {
-		return this.nodeGroup.getNode(importNodeIndex).getSparqlID() + "-" + String.join("-", builtStrings);
+	/**
+	 * 
+	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
+	 * @param builtStrings
+	 * @return
+	 */
+	private String getKey(String lookupNgMD5, ArrayList<String> builtStrings) {
+		return lookupNgMD5 + "-" + String.join("-", builtStrings);
 	}
 	
-	public void putUri(int importNodeIndex, ArrayList<String> builtStrings, String uri) {
-		this.uriCache.putIfAbsent(this.getKey(importNodeIndex, builtStrings), uri);
+	/**
+	 * Assign a URI given a unique lookup nodegroup and set of builtStrings
+	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
+	 * @param builtStrings
+	 * @param uri
+	 */
+	public void putUri(String lookupNgMD5, ArrayList<String> builtStrings, String uri) {
+		this.uriCache.putIfAbsent(this.getKey(lookupNgMD5, builtStrings), uri);
 	}
 	
-	public String getUri(int importNodeIndex, ArrayList<String> builtStrings) {
+	/**
+	 * Get a URI given a unique lookup nodegroup and set of builtStrings
+	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
+	 * @param builtStrings
+	 * @return
+	 */
+	public String getUri(String lookupNgMD5, ArrayList<String> builtStrings) {
 		try {
-			return this.uriCache.get(this.getKey(importNodeIndex, builtStrings));
+			return this.uriCache.get(this.getKey(lookupNgMD5, builtStrings));
 		} catch (Exception e) {
 			return null;
 		}
 	}
 	
-	public boolean isNotFound(int importNodeIndex, ArrayList<String> builtStrings) {
-		String key = this.getKey(importNodeIndex, builtStrings);
+	/**
+	 * Is it "notFound" given a unique lookup nodegroup and set of builtStrings
+	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
+	 * @param builtStrings
+	 * @return
+	 */
+	public boolean isNotFound(String lookupNgMD5, ArrayList<String> builtStrings) {
+		String key = this.getKey(lookupNgMD5, builtStrings);
 		return this.notFound.containsKey(key);
 	}
 	
@@ -78,12 +102,12 @@ public class UriCache {
 	
 	/**
 	 * Declare a URI 'not found', possibly suggesting a new value
-	 * @param importNodeIndex
+	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
 	 * @param builtStrings
 	 * @param generatedValue - value for URI ... or null or ""
 	 */
-	public synchronized void setUriNotFound(int importNodeIndex, ArrayList<String> builtStrings, String generatedValue) throws Exception {
-		String key = this.getKey(importNodeIndex, builtStrings);
+	public synchronized void setUriNotFound(String lookupNgMD5, ArrayList<String> builtStrings, String generatedValue) throws Exception {
+		String key = this.getKey(lookupNgMD5, builtStrings);
 		String newVal;
 		
 		if (generatedValue != null && generatedValue.length() > 0) {

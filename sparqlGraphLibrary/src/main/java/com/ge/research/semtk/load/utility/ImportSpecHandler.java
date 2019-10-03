@@ -19,6 +19,7 @@
 package com.ge.research.semtk.load.utility;
 
 import java.net.URI;
+import java.security.MessageDigest;
 import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -69,6 +72,7 @@ public class ImportSpecHandler {
 	NodeGroup ng = null;
 	SparqlConnection lookupConn = null;
 	HashMap<Integer, JSONObject> lookupNodegroupsJson = new HashMap<Integer, JSONObject>();       // cache of pruned nodegroups ready for lookup
+	HashMap<Integer, String>     lookupNodegroupMD5 = new HashMap<Integer, String>();             // MD5 hash for standardized lookup nodegroup.
 	HashMap<Integer, String>     lookupMode = new HashMap<Integer, String>();
 	HashMap<Integer, Long>    	 lookupResultCount = new HashMap<Integer, Long>();                // number of URI's in the triple-store to choose from
 
@@ -419,6 +423,18 @@ public class ImportSpecHandler {
 			}
 			
 			this.lookupNodegroupsJson.put(importNodeIndex, lookupNg.toJson());
+			
+			// standardize sparqlids, then generate sparql, then hash it
+			// so we can tell if two lookup nodegroups are identical
+			lookupNg.assignStandardSparqlIds();
+			String sparql = lookupNg.generateSparqlSelect();
+			MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+		    messageDigest.update(sparql.getBytes());
+		    byte[] digiest = messageDigest.digest();
+		    String ngMD5 = DatatypeConverter.printHexBinary(digiest);
+		    this.lookupNodegroupMD5.put(importNodeIndex, ngMD5);
+		    
+		    System.out.println(String.valueOf(importNodeIndex) + ": " + ngMD5);
 		}
 	}
 	
@@ -714,7 +730,7 @@ public class ImportSpecHandler {
 		}
 				
 		// return quickly if answer is already cached
-		String cachedUri = this.uriCache.getUri(nodeIndex, builtStrings);
+		String cachedUri = this.uriCache.getUri(this.lookupNodegroupMD5.get(nodeIndex), builtStrings);
 		
 		// if already cached
 		if (cachedUri != null) {
@@ -799,14 +815,14 @@ public class ImportSpecHandler {
 				} else {
 					// set URI to NOT_FOUND
 					ImportMapping m = this.getImportMapping(nodeIndex, -1);
-					this.uriCache.setUriNotFound(nodeIndex, builtStrings, (m == null) ? null : m.buildString(record));
+					this.uriCache.setUriNotFound(this.lookupNodegroupMD5.get(nodeIndex), builtStrings, (m == null) ? null : m.buildString(record));
 					return UriCache.NOT_FOUND;
 				}
 				
 			} else {
 				// 1 found:  cache and return
 				String uri = tab.getCell(0,0);
-				this.uriCache.putUri(nodeIndex, builtStrings, uri);
+				this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeIndex), builtStrings, uri);
 				return uri;
 			}
 		}
@@ -906,7 +922,7 @@ public class ImportSpecHandler {
 			}
 			
 			// add to cache
-			this.uriCache.putUri(nodeIndex, foundStrings, uri);
+			this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeIndex), foundStrings, uri);
 		}
 	}
 	
