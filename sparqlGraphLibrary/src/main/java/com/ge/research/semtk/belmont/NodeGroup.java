@@ -2750,6 +2750,56 @@ public class NodeGroup {
 		return retval.toString();
 	}
 	
+	/**
+	 * Return a list of nodes ordered by headnodes depth first
+	 * @return
+	 * @throws Exception
+	 */
+	private ArrayList<Node> getOrderedNodes() throws Exception {
+		ArrayList<Node> ret = new ArrayList<Node>();
+		Node headNode = this.getNextHeadNode(ret);
+		while (headNode != null) {
+			this.addOrderedSubnodes(headNode, ret);
+			headNode = this.getNextHeadNode(ret);
+		}
+		return ret;
+	}
+	
+	/**
+	 * Buddy to getOrderedNodes
+	 * @param snode
+	 * @param ret
+	 */
+	private void addOrderedSubnodes(Node snode, ArrayList<Node> ret) {
+		if(ret.contains(snode)){
+			return;
+		}
+		else{
+			ret.add(snode);
+			for(NodeItem nItem : snode.getNodeItemList()) {
+				
+				for (Node n : nItem.getNodeList()) {
+					addOrderedSubnodes(n, ret);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Assign boring deterministic sparqlIds
+	 * @throws Exception
+	 */
+	public void assignStandardSparqlIds() throws Exception {
+		int i=0;
+		for (Node n : this.getOrderedNodes()) {
+			this.changeSparqlID(n, n.getUri(true) + String.valueOf(i));
+			for (PropertyItem p : n.getPropertyItems()) {
+				if (! p.getSparqlID().isEmpty()) {
+					this.changeSparqlID(p, p.getKeyName() + String.valueOf(i));
+				}
+			}
+		}
+	}
 	
 	public String generateSparqlInsert(OntologyInfo oInfo, SparqlEndpointInterface endpoint) throws Exception {
 		return this.generateSparqlInsert(null, oInfo, endpoint);
