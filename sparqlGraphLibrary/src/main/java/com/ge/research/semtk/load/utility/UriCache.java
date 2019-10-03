@@ -47,7 +47,7 @@ public class UriCache {
 	}
 	
 	private String getKey(int importNodeIndex, ArrayList<String> builtStrings) {
-		return this.nodeGroup.getNode(importNodeIndex).getFullUriName() + "-" + String.join("-", builtStrings);
+		return this.nodeGroup.getNode(importNodeIndex).getSparqlID() + "-" + String.join("-", builtStrings);
 	}
 	
 	public void putUri(int importNodeIndex, ArrayList<String> builtStrings, String uri) {
