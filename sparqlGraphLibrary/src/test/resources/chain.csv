@@ -1,6 +1,6 @@
 chainName,chainDesc,link0name,link1name,link2name
 chainA,descA,linkA1,linkA2,linkA3
 chainB,,linkB1,linkB2,
-,,linkB2,linkB3,
+,,,linkB2,linkB3
 ,,linkB3,linkB4,
 ,,orphan1,orphan2,
