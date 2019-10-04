@@ -25,7 +25,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 import io.swagger.annotations.ApiModelProperty;
 
@@ -42,7 +41,7 @@ public class FdcRequest {
 		return tables;
 	}
 
-	public void setConn(String t) {
+	public void setTables(String t) {
 		this.tables = t;
 	}
 	
