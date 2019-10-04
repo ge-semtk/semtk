@@ -617,7 +617,7 @@ public class DataLoader implements Runnable {
 		
 		// load the data
 		try{
-			DataLoader loader = new DataLoader(sgJson.getJson(), dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader loader = new DataLoader(sgJson, dataset, sparqlEndpointUser, sparqlEndpointPassword);
 			if (overrideMaxThreads > 0) {
 				loader.overrideMaxThreads(overrideMaxThreads);
 			}
