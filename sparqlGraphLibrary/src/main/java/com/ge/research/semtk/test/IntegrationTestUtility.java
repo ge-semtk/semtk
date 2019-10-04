@@ -75,8 +75,9 @@ public class IntegrationTestUtility {
 				
 	}
 	public static int getSparqlServerPort() throws Exception {
-		String [] serverUrl = getSparqlServer().split(":");
-		return Integer.valueOf(serverUrl[2]);
+		String [] splitByColon = getSparqlServer().split(":");
+		String portMaybeEndpoint = splitByColon[2];
+		return Integer.valueOf(portMaybeEndpoint.split("/")[0]);
 	}
 	public static String getSparqlServer() throws Exception{
 		return getIntegrationTestProperty("integrationtest.sparqlendpoint.server");
@@ -248,9 +249,7 @@ public class IntegrationTestUtility {
 	public static SparqlEndpointInterface getServicesSei() throws Exception {
 		return SparqlEndpointInterface.getInstance(
 				getSparqlServerType(), 
-				getServiceProtocol(), 
-				getSparqlServerOnly(), 
-				getSparqlServerPort(), 
+				getSparqlServer(),
 				getServicesGraph(), 
 				getSparqlServerUsername(), 
 				getSparqlServerPassword());

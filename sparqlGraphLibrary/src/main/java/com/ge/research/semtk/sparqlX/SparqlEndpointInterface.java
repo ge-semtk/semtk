@@ -279,13 +279,6 @@ public abstract class SparqlEndpointInterface {
 	}	
 	
 	
-	public static SparqlEndpointInterface getInstance(String serverType, String protocol, String server, int port, String graph, String user, String password) throws Exception {
-		return getInstance(serverType, protocol + "://" + server + ":" + String.valueOf(port), graph, user, password);
-	}
-	
-	public static SparqlEndpointInterface getInstance(String serverType, String protocol, String server, int port, String graph) throws Exception {
-		return getInstance(serverType, protocol + "://" + server + ":" + String.valueOf(port), graph);
-	}
 	/**
 	 * Static method to get an instance of this abstract class
 	 */

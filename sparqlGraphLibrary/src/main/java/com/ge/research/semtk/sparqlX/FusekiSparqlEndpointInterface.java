@@ -55,14 +55,14 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	public FusekiSparqlEndpointInterface(String server, String graph)	throws Exception {
 		super(server, graph);
 		if (this.endpoint == null) {
-			throw new Exception("Fuseki URL is missing the dataset");
+			throw new Exception("Fuseki URL is missing the dataset: " + server);
 		}
 	}
 
 	public FusekiSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
 		super(server, graph, user, pass);
 		if (this.endpoint == null) {
-			throw new Exception("Fuseki URL is missing the dataset");
+			throw new Exception("Fuseki URL is missing the dataset: " + server);
 		}
 	}
 
