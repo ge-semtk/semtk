@@ -21,9 +21,9 @@ package com.ge.research.semtk.properties;
 // needing connection info for a microservice
 
 public abstract class ServiceProperties extends Properties {
-	private String server;
-	private int    port;
-	private String protocol;
+	protected String server;
+	protected int    port;
+	protected String protocol;
 
 	public void validate() throws Exception {
 		super.validate();
@@ -50,7 +50,5 @@ public abstract class ServiceProperties extends Properties {
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
-	
-	
 	
 }

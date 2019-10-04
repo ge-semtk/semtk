@@ -67,6 +67,10 @@ public class Properties {
 		}
 	}
 	
+	public String getPrefix() {
+		return prefix;
+	}
+	
 	/****** Individual field validators *******/
 	
 	protected void checkNotEmpty(String name, Integer i) throws Exception {
