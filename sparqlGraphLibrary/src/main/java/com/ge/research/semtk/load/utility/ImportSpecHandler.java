@@ -434,7 +434,7 @@ public class ImportSpecHandler {
 		    String ngMD5 = DatatypeConverter.printHexBinary(digiest);
 		    this.lookupNodegroupMD5.put(importNodeIndex, ngMD5);
 		    
-		    System.out.println(String.valueOf(importNodeIndex) + ": " + ngMD5);
+		    //LocalLogger.logToStdOut(String.valueOf(importNodeIndex) + ": " + ngMD5);
 		}
 	}
 	
