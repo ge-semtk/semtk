@@ -1235,8 +1235,9 @@ public abstract class SparqlEndpointInterface {
 				} else {
 					valueValue = (String) jsonCell.get("value");	
 					valueType =  (String) jsonCell.get("type");
-					if (valueType.endsWith("literal")) {
+					if (valueType.endsWith("literal") && jsonCell.containsKey("datatype") ) {
 						valueDataType = (String) jsonCell.get("datatype");
+
 					} else {
 						valueDataType = valueType;
 					}
