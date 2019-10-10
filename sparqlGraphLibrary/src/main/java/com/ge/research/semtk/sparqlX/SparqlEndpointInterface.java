@@ -418,7 +418,7 @@ public abstract class SparqlEndpointInterface {
 					int sleepMsec = 500;
 					
 					// if we're overwhelming a server, really throttle
-					if (e.getMessage().contains("Address already in use: connect")) {
+					if (e.getMessage() != null && e.getMessage().contains("Address already in use: connect")) {
 						sleepMsec = 5000 * tryCount;
 					} else {
 						// normally: 2 sec per try
@@ -1235,7 +1235,11 @@ public abstract class SparqlEndpointInterface {
 				} else {
 					valueValue = (String) jsonCell.get("value");	
 					valueType =  (String) jsonCell.get("type");
-					valueDataType = (valueType.equals("typed-literal")) ? (String) jsonCell.get("datatype") : valueType;  // e.g. "http:\/\/www.w3.org\/2001\/XMLSchema#integer", but only if type is "typed-literal" 
+					if (valueType.endsWith("literal")) {
+						valueDataType = (String) jsonCell.get("datatype");
+					} else {
+						valueDataType = valueType;
+					}
 					
 					// add the value to the row
 					rowForNewTable.add(valueValue);
