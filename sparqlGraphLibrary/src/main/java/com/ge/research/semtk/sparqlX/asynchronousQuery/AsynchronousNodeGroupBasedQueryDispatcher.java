@@ -150,6 +150,16 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			}
 			resTable.replaceColumnNames(modColnames);
 			
+			// ==== Testing A Materia Bug ====
+			
+			String t[] = resTable.getColumnTypes();
+			for (int i=0; i < t.length; i++) {
+				if (t[i].endsWith("decimal")) {
+					t[i] = "float";
+				}
+			}
+			//================================
+			
 			this.resultsClient.execStoreTableResults(this.jobID, resTable);
 		}
 		catch(Exception e){
