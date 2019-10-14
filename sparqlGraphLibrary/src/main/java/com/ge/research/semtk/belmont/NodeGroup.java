@@ -2902,7 +2902,7 @@ public class NodeGroup {
 				// insert each property we know of. 
 				for(PropertyItem prop : curr.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " \"" + inst + "\"^^" + this.applyPrefixing("http://www.w3.org/2001/XMLSchema#" + prop.getValueType().getSimpleName()) + " .\n";  
+						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildTypedValueString(inst, "XMLSchema") + " .\n";  
 					}
 				}
 				

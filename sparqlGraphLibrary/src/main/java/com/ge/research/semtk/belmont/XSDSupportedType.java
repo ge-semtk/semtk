@@ -89,8 +89,12 @@ public enum XSDSupportedType {
 		return candidate.toUpperCase(); // since this passed the check for existence, we can just hand it back. 
 	}
 
-	// get a string version of a value with type trailer
 	public String buildTypedValueString(String val) {
+		return this.buildTypedValueString(val, null);
+	}
+	
+	// get a string version of a value with type trailer
+	public String buildTypedValueString(String val, String typePrefixOverride) {
 		
 		if (this == XSDSupportedType.NODE_URI) {
 			// check for angle brackets first
@@ -106,8 +110,11 @@ public enum XSDSupportedType {
 				return val;
 			}
 			
-		} else {   // not a node uri.
-			return "'" + val + "'" + this.getXsdSparqlTrailer(); 
+		} else if (this == XSDSupportedType.BOOLEAN) {   
+			return val.toLowerCase();
+			
+		} else {
+			return "\"" + val + "\"" + this.getXsdSparqlTrailer(typePrefixOverride); 
 		}
 	}
 	
@@ -139,8 +146,17 @@ public enum XSDSupportedType {
 	}
 	
 	public String getXsdSparqlTrailer() {
-		
-		return xmlSchemaPrefix + this.camelCaseStr + xmlSchemaTrailer;
+		return getXsdSparqlTrailer(null);
+	}
+	
+	public String getXsdSparqlTrailer(String typePrefixOverride) {
+		if (typePrefixOverride == null) {
+			// e.g.:  ^^<http://www.w3.org/2001/XMLSchema#int>
+			return xmlSchemaPrefix 	+ this.camelCaseStr + xmlSchemaTrailer;
+		} else {
+			// e.g.: ^^XMLSchema:int
+			return "^^" + typePrefixOverride + ":" + this.camelCaseStr;
+		}
 		
 	}
 	
