@@ -57,50 +57,6 @@ public class Node extends Returnable {
 	
 	private NodeDeletionTypes deletionMode = NodeDeletionTypes.NO_DELETE;
 	
-	// a collection of our known subclasses. 
-	// PEC 9/21/2018 this is a terrible idea.  Any operation requiring subclasses should have the oInfo.
-	private ArrayList<String> subclassNames = new ArrayList<String>();
-	
-	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, ArrayList<String> subClassNames, NodeGroup ng){
-		// just create the basic node.
-		this.nodeName = name;
-		this.fullURIname = URI;
-		this.subclassNames = new ArrayList<String>(subClassNames);
-		if(n != null){ this.nodes = n;}
-		if(p != null){ this.props = p;}
-		this.nodeGroup = ng;
-		
-		// add code to get the sparqlID
-		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
-	}
-	
-	/**
-	 * Construct with a non-null oInfo for inflating.
-	 * @param name
-	 * @param p
-	 * @param n
-	 * @param classURI
-	 * @param subClassNames
-	 * @param ng
-	 * @param inflateOInfo - oInfo to re-inflate a deflated node
-	 * @throws Exception
-	 */
-	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String classURI, ArrayList<String> subClassNames, NodeGroup ng, OntologyInfo inflateOInfo) throws Exception {
-		// just create the basic node.
-		this.nodeName = name;
-		this.fullURIname = classURI;
-		this.subclassNames = new ArrayList<String>(subClassNames);
-		if(n != null){ this.nodes = n;}
-		if(p != null){ this.props = p;}
-		this.nodeGroup = ng;
-		
-		this.inflateAndValidate(inflateOInfo);
-		
-		// add code to get the sparqlID
-		this.sparqlID = BelmontUtil.generateSparqlID(name, this.nodeGroup.getSparqlNameHash());
-	}
-	
-	// Constructor when there are no subclasses
 	// Left-over from confused port from javascript
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, NodeGroup ng){
 		// just create the basic node.
@@ -150,11 +106,8 @@ public class Node extends Returnable {
 		JSONObject ret = new JSONObject();
 		JSONArray jPropList = new JSONArray();
 		JSONArray jNodeList = new JSONArray();
-		JSONArray scNames = new JSONArray();
 		
-		for (int i = 0; i < this.subclassNames.size(); i++) {
-			scNames.add(this.subclassNames.get(i));
-		}
+		// NOTE removed optional subclassNames
 		
 		// add properties
 		for (int i = 0; i < this.props.size(); i++) { 
@@ -183,7 +136,6 @@ public class Node extends Returnable {
 		ret.put("instanceValue", this.getInstanceValue());
 		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("deletionMode", this.deletionMode.name());
-		ret.put("subClassNames", scNames);
 		
 		// optional things
 		if (this.isTypeReturned) {
@@ -210,7 +162,7 @@ public class Node extends Returnable {
 	 * and validates all props
 	 * @param classURI
 	 * @param props
-	 * @param oInfo
+	 * @param oInfo - if non-null then inflate and validate
 	 * @return
 	 * @throws Exception
 	 */
@@ -341,7 +293,6 @@ public class Node extends Returnable {
 		this.props = newProps;
 		this.nodes = newNodes;
 		
-		this.subclassNames = oInfo.getSubclassNames(this.fullURIname);
 	}
 	
 	/**
@@ -442,23 +393,14 @@ public class Node extends Returnable {
 		nodes = new ArrayList<NodeItem>();
 		nodeName = null;
 		fullURIname = null;
-		instanceValue = null;
-		subclassNames = new ArrayList<String>();
-		
+		instanceValue = null;		
 		
 		// build all the parts we need from this incoming JSON Object...
 		this.nodeName = nodeEncoded.get("NodeName").toString();
 		this.fullURIname = nodeEncoded.get("fullURIName").toString();
 		this.sparqlID = nodeEncoded.get("SparqlID").toString();
 				
-		// get the array of subclass names.
-		JSONArray subclasses = (JSONArray)nodeEncoded.get("subClassNames");
-		if (subclasses != null) {
-			Iterator<String> it = subclasses.iterator();
-			while(it.hasNext()){
-				this.subclassNames.add(it.next());
-			}
-		}
+		// NOTE: removed OPTIONAL array of subclass names.
 		
 		this.isReturned = (Boolean)nodeEncoded.get("isReturned");
 		
@@ -630,11 +572,6 @@ public class Node extends Returnable {
 	
 	public void setValueConstraint(ValueConstraint v) {
 		this.constraints = v;
-	}
-	
-	
-	public ArrayList<String> getSubClassNames() {
-		return this.subclassNames;
 	}
 	
 	public String getUri(boolean localFlag) {
