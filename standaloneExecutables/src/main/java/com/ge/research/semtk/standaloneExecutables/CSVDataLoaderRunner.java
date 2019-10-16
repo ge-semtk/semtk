@@ -18,10 +18,14 @@
 
 package com.ge.research.semtk.standaloneExecutables;
 
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+
+import comge.research.semtk.standaloneExecutables.util.ArgParser;
 
 /**
  * Loads data to a triple store from a CSV file into database.
@@ -41,16 +45,31 @@ public class CSVDataLoaderRunner {
 		
 		SparqlConnection connectionOverride = null;		// stays null if no connection override provided
 		try{
-			if(args.length != 5 && args.length != 6){
-				throw new Exception("Invalid argument list.  Usage: main(templateJSONFilePath, sparqlEndpointUser, sparqlEndpointPassword, dataCSVFilePath, batchSize, connectionOverrideFilePath (optional))");
+			ArgParser ap = new ArgParser(
+					null, null, 
+					new String[] {"templateJSONFilePath", "sparqlEndpointUser", "sparqlEndpointPassword", "dataCSVFilePath"},
+					new String[] {"-noLoad", "-noPrecheck"},
+					null, null,
+					new String[] {"batchSize", "connectionOverrideFilePath"}
+					);
+			ap.parse("main", args);
+
+			String templateJSONFilePath = ap.get("templateJSONFilePath");
+			String sparqlEndpointUser = ap.get("sparqlEndpointUser");
+			String sparqlEndpointPassword = ap.get("sparqlEndpointPassword");
+			String dataCSVFilePath = ap.get("dataCSVFilePath");	
+			String batchSize = ap.get("batchSize");      // this should be deprecated
+			String connectionOverrideFilePath = ap.get("connectionOverrideFilePath");
+			boolean skipIngest = ap.get("-noLoad") != null;
+			boolean preCheck = ap.get("-noPrecheck") == null;
+			
+			// backwards compatibility
+			if (batchSize != null && batchSize.toLowerCase().contains(".json") && connectionOverrideFilePath == null) {
+				connectionOverrideFilePath = batchSize;
+				batchSize = "8";
 			}
-			String templateJSONFilePath = args[0];
-			String sparqlEndpointUser = args[1];
-			String sparqlEndpointPassword = args[2];
-			String dataCSVFilePath = args[3];	
-			String batchSize = args[4];      // this should be deprecated
-			if(args.length == 6 ){
-				String connectionOverrideFilePath = args[5]; 	
+			
+			if(connectionOverrideFilePath != null ){
 				connectionOverride = new SparqlConnection(Utility.getJSONObjectFromFilePath(connectionOverrideFilePath).toJSONString());	// override the connection	
 			}
 			
@@ -60,9 +79,8 @@ public class CSVDataLoaderRunner {
 				throw new Exception("Error: Cannot parse batch size to int: '" + batchSize + "'");
 			}
 			
-			// perform the load
-			// TODO: use the version with no batch size and overrideMaxThread at the end (-1 or 0 does nothing)
-			DataLoader.loadFromCsv(templateJSONFilePath, dataCSVFilePath, sparqlEndpointUser, sparqlEndpointPassword, Integer.parseInt(batchSize), connectionOverride);
+			DataLoader.loadFromCsv(templateJSONFilePath, dataCSVFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride, preCheck, skipIngest);
+			
 			System.exit(0);  // explicitly exit to avoid maven exec:java error ("thread was interrupted but is still alive")
 		
 		}catch(Exception e){

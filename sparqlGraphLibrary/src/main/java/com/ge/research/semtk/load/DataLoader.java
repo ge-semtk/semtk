@@ -287,7 +287,7 @@ public class DataLoader implements Runnable {
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
-		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : ""), true, false);
+		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : "") + (skipCheck ? " (no precheck)" : ""), true, false);
 		long lastMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 		
 		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();
@@ -570,10 +570,29 @@ public class DataLoader implements Runnable {
 		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride);
 	}
 	
+	public static int loadFromCsv(String loadTemplateFilePath, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride, boolean preCheck, boolean skipIngest) throws Exception{
+
+		if(!loadTemplateFilePath.endsWith(".json")){
+			throw new Exception("Error: Template file " + loadTemplateFilePath + " is not a JSON file");
+		}
+		
+		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
+		LocalLogger.logToStdOut("Template:   " + loadTemplateFilePath);
+		LocalLogger.logToStdOut("CSV file:   " + csvFilePath);
+		LocalLogger.logToStdOut("Batch size: " + DEFAULT_BATCH_SIZE);	
+		LocalLogger.logToStdOut("Connection override: " + connectionOverride);	// may be null if no override connection provided
+				
+		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride, -1, preCheck, skipIngest);
+	}
 	
 	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride) throws Exception{
 		return loadFromCsv(loadTemplateJson, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride, -1);
 	}
+	
+	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride, int overrideMaxThreads) throws Exception{
+		return DataLoader.loadFromCsv(loadTemplateJson, csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride, overrideMaxThreads, true, false);
+	}
+	
 	
 	/**
 	 * Utility method to load data given a template json, CSV file, and SPARQL connection
@@ -585,7 +604,7 @@ public class DataLoader implements Runnable {
 	 * @param overrideMaxThreads	    set the number of threads max
 	 * @return							total CSV records processed
 	 */
-	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride, int overrideMaxThreads) throws Exception{
+	public static int loadFromCsv(JSONObject loadTemplateJson, String csvFilePath, String sparqlEndpointUser, String sparqlEndpointPassword, SparqlConnection connectionOverride, int overrideMaxThreads, boolean preCheck, boolean skipIngest) throws Exception{
 				
 		// validate arguments
 		if(!csvFilePath.endsWith(".csv")){
@@ -621,7 +640,7 @@ public class DataLoader implements Runnable {
 			if (overrideMaxThreads > 0) {
 				loader.overrideMaxThreads(overrideMaxThreads);
 			}
-			int recordsAdded = loader.importData(true);
+			int recordsAdded = loader.importData(preCheck, skipIngest);
 			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
 			if(loader.getLoadingErrorReport().getNumRows() > 0){
 				// e.g. URI lookup errors may appear here

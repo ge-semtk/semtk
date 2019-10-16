@@ -31,6 +31,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -372,6 +374,10 @@ public abstract class Utility {
 		return ret;	
 	}
 	
+	public static String getStringFromFilePath(String path) throws Exception {
+		 byte[] encoded = Files.readAllBytes(Paths.get(path));
+		 return new String(encoded, StandardCharsets.UTF_8);
+	}
 	/**
 	 * Get colName entries from the import spec portion of the JSON template.
 	 * Converts all column names to lower case.

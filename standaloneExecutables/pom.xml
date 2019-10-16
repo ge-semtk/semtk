@@ -37,6 +37,24 @@
 				<executions>
 
 					<execution>
+						<id>standalone</id>
+						<configuration>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
+							<finalName>standaloneExecutables</finalName>
+						</configuration>
+						<phase>install</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+					
+					<!-- Please delete all the builds below once we have removed them from scripts -->
+					<!-- Replace with -->
+					<!--     java -cp path/to/standaloneExecutables-jar-with-dependencies.jar  com.research.full.mainClass arg1 arg2 ...  -->
+					<!-- works fine for all the main classes below without the time/space of extra jars -->
+					<execution>
 					      <id>build-a</id>
 						<configuration>
 							<descriptorRefs>
