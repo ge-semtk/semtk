@@ -147,6 +147,36 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
+	@ApiOperation(
+		    value= "Get a table of:  type (class|property), uri, label",
+		    notes= "If a URI has no labels, it will appear with label = \"\""
+		)
+	@CrossOrigin
+	@RequestMapping(value="/getUriLabelTable", method=RequestMethod.POST)
+	public JSONObject getUriLabelTable(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		final String ENDPOINT_NAME = "getUriLabelTable";
+		HeadersManager.setHeaders(headers);
+		TableResultSet retval = new TableResultSet();
+		
+		try{
+			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			
+			retval.addResults(oInfoCache.get(conn).getUriLabelTable());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+		}
+		// send it out.
+		return retval.toJson();
+	}
+	
+	@ApiOperation(
+		    value= "Get the oInfo JSON",
+		    notes= "This is the 'main' endpoint for this service."
+		)
 	@CrossOrigin
 	@RequestMapping(value="/getOntologyInfoJson", method=RequestMethod.POST)
 	public JSONObject getOntologyInfoJson(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
@@ -198,7 +228,8 @@ public class OntologyInfoServiceRestController {
 	}
 	
 	@ApiOperation(
-			value="Un-cache the ontology loaded by given connection."
+			value="Un-cache the ontology loaded by given connection.",
+			notes="For very specific UI operations only.<p>Generally, use <i>/uncacheChangedModel</i> instead."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/uncacheOntology", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)

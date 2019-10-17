@@ -31,7 +31,7 @@ public class OntologyInfoRequestBody {
 	@ApiModelProperty(
 			value = "jsonRenderedSparqlConnection",
 			required = true,
-			example = 	"{ \"name\":\"my-conn\",\"serverType\":\"virtuoso\",\"dataServerUrl\": ... }"
+			example = 	"\"{ \"name\":\"my-conn\",\"serverType\":\"virtuoso\",\"dataServerUrl\": ... }\""
 			           )	
 	private String jsonRenderedSparqlConnection = "";
 	

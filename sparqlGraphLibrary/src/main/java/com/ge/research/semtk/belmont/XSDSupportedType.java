@@ -118,8 +118,8 @@ public enum XSDSupportedType {
 		}
 	}
 	
-	public String getFullName(String delim) {
-		return xmlSchemaRawPrefix + delim + this.camelCaseStr;
+	public String getFullName() {
+		return xmlSchemaRawPrefix + "#" + this.camelCaseStr;
 	}
 	
 	public String getSimpleName() {

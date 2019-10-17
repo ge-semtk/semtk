@@ -30,10 +30,12 @@ import java.util.HashMap;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -2033,9 +2035,48 @@ public class OntologyInfo {
     			// call the load
     			this.loadAnnotationComments(uri, commentVals);
     		}
-    	}
-    	    	
+    	}	
     }
+
+    /**
+     * Get a table with all class and property uris, and their labels, if any
+     * @return
+     * @throws Exception
+     */
+	public Table getUriLabelTable() throws Exception {
+		
+		// set up table
+		String str = XSDSupportedType.STRING.getFullName();
+		Table ret = new Table( new String [] {"type", "uri", "label"},
+				               new String [] {str, str, str });
+		
+		// classes
+		for (String key : this.classHash.keySet()) {
+			OntologyClass c = this.classHash.get(key);
+			ArrayList<String> labels = c.getAnnotationLabels();
+			if (labels.size() == 0) {
+				ret.addRow(new String [] {"class", key, ""});
+			} else {
+				for (String l : labels) {
+					ret.addRow(new String [] {"class", key, l});
+				}
+			}
+		}
+		
+		// properties
+		for (String key : this.propertyHash.keySet()) {
+			OntologyProperty prop = this.propertyHash.get(key);
+			ArrayList<String> labels = prop.getAnnotationLabels();
+			if (labels.size() == 0) {
+				ret.addRow(new String [] {"property", key, ""});
+			} else {
+				for (String l : labels) {
+					ret.addRow(new String [] {"property", key, l});
+				}
+			}
+		}
+		return ret;
+	}
     
 }
 
