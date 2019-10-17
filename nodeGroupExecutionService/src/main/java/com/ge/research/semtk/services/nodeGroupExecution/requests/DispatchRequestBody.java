@@ -41,7 +41,7 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	@ApiModelProperty(
 			value = "Runtime constraints json",
 			required = false,
-			example = "{ optional complex json }")
+			example = "\"[{\"SparqlID\":\"?id\",\"Operator\":\"MATCHES\",\"Operands\":[\"98243-T\"]}]\"")
 	private String runtimeConstraints;
 
 	
@@ -59,15 +59,13 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	}
 	
 	
-	public JSONArray getRuntimeConstraintsJson() throws Exception {
+	public JSONArray getRuntimeConstraints() throws Exception {
 		if(this.runtimeConstraints == null || this.runtimeConstraints.trim().isEmpty()){
 			return null;
 		}
 		return Utility.getJsonArrayFromString(this.runtimeConstraints);
 	}
-	public String getRuntimeConstraints(){
-		return(this.runtimeConstraints);
-	}
+
 	public void setRuntimeConstraints(String runtimeConstraints){
 		this.runtimeConstraints = runtimeConstraints;
 	}
