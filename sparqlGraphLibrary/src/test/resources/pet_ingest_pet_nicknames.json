@@ -71,7 +71,10 @@
 				"isTypeReturned": true
 			}
 		],
-		"orderBy": []
+		"orderBy": [{
+				"sparqlID": "?name",
+				
+			}]
 	},
 	"importSpec": {
 		"version": "1",
