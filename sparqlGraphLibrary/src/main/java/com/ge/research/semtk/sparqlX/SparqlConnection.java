@@ -118,22 +118,12 @@ public class SparqlConnection {
 		JSONArray model = new JSONArray();
 		JSONArray data = new JSONArray();
 
-		for (int i=0; i < this.modelInterfaces.size(); i++) {
-			SparqlEndpointInterface mi = this.modelInterfaces.get(i);
-			JSONObject inner = new JSONObject();
-			inner.put("type", mi.getServerType());
-			inner.put("url", mi.getServerAndPort());
-			inner.put("graph", mi.getGraph());
-			model.add(inner);
+		for (int i=0; i < this.modelInterfaces.size(); i++) {			
+			model.add(this.modelInterfaces.get(i).toJson());
 		}
 		
 		for (int i=0; i < this.dataInterfaces.size(); i++) {
-			SparqlEndpointInterface di = this.dataInterfaces.get(i);
-			JSONObject inner = new JSONObject();
-			inner.put("type", di.getServerType());
-			inner.put("url", di.getServerAndPort());
-			inner.put("graph", di.getGraph());
-			data.add(inner);
+			data.add(this.dataInterfaces.get(i).toJson());
 		}
 		
 		jObj.put("model", model);
@@ -159,7 +149,7 @@ public class SparqlConnection {
 		
 		if (jObj.containsKey("dsURL")) {
 			
-			// backwards compatible read
+			// super-duper-backwards compatible read
 		
 			// If any field doesn't exist, presume it exists in the other connection
 			this.addModelInterface(	(String)(jObj.get("type")), 
@@ -176,14 +166,12 @@ public class SparqlConnection {
 			// read model interfaces
 	    	for (int i=0; i < ((JSONArray)(jObj.get("model"))).size(); i++) {
 	    		JSONObject m = (JSONObject)((JSONArray)jObj.get("model")).get(i);
-	    		String graph = m.containsKey("dataset") ? (String)(m.get("dataset")) : (String)(m.get("graph"));
-	    		this.addModelInterface((String)(m.get("type")), (String)(m.get("url")), graph);
+	    		this.addModelInterface(SparqlEndpointInterface.getInstance(m));
 	    	}
 	    	// read data interfaces
 	    	for (int i=0; i < ((JSONArray)(jObj.get("data"))).size(); i++) {
 	    		JSONObject d = (JSONObject)((JSONArray)jObj.get("data")).get(i);
-	    		String graph = d.containsKey("dataset") ? (String)(d.get("dataset")) : (String)(d.get("graph"));
-	    		this.addDataInterface((String)(d.get("type")), (String)(d.get("url")), graph);
+	    		this.addDataInterface(SparqlEndpointInterface.getInstance(d));
 	    	}
 		}
 		

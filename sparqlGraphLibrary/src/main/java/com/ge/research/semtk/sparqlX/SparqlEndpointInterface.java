@@ -304,6 +304,30 @@ public abstract class SparqlEndpointInterface {
 		}	
 	}
 	
+	public static SparqlEndpointInterface getInstance(JSONObject jObj) throws Exception {
+		for (String key : new String[] {"type", "url"}) {
+			if (!jObj.containsKey(key)) {
+				throw new Exception("Invalid SparqlEndpointInterface JSON does not contain " + key + ": " + jObj.toJSONString());
+			}
+		}
+		if (jObj.containsKey("graph")) {
+			return SparqlEndpointInterface.getInstance((String)jObj.get("type"), (String)jObj.get("url"), (String)jObj.get("graph"));
+		} else if (jObj.containsKey("dataset")) {
+			return SparqlEndpointInterface.getInstance((String)jObj.get("type"), (String)jObj.get("url"), (String)jObj.get("dataset"));
+		} else {
+			throw new Exception("Invalid SparqlEndpointInterface JSON does not contain 'graph' or 'dataset': " + jObj.toJSONString());
+		}
+	}
+	public JSONObject toJson() {
+		JSONObject ret = new JSONObject();
+		
+		ret.put("type", this.getServerType());
+		ret.put("url", this.getServerAndPort());
+		ret.put("graph", this.getGraph());
+		
+		return ret;
+	}
+	
 	/**
 	 * Static method to create an endpoint and execute a query
 	 */
