@@ -149,7 +149,8 @@ define([	// properly require.config'ed
                     var modeStr = (this.mapping.getUriLookupMode() == ImportMapping.LOOKUP_MODE_CREATE) ? "Create if missing" : "Error if missing";
                     this.uriLookupModeSelect = IIDXHelper.createSelect(null, 
                                                                        [["Error if missing",  ImportMapping.LOOKUP_MODE_NO_CREATE], 
-                                                                        ["Create if missing", ImportMapping.LOOKUP_MODE_CREATE   ] ],
+                                                                        ["Create if missing", ImportMapping.LOOKUP_MODE_CREATE   ],
+                                                                        ["Error if exists", ImportMapping.LOOKUP_MODE_ERR_IF_EXISTS]],
                                                                        modeStr,
                                                                        false);
                     this.uriLookupModeSelect.disabled = lookingMeUp.length == 0;

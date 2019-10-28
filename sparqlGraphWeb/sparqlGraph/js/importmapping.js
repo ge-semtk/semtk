@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- **
+ ** 
  **     http://www.apache.org/licenses/LICENSE-2.0
- **
+ ** 
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,13 +18,13 @@
 
 define([	// properly require.config'ed
         	 'sparqlgraph/js/mappingitem',
-
+              	
      		// shimmed
         	// 'logconfig',
 		],
 
 		function (MappingItem) {
-
+		
 			/**
 			 * An import mapping from columns, texts, and transforms to a class or property in the nodegroup.
 		     * @description <font color="red">Users of {@link SemtkAPI} should not call this constructor.</font><br>Use {@link SemtkImportAPI#getMappings} or {@link SemtkImportAPI#getMapping} instead
@@ -41,26 +41,27 @@ define([	// properly require.config'ed
 				this.uriLookupMode =  typeof optUriLookupMode == "undefined"  ? null : optUriLookupMode;
                 this.itemList = [];
 			};
-
+    
             // Every Json key needs to have a constant like in the java
             // and I believe they should all be moved to sparqlGraphJson
             ImportMapping.JKEY_IS_NODE_LOOKUP_MODE = "URILookupMode";
             ImportMapping.JKEY_IS_URI_LOOKUP =       "URILookup";
-
+    
             ImportMapping.LOOKUP_MODE_NO_CREATE = "noCreate";
             ImportMapping.LOOKUP_MODE_CREATE = "createIfMissing";
-
-
+            ImportMapping.LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";
+    
+			
 			ImportMapping.staticGenUniqueKey = function(sparqlId, propUri) {
 				return sparqlId + "." + (propUri != null ? propUri : "");
 			};
-
+			
 			ImportMapping.prototype = {
 				//
 				// NOTE any methods without jsdoc comments is NOT meant to be used by API users.
 				//      These methods' behaviors are not guaranteed to be stable in future releases.
 				//
-
+					
 				/**
 				 * @description Add a mapping item
 				 * @param {MappingItem} item           item to add
@@ -75,7 +76,7 @@ define([	// properly require.config'ed
 					}
 					item.incrUse(1);
 				},
-
+				
 				/**
 				 * @description clears all mapping items
 				 */
@@ -83,7 +84,7 @@ define([	// properly require.config'ed
 					// clears items without any regard for the ImportSpec
 					this.itemList = [];
 				},
-
+				
 				/**
 				 * @description delete a given mapping item
 				 * @param {MappingItem} item the mapping item to delete
@@ -92,27 +93,28 @@ define([	// properly require.config'ed
 				delItem : function (item) {
 					var i = this.itemList.indexOf(item);
 					if (i < 0) { kdlLogAndThrow("Internal error in ImportRow.delItem().  Item isn't in this row.");}
-
+					
 					item.incrUse(-1);
 					this.itemList.splice(i, 1);
 				},
-
+				
 				fromJsonNode : function (jNode, idHash, ng) {
 					if (! jNode.hasOwnProperty("sparqlID")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonNode().  No sparqlID field.");}
-
+					
 					var node = ng.getNodeBySparqlID(jNode.sparqlID);
 					if (! node) {kdlLogAndThrow("ImportMapping.fromJsonNode() can't find node in nodegroup: " + jNode.sparqlID); }
 					this.node = node;
 					this.propItem = null;
-
-					if (! jNode.hasOwnProperty("mapping")) {
+					
+					if (! jNode.hasOwnProperty("mapping")) { 
                         kdlLogAndThrow("Internal error in ImportRow.fromJsonNode().  No mapping field.");
                     }
 					this.itemsFromJson(jNode.mapping, idHash);
-
+                    
                     if (jNode.hasOwnProperty(ImportMapping.JKEY_IS_NODE_LOOKUP_MODE)) {
                         if (jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE] == ImportMapping.LOOKUP_MODE_CREATE ||
-                            jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE] == ImportMapping.LOOKUP_MODE_NO_CREATE) {
+                            jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE] == ImportMapping.LOOKUP_MODE_NO_CREATE ||
+                            jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE] == ImportMapping.LOOKUP_MODE_ERR_IF_EXISTS) {
                             this.uriLookupMode = jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE];
                         } else {
                             kdlLogAndThrow("Invalid URILookupMode in import spec: " + jNode[ImportMapping.JKEY_IS_NODE_LOOKUP_MODE]);
@@ -120,23 +122,23 @@ define([	// properly require.config'ed
                     } else {
                         this.uriLookupMode = null;
                     }
-
+                    
                     this.fromJsonUriLookup(jNode, ng);
 				},
-
+				
 				fromJsonProp : function (jProp, node, idHash, ng) {
-					this.node = node;
-
+					this.node = node;   
+					
 					if (! jProp.hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonProp().  No URIRelation field.");}
 					var propItem = node.getPropertyByURIRelation(jProp.URIRelation);
 					if (! propItem) { kdlLogAndThrow("ImportMapping.fromJsonProp() can't find property in nodegroup: " + node.getSparqlID() + "->" + jProp.URIRelation); }
 
 					if (! jProp.hasOwnProperty("mapping")) { kdlLogAndThrow("Internal error in ImportRow.fromJsonProp().  No mapping field.");}
 					this.itemsFromJson(jProp.mapping, idHash);
-
+                    
                     this.fromJsonUriLookup(jProp, ng);
 				},
-
+                
                 fromJsonUriLookup : function (jObj, ng) {
                     if (jObj.hasOwnProperty(ImportMapping.JKEY_IS_URI_LOOKUP)) {
                         var sparqlIDs = jObj[ImportMapping.JKEY_IS_URI_LOOKUP];
@@ -150,11 +152,11 @@ define([	// properly require.config'ed
                         }
                     }
                 },
-
+				
                 getUriLookupNodes : function() {
                     return this.uriLookupNodes;
                 },
-
+                
                 getUriLookupSparqlIDs : function () {
                     var ret = [];
                     for (var i=0; i < this.uriLookupNodes.length; i++) {
@@ -162,30 +164,30 @@ define([	// properly require.config'ed
                     }
                     return ret;
                 },
-
+                
                 // snodeList may be []
                 setUriLookupNodes : function(snodeList) {
                     this.uriLookupNodes = snodeList;
                 },
-
+                
                 // returns a URILookupMode or null
                 getUriLookupMode : function() {
                     return this.uriLookupMode;
                 },
-
+                
                 setUriLookupMode : function(modeStr) {
                     this.uriLookupMode = modeStr;
                 },
-
-
+                
+                
 				getNode : function () {
 					return this.node;
 				},
-
+				
 				getPropItem : function () {
 					return this.propItem;
 				},
-
+				
 				/**
 				 * @description Get the MappingItems for this ImportMapping
 				 * @returns {MappingItem[]} ordered list of items
@@ -193,34 +195,29 @@ define([	// properly require.config'ed
 				getItemList : function () {
 					return this.itemList;
 				},
-
+				
 				genUniqueKey : function () {
 					// key is unique to a nodegroup
 					return ImportMapping.staticGenUniqueKey(this.getNodeSparqlId(), this.getPropUri());
 				},
-
+				
                 // return ?SparqlID of node or keyname of propItem
                 getName : function () {
                     if (this.isNode()) {
                         return this.node.getSparqlID();
                     } else {
-                        let sparqlId = this.propItem.getSparqlID();
-                        if (sparqlId != "") {
-                            return sparqlId;
-                        } else {
-                            return this.propItem.getKeyName();
-                        }
+                        return this.propItem.getKeyName();
                     }
                 },
-
+                
                 isProperty : function() {
                     return (this.propItem != null);
                 },
-
+                
                 isNode : function() {
                     return ! this.isProperty();
                 },
-
+                
 				itemsFromJson : function (jMapping, idHash) {
 					for (var i=0; i < jMapping.length; i++) {
 						var item = new  MappingItem(null, null, null);
@@ -228,7 +225,7 @@ define([	// properly require.config'ed
 						this.itemList.push(item);
 					}
 				},
-
+				
 				toJson : function (idHash) {
 					var ret = {};
 					if (this.propItem == null) {
@@ -239,36 +236,36 @@ define([	// properly require.config'ed
 						// prop row
 						ret.URIRelation = this.propItem.getUriRelation();
 					}
-
+                    
                     // URILookupMode
                     if (this.uriLookupMode != null) {
                         ret.URILookupMode = this.uriLookupMode;
                     }
-
+                    
                     if (this.uriLookupNodes.length != 0) {
                         ret.URILookup = this.getUriLookupSparqlIDs();
                     }
-
+					
 					//mapping
 					ret.mapping = [];
 					for (var i=0; i < this.itemList.length; i++) {
 						ret.mapping.push(this.itemList[i].toJson(idHash));
 					}
-
+					
 					return ret;
 				},
-
+				
 				getNodeSparqlId : function() {
 					return this.node.getSparqlID();
 				},
-
+				
 				getPropUri : function() {
 					return this.propItem ? this.propItem.getUriRelation() : null;
 				},
 
-
+				
 
 			};
-			return ImportMapping;
+			return ImportMapping;            
 	}
 );
