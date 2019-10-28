@@ -1055,12 +1055,13 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * Does LOOKUP_MODE_CREATE appear anywhere in the ImportSpec
+	 * Does LOOKUP_MODE_CREATE or ERR_IF_EXISTS appear anywhere in the ImportSpec
+	 * (i.e. is there any way to lookup a URI and create it if it doesn't exist)
 	 * @return
 	 */
-	public boolean containsLookupModeCreate() {
+	public boolean containsLookupWithCreate() {
 		for (Integer key : this.lookupMode.keySet()) {
-			if (this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_CREATE)) {
+			if (this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_CREATE) || this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_ERR_IF_EXISTS)) {
 				return true;
 			}
 		}

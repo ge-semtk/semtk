@@ -234,7 +234,7 @@ public class DataLoader implements Runnable {
 				precheckFailed = true;
 			}
 			
-		} else if (this.batchHandler.containsLookupModeCreate()) {
+		} else if (this.batchHandler.containsLookupWithCreate()) {
 			
 			// perform invisible pass.  Only goal is to identify legally missing URI's and set them to NOT_FOUND.
 			String exceptionHeader = "Error during URILookup first pass.  At least one thread threw exception.  e.g.: ";
@@ -263,7 +263,7 @@ public class DataLoader implements Runnable {
 			
 			this.batchHandler.resetDataSet();
 			Boolean skipCheck = precheck;
-			this.totalRecordsProcessed = this.runIngestionThreads(false, skipCheck, exceptionHeader); // don't skip ingest
+			this.totalRecordsProcessed = this.runIngestionThreads(false, true, exceptionHeader); // ingest, skip precheck (already done)
 			
 		} else {
 			this.totalRecordsProcessed = 0;
@@ -287,7 +287,19 @@ public class DataLoader implements Runnable {
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
-		LocalLogger.logToStdOut("Records processed:" + (skipIngest ? " (no ingest)" : "") + (skipCheck ? " (no precheck)" : ""), true, false);
+		
+		String mode = "";
+		if (skipIngest && skipCheck) {
+			mode = "URILookup only";  
+		} else if (skipIngest && !skipCheck) {
+			mode = "precheck";
+		} else if (!skipIngest && skipCheck) {
+			mode = "ingest";
+		} else if (!skipIngest && !skipCheck) {
+			mode = "precheck & ingest";
+		} 
+		
+		LocalLogger.logToStdOut("Records processed (" + mode + "): ", true, false);
 		long lastMillis = System.currentTimeMillis();  // use this to report # recs loaded every X sec
 		
 		ArrayList<IngestionWorkerThread> wrkrs = new ArrayList<IngestionWorkerThread>();

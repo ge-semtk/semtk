@@ -223,8 +223,8 @@ public class DataLoadBatchHandler {
 	 * Does LOOKUP_MODE_CREATE appear anywhere in the ImportSpec
 	 * @return
 	 */
-	public boolean containsLookupModeCreate() {
-		return this.importSpec.containsLookupModeCreate();
+	public boolean containsLookupWithCreate() {
+		return this.importSpec.containsLookupWithCreate();
 	}
 	
 	public int getDsRows() throws Exception {
