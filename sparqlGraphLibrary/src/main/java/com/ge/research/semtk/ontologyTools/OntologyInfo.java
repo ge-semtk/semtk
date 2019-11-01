@@ -508,8 +508,12 @@ public class OntologyInfo {
 	/**
 	 * returns true/false value of whether a property is known to the OntologyInfo object
 	 **/
-	public Boolean containsProperty(String propertynameString){
-		return this.propertyHash.containsKey(propertynameString);
+	public Boolean containsProperty(String propertyUri){
+		return this.propertyHash.containsKey(propertyUri);
+	}
+	
+	public OntologyProperty getProperty(String propertyUri) {
+		return this.propertyHash.get(propertyUri);
 	}
 	
 	/**

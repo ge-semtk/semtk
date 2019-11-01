@@ -55,10 +55,10 @@ import com.ge.research.semtk.services.client.RestClientConfig.Methods;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
- * An abstract class containing code for a REST client.
+ * An  class containing code for a REST client.
  */
 @SuppressWarnings("deprecation")
-public abstract class RestClient extends Client implements Runnable {
+public  class RestClient extends Client implements Runnable {
 	
 	protected RestClientConfig conf;	
 	Object runRes = null;
@@ -127,6 +127,14 @@ public abstract class RestClient extends Client implements Runnable {
 		this.headerTable.remove(key);
 	}
 	
+	public void addParameter(String key, JSONObject val) {
+		this.parametersJSON.put(key, val);
+	}
+	
+	public void addParameter(String key, String val) {
+		this.parametersJSON.put(key, val);
+	}
+	
 	/** 
 	 * Remove endpoint and parameter settings, so this client can be used to connect to a new endpoint. 
 	 * Also remove any results and exceptions.
@@ -164,7 +172,7 @@ public abstract class RestClient extends Client implements Runnable {
 	/**
 	 * Abstract method to set up service parameters available upon instantiation
 	 */
-	public abstract void buildParametersJSON() throws Exception;
+	public  void buildParametersJSON() throws Exception {};
 	
 	/**
 	 * Abstract method to handle an empty response from the service
@@ -203,6 +211,10 @@ public abstract class RestClient extends Client implements Runnable {
 	 */
 	public Object execute() throws ConnectException, Exception {
 		return execute(false);
+	}
+	
+	public JSONObject executeToJson() throws Exception {
+		return (JSONObject) this.execute(false);
 	}
 	
 	/**
