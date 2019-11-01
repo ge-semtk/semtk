@@ -154,10 +154,11 @@ define([	// properly require.config'ed   bootstrap-modal
               * @private
               */
             execNodegroupSparqlId : function (endpoint, nodegroup, conn, sparqlId, successCallback) {
-				var sgJson = new SparqlGraphJson(conn, nodegroup, null);
+                var deflateFlag = false;
+				var sgJson = new SparqlGraphJson(conn, nodegroup, null, deflateFlag);
                 var data = JSON.stringify ({
 					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
-                      "targetObjectSparqlId": sparqlId
+                      "sparqlID": sparqlId
 					});
 				this.msi.postToEndpoint(endpoint, data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},

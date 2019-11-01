@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017-2018 General Electric Company
+ ** Copyright 2017 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,23 @@
 
 package com.ge.research.semtk.springutilib.requests;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-public class ConnectionUriRequest extends SparqlConnectionRequest {
-	
-	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
-	private String nodeUri;
+import io.swagger.annotations.ApiModelProperty;
 
-	public String getNodeUri() {
-		return nodeUri;
+public class SparqlIdOptionalRequest  {
+
+	@Pattern(regexp="^[a-zA-Z][a-zA-Z0-9_-]+$", message="sparqlId is ill-formed")
+	@Size(min=4, max=64, message="sparqlId must be 4-64 characters in length")
+	@ApiModelProperty(
+	   value = "sparqlId",
+	   required = true,
+	   example = "Var_Name")
+	private String sparqlId;
+
+	public String getSparqlId() {
+		return sparqlId;
 	}
+	
 }

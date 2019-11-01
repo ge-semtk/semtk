@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,18 +17,36 @@
 
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
+
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-public class NodegroupSparqlIdRequest extends NodegroupRequest {
+import java.util.ArrayList;
 
-	@ApiModelProperty(
-            position = 1,
-            value = "sparqlID",
+@ApiModel
+public class ConnectionUriRequest extends SparqlConnectionRequest {
+
+    @ApiModelProperty(
+    		value = "sparqlID",
             required = false,
             example = "myVarName")
     private String sparqlID;
+    
+    @ApiModelProperty(
+    		value = "uri",
+            required = true,
+            example = "http://path#this")
+    private String uri;
+
+ 
+    public String getUri() {
+		return uri;
+	}
 
 	public String getSparqlID() {
-		return this.sparqlID;
-	}
+        return sparqlID;
+    }
+
 }
