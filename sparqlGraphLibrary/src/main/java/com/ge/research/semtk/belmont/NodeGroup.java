@@ -2294,16 +2294,50 @@ public class NodeGroup {
 
 		return sNode;
 	}
-	
+    /**
+     * Set a property item to be returned, giving it a SparqlID if needed
+     * @param pItem
+     * @param val
+     * @return the sparqlId
+     * @throws Exception 
+     */
+    public String setValueConstraint(PropertyItem pItem, ValueConstraint vc) throws Exception {
+        String ret = null;
+        if (vc != null && pItem.getSparqlID().isEmpty()) {
+            ret = this.changeSparqlID(pItem, pItem.getKeyName());
+        } 
+        pItem.setValueConstraint(vc);
+        
+        return  ret;
+    }
+
+    /**
+     * Make sure sparqlID is not blank.  Get it.
+     * @param pItem
+     * @return
+     * @throws Exception
+     */
+    public String initSparqlID(PropertyItem pItem) throws Exception {
+        String ret = null;
+        if (pItem.getSparqlID().isEmpty()) {
+            ret = this.changeSparqlID(pItem, pItem.getKeyName());
+        }         
+        return  ret;
+    }
 	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain) throws Exception  {
 		return this.getOrAddNode(classURI, oInfo, domain, false, false);
 	}
 	
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag) throws Exception  {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, boolean superclassFlag) throws Exception  {
+		return this.getOrAddNode(classURI, oInfo, "", superclassFlag, false);
+	}
+	
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag) throws Exception  {
 		return this.getOrAddNode(classURI, oInfo, domain, superclassFlag, false);
 	}
+	
 
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag, Boolean optionalFlag ) throws Exception  {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag, boolean optionalFlag ) throws Exception  {
 		// return first (randomly selected) node with this URI
 		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
 		// if superclassFlag, then any subclass of classURI "counts"
