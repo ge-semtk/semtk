@@ -18,7 +18,9 @@
 package com.ge.research.semtk.services.client;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,7 @@ import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClientConfig.Methods;
+import com.ge.research.semtk.servlet.utility.Utility;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -375,5 +378,19 @@ public  class RestClient extends Client implements Runnable {
 		return retval;
 	}
 
+	/**
+	 * Append a param onto a GET url
+	 * @param url
+	 * @param name
+	 * @param value
+	 * @return
+	 * @throws UnsupportedEncodingException 
+	 */
+	public static String addGetParam(String url, String name, String value) throws UnsupportedEncodingException {
+		String ret = url;
+		ret += (url.contains("?") ? "&" : "?") + name + "=" + URLEncoder.encode(value,"UTF-8");
+		
+		return ret;
+	}
 	
 }
