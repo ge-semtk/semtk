@@ -26,6 +26,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.google.protobuf.TextFormat.ParseException;
 
@@ -56,8 +57,9 @@ public class NodeItem {
 	 * @param valueType (e.g. ScreenPrinting)
 	 * @param UriValueType (e.g. http://research.ge.com/print/testconfig#ScreenPrinting)
 	 */
-	public NodeItem(String nome, String valueType, String UriValueType) {
-		this.keyName = nome;
+	public NodeItem(String uri, String valueType, String UriValueType) {
+		this.keyName = (new OntologyName(uri)).getLocalName();
+		this.uriConnectBy = uri;
 		this.valueType = valueType;
 		this.valueTypeURI = UriValueType;
 	}

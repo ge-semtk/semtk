@@ -273,7 +273,7 @@ public class NodeGroup {
 				        String toNodeClassURI = toNode.getFullUriName(); // e.g. http://research.ge.com/print/testconfig#ScreenPrinting		        	
 				        
 			        	if(nodeItem == null){  // only create node item once
-					        nodeItem = new NodeItem(relationshipLocal, (new OntologyName(toNodeClassURI)).getLocalName(), toNodeClassURI); 
+					        nodeItem = new NodeItem(relationship, (new OntologyName(toNodeClassURI)).getLocalName(), toNodeClassURI); 
 					        nodeItem.setConnected(true);
 				        	nodeItem.setConnectBy(relationshipLocal);
 					        nodeItem.setUriConnectBy(relationship);				        
@@ -1077,6 +1077,38 @@ public class NodeGroup {
         }
 		return null;
     }
+	
+	/**
+	 * Find all items in nodegroup with this uri
+	 * @param uri
+	 * @return
+	 */
+	public ArrayList<PropertyItem> getPropertyItems(String uri) {
+		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
+		
+		for (Node n : this.nodes) {
+           
+            PropertyItem pItem = n.getPropertyByURIRelation(uri);
+            if (pItem != null) {
+            	 ret.add(pItem);
+            }
+            
+        }
+		return ret;
+	}
+	
+	public ArrayList<NodeItem> getNodeItems(String uri) {
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+		
+		for (Node n : this.nodes) {
+            
+            NodeItem nItem = n.getNodeItem(uri);
+            if (nItem != null) {
+            	 ret.add(nItem);
+            }
+        }
+		return ret;
+	}
 	
 	/**
 	 * Generate vanilla SELECT
@@ -2150,7 +2182,7 @@ public class NodeGroup {
 
 			// is the range a class ?
 			if (oInfo.containsClass(propRangeNameFull)) {
-				NodeItem p = new NodeItem(propNameLocal, propRangeNameLocal, propRangeNameFull);
+				NodeItem p = new NodeItem(propNameFull, propRangeNameLocal, propRangeNameFull);
 				belnodes.add(p);
 
 			}
@@ -2181,6 +2213,12 @@ public class NodeGroup {
 	public Node addNode(String classUri, OntologyInfo oInfo) throws Exception  {
 		Node node = this.returnBelmontSemanticNode(classUri, oInfo);
 		this.addOneNode(node, null, null, null);
+		return node;
+	}
+	
+	public Node addNode(String classUri, Node existingNode, String linkFromUri, String linkToUri) throws Exception {
+		Node node = this.returnBelmontSemanticNode(classUri, this.oInfo);
+		this.addOneNode(node, existingNode, linkFromUri, linkToUri);
 		return node;
 	}
 	
@@ -2252,6 +2290,11 @@ public class NodeGroup {
 		return  ret;
 	}
 	
+	public void setIsReturnedAllProps(Node node, boolean val) throws Exception {
+		for (PropertyItem pItem : node.getPropertyItems()) {
+			this.setIsReturned(pItem, val);
+		}
+	}
 	
 
 	public String changeSparqlID(Returnable obj, String requestID) {
@@ -2371,7 +2414,7 @@ public class NodeGroup {
 		return sNode;
 	}
 	
-	private Node getNodeItemParentSNode(NodeItem nItem) {
+	public Node getNodeItemParentSNode(NodeItem nItem) {
 		for (Node n : this.nodes) {
 			if (n.getNodeItemList().contains(nItem)) {
 				return n;
