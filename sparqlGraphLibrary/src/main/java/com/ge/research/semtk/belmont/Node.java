@@ -275,7 +275,7 @@ public class Node extends Returnable {
 				
 			// new node
 			} else {
-				NodeItem nodeItem = new NodeItem(	oProp.getNameStr(true), 
+				NodeItem nodeItem = new NodeItem(	oProp.getNameStr(false), 
 													oProp.getRangeStr(true),
 													oProp.getRangeStr(false)
 													);

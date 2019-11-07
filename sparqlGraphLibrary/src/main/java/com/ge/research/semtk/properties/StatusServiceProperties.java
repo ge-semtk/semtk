@@ -9,4 +9,9 @@ public class StatusServiceProperties extends ServiceProperties {
 		StatusClient client = new StatusClient(new StatusClientConfig(protocol, server, port, jobId));
 		return client;
 	}
+	
+	public StatusClient getClient() throws Exception {
+		StatusClient client = new StatusClient(new StatusClientConfig(protocol, server, port));
+		return client;
+	}
 }

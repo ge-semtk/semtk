@@ -63,8 +63,9 @@ import com.ge.research.semtk.utility.Utility;
  * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
  */
 public class ImportSpecHandler {
-	static final String LOOKUP_MODE_NO_CREATE = "noCreate";
-	static final String LOOKUP_MODE_CREATE = "createIfMissing";
+	static final String LOOKUP_MODE_NO_CREATE = 	"noCreate";    // should be 'errorIfMissing'
+	static final String LOOKUP_MODE_CREATE =        "createIfMissing";
+	static final String LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";  // this is a place-holder, not implemented yet
 	
 	JSONObject importspec = null;
 	
@@ -280,6 +281,7 @@ public class ImportSpecHandler {
 				switch (mode) {
 				case ImportSpecHandler.LOOKUP_MODE_CREATE:
 				case ImportSpecHandler.LOOKUP_MODE_NO_CREATE:
+				case ImportSpecHandler.LOOKUP_MODE_ERR_IF_EXISTS:
 					this.lookupMode.put(nodeIndex, mode);
 					break;
 				default:
@@ -805,12 +807,14 @@ public class ImportSpecHandler {
 			// Check and return results
 			if (tab.getNumRows() > 1) {
 				// multiple found: error
-				throw new Exception("URI lookup found multiple URI's");
+				String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
+				throw new Exception("URI lookup on " + lookup + " found multiple URI's matching: " + String.join(",", builtStrings));
 				
 			} else if (tab.getNumRows() == 0) {
 				// zero found
 				if (this.getLookupMode(nodeIndex).equals(LOOKUP_MODE_NO_CREATE)) {
-					throw new Exception("URI lookup failed on: " + String.join(",", builtStrings) );
+					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
+					throw new Exception("URI lookup on " + lookup + " failed on: " + String.join(",", builtStrings) );
 					
 				} else {
 					// set URI to NOT_FOUND
@@ -821,9 +825,16 @@ public class ImportSpecHandler {
 				
 			} else {
 				// 1 found:  cache and return
-				String uri = tab.getCell(0,0);
-				this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeIndex), builtStrings, uri);
-				return uri;
+				if (this.getLookupMode(nodeIndex).equals(LOOKUP_MODE_ERR_IF_EXISTS)) {
+					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
+					throw new Exception("URI lookup on 'error if exists' " + lookup + " already exists for: " + String.join(",", builtStrings) );
+					
+				} else {
+					// found 1.  Normal success.
+					String uri = tab.getCell(0,0);
+					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeIndex), builtStrings, uri);
+					return uri;
+				}
 			}
 		}
 	}
@@ -1044,12 +1055,13 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * Does LOOKUP_MODE_CREATE appear anywhere in the ImportSpec
+	 * Does LOOKUP_MODE_CREATE or ERR_IF_EXISTS appear anywhere in the ImportSpec
+	 * (i.e. is there any way to lookup a URI and create it if it doesn't exist)
 	 * @return
 	 */
-	public boolean containsLookupModeCreate() {
+	public boolean containsLookupWithCreate() {
 		for (Integer key : this.lookupMode.keySet()) {
-			if (this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_CREATE)) {
+			if (this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_CREATE) || this.getLookupMode(key).equals(ImportSpecHandler.LOOKUP_MODE_ERR_IF_EXISTS)) {
 				return true;
 			}
 		}

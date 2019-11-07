@@ -23,7 +23,8 @@ import javax.validation.constraints.Size;
 
 public class UriRequest {
 	
-	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
+	@NotNull(message="id can not be null") 
+	@Size(min=4, message="id must be at least 4 chars")
 	private String uri;
 
 	public String getUri() {

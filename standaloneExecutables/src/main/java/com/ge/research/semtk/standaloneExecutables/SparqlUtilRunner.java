@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.standaloneExecutables;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.DataLoader;
@@ -38,7 +40,6 @@ public class SparqlUtilRunner {
 	 * Main method
 	 */
 	public static void main(String[] args) throws Exception{
-		
 		SparqlConnection connectionOverride = null;		// stays null if no connection override provided
 		try{
 			ArgParser ap = new ArgParser(
@@ -78,7 +79,11 @@ public class SparqlUtilRunner {
 				
 				System.out.println("CLEAR GRAPH  server: " + sei.getServerAndPort() + ", graph: " + sei.getGraph());
 				sei.clearGraph();
+				
+			} else {
+				ap.throwUsageException("nothing to do");
 			}
+			
 			System.exit(0);  // explicitly exit to avoid maven exec:java error ("thread was interrupted but is still alive")
 		
 		}catch(Exception e){

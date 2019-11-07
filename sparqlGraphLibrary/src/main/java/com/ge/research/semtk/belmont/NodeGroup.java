@@ -273,7 +273,7 @@ public class NodeGroup {
 				        String toNodeClassURI = toNode.getFullUriName(); // e.g. http://research.ge.com/print/testconfig#ScreenPrinting		        	
 				        
 			        	if(nodeItem == null){  // only create node item once
-					        nodeItem = new NodeItem(relationshipLocal, (new OntologyName(toNodeClassURI)).getLocalName(), toNodeClassURI); 
+					        nodeItem = new NodeItem(relationship, (new OntologyName(toNodeClassURI)).getLocalName(), toNodeClassURI); 
 					        nodeItem.setConnected(true);
 				        	nodeItem.setConnectBy(relationshipLocal);
 					        nodeItem.setUriConnectBy(relationship);				        
@@ -1077,6 +1077,38 @@ public class NodeGroup {
         }
 		return null;
     }
+	
+	/**
+	 * Find all items in nodegroup with this uri
+	 * @param uri
+	 * @return
+	 */
+	public ArrayList<PropertyItem> getPropertyItems(String uri) {
+		ArrayList<PropertyItem> ret = new ArrayList<PropertyItem>();
+		
+		for (Node n : this.nodes) {
+           
+            PropertyItem pItem = n.getPropertyByURIRelation(uri);
+            if (pItem != null) {
+            	 ret.add(pItem);
+            }
+            
+        }
+		return ret;
+	}
+	
+	public ArrayList<NodeItem> getNodeItems(String uri) {
+		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
+		
+		for (Node n : this.nodes) {
+            
+            NodeItem nItem = n.getNodeItem(uri);
+            if (nItem != null) {
+            	 ret.add(nItem);
+            }
+        }
+		return ret;
+	}
 	
 	/**
 	 * Generate vanilla SELECT
@@ -2150,7 +2182,7 @@ public class NodeGroup {
 
 			// is the range a class ?
 			if (oInfo.containsClass(propRangeNameFull)) {
-				NodeItem p = new NodeItem(propNameLocal, propRangeNameLocal, propRangeNameFull);
+				NodeItem p = new NodeItem(propNameFull, propRangeNameLocal, propRangeNameFull);
 				belnodes.add(p);
 
 			}
@@ -2181,6 +2213,12 @@ public class NodeGroup {
 	public Node addNode(String classUri, OntologyInfo oInfo) throws Exception  {
 		Node node = this.returnBelmontSemanticNode(classUri, oInfo);
 		this.addOneNode(node, null, null, null);
+		return node;
+	}
+	
+	public Node addNode(String classUri, Node existingNode, String linkFromUri, String linkToUri) throws Exception {
+		Node node = this.returnBelmontSemanticNode(classUri, this.oInfo);
+		this.addOneNode(node, existingNode, linkFromUri, linkToUri);
 		return node;
 	}
 	
@@ -2252,6 +2290,11 @@ public class NodeGroup {
 		return  ret;
 	}
 	
+	public void setIsReturnedAllProps(Node node, boolean val) throws Exception {
+		for (PropertyItem pItem : node.getPropertyItems()) {
+			this.setIsReturned(pItem, val);
+		}
+	}
 	
 
 	public String changeSparqlID(Returnable obj, String requestID) {
@@ -2294,16 +2337,50 @@ public class NodeGroup {
 
 		return sNode;
 	}
-	
+    /**
+     * Set a property item to be returned, giving it a SparqlID if needed
+     * @param pItem
+     * @param val
+     * @return the sparqlId
+     * @throws Exception 
+     */
+    public String setValueConstraint(PropertyItem pItem, ValueConstraint vc) throws Exception {
+        String ret = null;
+        if (vc != null && pItem.getSparqlID().isEmpty()) {
+            ret = this.changeSparqlID(pItem, pItem.getKeyName());
+        } 
+        pItem.setValueConstraint(vc);
+        
+        return  ret;
+    }
+
+    /**
+     * Make sure sparqlID is not blank.  Get it.
+     * @param pItem
+     * @return
+     * @throws Exception
+     */
+    public String initSparqlID(PropertyItem pItem) throws Exception {
+        String ret = null;
+        if (pItem.getSparqlID().isEmpty()) {
+            ret = this.changeSparqlID(pItem, pItem.getKeyName());
+        }         
+        return  ret;
+    }
 	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain) throws Exception  {
 		return this.getOrAddNode(classURI, oInfo, domain, false, false);
 	}
 	
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag) throws Exception  {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, boolean superclassFlag) throws Exception  {
+		return this.getOrAddNode(classURI, oInfo, "", superclassFlag, false);
+	}
+	
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag) throws Exception  {
 		return this.getOrAddNode(classURI, oInfo, domain, superclassFlag, false);
 	}
+	
 
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, Boolean superclassFlag, Boolean optionalFlag ) throws Exception  {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag, boolean optionalFlag ) throws Exception  {
 		// return first (randomly selected) node with this URI
 		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
 		// if superclassFlag, then any subclass of classURI "counts"
@@ -2337,7 +2414,7 @@ public class NodeGroup {
 		return sNode;
 	}
 	
-	private Node getNodeItemParentSNode(NodeItem nItem) {
+	public Node getNodeItemParentSNode(NodeItem nItem) {
 		for (Node n : this.nodes) {
 			if (n.getNodeItemList().contains(nItem)) {
 				return n;

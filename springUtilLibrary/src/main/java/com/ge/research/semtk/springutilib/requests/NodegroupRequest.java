@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupService.requests;
+package com.ge.research.semtk.springutilib.requests;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -45,7 +45,7 @@ public class NodegroupRequest {
 
 
 	public SparqlConnection buildConnection() throws Exception {
-		SparqlConnection conn = buildSparqlGraphJsonWithConn().getSparqlConn();
+		SparqlConnection conn = buildSparqlGraphConnection().getSparqlConn();
 		if (conn == null) { 
 			throw new Exception("Operation requires a connection, not a legacy plain nodegroup json");
 		}
@@ -74,7 +74,7 @@ public class NodegroupRequest {
 	 * @return
 	 * @throws Exception
 	 */
-	public SparqlGraphJson buildSparqlGraphJsonWithConn() throws Exception {
+	public SparqlGraphJson buildSparqlGraphConnection() throws Exception {
 		
 		SparqlGraphJson ret = this.buildSparqlGraphJson();
 		if (ret.getSparqlConn() == null) {

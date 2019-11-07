@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017-2018 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,15 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+
 import io.swagger.annotations.ApiModelProperty;
 
-public class NodegroupRequest {
 
+public class NodegroupConstraintRequest extends RuntimeConstraintRequest {
+
+	// total copy-and-paste from NodegroupRequest because I can't figure out 
+	// how to fake multiple inheritance and keep the annotations.
 	@ApiModelProperty(
 			value = "jsonRenderedNodeGroup",
 			required = true,
@@ -90,8 +93,5 @@ public class NodegroupRequest {
 	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
 		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
 	}
-	
-	public void validate() throws Exception {
-		// all validation happens in getJsonNodeGroup
-	}
+
 }

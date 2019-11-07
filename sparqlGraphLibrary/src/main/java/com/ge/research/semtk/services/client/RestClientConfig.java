@@ -22,7 +22,7 @@ package com.ge.research.semtk.services.client;
  * Configuration class for a REST client.
  * Create subclass clients for specific services.
  */
-public abstract class RestClientConfig {
+public class RestClientConfig {
 
 	public enum Methods {POST, GET, PUT, DELETE};
 
