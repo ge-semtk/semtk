@@ -16,3 +16,4 @@ DOT_SETTINGS
 .vscode/
 ENV_OVERRIDE
 auth_settings.json
+*.rej
