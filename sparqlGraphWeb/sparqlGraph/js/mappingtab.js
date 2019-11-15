@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -515,6 +515,7 @@ define([	// properly require.config'ed
 				elem = document.createElement("label");
 				elem.innerHTML = "Text:";
 				nameForm.appendChild(elem);
+
 				
 				elem = document.createElement("input");
 				elem.id = "modal_text";
@@ -522,6 +523,15 @@ define([	// properly require.config'ed
 				elem.class = "input-small";
 				elem.value = (textElem != null) ? this.iSpecHash[textElem.id].getText() : "";
 				nameForm.appendChild(elem);
+                
+                var datalist = IIDXHelper.createDataList("mappingtextlist", ['%ingestTime', '%ingestEpoch']);
+                elem.setAttribute("list", datalist.id);
+                body.appendChild(datalist);
+
+                body.appendChild(IIDXHelper.createNbspText());
+                body.appendChild(ModalIidx.createInfoButton("Enter plain text or one of these special texts: <list>" +
+                                                            "<li>%ingestTime - dateTime of ingestion</li>" +
+                                                            "<li>%ingestEpoch - ingestion time as epoch seconds</li></list>"));
 				
 				var modalValidate = function() {
 					var text = document.getElementById("modal_text").value;
