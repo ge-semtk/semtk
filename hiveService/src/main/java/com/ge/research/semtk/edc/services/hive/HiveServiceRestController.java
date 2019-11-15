@@ -45,6 +45,8 @@ public class HiveServiceRestController {
 
 	private static String setStmt = "set hive.exec.stagingdir=/tmp/hive-staging;";
 
+	private boolean ASYNC = true;	// true for asynchronous mode (returns job id), false for synchronous mode (returns query results)
+	
 	@Autowired
 	HiveProperties props;
 	@Autowired
@@ -53,13 +55,25 @@ public class HiveServiceRestController {
 	StatusServiceProperties statusProps;
 	
 	/**
-	 * Execute arbitrary query in Hive
+	 * Execute arbitrary query in Hive.  
+	 * Returns a job id if running in asynchronous mode, or query results if running in synchronous mode.
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/queryHive", method= RequestMethod.POST)
 	public JSONObject queryHive(@RequestBody DatabaseQueryRequest requestBody){
 		String query = requestBody.query;
 		return runQuery (requestBody, query);
+	}
+	
+	/**
+	 * Execute arbitrary query in Hive.  
+	 * Returns the query results (not a job id).
+	 */
+	@CrossOrigin
+	@RequestMapping(value="/queryHiveSync", method= RequestMethod.POST)
+	public JSONObject queryHiveSync(@RequestBody DatabaseQueryRequest requestBody){
+		String query = requestBody.query;
+		return runQuery (requestBody, query, false);
 	}
 
 	/**
@@ -250,6 +264,13 @@ public class HiveServiceRestController {
 	 * Execute query in Hive
 	 */
 	private JSONObject runQuery (DatabaseRequest requestBody, String query) {
+		return runQuery(requestBody, query, ASYNC);
+	}
+		
+	/**
+	 * Execute query in Hive
+	 */
+	private JSONObject runQuery (DatabaseRequest requestBody, String query, boolean async) {
 		
 		// prepend statement to set execution engine (should be mr/tez/spark - Hive itself will give a nice error if not)
 		String setStmtExecutionEngine = "";  
@@ -268,9 +289,7 @@ public class HiveServiceRestController {
 			LocalLogger.logToStdOut("Connecting to: " + HiveConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
 			HiveConnector oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password);
 			
-			// TODO decide on the mechanism to turn this on/off
-			boolean ASYNC = true;
-			if (ASYNC) {
+			if (async) {
 				LocalLogger.logToStdOut("Async Hive query: " + query);
 				HiveQueryThread queryThread = new HiveQueryThread(oc, query, statusProps, resultsProps);
 				queryThread.start();
