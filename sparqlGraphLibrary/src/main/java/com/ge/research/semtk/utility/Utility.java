@@ -485,7 +485,14 @@ public abstract class Utility {
 			Element rdfElem = (Element) rdfNode;
 			ret = rdfElem.getAttribute("xml:base");
 			if (ret == null || ret.isEmpty()) {
-				throw new Exception("xml:base not found or empty");
+				
+				// hack in an exception for commonly used at GE: SadlBaseModel.owl
+				ret = rdfElem.getAttribute("xmlns:sadlbasemodel");
+				if (ret == null || ret.isEmpty()) {
+					throw new Exception("xml:base not found or empty");
+				} else {
+					ret = ret.split("#")[0];
+				}
 			}
 		} catch (Exception e) {
 			throw new Exception("Error pulling <rdf:RDF xml:base from file ", e);
