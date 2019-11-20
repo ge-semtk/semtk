@@ -574,6 +574,14 @@ public class Node extends Returnable {
 		this.constraints = v;
 	}
 	
+	public void addValueConstraint(String vc) {
+		if (this.constraints == null) {
+			this.constraints = new ValueConstraint(vc);
+		} else {
+			this.constraints.addConstraint(vc);
+		}
+	}
+	
 	public String getUri(boolean localFlag) {
 		if (localFlag) {
 			return new OntologyName(this.getFullUriName()).getLocalName();

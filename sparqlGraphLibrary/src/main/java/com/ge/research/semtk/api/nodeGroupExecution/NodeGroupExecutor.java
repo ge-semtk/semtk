@@ -248,6 +248,20 @@ public class NodeGroupExecutor {
 		return retval;
 	}
 	
+	// this method only works if the results are a JSON-LD result...
+	public JSONObject getJsonBlobResults() throws Exception{
+		JSONObject retval = null;
+
+		if(this.currentJobId == null){
+			throw new Exception("StoredQueryExecutor::getTableResults -- the current job ID is null. unable to get info on nonexistent job.");
+		}
+		else{
+			retval = this.resultsClient.execGetBlobResult(this.currentJobId);
+		}
+		return retval;
+	}
+		
+	
 	// Dispatch actions
 	public void dispatchRawSparql(SparqlConnection sc, String sparqlQuery) throws Exception {
 	

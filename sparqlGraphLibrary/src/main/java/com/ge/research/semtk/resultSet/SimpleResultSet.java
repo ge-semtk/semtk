@@ -60,6 +60,9 @@ public class SimpleResultSet extends GeneralResultSet{
 		this.addResult(SimpleResultSet.MESSAGE_JSONKEY, msg);
 	}
 	
+	public String getJobId() throws Exception {
+		return this.getResult(JOB_ID_RESULT_KEY);
+	}
 	/**
 	 * Return results in a hashmap
 	 */

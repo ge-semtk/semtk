@@ -128,6 +128,25 @@ public class OntologyPath {
 		return retval;
 	}
 	
+	public boolean containsSubPath(OntologyPath other) {
+		// loop through this path, stopping when there aren't enough left to match other
+		for (int i=0; i < this.getLength() - other.getLength() + 1; i++) {
+			// loop through comparison
+			for (int j=0; j < other.getLength(); j++) {
+				// break if there's a mismatch
+				if (! other.getTriple(j).equals(this.getTriple(i))) {
+					break;
+				}
+				// if we survived last comparison then return match
+				if (j == other.getLength() -1) {
+					return true;
+				}
+			}
+		}
+		// default no match
+		return false;
+	}
+	
 	public boolean isSingleLoop() {
 		boolean retval = false;
 		// if there is only one entry and the subject and object match, then we have a small closed loop. 

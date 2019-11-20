@@ -64,7 +64,11 @@ public class OntologyInfo {
 	private HashMap<String, ArrayList<OntologyClass>> subclassHash = new HashMap<String, ArrayList<OntologyClass>>();
 	// a list of all the enumerations available for a given class. these are handled as full uris for convenience sake. 
 	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
-		
+	
+	// --- not stored in json ---
+	// pathCountHash(path.toJson().toJSONString()) = count in a some graph somewhere known by caller.
+	private HashMap<String, Integer> pathCountHash = new HashMap<String, Integer>();
+	
 	// --- temporary hashes during path-finding ---
 	// for each class, the collection of valid, single-hop paths to and from other classes. 
 	private HashMap<String, ArrayList<OntologyPath>> connHash = new HashMap<String, ArrayList<OntologyPath>>();
@@ -247,6 +251,37 @@ public class OntologyInfo {
 		return new ArrayList<String>(this.propertyHash.keySet());
 	}
 	
+	/**
+	 * Get a (giant?) list of every possible one-hop CLASS to CLASS in oInfo
+	 * (including subclasses: see getConnList(classNameStr) )
+	 * @return
+	 * @throws Exception
+	 */
+	public ArrayList<OntologyPath> getConnList() throws Exception {
+		ArrayList<OntologyPath> ret = new ArrayList<OntologyPath>();
+		
+		for (String classNameStr : this.classHash.keySet()) {
+			ret.addAll(this.getConnList(classNameStr));
+		}
+		return ret;
+	}
+	
+	public void addPathCount(OntologyPath path, int count) {
+		String key = path.toJson().toJSONString();
+		this.pathCountHash.put(key, count);
+	}
+	
+	/**
+	 * Get all one-hop paths two and from a class
+	 *         classFrom -has-> classNameStr
+	 *      subClassFrom -has-> classNameStr
+	 *                          classNameStr -has->    classTo
+	 *                          classNameStr -has-> subClassTo
+	 * @param classNameStr
+	 * @return
+	 * @throws ClassException
+	 * @throws PathException
+	 */
 	public ArrayList<OntologyPath> getConnList(String classNameStr) throws ClassException, PathException {
 		// return or calculate all legal one-hop path connections to and from a class
 		
@@ -1085,6 +1120,16 @@ public class OntologyInfo {
 		return retval;
 	}
 	
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, String targetClassName) throws PathException, ClassException {
+		ArrayList<String> targetClassNames = new ArrayList<String>();
+		targetClassNames.add(targetClassName);
+		return this.findAllPaths(fromClassName, targetClassNames, null);
+	}
+	
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, ArrayList<String> targetClassNames) throws PathException, ClassException {
+		return this.findAllPaths(fromClassName, targetClassNames, null);
+	}
+
 	public ArrayList<OntologyPath> findAllPaths(String fromClassName, ArrayList<String> targetClassNames, String domain) throws PathException, ClassException {
 		//   NOTE:  lots of [sic] stuff in here so that this will match the Javascript VERY CLOSELY
 		//   A form of A* path finding algorithm
@@ -1169,7 +1214,8 @@ public class OntologyInfo {
 				}
 				
 				// check for loops in the path before adding the class
-				if (waitPath.containsClass(newClass)) {
+				// PEC 11/2019: there are some good paths that might have "loops" so this will have to be re-thought
+				if (waitPath.containsSubPath(conn.get(i))) {
 					loopFlag = true;
 				} 
 				

@@ -410,7 +410,7 @@ public class DispatcherServiceRestController {
 			while (t.getCause() != null) {
 				t = t.getCause();
 			}
-			throw (Exception) t;
+			throw new Exception(t);
 		}
 		
 		LocalLogger.logToStdOut("initialized job: " + jobId);	

@@ -424,15 +424,15 @@ public class DataLoader implements Runnable {
 	 * Returns an error report giving the row number and failure cause for each failure.
 	 */
 	public String getLoadingErrorReportBrief(){
-		String s = "";
+		StringBuilder s = new StringBuilder();
 		Table errorReport = this.batchHandler.getErrorReport();
 		int failureCauseIndex = errorReport.getColumnIndex(FAILURE_CAUSE_COLUMN_NAME);
 		int failureRowIndex = errorReport.getColumnIndex(FAILURE_RECORD_COLUMN_NAME);
 		ArrayList<ArrayList<String>> rows = errorReport.getRows();
 		for(ArrayList<String> row:rows){
-			s += "Error in row " + row.get(failureRowIndex) + ": " + row.get(failureCauseIndex) + "\n";
+			s.append("Error in row " + row.get(failureRowIndex) + ": " + row.get(failureCauseIndex) + "\n");
 		}
-		return s;
+		return s.toString();
 	}
 	
 	/**

@@ -5,7 +5,7 @@ import com.ge.research.semtk.edc.client.ResultsClientConfig;
 
 public class ResultsServiceProperties extends ServiceProperties {
 	
-	public ResultsClient getClient(String jobId) throws Exception {
+	public ResultsClient getClient() throws Exception {
 		ResultsClient client = new ResultsClient(new ResultsClientConfig(protocol, server, port));
 		return client;
 	}

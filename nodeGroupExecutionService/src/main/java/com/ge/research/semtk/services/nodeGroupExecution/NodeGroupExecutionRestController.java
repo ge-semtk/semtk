@@ -49,6 +49,7 @@ import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsSerializer;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -396,6 +397,11 @@ public class NodeGroupExecutionRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+	
+	// getJsonBlob : can't implement here because of
+	//    1) can't figure out how to stream results from results service through
+	//    2) don't know the results file location so can't instantiate a GenericJsonBlobResultsStorage
+	// call the results service
 	
 	@ApiOperation(
 			value=	"get results URLs",

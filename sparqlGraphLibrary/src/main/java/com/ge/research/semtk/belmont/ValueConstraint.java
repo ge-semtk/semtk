@@ -22,30 +22,58 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class ValueConstraint {
-
-	protected String constraint = "";
+	// list of strings representing constraint clauses.
+	protected ArrayList<String> constraint = new ArrayList<String>();
 	
 	public ValueConstraint() {}
 	
 	public ValueConstraint(String vc){
-		this.constraint = vc;
+		this.constraint.add(vc);
 	}
 	
-	public String getConstraint(){
-		return this.constraint;
-	}
-	
+	/**
+	 * Search and replace sparqlId
+	 * @param oldID
+	 * @param newID
+	 */
 	public void changeSparqlID(String oldID, String newID) {
-		if (this.constraint != null && oldID != null && newID != null) {
-			this.constraint = this.constraint.replaceAll("\\" + oldID + "\\b", newID);
+		if (this.constraint.size() > 0 && oldID != null && newID != null) {
+			for (int i=0; i < this.constraint.size(); i++) {
+				this.constraint.set(i, this.constraint.get(i).replaceAll("\\" + oldID + "\\b", newID));
+			}
+		}
+	}
+	
+	/**
+	 * Brute force removal of any constraint that contains a given variable name
+	 * @param id
+	 */
+	public void removeReferencesToVar(String id) {
+		if (this.constraint.toString().contains(id)) {
+			ArrayList<String> constraint2 = new ArrayList<String>();
+			for (String vc : this.constraint) {
+				if (!vc.contains(id)) {
+					constraint2.add(vc);
+				}
+			}
+			this.constraint = constraint2;
 		}
 	}
 	
 	/** 
-	 * to non-null string
+	 * to non-null string, possibly multiple clauses separated by "."
 	 */
 	public String toString() {
-		return this.constraint == null ? "" : this.constraint;
+		StringBuilder ret = new StringBuilder("");
+		for (String cStr : this.constraint) {
+			if (ret.length() > 0) ret.append(" . ");
+			ret.append(cStr);
+		}
+		return ret.toString();
+	}
+	
+	public void addConstraint(String vc) {
+		this.constraint.add(vc);
 	}
 	
 	//
@@ -53,6 +81,12 @@ public class ValueConstraint {
 	//
 	//
 	
+	public static String buildValuesConstraint(Returnable item, String val) throws Exception {
+		ArrayList<String> valList = new ArrayList<String>();
+		valList.add(val);
+		return buildValuesConstraint(item, valList);
+	}
+
 	/**
 	 * Build VALUES clause
 	 * @param item
@@ -123,6 +157,23 @@ public class ValueConstraint {
 			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
 		} 
 		return ret;
+	}
+	
+	public static String buildFilterConstraintWithVariable(Returnable item, String oper, String variable)  throws Exception {
+		String ret;
+		
+		if (!(	oper.equals("=") || 
+				oper.equals("!=") ||
+				oper.equals(">") ||
+				oper.equals(">=") ||
+				oper.equals("<") ||
+				oper.equals("<=")) ) {
+			throw new Exception("Unknown operator for constraint: " + oper);
+		}
+		
+		XSDSupportedType t = item.getValueType();
+		
+		return String.format("FILTER(%s %s %s)", item.getSparqlID(), oper, (variable.startsWith("?") ? "" : "?") + variable);
 	}
 	
 	/**

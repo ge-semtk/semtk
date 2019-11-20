@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.json.simple.JSONArray;
@@ -36,6 +37,7 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintMetaData;
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -1892,12 +1894,37 @@ public class NodeGroup {
 	 * @param excludeNode - don't delete this one or "cross" it to find more nodes
 	 */
 	public void deleteSubGraph(Node n, ArrayList<Node> stopList) {
+		ArrayList<String> sparqlIds = new ArrayList<String>();
 		
-		for (Node i : this.getSubGraph(n, stopList)) {
-			this.removeNode(i);
+		// remove nodes
+		for (Node subNode : this.getSubGraph(n, stopList)) {
+			sparqlIds.addAll(subNode.getSparqlIDList());
+			this.removeNode(subNode);
+		}
+		
+		// remove value constraints referencing the removed items
+		for (String id : sparqlIds) {
+			this.removeValueConstraintsContaining(id);
 		}
 	}
 	
+	/**
+	 * Delete value constraints that refer to a particular id
+	 * @param id
+	 */
+	public void removeValueConstraintsContaining(String id) {
+		for (Node n : this.nodes) {
+			if (n.getValueConstraint() != null) {
+				n.getValueConstraint().removeReferencesToVar(id);
+			}
+			
+			for (PropertyItem p : n.getPropertyItems()) {
+				if (p.getValueConstraint() != null) {
+					p.getValueConstraint().removeReferencesToVar(id);
+				}
+			}
+		}
+	}
 	
 	/**
 	 * remove a node
@@ -2315,6 +2342,9 @@ public class NodeGroup {
 		return BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
 	}
 	
+	public Node addClassFirstPath(String classURI, OntologyInfo oInfo) throws Exception  {
+		return this.addClassFirstPath(classURI, oInfo, null, false);
+	}
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, String domain, Boolean optionalFlag) throws Exception  {
 		// attach a classURI using the first path found.
 		// Error if less than one path is found.
@@ -3165,5 +3195,21 @@ public class NodeGroup {
 	 */
 	public void noInflateNorValidate(OntologyInfo oInfo) throws Exception  {
 		this.oInfo = oInfo;
+	}
+	
+	/**
+	 * Add a constraint such that this node is a unique instance 
+	 * from other nodes with the same URI
+	 * @param n
+	 * @throws Exception
+	 */
+	public void addUniqueInstanceConstraint(Node n) throws Exception {
+		ArrayList<Node> nodeList = this.getNodesByURI(n.getFullUriName());
+		for (Node other : nodeList) {
+			if (other != n) {
+				String vc = ValueConstraint.buildFilterConstraintWithVariable(n, "!=", other.getSparqlID());
+				n.addValueConstraint(vc);
+			}
+		}
 	}
 }

@@ -180,7 +180,7 @@ public class PropertyItem extends Returnable {
 	 */
 	public String getConstraints() {
 		if (constraints != null) {
-			String constraintStr =  this.constraints.getConstraint();
+			String constraintStr =  this.constraints.toString();
 			constraintStr = constraintStr.replaceAll("%id", this.sparqlID);
 			return constraintStr;
 		}

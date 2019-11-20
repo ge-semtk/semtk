@@ -34,6 +34,12 @@ public class Triple {
 		this.triple = new String[3];
 	}
 	
+	public boolean equals(Triple other) {
+		return ( this.triple[0].equals(other.triple[0]) &&
+				 this.triple[1].equals(other.triple[1]) &&
+				 this.triple[2].equals(other.triple[2])
+				);		
+	}
 	public String getSubject(){
 		return this.triple[0];
 	}

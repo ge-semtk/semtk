@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.services.ontologyinfo;
 
+import java.util.ArrayList;
+
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +39,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -162,6 +165,47 @@ public class OntologyInfoServiceRestController {
 			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
 			
 			retval.addResults(oInfoCache.get(conn).getUriLabelTable());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+		}
+		// send it out.
+		return retval.toJson();
+	}
+	
+	@ApiOperation(
+		    value= "Get 'obj class prop str' table for all strings in the data interface graphs",
+		    notes= "TESTING ONLY.  <br>" +
+		           "This needs to be async <br> " +
+		           "and handle results > 50000 gracefully"
+		)
+	@CrossOrigin
+	@RequestMapping(value="/getStringTable", method=RequestMethod.POST)
+	public JSONObject getStringTable(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		final String ENDPOINT_NAME = "getStringTable";
+		HeadersManager.setHeaders(headers);
+		TableResultSet retval = new TableResultSet();
+		
+		try{
+			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlEndpointInterface querySei = conn.getDefaultQueryInterface();
+			ArrayList<SparqlEndpointInterface> dataSeiList = conn.getDataInterfaces();
+			
+			String sparql = "select distinct ?obj ?class ?prop ?str";
+			for (SparqlEndpointInterface sei : dataSeiList) {
+				sparql += " FROM <" + sei.getGraph() + ">";
+			}
+			sparql += "where {\r\n" + 
+					"	filter (isLiteral(?str)).\r\n" + 
+					"    ?obj ?prop ?str.\n" + 
+					"    ?obj a ?class.\n" + 
+					"}";
+			Table t = querySei.executeQueryToTable(sparql);
+			
+			retval.addResults(t);
 			retval.setSuccess(true);
 		}
 		catch(Exception e){

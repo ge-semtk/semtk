@@ -25,7 +25,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.DatatypeConverter;
@@ -39,7 +38,6 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.ValuesConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
@@ -52,7 +50,6 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /*
@@ -779,13 +776,11 @@ public class ImportSpecHandler {
 						builtString = this.oInfo.getMatchingEnumeration(node.getFullUriName(), builtString);
 					}
 					
-					ValuesConstraint v = new ValuesConstraint(node, builtString);
-					node.setValueConstraint(v);
+					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(node, builtString)));
 					
 				} else {
 					PropertyItem prop = node.getPropertyItem(mapping.getPropItemIndex());
-					ValuesConstraint v = new ValuesConstraint(prop, builtString);
-					prop.setValueConstraint(v);
+					prop.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(prop, builtString)));
 				}
 			}
 			

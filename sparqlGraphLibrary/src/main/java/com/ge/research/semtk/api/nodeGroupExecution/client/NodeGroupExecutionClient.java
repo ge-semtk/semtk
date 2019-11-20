@@ -70,6 +70,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String ingestFromCsvStringsAndTemplateAsync = "/ingestFromCsvStringsAndTemplateAsync";
 	private static final String getResultsTableEndpoint = "/getResultsTable";
 	private static final String getResultsJsonLdEndpoint = "/getResultsJsonLd";
+	private static final String getResultsJsonBlobEndpoint = "/getResultsJsonBlob";
 	private static final String dispatchSelectByIdEndpoint = "/dispatchSelectById";
 	private static final String dispatchSelectByIdSyncEndpoint = "/dispatchSelectByIdSync";
 	private static final String dispatchSelectFromNodegroupEndpoint = "/dispatchSelectFromNodegroup";
@@ -237,6 +238,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 		return retval;
 	}
+	
 	
 	/**
 	 * get results URLs",
@@ -473,7 +475,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 	}
 
-	private JSONObject waitForJobAndGetJsonLd(String jobId) throws Exception {
+	public JSONObject waitForJobAndGetJsonLd(String jobId) throws Exception {
 		
 		waitForCompletion(jobId);
 		
@@ -485,7 +487,6 @@ public class NodeGroupExecutionClient extends RestClient {
 			throw new Exception(String.format("Job %s failed with message='%s'", jobId, msg));
 		}
 	}
-	
 	
 //  Functions removed:
 //  If you have a RuntimeConstraintManager then you must have the nodegroup
