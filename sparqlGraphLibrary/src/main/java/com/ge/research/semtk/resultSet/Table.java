@@ -120,6 +120,18 @@ public class Table {
 		}
 	}
 	
+	public void appendColumn(String colName, String colType) throws Exception {
+		
+		this.columnNames = (String[]) ArrayUtils.add(this.columnNames, colName);
+		this.columnTypes = (String[]) ArrayUtils.add(this.columnTypes, colType);
+		this.hashColumnPositions();
+
+		// add empty data
+		for (ArrayList<String> row : this.rows) {
+			row.add("");
+		}
+	}
+	
 	/**
 	 * insert a column of data at given pos
 	 * @param colName
@@ -338,6 +350,18 @@ public class Table {
 	 */
 	public void setCell(int row, int col, String val) {
 		this.rows.get(row).set(col, val);
+	}
+	
+	public void setCell(int row, String colName, String val) throws Exception {
+		this.rows.get(row).set(this.getColumnIndexOrError(colName), val);
+	}
+	
+	public void setCell(int row, String colName, double val) throws Exception {
+		this.rows.get(row).set(this.getColumnIndexOrError(colName), String.valueOf(val));
+	}
+	
+	public void setCell(int row, String colName, int val) throws Exception {
+		this.rows.get(row).set(this.getColumnIndexOrError(colName), String.valueOf(val));
 	}
 	
 	public String getCell(int row, int col) {
