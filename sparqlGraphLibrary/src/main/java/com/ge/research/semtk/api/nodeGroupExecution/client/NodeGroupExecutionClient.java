@@ -1309,7 +1309,7 @@ public class NodeGroupExecutionClient extends RestClient {
 		
 	}
 	
-public SimpleResultSet execDispatchDeleteFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn, JSONArray runtimeConstraintsJson) throws Exception {
+	public SimpleResultSet execDispatchDeleteFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn, JSONArray runtimeConstraintsJson) throws Exception {
 		
 		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(jarObj, resourcePath));
 		NodeGroup ng = sgjson.getNodeGroup();

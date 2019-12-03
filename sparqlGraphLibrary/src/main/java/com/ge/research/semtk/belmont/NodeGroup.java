@@ -2243,6 +2243,22 @@ public class NodeGroup {
 		return node;
 	}
 	
+	/**
+	 * Add a node constrained to a particular instance
+	 * @param classUri
+	 * @param oInfo
+	 * @param instanceURI - can be null or empty
+	 * @return
+	 * @throws Exception
+	 */
+	public Node addNodeInstance(String classUri, OntologyInfo oInfo, String instanceURI) throws Exception {
+		Node node = this.addNode(classUri, oInfo);
+		if (instanceURI != null && ! instanceURI.isEmpty()) {
+			node.addValueConstraint(ValueConstraint.buildValuesConstraint(node, instanceURI));
+		}
+		return node;
+	}
+	
 	public Node addNode(String classUri, Node existingNode, String linkFromUri, String linkToUri) throws Exception {
 		Node node = this.returnBelmontSemanticNode(classUri, this.oInfo);
 		this.addOneNode(node, existingNode, linkFromUri, linkToUri);
@@ -2275,6 +2291,19 @@ public class NodeGroup {
 		}
 		return retval;
 
+	}
+	
+	/**
+	 * Get sparql ids of all nodes in nodegroup
+	 * @return
+	 */
+	public ArrayList<String>  getNodeSparqlIds() {
+		ArrayList<String> retval = new ArrayList<String>();
+
+		for (Node n : this.nodes) {
+			retval.add(n.getSparqlID());
+		}
+		return retval;
 	}
 	
 	public String setIsReturned(Returnable r, boolean val) throws Exception {
@@ -2317,12 +2346,20 @@ public class NodeGroup {
 		return  ret;
 	}
 	
-	public void setIsReturnedAllProps(Node node, boolean val) throws Exception {
+	public void setIsReturnedAllProps(Node node, boolean isRet) throws Exception {
 		for (PropertyItem pItem : node.getPropertyItems()) {
-			this.setIsReturned(pItem, val);
+			this.setIsReturned(pItem, isRet);
 		}
 	}
 	
+	public void setIsReturnedAllProps(Node node, boolean isRet, int optMinus) throws Exception {
+		for (PropertyItem pItem : node.getPropertyItems()) {
+			this.setIsReturned(pItem, isRet);
+			pItem.setOptMinus(optMinus);
+		}
+	}
+	
+
 
 	public String changeSparqlID(Returnable obj, String requestID) {
 		// API call for any object with get/setSparqlID:
@@ -2376,6 +2413,17 @@ public class NodeGroup {
      */
     public String setValueConstraint(PropertyItem pItem, ValueConstraint vc) throws Exception {
         String ret = null;
+        if (vc != null && pItem.getSparqlID().isEmpty()) {
+            ret = this.changeSparqlID(pItem, pItem.getKeyName());
+        } 
+        pItem.setValueConstraint(vc);
+        
+        return  ret;
+    }
+    
+    public String setValueConstraint(PropertyItem pItem, String vcStr) throws Exception {
+        String ret = null;
+        ValueConstraint vc = new ValueConstraint(vcStr);
         if (vc != null && pItem.getSparqlID().isEmpty()) {
             ret = this.changeSparqlID(pItem, pItem.getKeyName());
         } 

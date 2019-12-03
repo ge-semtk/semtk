@@ -20,15 +20,17 @@ package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ValueConstraint {
 	// list of strings representing constraint clauses.
-	protected ArrayList<String> constraint = new ArrayList<String>();
+	protected String constraint = null;
 	
 	public ValueConstraint() {}
 	
 	public ValueConstraint(String vc){
-		this.constraint.add(vc);
+		this.constraint = vc;
 	}
 	
 	/**
@@ -37,10 +39,9 @@ public class ValueConstraint {
 	 * @param newID
 	 */
 	public void changeSparqlID(String oldID, String newID) {
-		if (this.constraint.size() > 0 && oldID != null && newID != null) {
-			for (int i=0; i < this.constraint.size(); i++) {
-				this.constraint.set(i, this.constraint.get(i).replaceAll("\\" + oldID + "\\b", newID));
-			}
+		if (this.constraint != null && oldID != null && newID != null) {
+			
+				this.constraint.replaceAll("\\" + oldID + "\\b", newID);
 		}
 	}
 	
@@ -49,14 +50,21 @@ public class ValueConstraint {
 	 * @param id
 	 */
 	public void removeReferencesToVar(String id) {
-		if (this.constraint.toString().contains(id)) {
-			ArrayList<String> constraint2 = new ArrayList<String>();
-			for (String vc : this.constraint) {
-				if (!vc.contains(id)) {
-					constraint2.add(vc);
-				}
-			}
-			this.constraint = constraint2;
+		if (constraint == null)
+			return;
+		
+		String regex = "";
+		final String ending = "[^-_A-Za-z0-9]";
+		
+		if (id.startsWith("?")) {
+			regex = "\\" +  id + ending;
+		} else {
+			regex = "\\?" + id + ending;
+		}
+		
+		Matcher m = Pattern.compile(regex).matcher(this.constraint);
+		if (m.find()) {
+			this.constraint = null;
 		}
 	}
 	
@@ -64,16 +72,13 @@ public class ValueConstraint {
 	 * to non-null string, possibly multiple clauses separated by "."
 	 */
 	public String toString() {
-		StringBuilder ret = new StringBuilder("");
-		for (String cStr : this.constraint) {
-			if (ret.length() > 0) ret.append(" . ");
-			ret.append(cStr);
-		}
-		return ret.toString();
+		return this.constraint == null ? "" : this.constraint;
 	}
 	
 	public void addConstraint(String vc) {
-		this.constraint.add(vc);
+		if (this.constraint != null) {
+			this.constraint += (" . " + vc);
+		}
 	}
 	
 	//

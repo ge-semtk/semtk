@@ -33,6 +33,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,6 +52,7 @@ import java.util.UUID;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -767,6 +770,13 @@ public abstract class Utility {
 	
 	public static String generateRandomURI() {
 		return "r" + UUID.randomUUID().toString();
+	}
+	
+	public static String hashMD5(String s) throws Exception {
+		MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+	    messageDigest.update(s.getBytes());
+	    byte[] digiest = messageDigest.digest();
+	    return DatatypeConverter.printHexBinary(digiest);
 	}
 	
 	public static String htmlToPlain(String html) {

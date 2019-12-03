@@ -266,6 +266,14 @@ public class OntologyInfo {
 		return ret;
 	}
 	
+	public boolean isDataProperty(OntologyProperty oProp) {
+		return ! this.isObjectProperty(oProp);
+	}
+	
+	public boolean isObjectProperty(OntologyProperty oProp) {
+		return this.classHash.keySet().contains(oProp.getRange().getFullName());
+	}
+	
 	public void addPathCount(OntologyPath path, int count) {
 		String key = path.toJson().toJSONString();
 		this.pathCountHash.put(key, count);

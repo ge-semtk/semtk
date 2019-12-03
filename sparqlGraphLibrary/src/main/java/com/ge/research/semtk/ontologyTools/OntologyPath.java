@@ -33,7 +33,7 @@ public class OntologyPath {
 	private String startClassName = "";
 	private String endClassName = "";
 	
-	private HashMap<String, String> classHash = new HashMap<String, String>();
+	private HashMap<String, Integer> classHash = new HashMap<String, Integer>();
 	
 	
 	public OntologyPath(){
@@ -41,7 +41,7 @@ public class OntologyPath {
 	}
 	
 	public OntologyPath(String startClassname){
-		this.classHash.put(startClassname, "1");
+		this.classHash.put(startClassname, 1);
 		this.startClassName = startClassname;
 		this.endClassName = startClassname;
 	}
@@ -56,12 +56,20 @@ public class OntologyPath {
 	
 	public void addTriple(String className0, String attributename, String className1) throws PathException{
 		// add whichever class is new to the hash and endpoint. 
-		if(className0.equalsIgnoreCase(this.endClassName)){
-			this.classHash.put(className1, "1");
+		if(className0.equalsIgnoreCase(this.endClassName)) {
+			if (this.classHash.containsKey(className1)) {
+				this.classHash.put(className1, this.classHash.get(className1) + 1);
+			} else {
+				this.classHash.put(className1, 1);
+			}
 			this.endClassName = className1;
 		}
 		else if(className1.equalsIgnoreCase(this.endClassName)){
-			this.classHash.put(className0, "1");
+			if (this.classHash.containsKey(className0)) {
+				this.classHash.put(className0, this.classHash.get(className0) + 1);
+			} else {
+				this.classHash.put(className0, 1);
+			}
 			this.endClassName = className0;	
 		}
 	
@@ -206,6 +214,59 @@ public class OntologyPath {
 			triples.add(t.toCsvString());
 		}
 		ret.put("triples", triples);
+		return ret;
+	}
+	
+	/**
+	 * Return copy of classList with classes from the path removed
+	 * @param classList
+	 * @return
+	 */
+	public ArrayList<ClassInstance> calcMissingInstances(ArrayList<ClassInstance> instanceList) {
+		HashMap<String, Integer> classHashClone = (HashMap<String, Integer>) this.classHash.clone();
+		ArrayList<ClassInstance> ret = new ArrayList<ClassInstance>();
+		
+		for (ClassInstance instance : instanceList) {
+			// is instance in classHashClone
+			if (classHashClone.containsKey(instance.classUri) && classHashClone.get(instance.classUri) > 0) {
+				// remove instance from the classHashClone
+				classHashClone.put(instance.classUri, classHashClone.get(instance.classUri) - 1);
+			} else {
+				// add instance to return
+				ret.add(instance);
+			}
+		}
+		return ret;
+	}
+	
+	public ArrayList<String> calcMissingProperties(ArrayList<String> propUriList, OntologyInfo oInfo) throws Exception {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for (String propUri : propUriList) {
+			
+			// get property
+			OntologyProperty oProp = oInfo.getProperty(propUri);
+			if (oProp == null) {
+				throw new Exception("Can't find property in model: " + propUri);
+			}
+			
+			// get domain
+			ArrayList<OntologyClass> domain = oInfo.getPropertyDomain(oProp);
+			boolean found = false;
+			
+			// search domain in this path's class hash
+			for (OntologyClass d : domain) {
+				if (this.classHash.keySet().contains(d.getNameString(false)) ) {
+					found = true;
+					break;
+				}
+			}
+			
+			// build return list of not found propUri's
+			if (! found) {
+				ret.add(propUri);
+			}
+		}
 		return ret;
 	}
 }
