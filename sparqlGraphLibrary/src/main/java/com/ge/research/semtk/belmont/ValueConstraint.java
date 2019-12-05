@@ -41,7 +41,7 @@ public class ValueConstraint {
 	public void changeSparqlID(String oldID, String newID) {
 		if (this.constraint != null && oldID != null && newID != null) {
 			
-				this.constraint.replaceAll("\\" + oldID + "\\b", newID);
+				this.constraint = this.constraint.replaceAll("\\" + oldID + "\\b", newID);
 		}
 	}
 	
