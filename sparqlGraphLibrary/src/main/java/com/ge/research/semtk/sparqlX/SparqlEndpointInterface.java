@@ -286,6 +286,10 @@ public abstract class SparqlEndpointInterface {
 		return getInstance(serverTypeString, server, graph, null, null);
 	}	
 	
+	public static SparqlEndpointInterface getEmptyInstance() throws Exception {
+		return getInstance(VIRTUOSO_SERVER, "http://empty:0", "http://empty/graph", "noone", "nopass");
+	}
+	
 	/**
 	 * Static method to get an instance of this abstract class
 	 */
@@ -394,6 +398,11 @@ public abstract class SparqlEndpointInterface {
 		return res.getTable();
 	}
 	
+	/**
+	 * Executes a confirm query and throws exception
+	 * @param query
+	 * @throws Exception if unsuccessful
+	 */
 	public void executeQueryAndConfirm(String query) throws Exception {
 		GeneralResultSet res = this.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();

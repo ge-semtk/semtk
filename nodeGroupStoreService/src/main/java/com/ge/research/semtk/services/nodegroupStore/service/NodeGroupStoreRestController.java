@@ -46,7 +46,7 @@ import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.nodegroupStore.NgStoreSparqlGenerator;
+import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -90,11 +90,10 @@ public class NodeGroupStoreRestController {
 				requestBody.validate();	
 	
 				// check that the ID does not already exist. if it does, fail.
-				NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
-				ArrayList<String> queries = sparqlGen.getNodeGroupByID(requestBody.getName());
-				Table instanceTable = this.createSuperuserSei().executeQueryToTable(queries.get(0));
+				NgStore store = new NgStore(this.createSei());
+				Table instanceTable = store.getNodegroupTable(requestBody.getName(), true);
+				
 				if(instanceTable.getNumRows() > 0){
-
 					throw new Exception("Unable to store node group:  ID (" + requestBody.getName() + ") already exists");
 				}
 	
@@ -106,11 +105,7 @@ public class NodeGroupStoreRestController {
 					throw new Exception("storeNodeGroup :: sparqlgraph json serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
 				}
 	
-				ArrayList<String> insertQueries = sparqlGen.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
-				
-				for (String insertQuery : insertQueries) {
-					this.createSuperuserSei().executeQueryAndConfirm(insertQuery);
-				}
+				store.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(), true);
 				
 				retval = new SimpleResultSet(true);
 	
@@ -136,7 +131,9 @@ public class NodeGroupStoreRestController {
 
 			TableResultSet retval = new TableResultSet();	
 			try{
-				Table ngTab = this.getNodegroupTable(requestBody.getId());
+				NgStore store = new NgStore(this.createSei());
+				Table ngTab = store.getNodegroupTable(requestBody.getId(), true);
+				
 				retval.setSuccess(true);
 				retval.addResults(ngTab);
 			}
@@ -162,9 +159,9 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = new TableResultSet(true);		
 	
 			try{
-				NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
-				String query = sparqlGen.getFullNodeGroupList();
-				retval.addResults(this.createSuperuserSei().executeQueryToTable(query));
+				NgStore store = new NgStore(this.createSei());
+				Table tab = store.getFullNodeGroupList(true);
+				retval.addResults(tab);
 				retval.setSuccess(true);
 			}
 			catch(Exception e){
@@ -189,9 +186,9 @@ public class NodeGroupStoreRestController {
 			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupMetadata";
 			TableResultSet retval = new TableResultSet();		
 			try{
-				NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
-				String query = sparqlGen.getNodeGroupMetadata();
-				retval.addResults(this.createSuperuserSei().executeQueryToTable(query));
+				NgStore store = new NgStore(this.createSei());
+				Table tab = store.getNodeGroupMetadata(true);
+				retval.addResults(tab);
 				retval.setSuccess(true);
 			}
 			catch(Exception e){
@@ -215,9 +212,9 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = null;
 	
 			try{
-
 				// get the nodegroup
-				Table tbl = this.getNodegroupTable(requestBody.getId());
+				NgStore store = new NgStore(this.createSei());
+				Table tbl = store.getNodegroupTable(requestBody.getId(), true);
 
 				if(tbl.getNumRows() > 0){
 					// we have a result. for now, let's assume that only the first result is valid.
@@ -264,10 +261,11 @@ public class NodeGroupStoreRestController {
 	 * generate a deletion query itself. 
 	 * @param requestBody
 	 * @return
+	 * @throws Exception 
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/deleteStoredNodeGroup", method=RequestMethod.POST)
-	public JSONObject deleteStoredNodeGroup(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject deleteStoredNodeGroup(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) throws Exception {
 		HeadersManager.setHeaders(headers);
 		try {
 			SimpleResultSet retval = null;
@@ -278,13 +276,12 @@ public class NodeGroupStoreRestController {
 			// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
 			// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
 	
-			NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
-			String query = sparqlGen.deleteNodeGroup(requestBody.getId());
+			NgStore store = new NgStore(this.createSei());
 
 	
 			try{
 				// attempt to delete the nodegroup, name and comments where there is a give ID.
-				this.createSuperuserSei().executeQueryAndConfirm(query);
+				store.deleteNodeGroup(requestBody.getId(), true);
 				retval = new SimpleResultSet(true);
 			}
 			catch(Exception e){
@@ -303,12 +300,8 @@ public class NodeGroupStoreRestController {
 	    }
 	}
 	
-	// static method to avoid repeating the client generation code...
+	private SparqlEndpointInterface createSei() throws Exception{
 
-
-	private SparqlEndpointInterface createSuperuserSei() throws Exception{
-
-		AuthorizationManager.nextQuerySemtkSuper();
 		SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(	
 				prop.getSparqlConnType(), 
 				prop.getSparqlConnServerAndPort(), 
@@ -320,35 +313,5 @@ public class NodeGroupStoreRestController {
 		return ret;
 	}
 	
-	/**
-	 * Return nodegroup table with zero rows, or one row containing full nodegroup json string
-	 * @param id
-	 * @return
-	 * @throws Exception
-	 */
-	private Table getNodegroupTable(String id)  throws Exception {
-		StringBuilder ngStr = new StringBuilder();
-		NgStoreSparqlGenerator sparqlGen = new NgStoreSparqlGenerator(prop.getSparqlConnDataDataset());
-		ArrayList<String> queries = sparqlGen.getNodeGroupByID(id);
-		
-		// run the base query
-		Table retTable = this.createSuperuserSei().executeQueryToTable(queries.get(0));
-		
-		if (retTable.getNumRows() > 0) {
-			ngStr = new StringBuilder(retTable.getCellAsString(0,  "NodeGroup"));
-
-			// look for additional text, using second query
-			Table catTable =  this.createSuperuserSei().executeQueryToTable(queries.get(1));
-		
-			for (int i=0; i < catTable.getNumRows(); i++) {
-				ngStr.append(catTable.getCellAsString(i, "NodeGroup"));
-			}
-			
-			int col = retTable.getColumnIndex("NodeGroup");
-			retTable.setCell(0, col, ngStr.toString());
-		}
-
-		
-		return retTable;
-	}
+	
 }

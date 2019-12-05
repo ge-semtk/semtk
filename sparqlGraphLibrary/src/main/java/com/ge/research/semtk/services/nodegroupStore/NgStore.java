@@ -21,22 +21,152 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
 
-public class NgStoreSparqlGenerator {
+/**
+ * Store nodegroups in triplestore graph "sei"
+ * @author 200001934
+ *
+ */
+public class NgStore {
 	
 	private String dataGraph = null;
+	private SparqlEndpointInterface sei = null;
 	
-	public NgStoreSparqlGenerator(String dataGraph) {
-		this.dataGraph = dataGraph;
+	public NgStore(SparqlEndpointInterface sei) {
+		this.dataGraph = sei.getGraph();
+		this.sei = sei;
+	}
+	
+	/**
+	 * Get sgJson or null
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public SparqlGraphJson getNodegroup(String id) throws Exception {
+		Table tbl = this.getNodegroupTable(id);
+		if(tbl.getNumRows() > 0){
+			// we have a result. for now, let's assume that only the first result is valid.
+			ArrayList<String> tmpRow = tbl.getRows().get(0);
+			int targetCol = tbl.getColumnIndex("NodeGroup");
+
+			String ngJSONstr = tmpRow.get(targetCol);
+			JSONParser jParse = new JSONParser();
+			JSONObject json = (JSONObject) jParse.parse(ngJSONstr); 
+			SparqlGraphJson sgJson = new SparqlGraphJson(json);
+			return sgJson;
+			
+		} else {
+			return null;
+		}
+			
+	}
+	
+	public Table getNodegroupTable(String id)  throws Exception {
+		return this.getNodegroupTable(id, false);
+	}
+	
+	/**
+	 * Return nodegroup table with zero rows, or one row containing full nodegroup json string
+	 * @param id
+	 * @return table with 0 or 1 rows
+	 * @throws Exception
+	 */
+	public Table getNodegroupTable(String id, boolean suFlag)  throws Exception {
+		StringBuilder ngStr = new StringBuilder();
+		ArrayList<String> queries = this.genSparqlGetNodegroupById(id);
+		
+		Table retTable = this.executeQuery(queries.get(0), suFlag);
+		
+		if (retTable.getNumRows() > 0) {
+			ngStr = new StringBuilder(retTable.getCellAsString(0,  "NodeGroup"));
+
+			// look for additional text, using second query
+			Table catTable =  this.executeQuery(queries.get(1), suFlag);
+		
+			for (int i=0; i < catTable.getNumRows(); i++) {
+				ngStr.append(catTable.getCellAsString(i, "NodeGroup"));
+			}
+			
+			int col = retTable.getColumnIndex("NodeGroup");
+			retTable.setCell(0, col, ngStr.toString());
+		}
+
+		
+		return retTable;
+	}
+	
+	public Table getNodeGroupIdList() throws Exception {
+		return this.getNodeGroupIdList(false);
+	}
+	
+	public Table getNodeGroupIdList(boolean suFlag) throws Exception {
+		return this.executeQuery(this.genSparqlGetNodeGroupIdList(), suFlag);
+	}
+	
+	public Table getFullNodeGroupList() throws Exception {
+		return this.getFullNodeGroupList(false);
+	}
+	
+	public Table getFullNodeGroupList(boolean suFlag) throws Exception {
+		return this.executeQuery(this.genSparqlGetFullNodeGroupList(), suFlag);
+	}
+	
+	public Table getNodeGroupMetadata() throws Exception {
+		return this.getNodeGroupMetadata(false);
+	}
+	
+	public Table getNodeGroupMetadata(boolean suFlag) throws Exception {
+		return this.executeQuery(this.genSparqlGetNodeGroupMetadata(), suFlag);
+	}
+	
+	public void deleteNodeGroup(String id) throws Exception {
+		this.deleteNodeGroup(id, false);
+	}
+	
+	public void deleteNodeGroup(String id, boolean suFlag) throws Exception {
+		this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id), suFlag);
+	}
+	
+	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator ) throws Exception {
+		this.insertNodeGroup(sgJsonJson, connJson, id, comments, creator, false);
+	}
+	
+	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator, boolean suFlag ) throws Exception {
+		ArrayList<String> insertQueries = this.genSparqlInsertNodeGroup(sgJsonJson, connJson, id, comments, creator);
+	
+		for (String insertQuery : insertQueries) {
+			this.executeConfirmQuery(insertQuery, suFlag);
+		}
+	}
+	
+	//-------------------- private -------------------
+	
+	private Table executeQuery(String sparql, boolean suFlag) throws Exception {
+		if (suFlag) {
+			AuthorizationManager.nextQuerySemtkSuper();
+		}
+		return this.sei.executeQueryToTable(sparql);
+	}
+	
+	private void executeConfirmQuery(String sparql, boolean suFlag) throws Exception {
+		if (suFlag) {
+			AuthorizationManager.nextQuerySemtkSuper();
+		}
+		this.sei.executeQueryAndConfirm(sparql);
 	}
 	
 	
 	// get sparql queries for getting the needed info. 
-	public ArrayList<String> getNodeGroupByID(String id){
+	private ArrayList<String> genSparqlGetNodegroupById(String id){
 		ArrayList<String> ret = new ArrayList<String>();
 		String query  = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?NodeGroup ?comments " +
@@ -66,7 +196,7 @@ public class NgStoreSparqlGenerator {
 		return ret;
 	}
 	
-	public String getNodeGroupByConnectionAlias(String connectionAlias){
+	private String genSparqlGetNodeGroupByConnAlias(String connectionAlias){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?NodeGroup ?comments " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
@@ -81,7 +211,7 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 	
-	public String getConnectionInfo(){
+	private String genSparqlGetConnectionInfo(){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?connectionAlias ?domain ?dsDataset ?dsKsURL ?dsURL ?originalServerType " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
@@ -96,7 +226,7 @@ public class NgStoreSparqlGenerator {
 		return retval;	
 	}
 	
-	public String getFullNodeGroupList(){
+	private String genSparqlGetFullNodeGroupList(){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?NodeGroup ?comments " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
@@ -108,7 +238,7 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 
-	public String getNodeGroupIdAndCommentList(){
+	private String genSparqlGetNodeGroupIdCommentList(){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?comments " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
@@ -120,7 +250,17 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 	
-	public String getNodeGroupMetadata(){
+	private String genSparqlGetNodeGroupIdList(){
+		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+						"SELECT distinct ?ID " +
+						"FROM <" + this.dataGraph + "> WHERE { " +
+						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
+						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
+						"}";
+		return retval;
+	}
+	
+	private String genSparqlGetNodeGroupMetadata(){
 		String retval = "PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 						"PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?comments ?creationDate ?creator " +
@@ -134,7 +274,7 @@ public class NgStoreSparqlGenerator {
 		return retval;
 	}
 
-	public  String deleteNodeGroup(String jobId) {
+	private String genSparqlDeleteNodeGroup(String jobId) {
 		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 				"WITH <" + this.dataGraph + "> DELETE { " +
@@ -163,7 +303,7 @@ public class NgStoreSparqlGenerator {
 		return ret;
 	}
 	
-	public ArrayList<String> insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator) throws Exception {
+	private ArrayList<String> genSparqlInsertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator) throws Exception {
 		final int SPLIT = 20000;
 		
 		// extract the connJson

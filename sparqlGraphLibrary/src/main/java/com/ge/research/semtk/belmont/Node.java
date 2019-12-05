@@ -37,6 +37,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.ontologyTools.ValidationException;
 
 //the nodes which represent any given entity the user/caller intends to manipulate. 
 
@@ -187,7 +188,7 @@ public class Node extends Returnable {
 		// get oInfo's version of the property list
 		OntologyClass ontClass = oInfo.getClass(this.getFullUriName());
 		if (ontClass == null) {
-			throw new Exception("Class does not exist in the model: " + this.getFullUriName());
+			throw new ValidationException("Class does not exist in the model: " + this.getFullUriName());
 		}
 		ArrayList<OntologyProperty> ontProps = oInfo.getInheritedProperties(ontClass);
 		
@@ -202,7 +203,7 @@ public class Node extends Returnable {
 				// has range changed
 				PropertyItem propItem = propItemHash.get(oPropURI);
 				if (! propItem.getValueTypeURI().equals(oProp.getRangeStr())) {
-					throw new Exception(String.format("Property %s range of %s doesn't match model range of %s",
+					throw new ValidationException(String.format("Property %s range of %s doesn't match model range of %s",
 														oPropURI, 
 														propItem.getValueTypeURI(), 
 														oProp.getRangeStr() ));
@@ -218,7 +219,7 @@ public class Node extends Returnable {
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
 				
 				if (nodeItemHash.containsKey(oPropKeyname)) {
-					throw new Exception(String.format("Node property %s has range %s in the nodegroup, which can't be found in model.", oPropURI, oProp.getRangeStr()));
+					throw new ValidationException(String.format("Node property %s has range %s in the nodegroup, which can't be found in model.", oPropURI, oProp.getRangeStr()));
 				}
 				
 				PropertyItem propItem = new PropertyItem(	oProp.getNameStr(true), 
@@ -235,10 +236,10 @@ public class Node extends Returnable {
 				String nRangeAbbr = nodeItem.getValueType();
 				
 				if (!nRangeStr.equals(oProp.getRangeStr())) {
-					throw new Exception("Node property " + oPropURI + " range of " + nRangeStr + " doesn't match model range of " + oProp.getRangeStr());
+					throw new ValidationException("Node property " + oPropURI + " range of " + nRangeStr + " doesn't match model range of " + oProp.getRangeStr());
 				}
 				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
-					throw new Exception("Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
+					throw new ValidationException("Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
 				}
 				
 				// if connected 
@@ -247,7 +248,7 @@ public class Node extends Returnable {
 					// check full domain
 					String nDomainStr = nodeItem.getUriConnectBy();
 					if (!nDomainStr.equals(oProp.getNameStr())) {
-						throw new Exception("Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr());
+						throw new ValidationException("Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr());
 					}
 					
 					// check all connected snode classes
@@ -259,11 +260,11 @@ public class Node extends Returnable {
 						OntologyClass snodeClass = oInfo.getClass(snodeURI);
 						
 						if (snodeClass == null) {
-							throw new Exception("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
+							throw new ValidationException("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
 						}
 						
 						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							throw new Exception("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
+							throw new ValidationException("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
 
 						}
 					}
@@ -284,10 +285,10 @@ public class Node extends Returnable {
 		}
 		
 		if (!propItemHash.isEmpty()) {
-			throw new Exception("Property does not exist in the model: " + propItemHash.keySet().toString());
+			throw new ValidationException("Property does not exist in the model: " + propItemHash.keySet().toString());
 		}
 		if (!nodeItemHash.isEmpty()) {
-			throw new Exception("Node property does not exist in the model: " + nodeItemHash.keySet().toString());
+			throw new ValidationException("Node property does not exist in the model: " + nodeItemHash.keySet().toString());
 		}
 		
 		this.props = newProps;
@@ -304,7 +305,7 @@ public class Node extends Returnable {
 		OntologyClass oClass = oInfo.getClass(this.fullURIname);
 		
 		if (oClass == null) {
-			throw new Exception("Class URI does not exist in the model: " + this.fullURIname);
+			throw new ValidationException("Class URI does not exist in the model: " + this.fullURIname);
 		}
 		
 		// build hash of ontology properties for this class
@@ -317,14 +318,14 @@ public class Node extends Returnable {
 		for (PropertyItem myPropItem : this.props) {
 			// domain
 			if (! oPropHash.containsKey(myPropItem.getUriRelationship())) {
-				throw new Exception(String.format("Node %s contains property %s which does not exist in the model",
+				throw new ValidationException(String.format("Node %s contains property %s which does not exist in the model",
 									this.getSparqlID(), myPropItem.getUriRelationship()));
 			}
 			
 			// range
 			OntologyRange oRange = oPropHash.get(myPropItem.getUriRelationship()).getRange();
 			if (! oRange.getFullName().equals(myPropItem.getValueTypeURI())) {
-				throw new Exception(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
+				throw new ValidationException(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
 									this.getSparqlID(), myPropItem.getUriRelationship(), myPropItem.getValueTypeURI(), oRange.getFullName()));
 			}
 		}
@@ -334,7 +335,7 @@ public class Node extends Returnable {
 			if (myNodeItem.getConnected()) {
 				// domain
 				if (! oPropHash.containsKey(myNodeItem.getUriConnectBy())) {
-					throw new Exception(String.format("Node %s contains node connection %s which does not exist in the model",
+					throw new ValidationException(String.format("Node %s contains node connection %s which does not exist in the model",
 										this.getSparqlID(), myNodeItem.getUriConnectBy()));
 				}
 				
@@ -344,7 +345,7 @@ public class Node extends Returnable {
 				OntologyRange oRange = oProp.getRange();
 				if (! myNodeItem.getUriValueType().equals(oRange.getFullName())) {
 					ArrayList<OntologyProperty> d = oInfo.getInheritedProperties(oClass);
-					throw new Exception(String.format("Node %s contains node connection %s with type %s which doesn't match %s in model", 
+					throw new ValidationException(String.format("Node %s contains node connection %s with type %s which doesn't match %s in model", 
 										this.getSparqlID(), myNodeItem.getUriConnectBy(), myNodeItem.getUriValueType(), oRange.getFullName()));
 				}
 				
@@ -353,7 +354,7 @@ public class Node extends Returnable {
 					OntologyClass rangeClass = oInfo.getClass(oRange.getFullName());
 					OntologyClass myNodeClass = oInfo.getClass(n.getFullUriName());
 					if (!oInfo.classIsA(myNodeClass, rangeClass)) {
-						throw new Exception(String.format("Node %s, node connection %s connects to node %s with type %s which isn't a type of %s in model", 
+						throw new ValidationException(String.format("Node %s, node connection %s connects to node %s with type %s which isn't a type of %s in model", 
 								this.getSparqlID(), myNodeItem.getUriConnectBy(), n.getSparqlID(), n.getFullUriName(), oRange.getFullName()));
 					}
 				}

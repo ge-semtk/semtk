@@ -18,17 +18,10 @@
 
 package com.ge.research.semtk.ontologyTools;
 
-
-import static org.hamcrest.CoreMatchers.containsString;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import javax.xml.bind.DatatypeConverter;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.belmont.Node;
@@ -36,6 +29,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -45,33 +39,35 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class PathExplorer {
-	// TODO write this to disk and learn over time.
-	private static HashMap <String, NodeGroup> cache = new HashMap <String, NodeGroup>();
+	// A NodeGroupCache for each unique cacheSei
+	private static HashMap<String, NodeGroupCache> cache = new HashMap<String, NodeGroupCache>();
 
 	private OntologyInfo oInfo;
 	private SparqlConnection conn;
 	private NodeGroupExecutionClient ngeClient;
+	private String cacheKey;
 	
-	public PathExplorer(SparqlConnection conn, NodeGroupExecutionClient ngeClient) throws Exception {
-		this.oInfo = new OntologyInfo(conn);
-		this.conn = conn;
-		this.ngeClient = ngeClient;
+	public PathExplorer(SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
+		this(new OntologyInfo(conn), conn, ngeClient, cacheSei);
 	}
 	
-	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient) {
+	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
 		this.oInfo = oInfo;
 		this.conn = conn;
 		this.ngeClient = ngeClient;
+		
+		// generate key for cacheSei
+		this.cacheKey = Utility.hashMD5(cacheSei.toJson().toJSONString());
+		
+		// init nodegroup cache from disk if needed
+		if (! PathExplorer.cache.containsKey(this.cacheKey)) {
+			PathExplorer.cache.put(cacheKey, new NodeGroupCache(cacheSei, oInfo));
+		}
 	}
 	
 	/**
 	 * Find a nodegroup that contains all the nodes and properties in uriArray
 	 * and has some data
-	 * 
-	 * Missing:
-	 *   - presumes that all properties are data properties
-	 *   - won't handle branch
-	 * 
 	 * 
 	 * @param classInstanceList  - class/instance uri pairs that need to be in ng.  (instances may be null)
 	 * @param returns  - data property or enum classes that need to be returned  (Data property domain must be in classInstanceList) 
@@ -92,8 +88,8 @@ public class PathExplorer {
 			}
 		}
 		
-		// try pulling from static cache
-		NodeGroup cached = checkCache(classInstanceList, enumRetList, propRetList);
+		// try pulling from cache
+		NodeGroup cached = this.getFromCache(classInstanceList, enumRetList, propRetList);
 		if (cached != null) {
 			this.addDataPropReturn(cached, propRetList);
 			this.addEnumReturns(cached, enumRetList);
@@ -116,8 +112,28 @@ public class PathExplorer {
 			
 			LocalLogger.logToStdOut("...succeeded");
 			return ng;
+			
+		} else {
+			// actual work
+			return this.buildNgWithData(classInstanceList, propRetList, enumRetList);
 		}
-		
+	}
+	
+	/**
+	 * Build nodegroup with data
+	 * 
+	 * Missing ??? 
+	 *   - presumes that all properties are data properties
+	 *   - won't handle branch
+	 *   
+	 * @param classInstanceList
+	 * @param propRetList
+	 * @param enumRetList
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> propRetList, ArrayList<String> enumRetList) throws Exception {
+
 		// get all model paths between all pairs
 		ArrayList<OntologyPath> pathList = new ArrayList<OntologyPath>(); 
 		ArrayList<ClassInstance> anchorInstanceList = new ArrayList<ClassInstance>();
@@ -197,7 +213,7 @@ public class PathExplorer {
 							break;
 						
 						LocalLogger.logToStdOut("...succeeded");
-						addCache(cacheNg, classInstanceList);
+						this.putToCache(cacheNg, classInstanceList);
 						return ng;
 					}
 				}
@@ -338,23 +354,74 @@ public class PathExplorer {
 		return (count > 0);
 	}
 	
-	private static NodeGroup checkCache(ArrayList<ClassInstance> classInstanceList, ArrayList<String> enumRetList, ArrayList<String> propRetList) throws Exception {
-		String key = getCacheKey(classInstanceList);
-		NodeGroup ret = null;
-		NodeGroup ng = cache.get(key);
+	/**
+	 * Find this object's cache using seiKey and then look for nodegroup
+	 * @param classInstanceList
+	 * @param enumRetList
+	 * @param propRetList
+	 * @return null if nodegroup is not there
+	 * @throws Exception
+	 */
+	private NodeGroup getFromCache(ArrayList<ClassInstance> classInstanceList, ArrayList<String> enumRetList, ArrayList<String> propRetList) throws Exception {
+		String ngKey = getNgKey(classInstanceList);
+		NodeGroup ng = null;
+		
+		try {
+			// get nodegroup
+			ng = PathExplorer.cache.get(this.cacheKey).get(ngKey);
+			
+		} catch (ValidationException e) {
+			// on ValidationError: delete and return null
+			LocalLogger.logToStdErr("Error validating cached nodegroup.  Deleting id " + ngKey);
+			PathExplorer.cache.get(this.cacheKey).delete(ngKey);
+			return null;
+		}
+		
 		if (ng != null) {
-			ret = NodeGroup.deepCopy(ng);
-		} 
-		return ret;
+			// add in classInstanceList
+			for (int i=0; i < classInstanceList.size(); i++) {
+				String instanceUri = classInstanceList.get(i).instanceUri;
+				if (instanceUri != null) {
+					Node n = ng.getNodeBySparqlID("classInstance_" + String.valueOf(i));
+					if (n == null) {
+						LocalLogger.logToStdErr("Error trying to add instance to cached nodegroup.  Deleting id " + ngKey);
+						PathExplorer.cache.get(this.cacheKey).delete(ngKey);
+						ng = null;
+					} else {
+						n.addValueConstraint(ValueConstraint.buildValuesConstraint(n, classInstanceList.get(i).instanceUri));
+					}
+				}
+			}
+		}
+		
+		return ng;
 	}
 	
-	private static void addCache(NodeGroup ng, ArrayList<ClassInstance> classInstanceList) throws Exception {
-		String key = getCacheKey(classInstanceList);
-		if (cache.containsKey(key)) {
-			LocalLogger.logToStdErr("PathExplorer attempted to cache a new nodegroup for key: " + key);
-		} else {
-			cache.put(key, ng);
+	private void putToCache(NodeGroup ng, ArrayList<ClassInstance> classInstanceList) throws Exception {
+		
+		// remove all node value contraints
+		for (Node n : ng.getNodeList()) {
+			for (int i=0; i < classInstanceList.size(); i++) {
+				String constraint = n.getValueConstraintStr();
+				String instanceUri = classInstanceList.get(i).instanceUri;
+				if (constraint != null && instanceUri != null && constraint.contains(instanceUri)) {
+					ng.changeSparqlID(n, "classInstance_" + String.valueOf(i));
+					break;
+				}
+			}
+			n.setValueConstraint(null);
 		}
+		
+		// generate a key for this nodegroup
+		String ngKey = getNgKey(classInstanceList);
+		
+		// generate some comments showing class list
+		ArrayList<String> classList = ClassInstance.getClassList(classInstanceList);
+		Collections.sort(classList);
+		String comments = classList.toString();
+		
+		// add to cache
+		PathExplorer.cache.get(this.cacheKey).put(ngKey, ng, conn, comments);
 	}
 	
 	/**
@@ -363,7 +430,7 @@ public class PathExplorer {
 	 * @return
 	 * @throws Exception
 	 */
-	private static String getCacheKey(ArrayList<ClassInstance> classInstanceList) throws Exception {
+	private static String getNgKey(ArrayList<ClassInstance> classInstanceList) throws Exception {
 		ArrayList<String> classList = ClassInstance.getClassList(classInstanceList);
 		Collections.sort(classList);
 	    

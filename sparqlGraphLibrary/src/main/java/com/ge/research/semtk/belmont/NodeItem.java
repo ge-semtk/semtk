@@ -84,7 +84,7 @@ public class NodeItem {
 				//throw new Exception("could not find the node referenced by sparql ID : " + currId);
 
 				// do not panic. add it. 
-				curr = new Node(currId, null, null, currId, ng);
+				curr = new Node(currId, null, null, this.valueTypeURI, ng);
 				curr.setSparqlID(currId);
 				ng.addOrphanedNode(curr);
 			}

@@ -45,6 +45,7 @@ import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.Triple;
+import com.ge.research.semtk.ontologyTools.ValidationException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -411,7 +412,7 @@ public class NodeGroup {
 		ArrayList<String> ids = this.getReturnedSparqlIDs();
 		for (OrderElement e : this.orderBy) {
 			if (!ids.contains(e.getSparqlID())) {
-				throw new Exception(String.format("Invalid SparqlID in ORDER BY : '%s'", e.getSparqlID()));
+				throw new ValidationException(String.format("Invalid SparqlID in ORDER BY : '%s'", e.getSparqlID()));
 			}
 		}
 	}
@@ -3217,7 +3218,7 @@ public class NodeGroup {
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception  {
 		this.oInfo = oInfo;
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
-			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
+			throw new ValidationException("Model contains no classes. Nodegroup can't be validated.");
 		}
 		
 		for (Node n : this.getNodeList()) {
@@ -3228,7 +3229,7 @@ public class NodeGroup {
 	public void validateAgainstModel(OntologyInfo oInfo) throws Exception  {
 		this.oInfo = oInfo;
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
-			throw new Exception("Model contains no classes. Nodegroup can't be validated.");
+			throw new ValidationException("Model contains no classes. Nodegroup can't be validated.");
 		}
 		
 		for (Node n : this.getNodeList()) {

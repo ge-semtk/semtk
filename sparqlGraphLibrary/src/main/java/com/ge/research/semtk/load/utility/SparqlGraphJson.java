@@ -98,6 +98,12 @@ public class SparqlGraphJson {
 		this((JSONObject) (new JSONParser()).parse(s));		
 	}
 	
+	public SparqlGraphJson(NodeGroup ng, SparqlConnection conn) {
+		this.jObj = new JSONObject();
+		this.jObj.put(JKEY_NODEGROUP, ng.toJson());
+		this.jObj.put(JKEY_SPARQLCONN, conn.toJson());
+	}
+	
 	/**
 	 * Check if Json is a full SparqlGraphJson.
 	 * Note that SparqlGraphJson can also be just a nodegroup.

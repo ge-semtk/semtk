@@ -25,7 +25,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.services.nodegroupStore.NgStoreSparqlGenerator;
+import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.utility.Utility;
 
 @Component
