@@ -1888,6 +1888,12 @@ public class NodeGroup {
 		
 	}
 	
+	public void deleteSubGraph(Node n, Node stopNode) {
+		ArrayList<Node> stopList = new ArrayList<Node>();
+		stopList.add(stopNode);
+		this.deleteSubGraph(n, stopList);
+	}
+
 	
 	/**
 	 * Delete a subgraph 
