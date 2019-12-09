@@ -119,20 +119,18 @@ public class PathExplorer {
 		}
 	}
 	
+
 	/**
 	 * Build nodegroup with data
 	 * 
-	 * Missing ??? 
-	 *   - presumes that all properties are data properties
-	 *   - won't handle branch
 	 *   
 	 * @param classInstanceList
 	 * @param propRetList
-	 * @param enumRetList
+	 * @param objRetList
 	 * @return
 	 * @throws Exception
 	 */
-	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> propRetList, ArrayList<String> enumRetList) throws Exception {
+	private NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> propRetList, ArrayList<String> objRetList) throws Exception {
 
 		// get all model paths between all pairs
 		ArrayList<OntologyPath> pathList = new ArrayList<OntologyPath>(); 
@@ -204,7 +202,7 @@ public class PathExplorer {
 						// make a copy in hopes we can cache this
 						NodeGroup cacheNg = NodeGroup.deepCopy(ng);
 						
-						success = this.addEnumReturns(ng, enumRetList);
+						success = this.addEnumReturns(ng, objRetList);
 						if (! success) 
 							break;
 						
