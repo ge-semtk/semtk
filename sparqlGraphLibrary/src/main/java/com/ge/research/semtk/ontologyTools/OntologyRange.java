@@ -23,7 +23,7 @@ public class OntologyRange {
 	private String name = "";
 	
 	public OntologyRange(String fullName) {
-		this.name = fullName;
+		this.name = (fullName == null || fullName.isEmpty()) ? "http://www.w3.org/2002/07/owl#Class" : fullName;
 	}
 	
 	public String getLocalName(){

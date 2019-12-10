@@ -955,6 +955,10 @@ public class OntologyInfo {
 							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
 							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
 						"} UNION { \n" +
+							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
+							// if SADL range is "class" then no range shows up in the owl
+							"MINUS { ?Property rdfs:range ?Range }. \n" +
+						"} UNION { \n" +
 							"?Property rdfs:domain ?x. \n" +
 							"?x owl:unionOf ?y. \n" +
 							buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +

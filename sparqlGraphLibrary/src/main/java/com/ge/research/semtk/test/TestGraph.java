@@ -247,6 +247,16 @@ public class TestGraph {
 		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
 	}
 	
+	public static void uploadOwlContents(String owl) throws Exception {
+		
+		SparqlEndpointInterface sei = getSei();		
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl.getBytes()));
+		if (!resultSet.getSuccess()) {
+			throw new Exception(resultSet.getRationaleAsString(" "));
+		}
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
+	}
+	
 	/**
 	 * Find graph from inside the owl/rdf
 	 * Clear the graph and load the owl
