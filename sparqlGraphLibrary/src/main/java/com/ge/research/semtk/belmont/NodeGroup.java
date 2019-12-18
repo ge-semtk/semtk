@@ -1888,6 +1888,25 @@ public class NodeGroup {
 		
 	}
 	
+	/**
+	 * Delete a node and of all the remaining disconnected islands, keep the one containing keepIslandContaining
+	 * @param delNode
+	 * @param keepIslandContaining
+	 */
+	public void deleteNode(Node delNode, Node keepIslandContaining) {
+		// delete node, potentially leaving multiple disconnected islands
+		this.deleteNode(delNode, false);
+		
+		// get all nodes in island we want to keep
+		ArrayList<Node> island = this.getSubGraph(keepIslandContaining, new ArrayList<Node>());
+		
+		for (Node n : this.nodes) {
+			if (! island.contains(n)) {
+				this.deleteNode(n, false);
+			}
+		}
+	}
+	
 	public void deleteSubGraph(Node n, Node stopNode) {
 		ArrayList<Node> stopList = new ArrayList<Node>();
 		stopList.add(stopNode);
@@ -2499,6 +2518,50 @@ public class NodeGroup {
 		return sNode;
 	}
 	
+	public Node getClosestOrAddNode(Node n, String classURI, OntologyInfo oInfo, boolean superclassFlag) throws Exception  {
+		// return node closest to n  with this classURI
+		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
+		// if superclassFlag, then any subclass of classURI "counts"
+		
+		// if gNodeGroup is empty: simple add
+		this.oInfo = oInfo;
+		Node sNode;
+		
+		if (this.getNodeCount() == 0) {
+			sNode = this.addNode(classURI, oInfo);
+			
+		} else {
+			// if node already exists, return first one
+			ArrayList<Node> sNodes = new ArrayList<Node>(); 
+			
+			// if superclassFlag, then any subclass of classURI "counts"
+			if (superclassFlag) {
+				sNodes = this.getNodesBySuperclassURI(classURI, oInfo);
+			// otherwise find nodes with exact classURI
+			} else {
+				sNodes = this.getNodesByURI(classURI);
+			}
+			
+			if (sNodes.size() > 1) {
+				int fewestHops = this.getNodeCount();
+				sNode = sNodes.get(0);
+				for (Node sn : sNodes) {
+					int hops = this.getHopsBetween(n, sn);
+					if (hops > -1 && hops < fewestHops) {
+						sNode = sn;
+					}
+				}
+
+			} else if (sNodes.size() == 1) {
+				sNode = sNodes.get(0);
+				
+			} else {
+				sNode = this.addClassFirstPath(classURI, oInfo, null, false);
+			}
+		}
+		return sNode;
+	}
+	
 	public Node getNodeItemParentSNode(NodeItem nItem) {
 		for (Node n : this.nodes) {
 			if (n.getNodeItemList().contains(nItem)) {
@@ -2506,6 +2569,38 @@ public class NodeGroup {
 			}
 		}
 		return null;
+	}
+	
+	public int getHopsBetween(Node n1, Node n2) {
+		HashSet<Node> visited = new HashSet<Node>();
+		return this.getHopsBetween(n1, n2, visited, 0);
+	}
+	
+	private int getHopsBetween(Node n1, Node n2, HashSet<Node> visited, int soFar) {
+		if (n1 == n2) {
+			return soFar;
+			
+		} else {
+			
+			visited.add(n1);
+			
+			ArrayList<Node> connected = n1.getConnectedNodes();
+			for (Node v : visited) {
+				connected.remove(v);
+			}
+			
+			if (connected.size() == 0) {
+				return -1;
+			} else {
+				for (Node c : connected) {
+					int hops = this.getHopsBetween(c, n2, visited, soFar + 1);
+					if (hops > 0) {
+						return hops;
+					}
+				}
+			}
+		}
+		return -1;
 	}
 	
 	/**

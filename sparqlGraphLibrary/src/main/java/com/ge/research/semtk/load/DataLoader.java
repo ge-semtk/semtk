@@ -33,6 +33,7 @@ import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.InMemoryInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -285,6 +286,13 @@ public class DataLoader implements Runnable {
 	 */
 	private int runIngestionThreads(boolean skipIngest, boolean skipCheck, String exceptionHeader) throws Exception {		
 		
+		final boolean IN_MEMORY = false;
+		InMemoryInterface inMem = new InMemoryInterface("temp");
+	
+		// TODO
+		// owl puts in triples as "id"^^String
+		// but virtuoso query seems to show they are not, just "id"
+		
 		int recordsProcessed = 0;
 		int startingRow = 1;
 		
@@ -319,7 +327,7 @@ public class DataLoader implements Runnable {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				IngestionWorkerThread worker = new IngestionWorkerThread(this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
+				IngestionWorkerThread worker = new IngestionWorkerThread(IN_MEMORY? inMem : this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				if (this.insertQueryIdealSizeOverride > 0) {
 					worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
 				}
@@ -380,6 +388,11 @@ public class DataLoader implements Runnable {
 		}
 		
 		LocalLogger.logToStdOut(" (DONE)", false, true);
+		
+		if (IN_MEMORY) {
+			byte [] owl = inMem.asOwlString().getBytes();
+			this.endpoint.executeAuthUploadOwl(inMem.asOwlString().getBytes());
+		}
 		
 		// tell status client if there is one set up
 		if (this.sClient != null) {
