@@ -122,11 +122,11 @@
 			</exclusions>
 		</dependency>
  
- 		<!--  dependency>
+ 		<dependency>
               <groupId>org.apache.jena</groupId>
               <artifactId>jena-arq</artifactId>
               <version>3.8.0</version>
-       </dependency-->
+       </dependency>
        <!-- dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>auth</artifactId>
