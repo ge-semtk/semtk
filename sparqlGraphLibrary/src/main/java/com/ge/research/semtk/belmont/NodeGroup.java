@@ -1899,11 +1899,16 @@ public class NodeGroup {
 		
 		// get all nodes in island we want to keep
 		ArrayList<Node> island = this.getSubGraph(keepIslandContaining, new ArrayList<Node>());
-		
+		ArrayList<Node> toDelete = new ArrayList<Node>();
 		for (Node n : this.nodes) {
 			if (! island.contains(n)) {
-				this.deleteNode(n, false);
+				toDelete.add(n);
 			}
+		}
+		
+		// now do the delete (avoiding ConcurrentModificationException)
+		for (Node n : toDelete) {
+			this.deleteNode(n, false);
 		}
 	}
 	
