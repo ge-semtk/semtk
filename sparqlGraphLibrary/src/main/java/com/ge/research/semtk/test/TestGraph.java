@@ -175,7 +175,6 @@ public class TestGraph {
 	/**
 	 * Clear the test graph
 	 */
-	// PEC TODO:  clear model and data graph
 	public static void clearGraph() throws Exception {
 		getSei().clearGraph();
 		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
@@ -348,7 +347,7 @@ public class TestGraph {
 	
 	/**
 	 * Get SparqlGraphJson modified with Test connection.
-	 * If owl imports are enabled, only swaps the data connection.
+	 * Not compatible with enabled owl imports.  
 	 * @param jsonObject
 	 */	
 	@SuppressWarnings("unchecked")
@@ -361,26 +360,9 @@ public class TestGraph {
 		conn.clearDataInterfaces();
 		conn.addDataInterface(getSei());
 		
-		// swap out model interfaces
-		// TODO this is breaking tests without true
-		//      try to understand why it was here
-		//      pec 1/3/2020
-		if (! conn.isOwlImportsEnabled() || true) {
-			conn.clearModelInterfaces();
-			conn.addModelInterface(getSei());
-		} else {
-			// make sure all connection server and ports are the same
-			String [] graphs = new String[conn.getModelInterfaceCount()];
-			
-			for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-				graphs[i] = conn.getModelInterface(i).getGraph();
-			}
-			
-			conn.clearModelInterfaces();
-			for (int i=0; i < graphs.length; i++) {
-				conn.addModelInterface(getSei(graphs[i]));
-			}
-		}
+		conn.clearModelInterfaces();
+		conn.addModelInterface(getSei());
+		
 		s.setSparqlConn(conn);
 		
 		return s;

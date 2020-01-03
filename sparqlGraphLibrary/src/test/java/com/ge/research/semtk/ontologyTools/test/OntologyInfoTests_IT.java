@@ -30,6 +30,9 @@ import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.load.DataLoader;
+import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -331,26 +334,43 @@ public class OntologyInfoTests_IT {
 		// clear data
 		TestGraph.clearGraph();
 		
-		// load against owl import model pre-setup in @beforeClass, but use test graph for data
-		TestGraph.ingest("src/test/resources/owl_import_leaf.json", "src/test/resources/owl_import_leaf.csv");
+		// set up custom TestGraph sparql connection
+		SparqlConnection conn = TestGraph.getSparqlAuthConn();
+		conn.setOwlImportsEnabled(true);
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		sei.setGraph("http://semtk.junit/leaf");
+		conn.clearModelInterfaces();
+		conn.addModelInterface(sei);
+		
+		// put connection into SGJson instead of using normal TestGraph override
+		// because we need to use the graph above
+		// and ingesting an owl model with imports into the wrong graph doesn't work because the name of the graph is the subject of the import triple
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_leaf.json");
+		sgjson.setSparqlConn(conn);
+		OntologyInfo oInfo = new OntologyInfo(conn);
+		
+		// load the data
+		Dataset ds = new CSVDataset("src/test/resources/owl_import_leaf.csv", false);
+		DataLoader dl = new DataLoader(sgjson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
 		
 		// run query
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_leaf.json");
-		String query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
+		sgJson.setSparqlConn(conn);
+		String query = sgJson.getNodeGroup(oInfo).generateSparqlSelect();
 		Table table = TestGraph.execTableSelect(query);
 	
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 		
 		// now try using superclass from import in the query (makes sure we got the superclass/subclass from an owl import)
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_imported_select.json");
-		query = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient()).generateSparqlSelect();
+		sgJson.setSparqlConn(conn);
+		query = sgJson.getNodeGroup(oInfo).generateSparqlSelect();
 		table = TestGraph.execTableSelect(query);
 	
-		NodeGroup ng = sgJson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
-		SparqlConnection c = ng.getSparqlConnection();
-		OntologyInfo oInfo = ng.getOInfo();
-		System.out.println("conn:\n" + c.toString());
-		System.out.println("OInfo:\n" + oInfo.toJson().toJSONString());
+		NodeGroup ng = sgJson.getNodeGroup(oInfo);
+
+		
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 	}
 	@Test
