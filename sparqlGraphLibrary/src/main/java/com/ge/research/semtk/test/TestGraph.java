@@ -43,6 +43,7 @@ import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.properties.EndpointProperties;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -190,6 +191,15 @@ public class TestGraph {
 	public static void dropGraph() throws Exception {
 		getSei().dropGraph();
 		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedModel(TestGraph.getSparqlConn());
+	}
+	
+	/**
+	 * Get directly (no oInfoClient)
+	 * @return
+	 * @throws Exception
+	 */
+	public static OntologyInfo getOInfo() throws Exception {
+		return new OntologyInfo(TestGraph.getSparqlConn());
 	}
 	
 	public static void execDeletionQuery(String query) throws Exception{
