@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,13 +40,17 @@ public class BelmontConstructQueryTest_IT {
 	
 	@BeforeClass
 	public static void setup() throws Exception {
+		
+		// TODO temporarily skipping - may be locking up Virtuoso / misreading JSON / failing in AWS Neptune
+		Assume.assumeTrue("Construct query is not currently supported", false);
+		
 		IntegrationTestUtility.authenticateJunit();
 		sgJson = TestGraph.initGraphWithData("sampleBattery");
 	}
 	
-	//@Test - temporarily commenting out due to Virtuoso lockup TODO re-enable
+	@Test
 	public void testConstructQuery1() throws Exception{
-			
+		
 		NodeGroup ng = sgJson.getNodeGroup();
 		SparqlEndpointInterface sei = sgJson.getSparqlConn().getDefaultQueryInterface();
 
@@ -60,7 +65,7 @@ public class BelmontConstructQueryTest_IT {
 	}
 
 	
-	//@Test - temporarily commenting out due to Virtuoso lockup TODO re-enable
+	@Test
 	public void testConstructQuery2() throws Exception {		
 		
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/sampleBattery_PlusConstraints.json");		
