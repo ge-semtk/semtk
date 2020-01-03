@@ -66,21 +66,25 @@ public class PathExplorer {
 	}
 	
 	/**
-	 * Find a nodegroup that contains all the nodes and properties in uriArray
-	 * and has some data
+	 * Checks cache first
+	 * Splits returns into property or enum (TODO still ignores domainHints)
+	 * Handles special case of one-node nodegroup
+	 * Calls the real buildNgWithData
 	 * 
 	 * @param classInstanceList  - class/instance uri pairs that need to be in ng.  (instances may be null)
 	 * @param returns  - data property or enum classes that need to be returned  (Data property domain must be in classInstanceList) 
 	 * @return NodeGroup or null
 	 * @throws Exception
 	 */
-	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> returns) throws Exception {
+	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<ReturnRequest> returns) throws Exception {
 		
 		ArrayList<String> propRetList = new ArrayList<String>();
 		ArrayList<String> enumRetList = new ArrayList<String>();
 
 		// build propRetList and enumRetList
-		for (String uri : returns) {
+		// TODO: actally use the ReturnRequest domainHintURI
+		for (ReturnRequest r : returns) {
+			String uri = r.getReturnUri();
 			if (this.oInfo.containsClass(uri)) {
 				enumRetList.add(uri);
 			} else {
@@ -88,8 +92,9 @@ public class PathExplorer {
 			}
 		}
 		
+	
 		// try pulling from cache
-		NodeGroup cached = this.getFromCache(classInstanceList, enumRetList, propRetList);
+		NodeGroup cached = this.getFromCache(classInstanceList);
 		if (cached != null) {
 			this.addDataPropReturn(cached, propRetList);
 			this.addEnumReturns(cached, enumRetList);
@@ -121,8 +126,9 @@ public class PathExplorer {
 	
 
 	/**
-	 * Build nodegroup with data
-	 * 
+	 * Build a nodegroup with all classes in clasInstanceList, possibly constrained to URI's
+	 * Add property and enum returns 
+	 * Saves to cache 
 	 *   
 	 * @param classInstanceList
 	 * @param propRetList
@@ -263,7 +269,7 @@ public class PathExplorer {
 				}
 			}
 			if (!found) {
-				LocalLogger.logToStdOut("...failed to add prop: " + propUri);
+				LocalLogger.logToStdErr("...failed to add prop: " + propUri);
 				return false;
 			}
 		}
@@ -360,7 +366,7 @@ public class PathExplorer {
 	 * @return null if nodegroup is not there
 	 * @throws Exception
 	 */
-	private NodeGroup getFromCache(ArrayList<ClassInstance> classInstanceList, ArrayList<String> enumRetList, ArrayList<String> propRetList) throws Exception {
+	private NodeGroup getFromCache(ArrayList<ClassInstance> classInstanceList) throws Exception {
 		String ngKey = getNgKey(classInstanceList);
 		NodeGroup ng = null;
 		

@@ -12,6 +12,10 @@ public class ClassInstance {
 		this.instanceUri = instanceUri;
 	} 
 	
+	public String toString() {
+		return "class: " + classUri + " instance:" + instanceUri;
+	}
+	
 	public static ArrayList<String> getClassList(ArrayList<ClassInstance> classInstanceList) {
 		ArrayList<String> ret = new ArrayList<String>();
 		for (ClassInstance i : classInstanceList) {

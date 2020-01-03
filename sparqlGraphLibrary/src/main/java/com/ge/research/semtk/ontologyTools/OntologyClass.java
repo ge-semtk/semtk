@@ -51,6 +51,10 @@ public class OntologyClass extends AnnotatableElement {
 		this(name, null);
 	}
 
+	public String getName() {
+		return this.name.getFullName();
+	}
+	
 	public String getNameString(Boolean stripNamespace){
 		if(stripNamespace){
 			return this.name.getLocalName();
