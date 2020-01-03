@@ -188,7 +188,7 @@ public class Node extends Returnable {
 		// get oInfo's version of the property list
 		OntologyClass ontClass = oInfo.getClass(this.getFullUriName());
 		if (ontClass == null) {
-			throw new ValidationException("Class does not exist in the model: " + this.getFullUriName());
+			throw new ValidationException("Class does not exist in the model:  " + this.getFullUriName() + "   existing classes: " + oInfo.getClassNames().toString());
 		}
 		ArrayList<OntologyProperty> ontProps = oInfo.getInheritedProperties(ontClass);
 		
