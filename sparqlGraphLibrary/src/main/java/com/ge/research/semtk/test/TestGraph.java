@@ -362,7 +362,10 @@ public class TestGraph {
 		conn.addDataInterface(getSei());
 		
 		// swap out model interfaces
-		if (! conn.isOwlImportsEnabled()) {
+		// TODO this is breaking tests without true
+		//      try to understand why it was here
+		//      pec 1/3/2020
+		if (! conn.isOwlImportsEnabled() || true) {
 			conn.clearModelInterfaces();
 			conn.addModelInterface(getSei());
 		} else {
