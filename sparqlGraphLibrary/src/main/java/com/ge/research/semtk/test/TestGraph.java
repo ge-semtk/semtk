@@ -300,6 +300,15 @@ public class TestGraph {
 		}
 	}
 	
+	public static void uploadTurtleString(String turtleData) throws Exception {
+		
+		SparqlEndpointInterface sei = getSei();
+		
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadTurtle(turtleData.getBytes()));
+		if (!resultSet.getSuccess()) {
+			throw new Exception(resultSet.getRationaleAsString(" "));
+		}
+	}
 	/**
 	 * Upload an owl string to the test graph
 	 * @param owl

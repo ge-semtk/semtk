@@ -39,6 +39,8 @@ import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.edc.client.StatusClient;
+import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
@@ -73,6 +75,8 @@ public class DispatcherServiceRestController {
 	DispatchOInfoServiceProperties oinfo_props;
 	@Autowired
 	DispatchResultsServiceProperties results_props;
+	@Autowired
+	DispatchStatusServiceProperties status_props;
 	
 	@Autowired 
 	private ApplicationContext appContext;
@@ -83,6 +87,7 @@ public class DispatcherServiceRestController {
 		store_props.validateWithExit();
 		edc_props.validateWithExit();
 		oinfo_props.validateWithExit();
+		status_props.validateWithExit();
 		results_props.validateWithExit();
 				
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
@@ -363,6 +368,7 @@ public class DispatcherServiceRestController {
 		}		
 		
 		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+		StatusClient sClient = new StatusClient(new StatusClientConfig(status_props.getProtocol(), status_props.getServer(), status_props.getPort()));
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		NodeGroupStoreRestClient ngStoreClient = new NodeGroupStoreRestClient(new NodeGroupStoreConfig(store_props.getProtocol(), store_props.getServer(), store_props.getPort()));
 
@@ -385,11 +391,12 @@ public class DispatcherServiceRestController {
 				// this is not a great way to get the constructor but the more traditional single call was failing pretty badly.
 				if(params[0].isAssignableFrom(      String.class) &&
 						params[1].isAssignableFrom( SparqlGraphJson.class)&&
-						params[2].isAssignableFrom( ResultsClient.class) &&
-						params[3].isAssignableFrom( SparqlEndpointInterface.class) &&
-						params[4].toString().equals("boolean" ) &&
-						params[5].isAssignableFrom( OntologyInfoClient.class) &&
-						params[6].isAssignableFrom( NodeGroupStoreRestClient.class)) {
+						params[2].isAssignableFrom( StatusClient.class) &&
+						params[3].isAssignableFrom( ResultsClient.class) &&
+						params[4].isAssignableFrom( SparqlEndpointInterface.class) &&
+						params[5].toString().equals("boolean" ) &&
+						params[6].isAssignableFrom( OntologyInfoClient.class) &&
+						params[7].isAssignableFrom( NodeGroupStoreRestClient.class)) {
 									
 					ctor = c;
 				}
@@ -399,7 +406,7 @@ public class DispatcherServiceRestController {
 			if (ctor == null) {
 				throw new Exception("Could not find constructor for dispatcher");
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(jobId, sgJson, rClient, servicesSei, heedRestrictions, oClient, ngStoreClient);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(jobId, sgJson, sClient, rClient, servicesSei, heedRestrictions, oClient, ngStoreClient);
 			
 		}catch(Exception e){
 			// log entire stack trace

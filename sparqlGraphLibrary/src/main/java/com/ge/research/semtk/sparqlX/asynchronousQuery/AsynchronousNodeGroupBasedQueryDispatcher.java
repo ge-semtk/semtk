@@ -73,12 +73,17 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public final static String FLAG_DISPATCH_RETURN_QUERIES = "DISPATCH_RETURN_QUERIES";
 	
-	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
+	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, StatusClient sClient, ResultsClient rClient, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
 		this.jobID = jobId;
 		
 		this.oInfoClient = oInfoClient;
 		this.ngStoreClient = ngStoreClient;
-		this.jobTracker = new JobTracker(extConfigSei);
+		
+		// change sClient into a jobs Sei borrowing the username password from the extConfigSei.
+		SparqlEndpointInterface jobSei = sClient.getJobTrackerSei();
+		jobSei.setUserAndPassword(extConfigSei.getUserName(), extConfigSei.getPassword());
+		this.jobTracker = new JobTracker(jobSei);
+		
 		this.resultsClient = rClient;
 		// get nodegroup and sei from json
 		LocalLogger.logToStdErr("processing incoming nodegroup - in base class");

@@ -235,6 +235,33 @@ public class StatusServiceRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+	
+	@ApiOperation(
+			value="Get seiJson SparqlEndpointInterface",
+			notes="This allows SemTK services to run efficient JobTrackers instead of inefficient internal calls to this service"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getJobTrackerSei", method=RequestMethod.POST)
+	public JSONObject getJobTrackerSei(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			final String ENDPOINT_NAME = "getJobTrackerSei";   // HERE
+			SimpleResultSet res = new SimpleResultSet(true);
+			try{
+				res.addResult("seiJson", edc_prop.buildSei().toJson());
+				
+		    } catch (Exception e) {
+		    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
+			    LocalLogger.printStackTrace(e);
+			    res.setSuccess(false);
+			    res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		    } 
+			return res.toJson();
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
 	/**
 	 * Block until status is percent complete is reached
 	 */

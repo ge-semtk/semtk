@@ -20,6 +20,7 @@ package com.ge.research.semtk.sparqlX.asynchronousQuery;
 
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 
@@ -42,8 +43,8 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 	 * @param encodedNodeGroup
 	 * @throws Exception
 	 */
-	public AsynchronousNodeGroupDispatcher(String jobId, SparqlGraphJson sgJson, ResultsClient rClient, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
-		super(jobId, sgJson, rClient, extConfigSei, unusedFlag, oInfoClient, ngStoreClient);
+	public AsynchronousNodeGroupDispatcher(String jobId, SparqlGraphJson sgJson, StatusClient sClient, ResultsClient rClient, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
+		super(jobId, sgJson, sClient, rClient, extConfigSei, unusedFlag, oInfoClient, ngStoreClient);
 		
 	}
 	

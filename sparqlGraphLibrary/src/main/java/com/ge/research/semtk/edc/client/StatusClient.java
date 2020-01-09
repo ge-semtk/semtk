@@ -27,6 +27,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.services.client.RestClientConfig;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class StatusClient extends RestClient {
@@ -308,6 +309,27 @@ public class StatusClient extends RestClient {
 			conf.setServiceEndpoint(null);
 		}
 	}
+	
+	/**
+	 * 
+	 * @throws Exception
+	 */
+	public SparqlEndpointInterface getJobTrackerSei() throws Exception {
+		conf.setServiceEndpoint("status/getJobTrackerSei");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(res.getResultJSON("seiJson"));
+			
+			return sei;
+			
+		} finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+		}
+	}
+	
 	
 	/**
 	 * Create a copy with a new jobId
