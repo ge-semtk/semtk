@@ -22,18 +22,13 @@ import java.io.File;
 import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
-import com.ge.research.semtk.auth.HeaderTable;
-import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -50,6 +45,12 @@ public class ResultsClient extends RestClient implements Runnable {
 	
 	public ResultsClient (ResultsClientConfig config) {
 		this.conf = config;	
+	}
+	
+	public ResultsClient (ResultsClient other) throws Exception {
+		this(new ResultsClientConfig(other.conf.getServiceProtocol(), 
+				other.conf.getServiceServer(),
+				other.conf.getServicePort()));
 	}
 	
 	@Override

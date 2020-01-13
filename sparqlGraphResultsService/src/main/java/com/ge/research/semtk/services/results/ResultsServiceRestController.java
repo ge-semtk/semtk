@@ -181,7 +181,7 @@ public class ResultsServiceRestController {
 			String blobStr = requestBody.getJsonBlobString();
 			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeJsonBlobResults", "jobId", requestBody.jobId, "chars", String.valueOf(blobStr.length()));
-			LocalLogger.logToStdOut("Results Service storeJsonLdResults JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut("Results Service storeJsonBlobResults JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
