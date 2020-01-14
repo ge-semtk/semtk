@@ -70,7 +70,8 @@ public class JobTracker {
 	private static HashSet<String> checkedOwl = new HashSet<String>();
 
 	public JobTracker (SparqlEndpointInterface jobSei) throws Exception {
-		this.sei = jobSei;
+		// make this thread safe
+		this.sei = jobSei.copy();
 		
 		JobTracker.uploadOwlModelIfNeeded(this);
 	}

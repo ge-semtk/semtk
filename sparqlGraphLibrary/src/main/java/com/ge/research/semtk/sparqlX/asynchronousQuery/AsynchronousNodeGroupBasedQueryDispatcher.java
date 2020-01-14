@@ -63,6 +63,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected NodeGroup queryNodeGroup;
 	protected OntologyInfoClient oInfoClient;
 	protected NodeGroupStoreRestClient ngStoreClient;
+	protected SparqlEndpointInterface jobTrackerSei;
 	protected JobTracker jobTracker;
 	protected ResultsClientConfig resConfig;
 	
@@ -80,6 +81,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		this.oInfoClient = oInfoClient;
 		this.ngStoreClient = ngStoreClient;
 		
+		this.jobTrackerSei = jobTrackerSei;
 		this.jobTracker = new JobTracker(jobTrackerSei);
 		
 		this.resConfig = resConfig;
