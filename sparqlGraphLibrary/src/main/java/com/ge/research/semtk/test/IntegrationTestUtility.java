@@ -236,7 +236,11 @@ public class IntegrationTestUtility {
 	 * Get a ResultsClient using the integration test properties.
 	 */
 	public static ResultsClient getResultsClient() throws Exception{
-		return new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
+		return new ResultsClient(getResultsClientConfig());
+	}
+	
+	public static ResultsClientConfig getResultsClientConfig() throws Exception{
+		return new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort());
 	}
 	
 	/**

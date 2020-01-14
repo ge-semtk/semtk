@@ -33,6 +33,7 @@ import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
@@ -63,7 +64,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	protected OntologyInfoClient oInfoClient;
 	protected NodeGroupStoreRestClient ngStoreClient;
 	protected JobTracker jobTracker;
-	protected ResultsClient resultsClient;
+	protected ResultsClientConfig resConfig;
 	
 	protected SparqlEndpointInterface querySei;
 
@@ -73,18 +74,15 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public final static String FLAG_DISPATCH_RETURN_QUERIES = "DISPATCH_RETURN_QUERIES";
 	
-	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, StatusClient sClient, ResultsClient rClient, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
+	public AsynchronousNodeGroupBasedQueryDispatcher(String jobId, SparqlGraphJson sgJson, SparqlEndpointInterface jobTrackerSei, ResultsClientConfig resConfig, SparqlEndpointInterface extConfigSei, boolean unusedFlag, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
 		this.jobID = jobId;
 		
 		this.oInfoClient = oInfoClient;
 		this.ngStoreClient = ngStoreClient;
 		
-		// change sClient into a jobs Sei borrowing the username password from the extConfigSei.
-		SparqlEndpointInterface jobSei = sClient.getJobTrackerSei();
-		jobSei.setUserAndPassword(extConfigSei.getUserName(), extConfigSei.getPassword());
-		this.jobTracker = new JobTracker(jobSei);
+		this.jobTracker = new JobTracker(jobTrackerSei);
 		
-		this.resultsClient = rClient;
+		this.resConfig = resConfig;
 		// get nodegroup and sei from json
 		LocalLogger.logToStdErr("processing incoming nodegroup - in base class");
 
@@ -155,7 +153,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			}
 			resTable.replaceColumnNames(modColnames);
 			
-			this.resultsClient.execStoreTableResults(this.jobID, resTable);
+			(new ResultsClient(this.resConfig)).execStoreTableResults(this.jobID, resTable);
 		}
 		catch(Exception e){
 			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());
@@ -168,7 +166,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	private void sendResultsToService(NodeGroupResultSet preRet)  throws ConnectException, EndpointNotFoundException, Exception{
 		try{
 			JSONObject resJSON = preRet.getResultsJSON();
-			this.resultsClient.execStoreGraphResults(this.jobID, resJSON);
+			(new ResultsClient(this.resConfig)).execStoreGraphResults(this.jobID, resJSON);
 		}
 		catch(Exception e){
 			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());

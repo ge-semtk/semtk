@@ -314,14 +314,14 @@ public class StatusClient extends RestClient {
 	 * 
 	 * @throws Exception
 	 */
-	public SparqlEndpointInterface getJobTrackerSei() throws Exception {
+	public SparqlEndpointInterface getJobTrackerSei(String user, String pass) throws Exception {
 		conf.setServiceEndpoint("status/getJobTrackerSei");
 		
 		try {
 			SimpleResultSet res = this.executeWithSimpleResultReturn();
 			res.throwExceptionIfUnsuccessful();
 			SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(res.getResultJSON("seiJson"));
-			
+			sei.setUserAndPassword(user, pass);
 			return sei;
 			
 		} finally {

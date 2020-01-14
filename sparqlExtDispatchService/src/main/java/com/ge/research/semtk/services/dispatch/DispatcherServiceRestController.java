@@ -367,8 +367,9 @@ public class DispatcherServiceRestController {
 			servicesSei = SparqlEndpointInterface.getInstance(edc_props.getEndpointType(), edc_props.getEndpointServerUrl(), edc_props.getEndpointDataset());
 		}		
 		
-		ResultsClient rClient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+		ResultsClientConfig resConfig = new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort());
 		StatusClient sClient = new StatusClient(new StatusClientConfig(status_props.getProtocol(), status_props.getServer(), status_props.getPort()));
+		SparqlEndpointInterface jobTrackerSei = sClient.getJobTrackerSei(edc_props.getEndpointUsername(), edc_props.getEndpointPassword());
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		NodeGroupStoreRestClient ngStoreClient = new NodeGroupStoreRestClient(new NodeGroupStoreConfig(store_props.getProtocol(), store_props.getServer(), store_props.getPort()));
 
@@ -391,8 +392,8 @@ public class DispatcherServiceRestController {
 				// this is not a great way to get the constructor but the more traditional single call was failing pretty badly.
 				if(params[0].isAssignableFrom(      String.class) &&
 						params[1].isAssignableFrom( SparqlGraphJson.class)&&
-						params[2].isAssignableFrom( StatusClient.class) &&
-						params[3].isAssignableFrom( ResultsClient.class) &&
+						params[2].isAssignableFrom( SparqlEndpointInterface.class) &&
+						params[3].isAssignableFrom( ResultsClientConfig.class) &&
 						params[4].isAssignableFrom( SparqlEndpointInterface.class) &&
 						params[5].toString().equals("boolean" ) &&
 						params[6].isAssignableFrom( OntologyInfoClient.class) &&
@@ -406,7 +407,7 @@ public class DispatcherServiceRestController {
 			if (ctor == null) {
 				throw new Exception("Could not find constructor for dispatcher");
 			}
-			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(jobId, sgJson, sClient, rClient, servicesSei, heedRestrictions, oClient, ngStoreClient);
+			dsp = (AsynchronousNodeGroupBasedQueryDispatcher) ctor.newInstance(jobId, sgJson, jobTrackerSei, resConfig, servicesSei, heedRestrictions, oClient, ngStoreClient);
 			
 		}catch(Exception e){
 			// log entire stack trace
