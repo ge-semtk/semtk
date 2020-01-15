@@ -36,6 +36,7 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<executions>
 
+					<!-- java -cp path/to/standaloneExecutables-jar-with-dependencies.jar com.research.full.mainClass arg1 arg2 ...  -->
 					<execution>
 						<id>standalone</id>
 						<configuration>
@@ -50,86 +51,6 @@
 						</goals>
 					</execution>
 					
-					<!-- Please delete all the builds below once we have removed them from scripts -->
-					<!-- Replace with -->
-					<!--     java -cp path/to/standaloneExecutables-jar-with-dependencies.jar  com.research.full.mainClass arg1 arg2 ...  -->
-					<!-- works fine for all the main classes below without the time/space of extra jars -->
-					<execution>
-					      <id>build-a</id>
-						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
-									<mainClass>com.ge.research.semtk.standaloneExecutables.CSVDataLoaderRunner</mainClass>
-								</manifest>
-							</archive>
-							<finalName>csvDataLoaderRunner</finalName>
-						</configuration>
-						<phase>install</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-
-					<execution>
-					      <id>build-b</id>
-						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
-									<mainClass>com.ge.research.semtk.standaloneExecutables.BulkLoader</mainClass>
-								</manifest>
-							</archive>
-							<finalName>bulkLoader</finalName>
-						</configuration>
-						<phase>install</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-					
-					<execution>
-					      <id>build-c</id>
-						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
-									<mainClass>com.ge.research.semtk.standaloneExecutables.CSVDataCleanerRunner</mainClass>
-								</manifest>
-							</archive>
-							<finalName>csvDataCleanerRunner</finalName>
-						</configuration>
-						<phase>install</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-
-					<execution>
-						<id>build-d</id>
-						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<archive>
-								<manifest>
-									<mainClass>com.ge.research.semtk.standaloneExecutables.StoreNodeGroup</mainClass>
-								</manifest>
-							</archive>
-							<finalName>storeNodeGroup</finalName>
-						</configuration>
-						<phase>install</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-
 				</executions>
 			</plugin>
 		</plugins>
