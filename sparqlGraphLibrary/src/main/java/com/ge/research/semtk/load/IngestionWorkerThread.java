@@ -100,7 +100,9 @@ public class IngestionWorkerThread extends Thread {
 					}
 				}
 			}
-			
+		
+		} catch (NothingToInsertException e) {
+			// silently skip
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);
 			this.e = e;
@@ -143,13 +145,18 @@ public class IngestionWorkerThread extends Thread {
 				}
 				
 				// generate query and check size
-				String subQuery = NodeGroup.generateCombinedSparqlInsert(ngSubList, this.oInfo, this.endpoint);
-				queryList.add(subQuery);
-				longestQueryLen = Math.max(longestQueryLen, subQuery.length());
-				
-				// get ready for next iteration
-				index0 += this.recommendedBatchSize;
-				indexN = Math.min(nodeGroupList.size(), indexN + this.recommendedBatchSize);
+				try {
+					String subQuery = NodeGroup.generateCombinedSparqlInsert(ngSubList, this.oInfo, this.endpoint);
+					queryList.add(subQuery);
+					longestQueryLen = Math.max(longestQueryLen, subQuery.length());
+					
+					// get ready for next iteration
+					index0 += this.recommendedBatchSize;
+					indexN = Math.min(nodeGroupList.size(), indexN + this.recommendedBatchSize);
+					
+				} catch (NothingToInsertException e) {
+					// silently skip
+				}
 			}
 			
 		} while (longestQueryLen > targetMax && this.recommendedBatchSize > 1);

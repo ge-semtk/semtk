@@ -38,6 +38,7 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintMetaData;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.load.NothingToInsertException;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -3106,6 +3107,9 @@ public class NodeGroup {
 				
 		}
 		
+		if (totalInsertHead.length() == 0) {
+			throw new NothingToInsertException("No data to insert");
+		}
 		// NOTE: the last NodeGroup should have all the prefixes of all the needed groups.
 		//       this way, we only need to get it's prefixes. 
 		String query =  ng.generateSparqlPrefix() + " INSERT { GRAPH <" + endpoint.getGraph() + "> {\n" + totalInsertHead + "} }\n WHERE {" + totalInsertWhere + " } ";
