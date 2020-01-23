@@ -22,6 +22,7 @@ public class AuthorizationProperties extends Properties {
 	int refreshFreqSeconds = 300;
 	String settingsFilePath = "";
 	String logPath = "";
+	String usernameKey = "user_name";
 
 	public String getLogPath() {
 		return logPath;
@@ -47,10 +48,19 @@ public class AuthorizationProperties extends Properties {
 		this.refreshFreqSeconds = refreshFreqSeconds;
 	}
 	
+	public String getUsernameKey() {
+		return usernameKey;
+	}
+	
+	public void setUsernameKey(String key) {
+		this.usernameKey = key;
+	}
+	
 	public void validate() throws Exception {
 		super.validate();
 		checkRangeInclusive("refreshFreqSeconds", refreshFreqSeconds, 1, 3600);
 		checkNone("settingsFilePath", settingsFilePath);
 		checkNone("logPath", logPath);
+		checkNone("usernameKey", usernameKey);
 	}
 }

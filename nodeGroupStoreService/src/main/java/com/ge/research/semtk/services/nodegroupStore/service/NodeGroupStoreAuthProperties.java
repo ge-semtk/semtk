@@ -8,4 +8,10 @@ import com.ge.research.semtk.auth.AuthorizationProperties;
 @Configuration
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class NodeGroupStoreAuthProperties extends AuthorizationProperties {
+
+	public NodeGroupStoreAuthProperties() {
+		super();
+		setPrefix("auth");
+	}
+
 }

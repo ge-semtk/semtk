@@ -40,15 +40,15 @@ public class AuthorizationManager {
 	private static long lastUpdate = 0;
 
 	private static final String AUTH_UNSET_MESSAGE="Authorization setup failed: auth.authFilePath must be set to an auth_file.json, or NO_AUTH";
-	private static final String JOB_ADMIN_GROUP = "JobAdmin";
 	public static String AUTH_FILE_NO_AUTH = "NO_AUTH";
 	private static String AUTH_FILE_UNSET = "unset";
 	private static String DEFAULT_GROUP = "ALL_USERS";
-	private static String DEFAULT_GRAPH = "DEFAULT";
+	private static String DEFAULT_GRAPH = "OTHER_GRAPHS";
 	
 	private static int refreshFreqSeconds = 301;
 	private static String authFilePath = AUTH_FILE_UNSET;
-	private static int nextQuerySuperCount = 0;
+	private static boolean nextQuerySuper = false;
+	private static boolean modeSuper = false;
 		
 	// userGroup.get(name) = ArrayList of user names
 	private static HashMap<String, ArrayList<String>> userGroups = new HashMap<String, ArrayList<String>>();
@@ -58,7 +58,7 @@ public class AuthorizationManager {
 	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
 
 	// remove when done with dev and test
-	public static final boolean FORGIVE_ALL = true;
+	public static final boolean FORGIVE_ALL = false;
 	
 	public static void clear() {
 		lastUpdate = 0;
@@ -68,6 +68,8 @@ public class AuthorizationManager {
 		userGroups.clear();
 		graphReaders.clear();
 		graphWriters.clear();
+		nextQuerySuper = false;
+		modeSuper = false;
 	}
 	
 	/**
@@ -110,6 +112,7 @@ public class AuthorizationManager {
 			
 			refreshFreqSeconds = authProps.getRefreshFreqSeconds();
 			authFilePath = authProps.getSettingsFilePath();
+			ThreadAuthenticator.setUsernameKey(authProps.getUsernameKey());
 			AuthorizationException.setAuthLogPath( authProps.getLogPath() );
 			updateAuthorization();
 			
@@ -130,17 +133,6 @@ public class AuthorizationManager {
 		}
 	}
 	
-	/** 
-	 * Exposed for testing.
-	 * @return - never null
-	 */
-	public static ArrayList<String> getJobAdmins() {
-		if (userGroups.containsKey(JOB_ADMIN_GROUP)) {
-			return userGroups.get(JOB_ADMIN_GROUP);
-		} else {
-			return new ArrayList<String>();
-		}
-	}
 	
 	private static boolean authProperlyDisabled() {
 
@@ -274,52 +266,19 @@ public class AuthorizationManager {
 		String user = ThreadAuthenticator.getThreadUserName();
 		
 		try {
-			// is user_name equal, or thread is a job admin
-			if (!user.equals(owner) && !threadIsJobAdmin() && !FORGIVE_ALL) {
+			// is user_name equal, or thread is a super user
+			if (!user.equals(owner) && ! isSemtkSuper()) {
 				throw new AuthorizationException("Permission denied on thread" + Thread.currentThread().getName() + ": " + user + " may not access " + itemName + " owned by " + owner);
 			}
 		} catch (AuthorizationException ae) {
 			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development");
+				AuthorizationException.logAuthEvent("Forgiven during development: " + ae.getMessage());
 				return;
+			} else {
+				throw ae;
 			}
 		}
 				
-	}
-		
-	/**
-	 * Throw exception if thread is not job admin
-	 * 	 
-	 * NOTE: this works even if auth is turned off or failed.
-
-	 * @throws AuthorizationException
-	 */
-	public static void throwExceptionIfNotJobAdmin() throws AuthorizationException {
-		try {
-			if (!threadIsJobAdmin()) {
-				throw new AuthorizationException("Function may only be performed by job admin.");
-			}
-		} catch (AuthorizationException ae) {
-			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development");
-				return;
-			}
-		}
-	}
-	
-	/**
-	 * Is this thread ADMIN or a job admin
-	 * note: uses up the one check of ThreadAuthenticator.isAdmin()
-	 * @return
-	 */
-	public static boolean threadIsJobAdmin() throws AuthorizationException {
-		if (ThreadAuthenticator.isJobAdmin()) {
-			return true;
-		} else {
-			updateAuthorization();
-			String user = ThreadAuthenticator.getThreadUserName();
-			return (userGroups.containsKey(JOB_ADMIN_GROUP) && userGroups.get(JOB_ADMIN_GROUP).contains(user));
-		}
 	}
 		
 	/**
@@ -332,9 +291,21 @@ public class AuthorizationManager {
 	 *       it must use a SparqlEndpointInterface and call this function before the query.
 	 */
 	public static void nextQuerySemtkSuper() {
-		nextQuerySuperCount = 1;
+		nextQuerySuper = true;
 	}
 	
+	public static void setSemtkSuper() {
+		modeSuper = true;
+	}
+	
+	public static void clearSemtkSuper() {
+		modeSuper = false;
+		nextQuerySuper = false;
+	}
+	
+	public static boolean isSemtkSuper() {
+		return nextQuerySuper || modeSuper;
+	}
 	/**
 	 * Check if query is authorized 
 	 * @param query
@@ -343,8 +314,11 @@ public class AuthorizationManager {
 	public static void authorizeQuery(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
 		
 		// handle semtk-super-user query
-		if (nextQuerySuperCount > 0) {
-			nextQuerySuperCount--;
+		if (nextQuerySuper) {
+			nextQuerySuper = false;   // used up one authorization
+			return;
+		}
+		if (modeSuper) {
 			return;
 		}
 	
@@ -364,13 +338,13 @@ public class AuthorizationManager {
 		SparqlQueryInterrogator sqi = new SparqlQueryInterrogator(queryStr);
 		readOnlyFlag = sqi.isReadOnly();
 		graphURIs = sqi.getGraphNames();
-		if (! graphURIs.contains(sei.getDataset()) ) {
-			graphURIs.add(sei.getDataset());
+		if (! graphURIs.contains(sei.getGraph()) ) {
+			graphURIs.add(sei.getGraph());
 		}
 		
 		// log the second half
 		AuthorizationException.logAuthEvent("Graphs:   " + graphURIs                                       );
-		AuthorizationException.logAuthEvent("Endpoint: " + sei.getServerAndPort() + " " + sei.getDataset() );
+		AuthorizationException.logAuthEvent("Endpoint: " + sei.getServerAndPort() + " " + sei.getGraph() );
 		AuthorizationException.logAuthEvent("Type:     " + (readOnlyFlag ? "read" : "write")               );
 		AuthorizationException.logAuthEvent("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
         	        
@@ -393,7 +367,7 @@ public class AuthorizationManager {
 	 */
 	public static void throwExceptionIfNotGraphReader(String graphName) throws AuthorizationException {
 		try {
-			if (authProperlyDisabled()) return;
+			if (authProperlyDisabled() || isSemtkSuper()) return;
 		
 			updateAuthorization();
 			
@@ -422,7 +396,7 @@ public class AuthorizationManager {
 			
 		} catch (AuthorizationException ae) {
 			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development");
+				AuthorizationException.logAuthEvent("Forgiven during development: " + ae.getMessage());
 				return;
 			}
 			else throw ae;
@@ -437,7 +411,7 @@ public class AuthorizationManager {
 	 */
 	public static void throwExceptionIfNotGraphWriter(String graphName) throws AuthorizationException {
 		try {
-			if (authProperlyDisabled()) return;
+			if (authProperlyDisabled() || isSemtkSuper()) return;
 			
 			updateAuthorization();
 			
@@ -466,7 +440,7 @@ public class AuthorizationManager {
 			
 		} catch (AuthorizationException ae) {
 			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development");
+				AuthorizationException.logAuthEvent("Forgiven during development: " + ae.getMessage());
 				return;
 			}
 			else throw ae;

@@ -361,7 +361,7 @@ public class AuthorizationTest_IT {
 	 * test that being a job admin in auth_setup.json gives job permissions
 	 * @throws Exception
 	 */
-	public void testJobAdmins() throws Exception {
+	public void testSemtkSuper() throws Exception {
 		
 		// Set up authorization, should be same location as all services participating in the test
 		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
@@ -369,25 +369,14 @@ public class AuthorizationTest_IT {
 		
 		try {
 			AuthorizationManager.authorize( auth_prop );
-	
-			// make sure some JobAdmin loaded
-			if (AuthorizationManager.getJobAdmins().size() == 0) {
-				fail("No job admins are loaded");
-			}
 			
-			// authenticate thread with first jobAdmin
-			String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
-			ThreadAuthenticator.authenticateThisThread(jobAdmin);
+			AuthorizationManager.setSemtkSuper();
 			
 			// tests that should pass
-			try {
-				AuthorizationManager.throwExceptionIfNotJobOwner("test_anyOtherUser", "item");
-				AuthorizationManager.throwExceptionIfNotJobOwner(jobAdmin, "item");
+			
+			AuthorizationManager.throwExceptionIfNotJobOwner("test_anyOtherUser", "item");
 	
-			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-				e.printStackTrace();
-				fail("Authorization failed for a jobAdmin: " + jobAdmin);
-			} 
+			
 			
 		} finally {
 			AuthorizationManager.clear();
@@ -489,26 +478,13 @@ public class AuthorizationTest_IT {
 		try {
 			AuthorizationManager.authorize( auth_prop );
 	
-			// make sure some JobAdmin loaded
-			if (AuthorizationManager.getJobAdmins().size() == 0) {
-				fail("No job admins are loaded");
-			}
-			
-			// authenticate thread with first jobAdmin
-			String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
-			ThreadAuthenticator.authenticateThisThread(jobAdmin);
+			AuthorizationManager.setSemtkSuper();
 			
 			// tests that should pass
-			try {
-				AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/read");
-				AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/write");
-				AuthorizationManager.throwExceptionIfNotGraphReader("http://all/read");
-	
-			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-				e.printStackTrace();
-				fail("Authorization failed for a jobAdmin: " + jobAdmin);
-			} 
-			
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/read");
+			AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/write");
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://all/read");
+
 			if (!AuthorizationManager.FORGIVE_ALL) {
 				// tests that should fail
 				try {
@@ -584,33 +560,21 @@ public class AuthorizationTest_IT {
 		try {
 			AuthorizationManager.authorize( auth_prop );
 	
-			// make sure some JobAdmin loaded
-			if (AuthorizationManager.getJobAdmins().size() == 0) {
-				fail("No job admins are loaded");
-			}
-			
-			// authenticate thread with first jobAdmin
-			String jobAdmin = AuthorizationManager.getJobAdmins().get(0);
-			ThreadAuthenticator.authenticateThisThread(jobAdmin);
+			AuthorizationManager.setSemtkSuper();
 			
 			// tests that should pass
-			try {
-				// known user in reads DEFAULT ALL_USERS and writes DEFAULT with group specified
-				AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
-				AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
-				
-				// anon user read DEFAULT is ALL_USERS
-				ThreadAuthenticator.unAuthenticateThisThread();
-				AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
-				
-				// non existent user reads DEFAULT as ALL_USERS
-				ThreadAuthenticator.authenticateThisThread("test_user_nonexistent");
-				AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
-	
-			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-				e.printStackTrace();
-				fail("Authorization failed when DEFAULT: " + jobAdmin);
-			} 
+			
+			// known user in reads DEFAULT ALL_USERS and writes DEFAULT with group specified
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
+			AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
+			
+			// anon user read DEFAULT is ALL_USERS
+			ThreadAuthenticator.unAuthenticateThisThread();
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
+			
+			// non existent user reads DEFAULT as ALL_USERS
+			ThreadAuthenticator.authenticateThisThread("test_user_nonexistent");
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
 			
 			// tests that should fail
 			try {

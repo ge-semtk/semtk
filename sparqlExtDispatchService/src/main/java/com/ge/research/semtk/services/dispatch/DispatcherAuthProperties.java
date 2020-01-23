@@ -8,4 +8,9 @@ import com.ge.research.semtk.auth.AuthorizationProperties;
 @Configuration
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class DispatcherAuthProperties extends AuthorizationProperties {
+
+	public DispatcherAuthProperties() {
+		super();
+		setPrefix("auth");
+	}
 }

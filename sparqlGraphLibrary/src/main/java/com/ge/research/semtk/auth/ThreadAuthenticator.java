@@ -42,10 +42,18 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class ThreadAuthenticator {
 	public static final String ANONYMOUS = "anonymous";
 	
-	public static final String USERNAME_KEY = "user_name";
+	private static String usernameKey = "user_name";
 	
 	private static ThreadLocal<HeaderTable> threadHeaderTables = new ThreadLocal<>();
 	private static ThreadLocal<Boolean> threadJobAdmins = new ThreadLocal<>();
+	
+	public static void setUsernameKey(String k) {
+		usernameKey = k;
+	}
+	
+	public static String getUsernameKey() {
+		return usernameKey;
+	}
 	
 	/**
 	 * Authenticate this thread with headers
@@ -80,7 +88,7 @@ public class ThreadAuthenticator {
 		HeaderTable tab = new HeaderTable();
 		ArrayList<String> vals = new ArrayList<String>();
 		vals.add(userName);
-		tab.put(ThreadAuthenticator.USERNAME_KEY, vals);
+		tab.put(ThreadAuthenticator.usernameKey, vals);
 		ThreadAuthenticator.authenticateThisThread(tab);
 	}
 	
@@ -92,9 +100,9 @@ public class ThreadAuthenticator {
 	/**
 	 * Makes this thread a job admin.
 	 * 
-	 *    // When you're not entirely sure the thread should alwasy be ADMIN, best usage is:
-	 * 	  setAdmin(true);
+	 *    // When you're not entirely sure the thread should always be ADMIN, best usage is:
 	 *    try {
+	 * 	      setAdmin(true);
 	 *        do stuff;
 	 *    } finally {
 	 *    	setAdmin(false);
@@ -125,7 +133,7 @@ public class ThreadAuthenticator {
 	
 	public static String getUserName(HeaderTable headerTable) {
 		if (headerTable != null) {
-			List<String> vals = headerTable.get(USERNAME_KEY);
+			List<String> vals = headerTable.get(usernameKey);
 			if (vals != null && vals.size() == 1) {
 				return vals.get(0);
 			} 

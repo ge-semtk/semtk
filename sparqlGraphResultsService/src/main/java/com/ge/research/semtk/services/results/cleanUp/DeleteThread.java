@@ -18,17 +18,13 @@
 package com.ge.research.semtk.services.results.cleanUp;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.services.results.ResultsSemtkEndpointProperties;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class DeleteThread extends Thread {
@@ -70,8 +66,12 @@ public class DeleteThread extends Thread {
     			LocalLogger.logToStdErr("Clean up started...");
     			
     			// clean up the official way
-    			ThreadAuthenticator.setJobAdmin(true);
-    			this.jTracker.deleteJobsAndFiles(cutoff, this.trstore);
+    			try {
+	    			AuthorizationManager.setSemtkSuper();
+	    			this.jTracker.deleteJobsAndFiles(cutoff, this.trstore);
+    			} finally {
+    				AuthorizationManager.clearSemtkSuper();
+    			}
     			
     			// look for leftovers
     			for (File f : locationToDeleteFrom.listFiles()) {

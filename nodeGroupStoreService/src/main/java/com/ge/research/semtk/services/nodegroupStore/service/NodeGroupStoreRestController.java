@@ -19,12 +19,14 @@ package com.ge.research.semtk.services.nodegroupStore.service;
 
 import java.util.ArrayList;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,18 +39,16 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @RestController
@@ -66,10 +66,24 @@ public class NodeGroupStoreRestController {
 	    response.addHeader("Access-Control-Max-Age", "3600");
 	}
 	
+	@Autowired 
+	private ApplicationContext appContext;
 	@Autowired
 	StoreProperties prop;
+	@Autowired
+	NodeGroupStoreAuthProperties auth_prop;
 	
 	private static final String SERVICE_NAME="nodeGroupStore";
+	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	
 	/**
 	 * Store a new nodegroup to the nodegroup store.

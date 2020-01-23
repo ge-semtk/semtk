@@ -20,8 +20,11 @@ package com.ge.research.semtk.services.ontologyinfo;
 
 import java.util.ArrayList;
 
+import javax.annotation.PostConstruct;
+
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
@@ -41,6 +45,7 @@ import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -55,11 +60,24 @@ public class OntologyInfoServiceRestController {
  	
 	@Autowired
 	OntologyInfoLoggingProperties log_prop;
-	
 	@Autowired
 	private OntologyServiceProperties service_prop;
+	@Autowired 
+	private ApplicationContext appContext;
+	@Autowired
+	OntologyInfoAuthProperties auth_prop;
 
-	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+
+		log_prop.validateWithExit();
+		service_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
 	/**
 	 * Get a tabular data dictionary report.
 	 */

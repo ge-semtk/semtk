@@ -46,9 +46,7 @@ public class HeadersManager {
 		// grab only principal-related headers
 		for (String key : headers.keySet()) {
 			
-			// grab user_name if there is exactly one
-			if (	key.equals("user_name") ||
-					key.equals("authorization")) {
+			if (key.equals(ThreadAuthenticator.getUsernameKey())) {
 				headerTable.put(key, headers.get(key));
 			}
 		}
