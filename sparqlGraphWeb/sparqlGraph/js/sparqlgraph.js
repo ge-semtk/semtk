@@ -1067,7 +1067,7 @@
             console.log("/user callback failed");
             callback(null);
         }
-        $.get(window.location.origin + "/user", success).fail(failure);
+        $.get(window.location.origin + g.userEndpoint, success).fail(failure);
     };
 
     var editOrderBy = function () {
@@ -1186,7 +1186,7 @@
                 client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
-                alert("not implemented");
+                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
 			case "DELETE":
                 var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);

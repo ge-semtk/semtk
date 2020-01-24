@@ -113,6 +113,7 @@ var g = {
 		mapping : "mappingTab",
 		upload : "uploadTab",
 	},
+	userEndpoint : "${WEB_USER_ENDPOINT}",
 
 	longTimeoutMsec: 8000,
 	shortTimeoutMsec: 5000,

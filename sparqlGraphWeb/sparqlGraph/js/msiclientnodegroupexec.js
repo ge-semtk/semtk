@@ -209,6 +209,10 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             /*==========  functions with jobIdCallback ============*/
+            execAsyncDispatchConstructFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroup("dispatchConstructFromNodegroup",
+                                        nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
             execAsyncDispatchSelectFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchSelectFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
