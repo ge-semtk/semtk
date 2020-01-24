@@ -19,8 +19,10 @@
 package com.ge.research.semtk.edc.services.hive;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +34,7 @@ import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutilib.requests.DatabaseQueryRequest;
 import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
+import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.edc.services.hive.HiveProperties;
 
@@ -60,7 +63,8 @@ public class HiveServiceRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/queryHive", method= RequestMethod.POST)
-	public JSONObject queryHive(@RequestBody DatabaseQueryRequest requestBody){
+	public JSONObject queryHive(@RequestBody DatabaseQueryRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers); // add security to async job
 		String query = requestBody.query;
 		return runQuery (requestBody, query);
 	}
