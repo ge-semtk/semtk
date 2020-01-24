@@ -84,7 +84,7 @@ public class StatusServiceRestController {
 
 	}
 	@RequestMapping(value="/headers", method=RequestMethod.GET)
-	public String getPercentComplete(@RequestHeader HttpHeaders headers) {
+	public String headers(@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		
 		return headers.toString();

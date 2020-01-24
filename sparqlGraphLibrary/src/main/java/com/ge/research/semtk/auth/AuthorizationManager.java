@@ -43,7 +43,7 @@ public class AuthorizationManager {
 	public static String AUTH_FILE_NO_AUTH = "NO_AUTH";
 	private static String AUTH_FILE_UNSET = "unset";
 	private static String DEFAULT_GROUP = "ALL_USERS";
-	private static String DEFAULT_GRAPH = "OTHER_GRAPHS";
+	private static String DEFAULT_GRAPH = "DEFAULT";
 	
 	private static int refreshFreqSeconds = 301;
 	private static String authFilePath = AUTH_FILE_UNSET;

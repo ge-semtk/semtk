@@ -57,6 +57,9 @@ public class IntegrationTestUtility {
 	// property file with integration test configurations
 	public static final String INTEGRATION_TEST_PROPERTY_FILE = "src/test/resources/integrationtest.properties";
 
+	public static String getAuthUsernameKey() throws Exception{
+		return getIntegrationTestProperty("integrationtest.auth.usernamekey");
+	}
 	
 	// protocol for all services
 	public static String getServiceProtocol() throws Exception{

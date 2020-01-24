@@ -75,11 +75,11 @@ public class AuthorizationTest_IT {
 	 */
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		
+		ThreadAuthenticator.setUsernameKey( IntegrationTestUtility.getAuthUsernameKey() );
 	}
 	
 	@AfterClass
-	public static void cleanupJobs() {
+	public static void cleanupJobs() throws Exception {
 		ArrayList<String> cleaned = new ArrayList<String>();
 		
 		for (String jobId : cleanupJobIds) {
@@ -97,7 +97,23 @@ public class AuthorizationTest_IT {
 		}
 		
 		// turn off any authorization
+		authMgrClear();
+	}
+	
+	/**
+	 * Apply authorization props
+	 * but usernamekey needs to match current services for _IT tests to work
+	 * @param props
+	 * @throws Exception
+	 */
+	private static void authMgrAuthorize(AuthorizationProperties props) throws Exception {
+		AuthorizationManager.authorize(props);
+		ThreadAuthenticator.setUsernameKey( IntegrationTestUtility.getAuthUsernameKey() );
+	}
+	
+	private static void authMgrClear() throws Exception {
 		AuthorizationManager.clear();
+		ThreadAuthenticator.setUsernameKey( IntegrationTestUtility.getAuthUsernameKey() );
 	}
 	
 	/**
@@ -368,7 +384,7 @@ public class AuthorizationTest_IT {
 		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 		
 		try {
-			AuthorizationManager.authorize( auth_prop );
+			authMgrAuthorize( auth_prop );
 			
 			AuthorizationManager.setSemtkSuper();
 			
@@ -379,7 +395,7 @@ public class AuthorizationTest_IT {
 			
 			
 		} finally {
-			AuthorizationManager.clear();
+			authMgrClear();
 		}
 
 	}
@@ -432,7 +448,7 @@ public class AuthorizationTest_IT {
 		// turn off AUTH in the correct way
 		AuthorizationProperties props = new AuthorizationProperties();
 		props.setSettingsFilePath(AuthorizationManager.AUTH_FILE_NO_AUTH);
-		AuthorizationManager.authorize(props);
+		authMgrAuthorize(props);
 		
 		try {
 			// authorize a random query
@@ -440,7 +456,7 @@ public class AuthorizationTest_IT {
 			AuthorizationManager.authorizeQuery(sgJson.getSparqlConn().getDefaultQueryInterface(), "select ?x ?y ?z where { ?x ?y ?z. }");
 			// no exception should be thrown
 		} finally {
-			AuthorizationManager.clear();
+			authMgrClear();
 		}
 	}
 	
@@ -450,9 +466,9 @@ public class AuthorizationTest_IT {
 	 * @throws AuthorizationException
 	 * @throws Exception
 	 */
-	public void testAuthorizeUnAuth() {
+	public void testAuthorizeUnAuth() throws Exception {
 		// best we can simulate lack of authorize() 
-		AuthorizationManager.clear();
+		authMgrClear();
 		
 		// authorize a random query
 		try {
@@ -476,11 +492,10 @@ public class AuthorizationTest_IT {
 		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 		
 		try {
-			AuthorizationManager.authorize( auth_prop );
-	
-			AuthorizationManager.setSemtkSuper();
-			
+			authMgrAuthorize( auth_prop );
+				
 			// tests that should pass
+			ThreadAuthenticator.authenticateThisThread("testuser_job_admin");
 			AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/read");
 			AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/write");
 			AuthorizationManager.throwExceptionIfNotGraphReader("http://all/read");
@@ -541,7 +556,7 @@ public class AuthorizationTest_IT {
 			
 			
 		} finally {
-			AuthorizationManager.clear();
+			authMgrClear();
 		}
 
 	}
@@ -558,13 +573,12 @@ public class AuthorizationTest_IT {
 		auth_prop.setSettingsFilePath("src/test/resources/auth_test_default_on.json");
 		
 		try {
-			AuthorizationManager.authorize( auth_prop );
-	
-			AuthorizationManager.setSemtkSuper();
+			authMgrAuthorize( auth_prop );
 			
 			// tests that should pass
 			
-			// known user in reads DEFAULT ALL_USERS and writes DEFAULT with group specified
+			// DEFAULT reader, and specified writer
+			ThreadAuthenticator.authenticateThisThread("testuser_job_admin");
 			AuthorizationManager.throwExceptionIfNotGraphReader("http://doesnt/exist");
 			AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
 			
@@ -595,7 +609,7 @@ public class AuthorizationTest_IT {
 			
 			
 		} finally {
-			AuthorizationManager.clear();
+			authMgrClear();
 		}
 
 	}
@@ -608,7 +622,7 @@ public class AuthorizationTest_IT {
 		auth_prop.setSettingsFilePath("src/test/resources/auth_test_error.json");
 		
 		try {
-			AuthorizationManager.authorize( auth_prop );
+			authMgrAuthorize( auth_prop );
 
 			if (!AuthorizationManager.FORGIVE_ALL) {
 				fail("Authorizing with unknown group name did not throw exception");
@@ -616,7 +630,7 @@ public class AuthorizationTest_IT {
 		} catch (AuthorizationException ae) {
 			ae.printStackTrace();
 		} finally {
-			AuthorizationManager.clear();
+			authMgrClear();
 		}
 
 	}
