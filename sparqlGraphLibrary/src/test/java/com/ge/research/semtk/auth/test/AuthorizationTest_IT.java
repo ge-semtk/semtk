@@ -169,8 +169,7 @@ public class AuthorizationTest_IT {
 	private void testAllStatusResultsEndpointsFail(String createUser, String defaultUser) throws Exception {
 		
 		// Can't test client if _IT environment has no authSettingsFile (auth is turned off)
-		String authFile = IntegrationTestUtility.getAuthSettingsFilePath();
-		if (authFile == null || authFile.isEmpty()) {
+		if (AuthorizationManager.authFileDisabled(IntegrationTestUtility.getAuthSettingsFilePath())) {
 			return;
 		}
 		

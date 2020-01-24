@@ -130,17 +130,19 @@ public class AuthorizationManager {
 		}
 	}
 
-
+	// return if authorize() was never called, or if it was called with 'NO_AUTH'
+	// This means legacy users or others using just semTK libraries
+	// don't need to know about security.
+	// All "offical" services have authorize() in their start-ups
+	// so they will either properly authorize or exit.
 	private static boolean authProperlyDisabled() {
 
-		// return if authorize() was never called, or if it was called with 'NO_AUTH'
-
-		// This means legacy users or others using just semTK libraries
-		// don't need to know about security.
-		// All "offical" services have authorize() in their start-ups
-		// so they will either properly authorize or exit.
-
 		return authFilePath.equals(AUTH_FILE_NO_AUTH) || authFilePath.equals(AUTH_FILE_UNSET) ;
+	}
+	
+	// for tests
+	public static boolean authFileDisabled(String filePath) {
+		return filePath == null || filePath.isEmpty() || filePath.equals(AUTH_FILE_NO_AUTH) || filePath.equals(AUTH_FILE_UNSET) ;
 	}
 
 	/**
