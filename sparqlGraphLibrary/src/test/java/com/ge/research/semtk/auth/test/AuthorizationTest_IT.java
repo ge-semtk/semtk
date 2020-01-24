@@ -75,7 +75,6 @@ public class AuthorizationTest_IT {
 	 */
 	@BeforeClass
 	public static void beforeClass() throws Exception {
-		ThreadAuthenticator.setUsernameKey( IntegrationTestUtility.getAuthUsernameKey() );
 	}
 	
 	@AfterClass
@@ -108,12 +107,10 @@ public class AuthorizationTest_IT {
 	 */
 	private static void authMgrAuthorize(AuthorizationProperties props) throws Exception {
 		AuthorizationManager.authorize(props);
-		ThreadAuthenticator.setUsernameKey( IntegrationTestUtility.getAuthUsernameKey() );
 	}
 	
 	private static void authMgrClear() throws Exception {
 		AuthorizationManager.clear();
-		ThreadAuthenticator.setUsernameKey( IntegrationTestUtility.getAuthUsernameKey() );
 	}
 	
 	/**
@@ -170,6 +167,13 @@ public class AuthorizationTest_IT {
 	}
 	
 	private void testAllStatusResultsEndpointsFail(String createUser, String defaultUser) throws Exception {
+		
+		// Can't test client if _IT environment has no authSettingsFile (auth is turned off)
+		String authFile = IntegrationTestUtility.getAuthSettingsFilePath();
+		if (authFile == null || authFile.isEmpty()) {
+			return;
+		}
+		
 		// create jobId and client
 		String jobId = this.getTestJobId();
 		String jobIdNonEmpty = this.getTestJobId();
@@ -298,7 +302,7 @@ public class AuthorizationTest_IT {
 	 */
 	public void testCheckJobOwnership() throws Exception {
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 
@@ -334,7 +338,7 @@ public class AuthorizationTest_IT {
 	public void testCheckAdminStatusClient() throws Exception {
 
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 
@@ -355,7 +359,7 @@ public class AuthorizationTest_IT {
 	 */
 	public void testCheckAdmin() throws Exception {
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 
@@ -395,7 +399,7 @@ public class AuthorizationTest_IT {
 	public void testSemtkSuper() throws Exception {
 		
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 			
@@ -420,7 +424,7 @@ public class AuthorizationTest_IT {
 	 */
 	public void testGetJobsInfoOwnership() throws Exception {
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 
@@ -508,7 +512,7 @@ public class AuthorizationTest_IT {
 	public void testGraphReadWrite() throws Exception {
 		
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 			
@@ -586,7 +590,7 @@ public class AuthorizationTest_IT {
 	public void testGraphReadWriteDefaultON() throws Exception {
 		
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test_default_on.json");
 			authMgrAuthorize( auth_prop );
 			
@@ -632,7 +636,7 @@ public class AuthorizationTest_IT {
 	public void testGraphReadWriteError() throws Exception {
 		
 		try {
-			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
 			auth_prop.setSettingsFilePath("src/test/resources/auth_test_error.json");
 			authMgrAuthorize( auth_prop );
 			
