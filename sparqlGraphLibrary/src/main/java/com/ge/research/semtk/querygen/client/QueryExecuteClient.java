@@ -33,6 +33,7 @@ public abstract class QueryExecuteClient extends RestClient {
 	private String jobId = null;
 	
 	public QueryExecuteClient(ExecuteClientConfig conf){
+		super();
 		this.conf = conf;
 	}
 	

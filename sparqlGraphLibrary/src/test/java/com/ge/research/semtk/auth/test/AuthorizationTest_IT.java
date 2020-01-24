@@ -191,10 +191,6 @@ public class AuthorizationTest_IT {
 		status = IntegrationTestUtility.getStatusClient(jobId);
 		results = IntegrationTestUtility.getResultsClient();
 		
-		if ( AuthorizationManager.FORGIVE_ALL) {
-			return;
-		}
-
 		// --- test status ---
 		try {
 			status.execGetPercentComplete();
@@ -317,9 +313,7 @@ public class AuthorizationTest_IT {
 		// different owner
 		try {
 			AuthorizationManager.throwExceptionIfNotJobOwner(user2, "item");
-			if (! AuthorizationManager.FORGIVE_ALL) {
-				fail("No exception thrown for bad ownership");
-			}
+			fail("No exception thrown for bad ownership");
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 		}
 		
@@ -362,9 +356,8 @@ public class AuthorizationTest_IT {
 		ThreadAuthenticator.setJobAdmin(false);
 		try {
 			AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
-			if (! AuthorizationManager.FORGIVE_ALL) {
-				fail("Admin didn't reset");
-			}
+			fail("Admin didn't reset");
+			
 		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
 
 		} 
@@ -500,59 +493,57 @@ public class AuthorizationTest_IT {
 			AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/write");
 			AuthorizationManager.throwExceptionIfNotGraphReader("http://all/read");
 
-			if (!AuthorizationManager.FORGIVE_ALL) {
-				// tests that should fail
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/read");
-					fail("Authorization didn't prevent writing");
-				} catch (AuthorizationException ae) {}
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/write");
-					fail("Authorization didn't prevent reading");
-				} catch (AuthorizationException ae) {}
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
-					fail("Authorization didn't prevent writing graph not in props");
-				} catch (AuthorizationException ae) {}
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
-					fail("Authorization didn't prevent writing graph not in props");
-				} catch (AuthorizationException ae) {}
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphWriter("http://all/read");
-					fail("Authorization didn't prevent user writing graph");
-				} catch (AuthorizationException ae) {}
-				
-				// become an unknown user
-				ThreadAuthenticator.authenticateThisThread("testuser_doesnt_exist");
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
-					fail("Authorization didn't prevent user not in props writing graph not in props");
-				} catch (AuthorizationException ae) {}
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
-					fail("Authorization didn't prevent user not in props writing graph not in props");
-				} catch (AuthorizationException ae) {}
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphWriter("http://securityTest");
-					fail("Authorization didn't prevent user not in props writing graph");
-				} catch (AuthorizationException ae) {}
-				
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphReader("http://securityTest");
-					fail("Authorization didn't prevent user not in props writing graph");
-				} catch (AuthorizationException ae) {}
-				try {
-					AuthorizationManager.throwExceptionIfNotGraphWriter("http://all/read");
-					fail("Authorization didn't prevent user not in props writing graph");
-				} catch (AuthorizationException ae) {}
-			}
+			// tests that should fail
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://job/admin/read");
+				fail("Authorization didn't prevent writing");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://job/admin/write");
+				fail("Authorization didn't prevent reading");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
+				fail("Authorization didn't prevent writing graph not in props");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
+				fail("Authorization didn't prevent writing graph not in props");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://all/read");
+				fail("Authorization didn't prevent user writing graph");
+			} catch (AuthorizationException ae) {}
+
+			// become an unknown user
+			ThreadAuthenticator.authenticateThisThread("testuser_doesnt_exist");
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
+				fail("Authorization didn't prevent user not in props writing graph not in props");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
+				fail("Authorization didn't prevent user not in props writing graph not in props");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://securityTest");
+				fail("Authorization didn't prevent user not in props writing graph");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://securityTest");
+				fail("Authorization didn't prevent user not in props writing graph");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://all/read");
+				fail("Authorization didn't prevent user not in props writing graph");
+			} catch (AuthorizationException ae) {}
 			
 			
 		} finally {
@@ -594,17 +585,15 @@ public class AuthorizationTest_IT {
 			try {
 				ThreadAuthenticator.authenticateThisThread("testuser_read_only");
 				AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
-				if (!AuthorizationManager.FORGIVE_ALL) {
-					fail("Authorization didn't prevent writing to default graph by known user in wrong group");
-				}
+				fail("Authorization didn't prevent writing to default graph by known user in wrong group");
+				
 			} catch (AuthorizationException ae) {}
 			
 			try {
 				ThreadAuthenticator.authenticateThisThread("test_user_nonexistent");
 				AuthorizationManager.throwExceptionIfNotGraphWriter("http://doesnt/exist");
-				if (!AuthorizationManager.FORGIVE_ALL) {
-					fail("Authorization didn't prevent writing to default graph by unknown user");
-				}
+				fail("Authorization didn't prevent writing to default graph by unknown user");
+				
 			} catch (AuthorizationException ae) {}
 			
 			
@@ -624,9 +613,8 @@ public class AuthorizationTest_IT {
 		try {
 			authMgrAuthorize( auth_prop );
 
-			if (!AuthorizationManager.FORGIVE_ALL) {
-				fail("Authorizing with unknown group name did not throw exception");
-			}
+			fail("Authorizing with unknown group name did not throw exception");
+			
 		} catch (AuthorizationException ae) {
 			ae.printStackTrace();
 		} finally {

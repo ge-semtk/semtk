@@ -44,22 +44,19 @@ public class AuthorizationManager {
 	private static String AUTH_FILE_UNSET = "unset";
 	private static String DEFAULT_GROUP = "ALL_USERS";
 	private static String DEFAULT_GRAPH = "DEFAULT";
-	
+
 	private static int refreshFreqSeconds = 301;
 	private static String authFilePath = AUTH_FILE_UNSET;
 	private static boolean nextQuerySuper = false;
 	private static boolean modeSuper = false;
-		
+
 	// userGroup.get(name) = ArrayList of user names
 	private static HashMap<String, ArrayList<String>> userGroups = new HashMap<String, ArrayList<String>>();
-	
+
 	// graphXers(graph_name) = ArrayList of group names
 	private static HashMap<String, ArrayList<String>> graphReaders = new HashMap<String, ArrayList<String>>();
 	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
 
-	// remove when done with dev and test
-	public static final boolean FORGIVE_ALL = false;
-	
 	public static void clear() {
 		lastUpdate = 0;
 		refreshFreqSeconds = 301;
@@ -71,7 +68,7 @@ public class AuthorizationManager {
 		nextQuerySuper = false;
 		modeSuper = false;
 	}
-	
+
 	/**
 	 * Turn on Authorization by providing a SPARQL endpoint and frequency.
 	 * Called at service start-up
@@ -95,27 +92,27 @@ public class AuthorizationManager {
 	 */
 	public static boolean authorize(AuthorizationProperties authProps) throws AuthorizationException {
 		clear();
-		
+
 		// Is Authorization turned off properly
 		if ( authProps.getSettingsFilePath().equals("NO_AUTH") ) {
 			LocalLogger.logToStdErr("NOTICE: Running with no authorization auth.authFilePath=NO_AUTH");
 			authFilePath = AUTH_FILE_NO_AUTH;
 			return false;
 		}
-				
+
 		// else set up authorization	
 		try {
 			if ( authProps.getSettingsFilePath().isEmpty() ) {
 				authFilePath = AUTH_FILE_UNSET;
 				throw new AuthorizationException(AUTH_UNSET_MESSAGE);
 			}
-			
+
 			refreshFreqSeconds = authProps.getRefreshFreqSeconds();
 			authFilePath = authProps.getSettingsFilePath();
 			ThreadAuthenticator.setUsernameKey(authProps.getUsernameKey());
 			AuthorizationException.setAuthLogPath( authProps.getLogPath() );
 			updateAuthorization();
-			
+
 		} catch (Exception e) {
 			clear();
 			authFilePath = null;
@@ -123,7 +120,7 @@ public class AuthorizationManager {
 		}
 		return true;
 	}
-	
+
 	public static void authorizeWithExit(AuthorizationProperties authProps) {
 		try {
 			authorize(authProps);
@@ -132,20 +129,20 @@ public class AuthorizationManager {
 			System.exit(1);;
 		}
 	}
-	
-	
+
+
 	private static boolean authProperlyDisabled() {
 
 		// return if authorize() was never called, or if it was called with 'NO_AUTH'
-		
+
 		// This means legacy users or others using just semTK libraries
 		// don't need to know about security.
 		// All "offical" services have authorize() in their start-ups
 		// so they will either properly authorize or exit.
-		
+
 		return authFilePath.equals(AUTH_FILE_NO_AUTH) || authFilePath.equals(AUTH_FILE_UNSET) ;
 	}
-	
+
 	/**
 	 * Call this before performing any authorization task.
 	 * 
@@ -155,26 +152,26 @@ public class AuthorizationManager {
 	 *  - authorization has been turned on by authorize()
 	 *  - refreshSeconds has passed since last update
 	 * 
-     * Eats all exceptions and clears permissions
+	 * Eats all exceptions and clears permissions
 	 */
 	private static void updateAuthorization() throws AuthorizationException {
-		
+
 		// return if we're not using authorization
 		if (authProperlyDisabled()) return;
-		
+
 		// check whether it's too soon to re-read the auth file
 		long now = Calendar.getInstance().getTime().getTime();
-		
+
 		if (now - lastUpdate >= refreshFreqSeconds * 1000  ) {
-		
+
 			LocalLogger.logToStdOut("Authorization Manager: refreshing authorization.");
 			lastUpdate = now;
-			
+
 			try {
 				JSONObject authJson = Utility.getJSONObjectFromFilePath(authFilePath);
 				updateUserGroups(authJson);
 				updateGraphAuthorization(authJson);
-								
+
 			} catch (Exception e) {
 				String path = authFilePath;
 				clear();
@@ -182,8 +179,8 @@ public class AuthorizationManager {
 			} 
 		}
 	}
-	
-	
+
+
 	/**
 	 * Read user groups from triplestore
 	 * @param querySei
@@ -191,23 +188,23 @@ public class AuthorizationManager {
 	 */
 	private static void updateUserGroups(JSONObject authJson) throws Exception {
 		userGroups.clear();
-		
+
 		JSONArray groups = (JSONArray) authJson.get("groups");
 		for (int i=0; i < groups.size(); i++) {
 			JSONObject group = (JSONObject) groups.get(i);
-			
+
 			JSONArray members = (JSONArray) group.get("members");
 			String groupName = (String) group.get("name");
-			
+
 			ArrayList<String> userList = new ArrayList<String>();
 			for (int j=0; j < members.size(); j++) {
 				userList.add((String)members.get(j));
 			}
-			
+
 			userGroups.put(groupName, userList);
 		}
 	}
-	
+
 	/**
 	 * Read graph admin from triplestore
 	 * @param querySei
@@ -216,18 +213,18 @@ public class AuthorizationManager {
 	private static void updateGraphAuthorization(JSONObject authJson) throws Exception {
 		graphReaders.clear();
 		graphWriters.clear();
-		
+
 		JSONArray graphs = (JSONArray) authJson.get("graphs");
 		for (int i=0; i < graphs.size(); i++) {
 			JSONObject graph = (JSONObject) graphs.get(i);
-			
+
 			String graphName = (String) graph.get("name");
 			JSONArray readers = (JSONArray) graph.get("readGroups");
 			JSONArray writers = (JSONArray) graph.get("writeGroups");
 
 			// read groups
 			ArrayList<String> readGroups = new ArrayList<String>();
-			
+
 			for (int j=0; j < readers.size(); j++) {
 				String groupName = (String)readers.get(j);
 				if ( ! userGroups.containsKey(groupName) && !groupName.equals(DEFAULT_GROUP)) {
@@ -236,10 +233,10 @@ public class AuthorizationManager {
 				readGroups.add(groupName);
 			}
 			graphReaders.put(graphName, readGroups);
-			
+
 			// read groups
 			ArrayList<String> writeGroups = new ArrayList<String>();
-			
+
 			for (int j=0; j < writers.size(); j++) {
 				String groupName = (String)writers.get(j);
 				if ( ! userGroups.containsKey(groupName) && !groupName.equals(DEFAULT_GROUP)) {
@@ -250,7 +247,7 @@ public class AuthorizationManager {
 			graphWriters.put(graphName, writeGroups);
 		}
 	}
-	
+
 	/**
 	 * check if this thread's user owns an item with:
 	 * 
@@ -262,25 +259,21 @@ public class AuthorizationManager {
 	 * @throws Exception - if there's trouble reading auth info from triplestore
 	 */
 	public static void throwExceptionIfNotJobOwner(String owner, String itemName) throws AuthorizationException, Exception {
-		
+
 		String user = ThreadAuthenticator.getThreadUserName();
-		
-		try {
-			// is user_name equal, or thread is a super user
-			if (!user.equals(owner) && ! isSemtkSuper()) {
-				throw new AuthorizationException("Permission denied on thread" + Thread.currentThread().getName() + ": " + user + " may not access " + itemName + " owned by " + owner);
-			}
-		} catch (AuthorizationException ae) {
-			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development: " + ae.getMessage());
-				return;
-			} else {
-				throw ae;
-			}
+
+
+		if (authProperlyDisabled() || isSemtkSuper()) return;
+		updateAuthorization();
+
+		// is user_name equal, or thread is a super user
+		if (!user.equals(owner) && ! isSemtkSuper()) {
+			throw new AuthorizationException("Permission denied on thread" + Thread.currentThread().getName() + ": " + user + " may not access " + itemName + " owned by " + owner);
 		}
-				
+
+
 	}
-		
+
 	/**
 	 * Run the next query as semtk-super-user.
 	 * Authorization will pass no matter what.
@@ -293,16 +286,16 @@ public class AuthorizationManager {
 	public static void nextQuerySemtkSuper() {
 		nextQuerySuper = true;
 	}
-	
+
 	public static void setSemtkSuper() {
 		modeSuper = true;
 	}
-	
+
 	public static void clearSemtkSuper() {
 		modeSuper = false;
 		nextQuerySuper = false;
 	}
-	
+
 	public static boolean isSemtkSuper() {
 		return nextQuerySuper || modeSuper;
 	}
@@ -312,7 +305,7 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException
 	 */
 	public static void authorizeQuery(SparqlEndpointInterface sei, String queryStr) throws AuthorizationException {
-		
+
 		// handle semtk-super-user query
 		if (nextQuerySuper) {
 			nextQuerySuper = false;   // used up one authorization
@@ -321,19 +314,19 @@ public class AuthorizationManager {
 		if (modeSuper) {
 			return;
 		}
-	
+
 		// get latest auth info
 		if (authProperlyDisabled()) return;
-		
+
 		// start authorizing the query
 		ArrayList<String> graphURIs = null;
 		boolean readOnlyFlag = false;
 		long startTime = System.nanoTime();
 		String user = ThreadAuthenticator.getThreadUserName();
-		
+
 		// log the first half
-        AuthorizationException.logAuthEvent("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG "));
-        AuthorizationException.logAuthEvent("User:     " + user);
+		AuthorizationException.logAuthEvent("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG "));
+		AuthorizationException.logAuthEvent("User:     " + user);
 
 		SparqlQueryInterrogator sqi = new SparqlQueryInterrogator(queryStr);
 		readOnlyFlag = sqi.isReadOnly();
@@ -341,24 +334,24 @@ public class AuthorizationManager {
 		if (! graphURIs.contains(sei.getGraph()) ) {
 			graphURIs.add(sei.getGraph());
 		}
-		
+
 		// log the second half
 		AuthorizationException.logAuthEvent("Graphs:   " + graphURIs                                       );
 		AuthorizationException.logAuthEvent("Endpoint: " + sei.getServerAndPort() + " " + sei.getGraph() );
 		AuthorizationException.logAuthEvent("Type:     " + (readOnlyFlag ? "read" : "write")               );
 		AuthorizationException.logAuthEvent("Time:     " + (System.nanoTime() - startTime) / 1000000 + " msec\n");
-        	        
-        // do the actual authorization
-        for (String graphURI : graphURIs) {
+
+		// do the actual authorization
+		for (String graphURI : graphURIs) {
 			if (readOnlyFlag) {
 				throwExceptionIfNotGraphReader(graphURI);					
 			} else {
 				throwExceptionIfNotGraphReader(graphURI);
 			}
 		}
-	
+
 	}
-		
+
 	/**
 	 * Focal point for all read authorization.
 	 * Note that user is retrieved from ThreadAuthenticator
@@ -366,43 +359,35 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException
 	 */
 	public static void throwExceptionIfNotGraphReader(String graphName) throws AuthorizationException {
-		try {
-			if (authProperlyDisabled() || isSemtkSuper()) return;
-		
-			updateAuthorization();
-			
-			String user = ThreadAuthenticator.getThreadUserName();
-			
-			// get read groups
-			ArrayList<String> groups = null;
-			if (graphReaders.containsKey(graphName)) {
-				groups = graphReaders.get(graphName);
-			} else if (graphReaders.containsKey(DEFAULT_GRAPH)) {
-				groups = graphReaders.get(DEFAULT_GRAPH);
-			} else {
-				throw new AuthorizationException("Read Access Denied since graph has no readGroups. graph=" + graphName + " user=" + user);
-			}
-			
-			// does user belong to one of the groups
-			for (String groupName : groups) {
-				List<String> members = userGroups.get(groupName);
-				if (groupName.equals(DEFAULT_GROUP) || members != null && members.contains(user)) {
-					AuthorizationException.logAuthEvent("User " + user + " granted read permission on graph " + graphName);
-					return;
-				}
-			}
-			
-			throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + user);
-			
-		} catch (AuthorizationException ae) {
-			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development: " + ae.getMessage());
+
+		if (authProperlyDisabled() || isSemtkSuper()) return;
+		updateAuthorization();
+
+		String user = ThreadAuthenticator.getThreadUserName();
+
+		// get read groups
+		ArrayList<String> groups = null;
+		if (graphReaders.containsKey(graphName)) {
+			groups = graphReaders.get(graphName);
+		} else if (graphReaders.containsKey(DEFAULT_GRAPH)) {
+			groups = graphReaders.get(DEFAULT_GRAPH);
+		} else {
+			throw new AuthorizationException("Read Access Denied since graph has no readGroups. graph=" + graphName + " user=" + user);
+		}
+
+		// does user belong to one of the groups
+		for (String groupName : groups) {
+			List<String> members = userGroups.get(groupName);
+			if (groupName.equals(DEFAULT_GROUP) || members != null && members.contains(user)) {
+				AuthorizationException.logAuthEvent("User " + user + " granted read permission on graph " + graphName);
 				return;
 			}
-			else throw ae;
 		}
+
+		throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + user);
+
 	}
-	
+
 	/**
 	 * Focal point for all write authorization.
 	 * Note that user is retrieved from ThreadAuthenticator
@@ -410,40 +395,32 @@ public class AuthorizationManager {
 	 * @throws AuthorizationException
 	 */
 	public static void throwExceptionIfNotGraphWriter(String graphName) throws AuthorizationException {
-		try {
-			if (authProperlyDisabled() || isSemtkSuper()) return;
-			
-			updateAuthorization();
-			
-			String user = ThreadAuthenticator.getThreadUserName();
-			
-			// get read groups
-			ArrayList<String> groups = null;
-			if (graphWriters.containsKey(graphName)) {
-				groups = graphWriters.get(graphName);
-			} else if (graphWriters.containsKey(DEFAULT_GRAPH)) {
-				groups = graphWriters.get(DEFAULT_GRAPH);
-			} else {
-				throw new AuthorizationException("Write Access Denied since graph has no readGroups. graph=" + graphName + " user=" + user);
-			}
-			
-			// check the groups
-			for (String groupName : groups) {
-				List<String> members = userGroups.get(groupName);
-				if (groupName.equals(DEFAULT_GROUP) || members != null && members.contains(user)) {
-					AuthorizationException.logAuthEvent("User " + user + " granted write permission on graph " + graphName);
-					return;
-				}
-			}
-			
-			throw new AuthorizationException("Write Access Denied.  graph=" + graphName + " user=" + user);
-			
-		} catch (AuthorizationException ae) {
-			if (FORGIVE_ALL) {
-				AuthorizationException.logAuthEvent("Forgiven during development: " + ae.getMessage());
+		if (authProperlyDisabled() || isSemtkSuper()) return;
+		updateAuthorization();
+
+		String user = ThreadAuthenticator.getThreadUserName();
+
+		// get read groups
+		ArrayList<String> groups = null;
+		if (graphWriters.containsKey(graphName)) {
+			groups = graphWriters.get(graphName);
+		} else if (graphWriters.containsKey(DEFAULT_GRAPH)) {
+			groups = graphWriters.get(DEFAULT_GRAPH);
+		} else {
+			throw new AuthorizationException("Write Access Denied since graph has no readGroups. graph=" + graphName + " user=" + user);
+		}
+
+		// check the groups
+		for (String groupName : groups) {
+			List<String> members = userGroups.get(groupName);
+			if (groupName.equals(DEFAULT_GROUP) || members != null && members.contains(user)) {
+				AuthorizationException.logAuthEvent("User " + user + " granted write permission on graph " + graphName);
 				return;
 			}
-			else throw ae;
 		}
+
+		throw new AuthorizationException("Write Access Denied.  graph=" + graphName + " user=" + user);
+
+
 	}
 }
