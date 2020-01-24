@@ -297,26 +297,33 @@ public class AuthorizationTest_IT {
 	 * @throws Exception
 	 */
 	public void testCheckJobOwnership() throws Exception {
-		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
-		String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
-		ThreadAuthenticator.authenticateThisThread(user1);
-	
-		// same owner
 		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
-			
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-			e.printStackTrace();
-			fail("Authorization failed");
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+			authMgrAuthorize( auth_prop );
+
+			String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
+			String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
+			ThreadAuthenticator.authenticateThisThread(user1);
+
+			// same owner
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
+
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+				e.printStackTrace();
+				fail("Authorization failed");
+			}
+
+			// different owner
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner(user2, "item");
+				fail("No exception thrown for bad ownership");
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+			}
+		} finally {
+			authMgrClear();
 		}
-		
-		// different owner
-		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner(user2, "item");
-			fail("No exception thrown for bad ownership");
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-		}
-		
 	}
 	
 	@Test
@@ -326,11 +333,19 @@ public class AuthorizationTest_IT {
 	 */
 	public void testCheckAdminStatusClient() throws Exception {
 
-		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
-		String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
-		testAllStatusResultsEndpointsFail(user1, user2);
-		testAllStatusResultsEndpointsSucceed(user1, user1);
+		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+			authMgrAuthorize( auth_prop );
 
+			String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
+			String user2 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "2");
+			testAllStatusResultsEndpointsFail(user1, user2);
+			testAllStatusResultsEndpointsSucceed(user1, user1);
+
+		} finally {
+			authMgrClear();
+		}
 	}
 	
 	@Test
@@ -339,29 +354,36 @@ public class AuthorizationTest_IT {
 	 * @throws Exception
 	 */
 	public void testCheckAdmin() throws Exception {
-		String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
-		String user5 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "5");
-
-		ThreadAuthenticator.authenticateThisThread(user1);
-		ThreadAuthenticator.setJobAdmin(true);
-		
 		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+			authMgrAuthorize( auth_prop );
 
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
-			e.printStackTrace();
-			fail("Authorization failed");
-		} 
-		
-		ThreadAuthenticator.setJobAdmin(false);
-		try {
-			AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
-			fail("Admin didn't reset");
-			
-		} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+			String user1 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "1");
+			String user5 = IntegrationTestUtility.generateUser("AuthorizationTest_IT", "5");
 
-		} 
+			ThreadAuthenticator.authenticateThisThread(user1);
+			ThreadAuthenticator.setJobAdmin(true);
 
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner(user1, "item");
+
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+				e.printStackTrace();
+				fail("Authorization failed");
+			} 
+
+			ThreadAuthenticator.setJobAdmin(false);
+			try {
+				AuthorizationManager.throwExceptionIfNotJobOwner(user5, "item");
+				fail("Admin didn't reset");
+
+			} catch (com.ge.research.semtk.auth.AuthorizationException e) {
+
+			} 
+		} finally {
+			authMgrClear();
+		}
 		
 	}
 	
@@ -372,11 +394,9 @@ public class AuthorizationTest_IT {
 	 */
 	public void testSemtkSuper() throws Exception {
 		
-		// Set up authorization, should be same location as all services participating in the test
-		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
-		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
-		
 		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
 			
 			AuthorizationManager.setSemtkSuper();
@@ -399,36 +419,43 @@ public class AuthorizationTest_IT {
 	 * @throws Exception
 	 */
 	public void testGetJobsInfoOwnership() throws Exception {
-		
-		
-		// create jobId and client
-		String jobId1 = this.getTestJobId();
-		String jobId2 = this.getTestJobId();
-		String owner1 = "test_owner1";
-		String owner2 = "test_owner2";
-		
-		// owner1: create existing job
-		ThreadAuthenticator.authenticateThisThread(owner1);
-		StatusClient status1 = IntegrationTestUtility.getStatusClient(jobId1);
-		status1.execSetPercentComplete(10);
+		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
+			authMgrAuthorize( auth_prop );
 
-		ThreadAuthenticator.authenticateThisThread(owner2);
-		
-		// owner2: delete existing jobs
-		Table oldJobTable = IntegrationTestUtility.getStatusClient(jobId2).getJobsInfo();
-		for (int i=0; i < oldJobTable.getNumRows(); i++) {
-			String oldId = oldJobTable.getCell(i,  "id");
-			IntegrationTestUtility.getStatusClient(oldId).execDeleteJob();
+
+			// create jobId and client
+			String jobId1 = this.getTestJobId();
+			String jobId2 = this.getTestJobId();
+			String owner1 = "test_owner1";
+			String owner2 = "test_owner2";
+
+			// owner1: create existing job
+			ThreadAuthenticator.authenticateThisThread(owner1);
+			StatusClient status1 = IntegrationTestUtility.getStatusClient(jobId1);
+			status1.execSetPercentComplete(10);
+
+			ThreadAuthenticator.authenticateThisThread(owner2);
+
+			// owner2: delete existing jobs
+			Table oldJobTable = IntegrationTestUtility.getStatusClient(jobId2).getJobsInfo();
+			for (int i=0; i < oldJobTable.getNumRows(); i++) {
+				String oldId = oldJobTable.getCell(i,  "id");
+				IntegrationTestUtility.getStatusClient(oldId).execDeleteJob();
+			}
+
+			// owner2: create a new job
+			StatusClient status2 = IntegrationTestUtility.getStatusClient(jobId2);
+			status2.execSetPercentComplete(10);
+
+			// owner2: there should only be one job
+			Table t = status2.getJobsInfo();
+			if (t.getNumRows() != 1) System.err.println(t.toCSVString());
+			assertEquals(1, t.getNumRows());
+		} finally {
+			authMgrClear();
 		}
-		
-		// owner2: create a new job
-		StatusClient status2 = IntegrationTestUtility.getStatusClient(jobId2);
-		status2.execSetPercentComplete(10);
-		
-		// owner2: there should only be one job
-		Table t = status2.getJobsInfo();
-		if (t.getNumRows() != 1) System.err.println(t.toCSVString());
-		assertEquals(1, t.getNumRows());
 	}
 
 	@Test
@@ -480,12 +507,11 @@ public class AuthorizationTest_IT {
 	 */
 	public void testGraphReadWrite() throws Exception {
 		
-		// Set up authorization, should be same location as all services participating in the test
-		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
-		auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
-		
 		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test.json");
 			authMgrAuthorize( auth_prop );
+			
 				
 			// tests that should pass
 			ThreadAuthenticator.authenticateThisThread("testuser_job_admin");
@@ -559,12 +585,11 @@ public class AuthorizationTest_IT {
 	 */
 	public void testGraphReadWriteDefaultON() throws Exception {
 		
-		// Set up authorization, should be same location as all services participating in the test
-		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
-		auth_prop.setSettingsFilePath("src/test/resources/auth_test_default_on.json");
-		
 		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test_default_on.json");
 			authMgrAuthorize( auth_prop );
+			
 			
 			// tests that should pass
 			
@@ -606,12 +631,11 @@ public class AuthorizationTest_IT {
 	@Test
 	public void testGraphReadWriteError() throws Exception {
 		
-		// Set up authorization, should be same location as all services participating in the test
-		AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
-		auth_prop.setSettingsFilePath("src/test/resources/auth_test_error.json");
-		
 		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthorizationProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test_error.json");
 			authMgrAuthorize( auth_prop );
+			
 
 			fail("Authorizing with unknown group name did not throw exception");
 			
