@@ -32,6 +32,7 @@ define([	// properly require.config'ed
             'sparqlgraph/js/modaliidx',
             'sparqlgraph/js/msiclientnodegroupexec',
             'sparqlgraph/js/ontologyinfo',
+            'sparqlgraph/js/visjshelper'
 
          	'jquery',
 
@@ -44,7 +45,7 @@ define([	// properly require.config'ed
 
 		],
 
-	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, OntologyInfo, $, vis) {
+	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, OntologyInfo, VisJsHelper, $, vis) {
 
 
 		//============ local object  ExploreTab =============
@@ -684,27 +685,8 @@ define([	// properly require.config'ed
             clearNetwork : function() {
                 this.configdiv.innerHTML = "";
                 // create an array with nodes
-                var options = {
-                    configure: {
-                        enabled: true,
-                        container: this.configdiv,
-                        filter: "layout physics",
-                        showButton: true
-                    },
-                    groups: {
-                        useDefaultGroups: true,
-                        data: {color:{background:'white'}, shape: 'box'}
-                    },
-                    interaction: {
-                        multiselect: true,
-                    },
-                    manipulation: {
-                        initiallyActive: false,
-                        deleteNode: true,
-                        deleteEdge: true,
-                    }
-                };
-                this.network = new vis.Network(this.canvasdiv, {}, options);
+
+                this.network = new vis.Network(this.canvasdiv, {}, VisJsHelper.getDefaultOptions(this.configdiv));
             },
 
             // query and add instance data based on the ontologyTree

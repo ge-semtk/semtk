@@ -18,11 +18,14 @@
 
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/iidxhelper',
+            'sparqlgraph/js/visjshelper',
+
+            'visjs/vis.min'
 			// shimmed
 
 		],
 
-	function(IIDXHelper) {
+	function(IIDXHelper, VisJsHelper, vis) {
 
 
 		var MsiResultSet = function (serviceURL, xhr) {
@@ -57,7 +60,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 
             isJsonLdResults : function () {
-                return this.xhr.hasOwnProperty("@graph");
+                return this.xhr.hasOwnProperty("@graph") || JSON.stringify(this.xhr) === "{}";
             },
 
 			getColumnName : function (x) {
@@ -90,7 +93,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 
             getGraphResultsJson : function () {
-                return this.xhr["@graph"];
+                return this.xhr["@graph"] || {};
             },
 
             /*
@@ -557,16 +560,49 @@ define([	// properly require.config'ed   bootstrap-modal
 				}
 
                 var jsonResultStr = JSON.stringify(this.getGraphResultsJson(), null, 4);
+
+                // header download link and menu
                 var headerTable = IIDXHelper.buildResultsHeaderTable(
-                    headerHtml,
+                    (jsonResultStr === "{}") ? "No results returned" : headerHtml,
                     [ "Save JSON" ] ,
                     [ IIDXHelper.downloadFile.bind(IIDXHelper, "jsonResultStr", "results.json", "text/json;charset=utf8") ]
                 );
                 div.appendChild(headerTable);
 
-				var resultsSpan = document.createElement("span");
-                resultsSpan.innerHTML = jsonResultStr;
-                div.appendChild(resultsSpan);
+                // canvas
+                var canvasDiv = document.createElement("div");
+                canvasDiv.style.width="100%";
+                canvasDiv.style.height="650px";
+                canvasDiv.style.margin="1ch";
+                div.appendChild(canvasDiv);
+
+                var configDiv = document.createElement("div");
+                configDiv.style.width="100%";
+                configDiv.style.height="100%";
+                div.appendChild(document.createElement("hr"));
+                div.appendChild(configDiv);
+
+                var jsonLd = this.getGraphResultsJson();
+                var nodeList = [];
+                var edgeList = [];
+
+                var network = new vis.Network(
+                    canvasDiv,
+                    {nodes: nodeList, edges: edgeList },
+                    VisJsHelper.getDefaultOptions(configDiv)
+                );
+
+                for (var i=0; i < jsonLd.length; i++) {
+                    VisJsHelper.addJsonLdObject(jsonLd[i], nodeList, edgeList);
+                    if (i % 20 == 0) {
+                        network.body.data.nodes.update(nodeList);
+                        network.body.data.edges.update(edgeList);
+                    }
+                }
+                network.body.data.nodes.update(nodeList);
+                network.body.data.edges.update(edgeList);
+
+                network.startSimulation();
 			},
 
             /**
