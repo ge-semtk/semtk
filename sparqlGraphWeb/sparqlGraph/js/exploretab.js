@@ -32,7 +32,7 @@ define([	// properly require.config'ed
             'sparqlgraph/js/modaliidx',
             'sparqlgraph/js/msiclientnodegroupexec',
             'sparqlgraph/js/ontologyinfo',
-            'sparqlgraph/js/visjshelper'
+            'sparqlgraph/js/visjshelper',
 
          	'jquery',
 
