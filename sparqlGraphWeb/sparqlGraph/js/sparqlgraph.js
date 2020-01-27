@@ -1177,6 +1177,13 @@
                                                                                      this.checkForCancel.bind(this),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
+
+            var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
+                                                                            queryFailureCallback,
+                                                                            setStatusProgressBar.bind(this, "Running Query"),
+                                                                            this.checkForCancel.bind(this),
+                                                                            g.service.status.url,
+                                                                            g.service.results.url);
             setStatusProgressBar("Running Query", 1);
             switch (getQueryType()) {
 			case "SELECT":
@@ -1186,7 +1193,7 @@
                 client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
                 break;
             case "CONSTRUCT":
-                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, queryFailureCallback);
                 break;
 			case "DELETE":
                 var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
@@ -1270,6 +1277,29 @@
             guiResultsNonEmpty();
             setStatus("");
          });
+    };
+
+    var queryJsonLdCallback = function(jsonLdResults) {
+        require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
+
+            var anchor = IIDXHelper.buildAnchorWithCallback(    "results.json",
+                                                                function (res) {
+                                                                    var str = JSON.stringify(res.getGraphResultsJson(), null, 4);
+                                                                    IIDXHelper.downloadFile(str, "results.json",  "application/json");
+                                                                }.bind(this, jsonLdResults)
+                                                            );
+
+            var header = document.createElement("span");
+            header.innerHTML =  "Download json: ";
+            header.appendChild(anchor);
+            header.appendChild(document.createElement("hr"));
+
+            jsonLdResults.putJsonLdResultsInDiv(document.getElementById("resultsParagraph"), header);
+
+            guiUnDisableAll();
+            guiResultsNonEmpty();
+            setStatus("");
+        });
     };
 
    	var doRetrieveFromNGStore = function() {

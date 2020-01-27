@@ -56,6 +56,10 @@ define([	// properly require.config'ed   bootstrap-modal
 				return this.xhr.hasOwnProperty("table");
 			},
 
+            isJsonLdResults : function () {
+                return this.xhr.hasOwnProperty("@graph");
+            },
+
 			getColumnName : function (x) {
 				return this.getTable().col_names[x];
 			},
@@ -84,6 +88,10 @@ define([	// properly require.config'ed   bootstrap-modal
 
 				return html;
 			},
+
+            getGraphResultsJson : function () {
+                return this.xhr["@graph"];
+            },
 
             /*
              * If simple results, build html out of just those fields
@@ -531,6 +539,34 @@ define([	// properly require.config'ed   bootstrap-modal
 								                      typeof optMenuCallbackList == "undefined" ? [this.tableDownloadCsv.bind(this)] : optMenuCallbackList,
 								                      optFinishedCallback,
                                                       optSortList);
+			},
+
+
+            /**
+			 * build an html iidx datagrid and add it to the div.
+			 * return the datagrid table element.
+             *
+             * params:
+             *    optSortList - see IIDXHelper.buildDatagridInDiv
+			 */
+			putJsonLdResultsInDiv : function (div, headerHtml) {
+
+				if (! this.isJsonLdResults()) {
+					div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
+					return;
+				}
+
+                var jsonResultStr = JSON.stringify(this.getGraphResultsJson(), null, 4);
+                var headerTable = IIDXHelper.buildResultsHeaderTable(
+                    headerHtml,
+                    [ "Save JSON" ] ,
+                    [ IIDXHelper.downloadFile.bind(IIDXHelper, "jsonResultStr", "results.json", "text/json;charset=utf8") ]
+                );
+                div.appendChild(headerTable);
+
+				var resultsSpan = document.createElement("span");
+                resultsSpan.innerHTML = jsonResultStr;
+                div.appendChild(resultsSpan);
 			},
 
             /**

@@ -793,6 +793,50 @@ define([	// properly require.config'ed
         return menuDiv;
     };
 
+    IIDXHelper.buildAnchorWithCallback = function(labelHTML, callback) {
+        var anchor = document.createElement("a");
+        anchor.onclick = callback;
+        anchor.innerHTML = labelHTML;
+        return anchor;
+    };
+
+    IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList) {
+        var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
+
+        // header Table
+        var headerTable = document.createElement("table");
+        headerTable.width = "100%";
+
+        var tr = document.createElement("tr");
+        var td;
+
+        // header cell
+        td = document.createElement("td");
+        td.align="left";
+
+        // header can be html or dom
+        if (typeof(header) == "string") {
+            td.innerHTML = header;
+        } else {
+            td.appendChild(header);
+        }
+
+        tr.appendChild(td);
+
+        // search cell (moved into the grid)
+        //td = document.createElement("td");
+        //td.align="right";
+        //td.innerHTML = searchHTML;
+        //tr.appendChild(td);
+
+        // menu cell
+        td = document.createElement("td");
+        td.appendChild(menuDiv);
+        tr.appendChild(td);
+        headerTable.appendChild(tr);
+        return headerTable;
+    };
+
     IIDXHelper.buildDatagridInDiv = function (div, headerHTML, colsCallback, dataCallback, menuLabelList, menuCallbackList, optFinishedCallback, optSortList) {
         //
         // PARAMS:
@@ -817,34 +861,9 @@ define([	// properly require.config'ed
         // search (moved into the grid)
         // var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
 
-        var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
-
-        // header Table
-        var headerTable = document.createElement("table");
-        headerTable.width = "100%";
-
-        var tr = document.createElement("tr");
-        var td;
-
-        // header cell
-        td = document.createElement("td");
-        td.align="left";
-        td.innerHTML = headerHTML;
-        tr.appendChild(td);
-
-        // search cell (moved into the grid)
-        //td = document.createElement("td");
-        //td.align="right";
-        //td.innerHTML = searchHTML;
-        //tr.appendChild(td);
-
-        // menu cell
-        td = document.createElement("td");
-        td.appendChild(menuDiv);
-        tr.appendChild(td);
+        var headerTable = IIDXHelper.buildResultsHeaderTable(headerHTML, menuLabelList, menuCallbackList);
 
         // add row to table & table to div
-        headerTable.appendChild(tr);
         div.innerHTML = "";
         div.appendChild(headerTable);
 

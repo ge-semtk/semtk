@@ -141,6 +141,45 @@ define([	// properly require.config'ed   bootstrap-modal
         };
 
 
+        /*
+         * just like buildCsvUrlSampleJsonCallback
+         * EXCEPT:
+         *    no max rows or csv URL
+         *    jsonLdCallback(jsonLdRes)
+         */
+        MsiClientNodeGroupExec.buildJsonLdCallback = function(jsonLdCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl) {
+
+            // callback for the nodegroup execution service to send jobId
+            var ngExecJobIdCallback = function(jsonLdCallback0, failureCallback0, progressCallback0, checkForCancelCallback0, statusUrl, resultUrl, jobId) {
+
+                // callback for status service after job successfully finishes
+                var ngStatusSuccessCallback = function(jobId, jsonLdCallback1, failureCallback1, progressCallback1, checkForCancelCallback1, resultUrl) {
+
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (jsonLdCallback2, progressCallback2, results) {
+                        progressCallback2(99);
+                        jsonLdCallback2(results);
+                    };
+
+                    // send json results to jsonLdCallback
+                    var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback1);
+                    resultsClient.execGetJsonLdRes( ngResultsSuccessCallback.bind(this, jsonLdCallback1, progressCallback1) );
+
+                }.bind(this, jobId, jsonLdCallback0, failureCallback0, progressCallback0, checkForCancelCallback0, resultUrl);
+
+                progressCallback0(5); // got jobId
+                var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, progressCallback0, 10, 90);
+
+                // call status service loop
+                var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback0);
+                statusClient.execAsyncWaitUntilDone(ngStatusSuccessCallback, checkForCancelCallback0, sProgress);
+
+            }.bind(this, jsonLdCallback, failureCallback, progressCallback, checkForCancelCallback, statusUrl, resultUrl);
+
+            return ngExecJobIdCallback;
+        };
+
+
 		MsiClientNodeGroupExec.prototype = {
 
 
