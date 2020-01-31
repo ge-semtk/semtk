@@ -34,15 +34,47 @@ define([	// properly require.config'ed
         };
     };
 
+    // object either has no type: "untyped"
+    // or has a single type
+    // or has an array of types
+    VisJsHelper.getShortType = function(j) {
+        var typ = j.hasOwnProperty("@type") ? j["@type"] : "prefix#untyped";
+        if (Array.isArray(typ)) {
+            ret = "";
+            for (var i=0; i < typ.length; i++ ) {
+                // concatenate short values
+                ret += "," + ((typ[i].indexOf("#") > -1) ? typ[i].split("#")[1] : typ[i])
+            }
+            ret = ret.slice(1);
+        } else {
+            ret = ((typ.indexOf("#") > -1) ? typ.split("#")[1] : typ);
+        }
+        return ret;
+    };
+
+    VisJsHelper.getLongType = function(j) {
+        var typ = j.hasOwnProperty("@type") ? j["@type"] : "untyped";
+        if (Array.isArray(typ)) {
+            ret = "";
+            for (var i=0; i < typ.length; i++ ) {
+                // concatenate entire values
+                ret += "," + typ[i]
+            }
+            ret = ret.slice(1);
+        } else {
+            ret = typ;
+        }
+        return ret;
+    };
 
     VisJsHelper.addJsonLdObject = function(j, nodeList, edgeList) {
 
         console.log(JSON.stringify(j));
 
         // add the main node
-        var shortType = j["@type"].split("#")[1];
-        var groupVal = j["@type"];
-        if (shortType.indexOf("XMLSchema") > -1) {
+        var shortType = VisJsHelper.getShortType(j);
+        var groupVal = VisJsHelper.getLongType(j);
+        if (groupVal.indexOf("XMLSchema") > -1) {
             groupVal = "data";
         }
         nodeList.push({
@@ -79,17 +111,20 @@ define([	// properly require.config'ed
                             group: key
                         });
                     } else {
+                        // sometimes virtuoso returns 35 instead of { @value: 35, @type: integer }
+                        var val = o.hasOwnProperty("@value") ? o["@value"] : o.toString();
+                        var typ = VisJsHelper.getLongType(o);
                         // add edge to data
                         nodeList.push({
-                            id : o["@value"],
-                            label: o["@value"],
-                            title: o["@type"],
+                            id : val,
+                            label: val,
+                            title: typ,
                             group: "data"
                         });
                         edgeList.push({
                             //id: p_id,
                             from: j["@id"],
-                            to: o["@value"],
+                            to: val,
                             label: predName,
                             arrows: 'to',
                             color: {inherit: false},
