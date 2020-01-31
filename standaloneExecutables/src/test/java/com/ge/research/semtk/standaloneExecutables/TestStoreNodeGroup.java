@@ -7,7 +7,7 @@ import static junit.framework.TestCase.assertTrue;
 
 public class TestStoreNodeGroup {
 
-    @Ignore
+    //@Ignore
     @Test
     public void testFileWithEmptyLine() {
 
