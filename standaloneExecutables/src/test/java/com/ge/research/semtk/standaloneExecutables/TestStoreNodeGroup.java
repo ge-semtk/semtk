@@ -1,11 +1,13 @@
 package com.ge.research.semtk.standaloneExecutables;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertTrue;
 
 public class TestStoreNodeGroup {
 
+    @Ignore
     @Test
     public void testFileWithEmptyLine() {
 
