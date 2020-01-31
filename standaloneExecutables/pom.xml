@@ -44,6 +44,7 @@
 								<descriptorRef>jar-with-dependencies</descriptorRef>
 							</descriptorRefs>
 							<finalName>standaloneExecutables</finalName>
+							<fileMode>0777</fileMode> 
 						</configuration>
 						<phase>install</phase>
 						<goals>
