@@ -363,10 +363,10 @@ public class SparqlGraphJson {
 	 * @return Table
 	 * @throws Exception
 	 */
-	public static Table executeSelectToTable(JSONObject sgJsonJson, SparqlConnection conn) throws Exception {
+	public static Table executeSelectToTable(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
 		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
 		sgjson.setSparqlConn(conn);
-		String query = sgjson.getNodeGroup().generateSparqlSelect();
+		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlSelect();
 		return conn.getDefaultQueryInterface().executeQueryToTable(query);
 	}
 }
