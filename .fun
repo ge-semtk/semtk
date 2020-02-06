@@ -41,6 +41,7 @@ function hostip
 ## Determine current host name
 function sethostname
 {
+	echo ".fun says SERVER_HOST=" ${SERVER_HOST}
 	if [ -n ${SERVER_HOST+x} ]; then
 		export HOST_NAME=${SERVER_HOST}
         elif command -v host > /dev/null 2>&1; then
@@ -48,6 +49,7 @@ function sethostname
         else
                 export HOST_NAME=$(hostname)
         fi
+	echo ".fun says HOST_NAME=" ${HOST_NAME}
 }
 
 ## End hostname function
