@@ -44,10 +44,13 @@ function sethostname
 	echo ".fun says SERVER_HOST=" ${SERVER_HOST}
 	if [ -n ${SERVER_HOST+x} ]; then
 		export HOST_NAME=${SERVER_HOST}
+		echo ".fun says 1 using SERVER_HOST"
         elif command -v host > /dev/null 2>&1; then
                 export HOST_NAME="$(host $HOST_IP | awk '{print substr($NF, 1, length($NF)-1)}')" # Linux
+		echo ".fun says 2 using host command"
         else
                 export HOST_NAME=$(hostname)
+		echo ".fun says 3 using hostname command"
         fi
 	echo ".fun says HOST_NAME=" ${HOST_NAME}
 }
