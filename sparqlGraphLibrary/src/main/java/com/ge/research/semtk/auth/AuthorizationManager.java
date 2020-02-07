@@ -56,6 +56,9 @@ public class AuthorizationManager {
 	// graphXers(graph_name) = ArrayList of group names
 	private static HashMap<String, ArrayList<String>> graphReaders = new HashMap<String, ArrayList<String>>();
 	private static HashMap<String, ArrayList<String>> graphWriters = new HashMap<String, ArrayList<String>>();
+	
+	private static HashMap<String, ArrayList<String>> graphIDMReaders = new HashMap<String, ArrayList<String>>();
+	private static HashMap<String, ArrayList<String>> graphIDMWriters = new HashMap<String, ArrayList<String>>();
 
 	public static void clear() {
 		lastUpdate = 0;
@@ -110,6 +113,7 @@ public class AuthorizationManager {
 			refreshFreqSeconds = authProps.getRefreshFreqSeconds();
 			authFilePath = authProps.getSettingsFilePath();
 			ThreadAuthenticator.setUsernameKey(authProps.getUsernameKey());
+			ThreadAuthenticator.setGroupKey(authProps.getGroupKey());
 			AuthorizationException.setAuthLogPath( authProps.getLogPath() );
 			updateAuthorization();
 
@@ -150,7 +154,7 @@ public class AuthorizationManager {
 	 * 
 	 * 1) Make sure that authorization has been set up
 	 * 
-	 * 2) Update authorization values from SPARQL endpoint iff 
+	 * 2) Update authorization values from JSON file iff 
 	 *  - authorization has been turned on by authorize()
 	 *  - refreshSeconds has passed since last update
 	 * 
@@ -164,7 +168,7 @@ public class AuthorizationManager {
 		// check whether it's too soon to re-read the auth file
 		long now = Calendar.getInstance().getTime().getTime();
 
-		if (now - lastUpdate >= refreshFreqSeconds * 1000  ) {
+		if ((now - lastUpdate) >= (refreshFreqSeconds * 1000)  ) {
 
 			LocalLogger.logToStdOut("Authorization Manager: refreshing authorization.");
 			lastUpdate = now;
@@ -184,7 +188,7 @@ public class AuthorizationManager {
 
 
 	/**
-	 * Read user groups from triplestore
+	 * Read user groups from json
 	 * @param querySei
 	 * @throws Exception
 	 */
@@ -192,23 +196,25 @@ public class AuthorizationManager {
 		userGroups.clear();
 
 		JSONArray groups = (JSONArray) authJson.get("groups");
-		for (int i=0; i < groups.size(); i++) {
-			JSONObject group = (JSONObject) groups.get(i);
-
-			JSONArray members = (JSONArray) group.get("members");
-			String groupName = (String) group.get("name");
-
-			ArrayList<String> userList = new ArrayList<String>();
-			for (int j=0; j < members.size(); j++) {
-				userList.add((String)members.get(j));
+		if (groups != null) {
+			for (int i=0; i < groups.size(); i++) {
+				JSONObject group = (JSONObject) groups.get(i);
+	
+				JSONArray members = (JSONArray) group.get("members");
+				String groupName = (String) group.get("name");
+	
+				ArrayList<String> userList = new ArrayList<String>();
+				for (int j=0; j < members.size(); j++) {
+					userList.add((String)members.get(j));
+				}
+	
+				userGroups.put(groupName, userList);
 			}
-
-			userGroups.put(groupName, userList);
 		}
 	}
 
 	/**
-	 * Read graph admin from triplestore
+	 * Read graph admin from json
 	 * @param querySei
 	 * @throws Exception
 	 */
@@ -221,32 +227,61 @@ public class AuthorizationManager {
 			JSONObject graph = (JSONObject) graphs.get(i);
 
 			String graphName = (String) graph.get("name");
-			JSONArray readers = (JSONArray) graph.get("readGroups");
-			JSONArray writers = (JSONArray) graph.get("writeGroups");
-
+			
 			// read groups
+			JSONArray readersJson = (JSONArray) graph.get("readGroups");
 			ArrayList<String> readGroups = new ArrayList<String>();
 
-			for (int j=0; j < readers.size(); j++) {
-				String groupName = (String)readers.get(j);
-				if ( ! userGroups.containsKey(groupName) && !groupName.equals(DEFAULT_GROUP)) {
-					throw new AuthorizationException("Authorization setup failed.  Unknown group: " + groupName);
+			if (readersJson != null) {
+				for (int j=0; j < readersJson.size(); j++) {
+					String groupName = (String)readersJson.get(j);
+					if ( ! userGroups.containsKey(groupName) && !groupName.equals(DEFAULT_GROUP)) {
+						throw new AuthorizationException("Authorization setup failed.  Unknown group: " + groupName);
+					}
+					readGroups.add(groupName);
 				}
-				readGroups.add(groupName);
 			}
 			graphReaders.put(graphName, readGroups);
 
-			// read groups
+			// write groups
+			JSONArray writersJson = (JSONArray) graph.get("writeGroups");
 			ArrayList<String> writeGroups = new ArrayList<String>();
 
-			for (int j=0; j < writers.size(); j++) {
-				String groupName = (String)writers.get(j);
-				if ( ! userGroups.containsKey(groupName) && !groupName.equals(DEFAULT_GROUP)) {
-					throw new AuthorizationException("Authorization setup failed.  Unknown group: " + groupName);
+			if (writersJson != null) {
+				for (int j=0; j < writersJson.size(); j++) {
+					String groupName = (String)writersJson.get(j);
+					if ( ! userGroups.containsKey(groupName) && !groupName.equals(DEFAULT_GROUP)) {
+						throw new AuthorizationException("Authorization setup failed.  Unknown group: " + groupName);
+					}
+					writeGroups.add(groupName);
 				}
-				writeGroups.add(groupName);
 			}
 			graphWriters.put(graphName, writeGroups);
+			
+			// IDM writers
+			JSONArray writersIDMJson = (JSONArray) graph.get("writeIDMGroups");			
+			ArrayList<String> writeIDMGroups = new ArrayList<String>();
+			
+			if (writersIDMJson != null) {
+				for (int j=0; j < writersIDMJson.size(); j++) {
+					String groupName = (String)writersIDMJson.get(j);
+					writeIDMGroups.add(groupName);
+				}
+			}
+			graphIDMWriters.put(graphName, writeIDMGroups);
+			
+			// IDM readers
+			JSONArray readersIDMJson = (JSONArray) graph.get("readIDMGroups");			
+			ArrayList<String> readIDMGroups = new ArrayList<String>();
+
+			if (readersIDMJson != null) {
+				for (int j=0; j < readersIDMJson.size(); j++) {
+					String groupName = (String)readersIDMJson.get(j);
+					readIDMGroups.add(groupName);
+				}
+			}
+			graphIDMReaders.put(graphName, readIDMGroups);
+			
 		}
 	}
 
@@ -365,28 +400,48 @@ public class AuthorizationManager {
 		if (authProperlyDisabled() || isSemtkSuper()) return;
 		updateAuthorization();
 
-		String user = ThreadAuthenticator.getThreadUserName();
-
+		String threadUser = ThreadAuthenticator.getThreadUserName();
+		List<String> threadIDMGroups = ThreadAuthenticator.getThreadGroups();
+		
 		// get read groups
-		ArrayList<String> groups = null;
+		ArrayList<String> graphGroups = null;
 		if (graphReaders.containsKey(graphName)) {
-			groups = graphReaders.get(graphName);
+			graphGroups = graphReaders.get(graphName);
 		} else if (graphReaders.containsKey(DEFAULT_GRAPH)) {
-			groups = graphReaders.get(DEFAULT_GRAPH);
+			graphGroups = graphReaders.get(DEFAULT_GRAPH);
 		} else {
-			throw new AuthorizationException("Read Access Denied since graph has no readGroups. graph=" + graphName + " user=" + user);
+			graphGroups = new ArrayList<String>();
 		}
 
-		// does user belong to one of the groups
-		for (String groupName : groups) {
-			List<String> members = userGroups.get(groupName);
-			if (groupName.equals(DEFAULT_GROUP) || members != null && members.contains(user)) {
-				AuthorizationException.logAuthEvent("User " + user + " granted read permission on graph " + graphName);
+		// does thread user belong to one of the graph groups
+		for (String graphGroup : graphGroups) {
+			List<String> members = userGroups.get(graphGroup);
+			if (graphGroup.equals(DEFAULT_GROUP) || members != null && members.contains(threadUser)) {
+				AuthorizationException.logAuthEvent("User " + threadUser + " granted read permission on graph " + graphName);
+				return;
+			}
+		}
+		
+		// get IDM read groups for this graph
+		ArrayList<String> graphIDMGroups = null;
+		if (graphIDMReaders.containsKey(graphName)) {
+			graphIDMGroups = graphIDMReaders.get(graphName);
+		} else if (graphIDMReaders.containsKey(DEFAULT_GRAPH)) {
+			graphIDMGroups = graphIDMReaders.get(DEFAULT_GRAPH);
+		} else {
+			graphIDMGroups = new ArrayList<String>();
+		}
+
+		// does thread IDM group list contain any of the graph IDM groups
+		for (String graphIDMGroup : graphIDMGroups) {
+			
+			if (threadIDMGroups.contains(graphIDMGroup)) {
+				AuthorizationException.logAuthEvent("User " + threadUser + " member of " + graphIDMGroup + " granted read permission on graph " + graphName);
 				return;
 			}
 		}
 
-		throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + user);
+		throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + threadUser);
 
 	}
 
@@ -400,28 +455,48 @@ public class AuthorizationManager {
 		if (authProperlyDisabled() || isSemtkSuper()) return;
 		updateAuthorization();
 
-		String user = ThreadAuthenticator.getThreadUserName();
-
-		// get read groups
-		ArrayList<String> groups = null;
+		String threadUser = ThreadAuthenticator.getThreadUserName();
+		List<String> threadIDMGroups = ThreadAuthenticator.getThreadGroups();
+		
+		// get graph write groups
+		ArrayList<String> graphWriteGroups = null;
 		if (graphWriters.containsKey(graphName)) {
-			groups = graphWriters.get(graphName);
+			graphWriteGroups = graphWriters.get(graphName);
 		} else if (graphWriters.containsKey(DEFAULT_GRAPH)) {
-			groups = graphWriters.get(DEFAULT_GRAPH);
+			graphWriteGroups = graphWriters.get(DEFAULT_GRAPH);
 		} else {
-			throw new AuthorizationException("Write Access Denied since graph has no readGroups. graph=" + graphName + " user=" + user);
+			graphWriteGroups = new ArrayList<String>();
 		}
 
-		// check the groups
-		for (String groupName : groups) {
-			List<String> members = userGroups.get(groupName);
-			if (groupName.equals(DEFAULT_GROUP) || members != null && members.contains(user)) {
-				AuthorizationException.logAuthEvent("User " + user + " granted write permission on graph " + graphName);
+		// does thread user belong to one of the graph groups
+		for (String graphGroup : graphWriteGroups) {
+			List<String> members = userGroups.get(graphGroup);
+			if (graphGroup.equals(DEFAULT_GROUP) || members != null && members.contains(threadUser)) {
+				AuthorizationException.logAuthEvent("User " + threadUser + " granted write permission on graph " + graphName);
 				return;
 			}
 		}
+		
+		// get IDM write groups for this graph
+		ArrayList<String> graphIDMGroups = null;
+		if (graphIDMWriters.containsKey(graphName)) {
+			graphIDMGroups = graphIDMWriters.get(graphName);
+		} else if (graphIDMWriters.containsKey(DEFAULT_GRAPH)) {
+			graphIDMGroups = graphIDMWriters.get(DEFAULT_GRAPH);
+		} else {
+			graphIDMGroups = new ArrayList<String>();
+		}
 
-		throw new AuthorizationException("Write Access Denied.  graph=" + graphName + " user=" + user);
+		// does thread IDM group list contain any of the graph IDM groups
+		for (String graphIDMGroup : graphIDMGroups) {
+			
+			if (threadIDMGroups.contains(graphIDMGroup)) {
+				AuthorizationException.logAuthEvent("User " + threadUser + " member of " + graphIDMGroup + " granted write permission on graph " + graphName);
+				return;
+			}
+		}
+		
+		throw new AuthorizationException("Write Access Denied.  graph=" + graphName + " user=" + threadUser);
 
 
 	}

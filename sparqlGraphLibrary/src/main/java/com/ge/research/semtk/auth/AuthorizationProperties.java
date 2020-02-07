@@ -23,6 +23,7 @@ public class AuthorizationProperties extends Properties {
 	String settingsFilePath = "";
 	String logPath = "";
 	String usernameKey = "user_name";
+	String groupKey = "group";
 
 	public String getLogPath() {
 		return logPath;
@@ -56,11 +57,20 @@ public class AuthorizationProperties extends Properties {
 		this.usernameKey = key;
 	}
 	
+	public String getGroupKey() {
+		return groupKey;
+	}
+	
+	public void setGroupKey(String key) {
+		this.groupKey = key;
+	}
+	
 	public void validate() throws Exception {
 		super.validate();
 		checkRangeInclusive("refreshFreqSeconds", refreshFreqSeconds, 1, 3600);
 		checkNone("settingsFilePath", settingsFilePath);
 		checkNone("logPath", logPath);
 		checkNone("usernameKey", usernameKey);
+		checkNone("groupKey", groupKey);
 	}
 }

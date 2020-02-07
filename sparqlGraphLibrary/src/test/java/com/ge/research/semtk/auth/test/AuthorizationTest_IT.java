@@ -586,6 +586,105 @@ public class AuthorizationTest_IT {
 	 * test read write permissions read from auth.json
 	 * @throws Exception
 	 */
+	public void testGraphReadWriteIDM() throws Exception {
+		
+		try {
+			AuthorizationProperties auth_prop = IntegrationTestUtility.getAuthProperties();
+			auth_prop.setSettingsFilePath("src/test/resources/auth_test_idm.json");
+			authMgrAuthorize( auth_prop );
+			
+				
+			// tests that should pass
+			ArrayList<String> groups = new ArrayList<String>();
+			groups.add("idmread");
+			groups.add("idmwrite");
+			ThreadAuthenticator.authenticateThisThread("ignore_user", groups);
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://read/write");
+			AuthorizationManager.throwExceptionIfNotGraphWriter("http://read/write");
+			AuthorizationManager.throwExceptionIfNotGraphReader("http://read/only");
+			AuthorizationManager.throwExceptionIfNotGraphWriter("http://write/only");
+
+			// tests that should fail
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://read/only");
+				fail("Authorization didn't prevent writing");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://write/only");
+				fail("Authorization didn't prevent reading");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://not/in/props");
+				fail("Authorization didn't prevent writing graph not in props");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://not/in/props");
+				fail("Authorization didn't prevent writing graph not in props");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://none");
+				fail("Authorization didn't prevent user writing graph");
+			} catch (AuthorizationException ae) {}
+			
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://none");
+				fail("Authorization didn't prevent user reader graph");
+			} catch (AuthorizationException ae) {}
+
+			// become an unknown user
+			ThreadAuthenticator.authenticateThisThread("ignore_user", "idmunknown");
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://read/write");
+				fail("Authorization didn't prevent unknown user/idmgroup writing graph");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://read/write");
+				fail("Authorization didn't prevent unknown user/idmgroup reading graph");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://read/only");
+				fail("Authorization didn't prevent unknown user/idmgroup reading graph");
+			} catch (AuthorizationException ae) {}
+
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://write/only");
+				fail("Authorization didn't prevent unknown user/idmgroup writing graph");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://none");
+				fail("Authorization didn't prevent unknown user/idmgroup reading graph");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://none");
+				fail("Authorization didn't prevent unknown user/idmgroup writing graph");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphReader("http://unlisted");
+				fail("Authorization didn't prevent unknown user/idmgroup reading graph");
+			} catch (AuthorizationException ae) {}
+			try {
+				AuthorizationManager.throwExceptionIfNotGraphWriter("http://unlisted");
+				fail("Authorization didn't prevent unknown user/idmgroup writing graph");
+			} catch (AuthorizationException ae) {}
+			
+			
+		} finally {
+			authMgrClear();
+		}
+
+	}
+	
+	@Test
+	/**
+	 * test read write permissions read from auth.json
+	 * @throws Exception
+	 */
 	public void testGraphReadWriteDefaultON() throws Exception {
 		
 		try {

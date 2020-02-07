@@ -126,7 +126,7 @@
             if (conn) {
 				doLoadConnection(conn);
 
-			} else {
+			} else if (g.customization.autoRunDemo) {
 
                 ModalIIDX.okCancel( "Demo",
                                     "Loading demo nodegroup, and<br>Launching demo documentation pop-up.<br>(You may need to override your pop-up blocker.)<br>",

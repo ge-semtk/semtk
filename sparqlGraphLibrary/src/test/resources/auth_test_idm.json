@@ -1,0 +1,20 @@
+{
+	"graphs" [
+		{
+			"name": "http://read/write",
+			"readIDMGroups": ["idmread","idmignore"],
+			"writeIDMGroups": ["idmwrite", "idmignore"]
+		},
+		{
+			"name": "http://read/only",
+			"readIDMGroups": ["idmread","idmignore"]
+		},
+		{
+			"name": "http://write/only",
+			"writeIDMGroups": ["idmwrite","idmignore"]
+		},
+		{
+			"name": "http://none"
+		}
+	]
+}

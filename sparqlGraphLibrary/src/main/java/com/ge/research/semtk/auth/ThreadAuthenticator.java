@@ -17,6 +17,7 @@
 package com.ge.research.semtk.auth;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import com.ge.research.semtk.utility.LocalLogger;
@@ -43,6 +44,7 @@ public class ThreadAuthenticator {
 	public static final String ANONYMOUS = "anonymous";
 	
 	private static String usernameKey = "user_name";
+	private static String groupKey = "group";
 	
 	private static ThreadLocal<HeaderTable> threadHeaderTables = new ThreadLocal<>();
 	private static ThreadLocal<Boolean> threadJobAdmins = new ThreadLocal<>();
@@ -53,6 +55,14 @@ public class ThreadAuthenticator {
 	
 	public static String getUsernameKey() {
 		return usernameKey;
+	}
+	
+	public static void setGroupKey(String k) {
+		groupKey = k;
+	}
+	
+	public static String getGroupKey() {
+		return groupKey;
 	}
 	
 	/**
@@ -84,12 +94,36 @@ public class ThreadAuthenticator {
 		}
 	}
 	
+	/**
+	 * For testing
+	 * @param userName
+	 */
 	public static void authenticateThisThread(String userName) {
 		HeaderTable tab = new HeaderTable();
 		ArrayList<String> vals = new ArrayList<String>();
 		vals.add(userName);
 		tab.put(ThreadAuthenticator.usernameKey, vals);
 		ThreadAuthenticator.authenticateThisThread(tab);
+	}
+	
+	/**
+	 * For testing
+	 * @param userName
+	 * @param groups
+	 */
+	public static void authenticateThisThread(String userName, ArrayList<String> groups) {
+		HeaderTable tab = new HeaderTable();
+		ArrayList<String> vals = new ArrayList<String>();
+		vals.add(userName);
+		tab.put(ThreadAuthenticator.usernameKey, vals);
+		tab.put(ThreadAuthenticator.groupKey, groups);
+		ThreadAuthenticator.authenticateThisThread(tab);
+	}
+	
+	public static void authenticateThisThread(String userName, String group) {
+		ArrayList<String> groups = new ArrayList<String>();
+		groups.add(group);
+		authenticateThisThread(userName, groups);
 	}
 	
 	public static void unAuthenticateThisThread() {
@@ -140,6 +174,32 @@ public class ThreadAuthenticator {
 		} 
 		
 		return ANONYMOUS;
+	}
+	
+	/**
+	 * Get idm groups on this thread
+	 * @return List<String> (never null)
+	 */
+	public static List<String> getThreadGroups() {
+		if (threadHeaderTables != null) {
+			return getGroups(threadHeaderTables.get());
+		} 
+		return new ArrayList<String>();
+	}
+	
+	/**
+	 * Get idm groups from header table
+	 * @return List<String> (never null)
+	 */
+	public static List<String> getGroups(HeaderTable headerTable) {
+		if (headerTable != null) {
+			List<String> vals = headerTable.get(groupKey);
+			if (vals != null) {
+				return vals;
+			} 
+		} 
+		
+		return new ArrayList<String>();
 	}
 	
 	/**

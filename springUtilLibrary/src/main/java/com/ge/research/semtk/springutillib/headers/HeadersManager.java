@@ -46,7 +46,8 @@ public class HeadersManager {
 		// grab only principal-related headers
 		for (String key : headers.keySet()) {
 			
-			if (key.equals(ThreadAuthenticator.getUsernameKey())) {
+			if (	key.equals(ThreadAuthenticator.getUsernameKey()) ||
+					key.equals(ThreadAuthenticator.getGroupKey())	) {
 				headerTable.put(key, headers.get(key));
 			}
 		}
