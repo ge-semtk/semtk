@@ -33,7 +33,8 @@ public class FdcRequest {
 	@ApiModelProperty(
 		value = "tables",
 		required = true,
-		example = "{\"0\": \"{ table json } \" }"
+		example = "\"{\"1\": {\"col_names\":[\"aircraftUri\",\"tailNumber\"],\"rows\":[[\"http://uri\",\"007a\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":1,\"row_count\":1}}\""
+					
 	)	
 	private String tables;
 
