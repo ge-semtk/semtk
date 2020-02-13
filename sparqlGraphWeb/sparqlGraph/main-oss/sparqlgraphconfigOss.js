@@ -74,7 +74,7 @@ var g = {
 		bannerText: "${WEB_CUSTOM_BANNER_TEXT}",
 		startupDialogTitle: "${WEB_CUSTOM_STARTUP_DIALOG_TITLE}",
 		startupDialogHtml: "${WEB_CUSTOM_STARTUP_DIALOG_HTML}",
-		autoRunDemo: ${WEB_CUSTOM_AUTO_RUN_DEMO_FLAG}
+		autoRunDemo: "${WEB_CUSTOM_AUTO_RUN_DEMO_FLAG}"
 	},
 
 	service : {

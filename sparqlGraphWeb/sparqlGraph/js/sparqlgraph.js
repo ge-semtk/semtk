@@ -126,7 +126,7 @@
             if (conn) {
 				doLoadConnection(conn);
 
-			} else if (g.customization.autoRunDemo) {
+			} else if (g.customization.autoRunDemo.toLowerCase() == "true") {
 
                 ModalIIDX.okCancel( "Demo",
                                     "Loading demo nodegroup, and<br>Launching demo documentation pop-up.<br>(You may need to override your pop-up blocker.)<br>",
