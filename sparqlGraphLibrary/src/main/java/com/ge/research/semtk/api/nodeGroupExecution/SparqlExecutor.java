@@ -1,5 +1,7 @@
 package com.ge.research.semtk.api.nodeGroupExecution;
 
+import com.ge.research.semtk.auth.HeaderTable;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.resultSet.ResultType;
@@ -16,6 +18,7 @@ public class SparqlExecutor extends Thread {
 	private SparqlEndpointInterface servicesSei = null;
 	private ResultsClient resClient = null;
 	private String jobId = null;
+	private HeaderTable headerTable = null;
 			
 	public SparqlExecutor(String sparql, SparqlEndpointInterface sei, SparqlEndpointInterface servicesSei, ResultsClient resClient) {
 		this.sparql = sparql;
@@ -23,9 +26,12 @@ public class SparqlExecutor extends Thread {
 		this.servicesSei = servicesSei;
 		this.resClient = resClient;
 		this.jobId = JobTracker.generateJobId();
+		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 	}
 	
 	public void run() {
+		ThreadAuthenticator.authenticateThisThread(this.headerTable);
+		
 		JobTracker tracker = null;
 		
 		// We're dead in the water if we can't track a job.  print stacktrace and return
