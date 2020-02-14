@@ -41,18 +41,13 @@ function hostip
 ## Determine current host name
 function sethostname
 {
-	echo ".fun: SERVER_ADDRESS=" ${SERVER_ADDRESS}
 	if ! [ -z ${SERVER_ADDRESS} ]; then
 		export HOST_NAME=${SERVER_ADDRESS}
-		echo ".fun: using SERVER_ADDRESS"
         elif command -v host > /dev/null 2>&1; then
                 export HOST_NAME="$(host $HOST_IP | awk '{print substr($NF, 1, length($NF)-1)}')" # Linux
-		echo ".fun: using host command"
         else
                 export HOST_NAME=$(hostname)
-		echo ".fun: using hostname command"
         fi
-	echo ".fun: HOST_NAME=" ${HOST_NAME}
 }
 
 ## End hostname function
