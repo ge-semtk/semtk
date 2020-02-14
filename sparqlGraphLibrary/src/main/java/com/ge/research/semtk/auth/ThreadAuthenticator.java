@@ -17,6 +17,7 @@
 package com.ge.research.semtk.auth;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -192,14 +193,19 @@ public class ThreadAuthenticator {
 	 * @return List<String> (never null)
 	 */
 	public static List<String> getGroups(HeaderTable headerTable) {
+		List<String> ret = new ArrayList<String>();
+		
 		if (headerTable != null) {
 			List<String> vals = headerTable.get(groupKey);
 			if (vals != null) {
-				return vals;
+				for (String v : vals) {
+					// each value might be a comma-separated list
+					Collections.addAll(ret, v.split(","));
+				}
 			} 
 		} 
 		
-		return new ArrayList<String>();
+		return ret;
 	}
 	
 	/**

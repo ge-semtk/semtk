@@ -362,7 +362,7 @@ public class AuthorizationManager {
 		String user = ThreadAuthenticator.getThreadUserName();
 
 		// log the first half
-		AuthorizationException.logAuthEvent("Query:    " + queryStr.replaceAll("\n", "\nAUTH_DEBUG "));
+		AuthorizationException.logAuthEvent("Query:    " + queryStr);
 		AuthorizationException.logAuthEvent("User:     " + user);
 
 		SparqlQueryInterrogator sqi = new SparqlQueryInterrogator(queryStr);
@@ -431,16 +431,15 @@ public class AuthorizationManager {
 		} else {
 			graphIDMGroups = new ArrayList<String>();
 		}
-
+				
 		// does thread IDM group list contain any of the graph IDM groups
 		for (String graphIDMGroup : graphIDMGroups) {
-			
 			if (threadIDMGroups.contains(graphIDMGroup)) {
 				AuthorizationException.logAuthEvent("User " + threadUser + " member of " + graphIDMGroup + " granted read permission on graph " + graphName);
 				return;
 			}
 		}
-
+			
 		throw new AuthorizationException("Read Access Denied.  graph=" + graphName + " user=" + threadUser);
 
 	}
