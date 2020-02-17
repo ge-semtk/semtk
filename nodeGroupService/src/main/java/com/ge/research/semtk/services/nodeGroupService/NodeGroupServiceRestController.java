@@ -19,8 +19,10 @@ package com.ge.research.semtk.services.nodeGroupService;
 
 import java.util.ArrayList;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.*;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
@@ -28,12 +30,12 @@ import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
-import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
-import com.ge.research.semtk.springutilib.requests.SparqlIdOptionalRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -49,7 +51,6 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -73,7 +74,23 @@ public class NodeGroupServiceRestController {
 		
 	@Autowired
 	OInfoServiceProperties oinfo_props;
+	@Autowired
+	private NodeGroupServiceAuthProperties auth_prop;
+	@Autowired 
+	private ApplicationContext appContext;
 	
+	@PostConstruct
+    public void init() {
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+
+		// these are still in the older NodegroupExecutionServiceStartup
+		
+		oinfo_props.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
+
+	}
     //OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);   // 5 seconds.  TODO make this a property
 
 	@CrossOrigin
@@ -102,7 +119,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateSelect", method=RequestMethod.POST)
-	public JSONObject generateSelectSparql(@RequestBody NodegroupRequest requestBody){
+	public JSONObject generateSelectSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -132,7 +150,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateCountAll", method=RequestMethod.POST)
-	public JSONObject generateCountAllSparql(@RequestBody NodegroupRequest requestBody){
+	public JSONObject generateCountAllSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -161,7 +180,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateDelete", method=RequestMethod.POST)
-	public JSONObject generateDeleteSparql(@RequestBody NodegroupRequest requestBody){
+	public JSONObject generateDeleteSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -191,7 +211,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateFilter", method=RequestMethod.POST)
-	public JSONObject generateFilterSparql(@RequestBody NodegroupSparqlIdRequest requestBody){
+	public JSONObject generateFilterSparql(@RequestBody NodegroupSparqlIdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -224,7 +245,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateAsk", method=RequestMethod.POST)
-	public JSONObject generateAskSparql(@RequestBody NodegroupRequest requestBody){
+	public JSONObject generateAskSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -250,7 +272,8 @@ public class NodeGroupServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/generateConstructForInstanceManipulation", method=RequestMethod.POST)
-	public JSONObject generateConstructSparqlForInstanceManipulation(@RequestBody NodegroupRequest requestBody){
+	public JSONObject generateConstructSparqlForInstanceManipulation(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -276,7 +299,8 @@ public class NodeGroupServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/generateConstruct", method=RequestMethod.POST)
-	public JSONObject generateConstructSparql(@RequestBody NodegroupRequest requestBody){
+	public JSONObject generateConstructSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
 		try{
@@ -305,7 +329,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraints", method=RequestMethod.POST)
-	public JSONObject getRuntimeConstraints(@RequestBody NodegroupRequest requestBody){
+	public JSONObject getRuntimeConstraints(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = null;
 		
 		try{
@@ -333,7 +358,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/setPropertySparqlId", method=RequestMethod.POST)
-	public JSONObject setAndReturnNewSparqlId(@RequestBody NodegroupPropertyRequest requestBody){
+	public JSONObject setAndReturnNewSparqlId(@RequestBody NodegroupPropertyRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 		
 		try{
@@ -373,7 +399,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/setIsReturned", method=RequestMethod.POST)
-	public JSONObject setReturnsBySparqlId(@RequestBody NodegroupSparqlIdReturnedRequest requestBody){
+	public JSONObject setReturnsBySparqlId(@RequestBody NodegroupSparqlIdReturnedRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 		
 		try{
@@ -408,7 +435,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/changeSparqlIds", method=RequestMethod.POST)
-	public JSONObject renameItems(@RequestBody NodegroupSparqlIdTupleRequest requestBody){
+	public JSONObject renameItems(@RequestBody NodegroupSparqlIdTupleRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 		
 		try{
@@ -448,7 +476,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getReturnedSparqlIds", method=RequestMethod.POST)
-	public JSONObject getReturns(@RequestBody NodegroupRequest requestBody){
+	public JSONObject getReturns(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		TableResultSet retval = new TableResultSet(false);
 
 		try {
@@ -482,7 +511,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getIngestionColumns", method=RequestMethod.POST)
-	public JSONObject  getIngestionColumns(@RequestBody NodegroupRequest requestBody){
+	public JSONObject  getIngestionColumns(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {
@@ -509,7 +539,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getSampleIngestionCSV", method=RequestMethod.POST)
-	public JSONObject getSampleIngestionCSV(@RequestBody NodegroupRequest requestBody){
+	public JSONObject getSampleIngestionCSV(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {
@@ -539,7 +570,8 @@ public class NodeGroupServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/buildRuntimeConstraintJSON", method=RequestMethod.POST,
 			consumes= MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	public JSONObject buildRuntimeConstraintJSON(@RequestBody ConstraintRequest requestBody){
+	public JSONObject buildRuntimeConstraintJSON(@RequestBody ConstraintRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {
@@ -570,7 +602,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getSampleIngestionCSVMulti", method=RequestMethod.POST)
-	public JSONObject getSampleIngestionCSVMulti(@RequestBody NodegroupListRequest requestBody){
+	public JSONObject getSampleIngestionCSVMulti(@RequestBody NodegroupListRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {
