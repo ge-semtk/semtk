@@ -24,6 +24,10 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.Returnable;
+import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
@@ -367,6 +371,31 @@ public class SparqlGraphJson {
 		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
 		sgjson.setSparqlConn(conn);
 		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlSelect();
+		return conn.getDefaultQueryInterface().executeQueryToTable(query);
+	}
+	
+	/**
+	 * Execute a select query from a JSON representation of SparqlGraphJson and an override connection
+	 * @param sgJsonJson
+	 * @param conn - override and default query sei
+	 * @return Table
+	 * @throws Exception
+	 */
+	public static Table executeSelectToTable(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient, String filterSparqlId, String filterOp, String filterVal) throws Exception {
+		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
+		sgjson.setSparqlConn(conn);
+		
+		// add filter clause
+		NodeGroup ng = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient);
+		Returnable item = ng.getItemBySparqlID(filterSparqlId);
+		if (item == null) {
+			throw new Exception("Nodegroup does not contain item with SparqlID: " + filterSparqlId);
+		}
+		ValueConstraint vc = new ValueConstraint(ValueConstraint.buildFilterConstraint(item, filterOp, filterVal));
+		item.setValueConstraint(vc);
+	
+		// run query
+		String query = ng.generateSparqlSelect();
 		return conn.getDefaultQueryInterface().executeQueryToTable(query);
 	}
 }
