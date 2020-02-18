@@ -23,7 +23,6 @@ import java.nio.file.Files;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -35,6 +34,9 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
  * Loads OWL to a semantic store.
+ * 
+ * Sample command: 
+ * java -cp /path/to/target/standaloneExecutables-jar-with-dependencies.jar com.ge.research.semtk.standaloneExecutables.BulkLoader -c sparqlConnection.json -e m0 owlFile.owl -u user -p password
  */
 public class BulkLoader {
 
