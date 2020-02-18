@@ -1232,14 +1232,14 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 
 	/**
-	 * Ingest a csv table asynchronously
+	 * Ingest a csv table synchronously
 	 * @param nodegroupAndTemplateId
 	 * @param csvContentStr
 	 * @param overrideConn =
 	 * @return
 	 * @throws Exception
 	 */
-	public String dispatchIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn) throws Exception {
+	public String dispatchIngestFromCsvStringsByIdSync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn) throws Exception {
 		String jobId = this.execIngestFromCsvStringsByIdAsync(nodegroupAndTemplateId, csvContentStr, overrideConn);
 		this.waitForCompletion(jobId);
 		if (this.getJobSuccess(jobId)) {
@@ -1249,8 +1249,8 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 	}
 	
-	public String dispatchIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr) throws Exception {
-		return this.dispatchIngestFromCsvStringsByIdAsync(nodegroupAndTemplateId, csvContentStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
+	public String dispatchIngestFromCsvStringsByIdSync(String nodegroupAndTemplateId, String csvContentStr) throws Exception {
+		return this.dispatchIngestFromCsvStringsByIdSync(nodegroupAndTemplateId, csvContentStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
 	}
 	
 	/**

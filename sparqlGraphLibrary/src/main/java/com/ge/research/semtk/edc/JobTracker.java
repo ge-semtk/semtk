@@ -61,6 +61,7 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class JobTracker {
+	static boolean firstConstruct = true;
 	SparqlEndpointInterface sei = null;
 	
 	public static String STATUS_SUCCESS = "Success";
@@ -73,11 +74,14 @@ public class JobTracker {
 		// make this thread safe
 		this.sei = jobSei.copy();
 		
-		try {
-			AuthorizationManager.setSemtkSuper();
-			JobTracker.uploadOwlModelIfNeeded(this);
-		} finally {
-			AuthorizationManager.clearSemtkSuper();
+		if (JobTracker.firstConstruct) {
+			try {
+				AuthorizationManager.setSemtkSuper();
+				JobTracker.uploadOwlModelIfNeeded(this);
+			} finally {
+				AuthorizationManager.clearSemtkSuper();
+			}
+			JobTracker.firstConstruct = false;
 		}
 	}
 	

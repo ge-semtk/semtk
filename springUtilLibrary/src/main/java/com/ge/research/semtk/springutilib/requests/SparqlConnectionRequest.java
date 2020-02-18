@@ -26,7 +26,7 @@ public class SparqlConnectionRequest {
 	@ApiModelProperty(
 		value = "conn",
 		required = true,
-		example = "{\"name\": \"%NODEGROUP%\",\"domain\": \"%NODEGROUP%\",\"model\": [],\"data\": []}"
+		example = "\"{\"name\": \"Sample\", \"domain\": \"\", \"model\": [{\"type\": \"virtuoso\", \"url\": \"http://server.com:2420\", \"graph\": \"http://graph/model\"}], \"data\": [{\"type\": \"virtuoso\", \"url\": \"http://server.com:2420\", \"graph\": \"http://graph/data\"}]}\""
 	)	
 	private String conn;
 

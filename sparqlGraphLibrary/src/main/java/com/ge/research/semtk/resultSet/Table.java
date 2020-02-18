@@ -51,6 +51,10 @@ public class Table {
 	private ArrayList<ArrayList<String>> rows;   
 	private HashMap<String, Integer> columnPositionInfo = new HashMap<String, Integer>();
 
+	public Table(String[] cols) throws Exception{
+		this(cols, null, new ArrayList<ArrayList<String>>());
+	}
+	
 	/**
 	 * Create an empty table with the given column names and column types.
 	 */
@@ -68,7 +72,10 @@ public class Table {
 			throw new Exception("Cannot create a Table: no columns provided");
 		}
 		if(colTypes == null){
-			throw new Exception("Cannot create a Table: no column types provided");
+			colTypes = new String[cols.length];
+			for (int i=0; i < cols.length; i++) {
+				colTypes[i] = "unknown";
+			}
 		}
 		if(cols.length != colTypes.length){
 			throw new Exception("Cannot create a Table: must provide the same number of columns and column types");

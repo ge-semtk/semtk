@@ -271,7 +271,7 @@ public class NodeGroupExecutionClientTest_IT {
 				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 				
 				// perform ingestion
-				nodeGroupExecutionClient.dispatchIngestFromCsvStringsByIdAsync(ID, csvStr);
+				nodeGroupExecutionClient.dispatchIngestFromCsvStringsByIdSync(ID, csvStr);
 				
 				// select back the data post ingest
 				Table tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
@@ -299,7 +299,7 @@ public class NodeGroupExecutionClientTest_IT {
 				
 				// perform ingestion
 				try {
-					nodeGroupExecutionClient.dispatchIngestFromCsvStringsByIdAsync(ID, csvStr);
+					nodeGroupExecutionClient.dispatchIngestFromCsvStringsByIdSync(ID, csvStr);
 					fail("Expected ingest exception did not occur");
 				} catch (Exception e) {
 					
