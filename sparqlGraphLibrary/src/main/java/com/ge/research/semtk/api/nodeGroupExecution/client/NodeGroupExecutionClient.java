@@ -1211,7 +1211,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * Ingest from a template
 	 * @param sgjsonWithOverride
 	 * @param csvContentStr
-	 * @return
+	 * @return jobId
 	 * @throws Exception
 	 */
 	public String execIngestFromCsvStringsAndTemplateAsync(SparqlGraphJson sgjsonWithOverride, String csvContentStr) throws Exception {
@@ -1236,7 +1236,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	 * @param nodegroupAndTemplateId
 	 * @param csvContentStr
 	 * @param overrideConn =
-	 * @return
+	 * @return status message
 	 * @throws Exception
 	 */
 	public String dispatchIngestFromCsvStringsByIdSync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn) throws Exception {
@@ -1253,6 +1253,22 @@ public class NodeGroupExecutionClient extends RestClient {
 		return this.dispatchIngestFromCsvStringsByIdSync(nodegroupAndTemplateId, csvContentStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
 	}
 	
+	/**
+	 * ingest with sgjson and csv string synchronously
+	 * @param sparqlGraphJson
+	 * @param csvContentStr
+	 * @return status message
+	 * @throws Exception
+	 */
+	public String dispatchIngestFromCsvStringsSync(SparqlGraphJson sparqlGraphJson, String csvContentStr) throws Exception {
+		String jobId = execIngestFromCsvStringsAndTemplateAsync(sparqlGraphJson, csvContentStr);
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else {
+			throw new Exception("Ingestion failed:\n" + this.getResultsTable(jobId).toCSVString());
+		}
+	}
 	/**
 	 * Ingest CSV using a nodegroup.
 	 */
