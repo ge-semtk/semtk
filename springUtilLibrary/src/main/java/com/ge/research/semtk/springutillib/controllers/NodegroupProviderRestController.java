@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 /**
  * Super-class for FDC services.
  * Your service can extend this class.
- * Store nodegroups in your /src/main/resources/<nodegroupID>.json
+ * Store nodegroups in your /src/main/resources/nodegroups/<nodegroupID>.json
  * Your service will then supply nodegroups to FDC Dispatcher and FDC Cache Services
  * 
  * You may alternatively store nodegroups in the nodegroup store.
@@ -39,7 +39,7 @@ public class NodegroupProviderRestController {
 		// retrieves nodegroup from /src/main/resources/<id>.json
 		HeadersManager.setHeaders(headers);		
 		final String ENDPOINT_NAME = "getNodegroup";
-		String resourcePath = "/" + request.getId() + ".json";
+		String resourcePath = "/nodegroups/" + request.getId() + ".json";
 		SimpleResultSet results = new SimpleResultSet();
 		try {
 			JSONObject sgJsonJson = Utility.getResourceAsJson(this, resourcePath);
