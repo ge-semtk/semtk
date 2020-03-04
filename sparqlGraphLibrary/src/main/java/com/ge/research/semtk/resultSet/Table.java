@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -556,6 +557,25 @@ public class Table {
 		}		
 		
 		return buf.toString();
+	}
+	
+	/**
+	 * hash table to unique MD5 string
+	 * @return
+	 * @throws Exception
+	 */
+	public String hashMD5() throws Exception {
+		// get csv and split into rows
+		String [] rows = this.toCSVString().split("\n");
+		String header = rows[0];
+		
+		// sort non-header rows
+		List<String> r = Arrays.asList(Arrays.copyOfRange(rows, 1, rows.length));
+		Collections.sort(r);
+		
+		// build input and run hash
+		String hashInput = header + "\n" + String.join("\n", r);
+		return Utility.hashMD5(hashInput);
 	}
 	
 	public JSONObject getHeaderJson() throws Exception{

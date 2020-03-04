@@ -76,6 +76,18 @@ public class SparqlToXUtils {
     return false;
   } 	
 	
+  /**
+   * Generate: select ?p ?o where  subject ?p ?o
+   * @param subject - "<http://something>"
+   * @throws IOException
+   */
+  public static String generateSelectBySubjectQuery(SparqlEndpointInterface sei, String subject) throws IOException{
+    return generateSelectFromWhereClause(sei, "?p ?o") + subject + " ?p ?o  } ";
+  }
+  
+  public static String generateInsertTripleQuery(SparqlEndpointInterface sei, String sub, String pred, String obj) {
+	  return "INSERT INTO <" + sei.getGraph() + "> { " + sub + " " + pred + " " + obj + "}";
+  }
 	/**
 	 * Generate a DELETE query for a specific URI.
 	 * To prevent a catastrophic delete, disallows a URI starting with ?
@@ -95,6 +107,7 @@ public class SparqlToXUtils {
 
   }	
   
+ 
   /**
    * Generate a DELETE query where the subject is a specific URI.
    * @throws IOException
@@ -316,6 +329,10 @@ public class SparqlToXUtils {
 	 */
 	private static String generateWithDeleteWhereClause(SparqlEndpointInterface sei, String deletePhrase) {
 		return "WITH <" + sei.getGraph() + "> DELETE " + deletePhrase + " WHERE {";
+	}
+	
+	private static String generateSelectFromWhereClause(SparqlEndpointInterface sei, String returnsPhrase) {
+		return "SELECT DISTINCT " + returnsPhrase + " FROM <"+ sei.getGraph() + ">  WHERE {";
 	}
 
 	/**
