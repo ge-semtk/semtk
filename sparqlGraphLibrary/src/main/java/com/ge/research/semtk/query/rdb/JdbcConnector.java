@@ -152,10 +152,11 @@ public abstract class JdbcConnector extends Connector {
 			throw new Exception("Must specify a query");
 		}
 		
-		// limit to SELECT queries for now
+		// limit queries
 		if((!query.toLowerCase().startsWith("select"))
-		&&(!query.toLowerCase().startsWith("set"))){
-			throw new Exception("Only SELECT or SET queries are currently supported");
+		&&(!query.toLowerCase().startsWith("set"))
+		&&(!query.toLowerCase().startsWith("call"))){
+			throw new Exception("Query is not supported");
 		}
 
 		ArrayList<ArrayList<String>> recs = new ArrayList<ArrayList<String>>();
