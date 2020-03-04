@@ -45,9 +45,11 @@ public class NodegroupProviderRestController {
 			JSONObject sgJsonJson = Utility.getResourceAsJson(this, resourcePath);
 			results.addResult("sgjson", sgJsonJson);
 			results.setSuccess(true);
+			LocalLogger.logToStdOut(ENDPOINT_NAME + ": " + resourcePath + " was found");
 			return results.toJson();
 			
 		} catch(Exception e){
+			LocalLogger.logToStdOut(ENDPOINT_NAME + ": " + resourcePath + " was not found");
 	    	results.setSuccess(false);
 	    	results.addRationaleMessage("NodegroupProvider", ENDPOINT_NAME, e);
 		    LocalLogger.printStackTrace(e);
