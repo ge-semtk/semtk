@@ -160,6 +160,19 @@ public class IngestionRestController {
 	}
 	
 	@CrossOrigin
+	@RequestMapping(value="/fromCsvFilePrecheckOnly", method= RequestMethod.POST)
+	public JSONObject fromCsvFilePrecheckOnly(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			//debug("fromCsvFilePrecheck", templateFile, dataFile);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, true, true);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
 	public JSONObject fromCsvFileWithNewConnectionPrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
