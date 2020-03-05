@@ -127,7 +127,7 @@ public class IngestionRestController {
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFile", templateFile, dataFile);
-			return this.fromAnyCsv(templateFile, dataFile, null, true, false);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, false, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -139,7 +139,7 @@ public class IngestionRestController {
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
-			return this.fromAnyCsv(templateFile, dataFile, connection, true, false);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, false, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -152,7 +152,7 @@ public class IngestionRestController {
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFilePrecheck", templateFile, dataFile);
-			return this.fromAnyCsv(templateFile, dataFile, null, true, true);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, true, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -165,7 +165,7 @@ public class IngestionRestController {
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
-			return this.fromAnyCsv(templateFile, dataFile, connection, true, true);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -219,7 +219,7 @@ public class IngestionRestController {
 		try {
 			// LocalLogger.logToStdErr("the request: " + requestBody);
 			//IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, false);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, false, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -233,7 +233,7 @@ public class IngestionRestController {
 		try {
 			// LocalLogger.logToStdErr("the request: " + requestBody);
 			//IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, false);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, false, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -245,7 +245,19 @@ public class IngestionRestController {
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true, false);
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvPrecheckOnly", method= RequestMethod.POST)
+	public JSONObject fromCsvPrecheckOnly(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true, true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -257,7 +269,7 @@ public class IngestionRestController {
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -312,12 +324,6 @@ public class IngestionRestController {
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);
 		}
-	}
-	/**
-	 * Load data from csv.
-	 */
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck){
-		return fromAnyCsv(templateFile, dataFile, sparqlConnectionOverride, fromFiles, precheck, false); // don't skip ingest
 	}
 	
 	/**
