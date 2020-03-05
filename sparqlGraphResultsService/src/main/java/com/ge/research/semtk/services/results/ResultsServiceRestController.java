@@ -96,7 +96,7 @@ public class ResultsServiceRestController {
 	@Autowired
 	ResultsProperties prop;
 	@Autowired
-	ResultsSemtkEndpointProperties edc_prop;
+	ResultsSemtkEndpointProperties servicesdataset_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
 	@Autowired
@@ -110,7 +110,7 @@ public class ResultsServiceRestController {
 		env_prop.validateWithExit();
 		
 		prop.validateWithExit();
-		edc_prop.validateWithExit();
+		servicesdataset_prop.validateWithExit();
 		log_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		
@@ -876,7 +876,7 @@ public class ResultsServiceRestController {
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
-		return new JobTracker(edc_prop.buildSei());
+		return new JobTracker(servicesdataset_prop.buildSei());
 	}
 	
 	private String getSampleJsonUserURL(String jobId) throws MalformedURLException {

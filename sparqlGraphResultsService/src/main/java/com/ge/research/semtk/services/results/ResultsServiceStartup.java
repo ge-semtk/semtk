@@ -18,17 +18,14 @@
 package com.ge.research.semtk.services.results;
 
 import java.io.File;
-import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.services.results.cleanUp.DeleteThread;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
 
 @Component
 public class ResultsServiceStartup implements ApplicationListener<ApplicationReadyEvent> {
@@ -36,7 +33,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
 	
 	@Autowired
-	ResultsSemtkEndpointProperties edc_prop;
+	ResultsSemtkEndpointProperties servicesdataset_prop;
 	
 	/**
 	 * Code to run after the service starts up.
@@ -103,7 +100,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 			String fileStore = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
 
 			// setup and run the actual thread. 
-			DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, edc_prop);
+			DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, servicesdataset_prop);
 			ripper.start();
 		}
 		else{
