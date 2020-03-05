@@ -19,7 +19,6 @@ package com.ge.research.semtk.services.nodeGroupExecution;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.annotation.PostConstruct;
 
@@ -47,9 +46,7 @@ import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
-import com.ge.research.semtk.edc.resultsStorage.GenericJsonBlobResultsSerializer;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -73,7 +70,6 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvS
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByNodegroupCsvStrRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataClassesRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataPredicatesRequestBody;
-import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.NodegroupRequestBodyPercentMsec;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.StatusRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -105,7 +101,7 @@ public class NodeGroupExecutionRestController {
  	@Autowired
 	private NodegroupExecutionAuthProperties auth_prop;
 	@Autowired
-	NodegroupExecutionSemtkEndpointProperties edc_prop;
+	NodegroupExecutionSemtkEndpointProperties servicesdataset_props;
 	@Autowired
 	NodegroupExecutionLoggingProperties log_prop;
 	@Autowired 
@@ -136,7 +132,7 @@ public class NodeGroupExecutionRestController {
 		ingest_prop.validateWithExit();
 
 
-		edc_prop.validateWithExit();
+		servicesdataset_props.validateWithExit();
 		log_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
@@ -1115,7 +1111,7 @@ public class NodeGroupExecutionRestController {
 				
 				// add connection
 				SparqlEndpointInterface sei = requestBody.buildSei();
-				SparqlEndpointInterface jobSei = edc_prop.buildSei();
+				SparqlEndpointInterface jobSei = servicesdataset_props.buildSei();
 				
 				// PEC TODO security
 				// borrowing auth username password from the services graph
@@ -1128,7 +1124,7 @@ public class NodeGroupExecutionRestController {
 				SparqlExecutor sparqlExec = new SparqlExecutor(
 						SparqlToXUtils.generateClearGraphSparql(sei), 
 						sei, 
-						edc_prop.buildSei(), 
+						servicesdataset_props.buildSei(), 
 						resClient);
 				
 				sparqlExec.start();
@@ -1424,11 +1420,10 @@ public class NodeGroupExecutionRestController {
 		NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
 		DispatchRestClient dispatchclient = new DispatchRestClient(dsConf);
 		ResultsClient resultsclient = new ResultsClient(rConf);
-		StatusClient statusclient = new StatusClient(sConf);
 		IngestorRestClient ingestClient = new IngestorRestClient(iConf);
 		
 		// create the actual executor
-		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, edc_prop.buildSei(), ingestClient);
+		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, servicesdataset_props.buildSei(), ingestClient);
 		if(jobID != null){ retval.setJobID(jobID); }
 		return retval;
 	}
@@ -1471,7 +1466,7 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
-		return new JobTracker(edc_prop.buildSei());
+		return new JobTracker(servicesdataset_props.buildSei());
 	}
 }
 

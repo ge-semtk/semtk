@@ -1314,7 +1314,7 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public boolean uploadOwlModelIfNeeded(InputStream owlInputStream) throws Exception {
 		
-		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("edcServices", this)); 
+		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("name", this));
 
 		byte [] owl = IOUtils.toByteArray(owlInputStream);
 

@@ -41,7 +41,6 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -61,7 +60,7 @@ public class StatusServiceRestController {
 	@Autowired
 	StatusProperties prop;
 	@Autowired
-	StatusSemtkEndpointProperties edc_prop;
+	StatusSemtkEndpointProperties servicesdataset_prop;
 	@Autowired
 	StatusLoggingProperties log_prop;
 	@Autowired
@@ -76,7 +75,7 @@ public class StatusServiceRestController {
 		env_prop.validateWithExit();
 		
 		prop.validateWithExit();
-		edc_prop.validateWithExit();
+		servicesdataset_prop.validateWithExit();
 		log_prop.validateWithExit();
 		
 		auth_prop.validateWithExit();
@@ -248,7 +247,7 @@ public class StatusServiceRestController {
 			final String ENDPOINT_NAME = "getJobTrackerSei";   // HERE
 			SimpleResultSet res = new SimpleResultSet(true);
 			try{
-				res.addResult("seiJson", edc_prop.buildSei().toJson());
+				res.addResult("seiJson", servicesdataset_prop.buildSei().toJson());
 				
 		    } catch (Exception e) {
 		    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
@@ -560,7 +559,7 @@ public class StatusServiceRestController {
 	}
 	
 	private JobTracker getTracker() throws Exception {
-		return new JobTracker(edc_prop.buildSei());
+		return new JobTracker(servicesdataset_prop.buildSei());
 	}
 	
 }
