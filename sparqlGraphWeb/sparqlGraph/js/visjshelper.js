@@ -69,8 +69,6 @@ define([	// properly require.config'ed
 
     VisJsHelper.addJsonLdObject = function(j, nodeList, edgeList) {
 
-        console.log(JSON.stringify(j));
-
         // add the main node
         var shortType = VisJsHelper.getShortType(j);
         var groupVal = VisJsHelper.getLongType(j);
