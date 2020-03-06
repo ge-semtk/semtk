@@ -67,7 +67,7 @@ public class DispatcherServiceRestController {
 	@Autowired
 	DispatchProperties props;
 	@Autowired
-	DispatchSemtkEndpointProperties servicesdataset_props;
+	DispatchSemtkEndpointProperties servicesgraph_props;
 	@Autowired
 	DispatchNGStoreProperties store_props;
 	@Autowired
@@ -84,7 +84,7 @@ public class DispatcherServiceRestController {
     public void init() {
 		props.validateWithExit();
 		store_props.validateWithExit();
-		servicesdataset_props.validateWithExit();
+		servicesgraph_props.validateWithExit();
 		oinfo_props.validateWithExit();
 		status_props.validateWithExit();
 		results_props.validateWithExit();
@@ -244,7 +244,7 @@ public class DispatcherServiceRestController {
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromSparql()", e);
 			
 			try {
-				JobTracker tracker = new JobTracker(servicesdataset_props.buildSei());
+				JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 				tracker.setJobFailure(jobId, e.getMessage());
 			} catch (Exception ee) {
 				LocalLogger.printStackTrace(ee);
@@ -294,7 +294,7 @@ public class DispatcherServiceRestController {
 			retval.addRationaleMessage(SERVICE_NAME, "../queryFromNodegroup()", e);
 			
 			try {
-				JobTracker tracker = new JobTracker(servicesdataset_props.buildSei());
+				JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 				tracker.setJobFailure(jobId, e.getMessage());
 			} catch (Exception ee) {
 				LocalLogger.printStackTrace(ee);
@@ -360,19 +360,19 @@ public class DispatcherServiceRestController {
 		// get clients needed to instantiate the Dispatcher
 		SparqlEndpointInterface servicesSei = null;
 		if(useAuth){
-			servicesSei = SparqlEndpointInterface.getInstance(servicesdataset_props.getEndpointType(), servicesdataset_props.getEndpointServerUrl(), servicesdataset_props.getEndpointDataset(),
-					servicesdataset_props.getEndpointUsername(), servicesdataset_props.getEndpointPassword());
+			servicesSei = SparqlEndpointInterface.getInstance(servicesgraph_props.getEndpointType(), servicesgraph_props.getEndpointServerUrl(), servicesgraph_props.getEndpointDataset(),
+					servicesgraph_props.getEndpointUsername(), servicesgraph_props.getEndpointPassword());
 		} else {
-			servicesSei = SparqlEndpointInterface.getInstance(servicesdataset_props.getEndpointType(), servicesdataset_props.getEndpointServerUrl(), servicesdataset_props.getEndpointDataset());
+			servicesSei = SparqlEndpointInterface.getInstance(servicesgraph_props.getEndpointType(), servicesgraph_props.getEndpointServerUrl(), servicesgraph_props.getEndpointDataset());
 		}		
 		
 		ResultsClientConfig resConfig = new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort());
 		StatusClient sClient = new StatusClient(new StatusClientConfig(status_props.getProtocol(), status_props.getServer(), status_props.getPort()));
-		SparqlEndpointInterface jobTrackerSei = sClient.getJobTrackerSei(servicesdataset_props.getEndpointUsername(), servicesdataset_props.getEndpointPassword());
+		SparqlEndpointInterface jobTrackerSei = sClient.getJobTrackerSei(servicesgraph_props.getEndpointUsername(), servicesgraph_props.getEndpointPassword());
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		NodeGroupStoreRestClient ngStoreClient = new NodeGroupStoreRestClient(new NodeGroupStoreConfig(store_props.getProtocol(), store_props.getServer(), store_props.getPort()));
 
-		JobTracker tracker = new JobTracker(servicesdataset_props.buildSei());
+		JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 		tracker.setJobPercentComplete(jobId, 0, "Job Initialized");
 		
 		// instantiate the dispatcher from the class name 

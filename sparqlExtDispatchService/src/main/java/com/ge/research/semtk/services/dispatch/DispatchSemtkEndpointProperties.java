@@ -26,11 +26,11 @@ import com.ge.research.semtk.properties.SemtkEndpointProperties;
 // subclass simply adds spring annotations including locations
 
 @Configuration
-@ConfigurationProperties(prefix="dispatch.edc.services", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="servicesgraph", ignoreUnknownFields = true)
 public class DispatchSemtkEndpointProperties extends SemtkEndpointProperties {
 
 	public DispatchSemtkEndpointProperties() {
 		super();
-		setPrefix("dispatch.edc.services");
+		setPrefix("servicesgraph");
 	}
 }

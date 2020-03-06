@@ -23,8 +23,7 @@ package com.ge.research.semtk.services.results;
  * Move properties to a common place.
  *    Do we want spring boot dependencies in sparqlGraphLibraries?  Seems bad.
  *    
- * Move query functions (anything that knows the model) to new package in libraries like
- *     com.ge.research.semtk.edc.services
+ * Move query functions (anything that knows the model) to new package
  * What is the best way to use properties in this situation.
  */
 
@@ -96,7 +95,7 @@ public class ResultsServiceRestController {
 	@Autowired
 	ResultsProperties prop;
 	@Autowired
-	ResultsSemtkEndpointProperties servicesdataset_prop;
+	ResultsSemtkEndpointProperties servicesgraph_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
 	@Autowired
@@ -110,7 +109,7 @@ public class ResultsServiceRestController {
 		env_prop.validateWithExit();
 		
 		prop.validateWithExit();
-		servicesdataset_prop.validateWithExit();
+		servicesgraph_prop.validateWithExit();
 		log_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		
@@ -876,7 +875,7 @@ public class ResultsServiceRestController {
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
-		return new JobTracker(servicesdataset_prop.buildSei());
+		return new JobTracker(servicesgraph_prop.buildSei());
 	}
 	
 	private String getSampleJsonUserURL(String jobId) throws MalformedURLException {

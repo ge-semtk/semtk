@@ -33,7 +33,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
 	
 	@Autowired
-	ResultsSemtkEndpointProperties servicesdataset_prop;
+	ResultsSemtkEndpointProperties servicesgraph_prop;
 	
 	/**
 	 * Code to run after the service starts up.
@@ -100,7 +100,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 			String fileStore = event.getApplicationContext().getEnvironment().getProperty("results.fileLocation");
 
 			// setup and run the actual thread. 
-			DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, servicesdataset_prop);
+			DeleteThread ripper = new DeleteThread(fileStore, cleanUpFreq, servicesgraph_prop);
 			ripper.start();
 		}
 		else{

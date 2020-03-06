@@ -60,7 +60,7 @@ public class StatusServiceRestController {
 	@Autowired
 	StatusProperties prop;
 	@Autowired
-	StatusSemtkEndpointProperties servicesdataset_prop;
+	StatusSemtkEndpointProperties servicesgraph_prop;
 	@Autowired
 	StatusLoggingProperties log_prop;
 	@Autowired
@@ -75,7 +75,7 @@ public class StatusServiceRestController {
 		env_prop.validateWithExit();
 		
 		prop.validateWithExit();
-		servicesdataset_prop.validateWithExit();
+		servicesgraph_prop.validateWithExit();
 		log_prop.validateWithExit();
 		
 		auth_prop.validateWithExit();
@@ -247,7 +247,7 @@ public class StatusServiceRestController {
 			final String ENDPOINT_NAME = "getJobTrackerSei";   // HERE
 			SimpleResultSet res = new SimpleResultSet(true);
 			try{
-				res.addResult("seiJson", servicesdataset_prop.buildSei().toJson());
+				res.addResult("seiJson", servicesgraph_prop.buildSei().toJson());
 				
 		    } catch (Exception e) {
 		    	//   LoggerRestClient.easyLog(logger, "ResultsService", "getTableResultsCsv exception", "message", e.toString());
@@ -559,7 +559,7 @@ public class StatusServiceRestController {
 	}
 	
 	private JobTracker getTracker() throws Exception {
-		return new JobTracker(servicesdataset_prop.buildSei());
+		return new JobTracker(servicesgraph_prop.buildSei());
 	}
 	
 }

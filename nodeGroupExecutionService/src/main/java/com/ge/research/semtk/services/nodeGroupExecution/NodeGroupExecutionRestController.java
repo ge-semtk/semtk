@@ -101,7 +101,7 @@ public class NodeGroupExecutionRestController {
  	@Autowired
 	private NodegroupExecutionAuthProperties auth_prop;
 	@Autowired
-	NodegroupExecutionSemtkEndpointProperties servicesdataset_props;
+	NodegroupExecutionSemtkEndpointProperties servicesgraph_props;
 	@Autowired
 	NodegroupExecutionLoggingProperties log_prop;
 	@Autowired 
@@ -132,7 +132,7 @@ public class NodeGroupExecutionRestController {
 		ingest_prop.validateWithExit();
 
 
-		servicesdataset_props.validateWithExit();
+		servicesgraph_props.validateWithExit();
 		log_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
@@ -1111,7 +1111,7 @@ public class NodeGroupExecutionRestController {
 				
 				// add connection
 				SparqlEndpointInterface sei = requestBody.buildSei();
-				SparqlEndpointInterface jobSei = servicesdataset_props.buildSei();
+				SparqlEndpointInterface jobSei = servicesgraph_props.buildSei();
 				
 				// PEC TODO security
 				// borrowing auth username password from the services graph
@@ -1124,7 +1124,7 @@ public class NodeGroupExecutionRestController {
 				SparqlExecutor sparqlExec = new SparqlExecutor(
 						SparqlToXUtils.generateClearGraphSparql(sei), 
 						sei, 
-						servicesdataset_props.buildSei(), 
+						servicesgraph_props.buildSei(), 
 						resClient);
 				
 				sparqlExec.start();
@@ -1423,7 +1423,7 @@ public class NodeGroupExecutionRestController {
 		IngestorRestClient ingestClient = new IngestorRestClient(iConf);
 		
 		// create the actual executor
-		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, servicesdataset_props.buildSei(), ingestClient);
+		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, servicesgraph_props.buildSei(), ingestClient);
 		if(jobID != null){ retval.setJobID(jobID); }
 		return retval;
 	}
@@ -1466,7 +1466,7 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
-		return new JobTracker(servicesdataset_props.buildSei());
+		return new JobTracker(servicesgraph_props.buildSei());
 	}
 }
 
