@@ -24,7 +24,7 @@ import java.util.Date;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
-import com.ge.research.semtk.services.results.ResultsSemtkEndpointProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class DeleteThread extends Thread {
@@ -35,7 +35,7 @@ public class DeleteThread extends Thread {
 	private JobTracker jTracker;
 	private TableResultsStorage trstore;
 	
-	public DeleteThread(String fileStorageLocation, int frequencyInMinutes, ResultsSemtkEndpointProperties edcProp){
+	public DeleteThread(String fileStorageLocation, int frequencyInMinutes, ServicesGraphProperties edcProp){
 		this.locationToDeleteFrom = new File(fileStorageLocation);
 		this.runFrequencyInMilliseconds = frequencyInMinutes * 60 * 1000;
 		this.frequencyInMinutes = frequencyInMinutes;
