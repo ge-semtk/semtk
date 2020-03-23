@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.DataLoader;
@@ -18,11 +19,16 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.InMemoryInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class InMemoryInterfaceTest {
+public class InMemoryInterfaceTest_IT {
 
+	@BeforeClass
+	public static void setup() throws Exception {
+	    IntegrationTestUtility.authenticateJunit();
+	}
 	@Test
 	public void testAsOwlString() throws Exception {
 		InMemoryInterface sei = new InMemoryInterface("http://name");
