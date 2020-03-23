@@ -39,18 +39,18 @@ public class InMemoryInterfaceTest {
 	public void testInsertSelect() throws Exception {
 		InMemoryInterface sei = new InMemoryInterface("http://name");
 		
-		SimpleResultSet res = new SimpleResultSet(sei.executeQueryPost(
+		SimpleResultSet res = (SimpleResultSet) sei.executeQueryAndBuildResultSet(
 				"INSERT DATA " + 
 				"  { GRAPH <urn:sparql:tests:insert:data>   { " + 
 				"        <#book1> <#price> 42  " + 
 				"      }  } ", 
-				SparqlResultTypes.CONFIRM));
+				SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
 		
-		TableResultSet tres = new TableResultSet(sei.executeQueryPost(
+		TableResultSet tres = (TableResultSet) sei.executeQueryAndBuildResultSet(
 				"SELECT * FROM <urn:sparql:tests:insert:data> " + 
 				"WHERE { ?s ?p ?o }", 
-				SparqlResultTypes.TABLE));
+				SparqlResultTypes.TABLE);
 		tres.throwExceptionIfUnsuccessful();
 		Table tab = tres.getTable();
 		assertTrue("Single row was not returned", tab.getNumRows() == 1);
