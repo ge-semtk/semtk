@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -81,6 +82,7 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -92,6 +94,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @RestController
 @RequestMapping("/nodeGroupExecution")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class NodeGroupExecutionRestController {
 	
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
@@ -101,7 +104,7 @@ public class NodeGroupExecutionRestController {
  	@Autowired
 	private NodegroupExecutionAuthProperties auth_prop;
 	@Autowired
-	NodegroupExecutionSemtkEndpointProperties servicesgraph_props;
+	ServicesGraphProperties servicesgraph_props;
 	@Autowired
 	NodegroupExecutionLoggingProperties log_prop;
 	@Autowired 

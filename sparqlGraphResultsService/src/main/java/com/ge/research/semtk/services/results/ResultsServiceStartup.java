@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import com.ge.research.semtk.services.results.cleanUp.DeleteThread;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 @Component
@@ -33,7 +34,7 @@ public class ResultsServiceStartup implements ApplicationListener<ApplicationRea
 	private static final Integer DEFAULT_CLEANUP_FREQUENCY = 120; // time in minutes.
 	
 	@Autowired
-	ResultsSemtkEndpointProperties servicesgraph_prop;
+	ServicesGraphProperties servicesgraph_prop;
 	
 	/**
 	 * Code to run after the service starts up.

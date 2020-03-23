@@ -25,6 +25,7 @@ import javax.annotation.PostConstruct;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,11 +54,13 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 
 @RestController
 @RequestMapping("/dispatcher")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class DispatcherServiceRestController {
  	static final String SERVICE_NAME = "dispatcher";
  	
@@ -67,7 +70,7 @@ public class DispatcherServiceRestController {
 	@Autowired
 	DispatchProperties props;
 	@Autowired
-	DispatchSemtkEndpointProperties servicesgraph_props;
+	ServicesGraphProperties servicesgraph_props;
 	@Autowired
 	DispatchNGStoreProperties store_props;
 	@Autowired

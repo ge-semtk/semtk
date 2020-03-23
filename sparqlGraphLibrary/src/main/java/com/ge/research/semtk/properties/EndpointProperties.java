@@ -58,7 +58,7 @@ public class EndpointProperties extends Properties {
 		checkNotEmpty("endpointType", endpointType);
 		checkNotEmpty("endpointServerUrl", endpointUrl);
 		checkNone("endpointUsername", endpointUsername);
-		checkNone("endpointPassword", endpointPassword);
+		checkNoneMaskValue("endpointPassword", endpointPassword);
 	}
 	
 }

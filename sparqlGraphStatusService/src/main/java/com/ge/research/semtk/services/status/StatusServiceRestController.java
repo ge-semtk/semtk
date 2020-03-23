@@ -21,6 +21,7 @@ package com.ge.research.semtk.services.status;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,6 +44,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -51,16 +53,16 @@ import io.swagger.annotations.ApiOperation;
 /**
  * Service to get status of a query.
  */
-
 @CrossOrigin
 @RestController
 @RequestMapping("/status")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class StatusServiceRestController {
  	static final String SERVICE_NAME = "StatusService";
 	@Autowired
 	StatusProperties prop;
 	@Autowired
-	StatusSemtkEndpointProperties servicesgraph_prop;
+	ServicesGraphProperties servicesgraph_prop;
 	@Autowired
 	StatusLoggingProperties log_prop;
 	@Autowired

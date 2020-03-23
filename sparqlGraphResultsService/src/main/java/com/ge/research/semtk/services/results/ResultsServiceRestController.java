@@ -29,6 +29,7 @@ package com.ge.research.semtk.services.results;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -75,6 +76,7 @@ import com.ge.research.semtk.services.results.requests.ResultsRequestBodyPath;
 import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -89,13 +91,14 @@ import org.springframework.web.multipart.MultipartFile;
 @CrossOrigin
 @RestController
 @RequestMapping("/results")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class ResultsServiceRestController {
  	static final String SERVICE_NAME = "ResultsService";
 
 	@Autowired
 	ResultsProperties prop;
 	@Autowired
-	ResultsSemtkEndpointProperties servicesgraph_prop;
+	ServicesGraphProperties servicesgraph_prop;
 	@Autowired
 	ResultsLoggingProperties log_prop;
 	@Autowired
