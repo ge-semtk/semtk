@@ -80,6 +80,9 @@ public class NodeGroupStoreRestController {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
 
+		// StoreProperties needs to be split up into pieces
+		// and each one validated
+		
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 

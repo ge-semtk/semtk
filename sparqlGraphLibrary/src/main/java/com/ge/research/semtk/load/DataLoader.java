@@ -390,8 +390,8 @@ public class DataLoader implements Runnable {
 		LocalLogger.logToStdOut(" (DONE)", false, true);
 		
 		if (IN_MEMORY) {
-			byte [] owl = inMem.asOwlString().getBytes();
-			this.endpoint.executeAuthUploadOwl(inMem.asOwlString().getBytes());
+			byte [] owl = inMem.dumpToOwl().getBytes();
+			this.endpoint.executeAuthUploadOwl(inMem.dumpToOwl().getBytes());
 		}
 		
 		// tell status client if there is one set up

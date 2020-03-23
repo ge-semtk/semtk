@@ -116,7 +116,7 @@ public class StatusClientTest_IT {
 	}
 	
 	@Test
-	public void testSetFailureTricky() {
+	public void testSetFailureTricky() throws Exception {
 		final String MESSAGE = "Failure message. with 'quoted' and \"double-quoted\" and new\nlines\n";
 		StatusClient client = null;
 		
@@ -136,15 +136,6 @@ public class StatusClientTest_IT {
 			assertTrue(percent == 100);
 			assertTrue(message.equals(MESSAGE));
 					
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
 		} finally {
 			cleanup(client);
 		}
@@ -403,7 +394,7 @@ public class StatusClientTest_IT {
 	}
 	
 	@Test
-	public void testWaitForPercentCompleteImmediate() {
+	public void testWaitForPercentCompleteImmediate() throws Exception {
 		final int PERCENT = 5;
 		
 		StatusClient client = null;
@@ -416,15 +407,6 @@ public class StatusClientTest_IT {
 			client.execWaitForPercentComplete(PERCENT - 1, 100);
 			// succeed
 			
-		} catch (ConnectException e) {
-			e.printStackTrace();
-			fail("No service running at this location.");
-		} catch (EndpointNotFoundException e) {
-			e.printStackTrace();
-			fail("Wrong service running at this location.");
-		} catch (Exception e){
-			e.printStackTrace();
-			fail("Unexpected exception");
 		} finally {
 			cleanup(client);
 		}

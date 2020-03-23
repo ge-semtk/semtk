@@ -347,9 +347,9 @@ public class DataLoaderTest_IT {
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
-		LocalLogger.logToStdOut("Starting load");
+		long start = IntegrationTestUtility.getStartTime();
 		dl.importData(true);
-		LocalLogger.logToStdOut("Finished with load");
+		IntegrationTestUtility.logDuration(start, "testLoadData");
 		
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {

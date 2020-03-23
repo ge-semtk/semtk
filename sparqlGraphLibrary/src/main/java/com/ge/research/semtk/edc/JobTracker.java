@@ -180,11 +180,12 @@ public class JobTracker {
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 	    SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-	    
+	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    res.throwExceptionIfUnsuccessful();
+	    Table tab = res.getTable();
 	     
-	    String trList[] = endpoint.getStringResultsColumn("percentComplete");
-	    this.checkEndpointUserNames(jobId, endpoint);
+	    String trList[] = tab.getColumn("percentComplete");
+	    this.checkEndpointUserNames(jobId, tab);
 	       
 	    if (trList.length > 1) {
 	    	LocalLogger.logToStdErr("getJobPercentComplete found multiple percentComplete entries:\n%s" + endpoint.getResponse());
@@ -341,10 +342,11 @@ public class JobTracker {
 				SparqlToXUtils.safeSparqlString(jobId));
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
-
-	    String trList[] = endpoint.getStringResultsColumn("status");
-	    this.checkEndpointUserNames(jobId, endpoint);
+	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    res.throwExceptionIfUnsuccessful();
+	    Table tab = res.getTable();
+	    String trList[] = tab.getColumn("status");
+	    this.checkEndpointUserNames(jobId, tab);
 		
 		
 		if (trList.length > 1) {
@@ -384,10 +386,13 @@ public class JobTracker {
 				SparqlToXUtils.safeSparqlString(jobId));
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
+	    
+	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    res.throwExceptionIfUnsuccessful();
+	    Table tab = res.getTable();
 
-		String trList[] = endpoint.getStringResultsColumn("statusMessage");
-		this.checkEndpointUserNames(jobId, endpoint);
+	    String trList[] = tab.getColumn("statusMessage");
+		this.checkEndpointUserNames(jobId, tab);
 
 		if (trList.length > 1) {
 			throw new Exception(String.format("Job %s has %d statusMessage entries.  Expecting 1.", jobId, trList.length));
@@ -534,10 +539,12 @@ public class JobTracker {
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
+	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    res.throwExceptionIfUnsuccessful();
+	    Table tab = res.getTable();
 	    
-	    String trList[] = endpoint.getStringResultsColumn("fullUrl");
-	    this.checkEndpointUserNames(jobId, endpoint);
+	    String trList[] = tab.getColumn("fullUrl");
+	    this.checkEndpointUserNames(jobId, tab);
 
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full results URL entries.  Expecting 1.", jobId, trList.length));
@@ -589,10 +596,12 @@ public class JobTracker {
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    endpoint.executeQuery(query, SparqlResultTypes.TABLE);
+	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    res.throwExceptionIfUnsuccessful();
+	    Table tab = res.getTable();
 		
-	    String trList[] = endpoint.getStringResultsColumn("sampleUrl");
-	    this.checkEndpointUserNames(jobId, endpoint);
+	    String trList[] = tab.getColumn("sampleUrl");
+	    this.checkEndpointUserNames(jobId, tab);
 
 	    if (trList.length > 1) {
 	    	throw new Exception(String.format("Job %s has %d full restults URL entries.  Expecting 1.", jobId, trList.length));
@@ -1124,9 +1133,9 @@ public class JobTracker {
 	 * @throws AuthorizationException
 	 * @throws Exception
 	 */
-	private void checkEndpointUserNames(String jobId, SparqlEndpointInterface endpoint) throws AuthorizationException, Exception {
+	private void checkEndpointUserNames(String jobId, Table tab) throws AuthorizationException, Exception {
 		// security
-	    String userList[] = endpoint.getStringResultsColumn("userName");
+	    String userList[] = tab.getColumn("userName");
 	    if (userList.length > 0) {
 	    	for (String user : userList) {
 	    		AuthorizationManager.throwExceptionIfNotJobOwner(user, "jobId=" + jobId);

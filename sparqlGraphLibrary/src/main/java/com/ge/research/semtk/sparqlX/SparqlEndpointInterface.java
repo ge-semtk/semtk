@@ -26,6 +26,7 @@ import java.net.URL;
 import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -103,9 +104,7 @@ public abstract class SparqlEndpointInterface {
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private static URLStreamHandler handler = null; // set only by unit tests
 
-	private JSONObject response = null;
-	private JSONArray resVars = null;
-	private JSONArray resBindings = null;
+	protected Table resTable = null;
 	
 	protected String userName = null;
 	
@@ -353,6 +352,17 @@ public abstract class SparqlEndpointInterface {
 		}
 	}		
 	
+	/**
+	 * Execute a TABLE result query.   High-level helper function.
+	 * @param query
+	 * @return
+	 * @throws Exception if unsuccessful
+	 */
+	public Table executeToTable(String query) throws Exception {
+		TableResultSet res = (TableResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+		res.throwExceptionIfUnsuccessful();
+		return res.getTable();
+	}
 	
 	/**
 	 * Execute query and assemble a GeneralResultSet object.
@@ -892,6 +902,8 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query, retrieving a HashMap of data for a given set of headers.
 	 *
+	 * Note: PEC 3/17/2020 Not sure why this is here.  Only seems to be used by testing.
+	 * 
 	 * @param query	the query
 	 * @param colNames	the headers of the result columns desired.  If null, use all column headers.
 	 * @param expectOneResult if true, expect a single row result per column - if zero or multiple results are returned, then error
@@ -900,22 +912,15 @@ public abstract class SparqlEndpointInterface {
 	 */
 	public HashMap<String,String[]> executeQuery(String query, String[] colNames, boolean expectOneResult) throws Exception {
 
-		executeQuery(query, SparqlResultTypes.TABLE);
-
+		TableResultSet res = (TableResultSet) executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+		Table tab = res.getTable();
 		HashMap<String,String[]> results = new HashMap<String,String[]>();
 		
-		String colArr[] = null;
-		if (colNames != null) {
-			colArr = colNames;
-		} else {
-			List<String> colList = getResultsColumnName();
-			colArr = colList.toArray(new String[colList.size()]);
-			
-		}
+		String colArr[] = tab.getColumnNames();
 		
 		for (String colName: colArr){
 
-			String[] column = getStringResultsColumn(colName);
+			String[] column = tab.getColumn(colName);
 
 			if(expectOneResult){
 				// expect each column to have exactly one entry
@@ -933,130 +938,11 @@ public abstract class SparqlEndpointInterface {
 	}
 
 
-	public JSONObject getResponse() {
-		return this.response;
+	public JSONObject getResponse() throws Exception {
+		return this.resTable.toJson();
 	}
 
-	/**
-	 * Get query results as ints
-	 */
-	public Integer [] getIntResultsColumn(String colName) throws Exception {
-		Integer ret[] = null;
-		String s = null;
-
-		this.checkResultsCol(colName);
-
-		// declare the array and populate it
-		ret = new Integer[this.resBindings.size()];
-		for (int i=0; i < this.resBindings.size(); i++) {
-			if (((JSONObject)this.resBindings.get(i)).containsKey(colName) && 
-					((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).containsKey("value")) {
-				s = (String) ((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).get("value");
-				ret[i] = Integer.parseInt(s);
-			} else {
-				ret[i] = null;
-			}
-		}
-		return ret;
-	}
-
-	/**
-	 * Get query results as Strings
-	 */
-	public String [] getStringResultsColumn(String colName) throws Exception {
-		String ret[] = null;
-
-		this.checkResultsCol(colName);
-
-		// declare the array and populate it
-		ret = new String[this.resBindings.size()];
-		for (int i=0; i < this.resBindings.size(); i++) {
-			if (((JSONObject)this.resBindings.get(i)).containsKey(colName) && 
-					((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).containsKey("value")) {
-					
-				ret[i] = (String) ((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).get("value");
-			} else {
-				ret[i] = null;
-			}
-		}
-		return ret;
-	}
-
-	/**
-	 * Get query results as doubles
-	 */	
-	public Double [] getDoubleResultsColumn(String colName) throws Exception {
-		Double ret[] = null;
-		String s = null;
-
-		this.checkResultsCol(colName);
-
-		// declare the array and populate it
-		ret = new Double[this.resBindings.size()];
-		for (int i=0; i < this.resBindings.size(); i++) {
-			if (((JSONObject)this.resBindings.get(i)).containsKey(colName) && 
-					((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).containsKey("value")) {
-				s = (String) ((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).get("value");
-				ret[i] = Double.parseDouble(s);
-			} else {
-				ret[i] = null;
-			}
-		}
-		return ret;
-	}
-
-	/**
-	 * Get query results as Dates
-	 */
-	public Date [] getDateResultsColumn(String colName) throws Exception {
-		Date[] ret = null;
-		String s = null;
-
-		this.checkResultsCol(colName);
-
-		// declare the array and populate it
-		ret = new Date[this.resBindings.size()];
-		for (int i=0; i < this.resBindings.size(); i++) {
-			if (((JSONObject)this.resBindings.get(i)).containsKey(colName) && 
-					((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).containsKey("value")) {
-				s = (String) ((JSONObject)((JSONObject)this.resBindings.get(i)).get(colName)).get("value");
-				ret[i] = SparqlEndpointInterface.DATE_FORMAT.parse(s);
-			} else {
-				ret[i] = null;
-			}
-		}
-		return ret;
-	}
-
-	/**
-	 * Check if the query results contain a given column name (throw exception if not)
-	 */
-	public void checkResultsCol(String colName) throws Exception {
-		int col = -1;
-
-		// find column
-		for (int i=0; i < this.resVars.size(); i++) {
-			if (((String)this.resVars.get(i)).equals(colName)) {
-				col = i;
-				break;
-			}
-		}
-		if (col == -1)
-			throw new Exception(String.format("SparqlEndpointInterface: Asked for column %s which was not returned by the Sparql query.", colName));
-	}
-
-
-	/**
-	 * Return all result column names.
-	 */
-	public ArrayList<String> getResultsColumnName(){
-		ArrayList<String> retval = new ArrayList<String>();
-		for (int i=0; i < this.resVars.size(); i++) {
-			retval.add((String)(this.resVars.get(i)));
-		}
-		return retval;
-	}
-
+	
 
 	/**
 	 * Get a results content type to be set in the HTTP header.
@@ -1094,13 +980,11 @@ public abstract class SparqlEndpointInterface {
 		// null is default assumption that one meant a tabular result.
 		if(resultType == SparqlResultTypes.TABLE) {
 			JSONObject resp = (JSONObject) responseObj;
-			this.response = resp;
-			this.resVars = this.getHeadVars(resp);
-			this.resBindings = this.getResultsBindings((JSONObject) resp);
-			
+
+			this.resTable = this.getTable(this.getHeadVars(resp), this.getResultsBindings((JSONObject) resp));
 			// put on the results
 			retval = new JSONObject();
-			retval.put(TableResultSet.TABLE_JSONKEY, this.getTableJSON(this.resVars, this.resBindings));	// @table		
+			retval.put(TableResultSet.TABLE_JSONKEY, this.resTable.toJson());		
 			
 		} else if (resultType == SparqlResultTypes.CONFIRM) {
 			
@@ -1220,7 +1104,7 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception 
 	 */
-	private JSONObject getTableJSON(JSONArray colNamesJsonArray, JSONArray rowsJsonArray) throws Exception{
+	private Table getTable(JSONArray colNamesJsonArray, JSONArray rowsJsonArray) throws Exception{
 
 		String key, valueValue, valueType, valueDataType;
 		JSONObject jsonCell;
@@ -1297,10 +1181,8 @@ public abstract class SparqlEndpointInterface {
 		String[] colsForNewTableArray = colsForNewTable.toArray(new String[0]);
 		String[] colTypesForNewTableArray = colTypesForNewTable.toArray(new String[0]);
 		// create JSON to return 
-		Table table = new Table(colsForNewTableArray, colTypesForNewTableArray, rowsForNewTable);  
+		return new Table(colsForNewTableArray, colTypesForNewTableArray, rowsForNewTable);  
 		
-		JSONObject tableJson = table.toJson();
-		return tableJson;
 	}	
 	
 	/**
@@ -1328,4 +1210,111 @@ public abstract class SparqlEndpointInterface {
 	}
 
 	public abstract SparqlEndpointInterface copy() throws Exception;
+	
+	/**
+	 * Get query results as ints
+	* 
+	 * Deprecated in favor of executeToTable()
+	 */
+	@Deprecated
+	public Integer [] getIntResultsColumn(String colName) throws Exception {
+		Integer ret[] = null;
+
+		this.checkResultsCol(colName);
+		int col = this.resTable.getColumnIndex(colName);
+		
+		ret = new Integer[this.resTable.getNumRows()];
+		for (int i=0; i < this.resTable.getNumRows(); i++) {
+			if (this.resTable.getCell(0,  col).length() < 1) {
+				ret[i] = null;
+			} else {
+				ret[i] = this.resTable.getCellAsInt(0,  col);
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Get query results as Strings
+	 * 
+	 * Deprecated in favor of executeToTable()
+	 */
+	@Deprecated
+	public String [] getStringResultsColumn(String colName) throws Exception {
+		String ret[] = null;
+
+		this.checkResultsCol(colName);
+		return this.resTable.getColumn(colName);
+	}
+
+	/**
+	 * Get query results as doubles
+	 * 
+	 * Deprecated in favor of executeToTable()
+	 */
+	@Deprecated
+	public Double [] getDoubleResultsColumn(String colName) throws Exception {
+		Double ret[] = null;
+		String s = null;
+
+		this.checkResultsCol(colName);
+		int col = this.resTable.getColumnIndex(colName);
+		
+		ret = new Double[this.resTable.getNumRows()];
+		for (int i=0; i < this.resTable.getNumRows(); i++) {
+			if (this.resTable.getCell(0,  col).length() < 1) {
+				ret[i] = null;
+			} else {
+				ret[i] = new Double(this.resTable.getCellAsFloat(0,  col));
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Get query results as Dates
+	 * 
+	 * Deprecated in favor of executeToTable()
+	 */
+	@Deprecated
+	public Date [] getDateResultsColumn(String colName) throws Exception {
+		Date[] ret = null;
+		String s = null;
+
+		this.checkResultsCol(colName);
+		int col = this.resTable.getColumnIndex(colName);
+		
+		ret = new Date[this.resTable.getNumRows()];
+		for (int i=0; i < this.resTable.getNumRows(); i++) {
+			if (this.resTable.getCell(0,  col).length() < 1) {
+				ret[i] = null;
+			} else {
+				ret[i] = SparqlEndpointInterface.DATE_FORMAT.parse(this.resTable.getCell(0,  col));
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Check if the query results contain a given column name (throw exception if not)
+	 * 
+	 * Deprecated in favor of executeToTable()
+	 */
+	@Deprecated 
+	public void checkResultsCol(String colName) throws Exception {
+		if (this.resTable.getColumnIndex(colName) == -1)
+			throw new Exception(String.format("SparqlEndpointInterface: Asked for column %s which was not returned by the Sparql query.", colName));
+	}
+
+
+	/**
+	 * Return all result column names.
+	 * 
+	 * Deprecated in favor of executeToTable()
+	 */
+	@Deprecated
+	public ArrayList<String> getResultsColumnName(){
+		return new ArrayList<String>(Arrays.asList(this.resTable.getColumnNames()));
+	}
+
 }

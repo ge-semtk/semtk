@@ -531,17 +531,6 @@ public class OntologyInfo {
 	}
 	
 	/**
-	 * return the complete list of single-hop connections between the given class and all
-	 * of the other known classes.
-	 **/
-	public ArrayList<String> getConnectionList(String classNameString) throws Exception{
-		ArrayList<String> retval = new ArrayList<String>();
-		// TODO: actual method.
-		throw new Exception("getConnectionList: method not implemented.");
-		
-		// return retval;
-	}
-	/**
 	 * returns true/false value of whether a class is known to the OntologyInfo object
 	 **/
 	public Boolean containsClass(String classNameString){
@@ -1004,13 +993,6 @@ public class OntologyInfo {
 		return retval;
 	}
 	
-	// Ravi's original solution 12/2/2016
-	private static String buildListMemberSPARQL1(String varName, String classVar, String filter) {
-		restCount += 1;
-		return String.format("{ {%s rdf:first %s %s.} UNION {%s rdf:rest+ ?Rest%d. ?Rest%d rdf:first %s %s.} }  ", 
-							 varName, classVar, filter, varName, restCount, restCount, classVar, filter );
-	}
-	
 	// Ravi's revised simpler solution 12/05/2016
 	private static String buildListMemberSPARQL(String varName, String classVar, String filter) {
 		restCount += 1;
@@ -1355,31 +1337,31 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	public void load(SparqlEndpointInterface endpoint, String domain, boolean owlImportFlag) throws Exception {
-		
+		Table tab;
 		// find, then recursively load owl imports
 		if (owlImportFlag) {
-			endpoint.executeQuery(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()), SparqlResultTypes.TABLE);
-			this.loadOwlImports(endpoint, endpoint.getStringResultsColumn("importee"));
+			tab = endpoint.executeQueryToTable(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()));
+			this.loadOwlImports(endpoint, tab.getColumn("importee"));
 		}
 		
 		// execute each sub-query in order
-		endpoint.executeQuery(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
-		this.loadSuperSubClasses(endpoint.getStringResultsColumn("x"), endpoint.getStringResultsColumn("y"));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain));
+		this.loadSuperSubClasses(tab.getColumn("x"), tab.getColumn("y"));
 		
-		endpoint.executeQuery(OntologyInfo.getTopLevelClassQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
-		this.loadTopLevelClasses(endpoint.getStringResultsColumn("Class"));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getTopLevelClassQuery(endpoint.getGraph(), domain));
+		this.loadTopLevelClasses(tab.getColumn("Class"));
 		
-		endpoint.executeQuery(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
-		this.loadProperties(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("Property"),endpoint.getStringResultsColumn("Range"));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));
+		this.loadProperties(tab.getColumn("Class"),tab.getColumn("Property"),tab.getColumn("Range"));
 		
-		endpoint.executeQuery(OntologyInfo.getEnumQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
-		this.loadEnums(endpoint.getStringResultsColumn("Class"),endpoint.getStringResultsColumn("EnumVal"));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getEnumQuery(endpoint.getGraph(), domain));
+		this.loadEnums(tab.getColumn("Class"),tab.getColumn("EnumVal"));
 		
-		endpoint.executeQuery(OntologyInfo.getAnnotationLabelsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
-		this.loadAnnotationLabels(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Label"));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationLabelsQuery(endpoint.getGraph(), domain));
+		this.loadAnnotationLabels(tab.getColumn("Elem"), tab.getColumn("Label"));
 		
-		endpoint.executeQuery(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain), SparqlResultTypes.TABLE);
-		this.loadAnnotationComments(endpoint.getStringResultsColumn("Elem"), endpoint.getStringResultsColumn("Comment"));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain));
+		this.loadAnnotationComments(tab.getColumn("Elem"), tab.getColumn("Comment"));
 		
 		this.validate();
 	}
@@ -1765,7 +1747,8 @@ public class OntologyInfo {
     
     
     // --------------------------------------------------------- Advanced Client Json ---------------------------------------------
-    public JSONObject toAdvancedClientJson() throws ClassException, PathException{
+    @SuppressWarnings("unchecked")
+	public JSONObject toAdvancedClientJson() throws ClassException, PathException{
     	// return the advanced client Json format
     	JSONObject retval = new JSONObject();
     	
@@ -1812,8 +1795,7 @@ public class OntologyInfo {
     			
     			if(oClass.getProperty(key) != null){
     				// we found one. as a result, this will be prefixed and added.
-    				OntologyProperty currPropInstance = oClass.getProperty(key);
-    				String classId = Utility.prefixURI(oClassKey, prefixes);
+       				String classId = Utility.prefixURI(oClassKey, prefixes);
     				domain.add(classId);
     			}
     			
@@ -1916,7 +1898,7 @@ public class OntologyInfo {
     	
     	String creationTime = ( new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime()) );
     	
-    	retval.put("version", this.JSON_VERSION);
+    	retval.put("version", JSON_VERSION);
     	retval.put("generated", creationTime);
     	
     	if(this.modelConnection != null){

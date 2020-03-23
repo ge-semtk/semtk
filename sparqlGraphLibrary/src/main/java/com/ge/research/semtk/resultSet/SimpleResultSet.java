@@ -38,6 +38,11 @@ public class SimpleResultSet extends GeneralResultSet{
 		super();		
 	}	
 	
+	public SimpleResultSet(JSONObject encoded) throws EndpointNotFoundException {
+		super();
+		this.readJson(encoded);
+	}
+	
 	public SimpleResultSet(Boolean succeeded) {
 		super(succeeded);
 	}
