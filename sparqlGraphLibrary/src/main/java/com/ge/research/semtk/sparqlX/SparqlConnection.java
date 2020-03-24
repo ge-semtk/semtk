@@ -302,19 +302,11 @@ public class SparqlConnection {
 	}
 	
 	public SparqlEndpointInterface getInsertInterface() throws Exception {
-		if (this.dataInterfaces.size() == 1) {
-			return this.dataInterfaces.get(0);
-		} else {
-			throw new Exception("Expecting one data endpoint for INSERT.  Found " + this.dataInterfaces.size());
-		}
+		return this.dataInterfaces.get(0);
 	}
 	
 	public SparqlEndpointInterface getDeleteInterface() throws Exception {
-		if (this.dataInterfaces.size() == 1) {
-			return this.dataInterfaces.get(0);
-		} else {
-			throw new Exception("Expecting one data endpoint for DELETE.  Found " + this.dataInterfaces.size());
-		}
+		return this.dataInterfaces.get(0);
 	}
 	
 	public boolean isOwlImportsEnabled() {

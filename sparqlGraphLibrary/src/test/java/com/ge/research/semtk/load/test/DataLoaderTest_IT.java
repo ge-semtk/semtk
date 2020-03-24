@@ -806,6 +806,7 @@ public class DataLoaderTest_IT {
 			LocalLogger.logToStdErr(err.toCSVString());
 			fail();
 		}
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestDuraBatteryFirst4Results.csv");
 
 		// the real test
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookXNodes.json");
@@ -819,6 +820,58 @@ public class DataLoaderTest_IT {
 		}
 
 		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestDuraBatteryLookXNodesResults.csv");
+	}
+	
+	@Test
+	public void testLoadLookXNodesTwoConn() throws Exception {
+		// Repeat testLoadLookXNodes() with an extra data connection
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup as normal
+		TestGraph.clearGraph();
+		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import durabattery first4 as normal
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestDuraBatteryFirst4Results.csv");
+
+		// the real test.   Note that "both" means standard model + data
+		SparqlEndpointInterface seiBoth = TestGraph.getSei();
+		SparqlEndpointInterface seiData0 = TestGraph.getSei(TestGraph.generateGraphName("data0"));
+		seiData0.clearGraph();
+		SparqlConnection connBoth = TestGraph.getSparqlConn();
+		
+		SparqlConnection connBothPlusData0 = TestGraph.getSparqlConn();
+		connBothPlusData0.clearDataInterfaces();
+		connBothPlusData0.addDataInterface(seiData0);
+		connBothPlusData0.addDataInterface(seiBoth);
+		
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookXNodes.json");
+		sgJson.setSparqlConn(connBothPlusData0);
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookXNodesData.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		// query both graphs should get full results
+		String query = sgJson.getNodeGroup().generateSparqlSelect();
+		IntegrationTestUtility.querySeiAndCheckResults(query, seiBoth, this, "/loadTestDuraBatteryLookXNodesResults.csv");
+		
+		// generate query with only "both" sei in the FROM clause should only return original load
+		sgJson.setSparqlConn(TestGraph.getSparqlConn());
+		query = sgJson.getNodeGroup().generateSparqlSelect();
+		IntegrationTestUtility.querySeiAndCheckResults(query, seiBoth, this, "/loadTestDuraBatteryFirst4Results.csv");
 	}
 	
 	@Test
@@ -1189,6 +1242,7 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		assertEquals(dl.getTotalRecordsProcessed(), 4);
+		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/sampleBatteryResults.csv");
 	}
 	
 

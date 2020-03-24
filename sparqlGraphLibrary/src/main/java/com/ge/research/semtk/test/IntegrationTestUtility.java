@@ -451,6 +451,12 @@ public class IntegrationTestUtility {
 		IntegrationTestUtility.compareResults(actual, caller, expectedFileName);
 	}
 	
+	public static void querySeiAndCheckResults(String query, SparqlEndpointInterface sei, Object caller, String expectedFileName) throws Exception {
+		Table tab = sei.executeQueryToTable(query);
+		String actual = tab.toCSVString();
+		IntegrationTestUtility.compareResults(actual, caller, expectedFileName);
+	}
+	
 	public static long getStartTime() {
 		return System.currentTimeMillis();
 	}

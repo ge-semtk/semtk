@@ -107,6 +107,7 @@ define([	// properly require.config'ed
                             </select> \
                         </div></div> \
                         <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Graph:</label><div class="controls"><input type="text" class="input-xlarge" id="mdGraph" list="mdDatalistGraphs" ></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS1">Usage info:</label><div class="controls"><span class="label" id="mdSeiInfo"></span></div></div>\
                         <div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
                             <button type="button" class="btn" id="mdSeiDelete">Delete</button>\
                         </div>\
@@ -421,6 +422,19 @@ define([	// properly require.config'ed
                 document.getElementById("mdSelectSeiType").disabled=false;
                 document.getElementById("mdServerURL").disabled=false;
                 document.getElementById("mdGraph").disabled=false;
+
+                var label = document.getElementById("mdSeiInfo");
+
+                if (seiType == "m") {
+                    label.className = "label label-inverse";
+                    label.innerHTML = "Read model";
+                } else if (seiIndex == 0) {
+                    label.className = "label label-success";
+                    label.innerHTML = "Select / Insert / Delete";
+                } else {
+                    label.className = "label label-inverse";
+                    label.innerHTML = "Select-only";
+                }
             } else {
                 document.getElementById("mdSelectSeiType").selectedIndex = 1;
                 document.getElementById("mdServerURL").value = "";
@@ -429,6 +443,11 @@ define([	// properly require.config'ed
                 document.getElementById("mdSelectSeiType").disabled=true;
                 document.getElementById("mdServerURL").disabled=true;
                 document.getElementById("mdGraph").disabled=true;
+
+                var label = document.getElementById("mdSeiInfo");
+
+                label.className = "label";
+                label.innerHTML = "";
             }
 
             this.updateDatalists();
