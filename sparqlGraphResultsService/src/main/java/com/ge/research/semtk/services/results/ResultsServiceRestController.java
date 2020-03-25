@@ -75,6 +75,7 @@ import com.ge.research.semtk.services.results.requests.ResultsRequestBodyMaxRows
 import com.ge.research.semtk.services.results.requests.ResultsRequestBodyPath;
 import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -102,7 +103,7 @@ public class ResultsServiceRestController {
 	@Autowired
 	ResultsLoggingProperties log_prop;
 	@Autowired
-	ResultsAuthProperties auth_prop; 
+	AuthProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	

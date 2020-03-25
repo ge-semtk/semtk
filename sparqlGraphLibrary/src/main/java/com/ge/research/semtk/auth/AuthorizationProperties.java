@@ -16,6 +16,8 @@
  */
 package com.ge.research.semtk.auth;
 
+import org.json.simple.JSONObject;
+
 import com.ge.research.semtk.properties.Properties;
 
 public class AuthorizationProperties extends Properties {
@@ -25,6 +27,11 @@ public class AuthorizationProperties extends Properties {
 	String usernameKey = "user_name";
 	String groupKey = "group";
 
+	/**
+	 * Return json version so that SpringUtilLibrary isn't compiled into SparqlGraphLibrary
+	 * @return
+	 */
+	
 	public String getLogPath() {
 		return logPath;
 	}

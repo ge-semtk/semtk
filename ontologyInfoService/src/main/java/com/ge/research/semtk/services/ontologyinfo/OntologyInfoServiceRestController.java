@@ -25,6 +25,7 @@ import javax.annotation.PostConstruct;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -45,6 +46,7 @@ import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -53,6 +55,7 @@ import io.swagger.annotations.ApiOperation;
 @CrossOrigin
 @RestController
 @RequestMapping("/ontologyinfo")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class OntologyInfoServiceRestController {
  	static final String SERVICE_NAME = "ontologyInfoService";
 
@@ -65,7 +68,7 @@ public class OntologyInfoServiceRestController {
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	OntologyInfoAuthProperties auth_prop;
+	AuthProperties auth_prop;
 
 	@PostConstruct
     public void init() {

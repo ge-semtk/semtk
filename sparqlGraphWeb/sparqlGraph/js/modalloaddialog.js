@@ -541,7 +541,11 @@ define([	// properly require.config'ed
             }.bind(this);
 
             this.storeDisplayedProfile();
-            this.validateThisConnAsync(success);
+            if (this.conn) {
+                this.validateThisConnAsync(success);
+            } else {
+                success();
+            }
         },
 
         // External
@@ -970,6 +974,11 @@ define([	// properly require.config'ed
         // sort the profiles select, preserving selectedIndex
         sortProfiles : function () {
             var select = this.document.getElementById("mdSelectProfiles");
+
+            // do nothing if select is empty
+            if ( ! select[this.displayedIndex]) {
+                return;
+            }
 
             // check for selectedIndex
             var selectedValue = null;

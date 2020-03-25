@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2018 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +14,23 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-
-package com.ge.research.semtk.services.nodegroupStore.service;
+package com.ge.research.semtk.springutillib.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.ge.research.semtk.auth.AuthorizationProperties;
 @Configuration
-@ConfigurationProperties(prefix="ngstore", ignoreUnknownFields = true)
-public class StoreProperties {
+@ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
+public class AuthProperties extends AuthorizationProperties {
 	
-	// everything successfully moved out
+	/**
+	 * Exists so that SpringUtilLibrary isn't compiled into SparqlGraphLibrary
+	 */
+	public AuthProperties() {
+		super();
+		setPrefix("auth");
+	}
+	
 
 }

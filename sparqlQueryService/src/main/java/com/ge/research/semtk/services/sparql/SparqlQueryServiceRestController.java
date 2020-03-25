@@ -21,6 +21,7 @@ package com.ge.research.semtk.services.sparql;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -58,6 +59,7 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -87,6 +89,7 @@ import io.swagger.annotations.ApiOperation;
  */
 @RestController
 @RequestMapping("/sparqlQueryService")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class SparqlQueryServiceRestController {			
  	static final String SERVICE_NAME = "sparqlQueryService";
 	
@@ -103,7 +106,7 @@ public class SparqlQueryServiceRestController {
 	@Autowired
 	private QueryUploadNeptuneProperties serviceProps; 
 	@Autowired
-	private SparqlQueryAuthProperties auth_prop; 
+	private AuthProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	

@@ -31,11 +31,13 @@ import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -62,6 +64,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/nodeGroup")
 @CrossOrigin
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class NodeGroupServiceRestController {
  	static final String SERVICE_NAME = "nodeGroupService";
 
@@ -75,7 +78,7 @@ public class NodeGroupServiceRestController {
 	@Autowired
 	OInfoServiceProperties oinfo_props;
 	@Autowired
-	private NodeGroupServiceAuthProperties auth_prop;
+	private AuthProperties auth_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	

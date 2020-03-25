@@ -43,6 +43,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -66,7 +67,7 @@ public class StatusServiceRestController {
 	@Autowired
 	StatusLoggingProperties log_prop;
 	@Autowired
-	StatusAuthProperties auth_prop;
+	AuthProperties auth_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	

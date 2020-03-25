@@ -81,6 +81,7 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -102,7 +103,7 @@ public class NodeGroupExecutionRestController {
  	
  	// updated
  	@Autowired
-	private NodegroupExecutionAuthProperties auth_prop;
+	private AuthProperties auth_prop;
 	@Autowired
 	ServicesGraphProperties servicesgraph_props;
 	@Autowired

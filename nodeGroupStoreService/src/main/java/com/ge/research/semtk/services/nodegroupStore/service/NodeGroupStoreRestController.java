@@ -27,6 +27,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,7 +40,9 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
@@ -54,6 +57,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 @RestController
 @RequestMapping("/nodeGroupStore")
 @CrossOrigin
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class NodeGroupStoreRestController {
 
 	
@@ -70,9 +74,11 @@ public class NodeGroupStoreRestController {
 	private ApplicationContext appContext;
 	@Autowired
 	StoreProperties prop;
+
 	@Autowired
-	NodeGroupStoreAuthProperties auth_prop;
-	
+	AuthProperties auth_prop;
+	@Autowired
+	ServicesGraphProperties servicesgraph_prop;
 	private static final String SERVICE_NAME="nodeGroupStore";
 	
 	@PostConstruct
@@ -82,6 +88,8 @@ public class NodeGroupStoreRestController {
 
 		// StoreProperties needs to be split up into pieces
 		// and each one validated
+		// then put demo nodegroup into store
+		servicesgraph_prop.validateWithExit();
 		
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
@@ -107,7 +115,7 @@ public class NodeGroupStoreRestController {
 				requestBody.validate();	
 	
 				// check that the ID does not already exist. if it does, fail.
-				NgStore store = new NgStore(this.createSei());
+				NgStore store = new NgStore(servicesgraph_prop.buildSei());
 				Table instanceTable = store.getNodegroupTable(requestBody.getName(), true);
 				
 				if(instanceTable.getNumRows() > 0){
@@ -148,7 +156,7 @@ public class NodeGroupStoreRestController {
 
 			TableResultSet retval = new TableResultSet();	
 			try{
-				NgStore store = new NgStore(this.createSei());
+				NgStore store = new NgStore(servicesgraph_prop.buildSei());
 				Table ngTab = store.getNodegroupTable(requestBody.getId(), true);
 				
 				retval.setSuccess(true);
@@ -176,7 +184,7 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = new TableResultSet(true);		
 	
 			try{
-				NgStore store = new NgStore(this.createSei());
+				NgStore store = new NgStore(servicesgraph_prop.buildSei());
 				Table tab = store.getFullNodeGroupList(true);
 				retval.addResults(tab);
 				retval.setSuccess(true);
@@ -203,7 +211,7 @@ public class NodeGroupStoreRestController {
 			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupMetadata";
 			TableResultSet retval = new TableResultSet();		
 			try{
-				NgStore store = new NgStore(this.createSei());
+				NgStore store = new NgStore(servicesgraph_prop.buildSei());
 				Table tab = store.getNodeGroupMetadata(true);
 				retval.addResults(tab);
 				retval.setSuccess(true);
@@ -230,7 +238,7 @@ public class NodeGroupStoreRestController {
 	
 			try{
 				// get the nodegroup
-				NgStore store = new NgStore(this.createSei());
+				NgStore store = new NgStore(servicesgraph_prop.buildSei());
 				Table tbl = store.getNodegroupTable(requestBody.getId(), true);
 
 				if(tbl.getNumRows() > 0){
@@ -293,7 +301,7 @@ public class NodeGroupStoreRestController {
 			// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
 			// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
 	
-			NgStore store = new NgStore(this.createSei());
+			NgStore store = new NgStore(servicesgraph_prop.buildSei());
 
 	
 			try{
@@ -315,19 +323,6 @@ public class NodeGroupStoreRestController {
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
-	}
-	
-	private SparqlEndpointInterface createSei() throws Exception{
-
-		SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(	
-				prop.getSparqlConnType(), 
-				prop.getSparqlConnServerAndPort(), 
-				prop.getSparqlConnDataDataset(),
-				prop.getSparqlServiceUser(),
-				prop.getSparqlServicePass()
-				);
-
-		return ret;
 	}
 	
 	

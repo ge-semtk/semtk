@@ -53,6 +53,7 @@ import com.ge.research.semtk.sparqlX.BadQueryException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
@@ -65,7 +66,7 @@ public class DispatcherServiceRestController {
  	static final String SERVICE_NAME = "dispatcher";
  	
 	@Autowired
-	DispatcherAuthProperties auth_prop;
+	AuthProperties auth_prop;
 	
 	@Autowired
 	DispatchProperties props;

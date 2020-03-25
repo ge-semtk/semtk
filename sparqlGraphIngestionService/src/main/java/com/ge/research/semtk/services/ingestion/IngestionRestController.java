@@ -31,6 +31,7 @@ import javax.validation.constraints.Size;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +50,7 @@ import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -79,10 +81,11 @@ import com.ge.research.semtk.resultSet.TableResultSet;
  */
 @RestController
 @RequestMapping("/ingestion")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class IngestionRestController {
  
 	@Autowired
-	IngestionAuthProperties auth_prop;
+	AuthProperties auth_prop;
 	
 	@Autowired
 	IngestionProperties prop;
