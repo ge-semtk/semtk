@@ -103,28 +103,25 @@ public class DataLoaderTest_InMemory_IT {
 		
 		long start = IntegrationTestUtility.getStartTime();
 		dl.importData(true);
-		IntegrationTestUtility.logDuration(start, "done with import");
+		IntegrationTestUtility.logDuration(start, "done with import");		
+		
 		String resOwl = sei.dumpToOwl();
 		TestGraph.uploadOwlString(resOwl);
-		
-		/** try this next but can't get the compile to work
-		String resOwl = sei.dumpToTurtle();
-		TestGraph.uploadTurtleString(resOwl);
-		**/
-		
 		IntegrationTestUtility.logDuration(start, "testLoadData done upload owl");
 		
+		// no loading errors
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
 			LocalLogger.logToStdErr(err.toCSVString());
 			fail();
 		}
-
 		assertEquals(dl.getTotalRecordsProcessed(), 1998);
 		
+		// query back from sei
 		IntegrationTestUtility.querySeiAndCheckResults(sgJson.getNodeGroup(), sei, this, "/loadTestResults.csv");
 		
-		TestGraph.queryAndCheckResults(sgJson.getNodeGroup(), this, "/loadTestResults.csv");
+		// query back from TestGraph
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestResults.csv");
 		
 	}
 	

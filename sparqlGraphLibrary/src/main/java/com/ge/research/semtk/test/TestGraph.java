@@ -333,10 +333,13 @@ public class TestGraph {
 	 * @throws Exception
 	 */
 	public static NodeGroup getNodeGroup(String jsonFilename) throws Exception {
-		
-		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroup();
+		// get nodegroup with TestGraph's oInfo
+		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
+	public static NodeGroup getNodeGroupWithOInfo(SparqlGraphJson sgjson) throws Exception {
+		return sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
+	}
 	/**
 	 * Get SparqlGraphJson modified with Test connection
 	 * @param jsonFilename
@@ -451,7 +454,8 @@ public class TestGraph {
 	 * @param expectedFileName
 	 * @throws Exception
 	 */	
-	public static void queryAndCheckResults(NodeGroup ng, Object caller, String expectedFileName) throws Exception {
+	public static void queryAndCheckResults(SparqlGraphJson sgjson, Object caller, String expectedFileName) throws Exception {
+		NodeGroup ng = sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
 		IntegrationTestUtility.querySeiAndCheckResults(ng, TestGraph.getSei(), caller, expectedFileName);
 	}
 	
