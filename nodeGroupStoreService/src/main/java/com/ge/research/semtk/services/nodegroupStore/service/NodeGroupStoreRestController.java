@@ -17,6 +17,7 @@
 
 package com.ge.research.semtk.services.nodegroupStore.service;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -46,12 +47,17 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.DataLoader;
+import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @RestController
@@ -82,7 +88,7 @@ public class NodeGroupStoreRestController {
 	private static final String SERVICE_NAME="nodeGroupStore";
 	
 	@PostConstruct
-    public void init() {
+    public void init() throws Exception {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
 
@@ -93,7 +99,27 @@ public class NodeGroupStoreRestController {
 		
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
-
+		
+		// upload model
+		SparqlEndpointInterface modelSei = this.getStoreModelSei();
+		InputStream owlStream = NodeGroup.class.getResourceAsStream("/semantics/OwlModels/prefabNodeGroup.owl");
+		modelSei.uploadOwlModelIfNeeded(owlStream);
+		
+		// load demo nodegroup
+//		JSONObject sgJsonJson = Utility.getResourceAsJson(this, "/nodegroups/demoNodegroup.json");
+//		SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
+//		SparqlEndpointInterface demoSei = servicesgraph_prop.buildSei();
+//		demoSei.setGraph("http://semtk/demo");
+//		SparqlConnection demoConn = new SparqlConnection("demoConn", demoSei);
+//		sgJson.setSparqlConn(demoConn);
+//		NgStore store = new NgStore(this.createStoreSei());	
+//		JSONObject connJson = sgJson.getSparqlConnJson();
+//		store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK", true);
+//		
+//		Dataset ds = new CSVDataset("src/test/resources/testTransforms.csv", false);
+//		DataLoader dl = new DataLoader(sgJson, ds, demoSei.getUserName(), demoSei.getPassword());
+		
+		
 	}
 	
 	/**
@@ -115,7 +141,7 @@ public class NodeGroupStoreRestController {
 				requestBody.validate();	
 	
 				// check that the ID does not already exist. if it does, fail.
-				NgStore store = new NgStore(servicesgraph_prop.buildSei());
+				NgStore store = new NgStore(this.getStoreDataSei());
 				Table instanceTable = store.getNodegroupTable(requestBody.getName(), true);
 				
 				if(instanceTable.getNumRows() > 0){
@@ -156,7 +182,7 @@ public class NodeGroupStoreRestController {
 
 			TableResultSet retval = new TableResultSet();	
 			try{
-				NgStore store = new NgStore(servicesgraph_prop.buildSei());
+				NgStore store = new NgStore(this.getStoreDataSei());
 				Table ngTab = store.getNodegroupTable(requestBody.getId(), true);
 				
 				retval.setSuccess(true);
@@ -184,7 +210,7 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = new TableResultSet(true);		
 	
 			try{
-				NgStore store = new NgStore(servicesgraph_prop.buildSei());
+				NgStore store = new NgStore(this.getStoreDataSei());
 				Table tab = store.getFullNodeGroupList(true);
 				retval.addResults(tab);
 				retval.setSuccess(true);
@@ -211,7 +237,7 @@ public class NodeGroupStoreRestController {
 			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getNodeGroupMetadata";
 			TableResultSet retval = new TableResultSet();		
 			try{
-				NgStore store = new NgStore(servicesgraph_prop.buildSei());
+				NgStore store = new NgStore(this.getStoreDataSei());
 				Table tab = store.getNodeGroupMetadata(true);
 				retval.addResults(tab);
 				retval.setSuccess(true);
@@ -238,7 +264,7 @@ public class NodeGroupStoreRestController {
 	
 			try{
 				// get the nodegroup
-				NgStore store = new NgStore(servicesgraph_prop.buildSei());
+				NgStore store = new NgStore(this.getStoreDataSei());
 				Table tbl = store.getNodegroupTable(requestBody.getId(), true);
 
 				if(tbl.getNumRows() > 0){
@@ -301,7 +327,7 @@ public class NodeGroupStoreRestController {
 			// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
 			// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
 	
-			NgStore store = new NgStore(servicesgraph_prop.buildSei());
+			NgStore store = new NgStore(this.getStoreDataSei());
 
 	
 			try{
@@ -325,5 +351,28 @@ public class NodeGroupStoreRestController {
 	    }
 	}
 	
+    private SparqlEndpointInterface getStoreDataSei() throws Exception{
+
+        SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(    
+                prop.getSparqlConnType(), 
+                prop.getSparqlConnServerAndPort(), 
+                prop.getSparqlConnDataDataset(),
+                servicesgraph_prop.getEndpointUsername(),
+                servicesgraph_prop.getEndpointPassword()
+                );
+
+        return ret;
+    }
+    
+    private SparqlEndpointInterface getStoreModelSei() throws Exception{
+
+        SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(    
+                prop.getSparqlConnType(), 
+                prop.getSparqlConnServerAndPort(), 
+                prop.getSparqlConnModelDataset()
+                );
+
+        return ret;
+    }
 	
 }

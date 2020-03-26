@@ -35,6 +35,8 @@ public class TestStoreNodeGroup {
 
         try {
             StoreNodeGroup.processCSVFile("http://vesuvius-test.crd.ge.com:12056", "./src/test/resources/nodegroupsTest.csv");
+            // test does not check that anything actually worked
+            // it should also delete these nodegroups
         } catch (Exception e) {
             e.printStackTrace();
             assertTrue(false);

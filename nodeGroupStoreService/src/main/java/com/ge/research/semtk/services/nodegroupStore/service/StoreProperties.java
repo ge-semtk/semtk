@@ -24,6 +24,43 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix="ngstore", ignoreUnknownFields = true)
 public class StoreProperties {
 	
-	// everything successfully moved out
+    // sparql server and named graph info
+    private String sparqlConnServerAndPort = "";
+    private String sparqlConnDataDataset = "";
+    private String sparqlConnModelDataset = "";
+    private String sparqlConnDomain = "";
+    private String sparqlConnType = "";
+    
+	public String getSparqlConnServerAndPort() {
+		return sparqlConnServerAndPort;
+	}
+	public void setSparqlConnServerAndPort(String sparqlConnServerAndPort) {
+		this.sparqlConnServerAndPort = sparqlConnServerAndPort;
+	}
+	public String getSparqlConnDataDataset() {
+		return sparqlConnDataDataset;
+	}
+	public void setSparqlConnDataDataset(String sparqlConnDataDataset) {
+		this.sparqlConnDataDataset = sparqlConnDataDataset;
+	}
+	public String getSparqlConnModelDataset() {
+		return sparqlConnModelDataset;
+	}
+	public void setSparqlConnModelDataset(String sparqlConnModelDataset) {
+		this.sparqlConnModelDataset = sparqlConnModelDataset;
+	}
+	public String getSparqlConnDomain() {
+		return sparqlConnDomain;
+	}
+	public void setSparqlConnDomain(String sparqlConnDomain) {
+		this.sparqlConnDomain = sparqlConnDomain;
+	}
+	public String getSparqlConnType() {
+		return sparqlConnType;
+	}
+	public void setSparqlConnType(String sparqlConnType) {
+		this.sparqlConnType = sparqlConnType;
+	}
+    
 
 }
