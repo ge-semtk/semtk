@@ -68,8 +68,6 @@ var g = {
 		}
 	},
 
-    demoNg : "demoNodegroup.json",
-
 	customization: {
 		bannerText: "${WEB_CUSTOM_BANNER_TEXT}",
 		startupDialogTitle: "${WEB_CUSTOM_STARTUP_DIALOG_TITLE}",

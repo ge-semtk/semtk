@@ -1,0 +1,16 @@
+uri "http://com.ge.research/sample/hardware" alias hardware.
+
+HardwarePart is a top-level class,
+	described by componentType with a single value of type string,
+	described by description with a single value of type string,
+	described by drawingNumber with a single value of type string,
+	described by hardwareClass with a single value of type string,
+	described by partNumber with a single value of type string,
+	described by modification with values of type HardwareModification.
+	
+HardwareModification is a top-level class,
+	described by modNumber with a single value of type string,
+	described by pId with a single value of type int,
+	described by modStatus with a single value of type HardwareModStatus.
+	
+HardwareModStatus is a class must be one of { inProgress, complete}.

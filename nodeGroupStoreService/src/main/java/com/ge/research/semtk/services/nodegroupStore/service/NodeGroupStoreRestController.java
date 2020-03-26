@@ -47,6 +47,7 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -105,21 +106,42 @@ public class NodeGroupStoreRestController {
 		InputStream owlStream = NodeGroup.class.getResourceAsStream("/semantics/OwlModels/prefabNodeGroup.owl");
 		modelSei.uploadOwlModelIfNeeded(owlStream);
 		
-		// load demo nodegroup
-//		JSONObject sgJsonJson = Utility.getResourceAsJson(this, "/nodegroups/demoNodegroup.json");
-//		SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
-//		SparqlEndpointInterface demoSei = servicesgraph_prop.buildSei();
-//		demoSei.setGraph("http://semtk/demo");
-//		SparqlConnection demoConn = new SparqlConnection("demoConn", demoSei);
-//		sgJson.setSparqlConn(demoConn);
-//		NgStore store = new NgStore(this.createStoreSei());	
-//		JSONObject connJson = sgJson.getSparqlConnJson();
-//		store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK", true);
-//		
-//		Dataset ds = new CSVDataset("src/test/resources/testTransforms.csv", false);
-//		DataLoader dl = new DataLoader(sgJson, ds, demoSei.getUserName(), demoSei.getPassword());
+		setupDemo();
 		
-		
+	}
+	
+	private void setupDemo() {
+		LocalLogger.logToStdOut("loading demo...");
+		try {
+			// setup demoSei and demoConn
+			SparqlEndpointInterface demoSei = servicesgraph_prop.buildSei();
+			demoSei.setGraph("http://semtk/demo");
+			SparqlConnection demoConn = new SparqlConnection("demoConn", demoSei);
+			
+			// put demoNodegroup into the store
+			JSONObject sgJsonJson = Utility.getResourceAsJson(this, "/nodegroups/demoNodegroup.json");
+			SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
+			sgJson.setSparqlConn(demoConn);
+			
+			NgStore store = new NgStore(this.getStoreDataSei());	
+			JSONObject connJson = sgJson.getSparqlConnJson();
+			store.deleteNodeGroup("demoNodegroup");
+			store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK", true);
+	
+			// load demo model owl
+			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/owlModels/hardware.owl");
+			demoSei.uploadOwlModelIfNeeded(owlStream);
+			owlStream = JobTracker.class.getResourceAsStream("/semantics/owlModels/testconfig.owl");
+			demoSei.uploadOwlModelIfNeeded(owlStream);
+			
+			// ingest demo csv
+			demoSei.clearPrefix("http://demo/prefix");  // extra safe.  No clear graph inside nodegroup store
+			Dataset ds = new CSVDataset("src/main/resources/demoNodegroup_data.csv", false);
+			DataLoader dl = new DataLoader(sgJson, ds, demoSei.getUserName(), demoSei.getPassword());
+			dl.importData(false);
+		} catch (Exception e) {
+			LocalLogger.printStackTrace(new Exception("Error setting up demo", e));
+		}
 	}
 	
 	/**

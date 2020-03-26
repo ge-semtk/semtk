@@ -1,0 +1,13 @@
+test_number,layer_code,meas_units,meas_tag,meas_name,value,timestamp
+4242,layer1,F,temp,temperature,200.8,2017-03-23T10:03:16
+4242,layer1,F,temp,temperature,200.8,2017-03-23T10:03:16
+4242,layer1,F,temp,temperature,200.8,2017-03-23T10:03:16
+4242,layer1,F,temp,temperature,200.5,2017-03-23T10:00:00
+4242,layer1,F,temp,temperature,200.5,2017-03-23T10:00:00
+4242,layer1,F,temp,temperature,200.5,2017-03-23T10:00:00
+4242,layer1,%,st1,status1,0.01,2017-03-23T10:00:00
+4242,layer1,%,st1,status1,0.01,2017-03-23T10:00:00
+4242,layer1,%,st1,status1,0.01,2017-03-23T10:00:00
+4242,layer1,F,temp,temperature,200.9,2017-03-23T10:03:17
+4242,layer1,%,st1,status1,0.72,2017-03-23T10:03:17
+4242,layer1,%,st1,status1,0.05,2017-03-23T10:03:16
