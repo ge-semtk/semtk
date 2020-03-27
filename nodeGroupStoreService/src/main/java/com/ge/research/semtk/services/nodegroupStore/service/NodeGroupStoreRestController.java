@@ -104,7 +104,13 @@ public class NodeGroupStoreRestController {
 		// upload model
 		SparqlEndpointInterface modelSei = this.getStoreModelSei();
 		InputStream owlStream = NodeGroup.class.getResourceAsStream("/semantics/OwlModels/prefabNodeGroup.owl");
-		modelSei.uploadOwlModelIfNeeded(owlStream);
+		
+		try {
+			AuthorizationManager.setSemtkSuper();
+			modelSei.uploadOwlModelIfNeeded(owlStream);
+		} finally {
+			AuthorizationManager.clearSemtkSuper();
+		}
 		
 		setupDemo();
 		
@@ -113,6 +119,8 @@ public class NodeGroupStoreRestController {
 	private void setupDemo() {
 		LocalLogger.logToStdOut("loading demo...");
 		try {
+			AuthorizationManager.setSemtkSuper();
+			
 			// setup demoSei and demoConn
 			SparqlEndpointInterface demoSei = servicesgraph_prop.buildSei();
 			demoSei.setGraph("http://semtk/demo");
@@ -141,6 +149,8 @@ public class NodeGroupStoreRestController {
 			dl.importData(false);
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(new Exception("Error setting up demo", e));
+		} finally {
+			AuthorizationManager.clearSemtkSuper();
 		}
 	}
 	
