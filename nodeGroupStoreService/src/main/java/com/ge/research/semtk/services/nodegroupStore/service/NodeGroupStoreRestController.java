@@ -137,9 +137,9 @@ public class NodeGroupStoreRestController {
 			store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK", true);
 	
 			// load demo model owl
-			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/owlModels/hardware.owl");
+			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/hardware.owl");
 			demoSei.uploadOwlModelIfNeeded(owlStream);
-			owlStream = JobTracker.class.getResourceAsStream("/semantics/owlModels/testconfig.owl");
+			owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/testconfig.owl");
 			demoSei.uploadOwlModelIfNeeded(owlStream);
 			
 			// ingest demo csv
