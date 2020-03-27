@@ -401,7 +401,9 @@ public class NodeGroupStoreRestController {
         SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(    
                 prop.getSparqlConnType(), 
                 prop.getSparqlConnServerAndPort(), 
-                prop.getSparqlConnModelDataset()
+                prop.getSparqlConnModelDataset(),
+                servicesgraph_prop.getEndpointUsername(),
+                servicesgraph_prop.getEndpointPassword()
                 );
 
         return ret;
