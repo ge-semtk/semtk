@@ -431,13 +431,4 @@ public class NodeGroupTest {
 		
 	}
 	
-	@Test
-	public void testTemp() throws Exception {
-
-		// load nodegroup
-		String jsonPath = "C:\\Users\\200001934\\Desktop\\Temp\\current-bug\\document (2).json";
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath(jsonPath));
-		NodeGroup nodegroup = sgJson.getNodeGroup();
-		nodegroup.unOptionalizeConstrained();
-	}
 }
