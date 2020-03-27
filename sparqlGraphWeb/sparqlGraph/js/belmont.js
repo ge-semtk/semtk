@@ -897,7 +897,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 										// link to.
 		this.NodeName = nome; // a name to be used for the node.
 		this.fullURIName = fullName; // full name of the class
-		this.subClassNames = subClassNames.slice(); // full names of all
+		this.subClassNames = subClassNames ? subClassNames.slice() : []; // optional
 													// possible subclasses
 		this.SparqlID = new SparqlFormatter().genSparqlID(nome,
 				nodeGroup.sparqlNameHash); // always has SparqlID since it is
@@ -946,7 +946,7 @@ SemanticNode.prototype = {
 			nodeList : [],
 			NodeName : this.NodeName,
 			fullURIName : this.fullURIName,
-			subClassNames : this.subClassNames.slice(),
+			subClassNames : this.subClassNames ? this.subClassNames.slice() : [],
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
 			isRuntimeConstrained : this.isRuntimeConstrained,
@@ -989,7 +989,7 @@ SemanticNode.prototype = {
 		this.propList = [], this.nodeList = [];
 		this.NodeName = jObj.NodeName;
 		this.fullURIName = jObj.fullURIName;
-		this.subClassNames = jObj.subClassNames.slice();
+		this.subClassNames = jObj.subClassNames ? jObj.subClassNames.slice() : [];
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
