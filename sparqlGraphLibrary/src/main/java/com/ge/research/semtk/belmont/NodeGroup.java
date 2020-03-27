@@ -2015,7 +2015,7 @@ public class NodeGroup {
 	 */
 	public void unOptionalizeConstrained() throws Exception {
 		// loop through each nodeItem
-		System.out.println("unOptionalizeConstrained");
+		// System.out.println("unOptionalizeConstrained");
 		
 		// first check that all property items in the nodegroup are NOT optional if they have constraints
 		for (Node n : this.nodes) {
@@ -2043,10 +2043,12 @@ public class NodeGroup {
 				
 				// if subgraph has Constrained returns, make sure it is not optional
 				if (upConstrainedReturns != 0 &&  nItem.getOptionalMinus(rangeNode) == NodeItem.OPTIONAL_REVERSE) {
+					LocalLogger.logToStdOut("unoptionalize " + owningNode.getSparqlID() + "->" + nItem.getKeyName() + "->" + rangeNode.getSparqlID());
 					nItem.setOptionalMinus(rangeNode, NodeItem.OPTIONAL_FALSE);
 				}
 				// repeat in downstream direction
 				if (downConstrainedReturns != 0 && nItem.getOptionalMinus(rangeNode) == NodeItem.OPTIONAL_TRUE) {
+					LocalLogger.logToStdOut("unoptionalize " + owningNode.getSparqlID() + "->" + nItem.getKeyName() + "->" + rangeNode.getSparqlID());
 					nItem.setOptionalMinus(rangeNode, NodeItem.OPTIONAL_FALSE);
 				}
 			}
@@ -2084,7 +2086,7 @@ public class NodeGroup {
 		return this.getDownstreamSubGraph(owningNode, nItem, rangeNode, owningNode);
 	}
 	private HashSet<Node> getDownstreamSubGraph(Node owningNode, NodeItem nItem, Node rangeNode, Node circularNode) throws Exception {
-		//System.err.println("Downstream subgraph: " + owningNode.getSparqlID() + " " + nItem.getKeyName() + " " + rangeNode.getSparqlID());
+		// System.err.println("Downstream subgraph: " + owningNode.getSparqlID() + " " + nItem.getKeyName() + " " + rangeNode.getSparqlID());
 		HashSet<Node> ret = new HashSet<Node>();
 		ret.add(rangeNode);
 		
@@ -2105,7 +2107,7 @@ public class NodeGroup {
 				if (upstreamNode == circularNode) {
 					throw new Exception("Can't perform this operation on nodegroups with circular connections.");
 				}
-				ret.addAll(this.getUpstreamSubGraph(upstreamNode, upstreamItem, owningNode, circularNode));
+				ret.addAll(this.getUpstreamSubGraph(upstreamNode, upstreamItem, rangeNode, circularNode));
 			}
 		}
 		
@@ -2123,7 +2125,7 @@ public class NodeGroup {
 		return this.getUpstreamSubGraph(owningNode, nItem, rangeNode, rangeNode);
 	}
 	private HashSet<Node> getUpstreamSubGraph(Node owningNode, NodeItem nItem, Node rangeNode, Node circularNode) throws Exception {
-		//System.err.println("Upstream subgraph: " + owningNode.getSparqlID() + " " + nItem.getKeyName() + " " + rangeNode.getSparqlID());
+		// System.err.println("Upstream subgraph: " + owningNode.getSparqlID() + " " + nItem.getKeyName() + " " + rangeNode.getSparqlID());
 		HashSet<Node> ret = new HashSet<Node>();
 		ret.add(rangeNode);
 		
