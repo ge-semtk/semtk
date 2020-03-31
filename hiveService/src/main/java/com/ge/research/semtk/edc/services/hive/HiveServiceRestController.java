@@ -19,6 +19,7 @@
 package com.ge.research.semtk.edc.services.hive;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.PostConstruct;
+
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.query.rdb.HiveConnector;
@@ -35,6 +39,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutilib.requests.DatabaseQueryRequest;
 import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
+import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.edc.services.hive.HiveProperties;
 
@@ -50,12 +55,23 @@ public class HiveServiceRestController {
 
 	private boolean ASYNC = true;	// true for asynchronous mode (returns job id), false for synchronous mode (returns query results)
 	
+	@Autowired 
+	private ApplicationContext appContext;
 	@Autowired
 	HiveProperties props;
 	@Autowired
 	ResultsServiceProperties resultsProps;
 	@Autowired
 	StatusServiceProperties statusProps;
+	
+	@PostConstruct
+    public void init() {		
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		props.validateWithExit();
+		resultsProps.validateWithExit();
+		statusProps.validateWithExit();
+	}
 	
 	/**
 	 * Execute arbitrary query in Hive.  
@@ -291,8 +307,13 @@ public class HiveServiceRestController {
 
 		try {
 			LocalLogger.logToStdOut("Connecting to: " + HiveConnector.getDatabaseURL(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database));
-			HiveConnector oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password);
-			
+			HiveConnector oc;
+			if(props.getLoginTimeoutSec() == null){
+				oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password); // use default timeout
+			}else{
+				oc = new HiveConnector(requestBody.host, Integer.valueOf(requestBody.port), requestBody.database, username, password, props.getLoginTimeoutSec().intValue()); 
+			}
+				
 			if (async) {
 				LocalLogger.logToStdOut("Async Hive query: " + query);
 				HiveQueryThread queryThread = new HiveQueryThread(oc, query, statusProps, resultsProps);

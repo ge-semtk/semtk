@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * A JDBC connector to access an RDB database (e.g. Hive)
@@ -39,6 +40,7 @@ public abstract class JdbcConnector extends Connector {
 	
 	// these are the items needed to create a connection
 	private String driver;  										// the database driver class
+	private int loginTimeoutSec = 30;								// the login timeout, defaulting to 30 sec
 	private String dbUrl;											// the database url, e.g. prefix@//host:port/sid
 	private Properties connectionProperties = new Properties();  	// connection properties (e.g. username, password)
 	
@@ -47,6 +49,10 @@ public abstract class JdbcConnector extends Connector {
 	 */
 	protected void setDriver(String driver){
 		this.driver = driver;
+	}
+	
+	protected void setLoginTimeout(int loginTimeoutSec){
+		this.loginTimeoutSec = loginTimeoutSec;
 	}
 	
 	/**
@@ -101,7 +107,8 @@ public abstract class JdbcConnector extends Connector {
 	 */
 	private Connection getConnection() throws Exception{
 		Class.forName(driver);
-		DriverManager.setLoginTimeout(30);
+		DriverManager.setLoginTimeout(loginTimeoutSec);
+		LocalLogger.logToStdOut("JdbcConnector.getConnection() login timeout = " + DriverManager.getLoginTimeout() + " sec"); // TODO REMOVE
 		return DriverManager.getConnection(dbUrl, connectionProperties);
 	}
 	

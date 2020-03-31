@@ -8,5 +8,8 @@ import com.ge.research.semtk.properties.ServiceProperties;
 @Configuration
 @ConfigurationProperties(prefix="hive-service.status", ignoreUnknownFields = true)
 public class StatusServiceProperties extends ServiceProperties {
-
+	public StatusServiceProperties() {
+		super();
+		setPrefix("hive-service.status");
+	}
 }

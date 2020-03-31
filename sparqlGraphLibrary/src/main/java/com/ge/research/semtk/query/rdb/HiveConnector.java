@@ -34,13 +34,22 @@ public class HiveConnector extends JdbcConnector {
 	 * Instantiate the connector.
 	 * @throws Exception 
 	 */
-	public HiveConnector(String host, int port, String database, String username, String password) throws Exception{
+	public HiveConnector(String host, int port, String database, String username, String password, int loginTimeoutSec) throws Exception{
 		setDriver(HIVE_DRIVER);
+		setLoginTimeout(loginTimeoutSec);
 		setDatabaseUrl(getDatabaseURL(host, port, database));
 		setConnectionProperty(PROPERTY_KEY_USERNAME, username);
 		setConnectionProperty(PROPERTY_KEY_PASSWORD, password);
 		validate();
 		testConnection(HIVE_TEST_QUERY);
+	}
+	
+	/**
+	 * Instantiate the connector.
+	 * @throws Exception 
+	 */
+	public HiveConnector(String host, int port, String database, String username, String password) throws Exception{
+		this(host, port, database, username, password, 30);
 	}
 
 	/**
