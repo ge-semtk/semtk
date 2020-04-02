@@ -60,7 +60,7 @@ public class FDCDispatcherTest_IT {
 	@BeforeClass
 	public static void setup() throws Exception {
 		
-		IntegrationTestUtility.setupFdcTests();
+		IntegrationTestUtility.setupFdcTests(FDCDispatcherTest_IT.class);
 		
 		resultsClient = IntegrationTestUtility.getResultsClient();
 	}

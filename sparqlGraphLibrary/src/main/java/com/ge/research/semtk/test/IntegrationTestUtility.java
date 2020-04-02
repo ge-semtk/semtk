@@ -42,7 +42,6 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.fdc.FdcClient;
 import com.ge.research.semtk.fdc.FdcClientConfig;
-import com.ge.research.semtk.fdc.test.FDCDispatcherTest_IT;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -344,7 +343,7 @@ public class IntegrationTestUtility{
 	 * Called by both OSS and GE tests at some point, so it's here.
 	 * @throws Exception
 	 */
-	public static void setupFdcTests() throws Exception {
+	public static void setupFdcTests(Class c) throws Exception {
 		// skip this file if system is not configured to use the FdcDispatcher
 		// TODO: this will get more complicated when there are sub-classes
 		assumeTrue("Skipping FDC tests, using non-FDC dispatcher class: " + IntegrationTestUtility.get("integrationtest.dispatcherclassname"), 
@@ -386,14 +385,14 @@ public class IntegrationTestUtility{
 		
 		// ingest FDC owl
 		
-		TestGraph.uploadOwlResource(FDCDispatcherTest_IT.class, "/federatedDataConnection.owl");
-		TestGraph.uploadOwlResource(FDCDispatcherTest_IT.class, "/fdcSampleTest.owl");
+		TestGraph.uploadOwlResource(c, "/federatedDataConnection.owl");
+		TestGraph.uploadOwlResource(c, "/fdcSampleTest.owl");
 		
 		// ingest a demo aircraft
 		String aircraftCsv = "tail,type\ndemo,A320\n";
-		TestGraph.ingestCsvString(FDCDispatcherTest_IT.class, "/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
+		TestGraph.ingestCsvString(c, "/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
 
 		// ingest some airports
-		TestGraph.ingest(FDCDispatcherTest_IT.class, "/fdc_ingest_airports.json", "/fdc_airport_lat_lon.csv");
+		TestGraph.ingest(c, "/fdc_ingest_airports.json", "/fdc_airport_lat_lon.csv");
 	}
 }
