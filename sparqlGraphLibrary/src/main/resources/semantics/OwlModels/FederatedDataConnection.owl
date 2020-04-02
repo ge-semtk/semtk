@@ -1,0 +1,39 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:fdc="http://research.ge.com/kdl/sparqlgraph/federatedDataConnection#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://research.ge.com/kdl/sparqlgraph/federatedDataConnection">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <owl:versionInfo>$Revision:$ Last modified on   $Date:$</owl:versionInfo>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'federatedDataConnection.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="FDCData"/>
+  <owl:Class rdf:ID="FDCKey">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="hasParams"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="FDCParams"/>
+  <owl:ObjectProperty rdf:about="#hasParams">
+    <rdfs:domain rdf:resource="#FDCKey"/>
+    <rdfs:range rdf:resource="#FDCParams"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="hasData">
+    <rdfs:domain rdf:resource="#FDCKey"/>
+    <rdfs:range rdf:resource="#FDCData"/>
+  </owl:ObjectProperty>
+</rdf:RDF>

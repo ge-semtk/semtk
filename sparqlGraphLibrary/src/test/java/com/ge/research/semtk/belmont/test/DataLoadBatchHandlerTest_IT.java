@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2020 General Electric Company
  **
  */
 
@@ -37,7 +37,7 @@ public class DataLoadBatchHandlerTest_IT {
 
 		TestGraph.clearGraph();
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
-		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+		TestGraph.uploadOwlResource(this, "sampleBattery.owl");
 		DataLoadBatchHandler dtmx = new DataLoadBatchHandler(sgJson, 6, ds, null);  // TODO temporary null endpoint
 		ArrayList<ArrayList<String>> recordList = dtmx.getNextRecordsFromDataSet();
 		ArrayList<NodeGroup> ngArr = dtmx.convertToNodeGroups(recordList, 1, false);	

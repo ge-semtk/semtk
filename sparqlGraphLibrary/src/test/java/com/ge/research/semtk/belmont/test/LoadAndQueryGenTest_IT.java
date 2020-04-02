@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016-2019 General Electric Company
+ ** Copyright 2016-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ public class LoadAndQueryGenTest_IT {
 		// and URI lookup where different nodes with the same type
 		// can represent the same URI on different lines of input.
 		
-		sgJson = TestGraph.initGraphWithData("chain");
+		sgJson = TestGraph.initGraphWithData(LoadAndQueryGenTest_IT.class, "chain");
 	}
 	
 	

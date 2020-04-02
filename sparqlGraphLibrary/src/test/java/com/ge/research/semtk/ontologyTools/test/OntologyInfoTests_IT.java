@@ -169,9 +169,9 @@ public class OntologyInfoTests_IT {
 
 
 		SparqlQueryClientConfig conf = new SparqlQueryClientConfig(
-				IntegrationTestUtility.getServiceProtocol(), 
-				IntegrationTestUtility.getSparqlQueryServiceServer(), 
-				IntegrationTestUtility.getSparqlQueryServicePort(), 
+				IntegrationTestUtility.get("protocol"), 
+				IntegrationTestUtility.get("sparqlqueryservice.server"), 
+				IntegrationTestUtility.getInt("sparqlqueryservice.port"), 
 				"sparqlQueryService/query",
 				TestGraph.getSparqlServer(), 
 				TestGraph.getSparqlServerType(), 
@@ -214,9 +214,9 @@ public class OntologyInfoTests_IT {
 	@Test
 	public void testDoubleModelViaQueryService() throws Exception {
 		SparqlQueryClientConfig config = new SparqlQueryClientConfig(
-				IntegrationTestUtility.getServiceProtocol(), 
-				IntegrationTestUtility.getSparqlQueryServiceServer(), 
-				IntegrationTestUtility.getSparqlQueryServicePort(), 
+				IntegrationTestUtility.get("protocol"), 
+				IntegrationTestUtility.get("sparqlqueryservice.server"), 
+				IntegrationTestUtility.getInt("sparqlqueryservice.port"), 
 				"sparqlQueryService/query",
 				"empty", 
 				"empty", 

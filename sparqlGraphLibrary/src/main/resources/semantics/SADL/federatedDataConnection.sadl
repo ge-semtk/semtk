@@ -1,0 +1,11 @@
+uri "http://research.ge.com/kdl/sparqlgraph/federatedDataConnection" alias fdc version "$Revision:$ Last modified on   $Date:$". 
+// v8-27-2015 9:00
+
+// model for FDC to be imported by users of FDC
+FDCKey is a top-level class,
+	described by hasData with values of type FDCData,
+	described by hasParams with a single value of type FDCParams.
+
+FDCData is a top-level class.
+
+FDCParams is a top-level class.

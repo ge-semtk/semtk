@@ -47,7 +47,7 @@ public class SparqlGraphJsonTest_IT {
 	public void test_deflate_inflate() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");		
+		TestGraph.uploadOwlResource(this, "sampleBattery.owl");		
 		
 		String jsonPath = "src/test/resources/sampleBatteryTestDeflate.json";
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
@@ -90,7 +90,7 @@ public class SparqlGraphJsonTest_IT {
 	public void test_badInflates() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");		
+		TestGraph.uploadOwlResource(this, "sampleBattery.owl");		
 		
 		String files[] = {	
 				"src/test/resources/sampleBatteryInflateBadPropURI.json",

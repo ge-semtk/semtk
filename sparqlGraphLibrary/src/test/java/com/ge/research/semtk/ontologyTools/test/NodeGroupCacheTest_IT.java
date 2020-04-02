@@ -19,7 +19,7 @@ public class NodeGroupCacheTest_IT {
 	@BeforeClass
 	public static void init() throws Exception {
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+		TestGraph.uploadOwlResource(NodeGroupCacheTest_IT.class, "sampleBattery.owl");
 		oInfo = new OntologyInfo(TestGraph.getSparqlConn());
 		cache = new NodeGroupCache(TestGraph.getSei(), oInfo);
 	}

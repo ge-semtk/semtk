@@ -1,0 +1,303 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xml:base="http://research.ge.com/kdl/sparqlgraph/edcServices">
+  <owl:Ontology rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices">
+    <owl:versionInfo>$Revision:$ Last modified on   $Date:$</owl:versionInfo>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'sparqlEdcServices.sadl' and should not be edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="Service">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="endpoint"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="port"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="url"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="protocol"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="clientType"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="EdcQueryConstraint">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="edcConstraintVarKeyname"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="edcConstraintVarClassname"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="edcConstraintName"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="EdcNodegroupRestriction">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="operand"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="operator"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="restrictionClassname"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="EdcParam">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="sparqlId"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="keyname"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="paramClassname"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="EdcType">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="queryConstraint"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#queryConstraint"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="executeService"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#executeService"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="generateService"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#generateService"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="mnemonic"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#generateService">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="edcServiceParam">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#queryConstraint">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#executeService">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="nodegroupConstraint">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#sparqlId">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#edcConstraintVarClassname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#endpoint">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#edcConstraintName">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="triggerSourceClassname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#paramClassname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#mnemonic">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#protocol">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="triggerValueClassname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#port">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#url">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#operand">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#keyname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#edcConstraintVarKeyname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#restrictionClassname">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#operator">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/kdl/sparqlgraph/edcServices#clientType">
+    <rdfs:domain rdf:resource="http://research.ge.com/kdl/sparqlgraph/edcServices#Service"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>

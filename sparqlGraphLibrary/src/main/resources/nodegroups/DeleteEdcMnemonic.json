@@ -1,0 +1,281 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "SemTK Services",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 7,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "EdcQueryConstraint",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint",
+				"subClassNames": [],
+				"SparqlID": "?EdcQueryConstraint",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "EdcNodegroupRestriction",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction",
+				"subClassNames": [],
+				"SparqlID": "?EdcNodegroupRestriction",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Service",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#Service",
+				"subClassNames": [],
+				"SparqlID": "?Service_0",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Service",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#Service",
+				"subClassNames": [],
+				"SparqlID": "?Service",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "EdcParam",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam",
+				"subClassNames": [],
+				"SparqlID": "?EdcParam",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "mnemonic",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#mnemonic",
+						"Constraints": "VALUES %id { 'OVERRIDE_WITH_RUNTIME_CONSTRAINT'^^XMLSchema:string } ",
+						"fullURIName": "",
+						"SparqlID": "?mnemonic",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": true
+					},
+					{
+						"KeyName": "triggerSourceClassname",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#triggerSourceClassname",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?triggerSourceClassname",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": true
+					},
+					{
+						"KeyName": "triggerValueClassname",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#triggerValueClassname",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?triggerValueClassname",
+						"isReturned": true,
+						"isOptional": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": true
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?EdcParam"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							true
+						],
+						"KeyName": "edcServiceParam",
+						"ValueType": "EdcParam",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam",
+						"ConnectBy": "edcServiceParam",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/edcServices#edcServiceParam"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Service"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							true
+						],
+						"KeyName": "executeService",
+						"ValueType": "Service",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/edcServices#Service",
+						"ConnectBy": "executeService",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/edcServices#executeService"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Service_0"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							true
+						],
+						"KeyName": "generateService",
+						"ValueType": "Service",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/edcServices#Service",
+						"ConnectBy": "generateService",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/edcServices#generateService"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?EdcNodegroupRestriction"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							true
+						],
+						"KeyName": "nodegroupConstraint",
+						"ValueType": "EdcNodegroupRestriction",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction",
+						"ConnectBy": "nodegroupConstraint",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/edcServices#nodegroupConstraint"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?EdcQueryConstraint"
+						],
+						"SnodeOptionals": [
+							"1"
+						],
+						"DeletionMarkers": [
+							true
+						],
+						"KeyName": "queryConstraint",
+						"ValueType": "EdcQueryConstraint",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint",
+						"ConnectBy": "queryConstraint",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/edcServices#queryConstraint"
+					}
+				],
+				"NodeName": "EdcType",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType",
+				"subClassNames": [],
+				"SparqlID": "?EdcType",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "FULL_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?EdcType",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?EdcParam",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcParam",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Service",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#Service",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Service_0",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#Service",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?EdcNodegroupRestriction",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?EdcQueryConstraint",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcQueryConstraint",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

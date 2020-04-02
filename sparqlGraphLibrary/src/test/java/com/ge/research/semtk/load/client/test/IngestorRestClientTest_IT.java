@@ -53,9 +53,9 @@ public class IngestorRestClientTest_IT {
 	@BeforeClass
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
-		String serviceProtocol = IntegrationTestUtility.getServiceProtocol();
-		String ingestionServiceServer = IntegrationTestUtility.getIngestionServiceServer();
-		int ingestionServicePort = IntegrationTestUtility.getIngestionServicePort();
+		String serviceProtocol = IntegrationTestUtility.get("protocol");
+		String ingestionServiceServer = IntegrationTestUtility.get("ingestionservice.server");
+		int ingestionServicePort = IntegrationTestUtility.getInt("ingestionservice.port");
 		irc   = new IngestorRestClient(new IngestorClientConfig(serviceProtocol, ingestionServiceServer, ingestionServicePort));
 
 		sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");

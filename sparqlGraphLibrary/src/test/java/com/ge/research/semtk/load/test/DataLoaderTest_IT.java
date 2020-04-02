@@ -203,14 +203,12 @@ public class DataLoaderTest_IT {
 				+ "<contains space and brackets>,cellA,01/01/1966,red\n";
 
 		//String CORRECT = "Cell_%3Ccontains%20spacE%20and%20brackEts%3E";
-		String owlPath = "src/test/resources/sampleBattery.owl";
-		String jsonPath = "src/test/resources/sampleBattery.json";
 		Dataset ds = new CSVDataset(contents, true);
 
 		// get json
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlPath);
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
+		TestGraph.uploadOwlResource(this, "sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
@@ -1237,7 +1235,7 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testGraphLoadBattery() throws Exception {
-		SparqlGraphJson sgJson = TestGraph.initGraphWithData("sampleBattery");
+		SparqlGraphJson sgJson = TestGraph.initGraphWithData(this.getClass(), "sampleBattery");
 		CSVDataset csvDataset = new CSVDataset("src/test/resources/sampleBattery.csv", false);
 		DataLoader dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);

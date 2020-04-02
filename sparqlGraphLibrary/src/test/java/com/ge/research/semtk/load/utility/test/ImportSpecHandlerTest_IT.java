@@ -45,7 +45,7 @@ public class ImportSpecHandlerTest_IT {
 	public void test_getMappedPropItems() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");		
+		TestGraph.uploadOwlResource(this, "sampleBattery.owl");		
 		
 		// load in ImportSpecHandler
 		String jsonPath = "src/test/resources/sampleBattery_PlusConstraints.json";

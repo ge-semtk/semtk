@@ -1,6 +1,6 @@
 /*
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,8 @@
  */
 
 package com.ge.research.semtk.utility;
+
+import static org.hamcrest.CoreMatchers.containsString;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -458,6 +460,8 @@ public abstract class Utility {
 	 * @param propertyFile the property file
 	 * @param key the name of the property to retrieve
 	 */
+	// super inefficent to reload the file each time we need a property
+	@Deprecated
 	public static String getPropertyFromFile(String propertyFile, String key) throws Exception{
 	
 		Properties properties = new Properties();
@@ -466,15 +470,63 @@ public abstract class Utility {
 		} catch (Exception e) {
 		    throw new Exception("Cannot load properties file " + propertyFile, e);
 		}
+
+		return getProperty(properties, key);
+	}	
+	
+	public static String getProperty(Properties properties, String key) throws Exception{
+		
 		// now read the property		
 		String ret = properties.getProperty(key);
 		if(ret == null){
-		    throw new Exception("Cannot read property '" + key + "' from " + propertyFile);	
+		    throw new Exception("Cannot read property '" + key);	
 		}
 		
 		// Replace ENV and trim()
-		return envSubstitutor.replace(ret).trim();
+		return expandEnv(ret);
 	}	
+	
+	/**
+	 * Get subset of properties containing one of keyMatch
+	 * @param properties
+	 * @param keyMatch
+	 * @return
+	 */
+	public static Properties withKeyContaining(Properties properties, String [] keyMatch) {
+		Properties ret = new Properties();
+		for (Object k : properties.keySet()) {
+			for (String match : keyMatch) {
+				if (((String) k).contains(match)) {
+					ret.put(k, properties.get(k));
+					break;
+				}
+			}
+		}
+		return ret;
+	}
+	
+	/**
+	 * Expand properties into string, where string contains ${property}
+	 * and then do ENVIRONMENT variable expansion
+	 * @param properties
+	 * @param str
+	 * @return
+	 * @throws Exception
+	 */
+	public static String expandProperties(Properties properties, String str) throws Exception {
+		
+        for (Object k : properties.keySet()) {
+        	String key = ((String) k).trim();
+        	String val = properties.getProperty((String) key);
+        	str = str.replace("${" + key + "}", val);
+        }
+        str = Utility.expandEnv(str);
+        return str;
+	}
+	
+	public static String expandEnv(String str) {
+		return envSubstitutor.replace(str).trim();
+	}
 	
 	public static String getXmlBaseFromOwlRdf(InputStream is) throws Exception {
 		String ret;
@@ -678,9 +730,11 @@ public abstract class Utility {
 	 * @return the file contents
 	 */
 	public static String getResourceAsString(Object obj, String fileName) throws Exception {
+		return getResourceAsString(obj.getClass(), fileName);
+	}
+	public static String getResourceAsString(Class c, String fileName) throws Exception {
 		String ret = null;
-		
-		InputStream in = obj.getClass().getResourceAsStream(fileName);
+		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
 		if (in == null) {
 			throw new Exception("Could find resource file: " + fileName);
 		}
@@ -694,9 +748,12 @@ public abstract class Utility {
 	}
 	
 	public static File getResourceAsFile(Object obj, String fileName) throws Exception {
+		return getResourceAsFile(obj.getClass(), fileName);
+	}
+	public static File getResourceAsFile(Class c, String fileName) throws Exception {
 		File ret = null;
 		
-		URL url = obj.getClass().getResource(fileName);
+		URL url = c.getResource(fixResourceName(fileName));
 		if (url == null) {
 			throw new Exception("Could find resource file: " + fileName);
 		}
@@ -709,10 +766,13 @@ public abstract class Utility {
 		return ret;
 	}
 	
-	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception  {
+	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception {
+		return getResourceAsBytes(obj.getClass(), fileName);
+	}
+	public static byte [] getResourceAsBytes(Class c, String fileName) throws Exception  {
 		byte [] ret = null;
 
-		InputStream in = obj.getClass().getResourceAsStream(fileName);
+		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
 		if (in == null) {
 			throw new Exception("Could find resource file: " + fileName);
 		}
@@ -736,6 +796,17 @@ public abstract class Utility {
 		return Utility.getJsonObjectFromString(Utility.getResourceAsString(obj, fileName));
 	}
 	
+	public static JSONObject getResourceAsJson(Class c, String fileName) throws Exception {
+		return Utility.getJsonObjectFromString(Utility.getResourceAsString(c, fileName));
+	}
+	
+	private static String fixResourceName(String resourceName) {
+		if (resourceName.startsWith("/")) {
+			return resourceName;
+		} else {
+			return "/" + resourceName;
+		}
+	}
 	/**
 	 * Replace UUIDs in a string with "<UUID>".
 	 * Note: does not affect hashes.

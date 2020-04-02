@@ -1,5 +1,5 @@
 /**
- ** Copyright 2018 General Electric Company
+ ** Copyright 2018-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,9 +49,9 @@ public class NodeGroupServiceClientTest_IT {
 			// instantiate a client
 			ngServiceClient = new NodeGroupServiceRestClient(
 					new NodeGroupServiceConfig(
-							IntegrationTestUtility.getServiceProtocol(), 
-							IntegrationTestUtility.getNodegroupServiceServer(), 
-							IntegrationTestUtility.getNodegroupServicePort()));
+							IntegrationTestUtility.get("protocol"), 
+							IntegrationTestUtility.get("nodegroupservice.server"), 
+							IntegrationTestUtility.getInt("nodegroupservice.port")));
 		}
 		
 		@AfterClass
@@ -252,7 +252,7 @@ public class NodeGroupServiceClientTest_IT {
 		public void getImportColumns() throws Exception{				
 			
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			TestGraph.uploadOwlResource(this, "sampleBattery.owl");
 			
 			// get a nodegroup
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
@@ -269,7 +269,7 @@ public class NodeGroupServiceClientTest_IT {
 		@Test
 		public void getSampleImportCSV() throws Exception{				
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			TestGraph.uploadOwlResource(this, "sampleBattery.owl");
 			// get a nodegroup
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			

@@ -1,0 +1,72 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "SemTK Services",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "specId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#id",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?specId",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "FdcCacheSpec",
+				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheSpec",
+				"subClassNames": [],
+				"SparqlID": "?FdcCacheSpec",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?FdcCacheSpec",
+				"type": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheSpec",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

@@ -1,0 +1,159 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "SemTK Services",
+		"domain": "http://",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "operand",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#operand",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?operand",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "operator",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#operator",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?operator",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "restrictionClassname",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#restrictionClassname",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?restrictionClassname",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "EdcNodegroupRestriction",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction",
+				"subClassNames": [],
+				"SparqlID": "?EdcNodegroupRestriction",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "mnemonic",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/sparqlgraph/edcServices#mnemonic",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?mnemonic",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?EdcNodegroupRestriction"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "nodegroupConstraint",
+						"ValueType": "EdcNodegroupRestriction",
+						"UriValueType": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction",
+						"ConnectBy": "nodegroupConstraint",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/sparqlgraph/edcServices#nodegroupConstraint"
+					}
+				],
+				"NodeName": "EdcType",
+				"fullURIName": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType",
+				"subClassNames": [],
+				"SparqlID": "?EdcType",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?mnemonic"
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?EdcType",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcType",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?EdcNodegroupRestriction",
+				"type": "http://research.ge.com/kdl/sparqlgraph/edcServices#EdcNodegroupRestriction",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

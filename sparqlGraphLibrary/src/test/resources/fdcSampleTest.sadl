@@ -1,0 +1,39 @@
+uri "http://research.ge.com/semtk/fdcSample/test" alias fdcSampleTest version "$Revision:$ Last modified on   $Date:$". 
+// v8-27-2015 9:00
+
+import "http://research.ge.com/semtk/federatedDataConnection".
+
+Distance (alias "distance") is a type of FDCData,
+	described by distanceNm with a single value of type double,
+	described by location1 with a single value of type Location,
+	described by location2 with a single value of type Location.
+
+
+Location is a class,
+	described by latitude (alias "latitude") with a single value of type double,
+	described by longitude (alias "longitude") with a single value of type double.
+	
+AircraftLocation is a type of FDCData.
+AircraftLocation is a type of Location.
+
+LocationTrackableAircraft is a class,
+	described by tailNumber (alias "tail number") with a single value of type string,
+	described by currentLocation with a single value of type AircraftLocation.
+
+Airport is a class,
+	described by airportType with a single value of type AirportType,
+	described by city with a single value of type string,
+	described by code with a single value of type string,
+	described by country with a single value of type string,
+	described by elevation with a single value of type int,
+	described by fdwId with a single value of type int,
+	described by location with a single value of type Location,
+	described by name with a single value of type string.
+
+Aircraft is a type of LocationTrackableAircraft.
+
+AirportType is a class must be one of {Military, Civil}.
+
+Elevation is a type of FDCData,
+	described by elevationFt with a single value of type int,
+	described by location with a single value of type Location.

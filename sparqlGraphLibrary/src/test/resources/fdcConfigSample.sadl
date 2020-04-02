@@ -1,0 +1,95 @@
+uri "http://research.ge.com/semtk/fdcConfigSample" alias fdcConfigSample.
+//
+//	Fdc Configuration instance data
+//
+
+// import FdcConfig classes
+import "http://research.ge.com/semtk/fdcServices".
+
+// import my local FdcData classes: Distance, Location, etc.
+// Warning: SADL can't check these classes and params exist inside FdcParam so be extra cautious.
+// Warning: in eclipse: Project->properties->SADL->type checking issues as warning only.
+import "http://research.ge.com/semtk/fdcSample/test".
+
+// create an configuration instance for Distance class.
+// The serviceURL takes two tables:  distance from and distance to
+// The results of this service call will be ingested using nodegroup "fdcSampleDistance" 
+//   	which must be in the nodegroup store
+DistanceConfig is a FdcConfig,
+	with fdcClass fdcSampleTest:Distance,
+	with serviceURL "http://localhost:12066/fdcSample/distance",
+	with ingestNodegroupId "fdcSampleDistance",
+	with input DistanceInput1,
+	with input DistanceInput2.
+
+// this instance of FdcInput will create the "distance from" table 
+// as table #1
+//
+// subgraphLink means we generate the table by running the subgraph of the nodegroup
+//       starting from Distance->location1->Location
+//       This triple could have the distance FdcClass at either end, depending on actual link direction
+//       Distance class and anything NOT on the "location1" side will be removed from the nodegroup
+//          when we generate in input table1.
+//       If this link doesn't exist in the nodegroup, the FDC query will return nothing.
+//
+// input Table one will have three columns:  latitude1, longitude1, location1.
+//       These would be added to the nodegroup if Location didn't exist, 
+// 			but in this simple example, Location must exist because it's in the subgraphLink
+// 	     Since "location1" parameter has no propertyURI, it is the class.
+//			These are typically needed to ingest the results (to attach the distance to this location)
+DistanceInput1 is a FdcInput,
+	with inputIndex 1,
+	with subgraphLink (a FdcInputSubgraphLink 
+		with subjectClass fdcSampleTest:Distance
+		with predicateProp location1,
+		with objectClass fdcSampleTest:Location
+		)
+	with param (a FdcParam with columnName "latitude1", with classURI fdcSampleTest:Location, with propertyURI fdcSampleTest:latitude),
+	with param (a FdcParam with columnName "longitude1", with classURI fdcSampleTest:Location, with propertyURI fdcSampleTest:longitude),
+	with param (a FdcParam with columnName "location1", with classURI fdcSampleTest:Location).
+
+DistanceInput2 is a FdcInput,
+	with inputIndex 2,
+	with subgraphLink (a FdcInputSubgraphLink 
+		with subjectClass fdcSampleTest:Distance, 
+		with predicateProp location2,
+		with objectClass fdcSampleTest:Location
+		)
+	with param (a FdcParam with columnName "latitude2", with classURI fdcSampleTest:Location, with propertyURI fdcSampleTest:latitude),
+	with param (a FdcParam with columnName "longitude2", with classURI fdcSampleTest:Location, with propertyURI fdcSampleTest:longitude),
+	with param (a FdcParam with columnName "location2", with classURI fdcSampleTest:Location).
+
+AircraftLocationConfig is a FdcConfig,
+	with fdcClass fdcSampleTest:AircraftLocation,
+	with serviceURL "http://localhost:12066/fdcSample/aircraftLocation",
+	with ingestNodegroupId "fdcSampleAircraftLocation",
+	with input AircraftLocationInput1.
+	
+AircraftLocationInput1 is a FdcInput,
+	with inputIndex 1,
+	with subgraphLink (a FdcInputSubgraphLink 
+		with subjectClass fdcSampleTest:LocationTrackableAircraft
+		with predicateProp currentLocation
+		with objectClass AircraftLocation
+		)
+	with param (a FdcParam with columnName "tailNumber",  with classURI fdcSampleTest:LocationTrackableAircraft, with propertyURI fdcSampleTest:tailNumber),
+	with param (a FdcParam with columnName "aircraftUri", with classURI fdcSampleTest:LocationTrackableAircraft).
+
+ElevationConfig is a FdcConfig,
+	with fdcClass fdcSampleTest:Elevation,
+	with serviceURL "http://localhost:12066/fdcSample/elevation",
+	with ingestNodegroupId "fdcSampleElevation",
+	with input ElevationInput1.
+	
+ElevationInput1 is a FdcInput,
+	with inputIndex 1,
+	with subgraphLink (a FdcInputSubgraphLink 
+		with subjectClass fdcSampleTest:Elevation
+		with predicateProp location
+		with objectClass fdcSampleTest:Location
+		)
+	with param (a FdcParam with columnName "latitude", with classURI fdcSampleTest:Location, with propertyURI fdcSampleTest:latitude),
+	with param (a FdcParam with columnName "longitude", with classURI fdcSampleTest:Location, with propertyURI fdcSampleTest:longitude),
+	with param (a FdcParam with columnName "location", with classURI fdcSampleTest:Location).
+
+	

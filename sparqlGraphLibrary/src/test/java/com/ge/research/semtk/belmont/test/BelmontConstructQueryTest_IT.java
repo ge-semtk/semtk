@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ public class BelmontConstructQueryTest_IT {
 		Assume.assumeTrue("Construct query is not currently supported", false);
 		
 		IntegrationTestUtility.authenticateJunit();
-		sgJson = TestGraph.initGraphWithData("sampleBattery");
+		sgJson = TestGraph.initGraphWithData(BelmontConstructQueryTest_IT.class, "sampleBattery");
 	}
 	
 	@Test

@@ -23,7 +23,7 @@ public class DataDictionaryTest_IT {
 		
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/annotationBattery.owl");		
+		TestGraph.uploadOwlResource(this, "annotationBattery.owl");		
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn("http://"));
 
 		// generate a dictionary with stripped namespaces

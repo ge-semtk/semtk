@@ -1,0 +1,233 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "latitude",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#latitude",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "longitude",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#longitude",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Location",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"subClassNames": [
+					"http://research.ge.com/semtk/fdcSample/test#AircraftLocation"
+				],
+				"SparqlID": "?Location",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "code",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#code",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?code",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Location"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "location",
+						"ValueType": "Location",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#Location",
+						"ConnectBy": "location",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#location"
+					}
+				],
+				"NodeName": "Airport",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Airport",
+				"subClassNames": [],
+				"SparqlID": "?Airport",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "Landing Airport City"
+			},
+			{
+				"colId": "col_1",
+				"colName": "Landing Airport Code"
+			},
+			{
+				"colId": "col_2",
+				"colName": "Landing Airport Country"
+			},
+			{
+				"colId": "col_3",
+				"colName": "Landing Airport Elevation (ft)"
+			},
+			{
+				"colId": "col_4",
+				"colName": "Landing Airport FDW ID Number"
+			},
+			{
+				"colId": "col_5",
+				"colName": "Landing Airport Latitude"
+			},
+			{
+				"colId": "col_6",
+				"colName": "Landing Airport Longitude"
+			},
+			{
+				"colId": "col_7",
+				"colName": "Landing Airport Name"
+			},
+			{
+				"colId": "col_8",
+				"colName": "Landing Airport State"
+			},
+			{
+				"colId": "col_9",
+				"colName": "Landing Airport Type"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Airport",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Airport",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#code",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#name",
+						"mapping": [
+							{
+								"colId": "col_7"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Location",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#latitude",
+						"mapping": [
+							{
+								"colId": "col_5"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#longitude",
+						"mapping": [
+							{
+								"colId": "col_6"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

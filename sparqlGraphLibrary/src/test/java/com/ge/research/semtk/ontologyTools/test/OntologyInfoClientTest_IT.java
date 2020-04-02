@@ -59,9 +59,9 @@ public class OntologyInfoClientTest_IT {
 	@BeforeClass
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
-		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
-		SERVICE_SERVER = IntegrationTestUtility.getOntologyInfoServiceServer();
-		SERVICE_PORT = IntegrationTestUtility.getOntologyInfoServicePort();
+		SERVICE_PROTOCOL = IntegrationTestUtility.get("protocol");
+		SERVICE_SERVER = IntegrationTestUtility.get("ontologyinfoservice.server");
+		SERVICE_PORT = IntegrationTestUtility.getInt("ontologyinfoservice.port");
 	}
 	
 	private OntologyInfoClient getClient() throws Exception {
@@ -141,15 +141,15 @@ public class OntologyInfoClientTest_IT {
 		
 		// create sparql query client
 		SparqlQueryAuthClientConfig qConfig = new SparqlQueryAuthClientConfig(
-				IntegrationTestUtility.getServiceProtocol(), 
-				IntegrationTestUtility.getSparqlQueryServiceServer(), 
-				IntegrationTestUtility.getSparqlQueryServicePort(), 
+				IntegrationTestUtility.get("protocol"), 
+				IntegrationTestUtility.get("sparqlqueryservice.server"), 
+				IntegrationTestUtility.getInt("sparqlqueryservice.port"), 
 				"sparqlQueryService/uploadOwl", 
 				conn.getModelInterface(0).getServerAndPort(), 
 				conn.getModelInterface(0).getServerType(), 
 				conn.getModelInterface(0).getDataset(),
-				IntegrationTestUtility.getSparqlServerUsername(),
-				IntegrationTestUtility.getSparqlServerPassword());
+				IntegrationTestUtility.get("sparqlendpoint.username"),
+				IntegrationTestUtility.get("sparqlendpoint.password"));
 		SparqlQueryClient qClient = new SparqlQueryClient(qConfig);
 		
 		// make sure original oInfo is empty

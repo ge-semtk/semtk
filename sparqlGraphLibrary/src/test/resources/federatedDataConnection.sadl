@@ -1,0 +1,4 @@
+uri "http://research.ge.com/semtk/federatedDataConnection" alias fdc version "$Revision:$ Last modified on   $Date:$". 
+// v8-27-2015 9:00
+
+FDCData is a top-level class.

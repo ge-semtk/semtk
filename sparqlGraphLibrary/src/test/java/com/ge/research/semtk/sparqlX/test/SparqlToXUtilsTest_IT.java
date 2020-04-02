@@ -41,7 +41,7 @@ public class SparqlToXUtilsTest_IT {
 	@Test
 	public void testGetInstanceData_IT() throws Exception {
 		TestGraph.clearGraph();
-		SparqlGraphJson sgJson = TestGraph.initGraphWithData("sampleBattery");
+		SparqlGraphJson sgJson = TestGraph.initGraphWithData(this.getClass(), "sampleBattery");
 		SparqlConnection conn = sgJson.getSparqlConn();
 		OntologyInfo oInfo = sgJson.getOntologyInfo(IntegrationTestUtility.getOntologyInfoClient());
 		

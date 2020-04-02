@@ -1,0 +1,179 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:fdcSampleTest="http://research.ge.com/semtk/fdcSample/test"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:fdcServices="http://research.ge.com/semtk/fdcServices"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions"
+    xmlns:fdcConfigSample="http://research.ge.com/semtk/fdcConfigSample#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:j.0="http://research.ge.com/semtk/fdcServices#"
+  xml:base="http://research.ge.com/semtk/fdcConfigSample">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="fdcSample/test"/>
+    <owl:imports rdf:resource="fdcServices"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'fdcConfigSample.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <j.0:FdcConfig rdf:ID="ElevationConfig">
+    <j.0:input>
+      <j.0:FdcInput rdf:ID="ElevationInput1">
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >location</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#longitude"/>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >longitude</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#latitude"/>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >latitude</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:subgraphLink>
+          <j.0:FdcInputSubgraphLink>
+            <j.0:objectClass rdf:resource="fdcSample/test#Location"/>
+            <j.0:predicateProp rdf:resource="fdcSample/test#location"/>
+            <j.0:subjectClass rdf:resource="fdcSample/test#Elevation"/>
+          </j.0:FdcInputSubgraphLink>
+        </j.0:subgraphLink>
+        <j.0:inputIndex rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</j.0:inputIndex>
+      </j.0:FdcInput>
+    </j.0:input>
+    <j.0:ingestNodegroupId rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >fdcSampleElevation</j.0:ingestNodegroupId>
+    <j.0:serviceURL rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >http://localhost:12066/fdcSample/elevation</j.0:serviceURL>
+    <j.0:fdcClass rdf:resource="fdcSample/test#Elevation"/>
+  </j.0:FdcConfig>
+  <j.0:FdcConfig rdf:ID="DistanceConfig">
+    <j.0:input>
+      <j.0:FdcInput rdf:ID="DistanceInput2">
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >location2</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#longitude"/>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >longitude2</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#latitude"/>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >latitude2</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:subgraphLink>
+          <j.0:FdcInputSubgraphLink>
+            <j.0:objectClass rdf:resource="fdcSample/test#Location"/>
+            <j.0:predicateProp rdf:resource="fdcSample/test#location2"/>
+            <j.0:subjectClass rdf:resource="fdcSample/test#Distance"/>
+          </j.0:FdcInputSubgraphLink>
+        </j.0:subgraphLink>
+        <j.0:inputIndex rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >2</j.0:inputIndex>
+      </j.0:FdcInput>
+    </j.0:input>
+    <j.0:input>
+      <j.0:FdcInput rdf:ID="DistanceInput1">
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >location1</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#longitude"/>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >longitude1</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#latitude"/>
+            <j.0:classURI rdf:resource="fdcSample/test#Location"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >latitude1</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:subgraphLink>
+          <j.0:FdcInputSubgraphLink>
+            <j.0:objectClass rdf:resource="fdcSample/test#Location"/>
+            <j.0:predicateProp rdf:resource="fdcSample/test#location1"/>
+            <j.0:subjectClass rdf:resource="fdcSample/test#Distance"/>
+          </j.0:FdcInputSubgraphLink>
+        </j.0:subgraphLink>
+        <j.0:inputIndex rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</j.0:inputIndex>
+      </j.0:FdcInput>
+    </j.0:input>
+    <j.0:ingestNodegroupId rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >fdcSampleDistance</j.0:ingestNodegroupId>
+    <j.0:serviceURL rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >http://localhost:12066/fdcSample/distance</j.0:serviceURL>
+    <j.0:fdcClass rdf:resource="fdcSample/test#Distance"/>
+  </j.0:FdcConfig>
+  <j.0:FdcConfig rdf:ID="AircraftLocationConfig">
+    <j.0:input>
+      <j.0:FdcInput rdf:ID="AircraftLocationInput1">
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:classURI rdf:resource="fdcSample/test#LocationTrackableAircraft"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >aircraftUri</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:param>
+          <j.0:FdcParam>
+            <j.0:propertyURI rdf:resource="fdcSample/test#tailNumber"/>
+            <j.0:classURI rdf:resource="fdcSample/test#LocationTrackableAircraft"/>
+            <j.0:columnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+            >tailNumber</j.0:columnName>
+          </j.0:FdcParam>
+        </j.0:param>
+        <j.0:subgraphLink>
+          <j.0:FdcInputSubgraphLink>
+            <j.0:objectClass rdf:resource="fdcSample/test#AircraftLocation"/>
+            <j.0:predicateProp rdf:resource="fdcSample/test#currentLocation"/>
+            <j.0:subjectClass rdf:resource="fdcSample/test#LocationTrackableAircraft"/>
+          </j.0:FdcInputSubgraphLink>
+        </j.0:subgraphLink>
+        <j.0:inputIndex rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</j.0:inputIndex>
+      </j.0:FdcInput>
+    </j.0:input>
+    <j.0:ingestNodegroupId rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >fdcSampleAircraftLocation</j.0:ingestNodegroupId>
+    <j.0:serviceURL rdf:datatype="http://www.w3.org/2001/XMLSchema#string"
+    >http://localhost:12066/fdcSample/aircraftLocation</j.0:serviceURL>
+    <j.0:fdcClass rdf:resource="fdcSample/test#AircraftLocation"/>
+  </j.0:FdcConfig>
+</rdf:RDF>

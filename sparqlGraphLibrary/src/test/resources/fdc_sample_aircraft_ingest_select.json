@@ -1,0 +1,91 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "tailNumber",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#tailNumber",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?tailNumber",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Aircraft",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Aircraft",
+				"subClassNames": [],
+				"SparqlID": "?Aircraft",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "tail"
+			},
+			{
+				"colId": "col_1",
+				"colName": "type"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Aircraft",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Aircraft",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#tailNumber",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

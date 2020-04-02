@@ -48,9 +48,9 @@ public class ResultsClientTest_IT {
 	@BeforeClass
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
-		SERVICE_PROTOCOL = IntegrationTestUtility.getServiceProtocol();
-		SERVICE_SERVER = IntegrationTestUtility.getResultsServiceServer();
-		SERVICE_PORT = IntegrationTestUtility.getResultsServicePort();
+		SERVICE_PROTOCOL = IntegrationTestUtility.get("protocol");
+		SERVICE_SERVER = IntegrationTestUtility.get("resultsservice.server");
+		SERVICE_PORT = IntegrationTestUtility.getInt("resultsservice.port");
 		client = new ResultsClient(new ResultsClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT));
 	}
 

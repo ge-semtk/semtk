@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2016-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.UUID;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
@@ -58,44 +61,48 @@ import com.ge.research.semtk.utility.Utility;
  * 
  * NOTE: This class cannot be put in under src/test/java because it must remain accessible to other projects.
  */
-public class IntegrationTestUtility {
+public class IntegrationTestUtility{
 	
-	// property file with integration test configurations
-	public static final String INTEGRATION_TEST_PROPERTY_FILE = "src/test/resources/integrationtest.properties";
-
+	static Properties properties = null;
 	
-	// protocol for all services
-	public static String getServiceProtocol() throws Exception{
-		return getIntegrationTestProperty("integrationtest.protocol");
+	public static Properties getProperties() throws IOException {
+		loadProperties();
+		return properties;
 	}
-	
-	public static String getDispatcherClassName() throws Exception{
-		return getIntegrationTestProperty("integrationtest.dispatcherclassname");
+	private static void loadProperties() throws IOException {
+		if (properties == null) {
+			properties = new Properties();
+			InputStream is = IntegrationTestUtility.class.getResourceAsStream("/integrationtest.properties");
+			properties.load(is);
+		} 
+	}
+	public static String get(String key) throws Exception{ 
+		loadProperties();
+		if (!Utility.ENV_TEST) {
+			throw new Exception(Utility.ENV_TEST_EXCEPTION_STRING);
+		}
+		if (key.startsWith("integrationtest")) {
+			return Utility.getProperty(properties, key);
+		} else {
+			return Utility.getProperty(properties, "integrationtest." + key);
+		}
+	}
+		
+	public static int getInt(String key) throws Exception {
+		return Integer.valueOf(get(key)).intValue();
 	}
 	
 	// sparql endpoint
 	public static String getSparqlServerOnly() throws Exception {
-		String stripProtocol = getSparqlServer().split("://")[1];
+		String stripProtocol = get("sparqlendpoint.server").split("://")[1];
 		String stripPort = stripProtocol.split(":")[0];
 		return stripPort;
 				
 	}
 	public static int getSparqlServerPort() throws Exception {
-		String [] splitByColon = getSparqlServer().split(":");
+		String [] splitByColon = get("sparqlendpoint.server").split(":");
 		String portMaybeEndpoint = splitByColon[2];
 		return Integer.valueOf(portMaybeEndpoint.split("/")[0]);
-	}
-	public static String getSparqlServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.sparqlendpoint.server");
-	}
-	public static String getSparqlServerType() throws Exception{
-		return getIntegrationTestProperty("integrationtest.sparqlendpoint.type");
-	}
-	public static String getSparqlServerUsername() throws Exception{
-		return getIntegrationTestProperty("integrationtest.sparqlendpoint.username");
-	}
-	public static String getSparqlServerPassword() throws Exception{
-		return getIntegrationTestProperty("integrationtest.sparqlendpoint.password");
 	}
 	
 	/**
@@ -106,148 +113,24 @@ public class IntegrationTestUtility {
 	public static EndpointProperties getEndpointProperties() throws Exception {
 		EndpointProperties ret = new EndpointProperties();
 		
-		ret.setEndpointType(getSparqlServerType());
-		ret.setEndpointServerUrl(getSparqlServer());
-		ret.setEndpointUsername(getSparqlServerUsername());
-		ret.setEndpointPassword(getSparqlServerPassword());
+		ret.setEndpointType(get("sparqlendpoint.type"));
+		ret.setEndpointServerUrl(get("sparqlendpoint.server"));
+		ret.setEndpointUsername(get("sparqlendpoint.username"));
+		ret.setEndpointPassword(get("sparqlendpoint.password"));
 		
 		return ret;
-	}
-	
-	public static String getAuthUsernameKey() throws Exception{
-		return getIntegrationTestProperty("integrationtest.auth.usernameKey");
-	}
-	public static String getAuthSettingsFilePath() throws Exception{
-		return getIntegrationTestProperty("integrationtest.auth.settingsFilePath");
-	}
-	public static String getAuthRefreshFreqSec() throws Exception{
-		return getIntegrationTestProperty("integrationtest.auth.refreshFreqSeconds");
 	}
 	
 	public static AuthorizationProperties getAuthProperties() throws Exception {
 		AuthorizationProperties ret = new AuthorizationProperties();
-		ret.setUsernameKey(getAuthUsernameKey());
-		ret.setSettingsFilePath(getAuthSettingsFilePath());
+		ret.setUsernameKey(get("auth.usernameKey"));
+		ret.setSettingsFilePath(get("auth.settingsFilePath"));
 		try {
-			ret.setRefreshFreqSeconds(Integer.parseInt(getIntegrationTestProperty("auth.refreshFreqSeconds")));
+			ret.setRefreshFreqSeconds(Integer.parseInt(get("auth.refreshFreqSeconds")));
 		} catch (Exception e) {
 			// ok. optional property
 		}
 		return ret;
-	}
-	
-	// sparql query service
-	public static String getSparqlQueryServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.sparqlqueryservice.server");
-	}
-	public static int getSparqlQueryServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.sparqlqueryservice.port")).intValue();	
-	}	
-	
-	// ingestion service
-	public static String getIngestionServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.ingestionservice.server");
-	}
-	public static int getIngestionServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.ingestionservice.port")).intValue();	
-	}	
-		
-	// status service
-	public static String getStatusServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.statusservice.server");
-	}
-	public static int getStatusServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.statusservice.port")).intValue();
-	}
-	
-	// results service
-	public static String getResultsServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.resultsservice.server");
-	}
-	public static int getResultsServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.resultsservice.port")).intValue();
-	}
-	public static int getFdcSampleServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.fdcsampleservice.port")).intValue();
-	}
-	public static String getFdcSampleServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.fdcsampleservice.server");
-	}
-	
-	// dispatch service
-	public static String getDispatchServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.dispatchservice.server");
-	}
-	public static int getDispatchServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.dispatchservice.port")).intValue();
-	}	
-		
-	// Hive service
-	public static String getHiveServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.hiveservice.server");
-	}
-	public static int getHiveServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.hiveservice.port")).intValue();
-	}
-	// nodegroup store service
-	public static String getNodegroupServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.nodegroupservice.server");
-	}
-	public static int getNodegroupServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupservice.port")).intValue();
-	}
-	// nodegroup store service
-	public static String getNodegroupStoreServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.nodegroupstoreservice.server");
-	}
-	public static int getNodegroupStoreServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupstoreservice.port")).intValue();
-	}
-	
-	// nodegroup execution service
-	public static String getNodegroupExecutionServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.nodegroupexecution.server");
-	}
-	public static int getNodegroupExecutionServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.nodegroupexecution.port")).intValue();
-	}
-	
-	// oInfo store service
-	public static String getOntologyInfoServiceServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.ontologyinfoservice.server");
-	}
-	public static int getOntologyInfoServicePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.ontologyinfoservice.port")).intValue();
-	}
-	// Hive
-	public static String getHiveServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.hive.server");
-	}
-	public static int getHivePort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.hive.port")).intValue();
-	}
-	public static String getHiveUsername() throws Exception{
-		return getIntegrationTestProperty("integrationtest.hive.username");
-	}
-	public static String getHivePassword() throws Exception{
-		return getIntegrationTestProperty("integrationtest.hive.password");
-	}
-	public static String getHiveDatabase() throws Exception{
-		return getIntegrationTestProperty("integrationtest.hive.database");
-	}
-	
-	// ArangoDB
-	public static String getArangoDbServer() throws Exception{
-		return getIntegrationTestProperty("integrationtest.arangodb.server");
-	}
-	public static int getArangoDbPort() throws Exception{
-		return Integer.valueOf(getIntegrationTestProperty("integrationtest.arangodb.port")).intValue();
-	}
-	public static String getArangoDbUsername() throws Exception{
-		return getIntegrationTestProperty("integrationtest.arangodb.username");
-	}
-	public static String getArangoDbPassword() throws Exception{
-		return getIntegrationTestProperty("integrationtest.arangodb.password");
 	}
 	
 	/**
@@ -258,62 +141,59 @@ public class IntegrationTestUtility {
 	}
 	
 	public static ResultsClientConfig getResultsClientConfig() throws Exception{
-		return new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort());
+		return new ResultsClientConfig(get("protocol"), get("resultsservice.server"), getInt("resultsservice.port"));
 	}
 	
 	/**
 	 * Get a StatusClient using the integration test properties.
 	 */
 	public static StatusClient getStatusClient(String jobId) throws Exception{
-		return new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), jobId));
+		return new StatusClient(new StatusClientConfig(get("protocol"), get("statusservice.server"), getInt("statusservice.port"), jobId));
 	}	
 	
 	public static SparqlEndpointInterface getServicesSei() throws Exception {
 		return SparqlEndpointInterface.getInstance(
-				getSparqlServerType(), 
-				getSparqlServer(),
-				getServicesGraph(), 
-				getSparqlServerUsername(), 
-				getSparqlServerPassword());
+				get("sparqlendpoint.type"), 
+				get("sparqlendpoint.server"),
+				get("services.graph"), 
+				get("sparqlendpoint.username"), 
+				get("sparqlendpoint.password"));
 	}
 	
-	public static String getServicesGraph() throws Exception {
-		return getIntegrationTestProperty("integrationtest.services.graph");
-	}
 	/**
 	 * Get a SparqlQueryClient using the integration test properties.
 	 */
 	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
-		return new SparqlQueryClient(new SparqlQueryClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset));
+		return new SparqlQueryClient(new SparqlQueryClientConfig(get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), serviceEndpoint, sparqlServer, get("sparqlendpoint.type"), dataset));
 	}
 	
 	/**
 	 * Get a SparqlQueryClient using the integration test properties.
 	 */
 	public static SparqlQueryClient getSparqlQueryAuthClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
-		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), serviceEndpoint, sparqlServer, getSparqlServerType(), dataset, getSparqlServerUsername(), getSparqlServerPassword()));
+		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), serviceEndpoint, sparqlServer, get("sparqlendpoint.type"), dataset, get("sparqlendpoint.username"), get("sparqlendpoint.password")));
 	}
 	
 	public static SparqlQueryClient getSparqlQueryAuthClient() throws Exception{
-		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(getServiceProtocol(), getSparqlQueryServiceServer(), getSparqlQueryServicePort(), "/sparqlQueryService/query", getSparqlServer(), getSparqlServerType(), TestGraph.getDataset(), getSparqlServerUsername(), getSparqlServerPassword()));
+		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), "/sparqlQueryService/query", get("sparqlendpoint.server"), get("sparqlendpoint.type"), TestGraph.getDataset(), get("sparqlendpoint.username"), get("sparqlendpoint.password")));
 	}
 
 	public static OntologyInfoClient getOntologyInfoClient() throws Exception{
-		return new OntologyInfoClient(new OntologyInfoClientConfig(getServiceProtocol(), getOntologyInfoServiceServer(), getOntologyInfoServicePort()));
+		return new OntologyInfoClient(new OntologyInfoClientConfig(get("protocol"), get("ontologyinfoservice.server"), getInt("ontologyinfoservice.port")));
 	}
 	
 	/**
 	 * Get a NodeGroupStoreRestClient using the integration test properties.
 	 */
 	public static NodeGroupStoreRestClient getNodeGroupStoreRestClient() throws Exception{
-		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(getServiceProtocol(), getNodegroupStoreServiceServer(),  getNodegroupStoreServicePort()));
+		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(get("protocol"), get("nodegroupstoreservice.server"),  getInt("nodegroupstoreservice.port")));
 	}
 	
 	/**
 	 * Get a NodeGroupStoreRestClient using the integration test properties.
 	 */
 	public static NodeGroupExecutionClient getNodeGroupExecutionRestClient() throws Exception{
-		return new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(getServiceProtocol(), getNodegroupExecutionServiceServer(), getNodegroupExecutionServicePort(), getSparqlServerUsername(), getSparqlServerPassword()));
+		return new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(get("protocol"), get("nodegroupexecution.server"), getInt("nodegroupexecution.port"), get("sparqlendpoint.username"), get("sparqlendpoint.password")));
 	}
 	
 	/**
@@ -321,23 +201,12 @@ public class IntegrationTestUtility {
 	 */
 	public static NodeGroupExecutor getNodegroupExecutor() throws Exception{
 		NodeGroupStoreRestClient ngsrc = getNodeGroupStoreRestClient();
-		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(getServiceProtocol(), getDispatchServiceServer(), getDispatchServicePort()));
-		StatusClient stc = new StatusClient(new StatusClientConfig(getServiceProtocol(), getStatusServiceServer(), getStatusServicePort(), "totally fake"));
-		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(getServiceProtocol(), getResultsServiceServer(), getResultsServicePort()));
-		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(getServiceProtocol(), getIngestionServiceServer(), getIngestionServicePort()));		
+		DispatchRestClient drc = new DispatchRestClient(new DispatchClientConfig(get("protocol"), get("dispatchservice.server"), getInt("dispatchservice.port")));
+		StatusClient stc = new StatusClient(new StatusClientConfig(get("protocol"), get("statusservice.server"), getInt("statusservice.port"), "totally fake"));
+		ResultsClient rc  = new ResultsClient(new ResultsClientConfig(get("protocol"), get("resultsservice.server"), getInt("resultsservice.port")));
+		IngestorRestClient ic = new IngestorRestClient(new IngestorClientConfig(get("protocol"), get("ingestionservice.server"), getInt("ingestionservice.port")));		
 		SparqlEndpointInterface sei = getServicesSei();
 		return new NodeGroupExecutor(ngsrc, drc, rc, sei, ic);
-	}
-	
-	public static String getIntegrationTestProperty(String key) throws Exception{
-		if (!Utility.ENV_TEST) {
-			throw new Exception(Utility.ENV_TEST_EXCEPTION_STRING);
-		}
-		if (key.startsWith("integrationtest")) {
-			return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, key);
-		} else {
-			return Utility.getPropertyFromFile(INTEGRATION_TEST_PROPERTY_FILE, "integrationtest." + key);
-		}
 	}
 	
 	public static File getSampleFile(Object caller) throws Exception {
@@ -373,9 +242,9 @@ public class IntegrationTestUtility {
 	 */
 	public static S3BucketConfig getS3Config() throws Exception {
 		// these should exist, but may be blank
-		String region = getIntegrationTestProperty("integrationtest.neptuneupload.s3ClientRegion");
-		String iamRoleArn = getIntegrationTestProperty("integrationtest.neptuneupload.awsIamRoleArn");
-		String name =   getIntegrationTestProperty("integrationtest.neptuneupload.s3BucketName");
+		String region = get("neptuneupload.s3ClientRegion");
+		String iamRoleArn = get("neptuneupload.awsIamRoleArn");
+		String name =   get("neptuneupload.s3BucketName");
         
         S3BucketConfig config = new S3BucketConfig(region, name, iamRoleArn);
         

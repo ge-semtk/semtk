@@ -1,0 +1,65 @@
+uri "http://research.ge.com/kdl/sparqlgraph/externalDataConnection" alias sparqlEdc version "$Revision:$ Last modified on   $Date:$". 
+// v8-27-2015 9:00
+ 
+ExternalDataSource is a class.
+ExternalDataValue is a class.
+
+EDCValueGenerator is a class.
+EDCLocation is a class.
+
+// each time series  tag / readable-name 
+TimeSeriesGenerator is a type of EDCValueGenerator,
+	described by tag with a single value of type string,
+	described by variableName with a single value of type string,
+	described by hasValues with values of type TimeSeriesValue.
+
+// actually stored in externally
+TimeSeriesValue is a type of ExternalDataValue,
+	described by hasDateTime with a single value of type time,
+	described by hasValue with a single value of type float.
+
+// a collection of timeSeriesGenerators	
+TimeSeriesGeneratorMap is a class,                                        
+ 	described by mapName with a single value of type string,         
+ 	described by hasMeasurement with values of type TimeSeriesGenerator.  
+  
+TimeSeriesDatasetBase is a type of ExternalDataSource,
+	described by map with a single value of type TimeSeriesGeneratorMap.
+ 	
+TimeSeriesDatasetSimpleLocation is a type of TimeSeriesDatasetBase,
+ 	described by simpleLocation with a single value of type SimpleLocation.  
+KairosDBDataset is a type of TimeSeriesDatasetSimpleLocation.
+ 	 
+TimeSeriesDataset is a type of TimeSeriesDatasetBase,
+ 	described by location with a single value of type Location.
+
+// this version will allow constraints with col1 < col2		
+TimeSeriesRowDataset is a type of TimeSeriesDataset.
+
+// this version is traditional timeseries
+TimeSeriesTupleDataset is a type of TimeSeriesDataset.
+
+SimpleLocation is a type of EDCLocation,	
+	described by databaseServer with a single value of type string.		// e.g. "jdbc:hive2://host:10000", "athena", "http://kairosdbhost:8080"
+
+Location is a type of SimpleLocation,
+	described by database with a single value of type string,
+	described by tableName with a single value of type string,
+	described by dateTimeMarker with values of type DateTimeMarker.		// the names of columns in the table which indicate data and/or time. 
+
+DateTimeMarker is a class,
+	described by timeStampColumnList with a single value of type string. 	//should be in order of descending resolution. 
+
+
+	
+// ================================ Simple File storage ================================
+
+File is a type of ExternalDataSource,
+	described by filename with a single value of type string,
+	described by systemUrl with a single value of type string,
+	described by resultsFile with a single value of type ResultsFile. 
+
+// this get's replaced by EDC
+ResultsFile is a type of ExternalDataValue,
+	described by fileID with a single value of type string.
+	

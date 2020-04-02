@@ -1,0 +1,41 @@
+uri "http://research.ge.com/kdl/sparqlgraph/edcServices" alias edcServices version "$Revision:$ Last modified on   $Date:$". 
+
+//import "http://www.w3.org/1999/02/22-rdf-syntax-ns#" as rdf.
+//import "http://www.w3.org/2002/07/something?.owl" as owl.
+//import "http://www.w3.org/1999/02/22-rdf-syntax-ns.owl" as rdf.
+
+Service is a class,
+	described by clientType with a single value of type string,
+	described by protocol with a single value of type string,
+	described by url with a single value of type string,
+	described by port with a single value of type int,
+	described by endpoint with a single value of type string.
+
+EdcParam is a class,
+	described by paramClassname with a single value of type string,
+	described by keyname with a single value of type string,
+	described by sparqlId with a single value of type string.
+	
+EdcQueryConstraint is a class,
+	described by edcConstraintName with a single value of type string,
+	described by edcConstraintVarClassname with a single value of type string,
+	described by edcConstraintVarKeyname with a single value of type string.
+	
+EdcNodegroupRestriction is a class,
+	described by restrictionClassname with a single value of type string,
+	described by operator with a single value of type string,
+	described by operand with a single value of type string.
+	
+EdcType is a class,
+	described by mnemonic with a single value of type string,
+	described by generateService with a single value of type Service,
+	described by executeService with a single value of type Service,
+	
+	// I can't figure out how to make these classes.
+	described by triggerSourceClassname with values of type string,
+	described by triggerValueClassname with values of type string, 
+	
+	described by edcServiceParam with values of type EdcParam,
+	described by queryConstraint with a single value of type EdcQueryConstraint,
+	described by nodegroupConstraint with values of type EdcNodegroupRestriction.
+

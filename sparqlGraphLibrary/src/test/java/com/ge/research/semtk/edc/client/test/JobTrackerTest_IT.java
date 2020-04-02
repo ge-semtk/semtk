@@ -54,7 +54,7 @@ public class JobTrackerTest_IT {
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/main/resources/semantics/OwlModels/serviceJob.owl");
+		TestGraph.uploadOwlResource(JobTrackerTest_IT.class, "serviceJob.owl");
 		
 		tempFolder = Files.createTempDir();
 		trstore = new TableResultsStorage(tempFolder.getPath());

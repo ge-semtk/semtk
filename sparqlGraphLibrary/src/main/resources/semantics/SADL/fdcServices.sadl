@@ -1,0 +1,25 @@
+uri "http://research.ge.com/semtk/fdcServices" alias fdcServices.
+
+// model for the SemTK services graph configuration data
+FdcConfig is a top-level class,
+	described by fdcClass with a single value of type class,
+	described by serviceURL with a single value of type string,
+	described by ingestNodegroupId with a single value of type string,
+	described by input with values of type FdcInput,
+	described by docURL with a single value of type string.
+	
+FdcInput is a top-level class,
+	described by inputIndex with a single value of type int,
+	described by subgraphLink with a single value of type FdcInputSubgraphLink,
+	described by param with values of type FdcParam.
+
+FdcInputSubgraphLink is a top-level class,
+	described by subjectClass with a single value of type class,
+	described by predicateProp with a single value of type class,
+	described by objectClass with a single value of type class.
+		
+FdcParam is a top-level class,
+	described by columnName with a single value of type string,
+	described by classURI with a single value of type class,
+	described by propertyURI with a single value of type class.
+	

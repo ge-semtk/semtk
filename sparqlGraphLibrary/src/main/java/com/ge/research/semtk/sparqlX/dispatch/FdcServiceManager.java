@@ -106,7 +106,6 @@ public class FdcServiceManager {
 		// build static cache
 		FdcServiceManager.lastCacheMillis = 0;
 		FdcServiceManager.suggestReCache(extConfigSei, oInfoClient);
-
 	}
 	
 	private void calculate() throws Exception {

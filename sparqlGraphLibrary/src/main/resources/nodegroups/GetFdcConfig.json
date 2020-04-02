@@ -1,0 +1,335 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "objectClass",
+						"ValueType": "Class",
+						"relationship": "http://www.w3.org/2002/07/owl#Class",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#objectClass",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?objectClass",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "predicateProp",
+						"ValueType": "Class",
+						"relationship": "http://www.w3.org/2002/07/owl#Class",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#predicateProp",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?predicateProp",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "subjectClass",
+						"ValueType": "Class",
+						"relationship": "http://www.w3.org/2002/07/owl#Class",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#subjectClass",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?subjectClass",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "FdcInputSubgraphLink",
+				"fullURIName": "http://research.ge.com/semtk/fdcServices#FdcInputSubgraphLink",
+				"subClassNames": [],
+				"SparqlID": "?FdcInputSubgraphLink",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "classURI",
+						"ValueType": "Class",
+						"relationship": "http://www.w3.org/2002/07/owl#Class",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#classURI",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?classURI",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "columnName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#columnName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?columnName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "propertyURI",
+						"ValueType": "Class",
+						"relationship": "http://www.w3.org/2002/07/owl#Class",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#propertyURI",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?propertyURI",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "FdcParam",
+				"fullURIName": "http://research.ge.com/semtk/fdcServices#FdcParam",
+				"subClassNames": [],
+				"SparqlID": "?FdcParam",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "inputIndex",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#inputIndex",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?inputIndex",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?FdcParam"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "param",
+						"ValueType": "FdcParam",
+						"UriValueType": "http://research.ge.com/semtk/fdcServices#FdcParam",
+						"ConnectBy": "param",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcServices#param"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?FdcInputSubgraphLink"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "subgraphLink",
+						"ValueType": "FdcInputSubgraphLink",
+						"UriValueType": "http://research.ge.com/semtk/fdcServices#FdcInputSubgraphLink",
+						"ConnectBy": "subgraphLink",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcServices#subgraphLink"
+					}
+				],
+				"NodeName": "FdcInput",
+				"fullURIName": "http://research.ge.com/semtk/fdcServices#FdcInput",
+				"subClassNames": [],
+				"SparqlID": "?FdcInput",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "docURL",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#docURL",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?docURL",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "fdcClass",
+						"ValueType": "Class",
+						"relationship": "http://www.w3.org/2002/07/owl#Class",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#fdcClass",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?fdcClass",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "ingestNodegroupId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#ingestNodegroupId",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?ingestNodegroupId",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "serviceURL",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcServices#serviceURL",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?serviceURL",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?FdcInput"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "input",
+						"ValueType": "FdcInput",
+						"UriValueType": "http://research.ge.com/semtk/fdcServices#FdcInput",
+						"ConnectBy": "input",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcServices#input"
+					}
+				],
+				"NodeName": "FdcConfig",
+				"fullURIName": "http://research.ge.com/semtk/fdcServices#FdcConfig",
+				"subClassNames": [],
+				"SparqlID": "?FdcConfig",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?FdcConfig",
+				"type": "http://research.ge.com/semtk/fdcServices#FdcConfig",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?FdcInput",
+				"type": "http://research.ge.com/semtk/fdcServices#FdcInput",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?FdcParam",
+				"type": "http://research.ge.com/semtk/fdcServices#FdcParam",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?FdcInputSubgraphLink",
+				"type": "http://research.ge.com/semtk/fdcServices#FdcInputSubgraphLink",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

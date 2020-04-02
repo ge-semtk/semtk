@@ -1,0 +1,174 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Location",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"subClassNames": [
+					"http://research.ge.com/semtk/fdcSample/test#AircraftLocation"
+				],
+				"SparqlID": "?Location",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "code",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#code",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?code",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Location"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "location",
+						"ValueType": "Location",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#Location",
+						"ConnectBy": "location",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#location"
+					}
+				],
+				"NodeName": "Airport",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Airport",
+				"subClassNames": [],
+				"SparqlID": "?Airport",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "distanceNm",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#distanceNm",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?distanceNm",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Location"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "location2",
+						"ValueType": "Location",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#Location",
+						"ConnectBy": "location2",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#location2"
+					}
+				],
+				"NodeName": "Distance",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Distance",
+				"subClassNames": [],
+				"SparqlID": "?Distance",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?distanceNm"
+			}
+		]
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Distance",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Distance",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Airport",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Airport",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Location",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

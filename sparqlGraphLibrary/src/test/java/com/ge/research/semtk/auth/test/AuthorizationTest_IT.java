@@ -1,5 +1,5 @@
 /**
- ** Copyright 2018 General Electric Company
+ ** Copyright 2018-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -169,7 +169,7 @@ public class AuthorizationTest_IT {
 	private void testAllStatusResultsEndpointsFail(String createUser, String defaultUser) throws Exception {
 		
 		// Can't test client if _IT environment has no authSettingsFile (auth is turned off)
-		if (AuthorizationManager.authFileDisabled(IntegrationTestUtility.getAuthSettingsFilePath())) {
+		if (AuthorizationManager.authFileDisabled(IntegrationTestUtility.get("auth.settingsFilePath"))) {
 			return;
 		}
 		

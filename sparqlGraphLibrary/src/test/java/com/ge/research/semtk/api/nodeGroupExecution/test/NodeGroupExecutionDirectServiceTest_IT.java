@@ -1,5 +1,5 @@
 /**
- ** Copyright 2018 General Electric Company
+ ** Copyright 2018-2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ public class NodeGroupExecutionDirectServiceTest_IT {
 		public static void setup() throws Exception {
 			IntegrationTestUtility.authenticateJunit();			
 			// get client config for nodegroup execution service
-			nodeGroupExecutionClientConfig = new NodeGroupExecutionClientConfig(IntegrationTestUtility.getServiceProtocol(), IntegrationTestUtility.getNodegroupExecutionServiceServer(), IntegrationTestUtility.getNodegroupExecutionServicePort());
+			nodeGroupExecutionClientConfig = new NodeGroupExecutionClientConfig(IntegrationTestUtility.get("protocol"), IntegrationTestUtility.get("nodegroupexecution.server"), IntegrationTestUtility.getInt("nodegroupexecution.port"));
 			nodeGroupExecutionClientConfig.setServiceEndpoint(nodeGroupExecutionServiceMappingPrefix + dispatchSelectByIdEndpoint);
 		}
 				
