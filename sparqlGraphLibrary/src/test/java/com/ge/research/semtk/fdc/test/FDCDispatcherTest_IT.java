@@ -48,7 +48,6 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class FDCDispatcherTest_IT {
 	private static ResultsClient resultsClient;
-	private final static String CREATOR = "Junit FDCDispatcherTest_IT.java";
 	/**
 	 * Load an FDC config with distance and location objects
 	 * Load all the required owl for models
@@ -61,85 +60,9 @@ public class FDCDispatcherTest_IT {
 	@BeforeClass
 	public static void setup() throws Exception {
 		
-		// skip this file if system is not configured to use the FdcDispatcher
-		// TODO: this will get more complicated when there are sub-classes
-		assumeTrue("Skipping FDC tests, using non-FDC dispatcher class: " + IntegrationTestUtility.get("integrationtest.dispatcherclassname"), 
-				IntegrationTestUtility.get("integrationtest.dispatcherclassname").contains("FdcDispatcher"));
-		
-		// setup
-		IntegrationTestUtility.authenticateJunit();		
-		TestGraph.clearGraph();
+		IntegrationTestUtility.setupFdcTests();
 		
 		resultsClient = IntegrationTestUtility.getResultsClient();
-		
-		// load fdcConfigSample.owl into a local FDC config
-		// convert "localhost:12070" placeholder into the location of fdcSampleService
-		int port = IntegrationTestUtility.getInt("fdcsampleservice.port");
-		String server = IntegrationTestUtility.get("fdcsampleservice.server");
-		String configOwl = Utility.getResourceAsString(TestGraph.getOSObject(), "/fdcConfigSample.owl");
-		configOwl = configOwl.replace("localhost:12070", server + "/" + String.valueOf(port));
-		// rename one nodegroup for nodegroupstore testing
-		configOwl = configOwl.replace("fdcSampleElevation", "fdcSampleElevation-STORE");
-		
-		// first cache will get nothing, but load owl
-		FdcServiceManager.cacheFdcConfig(TestGraph.getSei(), IntegrationTestUtility.getOntologyInfoClient());
-		// upload fdc config to testGraph
-		TestGraph.uploadOwlContents(configOwl);	
-		// force re-cache from test graph, different than normal semtk services which FDCDispatcher will use later
-		FdcServiceManager.cacheFdcConfig(TestGraph.getSei(), IntegrationTestUtility.getOntologyInfoClient());
-		
-		// delete just to be sure
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleDistance");
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleAircraftLocation");
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleElevation");
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleElevation-STORE");
-
-		// load one nodegroup to store
-		FdcClient fdcClient = new FdcClient(FdcClientConfig.buildGetNodegroup("http://" + server + ":" + String.valueOf(port) + "/fdcSample/anything", "fdcSampleElevation"));
-		SparqlGraphJson sgjson = fdcClient.executeGetNodegroup();
-		if (sgjson == null) {
-			throw new Exception("Error retrieving fdcSampleElevation nodegroup from fdcSampleService");
-		}
-		IntegrationTestUtility.getNodeGroupStoreRestClient().executeStoreNodeGroup("fdcSampleElevation-STORE", "no comment", CREATOR, sgjson.toJson());
-		
-		// ingest FDC owl
-		
-		TestGraph.uploadOwlResource(FDCDispatcherTest_IT.class, "/federatedDataConnection.owl");
-		TestGraph.uploadOwlResource(FDCDispatcherTest_IT.class, "/fdcSampleTest.owl");
-		
-		try {
-			// ingest a demo aircraft
-			String aircraftCsv = "tail,type\ndemo,A320\n";
-			TestGraph.ingestCsvString(FDCDispatcherTest_IT.class, "/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
-			
-		} catch (Exception ee) {
-			LocalLogger.logToStdErr("---- Encountered intermittent error in FDCDispatchTest_IT-----");
-			LocalLogger.logToStdErr(ee.getMessage());
-			
-			OntologyInfo oInfo = TestGraph.getOInfo();
-			
-			LocalLogger.logToStdErr("Test graph is: " + TestGraph.getSei().getGraph());
-			LocalLogger.logToStdErr("Reloading oInfo.  Does it contain #Aircraft now?  classes:");
-			LocalLogger.logToStdErr(oInfo.getClassNames().toString());
-			
-			LocalLogger.logToStdErr("Attempting to re-ingest");
-			String aircraftCsv = "tail,type\ndemo,A320\n";
-		
-			try {
-				TestGraph.ingestCsvString(FDCDispatcherTest_IT.class, "/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
-				LocalLogger.logToStdErr("Re-ingest succeeded");
-				// if this is succeeded we could put in a wait
-				// I have not found virtuoso documentation on checking when a bulk load is complete across REST
-			} catch (Exception eee) {
-				LocalLogger.logToStdErr("Re-ingest failed");
-				LocalLogger.logToStdErr(eee.getMessage());
-			}
-
-			fail("Intermittent (virtuoso?) error hit.  Check all the extra stderr logging.");
-		}
-		
-		// ingest some airports
-		TestGraph.ingest(FDCDispatcherTest_IT.class, "/fdc_ingest_airports.json", "/fdc_airport_lat_lon.csv");
 	}
 	
 	@AfterClass

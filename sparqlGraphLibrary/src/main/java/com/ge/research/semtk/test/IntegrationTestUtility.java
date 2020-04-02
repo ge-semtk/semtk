@@ -19,6 +19,7 @@ package com.ge.research.semtk.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +40,12 @@ import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.fdc.FdcClient;
+import com.ge.research.semtk.fdc.FdcClientConfig;
+import com.ge.research.semtk.fdc.test.FDCDispatcherTest_IT;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.properties.EndpointProperties;
@@ -51,6 +56,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -332,5 +338,62 @@ public class IntegrationTestUtility{
 	public static void logDuration(long startTime, String message) {
 		Double dur = (System.currentTimeMillis() - startTime) / 1000.0;
 		LocalLogger.logToStdOut(message + ": " + String.valueOf(dur) + " sec");
+	}
+	
+	/**
+	 * Called by both OSS and GE tests at some point, so it's here.
+	 * @throws Exception
+	 */
+	public static void setupFdcTests() throws Exception {
+		// skip this file if system is not configured to use the FdcDispatcher
+		// TODO: this will get more complicated when there are sub-classes
+		assumeTrue("Skipping FDC tests, using non-FDC dispatcher class: " + IntegrationTestUtility.get("integrationtest.dispatcherclassname"), 
+				IntegrationTestUtility.get("integrationtest.dispatcherclassname").contains("FdcDispatcher"));
+		
+		// setup
+		IntegrationTestUtility.authenticateJunit();		
+		TestGraph.clearGraph();
+		
+		// load fdcConfigSample.owl into a local FDC config
+		// convert "localhost:12070" placeholder into the location of fdcSampleService
+		int port = IntegrationTestUtility.getInt("fdcsampleservice.port");
+		String server = IntegrationTestUtility.get("fdcsampleservice.server");
+		String configOwl = Utility.getResourceAsString(TestGraph.getOSObject(), "/fdcConfigSample.owl");
+		configOwl = configOwl.replace("localhost:12070", server + "/" + String.valueOf(port));
+		// rename one nodegroup for nodegroupstore testing
+		configOwl = configOwl.replace("fdcSampleElevation", "fdcSampleElevation-STORE");
+		
+		// first cache will get nothing, but load owl
+		FdcServiceManager.cacheFdcConfig(TestGraph.getSei(), IntegrationTestUtility.getOntologyInfoClient());
+		// upload fdc config to testGraph
+		TestGraph.uploadOwlContents(configOwl);	
+		// force re-cache from test graph, different than normal semtk services which FDCDispatcher will use later
+		FdcServiceManager.cacheFdcConfig(TestGraph.getSei(), IntegrationTestUtility.getOntologyInfoClient());
+		
+		// delete just to be sure
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleDistance");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleAircraftLocation");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleElevation");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleElevation-STORE");
+
+		// load one nodegroup to store
+		FdcClient fdcClient = new FdcClient(FdcClientConfig.buildGetNodegroup("http://" + server + ":" + String.valueOf(port) + "/fdcSample/anything", "fdcSampleElevation"));
+		SparqlGraphJson sgjson = fdcClient.executeGetNodegroup();
+		if (sgjson == null) {
+			throw new Exception("Error retrieving fdcSampleElevation nodegroup from fdcSampleService");
+		}
+		IntegrationTestUtility.getNodeGroupStoreRestClient().executeStoreNodeGroup("fdcSampleElevation-STORE", "no comment", "Junit setupFdcTests", sgjson.toJson());
+		
+		// ingest FDC owl
+		
+		TestGraph.uploadOwlResource(FDCDispatcherTest_IT.class, "/federatedDataConnection.owl");
+		TestGraph.uploadOwlResource(FDCDispatcherTest_IT.class, "/fdcSampleTest.owl");
+		
+		// ingest a demo aircraft
+		String aircraftCsv = "tail,type\ndemo,A320\n";
+		TestGraph.ingestCsvString(FDCDispatcherTest_IT.class, "/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
+
+		// ingest some airports
+		TestGraph.ingest(FDCDispatcherTest_IT.class, "/fdc_ingest_airports.json", "/fdc_airport_lat_lon.csv");
 	}
 }
