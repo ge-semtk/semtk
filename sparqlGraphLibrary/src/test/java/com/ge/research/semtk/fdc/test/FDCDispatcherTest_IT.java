@@ -65,12 +65,6 @@ public class FDCDispatcherTest_IT {
 		resultsClient = IntegrationTestUtility.getResultsClient();
 	}
 	
-	@AfterClass
-	public static void teardown() throws Exception {
-		//leave the sample nodegroups in the "real" nodegroup store
-		//IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleDistance");
-		//IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleAircraftLocation");
-	}
 	
 	@Test 
 	public void testRetrieveNodegroups() throws Exception {
