@@ -6,6 +6,7 @@ import org.junit.Test;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 public class TestStoreNodeGroup_IT {
 	
@@ -13,6 +14,7 @@ public class TestStoreNodeGroup_IT {
 	
 	@BeforeClass
 	public static void setup() throws Exception {
+		assumeTrue("Fixed test setup to run this as IT", false);
 		serviceURL = IntegrationTestUtility.getNodeGroupStoreFullURL();
 	}
     
