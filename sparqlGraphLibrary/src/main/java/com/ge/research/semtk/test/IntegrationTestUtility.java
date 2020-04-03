@@ -194,6 +194,9 @@ public class IntegrationTestUtility{
 		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(get("protocol"), get("nodegroupstoreservice.server"),  getInt("nodegroupstoreservice.port")));
 	}
 	
+	public static String getNodeGroupStoreFullURL() throws Exception {
+		return get("protocol") + "://" + get("nodegroupstoreservice.server") + ":" + get("nodegroupstoreservice.port");
+	}
 	/**
 	 * Get a NodeGroupStoreRestClient using the integration test properties.
 	 */
@@ -357,7 +360,7 @@ public class IntegrationTestUtility{
 		// convert "localhost:12070" placeholder into the location of fdcSampleService
 		int port = IntegrationTestUtility.getInt("fdcsampleservice.port");
 		String server = IntegrationTestUtility.get("fdcsampleservice.server");
-		String configOwl = Utility.getResourceAsString(TestGraph.getOSObject(), "/fdcConfigSample.owl");
+		String configOwl = Utility.getResourceAsString(TestGraph.getOSObject(), "/fdcTestSetup/fdcConfigSample.owl");
 		configOwl = configOwl.replace("localhost:12070", server + "/" + String.valueOf(port));
 		// rename one nodegroup for nodegroupstore testing
 		configOwl = configOwl.replace("fdcSampleElevation", "fdcSampleElevation-STORE");
@@ -385,14 +388,14 @@ public class IntegrationTestUtility{
 		
 		// ingest FDC owl
 		
-		TestGraph.uploadOwlResource(c, "/federatedDataConnection.owl");
-		TestGraph.uploadOwlResource(c, "/fdcSampleTest.owl");
+		TestGraph.uploadOwlResource(c, "/fdcTestSetup/federatedDataConnection.owl");
+		TestGraph.uploadOwlResource(c, "/fdcTestSetup/fdcSampleTest.owl");
 		
 		// ingest a demo aircraft
 		String aircraftCsv = "tail,type\ndemo,A320\n";
-		TestGraph.ingestCsvString(c, "/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
+		TestGraph.ingestCsvString(c, "/fdcTestSetup/fdc_sample_aircraft_ingest_select.json", aircraftCsv);
 
 		// ingest some airports
-		TestGraph.ingest(c, "/fdc_ingest_airports.json", "/fdc_airport_lat_lon.csv");
+		TestGraph.ingest(c, "/fdcTestSetup/fdc_ingest_airports.json", "/fdcTestSetup/fdc_airport_lat_lon.csv");
 	}
 }

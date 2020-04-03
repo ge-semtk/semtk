@@ -102,7 +102,7 @@ public class FDCDispatcherTest_IT {
 	@Test
 	public void testNonFdcQuery() throws Exception {
 		// simple query of the demo aircraft
-		Table t = this.runFdc("src/test/resources/fdc_sample_aircraft_ingest_select.json");
+		Table t = this.runFdc("src/test/resources/fdc_sample_location_select.json");
 		assertTrue("Did not find expected single aircraft named 'demo'", t.getCell(0, 0).equals("demo"));
 	}
 	
