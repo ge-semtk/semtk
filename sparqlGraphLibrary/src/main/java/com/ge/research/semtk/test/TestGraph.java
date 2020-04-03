@@ -149,7 +149,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServerType() throws Exception{
-		return IntegrationTestUtility.get("integrationtest.sparqlendpoint.type");
+		return IntegrationTestUtility.get("sparqlendpoint.type");
 	}
 	
 	/**
