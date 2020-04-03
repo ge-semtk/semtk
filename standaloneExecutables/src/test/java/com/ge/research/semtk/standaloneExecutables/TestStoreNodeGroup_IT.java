@@ -7,7 +7,7 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 
 import static junit.framework.TestCase.assertTrue;
 
-public class TestStoreNodeGroup {
+public class TestStoreNodeGroup_IT {
 	
 	static String serviceURL = null;
 	
