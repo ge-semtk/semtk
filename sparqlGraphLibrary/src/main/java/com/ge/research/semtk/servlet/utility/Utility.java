@@ -26,36 +26,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-
 
 
 /*
  * Utility methods
  */
 public abstract class Utility {
-
-	/**
-	 * Load properties from a file.
-	 * @param filename
-	 * @return
-	 * @throws ServletException
-	 */
-	public static Properties loadPropertiesFromFile(String propertiesFile, ServletContext servletContext) throws ServletException {
-		System.out.println("Loading properties from file: " + propertiesFile);
-		Properties properties = new Properties();
-		try (InputStream propertiesInputStream = servletContext.getResourceAsStream(propertiesFile)) {
-		    if (propertiesInputStream == null) {
-				throw new ServletException("Cannot find " + propertiesFile);
-		    }
-		    properties.load(propertiesInputStream);
-		}
-		catch (IOException e) {
-		    throw new ServletException("Error reading " + propertiesFile, e);
-		}
-		return properties;
-	}
 
 	/*
 	 * Convert dates.

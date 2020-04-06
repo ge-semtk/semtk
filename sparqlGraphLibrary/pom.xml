@@ -7,8 +7,8 @@
 		<version>2.1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>sparqlGraphLibrary</artifactId>
-	
-    <repositories>
+
+	<repositories>
 		<!-- need cloudera repository to retrieve hadoop-client 2.5.0-cdh5.3.0 -->
 		<repository>
 			<id>cloudera</id>
@@ -18,64 +18,65 @@
 
 	<dependencies>
 
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-		</dependency>
+		
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 		</dependency>
 
-		<!-- added by paul and doesn't work. supposed to be for MultipartEntityBuilder -->
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
-			</dependency>
-		<!-- end addition by paul -->
-		<!--  Added by Justin because tests were failing to find a specifically needed class -->
-
+		</dependency>
+		
+		<!-- License: Apache 2.0 -->
 		<dependency>
-		    <groupId>org.apache.httpcomponents</groupId>
-		    <artifactId>httpcore</artifactId>
-		    <!-- version is forced to fix AWS incompatibility.  see https://github.com/aws/aws-sdk-java-v2/issues/652 -->
-		    <version>4.4.9</version>
-		    </dependency>
-
-		<!--  End of additions by Justin -->
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore</artifactId>
+			<!-- version is forced to fix AWS incompatibility. see https://github.com/aws/aws-sdk-java-v2/issues/652 -->
+			<version>4.4.9</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 		</dependency>
 
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>1.4</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
-		    <groupId>commons-io</groupId>
-		    <artifactId>commons-io</artifactId>
-		    <version>2.6</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.6</version>
 		</dependency>
 
+		<!-- License: MIT -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			</dependency>
+		</dependency>
 
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>27.0.1-jre</version>
 		</dependency>
 
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.apache.hive</groupId>
 			<artifactId>hive-jdbc</artifactId>
@@ -96,6 +97,7 @@
 			</exclusions>
 		</dependency>
 
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-common</artifactId>
@@ -115,63 +117,65 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
- 
- 		<dependency>
-              <groupId>org.apache.jena</groupId>
-              <artifactId>jena-arq</artifactId>
-              <version>3.8.0</version>
-       </dependency>
-       <!-- dependency>
-			<groupId>software.amazon.awssdk</groupId>
-			<artifactId>auth</artifactId>
-			<version>[2.5.4.4,)</version>
-		</dependency -->
-		
-		<!--  for com.amazonaws.http -->
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
-	      <groupId>com.amazonaws</groupId>
-	      <artifactId>aws-java-sdk-core</artifactId>
-	      <version>1.11.415</version>
-	      <scope>compile</scope>
-	    </dependency>
-		<dependency>
-		    <groupId>org.projectlombok</groupId>
-		    <artifactId>lombok</artifactId>
-		    <version>1.16.22</version>
-		    <scope>provided</scope>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>jena-arq</artifactId>
+			<version>3.8.0</version>
 		</dependency>
-	    
-	    
+
+		<!-- License: Apache 2.0 -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-core</artifactId>
+			<version>1.11.415</version>
+			<scope>compile</scope>
+		</dependency>
+		
+		<!-- License: MIT -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.22</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
 			<version>2.5.51</version>
 		</dependency>
-		
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>sts</artifactId>
 			<version>2.5.53</version>
 		</dependency>
-			    
-	    <dependency>
-    		<groupId>com.arangodb</groupId>
-    		<artifactId>arangodb-java-driver</artifactId>
-    		<version>4.2.2</version>
-  		</dependency>
-  		
-  		<dependency>
+
+		<!-- License: Apache 2.0 -->
+		<dependency>
+			<groupId>com.arangodb</groupId>
+			<artifactId>arangodb-java-driver</artifactId>
+			<version>4.2.2</version>
+		</dependency>
+
+		<!-- License: Apache 2.0 -->
+		<dependency>
 			<groupId>org.kairosdb</groupId>
 			<artifactId>client</artifactId>
 			<version>2.0</version>
 		</dependency>
-		
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-athena</artifactId>
 			<version>1.11.133</version>
 		</dependency>
-	    
+
 	</dependencies>
 
 	<properties>
