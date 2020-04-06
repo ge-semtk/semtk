@@ -1,34 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.ge.research.semtk</groupId>
-    <artifactId>semtk-oss</artifactId>
-    <version>2.1.1-SNAPSHOT</version>
-  </parent>
-  <artifactId>standaloneExecutables</artifactId>
-  <version>2.1.1-SNAPSHOT</version>
-    
-  <dependencies>
-  
-  	<dependency>
-	  <groupId>com.ge.research.semtk</groupId>
-	  <artifactId>sparqlGraphLibrary</artifactId>
-	  <version>2.1.1-SNAPSHOT</version>
-	</dependency>
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ge.research.semtk</groupId>
+		<artifactId>semtk-oss</artifactId>
+		<version>2.1.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>standaloneExecutables</artifactId>
+	<version>2.1.1-SNAPSHOT</version>
 
-      <dependency>
-          <groupId>com.opencsv</groupId>
-          <artifactId>opencsv</artifactId>
-          <version>4.1</version>
-      </dependency>
+	<dependencies>
 
-  </dependencies>
-  
-   	<properties>
+		<dependency>
+			<groupId>com.ge.research.semtk</groupId>
+			<artifactId>sparqlGraphLibrary</artifactId>
+			<version>2.1.1-SNAPSHOT</version>
+		</dependency>
+
+		<!-- License: Apache 2.0 -->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>4.1</version>
+		</dependency>
+
+	</dependencies>
+
+	<properties>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 	</properties>
-  
+
 	<!-- create runnable ("fat") jars with dependencies included -->
 	<build>
 		<plugins>
@@ -36,7 +37,7 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<executions>
 
-					<!-- java -cp path/to/standaloneExecutables-jar-with-dependencies.jar com.research.full.mainClass arg1 arg2 ...  -->
+					<!-- java -cp path/to/standaloneExecutables-jar-with-dependencies.jar com.research.full.mainClass arg1 arg2 ... -->
 					<execution>
 						<id>standalone</id>
 						<configuration>
@@ -44,17 +45,17 @@
 								<descriptorRef>jar-with-dependencies</descriptorRef>
 							</descriptorRefs>
 							<finalName>standaloneExecutables</finalName>
-							<fileMode>0777</fileMode> 
+							<fileMode>0777</fileMode>
 						</configuration>
 						<phase>install</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
 					</execution>
-					
+
 				</executions>
 			</plugin>
 		</plugins>
-	</build>  
-  
+	</build>
+
 </project>

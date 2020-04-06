@@ -1,83 +1,84 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.ge.research.semtk</groupId>
-    <artifactId>semtk-oss</artifactId>
-    <version>2.1.1-SNAPSHOT</version>
-  </parent>
-  <groupId>com.ge.research.semtk</groupId>
-  <artifactId>springSecurityLibrary</artifactId>
-  <version>2.1.1-SNAPSHOT</version>
-  <name>springSecurityLibrary</name>
-  <url>http://maven.apache.org</url>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ge.research.semtk</groupId>
+		<artifactId>semtk-oss</artifactId>
+		<version>2.1.1-SNAPSHOT</version>
+	</parent>
+	<groupId>com.ge.research.semtk</groupId>
+	<artifactId>springSecurityLibrary</artifactId>
+	<version>2.1.1-SNAPSHOT</version>
+	<name>springSecurityLibrary</name>
+	<url>http://maven.apache.org</url>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
 
 	<dependencies>
+	
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<!-- <version>1.3.1.RELEASE</version> -->
-		</dependency>	
+		</dependency>
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-		
-		<!-- security additions -->
-		<!--
-		<dependency>
-			<groupId>org.springframework.security.oauth</groupId>
-			<artifactId>spring-security-oauth2</artifactId>
-		</dependency>
-		-->
 
-		<!-- New location of the @EnableOAuth2Sso annotation -->
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.springframework.security.oauth.boot</groupId>
 			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
 		</dependency>
 
-
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
 
-
-        <dependency>
+		<!-- License: Apache 2.0 -->
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.3.2</version>
 		</dependency>
-		<!--  end security additions -->	
-		
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
-			<version>1.1.1</version>			
-			</dependency>
+			<version>1.1.1</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
 			<version>2.1.1-SNAPSHOT</version>
-		</dependency>		
+		</dependency>
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
 			<version>${swagger.version}</version>
 		</dependency>
+
+		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger-ui</artifactId>
