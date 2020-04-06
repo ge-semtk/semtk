@@ -2813,7 +2813,10 @@ public class NodeGroup {
 						} else {
 							// normal case: increment count
 							Integer val = linkHash.get(toSnode.getSparqlID());
-							linkHash.put(toSnode.getSparqlID(), val + 1);
+							// if toSnode is not in skipNodes, then increment
+							if (val != null) {
+								linkHash.put(toSnode.getSparqlID(), val + 1);
+							}
 						}
 					}
 				}
