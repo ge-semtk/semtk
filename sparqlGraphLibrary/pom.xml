@@ -53,12 +53,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.glassfish</groupId>
-			<artifactId>javax.json</artifactId>
-			<version>1.0.4</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>1.4</version>
@@ -159,14 +153,7 @@
 			<artifactId>sts</artifactId>
 			<version>2.5.53</version>
 		</dependency>
-
-		<!--  for commented-out API calls in NeptuneSparqlEndpointInterface.java -->
-		<!--  dependency>
-	      <groupId>org.eclipse.rdf4j</groupId>
-	      <artifactId>rdf4j-runtime</artifactId>
-	      <version>2.2</version>
-	    </dependency-->
-	    
+			    
 	    <dependency>
     		<groupId>com.arangodb</groupId>
     		<artifactId>arangodb-java-driver</artifactId>
