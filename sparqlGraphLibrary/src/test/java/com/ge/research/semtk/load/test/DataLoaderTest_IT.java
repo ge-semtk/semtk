@@ -40,7 +40,6 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
-import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
@@ -60,7 +59,6 @@ import com.ge.research.semtk.utility.LocalLogger;
  */
 public class DataLoaderTest_IT {
 
-	private static final int DEFAULT_BATCH_SIZE = 32;
 	
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -73,7 +71,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// test
@@ -89,11 +87,11 @@ public class DataLoaderTest_IT {
 	@Test
 	public void testLoadFromCsv() throws Exception {
 
-		String owlFile = "src/test/resources/testTransforms.owl";
+		String owlResource = "/testTransforms.owl";
 		
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlFile);
-		SparqlConnection conn = TestGraph.getSparqlConn("http://");
+		TestGraph.uploadOwlResource(this, owlResource);
+		SparqlConnection conn = TestGraph.getSparqlConn();
 		
 		String templateFilePath = "src/test/resources/testTransforms.json";
 		String csvFilePath = "src/test/resources/testTransforms.csv";
@@ -143,11 +141,11 @@ public class DataLoaderTest_IT {
 		// confirm works, using connection override
 		int numRecordsAdded = DataLoader.loadFromCsv(templateFilePath, csvFilePath, TestGraph.getUsername(), TestGraph.getPassword(), conn);
 		assertEquals(numRecordsAdded, 3);	// loaded 3 csv rows
-		assertEquals(TestGraph.getNumTriples(), 147);  // confirmed that the graph got all the data
+		assertEquals(147, TestGraph.getNumTriples());  // confirmed that the graph got all the data
 		
 		// confirm can delete a directory containing a CSV file that has been loaded
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlFile);
+		TestGraph.uploadOwlResource(this, owlResource);
 		String tmpDirToDelete = "src/test/resources/tmpToDelete/";     			// create a directory that we can later delete
 		String csvFileToDelete = tmpDirToDelete + "testTransforms.csv";
 		FileUtils.copyFile(new File(csvFilePath),new File(csvFileToDelete));	// copy a CSV file here
@@ -171,7 +169,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
@@ -239,7 +237,7 @@ public class DataLoaderTest_IT {
 		uri = prefix + "Cell_" + uri.replaceAll("e", "E");
 
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -284,7 +282,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// import
@@ -339,7 +337,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
 
 		// import
@@ -361,6 +359,7 @@ public class DataLoaderTest_IT {
 		
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testLoadDataSmallBatch() throws Exception {
 		// Pre changes:   19.5s 18.5s  18.64s  17.514
@@ -370,7 +369,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
 
 		// import with stupid small starting batch size
@@ -392,6 +391,7 @@ public class DataLoaderTest_IT {
 		
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testLoadDataLargeBatch() throws Exception {
 		// Pre changes:   19.5s 18.5s  18.64s  17.514
@@ -401,7 +401,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
 
 		// import with stupid big starting batch size
@@ -431,11 +431,11 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestMessyBaseURI.json");
 		
 		// import 
-		DataLoader dl = new DataLoader(sgJson, 100, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
@@ -458,7 +458,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTest.owl");
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
 
 		// precheck
@@ -487,11 +487,11 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, 8, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
@@ -515,11 +515,11 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryIngestTime.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, 8, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		LocalLogger.logToStdOut("Starting load");
 		dl.importData(true);
@@ -549,11 +549,11 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import
-		DataLoader dl = new DataLoader(sgJson, 8, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
 		String jobId = IntegrationTestUtility.generateJobId("testLoadDataDuraBatteryAsync");
 		StatusClient sClient = IntegrationTestUtility.getStatusClient(jobId);
@@ -585,7 +585,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
 
 		// import
@@ -608,7 +608,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
 
 		String jobId = IntegrationTestUtility.generateJobId("testLoadDataDuraBatteryEmptyColAsync");
@@ -646,7 +646,7 @@ public class DataLoaderTest_IT {
 		TestGraph.clearGraph();
 				
 		// ==== pre set some data =====
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
@@ -685,7 +685,7 @@ public class DataLoaderTest_IT {
 		TestGraph.clearGraph();
 				
 		// ==== pre set some data =====
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryShortData.csv", false);
 
@@ -722,7 +722,7 @@ public class DataLoaderTest_IT {
 	public void testLookupBatteryId_lookupFails() throws Exception {
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 	
 		// Try URI lookup
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
@@ -746,7 +746,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery twice.  
@@ -793,7 +793,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -827,7 +827,7 @@ public class DataLoaderTest_IT {
 
 		// setup as normal
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4 as normal
@@ -844,7 +844,6 @@ public class DataLoaderTest_IT {
 		SparqlEndpointInterface seiBoth = TestGraph.getSei();
 		SparqlEndpointInterface seiData0 = TestGraph.getSei(TestGraph.generateGraphName("data0"));
 		seiData0.clearGraph();
-		SparqlConnection connBoth = TestGraph.getSparqlConn();
 		
 		SparqlConnection connBothPlusData0 = TestGraph.getSparqlConn();
 		connBothPlusData0.clearDataInterfaces();
@@ -879,7 +878,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -912,7 +911,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -945,7 +944,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -977,7 +976,7 @@ public class DataLoaderTest_IT {
 		
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		
 		// the real test : look up battery by two colors and add assembly date.  But one color is blank.
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupPruneBlanks.json");
@@ -1016,7 +1015,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -1050,7 +1049,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -1085,7 +1084,7 @@ public class DataLoaderTest_IT {
 		
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/Pet.owl");
+		TestGraph.uploadOwlResource(this, "/Pet.owl");
 		SparqlGraphJson sgJson1 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/pet_ingest_cat_info.json");
 		SparqlGraphJson sgJson2 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/pet_ingest_pet_nicknames.json");
 		Dataset ds1 = new CSVDataset("src/test/resources/pet_cat_info.csv", false);
@@ -1138,7 +1137,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -1186,7 +1185,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
@@ -1248,12 +1247,12 @@ public class DataLoaderTest_IT {
 	public void testGraphLoadBadEnum() throws Exception {
 		String csvPath = "src/test/resources/sampleBatteryBadColor.csv";
 		String jsonPath = "src/test/resources/sampleBattery.json";
-		String owlPath = "src/test/resources/sampleBattery.owl";
+		String owlResource = "/sampleBattery.owl";
 
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath);
 		CSVDataset csvDataset = new CSVDataset(csvPath, false);
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlPath);
+		TestGraph.uploadOwlResource(this, owlResource);
 
 		DataLoader dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1273,7 +1272,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
@@ -1308,7 +1307,7 @@ public class DataLoaderTest_IT {
 
 		// setup
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/loadTestDuraBattery.owl");
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
 
 	  
@@ -1328,87 +1327,14 @@ public class DataLoaderTest_IT {
 		
 	}
 	
-	@Test
-	public void test_TEMPORARY() throws Exception {
-		// This test will load up to two owls
-		// then a csv dataset
-		// and ingest up to three templates against the csv
-		String csvPath = "";
-		String jsonPath1 = "";
-		String jsonPath2 = "";
-		String jsonPath3 = "";
-		String owlPath1 = "";
-		String owlPath2 = "";
-		
-		if (csvPath.isEmpty() || owlPath1.isEmpty()) {
-			return;
-		}
-		
-		// load csv
-		CSVDataset csvDataset = new CSVDataset(csvPath, false);
-		
-		// owl1
-		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlPath1);
-		
-		// owl2
-		if (!owlPath2.isEmpty()) {
-			TestGraph.uploadOwl(owlPath2);
-		}
-		
-		SparqlGraphJson sgJson = null;
-		
-        // load data 1
-		if (!jsonPath1.isEmpty()) {
-			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath1);
-			DataLoader dl1 = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
-			dl1.importData(true);
-			
-			Table err = dl1.getLoadingErrorReport();
-			if (err.getNumRows() > 0) {
-				LocalLogger.logToStdErr(err.toCSVString());
-				fail();
-			}
-		}
-		
-        // load data 2
-		if (!jsonPath2.isEmpty()) {
-	
-			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath2);
-			csvDataset.reset();
-			DataLoader dl2 = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
-			dl2.importData(true);
-			
-			Table err = dl2.getLoadingErrorReport();
-			if (err.getNumRows() > 0) {
-				LocalLogger.logToStdErr(err.toCSVString());
-				fail();
-			}
-		}
-			
-		// load data 3
-		if (!jsonPath3.isEmpty()) {
-
-			sgJson = TestGraph.getSparqlGraphJsonFromFile(jsonPath3);
-			csvDataset.reset();
-			DataLoader dl3 = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
-			dl3.importData(true);
-			
-			Table err = dl3.getLoadingErrorReport();
-			if (err.getNumRows() > 0) {
-				LocalLogger.logToStdErr(err.toCSVString());
-				fail();
-			}
-		}
-		
-	}
 	
 	
 	
 	
 	
-	// TODO: fails if we don't set SparqlID
-	// TODO: fails if SparqlID doesn't start with "?"
+	
+	// fails if we don't set SparqlID
+	// fails if SparqlID doesn't start with "?"
 	private void returnProp(NodeGroup nodegroup, String node, String prop) throws Exception {
 		PropertyItem cellId = nodegroup.getNodeBySparqlID("?" + node).getPropertyByKeyname(prop);
 		cellId.setSparqlID("?" + prop);
@@ -1427,12 +1353,5 @@ public class DataLoaderTest_IT {
 		node.setValueConstraint(v);
 	}
 
-	private void runDeleteQuery(String query) throws Exception {
-		SparqlEndpointInterface sei = TestGraph.getSei();
-		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-		if (!res.getSuccess()) {
-			throw new Exception("Failure running delete query: \n" + query + "\n rationale: " + res.getRationaleAsString(" "));
-		}
-	}
 	
 }
