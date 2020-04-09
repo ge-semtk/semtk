@@ -73,8 +73,6 @@ public class DataLoader implements Runnable {
 	int datasetRows = 0;
 	int percentStart = 0;
 	int percentEnd = 0;
-
-	InMemoryInterface cacheSei = null;
 	
 	public DataLoader(){
 		// default and does nothing special 
@@ -142,9 +140,6 @@ public class DataLoader implements Runnable {
 		this.batchHandler.setBatchSize(this.batchSize);
 	}
 	
-	public void setCacheSei(InMemoryInterface cacheSei) {
-		this.cacheSei = cacheSei;
-	}
 	/**
 	 * Override the ideal insert query size provided by the SparqlEndpointInterface
 	 * @param override
@@ -290,6 +285,9 @@ public class DataLoader implements Runnable {
 	 * @throws Exception - if any thread throws an exception, one will be thrown as (exceptionHeader + e)
 	 */
 	private int runIngestionThreads(boolean skipIngest, boolean skipCheck, String exceptionHeader) throws Exception {		
+		
+		final boolean IN_MEMORY = false;
+		InMemoryInterface inMem = new InMemoryInterface("temp");
 	
 		// TODO
 		// owl puts in triples as "id"^^String
@@ -329,8 +327,7 @@ public class DataLoader implements Runnable {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				SparqlEndpointInterface ingestSei = (this.cacheSei != null) ? this.cacheSei : this.endpoint;
-				IngestionWorkerThread worker = new IngestionWorkerThread(ingestSei, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
+				IngestionWorkerThread worker = new IngestionWorkerThread(IN_MEMORY? inMem : this.endpoint, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				if (this.insertQueryIdealSizeOverride > 0) {
 					worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
 				}
@@ -392,12 +389,9 @@ public class DataLoader implements Runnable {
 		
 		LocalLogger.logToStdOut(" (DONE)", false, true);
 		
-		// If a temporary in-memory graph was used, then dump it to owl and upload it
-		if (!skipIngest && this.cacheSei != null) {
-			LocalLogger.logToStdOut("Uploading temporary graph...");
-			String owl = this.cacheSei.dumpToOwl();
-			this.endpoint.executeAuthUploadOwl(owl.getBytes());
-			LocalLogger.logToStdOut("done.");
+		if (IN_MEMORY) {
+			byte [] owl = inMem.dumpToOwl().getBytes();
+			this.endpoint.executeAuthUploadOwl(inMem.dumpToOwl().getBytes());
 		}
 		
 		// tell status client if there is one set up

@@ -61,7 +61,6 @@ public class NodeGroup {
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();
-	private HashMap<String, Node> idToNodeHash = new HashMap<String, Node>();
 	private int limit = 0;
 	private int offset = 0;
 	private ArrayList<OrderElement> orderBy = new ArrayList<OrderElement>();
@@ -324,7 +323,6 @@ public class NodeGroup {
 		this.orphanOnCreate.add(node);
 		// also, add to the list of known nodes
 		this.nodes.add(node);
-		this.idToNodeHash.put(node.getSparqlID(), node);
 	}
 	
 	/**
@@ -736,11 +734,10 @@ public class NodeGroup {
 
 
 		// reserve the node SparqlID
-		this.legalizeAndReserviceSparqlIDs(curr);
+		this.reserveNodeSparqlIDs(curr);
 		
 		// add the node to the nodegroup control structure..
 		this.nodes.add(curr);
-		this.idToNodeHash.put(curr.getSparqlID(), curr);
 		// set up the connection info so this node participates in the graph
 		if(linkFromNewUri != null && linkFromNewUri != ""){
 			curr.setConnection(existingNode, linkFromNewUri);
@@ -754,16 +751,16 @@ public class NodeGroup {
 		
 	}
 
-	private void legalizeAndReserviceSparqlIDs(Node node) {
-		String ID = node.getSparqlID();
+	private void reserveNodeSparqlIDs(Node curr) {
+		String ID = curr.getSparqlID();
 		if(this.sparqlNameHash.containsKey(ID)){	// this name was already used. 
 			ID = BelmontUtil.generateSparqlID(ID, this.sparqlNameHash);
-			node.setSparqlID(ID);	// update it. 
+			curr.setSparqlID(ID);	// update it. 
 		}
 		this.reserveSparqlID(ID);	// actually hold the name now. 
 		
 		// check the properties...
-		ArrayList<PropertyItem> props = node.getReturnedPropertyItems();
+		ArrayList<PropertyItem> props = curr.getReturnedPropertyItems();
 		for(int i = 0; i < props.size(); i += 1){
 			String pID = props.get(i).getSparqlID();
 			if(this.sparqlNameHash.containsKey(pID)){
@@ -886,11 +883,10 @@ public class NodeGroup {
 	 * @return - index or -1
 	 */
 	public int getNodeIndexBySparqlID(String sparqlId) {
-		String lookupId = (sparqlId.charAt(0) == '?') ? sparqlId : "?" + sparqlId;
+		String lookupId = (sparqlId.startsWith("?")) ? sparqlId : "?" + sparqlId;
 		
 		// look up a node by ID and return it. 
-		int size = nodes.size();
-		for(int i = 0; i < size; i += 1){
+		for(int i = 0; i < nodes.size(); i += 1){
 			// can we find it by name?
 			if(this.nodes.get(i).getSparqlID().equals(lookupId)){   // this was "==" but that failed in some cases...
 				return i;
@@ -900,9 +896,11 @@ public class NodeGroup {
 	}
 	
 	public Node getNodeBySparqlID(String sparqlId) {
-		String lookupId = (sparqlId.charAt(0) == '?') ? sparqlId : "?" + sparqlId;
-		return this.idToNodeHash.get(lookupId);
-
+		int i = this.getNodeIndexBySparqlID(sparqlId);
+		if (i == -1) 
+			return null;
+		else 
+			return this.nodes.get(i);
 	}
 	
 	public Node getNode(int i) {
@@ -1989,7 +1987,6 @@ public class NodeGroup {
 
 		// remove the sNode from the nodeGroup
 		this.nodes.remove(node);
-		this.idToNodeHash.remove(node.getSparqlID());
 	}
 
 	/**
@@ -2416,16 +2413,10 @@ public class NodeGroup {
 		// return the new id, which may be slightly different than the requested
 		// id.
 
-		String oldID = obj.getSparqlID();
-		String newID = BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
 		this.freeSparqlID(obj.getSparqlID());
+		String newID = BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
 		this.reserveSparqlID(newID);
 		obj.setSparqlID(newID);
-		
-		if (obj instanceof Node) {
-			this.idToNodeHash.remove(oldID);
-			this.idToNodeHash.put(newID, (Node) obj);
-		}
 		return newID;
 	}
 

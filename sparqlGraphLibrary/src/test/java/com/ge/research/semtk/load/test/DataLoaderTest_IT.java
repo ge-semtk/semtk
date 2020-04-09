@@ -44,7 +44,6 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.InMemoryInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -93,7 +92,7 @@ public class DataLoaderTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, owlResource);
 		SparqlConnection conn = TestGraph.getSparqlConn();
-
+		
 		String templateFilePath = "src/test/resources/testTransforms.json";
 		String csvFilePath = "src/test/resources/testTransforms.csv";
 		
@@ -147,7 +146,6 @@ public class DataLoaderTest_IT {
 		// confirm can delete a directory containing a CSV file that has been loaded
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, owlResource);
-
 		String tmpDirToDelete = "src/test/resources/tmpToDelete/";     			// create a directory that we can later delete
 		String csvFileToDelete = tmpDirToDelete + "testTransforms.csv";
 		FileUtils.copyFile(new File(csvFilePath),new File(csvFileToDelete));	// copy a CSV file here
@@ -207,7 +205,7 @@ public class DataLoaderTest_IT {
 
 		// get json
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		TestGraph.uploadOwlResource(this, "sampleBattery.owl");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
@@ -331,13 +329,7 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
-	public void test_LoadData() throws Exception {
-		doLoadData(false);
-		//doLoadData(true);
-	}
-	
-	public void doLoadData(boolean cacheFlag) throws Exception {
-
+	public void testLoadData() throws Exception {
 		// Pre changes:   19.5s 18.5s  18.64s  17.514
 		// During changes:  
 		// Bigger-ish test of many import spec features and timing
@@ -350,7 +342,10 @@ public class DataLoaderTest_IT {
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		loadData(dl, "doLoadData", cacheFlag);
+		
+		long start = IntegrationTestUtility.getStartTime();
+		dl.importData(true);
+		IntegrationTestUtility.logDuration(start, "testLoadData");
 		
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -484,12 +479,9 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
-	public void test_LoadDataDuraBattery() throws Exception {
-		doLoadDataDuraBattery(false);
-		//doLoadDataDuraBattery(true);
-	}
-	
-	public void doLoadDataDuraBattery(boolean cacheFlag) throws Exception {  
+	public void testLoadDataDuraBattery() throws Exception {
+		// Pre changes:   
+		// During changes:  
 		// Bigger-ish test of many import spec features and timing. 
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
@@ -501,7 +493,9 @@ public class DataLoaderTest_IT {
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		
-		loadData(dl, "doLoadDataDuraBattery", cacheFlag);
+		LocalLogger.logToStdOut("Starting load");
+		dl.importData(true);
+		LocalLogger.logToStdOut("Finished with load");
 		
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -647,14 +641,7 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
-	public void test_LookupBatteryIdAddDesc() throws Exception {
-		//doLookupBatteryIdAddDesc(true);
-		doLookupBatteryIdAddDesc(false);
-		
-	}
-	
-	public void doLookupBatteryIdAddDesc(boolean cacheFlag) throws Exception {
-
+	public void testLookupBatteryIdAddDesc() throws Exception {
 		// setup
 		TestGraph.clearGraph();
 				
@@ -664,23 +651,7 @@ public class DataLoaderTest_IT {
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
-		
-		//
-		//
-		// switching between these lines causes the a failure
-		//dl0.importData(true);
-		loadData(dl0, "doLookupBatteryIdAddDesc PRELOAD", cacheFlag);
-		//
-		//
-		//
-		
-		// It looks like when we insert via inMemory graph, the strings go in as plain literals.
-		// When we do URI lookups, we query for "value"^^xsd:string
-		//
-		// TODO: 
-		//   confirm we are putting the type on during the INSERT
-		//   figure out how either the JENA dump to owl or the Virtuoso uploadOwl is losing it
-		//   http://iswc2011.semanticweb.org/fileadmin/iswc/Papers/Workshops/SSWS/Emmons-et-all-SSWS2011.pdf
+		dl0.importData(true);
 		
 		Table err0 = dl0.getLoadingErrorReport();
 		if (err0.getNumRows() > 0) {
@@ -695,7 +666,8 @@ public class DataLoaderTest_IT {
 		
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		loadData(dl, "doLookupBatteryIdAddDesc LOOKUP", cacheFlag);
+		dl.importData(true);
+
 
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
@@ -850,8 +822,7 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testLoadLookXNodesTwoConn() throws Exception {
-		// Repeat testLoadLookXNodes() with an extra data connection graph
-		// ingest into a different graph
+		// Repeat testLoadLookXNodes() with an extra data connection
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
 
 		// setup as normal
@@ -891,15 +862,10 @@ public class DataLoaderTest_IT {
 		}
 
 		// query both graphs should get full results
-		// query contains both + data0
-		// New data should come back
 		String query = TestGraph.getNodeGroupWithOInfo(sgJson).generateSparqlSelect();
 		IntegrationTestUtility.querySeiAndCheckResults(query, seiBoth, this, "/loadTestDuraBatteryLookXNodesResults.csv");
 		
 		// generate query with only "both" sei in the FROM clause should only return original load
-		// query only contains both (not data0)
-		// new data shouldn't show up
-		// original first4 should still return just those 4
 		sgJson.setSparqlConn(TestGraph.getSparqlConn());
 		query = TestGraph.getNodeGroupWithOInfo(sgJson).generateSparqlSelect();
 		IntegrationTestUtility.querySeiAndCheckResults(query, seiBoth, this, "/loadTestDuraBatteryFirst4Results.csv");
@@ -1220,7 +1186,6 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
-
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
@@ -1389,12 +1354,4 @@ public class DataLoaderTest_IT {
 	}
 
 	
-	private void loadData(DataLoader dl, String logName, boolean cacheFlag) throws Exception {
-		if (cacheFlag)
-			dl.setCacheSei(new InMemoryInterface("http://cache"));
-
-		long start = IntegrationTestUtility.getStartTime();
-		dl.importData(true);
-		IntegrationTestUtility.logDuration(start, "TIMING " + logName + (cacheFlag ? " with cache" : " w/o  cache"));
-	}
 }
