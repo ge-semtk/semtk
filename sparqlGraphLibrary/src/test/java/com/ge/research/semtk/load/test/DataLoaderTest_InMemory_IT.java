@@ -76,7 +76,7 @@ public class DataLoaderTest_InMemory_IT {
 	
 	
 	@Test
-	public void testLoadData() throws Exception {
+	public void testLoadDataManualInMemory() throws Exception {
 		
 		InMemoryInterface sei = new InMemoryInterface("http://name");
 		

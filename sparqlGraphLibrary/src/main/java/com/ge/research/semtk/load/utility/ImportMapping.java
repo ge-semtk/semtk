@@ -20,51 +20,45 @@ package com.ge.research.semtk.load.utility;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
-import com.ge.research.semtk.belmont.XSDSupportedType;
-
 /**
  * One row of items mapping to a particular item in the nodegroup
  * @author 200001934
  *
  */
 public class ImportMapping {
-	private int importNodeIndex = -1;
-	private int propItemIndex = -1;
+	public static String NO_PROPERTY = "";
+	private String nodeSparqlID = null;
+	private String propURI = NO_PROPERTY;   
 	private ArrayList<MappingItem> itemList = new ArrayList<MappingItem>();
 	private boolean isEnum = false;     // does sNodeIndex point to an enum
-	private int lookupNodeIndex = -1;
 
 	public static ImportMapping importSpecCopy(ImportMapping other) {
 		ImportMapping ret = new ImportMapping();
-		ret.importNodeIndex = other.importNodeIndex;
-		ret.propItemIndex = other.propItemIndex;
+		ret.nodeSparqlID = other.nodeSparqlID;
+		ret.propURI = other.propURI;
 		for (MappingItem item : other.itemList) {
 			ret.itemList.add(MappingItem.importSpecCopy(item)); 
 		}
 		ret.isEnum = other.isEnum;
-		ret.lookupNodeIndex = other.lookupNodeIndex;
 		
 		return ret;
 	}
 	
-	public int getLookupNodeIndex() {
-		return lookupNodeIndex;
+	public String getNodeSparqlID() {
+		return nodeSparqlID;
 	}
-	public void setLookupNodeIndex(int lookupNodeIndex) {
-		this.lookupNodeIndex = lookupNodeIndex;
+
+
+	public void setNodeSparqlID(String nodeSparqlID) {
+		this.nodeSparqlID = nodeSparqlID;
 	}
-	
-	public int getImportNodeIndex() {
-		return importNodeIndex;
+
+
+	public String getPropURI() {
+		return propURI;
 	}
-	public void setImportNodeIndex(int sNodeIndex) {
-		this.importNodeIndex = sNodeIndex;
-	}
-	public int getPropItemIndex() {
-		return propItemIndex;
-	}
-	public void setPropItemIndex(int propItemIndex) {
-		this.propItemIndex = propItemIndex;
+	public void setPropURI(String propURI) {
+		this.propURI = propURI;
 	}
 	public void setIsEnum(boolean b) {
 		this.isEnum = b;
@@ -73,11 +67,11 @@ public class ImportMapping {
 		return this.isEnum;
 	}
 	public boolean isProperty() {
-		return this.propItemIndex > -1;
+		return !this.propURI.equals(NO_PROPERTY);
 	}
 	
 	public boolean isNode() {
-		return this.propItemIndex == -1;
+		return this.propURI.equals(NO_PROPERTY);
 	}
 	
 	public void addItem(MappingItem item) {
