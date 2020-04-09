@@ -135,6 +135,11 @@ public class FdcServiceManager {
 			// one entry for the SparqlID of each FDC node in the nodegroup
 			// the entry hashes the paramset string to a nodegroup that will generate the param sets;
 			
+			/*
+			 * This is too blunt of a tool.
+			 * - some errors are real errors and should be reported
+			 * - some errors are missing connections that should silently return nothing
+			 */
 			try {
 				this.calcParameterNodegroups(n);
 				this.unprocessedFdcNodes.add(sparqlId);
