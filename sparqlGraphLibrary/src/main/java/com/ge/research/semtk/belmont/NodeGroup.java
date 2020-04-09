@@ -61,6 +61,7 @@ public class NodeGroup {
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();
+	private HashMap<String, Node> idToNodeHash = new HashMap<String, Node>();
 	private int limit = 0;
 	private int offset = 0;
 	private ArrayList<OrderElement> orderBy = new ArrayList<OrderElement>();
@@ -323,6 +324,7 @@ public class NodeGroup {
 		this.orphanOnCreate.add(node);
 		// also, add to the list of known nodes
 		this.nodes.add(node);
+		this.idToNodeHash.put(node.getSparqlID(), node);
 	}
 	
 	/**
@@ -734,10 +736,11 @@ public class NodeGroup {
 
 
 		// reserve the node SparqlID
-		this.reserveNodeSparqlIDs(curr);
+		this.legalizeAndReserviceSparqlIDs(curr);
 		
 		// add the node to the nodegroup control structure..
 		this.nodes.add(curr);
+		this.idToNodeHash.put(curr.getSparqlID(), curr);
 		// set up the connection info so this node participates in the graph
 		if(linkFromNewUri != null && linkFromNewUri != ""){
 			curr.setConnection(existingNode, linkFromNewUri);
@@ -751,16 +754,16 @@ public class NodeGroup {
 		
 	}
 
-	private void reserveNodeSparqlIDs(Node curr) {
-		String ID = curr.getSparqlID();
+	private void legalizeAndReserviceSparqlIDs(Node node) {
+		String ID = node.getSparqlID();
 		if(this.sparqlNameHash.containsKey(ID)){	// this name was already used. 
 			ID = BelmontUtil.generateSparqlID(ID, this.sparqlNameHash);
-			curr.setSparqlID(ID);	// update it. 
+			node.setSparqlID(ID);	// update it. 
 		}
 		this.reserveSparqlID(ID);	// actually hold the name now. 
 		
 		// check the properties...
-		ArrayList<PropertyItem> props = curr.getReturnedPropertyItems();
+		ArrayList<PropertyItem> props = node.getReturnedPropertyItems();
 		for(int i = 0; i < props.size(); i += 1){
 			String pID = props.get(i).getSparqlID();
 			if(this.sparqlNameHash.containsKey(pID)){
@@ -883,10 +886,11 @@ public class NodeGroup {
 	 * @return - index or -1
 	 */
 	public int getNodeIndexBySparqlID(String sparqlId) {
-		String lookupId = (sparqlId.startsWith("?")) ? sparqlId : "?" + sparqlId;
+		String lookupId = (sparqlId.charAt(0) == '?') ? sparqlId : "?" + sparqlId;
 		
 		// look up a node by ID and return it. 
-		for(int i = 0; i < nodes.size(); i += 1){
+		int size = nodes.size();
+		for(int i = 0; i < size; i += 1){
 			// can we find it by name?
 			if(this.nodes.get(i).getSparqlID().equals(lookupId)){   // this was "==" but that failed in some cases...
 				return i;
@@ -896,11 +900,9 @@ public class NodeGroup {
 	}
 	
 	public Node getNodeBySparqlID(String sparqlId) {
-		int i = this.getNodeIndexBySparqlID(sparqlId);
-		if (i == -1) 
-			return null;
-		else 
-			return this.nodes.get(i);
+		String lookupId = (sparqlId.charAt(0) == '?') ? sparqlId : "?" + sparqlId;
+		return this.idToNodeHash.get(lookupId);
+
 	}
 	
 	public Node getNode(int i) {
@@ -1987,6 +1989,7 @@ public class NodeGroup {
 
 		// remove the sNode from the nodeGroup
 		this.nodes.remove(node);
+		this.idToNodeHash.remove(node.getSparqlID());
 	}
 
 	/**
@@ -2406,17 +2409,31 @@ public class NodeGroup {
 	
 
 
+	/**
+	 * Change an object's sparqlID to something close to requestID
+	 * @param obj
+	 * @param requestID
+	 * @return the actual new requestID
+	 */
 	public String changeSparqlID(Returnable obj, String requestID) {
-		// API call for any object with get/setSparqlID:
-		// set an object's sparqlID, making sure it is legal, unique, nameHash,
-		// etc...
-		// return the new id, which may be slightly different than the requested
-		// id.
 
-		this.freeSparqlID(obj.getSparqlID());
+		// bail if this is a no-op
+		String oldID = obj.getSparqlID();
+		if (requestID.equals(oldID)) {
+			return requestID;
+		}
+		
+		// change the id
+		this.freeSparqlID(oldID);
 		String newID = BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
 		this.reserveSparqlID(newID);
 		obj.setSparqlID(newID);
+		
+		// if obj is a Node, update idToNodeHash 
+		if (obj instanceof Node) {
+			this.idToNodeHash.remove(oldID);
+			this.idToNodeHash.put(newID, (Node) obj);
+		}
 		return newID;
 	}
 
