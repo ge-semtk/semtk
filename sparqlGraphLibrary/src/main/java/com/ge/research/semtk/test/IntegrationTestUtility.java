@@ -337,9 +337,12 @@ public class IntegrationTestUtility{
 	public static long getStartTime() {
 		return System.currentTimeMillis();
 	}
-	public static void logDuration(long startTime, String message) {
+	
+	public static String logDuration(long startTime, String message) {
 		Double dur = (System.currentTimeMillis() - startTime) / 1000.0;
-		LocalLogger.logToStdOut(message + ": " + String.valueOf(dur) + " sec");
+		String entry = message + ": " + String.valueOf(dur) + " sec";
+		LocalLogger.logToStdOut(entry);
+		return entry;
 	}
 	
 	/**

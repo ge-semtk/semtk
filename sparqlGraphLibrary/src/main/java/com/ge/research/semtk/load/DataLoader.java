@@ -268,7 +268,6 @@ public class DataLoader implements Runnable {
 				exceptionHeader = "Error during one-pass ingestion.\nParial ingestion may have occurred.  At least one thread threw exception.  e.g.:";
 			
 			this.batchHandler.resetDataSet();
-			Boolean skipCheck = precheck;
 			this.totalRecordsProcessed = this.runIngestionThreads(false, true, exceptionHeader); // ingest, skip precheck (already done)
 			
 		} else {
@@ -290,10 +289,6 @@ public class DataLoader implements Runnable {
 	 * @throws Exception - if any thread throws an exception, one will be thrown as (exceptionHeader + e)
 	 */
 	private int runIngestionThreads(boolean skipIngest, boolean skipCheck, String exceptionHeader) throws Exception {		
-	
-		// TODO
-		// owl puts in triples as "id"^^String
-		// but virtuoso query seems to show they are not, just "id"
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
@@ -395,8 +390,8 @@ public class DataLoader implements Runnable {
 		// If a temporary in-memory graph was used, then dump it to owl and upload it
 		if (!skipIngest && this.cacheSei != null) {
 			LocalLogger.logToStdOut("Uploading temporary graph...");
-			String owl = this.cacheSei.dumpToOwl();
-			this.endpoint.executeAuthUploadOwl(owl.getBytes());
+			String s = this.cacheSei.dumpToTurtle();
+			this.endpoint.executeAuthUploadTurtle(s.getBytes());
 			LocalLogger.logToStdOut("done.");
 		}
 		

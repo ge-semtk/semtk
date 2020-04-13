@@ -14,6 +14,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.system.ErrorHandler;
+import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.update.UpdateAction;
 import org.json.simple.JSONObject;
 
@@ -75,29 +78,41 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 	}
 	
 	public String dumpToOwl() {
-		return this.dumpToString("RDF/XML");
+		return this.dumpToString(Lang.RDFXML);
 	}
 	
 	public String dumpToTurtle() {
-		/* Seems to need this dependency, which won't work.
-		 * 
-		 * Will thrown a runtime exception can't find SnappyCompressorInputStream
-		 
-	       Could not transfer artifact org.apache.commons:commons-compress:jar:1.17 from/to cloudera (https://repository.cloudera.com/artifactory/cloudera-
-		 repos/): Failed to connect to /3.39.251.6:8080 org.eclipse.aether.transfer.ArtifactTransferException: Could not transfer artifact org.apache.commons:commons-
-		 compress:jar:1.17 from/to cloudera (https://repository.cloudera.com/artifactory/cloudera-repos/): Failed to connect to /3.39.251.6:8080 at 
-	     
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-compress</artifactId>
-				<version>1.17</version>
-			</dependency>
-		*/
-		
-		return this.dumpToString("TTL");
+	//  https://www.w3.org/TR/turtle/
+    //
+	//  https://jena.apache.org/documentation/io/
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			RDFDataMgr.write(stream, ds.getNamedModel(this.graph), RDFFormat.TURTLE_PRETTY);
+			String str = stream.toString();
+			return str;
+		} catch (Exception e) {
+			throw e;
+		}
+			finally { ds.end() ; 
+		}
 	}
 	
-	private String dumpToString(String lang) {
+	private String dumpToString(Lang lang) {
+		
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			
+			RDFDataMgr.write(stream, ds.getNamedModel(this.graph), lang);
+			String str = stream.toString();
+			return str;
+		} catch (Exception e) {
+			throw e;
+		}
+			finally { ds.end() ; 
+		}
+	}
+	
+	public String dumpToStringLegacy(String lang) {
 		ds.begin(ReadWrite.READ) ;
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -154,13 +169,33 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 
 	}
 
-	@Override
 	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception {
+		return this.executeAuthUploadOwl(owl);
+	}
+	
+	@Override
+	public JSONObject executeAuthUploadOwl(byte[] owl) throws AuthorizationException, Exception {
 		
 		ByteArrayInputStream stream = new ByteArrayInputStream(owl); 
 		
 		this.ds.getNamedModel(this.graph).read(stream, "RDF/XML");
 		//this.ds.getDefaultModel().read(stream, "RDF/XML");
+
+		return new SimpleResultSet(true).toJson();
+	}
+	
+	@Override
+	public JSONObject executeAuthUploadTurtle(byte[] ttl) throws AuthorizationException, Exception {
+		
+		// The parsers will do the necessary character set conversion.  
+	    try (ByteArrayInputStream in = new ByteArrayInputStream(ttl)) {
+	        RDFParser.create()
+	            .source(in)
+	            .lang(Lang.TURTLE)
+	            .errorHandler(ErrorHandlerFactory.errorHandlerStd)
+	            .parse(this.ds.getNamedModel(this.graph)
+	            );
+	    }
 
 		return new SimpleResultSet(true).toJson();
 	}
