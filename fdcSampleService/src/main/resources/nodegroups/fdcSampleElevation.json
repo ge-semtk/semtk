@@ -1,0 +1,137 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:2420",
+				"graph": "http://dataset"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:2420",
+				"graph": "http://dataset"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Location",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"subClassNames": [
+					"http://research.ge.com/semtk/fdcSample/test#AircraftLocation"
+				],
+				"SparqlID": "?Location",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "elevationFt",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#elevationFt",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Location"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "location",
+						"ValueType": "Location",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#Location",
+						"ConnectBy": "location",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#location"
+					}
+				],
+				"NodeName": "Elevation",
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Elevation",
+				"subClassNames": [],
+				"SparqlID": "?Elevation",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "elevation"
+			},
+			{
+				"colId": "col_1",
+				"colName": "location"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Elevation",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Elevation",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#elevationFt",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Location",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"mapping": [
+					{
+						"colId": "col_1"
+					}
+				],
+				"props": []
+			}
+		]
+	}
+}

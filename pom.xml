@@ -43,6 +43,7 @@
 		<module>nodeGroupService</module>
 		<module>springSecurityLibrary</module>
 		<module>springUtilLibrary</module>
+		<module>fdcSampleService</module>
 		<module>distribution</module>
 	</modules>
 

@@ -44,5 +44,6 @@ multikill hiveService
 multikill sparqlExtDispatchService
 multikill nodeGroupExecutionService
 multikill nodeGroupService
+multikill fdcSampleService
 
 echo "=== DONE ==="

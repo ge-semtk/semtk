@@ -95,6 +95,10 @@ PROC_ARRAY+=("sparqlGraphIngestionService");
 PID_ARRAY+=($!)
 PROC_ARRAY+=("nodeGroupService");
 
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fdcSampleService/target/fdcSampleService-*.jar > "$LOGS"/fdcSampleService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("fdcSampleService");
+
 #
 # wait for services
 #
@@ -109,6 +113,7 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_SPARQL_QUERY_SERVICE
                   $PORT_INGESTION_SERVICE
                   $PORT_NODEGROUP_SERVICE
+                  $PORT_FDCSAMPLE_SERVICE
                  )
 # protocol for ping
 if [ "$SSL_ENABLED" == "false" ]; then

@@ -1,0 +1,178 @@
+{
+	"sparqlConn": {
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:2420",
+				"graph": "http://dataset"
+			}
+		],
+		"domain": "",
+		"name": "daDemo",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:2420",
+				"graph": "http://dataset"
+			}
+		],
+		"enableOwlImports": true
+	},
+	"sNodeGroup": {
+		"offset": 0,
+		"sNodeList": [
+			{
+				"isReturned": false,
+				"propList": [
+					{
+						"KeyName": "latitude",
+						"optMinus": 0,
+						"isReturned": true,
+						"Constraints": "",
+						"ValueType": "double",
+						"instanceValues": [],
+						"isRuntimeConstrained": false,
+						"isMarkedForDeletion": false,
+						"SparqlID": "?latitude",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"fullURIName": "",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#latitude"
+					},
+					{
+						"KeyName": "longitude",
+						"optMinus": 0,
+						"isReturned": true,
+						"Constraints": "",
+						"ValueType": "double",
+						"instanceValues": [],
+						"isRuntimeConstrained": false,
+						"isMarkedForDeletion": false,
+						"SparqlID": "?longitude",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"fullURIName": "",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#longitude"
+					}
+				],
+				"NodeName": "AircraftLocation",
+				"subClassNames": [],
+				"isRuntimeConstrained": false,
+				"SparqlID": "?AircraftLocation",
+				"valueConstraint": "",
+				"deletionMode": "NO_DELETE",
+				"nodeList": [],
+				"instanceValue": null,
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#AircraftLocation"
+			},
+			{
+				"isReturned": false,
+				"propList": [
+					{
+						"KeyName": "tailNumber",
+						"optMinus": 0,
+						"isReturned": true,
+						"Constraints": "",
+						"ValueType": "string",
+						"instanceValues": [],
+						"isRuntimeConstrained": false,
+						"isMarkedForDeletion": false,
+						"SparqlID": "?tailNumber",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"fullURIName": "",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#tailNumber"
+					}
+				],
+				"NodeName": "LocationTrackableAircraft",
+				"subClassNames": [
+					"http://research.ge.com/decisionAid/decisionAidDemo#Aircraft"
+				],
+				"isRuntimeConstrained": false,
+				"SparqlID": "?LocationTrackableAircraft",
+				"valueConstraint": "",
+				"deletionMode": "NO_DELETE",
+				"nodeList": [
+					{
+						"KeyName": "currentLocation",
+						"SnodeSparqlIDs": [
+							"?AircraftLocation"
+						],
+						"ValueType": "AircraftLocation",
+						"Connected": true,
+						"DeletionMarkers": [
+							false
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#currentLocation",
+						"ConnectBy": "currentLocation",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#AircraftLocation"
+					}
+				],
+				"instanceValue": null,
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#LocationTrackableAircraft"
+			}
+		],
+		"limit": 0,
+		"orderBy": [],
+		"version": 9
+	},
+	"importSpec": {
+		"nodes": [
+			{
+				"mapping": [
+					{
+						"colId": "col_0"
+					}
+				],
+				"sparqlID": "?LocationTrackableAircraft",
+				"type": "http://research.ge.com/semtk/fdcSample/test#LocationTrackableAircraft",
+				"props": []
+			},
+			{
+				"mapping": [],
+				"sparqlID": "?AircraftLocation",
+				"type": "http://research.ge.com/semtk/fdcSample/test#AircraftLocation",
+				"props": [
+					{
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						],
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#latitude"
+					},
+					{
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						],
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#longitude"
+					}
+				]
+			}
+		],
+		"texts": [],
+		"columns": [
+			{
+				"colName": "aircraftUri",
+				"colId": "col_0"
+			},
+			{
+				"colName": "latitude",
+				"colId": "col_1"
+			},
+			{
+				"colName": "longitude",
+				"colId": "col_2"
+			}
+		],
+		"baseURI": "",
+		"transforms": [],
+		"version": "1"
+	},
+	"version": 2
+}

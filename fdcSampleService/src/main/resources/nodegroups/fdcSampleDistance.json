@@ -1,0 +1,190 @@
+{
+	"sparqlConn": {
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:2420",
+				"graph": "http://dataset"
+			}
+		],
+		"domain": "",
+		"name": "daDemo",
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:2420",
+				"graph": "http://dataset"
+			}
+		],
+		"enableOwlImports": true
+	},
+	"sNodeGroup": {
+		"offset": 0,
+		"sNodeList": [
+			{
+				"isReturned": true,
+				"propList": [],
+				"NodeName": "Location",
+				"subClassNames": [
+					"http://research.ge.com/decisionAid/decisionAidDemo#CurrentLocation"
+				],
+				"isRuntimeConstrained": false,
+				"SparqlID": "?Location2",
+				"valueConstraint": "",
+				"deletionMode": "NO_DELETE",
+				"nodeList": [],
+				"instanceValue": null,
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Location"
+			},
+			{
+				"isReturned": true,
+				"propList": [],
+				"NodeName": "Location",
+				"subClassNames": [
+					"http://research.ge.com/decisionAid/decisionAidDemo#CurrentLocation"
+				],
+				"isRuntimeConstrained": false,
+				"SparqlID": "?Location1",
+				"valueConstraint": "",
+				"deletionMode": "NO_DELETE",
+				"nodeList": [],
+				"instanceValue": null,
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Location"
+			},
+			{
+				"isReturned": false,
+				"propList": [
+					{
+						"KeyName": "distanceNm",
+						"optMinus": 0,
+						"isReturned": true,
+						"Constraints": "",
+						"ValueType": "double",
+						"instanceValues": [],
+						"isRuntimeConstrained": false,
+						"isMarkedForDeletion": false,
+						"SparqlID": "?distanceNm",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"fullURIName": "",
+						"UriRelationship": "http://research.ge.com/semtk/fdcSample/test#distanceNm"
+					}
+				],
+				"NodeName": "Distance",
+				"subClassNames": [],
+				"isRuntimeConstrained": false,
+				"SparqlID": "?Distance",
+				"valueConstraint": "",
+				"deletionMode": "NO_DELETE",
+				"nodeList": [
+					{
+						"KeyName": "location1",
+						"SnodeSparqlIDs": [
+							"?Location1"
+						],
+						"ValueType": "Location",
+						"Connected": true,
+						"DeletionMarkers": [
+							false
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#location1",
+						"ConnectBy": "location1",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#Location"
+					},
+					{
+						"KeyName": "location2",
+						"SnodeSparqlIDs": [
+							"?Location2"
+						],
+						"ValueType": "Location",
+						"Connected": true,
+						"DeletionMarkers": [
+							false
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"UriConnectBy": "http://research.ge.com/semtk/fdcSample/test#location2",
+						"ConnectBy": "location2",
+						"UriValueType": "http://research.ge.com/semtk/fdcSample/test#Location"
+					}
+				],
+				"instanceValue": null,
+				"fullURIName": "http://research.ge.com/semtk/fdcSample/test#Distance"
+			}
+		],
+		"limit": 3,
+		"orderBy": [],
+		"version": 9
+	},
+	"importSpec": {
+		"nodes": [
+			{
+				"mapping": [],
+				"sparqlID": "?Distance",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Distance",
+				"props": [
+					{
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						],
+						"URIRelation": "http://research.ge.com/semtk/fdcSample/test#distanceNm"
+					}
+				]
+			},
+			{
+				"mapping": [
+					{
+						"colId": "col_2"
+					}
+				],
+				"sparqlID": "?Location1",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"props": []
+			},
+			{
+				"mapping": [
+					{
+						"colId": "col_3"
+					}
+				],
+				"sparqlID": "?Location2",
+				"type": "http://research.ge.com/semtk/fdcSample/test#Location",
+				"props": []
+			}
+		],
+		"texts": [],
+		"columns": [
+			{
+				"colName": "curLong",
+				"colId": "col_0"
+			},
+			{
+				"colName": "distanceNm",
+				"colId": "col_1"
+			},
+			{
+				"colName": "location1",
+				"colId": "col_2"
+			},
+			{
+				"colName": "location2",
+				"colId": "col_3"
+			}
+		],
+		"baseURI": "http://research.ge.com/fdc/distance",
+		"transforms": [],
+		"version": "1"
+	},
+	"version": 2
+}
