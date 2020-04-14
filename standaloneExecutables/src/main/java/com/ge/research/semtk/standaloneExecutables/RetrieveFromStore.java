@@ -23,6 +23,8 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
@@ -33,6 +35,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,15 +96,20 @@ public class RetrieveFromStore {
 				new String[] {"Context","ID","comments","creationDate","creator","jsonFile"},
 				new String[] {"unknown","unknown","unknown","unknown","unknown","unknown"});
 
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		
 		for (int i=0; i < matchTable.getNumRows(); i++) {
 			String id = matchTable.getCell(i, "ID");
 			System.out.println(id);
 
 			// write local copy of nodegroup
 			SparqlGraphJson sgjson = client.executeGetNodeGroupByIdToSGJson(id);
-			Path jsonPath = Paths.get(folder, id + ".json");
-			Path jsonFilePath = Paths.get(    id + ".json");
-			Files.write(jsonPath, sgjson.toJson().toJSONString().getBytes());
+			String filename = id + ".json";
+			Path jsonPath = Paths.get(folder, filename);
+			
+			FileWriter writer = new FileWriter(jsonPath.toString());
+            gson.toJson(sgjson.toJson(),writer);
+            writer.close();
 
 			// save metadata about nodegroup
 			ArrayList<String> row = new ArrayList<String>();
@@ -110,7 +118,7 @@ public class RetrieveFromStore {
 			row.add(matchTable.getCell(i, "comments"));
 			row.add(matchTable.getCell(i, "creationDate"));
 			row.add(matchTable.getCell(i, "creator"));
-			row.add(jsonFilePath.toString());
+			row.add(filename);
 			outTable.addRow(row);
 		}
 
