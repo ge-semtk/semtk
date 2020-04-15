@@ -45,5 +45,6 @@ multikill sparqlExtDispatchService
 multikill nodeGroupExecutionService
 multikill nodeGroupService
 multikill fdcSampleService
+multikill binaryFileService
 
 echo "=== DONE ==="
