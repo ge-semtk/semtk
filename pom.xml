@@ -44,7 +44,6 @@
 		<module>springSecurityLibrary</module>
 		<module>springUtilLibrary</module>
 		<module>fdcSampleService</module>
-		<module>binaryFileService</module>
 		<module>distribution</module>
 	</modules>
 

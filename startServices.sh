@@ -99,10 +99,6 @@ PROC_ARRAY+=("nodeGroupService");
 PID_ARRAY+=($!)
 PROC_ARRAY+=("fdcSampleService");
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/binaryFileService/target/binaryFileService-*.jar > "$LOGS"/binaryFileService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("binaryFileService");
-
 #
 # wait for services
 #
@@ -118,7 +114,6 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_INGESTION_SERVICE
                   $PORT_NODEGROUP_SERVICE
                   $PORT_FDCSAMPLE_SERVICE
-                  $PORT_BINARYFILE_SERVICE
                  )
 # protocol for ping
 if [ "$SSL_ENABLED" == "false" ]; then
