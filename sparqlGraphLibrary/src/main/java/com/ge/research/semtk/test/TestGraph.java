@@ -134,7 +134,15 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServer() throws Exception{
-		return IntegrationTestUtility.get("sparqlendpoint.server");
+		return IntegrationTestUtility.get("testgraph.server");
+	}
+	
+	/**
+	 * Get the SPARQL server type.
+	 * @throws Exception 
+	 */
+	public static String getSparqlServerType() throws Exception{
+		return IntegrationTestUtility.get("testgraph.type");
 	}
 	
 	/**
@@ -144,13 +152,7 @@ public class TestGraph {
 		return getSei().getGraph();
 	}
 	
-	/**
-	 * Get the SPARQL server type.
-	 * @throws Exception 
-	 */
-	public static String getSparqlServerType() throws Exception{
-		return IntegrationTestUtility.get("sparqlendpoint.type");
-	}
+	
 	
 	/**
 	 * Get the SPARQL server username.
