@@ -44,6 +44,7 @@
 		<module>springSecurityLibrary</module>
 		<module>springUtilLibrary</module>
 		<module>fdcSampleService</module>
+		<module>edcQueryGenerationService</module>
 		<module>distribution</module>
 	</modules>
 
