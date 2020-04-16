@@ -99,6 +99,10 @@ PROC_ARRAY+=("nodeGroupService");
 PID_ARRAY+=($!)
 PROC_ARRAY+=("fdcSampleService");
 
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fdcCacheService/target/fdcCacheService-*.jar > "$LOGS"/fdcCacheService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("fdcCacheService");
+
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/edcQueryGenerationService/target/edcQueryGenerationService-*.jar > "$LOGS"/edcQueryGenerationService.log 2>&1 &
 PID_ARRAY+=($!)
 PROC_ARRAY+=("edcQueryGenerationService");
@@ -118,6 +122,7 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_INGESTION_SERVICE
                   $PORT_NODEGROUP_SERVICE
                   $PORT_FDCSAMPLE_SERVICE
+                  $PORT_FDCCACHE_SERVICE
 				  $PORT_EDCQUERYGEN_SERVICE
                  )
 # protocol for ping

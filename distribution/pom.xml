@@ -74,6 +74,11 @@
 	</dependency>
 	<dependency>
 	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>fdcCacheService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
 	  <artifactId>fdcSampleService</artifactId>
 	  <version>2.1.1-SNAPSHOT</version>
 	</dependency>
