@@ -1,0 +1,20 @@
+uri "http://research.ge.com/semtk/fdcCacheSpec" alias fdcCacheSpec.
+
+
+FdcCacheSpec is a top-level class,
+	described by id with a single value of type string,
+	described by step with values of type FdcCacheStep.
+	
+FdcCacheStep is a top-level class,
+	described by retrieval with a single value of type Retrieval,
+	described by inference with a single value of type Inference,
+	described by sequence with a single value of type int.
+
+Retrieval is a top-level class,
+	described by inputNodegroupId with a single value of type string,
+	described by serviceURL with a single value of type string,
+	described by ingestNodeGroupId with a single value of type string.
+	
+Inference is a top-level class.
+	
+	

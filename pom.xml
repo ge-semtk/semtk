@@ -43,7 +43,10 @@
 		<module>nodeGroupService</module>
 		<module>springSecurityLibrary</module>
 		<module>springUtilLibrary</module>
+		<module>fdcCacheService</module>
 		<module>fdcSampleService</module>
+		<module>edcQueryGenerationService</module>
+		<module>athenaService</module>
 		<module>distribution</module>
 	</modules>
 
