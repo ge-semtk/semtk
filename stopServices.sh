@@ -48,5 +48,6 @@ multikill fdcSampleService
 multikill fdcCacheService
 multikill edcQueryGenerationService
 multikill athenaService
+multikill arangoDbService
 
 echo "=== DONE ==="
