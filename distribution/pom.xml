@@ -86,6 +86,11 @@
 	  <groupId>com.ge.research.semtk</groupId>
 	  <artifactId>edcQueryGenerationService</artifactId>
 	  <version>2.1.1-SNAPSHOT</version>
+	</dependency>	
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>athenaService</artifactId>
+	  <version>2.1.1-SNAPSHOT</version>
 	</dependency>
   </dependencies>
  

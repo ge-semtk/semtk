@@ -46,6 +46,7 @@
 		<module>fdcCacheService</module>
 		<module>fdcSampleService</module>
 		<module>edcQueryGenerationService</module>
+		<module>athenaService</module>
 		<module>distribution</module>
 	</modules>
 

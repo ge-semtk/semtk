@@ -55,6 +55,7 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_INGESTION_SERVICE
                   $PORT_NODEGROUP_SERVICE
                   $PORT_EDCQUERYGEN_SERVICE
+                  $PORT_ATHENA_SERVICE
                  )
 # protocol for ping
 if [ "$SSL_ENABLED" == "false" ]; then

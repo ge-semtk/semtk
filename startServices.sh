@@ -107,6 +107,10 @@ PROC_ARRAY+=("fdcCacheService");
 PID_ARRAY+=($!)
 PROC_ARRAY+=("edcQueryGenerationService");
 
+"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -jar "$SEMTK"/athenaService/target/athenaService-*.jar > "$LOGS"/athenaService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("athenaService");
+
 #
 # wait for services
 #
@@ -124,6 +128,7 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_FDCSAMPLE_SERVICE
                   $PORT_FDCCACHE_SERVICE
 				  $PORT_EDCQUERYGEN_SERVICE
+				  $PORT_ATHENA_SERVICE
                  )
 # protocol for ping
 if [ "$SSL_ENABLED" == "false" ]; then
