@@ -21,7 +21,7 @@ public class SparqlQueryInterrogator {
 	private static Pattern PATTERN_SELECT = 	Pattern.compile("\\Wselect\\W", Pattern.CASE_INSENSITIVE);
 	private static Pattern PATTERN_CONSTRUCT = 	Pattern.compile("\\Wconstruct\\W", Pattern.CASE_INSENSITIVE);
 	private static Pattern PATTERN_ASK = 		Pattern.compile("\\Wask\\W", Pattern.CASE_INSENSITIVE);
-	private static Pattern PATTERN_SERVICE = 	Pattern.compile("\\Wservice\\W", Pattern.CASE_INSENSITIVE);
+	private static Pattern PATTERN_SERVICE = 	Pattern.compile("[^\\w:\\?]service\\W", Pattern.CASE_INSENSITIVE);
 	
 	// a keyword that's supposed to be followed by <graph> but has something else (like a variable) afterwards
 	private static Pattern PATTERN_ILLEGAL_GRAPH = Pattern.compile("\\W(from|into|graph)\\s*[^<]", Pattern.CASE_INSENSITIVE);
