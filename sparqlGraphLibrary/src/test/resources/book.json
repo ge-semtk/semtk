@@ -1,0 +1,217 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop localhost",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:8890",
+				"graph": "http://junit/graph/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:8890",
+				"graph": "http://junit/graph/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 9,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "pages",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://semtk/junit/book#pages",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?pages",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "price",
+						"ValueType": "double",
+						"relationship": "http://www.w3.org/2001/XMLSchema#double",
+						"UriRelationship": "http://semtk/junit/book#price",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?price",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "publishDate",
+						"ValueType": "date",
+						"relationship": "http://www.w3.org/2001/XMLSchema#date",
+						"UriRelationship": "http://semtk/junit/book#publishDate",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?publishDate",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "publishDateTime",
+						"ValueType": "dateTime",
+						"relationship": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"UriRelationship": "http://semtk/junit/book#publishDateTime",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?publishDateTime",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "publishTime",
+						"ValueType": "time",
+						"relationship": "http://www.w3.org/2001/XMLSchema#time",
+						"UriRelationship": "http://semtk/junit/book#publishTime",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?publishTime",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "title",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://semtk/junit/book#title",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?title",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Book",
+				"fullURIName": "http://semtk/junit/book#Book",
+				"subClassNames": [],
+				"SparqlID": "?Book",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "pages"
+			},
+			{
+				"colId": "col_1",
+				"colName": "price"
+			},
+			{
+				"colId": "col_2",
+				"colName": "publishDate"
+			},
+			{
+				"colId": "col_3",
+				"colName": "publishDateTime"
+			},
+			{
+				"colId": "col_4",
+				"colName": "publishTime"
+			},
+			{
+				"colId": "col_5",
+				"colName": "title"
+			}
+		],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Book",
+				"type": "http://semtk/junit/book#Book",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://semtk/junit/book#pages",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk/junit/book#price",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk/junit/book#publishDate",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk/junit/book#publishDateTime",
+						"mapping": [
+							{
+								"colId": "col_3"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk/junit/book#publishTime",
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://semtk/junit/book#title",
+						"mapping": [
+							{
+								"colId": "col_5"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

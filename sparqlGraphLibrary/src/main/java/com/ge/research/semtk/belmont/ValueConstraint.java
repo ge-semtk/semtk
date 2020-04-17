@@ -95,33 +95,19 @@ public class ValueConstraint {
 	/**
 	 * Build VALUES clause
 	 * @param item
-	 * @param valList
+	 * @param valList - list of items does not get "parsed"
 	 * @return
 	 * @throws Exception
 	 */
 	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList) throws Exception {
 		// build a value constraint for an "item" (see item interface comment)
 		
-		if (item.getSparqlID().isEmpty()) {
+		String sparqlID = item.getSparqlID();
+		if (sparqlID.isEmpty()) {
 			throw new Error("Trying to build VALUES constraint for property with empty sparql ID");
 		}
 
-		StringBuffer ret = new StringBuffer();
-		if (valList.size() > 0) {
-			XSDSupportedType t = item.getValueType();
-			ret.append("VALUES " + item.getSparqlID() + " {");
-			
-			for (int i=0; i < valList.size(); i++) {
-				if (t == XSDSupportedType.NODE_URI) {
-					ret.append(" <" + valList.get(i) + ">");
-				} else {
-					ret.append(" '" + BelmontUtil.sparqlSafe(valList.get(i)) + "'^^" + item.getValueType().getPrefixedName());
-				}
-			}
-			
-			ret.append(" } ");
-		}
-		return ret.toString();
+		return buildValuesConstraint(sparqlID, valList, item.getValueType());
 	}
 	
 	/**
@@ -233,16 +219,23 @@ public class ValueConstraint {
 		
 		// VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> '1279'^^<http://www.w3.org/2001/XMLSchema#int> } 
 	
-		String retval = "VALUES " + sparqlId + " { ";
+		StringBuffer retval = new StringBuffer();
+		retval.append("VALUES " + sparqlId + " { ");
 		// go through each passed value and add them.
-		for(String v : valList){		
-			valType.parse(v);
-			retval += valType.buildTypedValueString(v) + " ";
+		for(String v : valList){
+			v = BelmontUtil.sparqlSafe(v);
+			valType.validate(v);
+			retval.append(valType.buildTypedValueString(v) + " ");
+			
+			// for strings only:  SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
+			if (valType == XSDSupportedType.STRING) {
+				retval.append(valType.buildRDF11ValueString(v) + " ");   
+			}
 		}
 		
-		retval += " }";
+		retval.append(" }");
 		
-		return retval;
+		return retval.toString();
 	}
 	
 	/**
@@ -257,7 +250,7 @@ public class ValueConstraint {
 		
 		String retval = "";
 		
-		valType.parse(regexp);
+		valType.validate(regexp);
 		
 		if(valType.regexIsAvailable()){
 			retval = "FILTER regex(" + sparqlId + " ,\"" + regexp + "\")";
@@ -279,7 +272,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildGreaterThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean greaterOrEqual) throws Exception{
-		valType.parse(val);
+		valType.validate(val);
 		String retval = "";
 		
 		if(valType.rangeOperationsAvailable()) {
@@ -307,7 +300,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildLessThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean lessOrEqual) throws Exception{
-		valType.parse(val);
+		valType.validate(val);
 
 		String retval = "";
 		
@@ -337,8 +330,8 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildRangeConstraint(String sparqlId, String valLow, String valHigh, XSDSupportedType valType, boolean greaterOrEqual, boolean lessThanOrEqual) throws Exception{
-		valType.parse(valHigh);
-		valType.parse(valLow);
+		valType.validate(valHigh);
+		valType.validate(valLow);
 
 		String retval = "";
 		

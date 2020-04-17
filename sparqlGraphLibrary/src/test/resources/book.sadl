@@ -1,0 +1,9 @@
+uri "http://semtk/junit/book" alias book.
+
+Book is a class,
+	described by title with a single value of type string,
+	described by publishDate with a single value of type date,
+	described by publishDateTime with a single value of type dateTime,
+	described by publishTime with a single value of type time,
+	described by pages with a single value of type int,
+	described by price with a single value of type double.

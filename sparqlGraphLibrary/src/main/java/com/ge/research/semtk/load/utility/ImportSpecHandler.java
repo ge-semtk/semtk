@@ -21,6 +21,7 @@ package com.ge.research.semtk.load.utility;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1165,7 +1166,7 @@ public class ImportSpecHandler {
 			break;
 		case TIME:
 			try{
-				Time.parse(input);
+				(new SimpleDateFormat("HH:mm:ss")).parse(input);
 			}
 			catch(Exception e){
 				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
