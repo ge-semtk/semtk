@@ -40,8 +40,37 @@ import com.ge.research.semtk.test.TestGraph;
  * Test typed and untyped literals.
  * SemTK's old friend opensource Virtuoso is RDF1.0 so check compatibility.
  * 
+ * Specialty here is checking semtk against legacy formats of inserted data.
+ *
+ * 
  * @author 200001934
  *
+ * Virtuoso RDF1.0 behavior vs Neptune RDF1.1 behavior test results:
+ * 
+ * ----------String----------
+ * virtuoso: values and filter clauses must match.  typed match typed, untyped match untyped
+ * neptune all match each other
+ * 
+ * SOLUTION:
+ *	insert untyped strings
+ *	backwards-compatible clause-building use OR "string" "string"^^XMLSchema#string
+ *
+ * ----------Date----------
+ * virtuoso:  typed filter > clause matches typed and untyped  (date > date, date > string_looks_like_date)
+ * neptune:   typed filter > clause matches typed date         ( date > date, date and string do not compare)
+ *
+ * virtuoso:  untyped filter > clause matches nothing       (string can't be > another string or date)
+ * neptune:   untyped filter > clause matches untyped date  (string > string.  date and string don't compare)
+ *
+ * SOLUTION:
+ *	continue typing all dates and times
+ *
+ * ----------Int and Double----------
+ * typed string matches plain number literal in either direction 
+ *
+ * SOLUTION:
+ *	stop typing numbers. 
+ *	change is fully backward-compatible
  */
 public class TypedUntypedLiteralsTestRDF11 {
 	static NodeGroupExecutor nodeGroupExecutor = null;
@@ -189,19 +218,7 @@ public class TypedUntypedLiteralsTestRDF11 {
 	 */
 	private void queryAllThreeBooks(String sparqlID, SupportedOperations operator, String [] operandList) throws Exception {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "/book.json");
-		NodeGroup ng = sgjson.getNodeGroup();
-		
-		// Try to call through the highest level of runtime constraint through value constraint code
-		RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
-		JSONObject constraint = RuntimeConstraintManager.buildRuntimeConstraintJson(
-				sparqlID, 
-				operator,
-				new ArrayList<String>(Arrays.asList(operandList)));
-		JSONArray runtimeConstraints = new JSONArray();
-		runtimeConstraints.add(constraint);
-		rtci.applyConstraintJson(runtimeConstraints);
-		String constraintSparql = ng.getItemBySparqlID(sparqlID).getValueConstraint().toString();
-		sgjson.setNodeGroup(ng);
+		String constraintSparql = TestGraph.addRuntimeConstraint(sgjson, sparqlID, operator, operandList);
 		
 		// run the query
 		Table tab = TestGraph.execTableSelect(sgjson);

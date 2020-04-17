@@ -25,12 +25,17 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -365,6 +370,24 @@ public class TestGraph {
 	
 	public static NodeGroup getNodeGroupWithOInfo(SparqlGraphJson sgjson) throws Exception {
 		return sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
+	}
+	
+	public static String addRuntimeConstraint(SparqlGraphJson sgjson, String sparqlID, SupportedOperations operator, String [] operandList) throws Exception {
+
+		NodeGroup ng = sgjson.getNodeGroup();
+		
+		// Try to call through the highest level of runtime constraint through value constraint code
+		RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
+		JSONObject constraint = RuntimeConstraintManager.buildRuntimeConstraintJson(
+				sparqlID, 
+				operator,
+				new ArrayList<String>(Arrays.asList(operandList)));
+		JSONArray runtimeConstraints = new JSONArray();
+		runtimeConstraints.add(constraint);
+		rtci.applyConstraintJson(runtimeConstraints);
+		String constraintSparql = ng.getItemBySparqlID(sparqlID).getValueConstraint().toString();
+		sgjson.setNodeGroup(ng);
+		return constraintSparql;
 	}
 	
 	public static SparqlGraphJson getSparqlGraphJsonFromResource(Object o, String resourceName) throws Exception {

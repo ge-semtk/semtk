@@ -637,7 +637,7 @@ public class NodeGroup {
 		if(this.prefixHash.size() == 0) { this.buildPrefixHash(); }
 		
 		for(String k : this.prefixHash.keySet()){
-			retval.append("prefix ").append(this.prefixHash.get(k)).append(":<").append(k).append("#>\n");
+			retval.append("prefix " + this.prefixHash.get(k) + ":<" + k + "#>\n");
 		}
 				
 		return(retval.toString());
@@ -1177,15 +1177,15 @@ public class NodeGroup {
 			// Solution is from: https://stackoverflow.com/questions/38371049/sparql-distinct-gives-duplicates-in-virtuoso
 			// -Paul 11/3/2017
 			if (targetObj.getValueType() == XSDSupportedType.FLOAT) {
-				sparql.append(" ").append(" xsd:float(str(" + targetObj.getSparqlID() + "))");
+				sparql.append(" " + " xsd:float(str(" + targetObj.getSparqlID() + "))");
 			} else {
-				sparql.append(" ").append(targetObj.getSparqlID());
+				sparql.append(" " + targetObj.getSparqlID());
 			}
 		}
 		else {
 			ArrayList<String> ids = this.getReturnedSparqlIDs();
 			for (String id : ids) {
-				sparql.append(" ").append(id);
+				sparql.append(" " + id);
 			}
 		}
 		
@@ -3195,7 +3195,7 @@ public class NodeGroup {
 				// insert each property we know of. 
 				for(PropertyItem prop : curr.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildTypedValueString(inst, "XMLSchema") + " .\n";  
+						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildRDF11ValueString(inst, "XMLSchema") + " .\n";  
 					}
 				}
 				
@@ -3237,7 +3237,7 @@ public class NodeGroup {
 				String nodeVal = this.applyBaseURI(node.getInstanceValue());
 				nodeVal = this.applyPrefixing(nodeVal);
 				nodeVal = this.applyAngleBrackets(nodeVal);  // VARISH's unusual URI's with no '#'
-				sparql.append("\tBIND (").append(nodeVal).append(" AS ").append(sparqlId).append(").\n");
+				sparql.append("\tBIND (" + nodeVal + " AS " + sparqlId + ").\n");
 			
 			} else if(instanceIsBlank && !nodeIsEnum){
 				ArrayList<PropertyItem> constrainedProps = node.getConstrainedPropertyObjects();
@@ -3247,9 +3247,9 @@ public class NodeGroup {
 					
 					for (PropertyItem pi : constrainedProps) {
 				
-						sparql.append(" ").append(sparqlId).append(" ").append(this.applyPrefixing(pi.getUriRelationship()))
-								.append(" ").append(pi.getSparqlID()).append(". ").append(pi.getConstraints())
-								.append(" .\n");
+						sparql.append(
+								" " + sparqlId + " " + this.applyPrefixing(pi.getUriRelationship()) +
+								" " + pi.getSparqlID() + ". " + pi.getConstraints() + " .\n");
 					}
 				}
 				
@@ -3261,14 +3261,11 @@ public class NodeGroup {
 					if (node.getInstanceValue() != null && !node.getInstanceValue().equals("") && !node.getInstanceValue().isEmpty()) {
 						String nodeVal = this.applyBaseURI(node.getInstanceValue());
 						
-						sparql.append("\tBIND (iri(\"").append(this.applyPrefixing(nodeVal))
-							.append("\") AS ").append(sparqlId).append(").\n");
+						sparql.append("\tBIND (iri(\"" + this.applyPrefixing(nodeVal) + "\") AS " + sparqlId + ").\n");
 					}
 					else {
 						
-						sparql.append("\tBIND (iri(concat(\"" + this.applyPrefixing(UriResolver.DEFAULT_URI_PREFIX) + "\", \"")
-							.append(UUID.randomUUID().toString()).append("\")) AS ")
-							.append(sparqlId).append(").\n");
+						sparql.append("\tBIND (iri(concat(\"" + this.applyPrefixing(UriResolver.DEFAULT_URI_PREFIX) + "\", \"" + UUID.randomUUID().toString() + "\")) AS " + sparqlId + ").\n");
 						
 						
 					}

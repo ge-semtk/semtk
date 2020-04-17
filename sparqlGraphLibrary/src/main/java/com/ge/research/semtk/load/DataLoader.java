@@ -392,6 +392,7 @@ public class DataLoader implements Runnable {
 			LocalLogger.logToStdOut("Uploading temporary graph...");
 			String s = this.cacheSei.dumpToTurtle();
 			this.endpoint.executeAuthUploadTurtle(s.getBytes());
+			LocalLogger.logToStdErr("size " + s.length());
 			LocalLogger.logToStdOut("done.");
 		}
 		

@@ -90,21 +90,31 @@ public enum XSDSupportedType {
 	}
 
 	public String buildRDF11ValueString(String val) {
+		return buildRDF11ValueString(val, null);
+	}
+	
+	public String buildRDF11ValueString(String val, String typePrefixOverride) {
+		
 		if (this.numericOperationAvailable()) {
 			return val;
+			
 		} else if (this.dateOperationAvailable()) {
-			return buildTypedValueString(val);
+			return buildTypedValueString(val, typePrefixOverride);
+			
+		} else if (this == XSDSupportedType.NODE_URI) {
+			return buildTypedValueString(val, typePrefixOverride);
+			
 		} else {
 			return "\"" + val + "\"";
 		}
 				
 	}
-	public String buildTypedValueString(String val) {
+	private String buildTypedValueString(String val) {
 		return this.buildTypedValueString(val, null);
 	}
 	
 	// get a string version of a value with type trailer
-	public String buildTypedValueString(String val, String typePrefixOverride) {
+	private String buildTypedValueString(String val, String typePrefixOverride) {
 		
 		if (this == XSDSupportedType.NODE_URI) {
 			// check for angle brackets first

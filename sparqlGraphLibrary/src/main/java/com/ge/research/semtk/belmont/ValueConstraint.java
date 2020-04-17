@@ -225,7 +225,7 @@ public class ValueConstraint {
 		for(String v : valList){
 			v = BelmontUtil.sparqlSafe(v);
 			valType.validate(v);
-			retval.append(valType.buildTypedValueString(v) + " ");
+			retval.append(valType.buildRDF11ValueString(v) + " ");
 			
 			// for strings only:  SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
 			if (valType == XSDSupportedType.STRING) {
@@ -278,10 +278,10 @@ public class ValueConstraint {
 		if(valType.rangeOperationsAvailable()) {
 		
 			if(!greaterOrEqual){
-				retval = "FILTER (" + sparqlId + " > " + valType.buildTypedValueString(val) + ")";
+				retval = "FILTER (" + sparqlId + " > " + valType.buildRDF11ValueString(val) + ")";
 			}
 			else{
-				retval = "FILTER (" + sparqlId + " >= " + valType.buildTypedValueString(val) + ")";
+				retval = "FILTER (" + sparqlId + " >= " + valType.buildRDF11ValueString(val) + ")";
 			}
 		}
 		else{
@@ -306,10 +306,10 @@ public class ValueConstraint {
 		
 		if(valType.rangeOperationsAvailable()) {
 			if(!lessOrEqual){
-				retval = "FILTER (" + sparqlId + " < " + valType.buildTypedValueString(val) + ")";
+				retval = "FILTER (" + sparqlId + " < " + valType.buildRDF11ValueString(val) + ")";
 			}
 			else{
-				retval = "FILTER (" + sparqlId + " <= " + valType.buildTypedValueString(val) + ")";
+				retval = "FILTER (" + sparqlId + " <= " + valType.buildRDF11ValueString(val) + ")";
 			}
 		}
 		else{
@@ -340,20 +340,20 @@ public class ValueConstraint {
 			StringBuilder ret = new StringBuilder("FILTER (");
 			
 			if(greaterOrEqual){
-				ret.append(" " + sparqlId + " >= " + valType.buildTypedValueString(valLow) + " ");
+				ret.append(" " + sparqlId + " >= " + valType.buildRDF11ValueString(valLow) + " ");
 			}
 			else{
-				ret.append(" " + sparqlId + " > " + valType.buildTypedValueString(valLow) + " ");
+				ret.append(" " + sparqlId + " > " + valType.buildRDF11ValueString(valLow) + " ");
 			}
 			
 			// add a conjunction
 			ret.append(" && ");
 			
 			if(lessThanOrEqual){
-				ret.append(" " + sparqlId + " <= " + valType.buildTypedValueString(valHigh) + " ");
+				ret.append(" " + sparqlId + " <= " + valType.buildRDF11ValueString(valHigh) + " ");
 			}
 			else{
-				ret.append(" " + sparqlId + " < " + valType.buildTypedValueString(valHigh) + " ");
+				ret.append(" " + sparqlId + " < " + valType.buildRDF11ValueString(valHigh) + " ");
 			}
 			ret.append(")");
 			retval = ret.toString();
