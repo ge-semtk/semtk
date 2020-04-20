@@ -292,6 +292,9 @@ public class DataLoader implements Runnable {
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
+		int dumpCacheRowInterval = 0;
+		int dumpCacheNext = 0;
+		final int MAX_CACHE_LENGTH = (int) (Integer.MAX_VALUE * 0.5);
 		
 		String mode = "";
 		if (skipIngest && skipCheck) {
@@ -375,6 +378,22 @@ public class DataLoader implements Runnable {
 						this.sClient.execSetPercentComplete(percent);
 					}
 				}
+				
+				// if there is a cacheSei, make sure it isn't getting too large
+				if (!skipIngest && this.cacheSei != null) {
+					// after 100 rows, guess a good place to upload
+					if (dumpCacheRowInterval == 0 && startingRow > 100) {
+						long testSize = this.cacheSei.dumpToTurtle().length();
+						dumpCacheRowInterval = (int) ((startingRow * MAX_CACHE_LENGTH) / testSize);
+						dumpCacheNext = dumpCacheRowInterval;
+					}
+					// do upload when needed
+					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
+						uploadTempGraph();
+						this.cacheSei.clearGraph();
+						dumpCacheNext += dumpCacheRowInterval;
+					}
+				}
 			}
 		}
 		
@@ -389,11 +408,7 @@ public class DataLoader implements Runnable {
 		
 		// If a temporary in-memory graph was used, then dump it to owl and upload it
 		if (!skipIngest && this.cacheSei != null) {
-			LocalLogger.logToStdOut("Uploading temporary graph...");
-			String s = this.cacheSei.dumpToTurtle();
-			this.endpoint.executeAuthUploadTurtle(s.getBytes());
-			LocalLogger.logToStdErr("size " + s.length());
-			LocalLogger.logToStdOut("done.");
+			uploadTempGraph();
 		}
 		
 		// tell status client if there is one set up
@@ -402,6 +417,13 @@ public class DataLoader implements Runnable {
 		}
 		
 		return recordsProcessed;
+	}
+	
+	private void uploadTempGraph() throws Exception {
+		LocalLogger.logToStdOut("Uploading temporary graph...");
+		String s = this.cacheSei.dumpToTurtle();
+		this.endpoint.executeAuthUploadTurtle(s.getBytes());
+		LocalLogger.logToStdErr("size " + s.length());
 	}
 	
 	public int getMaxThreads() {
