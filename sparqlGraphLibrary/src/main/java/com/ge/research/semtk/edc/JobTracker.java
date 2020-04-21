@@ -173,7 +173,7 @@ public class JobTracker {
 	    	"	select distinct ?Job ?percentComplete ?userName \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
 	    	"   from <" + this.sei.getGraph() + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
-	    	"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
+	    	"	   ?Job job:id '%s' .  \n" +
 	    	"	   ?Job job:percentComplete ?percentComplete .  \n" +
 	    	"	   ?Job job:userName ?userName .  \n" +
 	    	"	}",
@@ -249,20 +249,19 @@ public class JobTracker {
 	        "DELETE { " +
 
 	        "   ?Job job:percentComplete ?percentComplete .\n" +
-	        "   ?Job job:status ?status." +
-	        "   ?Job job:statusMessage ?statusMessage." +
+	        "   ?Job job:status ?status ." +
+	        "   ?Job job:statusMessage ?statusMessage ." +
 	        "} \n" +
 	        "INSERT { " +
-	        "   ?Job job:percentComplete '%d'^^XMLSchema:integer. \n" +
-	        "   ?Job job:status job:InProgress. \n" +
-	        "   ?Job job:statusMessage '%s'^^XMLSchema:string." +
+	        "   ?Job job:percentComplete %d . \n" +
+	        "   ?Job job:status job:InProgress . \n" +
+	        "   ?Job job:statusMessage '%s' ." +
 	        "} \n" +
 	        "WHERE {\n" +
-	        "   ?Job a job:Job. \n" +
-	        "   ?Job job:id '%s'^^XMLSchema:string. \n" +
-	        "   optional {?Job job:percentComplete ?percentComplete.} \n" +
-	        "   optional {?Job job:status ?status.} \n" +
-	        "   optional {?Job job:statusMessage ?statusMessage.}" +
+	        "   ?Job job:id '%s' . \n" +
+	        "   optional {?Job job:percentComplete ?percentComplete .} \n" +
+	        "   optional {?Job job:status ?status .} \n" +
+	        "   optional {?Job job:statusMessage ?statusMessage .}" +
 	        "}",
 	    	percentComplete, SparqlToXUtils.safeSparqlString(message), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
@@ -296,16 +295,15 @@ public class JobTracker {
 	        "   ?Job job:status ?status." +
 	        "} \n" +
 	        "INSERT { " +
-			"   ?Job job:percentComplete '100'^^XMLSchema:integer.  \n" +
-	        "   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
-	        "   ?Job job:status job:Failure. \n" +
+			"   ?Job job:percentComplete 100 .  \n" +
+	        "   ?Job job:statusMessage '%s' . \n" +
+	        "   ?Job job:status job:Failure . \n" +
 	        "} \n" +
 	        "WHERE { \n" +
-	        "   ?Job a job:Job. \n" +
-	        "   ?Job job:id '%s'^^XMLSchema:string . \n" +
+	        "   ?Job job:id '%s' . \n" +
 			"   optional {?Job job:percentComplete ?percentComplete .} \n" +
-	        "   optional {?Job job:statusMessage ?statusMessage.} \n" +
-	        "   optional {?Job job:status ?status.} \n" +
+	        "   optional {?Job job:statusMessage ?statusMessage .} \n" +
+	        "   optional {?Job job:status ?status .} \n" +
 	        "}",
 	        
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
@@ -335,7 +333,7 @@ public class JobTracker {
 				"	select distinct ?status ?userName \n" +
 		        "   from <" + this.sei.getGraph() + "> where { " +
 				"	   ?Job a job:Job.  \n" +
-				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
+				"	   ?Job job:id '%s' .  \n" +
 				"	   ?Job job:status ?status .  \n" +
 				"	   ?Job job:userName ?userName .  \n" +
 				"	}",
@@ -379,7 +377,7 @@ public class JobTracker {
 				"	SELECT DISTINCT ?statusMessage ?userName \n" +
 		        "   from <" + this.sei.getGraph() + "> where { " +
 		        "	   ?Job a job:Job.  \n" +
-				"	   ?Job job:id '%s'^^XMLSchema:string .  \n" +
+				"	   ?Job job:id '%s' .  \n" +
 				"	   ?Job job:statusMessage ?statusMessage .  \n" +
 				"	   ?Job job:userName ?userName .  \n" +
 		    	"	}",
@@ -436,13 +434,12 @@ public class JobTracker {
 				"   ?Job job:status ?status." +
 				"} \n" +
 		        "INSERT { " +
-				"   ?Job job:percentComplete '100'^^XMLSchema:integer.  \n" +
-				"   ?Job job:statusMessage '%s'^^XMLSchema:string. \n" +
+				"   ?Job job:percentComplete 100 .  \n" +
+				"   ?Job job:statusMessage '%s' . \n" +
 				"   ?Job job:status job:Success. \n" +
 				"} \n" +
 		        "WHERE { \n" +
-				"   ?Job a job:Job. \n" +
-				"   ?Job job:id '%s'^^XMLSchema:string . \n" +
+				"   ?Job job:id '%s' . \n" +
 				"   optional {?Job job:percentComplete ?percentComplete .} \n" +
 				"   optional {?Job job:statusMessage ?statusMessage.} \n" +
 				"   optional {?Job job:status ?status.} \n" +
@@ -488,13 +485,12 @@ public class JobTracker {
 		        "} \n" +
 		        "INSERT { " +
 		        "   ?Job job:fullResultsURL <%s>. \n" +
-		        "   <%s> job:full '%s'^^XMLSchema:string .  \n" +
+		        "   <%s> job:full '%s' .  \n" +
 		        "   ?Job job:sampleResultsURL <%s>. \n" +
-		        "   <%s> job:full '%s'^^XMLSchema:string . \n" +
+		        "   <%s> job:full '%s' . \n" +
 		        "} \n" +
 		        "WHERE {\n" +
-		        "   ?Job a job:Job. \n" +
-		        "   ?Job job:id '%s'^^XMLSchema:string . \n" +
+		        "   ?Job job:id '%s' . \n" +
 		        "   optional {?Job job:fullResultsURL ?fullURI. \n" +
 		        "             ?fullURI job:full ?fullURL . } \n" +
 		        "   optional {?Job job:sampleResultsURL ?sampleURI. \n" +
@@ -531,7 +527,7 @@ public class JobTracker {
 	    	"	SELECT DISTINCT ?fullUrl ?userName \n" +
 	        "   FROM <" + this.sei.getGraph() + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
-	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
+	    	"	   ?Job job:id '%s' .  \n" +
 	    	"	   ?Job job:fullResultsURL ?URL.  \n" +
 			"	   ?Job job:userName ?userName .  \n" +
 			"      ?URL job:full ?fullUrl . \n" +
@@ -587,8 +583,7 @@ public class JobTracker {
 	    	"	  \n" +
 	    	"	SELECT DISTINCT ?sampleUrl ?userName \n" +
 	        "   FROM <" + this.sei.getGraph() + "> where { " +
-	    	"	   ?Job a job:Job.  \n" +
-	    	"	   ?Job job:id '%s'^^XMLSchema:string.  \n" +
+	    	"	   ?Job job:id '%s' .  \n" +
 	    	"	   ?Job job:sampleResultsURL ?URL.  \n" +
 			"	   ?Job job:userName ?userName .  \n" +
 	    	"      ?URL job:full ?sampleUrl . \n" +
@@ -653,10 +648,10 @@ public class JobTracker {
 	        "} \n" +
 	        "INSERT { " +
 	        "?job a job:Job. \n" + 
-	        "?job job:id '%s'^^XMLSchema:string. \n" +
-            "?job job:creationTime '%s'^^XMLSchema:dateTime. \n" +
-	        "?job job:percentComplete '0'^^XMLSchema:integer. \n" +
-	        "?job job:userName '%s'^^XMLSchema:string. \n" +
+	        "?job job:id '%s' . \n" +
+            "?job job:creationTime '%s'^^XMLSchema:dateTime . \n" +
+	        "?job job:percentComplete 0 . \n" +
+	        "?job job:userName '%s' . \n" +
 	        "?job job:status job:InProgress. \n" +
 	        "}\n" +
 	        "WHERE {\n" +
@@ -692,7 +687,7 @@ public class JobTracker {
 	            "?job job:name ?x. \n" +
 		        "} \n" +
 		        "INSERT { " +
-		        "?job job:name '%s'^^XMLSchema:string. \n" +
+		        "?job job:name '%s'. \n" +
 		        "}\n" +
 		        "WHERE {\n" +
 		        "BIND (<%s> AS ?job)\n" +
@@ -724,9 +719,9 @@ public class JobTracker {
 		        "INSERT { " +
 				"?file a job:BinaryFile. \n" + 
 				"?job job:file ?file. \n" +
-				"?file job:fileID   '%s'^^XMLSchema:string. \n" +
-				"?file job:filename '%s'^^XMLSchema:string. \n" +
-				"?file job:path     '%s'^^XMLSchema:string. \n" +
+				"?file job:fileID   '%s' . \n" +
+				"?file job:filename '%s' . \n" +
+				"?file job:path     '%s' . \n" +
 				"}\n" +
 		        "WHERE {\n" +
 		        "BIND (<%s> AS ?file)\n" +
@@ -1164,7 +1159,7 @@ public class JobTracker {
 				"where { \n" +
 				"   ?Job a job:Job. \n" +
 				"   ?Job job:id ?id. \n" +
-				"      VALUES ?id { '%s'^^XMLSchema:string }. \n" +
+				"      VALUES ?id { '%s' }. \n" +
 				"   ?Job job:userName ?userName. \n" +
 				"}",
 				SparqlToXUtils.safeSparqlString(jobId));
