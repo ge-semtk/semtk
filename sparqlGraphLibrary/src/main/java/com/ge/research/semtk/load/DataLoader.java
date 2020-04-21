@@ -70,11 +70,12 @@ public class DataLoader implements Runnable {
 	ResultsClient rClient = null;
 	StatusClient sClient = null;
 	HeaderTable headerTable = null;
-	int datasetRows = 0;
+	int datasetNumRows = 0;
 	int percentStart = 0;
 	int percentEnd = 0;
 
 	InMemoryInterface cacheSei = null;
+	boolean doNotCache = false;
 	
 	public DataLoader(){
 		// default and does nothing special 
@@ -142,8 +143,9 @@ public class DataLoader implements Runnable {
 		this.batchHandler.setBatchSize(this.batchSize);
 	}
 	
-	public void setCacheSei(InMemoryInterface cacheSei) {
-		this.cacheSei = cacheSei;
+	// for testing
+	public void doNotCache() {
+		this.doNotCache = true;
 	}
 	/**
 	 * Override the ideal insert query size provided by the SparqlEndpointInterface
@@ -210,7 +212,14 @@ public class DataLoader implements Runnable {
 	public int importData(Boolean precheck, Boolean skipIngest) throws Exception{
 
 		// set up information for percent complete
-		this.datasetRows = batchHandler.getDsRows();
+		this.datasetNumRows = batchHandler.getDsRows();
+		
+		// Set up InMemory cache if dataset isn't tiny and we're not skipping the ingestion
+		if (this.datasetNumRows > 10 && !skipIngest && !this.doNotCache) {
+			this.cacheSei = new InMemoryInterface("http://cache");
+		} else {
+			this .cacheSei = null;
+		}
 		
 		// check the nodegroup for consistency before continuing.			
 		this.master.validateAgainstModel(this.oInfo);
@@ -367,7 +376,7 @@ public class DataLoader implements Runnable {
 				if (nowMillis - lastMillis > 1000) {
 					
 					// calculate percent complete
-					double fraction = (double)startingRow / Math.max(1, this.datasetRows);
+					double fraction = (double)startingRow / Math.max(1, this.datasetNumRows);
 					int percent = this.percentStart + (int) Math.floor((this.percentEnd - this.percentStart) * fraction); 
 					percent = Math.min(99, percent);  // don't let it hit 100 due to rounding.  100 will fail in status service.
 					LocalLogger.logToStdOut("..." + recordsProcessed, false, false);

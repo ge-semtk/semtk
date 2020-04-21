@@ -1489,8 +1489,8 @@ public class DataLoaderTest_IT {
 
 	
 	private void loadData(DataLoader dl, String logName, boolean cacheFlag) throws Exception {
-		if (cacheFlag)
-			dl.setCacheSei(new InMemoryInterface("http://cache"));
+		if (!cacheFlag)
+			dl.doNotCache();
 
 		long start = IntegrationTestUtility.getStartTime();
 		dl.importData(true);
