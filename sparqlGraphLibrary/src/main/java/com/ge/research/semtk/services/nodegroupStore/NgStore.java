@@ -319,7 +319,7 @@ public class NgStore {
 		String ngURI = "generateSparqlInsert:semtk_ng_" +  UUID.randomUUID().toString();
 		String query = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
-				"PREFIX generateSparqlInsert:<belmont/generateSparqlInsert#> " +
+				"PREFIX generateSparqlInsert:<uri://generateSparqlInsert#> " +
 				"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 				"INSERT { GRAPH <" + this.dataGraph + "> { " +
 				"      ?SemTkConnection__0 a prefabNodeGroup:SemTkConnection . " + 
@@ -349,7 +349,7 @@ public class NgStore {
 			
 			query = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 					"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
-					"PREFIX generateSparqlInsert:<belmont/generateSparqlInsert#> " +
+					"PREFIX generateSparqlInsert:<uri://generateSparqlInsert#> " +
 					"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 					"INSERT { GRAPH <" + this.dataGraph + "> { " +
 					"      ?SemTkStringChunk__0 a prefabNodeGroup:StringChunk . " +

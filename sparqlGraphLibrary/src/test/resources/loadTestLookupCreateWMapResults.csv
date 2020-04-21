@@ -1,8 +1,8 @@
 DuraBattery,assemblyDate,batteryDesc,batteryId
-belmont/generateSparqlInsert#Batt_created_id1,1966-03-23T08:00:01,description 1,created_id1
-belmont/generateSparqlInsert#Batt_created_id2,1966-03-23T08:00:02,description 2,created_id2
-belmont/generateSparqlInsert#Batt_created_id3,1966-03-23T08:00:03,description 3,created_id3
-belmont/generateSparqlInsert#Batt_created_id4,1966-03-23T08:00:04,description 4,created_id4
+uri://semtk/generated#Batt_created_id1,1966-03-23T08:00:01,description 1,created_id1
+uri://semtk/generated#Batt_created_id2,1966-03-23T08:00:02,description 2,created_id2
+uri://semtk/generated#Batt_created_id3,1966-03-23T08:00:03,description 3,created_id3
+uri://semtk/generated#Batt_created_id4,1966-03-23T08:00:04,description 4,created_id4
 uri://durabattery/data#Batt_ZF1220BF15026A71C4EFF8DDBD10C1739102BB79Anocells,2017-03-23T10:23:01,no cells,nocells
 uri://durabattery/data#Batt_Z52E6D8AB88471AF82DA12A0EAE7AAB01357E3881full,2017-03-23T10:23:00,normal battery,full
 uri://durabattery/data#Batt_Z3C0B067A6699A769F0281BAFA4FC34EDE61F791Fonlycolor,1966-03-23T08:00:05,only colors,onlycolor

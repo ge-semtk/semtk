@@ -33,7 +33,7 @@ public class UriResolver {
 	// in any case, it would be nice to have a one-stop location for this sort of task.
 
 	// default uri 
-	public final static String DEFAULT_URI_PREFIX = "belmont/generateSparqlInsert#";
+	public final static String DEFAULT_URI_PREFIX = "uri://semtk/generated#";
 	
 	private String userUriPrefix = "";
 	private OntologyInfo oInfo = null;
