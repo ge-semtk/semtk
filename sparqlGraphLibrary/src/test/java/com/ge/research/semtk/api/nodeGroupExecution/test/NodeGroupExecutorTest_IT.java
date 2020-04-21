@@ -75,13 +75,13 @@ public class NodeGroupExecutorTest_IT {
 	@Test
 	public void testIngestByNodegroup() throws Exception{				
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		
 		// get a nodegroup to execute
 		SparqlGraphJson sparqlGraphJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 		
 		// check number of triples before insert
-		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
+		assertEquals(123, TestGraph.getNumTriples());	// get count before loading
 		
 		// do the insert (using full nodegroup)
 		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA);
@@ -99,7 +99,7 @@ public class NodeGroupExecutorTest_IT {
 	public void testIngestByNodegroupID() throws Exception{				
 		
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		
 		// store a nodegroup to execute
 		SparqlGraphJson sparqlGraphJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
@@ -130,7 +130,7 @@ public class NodeGroupExecutorTest_IT {
 	public void testIngestByNodegroupIDConn() throws Exception{				
 		
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		
 		// store a nodegroup to execute
 		SparqlGraphJson sparqlGraphJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
@@ -153,10 +153,9 @@ public class NodeGroupExecutorTest_IT {
 	public void testIngestByNodegroupIDError() throws Exception{		
 		
 		String data = Utility.readFile("src/test/resources/sampleBatteryBadColor.csv");
-		String owlPath = "src/test/resources/sampleBattery.owl";
 		
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl(owlPath);
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 		
 		// store a nodegroup to execute
 		SparqlGraphJson sparqlGraphJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");

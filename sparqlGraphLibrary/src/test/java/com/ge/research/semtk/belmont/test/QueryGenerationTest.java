@@ -75,10 +75,10 @@ public class QueryGenerationTest {
 		
 		String expected = " INSERT { GRAPH <http://graph> {\n" +
 				" ?testNode a http://knowledge.ge.com/bar .\n" +
-				"        ?testNode bar:foo \"2\"^^XMLSchema:int .\n" +
-				"        ?testNode bar:foo \"123543\"^^XMLSchema:int .\n" +
-				"        ?testNode a2bar:foostr \"testvalue\"^^XMLSchema:string .\n" +
-				"        ?testNode a2bar:foostr \"anothertest\"^^XMLSchema:string .\n" +
+				"        ?testNode bar:foo 2 .\n" +
+				"        ?testNode bar:foo 123543 .\n" +
+				"        ?testNode a2bar:foostr \"testvalue\" .\n" +
+				"        ?testNode a2bar:foostr \"anothertest\" .\n" +
 				"} } WHERE {       BIND (iri(concat(\"generateSparqlInsert:\"";  // what follows is a unique string that we can't compare
 		assertTrue(insertQuery.replaceAll("\\s+","").contains(expected.replaceAll("\\s+",""))); // ignore whitespace
 		
@@ -121,10 +121,10 @@ public class QueryGenerationTest {
 		String insertQuery = ng.generateSparqlInsert(oInfo, endpoint);
 		String expected = "INSERT { GRAPH <http://graph> {\n" +
 			"?testNode a http://knowledge.ge.com/bar . " +
-			"?testNode bar:foo \"2\"^^XMLSchema:int ." +
-			"?testNode bar:foo \"123543\"^^XMLSchema:int ." +
-			"?testNode bar:foostr \"testvalue\"^^XMLSchema:string ." +
-			"?testNode bar:foostr \"anothertest\"^^XMLSchema:string ." +
+			"?testNode bar:foo 2 ." +
+			"?testNode bar:foo 123543 ." +
+			"?testNode bar:foostr \"testvalue\" ." +
+			"?testNode bar:foostr \"anothertest\" ." +
 			"} } WHERE {       BIND (bar:testInstance AS ?testNode)." +
 			"}";
 
@@ -275,7 +275,7 @@ public class QueryGenerationTest {
 		
 		String sparql = ng.generateSparqlPrefix() + ng1.generateSparqlPrefix() + " INSERT {" + head + "} WHERE {" + body + "}";
 		
-		String expected = " INSERT {       ?testNode0 a http://knowledge.ge.com/bar . ?testNode0 bar:foo \"2\"^^XMLSchema:int . ?testNode0 bar:foo \"123543\"^^XMLSchema:int . ?testNode0 bar:foostr \"testvalue\"^^XMLSchema:string . ?testNode0 bar:foostr \"anothertest\"^^XMLSchema:string . ?testNode1 a http://knowledge.ge.com/bar . ?testNode1 bar:foo \"20\"^^XMLSchema:int . ?testNode1 bar:foo \"1235430\"^^XMLSchema:int . ?testNode1 bar:foostr \"testvalue\"^^XMLSchema:string . ?testNode1 bar:foostr \"anothertest\"^^XMLSchema:string . } WHERE {       BIND (iri(concat(\"generateSparqlInsert:\"";  // what follows are unique strings
+		String expected = " INSERT {       ?testNode0 a http://knowledge.ge.com/bar . ?testNode0 bar:foo 2 . ?testNode0 bar:foo 123543 . ?testNode0 bar:foostr \"testvalue\" . ?testNode0 bar:foostr \"anothertest\" . ?testNode1 a http://knowledge.ge.com/bar . ?testNode1 bar:foo 20 . ?testNode1 bar:foo 1235430 . ?testNode1 bar:foostr \"testvalue\" . ?testNode1 bar:foostr \"anothertest\" . } WHERE {       BIND (iri(concat(\"generateSparqlInsert:\"";  // what follows are unique strings
 		assertTrue(sparql.replaceAll("\\s+","").contains(expected.replaceAll("\\s+",""))); // ignore whitespace
 		// see NOTE at top of this test class definition
 	}
