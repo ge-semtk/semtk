@@ -699,7 +699,7 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void test_LookupBatteryIdAddDesc() throws Exception {
-		doLookupBatteryIdAddDesc(true);  // FAILS with un-typed literals in jena dump
+		doLookupBatteryIdAddDesc(true);  
 		doLookupBatteryIdAddDesc(false);
 	}
 	
@@ -750,7 +750,12 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
-	public void testLookupBatteryIdAddDescShort() throws Exception {
+	public void test_LookupBatteryIdAddDescShort() throws Exception {
+		doLookupBatteryIdAddDescShort(false);
+		doLookupBatteryIdAddDescShort(true);
+	}
+
+	public void doLookupBatteryIdAddDescShort(boolean cacheFlag) throws Exception {
 		// setup
 		TestGraph.clearGraph();
 				
@@ -760,12 +765,7 @@ public class DataLoaderTest_IT {
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryShortData.csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
-		dl0.importData(true);
-		
-		Table err0 = dl0.getLoadingErrorReport();
-		if (err0.getNumRows() > 0) {
-			fail(err0.toCSVString());
-		}
+		loadData(dl0, "testLookupBatteryIdAddDescShort preload", cacheFlag);
 				
 		LocalLogger.logToStdErr("------ done import 1 -------");		
 		// Try URI lookup
@@ -775,15 +775,8 @@ public class DataLoaderTest_IT {
 		
 		// import the actual test: lookup URI and add description
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		dl.importData(true);
+		loadData(dl, "testLookupBatteryIdAddDescShort", cacheFlag);
 
-
-		Table err = dl.getLoadingErrorReport();
-		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
-		}
-		
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescShortResults.csv");
 		
 	}
@@ -892,6 +885,10 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testLoadLookXNodesTwoConn() throws Exception {
+		doLoadLookXNodesTwoConn(false);
+		doLoadLookXNodesTwoConn(true);
+	}
+	public void doLoadLookXNodesTwoConn(boolean cacheFlag) throws Exception {
 		// Repeat testLoadLookXNodes() with an extra data connection graph
 		// ingest into a different graph
 		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
@@ -903,12 +900,7 @@ public class DataLoaderTest_IT {
 
 		// import durabattery first4 as normal
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		dl.importData(true);
-		Table err = dl.getLoadingErrorReport();
-		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
-		}
+		loadData(dl, "doLoadLookXNodesTwoConn preload", cacheFlag);
 		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryFirst4Results.csv");
 
 		// the real test.   Note that "both" means standard model + data
@@ -925,12 +917,8 @@ public class DataLoaderTest_IT {
 		sgJson.setSparqlConn(connBothPlusData0);
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookXNodesData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		dl.importData(true);
-		err = dl.getLoadingErrorReport();
-		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
-		}
+		loadData(dl, "doLoadLookXNodesTwoConn", cacheFlag);
+		
 
 		// query both graphs should get full results
 		// query contains both + data0
@@ -1411,7 +1399,8 @@ public class DataLoaderTest_IT {
 	}
 	
 	public void doTypesAndConstraintsViaBook(boolean cacheFlag) throws Exception {  
-		// Bigger-ish test of many import spec features and timing. 
+		// Test important parts of RDF1.1 literal typing
+		// with semtk load and semtk query
 		Dataset ds = new CSVDataset("src/test/resources/book.csv", false);
 
 		// setup
