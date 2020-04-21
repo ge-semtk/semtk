@@ -327,7 +327,7 @@ public class DataLoader implements Runnable {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				SparqlEndpointInterface ingestSei = (this.cacheSei != null) ? this.cacheSei : this.endpoint;
+				SparqlEndpointInterface ingestSei = (!skipIngest && this.cacheSei != null) ? this.cacheSei : this.endpoint;
 				IngestionWorkerThread worker = new IngestionWorkerThread(ingestSei, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				if (this.insertQueryIdealSizeOverride > 0) {
 					worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
