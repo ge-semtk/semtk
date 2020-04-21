@@ -229,7 +229,7 @@ public class ValueConstraint {
 			
 			// for strings only:  SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
 			if (valType == XSDSupportedType.STRING) {
-				retval.append(valType.buildRDF11ValueString(v) + " ");   
+				retval.append(valType.buildTypedValueString(v) + " ");   
 			}
 		}
 		

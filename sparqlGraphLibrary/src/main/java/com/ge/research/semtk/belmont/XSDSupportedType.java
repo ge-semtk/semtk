@@ -109,12 +109,17 @@ public enum XSDSupportedType {
 		}
 				
 	}
-	private String buildTypedValueString(String val) {
+	/**
+	 * Force typed literal
+	 * Use buildRDF11ValueString() instead unless you're sure you want this.
+	 * @param val
+	 * @return
+	 */
+	public String buildTypedValueString(String val) {
 		return this.buildTypedValueString(val, null);
 	}
 	
-	// get a string version of a value with type trailer
-	private String buildTypedValueString(String val, String typePrefixOverride) {
+	public String buildTypedValueString(String val, String typePrefixOverride) {
 		
 		if (this == XSDSupportedType.NODE_URI) {
 			// check for angle brackets first
