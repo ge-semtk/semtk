@@ -67,7 +67,7 @@ public class RDBTimeCoherentTimeSeriesQueryGenClientTest_IT {
 		UUID uuid2 = UUID.randomUUID();
 		Table locationAndValueInfoTable = getTestTable(uuid1, uuid2);
 
-		String edcConstraintJsonStr = "{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[{\"@var\":\"PRESSURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"100\",\"@type\":\"number\"}},{\"@var\":\"TEMPERATURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"50\",\"@type\":\"number\"},\"@operator2\":\"<\",\"@value2\":{\"@value\":\"60\",\"@type\":\"number\"}}]},\"@timeConstraint\":" + TimeSeriesConstraintTest.getSampleTimeSeriesConstraintJsonStr() + "}";
+		String edcConstraintJsonStr = "{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[{\"@var\":\"PRESSURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"100\",\"@type\":\"number\"}},{\"@var\":\"TEMPERATURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"50\",\"@type\":\"number\"},\"@operator2\":\"<\",\"@value2\":{\"@value\":\"60\",\"@type\":\"number\"}}]},\"@timeConstraint\":" + IntegrationTestUtility.getSampleTimeSeriesConstraintJsonStr() + "}";
 		JSONObject edcConstraintJson = com.ge.research.semtk.utility.Utility.getJsonObjectFromString(edcConstraintJsonStr);
 		// execute
 		TableResultSet resultSet = client.execute(locationAndValueInfoTable, edcConstraintJson, null);
@@ -104,7 +104,7 @@ public class RDBTimeCoherentTimeSeriesQueryGenClientTest_IT {
 		rows.add(new ArrayList<String>(Arrays.asList(uuid2.toString(),"athena","dbase","table4444","ts_time_utc","SPEED","col43")));					
 		Table locationAndValueInfoTable = new Table(COLS, COL_TYPES, rows);
 
-		String edcConstraintJsonStr = "{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[{\"@var\":\"PRESSURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"100\",\"@type\":\"number\"}},{\"@var\":\"TEMPERATURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"50\",\"@type\":\"number\"},\"@operator2\":\"<\",\"@value2\":{\"@value\":\"60\",\"@type\":\"number\"}}]},\"@timeConstraint\":" + TimeSeriesConstraintTest.getSampleTimeSeriesConstraintJsonStr() + "}";
+		String edcConstraintJsonStr = "{\"@constraintSet\":{\"@op\":\"AND\",\"@constraints\":[{\"@var\":\"PRESSURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"100\",\"@type\":\"number\"}},{\"@var\":\"TEMPERATURE\",\"@operator1\":\">\",\"@value1\":{\"@value\":\"50\",\"@type\":\"number\"},\"@operator2\":\"<\",\"@value2\":{\"@value\":\"60\",\"@type\":\"number\"}}]},\"@timeConstraint\":" + IntegrationTestUtility.getSampleTimeSeriesConstraintJsonStr() + "}";
 		JSONObject edcConstraintJson = com.ge.research.semtk.utility.Utility.getJsonObjectFromString(edcConstraintJsonStr);
 		// execute
 		TableResultSet resultSet = client.execute(locationAndValueInfoTable, edcConstraintJson, null);

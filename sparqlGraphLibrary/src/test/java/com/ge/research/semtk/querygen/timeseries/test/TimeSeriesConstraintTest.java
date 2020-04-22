@@ -29,21 +29,10 @@ import org.junit.Test;
 import com.ge.research.semtk.querygen.timeseries.TimeSeriesConstraint;
 import com.ge.research.semtk.querygen.timeseries.fragmentbuilder.AthenaQueryFragmentBuilder;
 import com.ge.research.semtk.querygen.timeseries.fragmentbuilder.HiveQueryFragmentBuilder;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
-public class TimeSeriesConstraintTest {
-	
-	// these are reused in many tests
-	public static String getSampleTimeSeriesConstraintJsonStr(){
-		return "{\"@var\":\"_Time_\",\"@operator1\":\">=\",\"@value1\":{\"@value\":\"04/07/2016 2:00:00 AM\",\"@type\":\"datetime\"},\"@operator2\":\"<=\",\"@value2\":{\"@value\":\"04/09/2016 4:00:00 AM\",\"@type\":\"datetime\"}}";
-	}	
-	public static TimeSeriesConstraint getSampleTimeSeriesConstraint() throws Exception{
-		return new TimeSeriesConstraint(Utility.getJsonObjectFromString(getSampleTimeSeriesConstraintJsonStr()));
-	}	
-	public static String getSampleTimeSeriesConstraintQueryFragment_Hive(){
-		return "((unix_timestamp(to_utc_timestamp(`ts_time_utc`,'Ect/GMT+0'), 'yyyy-MM-dd HH:mm:ss') >= unix_timestamp('2016-04-07 02:00:00','yyyy-MM-dd HH:mm:ss')) AND (unix_timestamp(to_utc_timestamp(`ts_time_utc`,'Ect/GMT+0'), 'yyyy-MM-dd HH:mm:ss') <= unix_timestamp('2016-04-09 04:00:00','yyyy-MM-dd HH:mm:ss')))";
-	}
-	
+public class TimeSeriesConstraintTest {	
 	
 	@Test
 	public void test() throws Exception {
@@ -77,8 +66,8 @@ public class TimeSeriesConstraintTest {
 
 	@Test
 	public void testTimeConstraint() throws Exception {
-		TimeSeriesConstraint tsc = getSampleTimeSeriesConstraint();
-		assertEquals(tsc.getTimeConstraintQueryFragment("ts_time_utc", new HiveQueryFragmentBuilder()), getSampleTimeSeriesConstraintQueryFragment_Hive());
+		TimeSeriesConstraint tsc = IntegrationTestUtility.getSampleTimeSeriesConstraint();
+		assertEquals(tsc.getTimeConstraintQueryFragment("ts_time_utc", new HiveQueryFragmentBuilder()), IntegrationTestUtility.getSampleTimeSeriesConstraintQueryFragment_Hive());
 		assertEquals(tsc.getTimeConstraintQueryFragment_typeTimestamp("ts_time_utc", new HiveQueryFragmentBuilder()), "((ts_time_utc >= to_utc_timestamp('2016-04-07 02:00:00.000', 'GMT')) AND (ts_time_utc <= to_utc_timestamp('2016-04-09 04:00:00.000', 'GMT')))");
 		assertEquals(tsc.getTimeConstraintQueryFragment("ts_time_utc", new AthenaQueryFragmentBuilder()), "((from_unixtime(\"ts_time_utc\") >= timestamp '2016-04-07 02:00:00') AND (from_unixtime(\"ts_time_utc\") <= timestamp '2016-04-09 04:00:00'))");
 	}
