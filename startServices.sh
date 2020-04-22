@@ -111,6 +111,13 @@ PROC_ARRAY+=("edcQueryGenerationService");
 PID_ARRAY+=($!)
 PROC_ARRAY+=("athenaService");
 
+"$JAVA_HOME"/bin/java -jar "$SEMTK"/arangoDbService/target/arangoDbService-*.jar > "$LOGS"/arangoDbService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("arangoDbService");
+
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/utilityService/target/utilityService-*.jar > "$LOGS"/utilityService.log 2>&1 &
+PID_ARRAY+=($!)
+PROC_ARRAY+=("utilityService");
 #
 # wait for services
 #
@@ -129,6 +136,8 @@ declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
                   $PORT_FDCCACHE_SERVICE
 				  $PORT_EDCQUERYGEN_SERVICE
 				  $PORT_ATHENA_SERVICE
+                  $PORT_ARANGODB_SERVICE
+				  $PORT_UTILITY_SERVICE
                  )
 # protocol for ping
 if [ "$SSL_ENABLED" == "false" ]; then
