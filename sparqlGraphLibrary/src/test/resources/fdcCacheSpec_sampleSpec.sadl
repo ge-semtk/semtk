@@ -1,0 +1,35 @@
+uri "http://research.ge.com/semtk/fdcCacheSpecSample" alias fdcCacheSpecSample.
+
+import "http://research.ge.com/semtk/fdcCacheSpec".
+
+SampleSpec is a FdcCacheSpec,
+	with id "sampleSpec",
+	
+	with step ( a FdcCacheStep 
+		with retrieval( a Retrieval 
+			with inputNodegroupId "sampleInputNg1",
+			with serviceURL "http://localhost:12066/fdcSample/aircraftLocation",
+			with ingestNodeGroupId "fdcSampleAircraftLocation"
+		)
+		with sequence 1
+	),
+	with step ( a FdcCacheStep 
+		with retrieval( a Retrieval 
+			with inputNodegroupId "fdcSampleCacheGetLocations",
+			with serviceURL "http://localhost:12066/fdcSample/elevation",
+			with ingestNodeGroupId "fdcSampleElevation"
+		)
+		with sequence 2
+	).
+
+EmptySpec is a FdcCacheSpec,
+	with id "otherSpec",
+	
+	with step ( a FdcCacheStep 
+		with retrieval( a Retrieval 
+			with inputNodegroupId "doesnt_exist",
+			with serviceURL "http://localhost:12066/fdcSample/doesnt_exist",
+			with ingestNodeGroupId "doesnt_exist_either"
+		)
+		with sequence 1
+	).
