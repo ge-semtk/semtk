@@ -214,8 +214,15 @@ public class DataLoader implements Runnable {
 		// set up information for percent complete
 		this.datasetNumRows = batchHandler.getDsRows();
 		
-		// Set up InMemory cache if dataset isn't tiny and we're not skipping the ingestion
-		if (this.datasetNumRows > 10 && !skipIngest && !this.doNotCache) {
+		// Set up InMemory cache if 
+		//    virtuoso
+		//    dataset isn't tiny 
+		//    we're not skipping the ingestion
+		//    user did not set "noNotCache"
+		if (this.endpoint.getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER) && 
+				this.datasetNumRows > 10 && 
+				!skipIngest && 
+				!this.doNotCache) {
 			this.cacheSei = new InMemoryInterface("http://cache");
 		} else {
 			this .cacheSei = null;
