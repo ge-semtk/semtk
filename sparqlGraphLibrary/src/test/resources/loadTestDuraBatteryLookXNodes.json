@@ -438,7 +438,7 @@
 	},
 	"importSpec": {
 		"version": "1",
-		"baseURI": "uri://durabattery/data",
+		"baseURI": "http://durabattery/data",
 		"columns": [
 			{
 				"colId": "col_0",

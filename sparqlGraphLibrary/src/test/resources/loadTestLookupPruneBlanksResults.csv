@@ -1,4 +1,4 @@
 DuraBattery,batteryDesc,batteryId,cellId,Color
-uri://durabattery/data_create#82f44c4f-d1e9-428a-a06b-53030958f478,desc 1,batt-1,A1,http://kdl.ge.com/durabattery#blue
-uri://durabattery/data_create#ac0a4e92-9e1f-477f-a042-5d87797798bc,desc 2,batt-2,B1,
-uri://durabattery/data_create#021b6a4b-c881-40fa-8bc5-3f5046411cd0,desc 3,batt-3,,
+http://durabattery/data_create#82f44c4f-d1e9-428a-a06b-53030958f478,desc 1,batt-1,A1,http://kdl.ge.com/durabattery#blue
+http://durabattery/data_create#ac0a4e92-9e1f-477f-a042-5d87797798bc,desc 2,batt-2,B1,
+http://durabattery/data_create#021b6a4b-c881-40fa-8bc5-3f5046411cd0,desc 3,batt-3,,
