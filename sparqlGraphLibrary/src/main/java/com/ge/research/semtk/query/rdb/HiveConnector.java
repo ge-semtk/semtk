@@ -28,7 +28,7 @@ public class HiveConnector extends JdbcConnector {
 
 	private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";	
 	private static final String HIVE_URL_PREFIX = "jdbc:hive2://";			
-	private static final String HIVE_TEST_QUERY = "show tables";
+	public static final String HIVE_TEST_QUERY = "select unix_timestamp() as tstamp";
 	
 	/**
 	 * Instantiate the connector.

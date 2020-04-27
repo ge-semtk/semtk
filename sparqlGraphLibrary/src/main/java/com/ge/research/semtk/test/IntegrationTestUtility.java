@@ -48,6 +48,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.properties.EndpointProperties;
+import com.ge.research.semtk.querygen.timeseries.TimeSeriesConstraint;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -400,5 +401,16 @@ public class IntegrationTestUtility{
 
 		// ingest some airports
 		TestGraph.ingest(c, "/fdcTestSetup/fdc_ingest_airports.json", "/fdcTestSetup/fdc_airport_lat_lon.csv");
+	}
+	
+	// these are reused in many tests
+	public static String getSampleTimeSeriesConstraintJsonStr(){
+		return "{\"@var\":\"_Time_\",\"@operator1\":\">=\",\"@value1\":{\"@value\":\"04/07/2016 2:00:00 AM\",\"@type\":\"datetime\"},\"@operator2\":\"<=\",\"@value2\":{\"@value\":\"04/09/2016 4:00:00 AM\",\"@type\":\"datetime\"}}";
+	}	
+	public static TimeSeriesConstraint getSampleTimeSeriesConstraint() throws Exception{
+		return new TimeSeriesConstraint(Utility.getJsonObjectFromString(getSampleTimeSeriesConstraintJsonStr()));
+	}	
+	public static String getSampleTimeSeriesConstraintQueryFragment_Hive(){
+		return "((unix_timestamp(to_utc_timestamp(`ts_time_utc`,'Ect/GMT+0'), 'yyyy-MM-dd HH:mm:ss') >= unix_timestamp('2016-04-07 02:00:00','yyyy-MM-dd HH:mm:ss')) AND (unix_timestamp(to_utc_timestamp(`ts_time_utc`,'Ect/GMT+0'), 'yyyy-MM-dd HH:mm:ss') <= unix_timestamp('2016-04-09 04:00:00','yyyy-MM-dd HH:mm:ss')))";
 	}
 }
