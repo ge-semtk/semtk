@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -37,12 +38,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
+import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
+import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoClassRequestBody;
+import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoRequestBody;
+import com.ge.research.semtk.services.ontologyinfo.requests.SparqlConnectionRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
@@ -154,7 +160,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = null;
 		
 		try{
-			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlConnection conn = requestBody.buildSparqlConnection();
 			OntologyInfo oInfo = oInfoCache.get(conn);
 			JSONObject oInfoDetails = oInfo.toAdvancedClientJson();
 			
@@ -165,6 +171,46 @@ public class OntologyInfoServiceRestController {
 		catch(Exception e){
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "getOntologyInfo", e);
+			LocalLogger.printStackTrace(e);
+		}
+		// send it out.
+		return retval.toJson();
+	}
+	@ApiOperation(
+		    value= "Get all data and object properties of a class, including those inherited from superclasses.",
+		    notes= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: 'http://model#Tree' } ]"
+		)
+	@CrossOrigin
+	@RequestMapping(value="/getClassInfo", method=RequestMethod.POST)
+	public JSONObject getClassInfo(@RequestBody OntologyInfoClassRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			OntologyClass oClass = requestBody.buildClass();
+			OntologyInfo oInfo = oInfoCache.get(conn);
+			
+			ArrayList<OntologyProperty> props = oInfo.getInheritedProperties(oClass);
+			JSONArray retArray = new JSONArray();
+			for (OntologyProperty p : props) {
+				JSONObject propJson = new JSONObject();
+				propJson.put("domain", p.getNameStr());
+				propJson.put("range", p.getRangeStr());
+				retArray.add(propJson);
+			}
+			
+			JSONObject retObj = new JSONObject();
+			retObj.put("name", oClass.getName());
+			retObj.put("properties", retArray);
+			
+			retval = new SimpleResultSet();
+			retval.addResult("classInfo", retObj);
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "getClassInfo", e);
 			LocalLogger.printStackTrace(e);
 		}
 		// send it out.
@@ -183,7 +229,7 @@ public class OntologyInfoServiceRestController {
 		TableResultSet retval = new TableResultSet();
 		
 		try{
-			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
 			retval.addResults(oInfoCache.get(conn).getUriLabelTable());
 			retval.setSuccess(true);
@@ -211,7 +257,7 @@ public class OntologyInfoServiceRestController {
 		TableResultSet retval = new TableResultSet();
 		
 		try{
-			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlConnection conn = requestBody.buildSparqlConnection();
 			SparqlEndpointInterface querySei = conn.getDefaultQueryInterface();
 			ArrayList<SparqlEndpointInterface> dataSeiList = conn.getDataInterfaces();
 			
@@ -249,7 +295,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = null;
 		
 		try{
-			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlConnection conn = requestBody.buildSparqlConnection();
 			OntologyInfo oInfo = oInfoCache.get(conn);
 			JSONObject json = oInfo.toJson();
 			
@@ -277,7 +323,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {			
-			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
 			oInfoCache.removeSimilar(conn);
 			
@@ -304,7 +350,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {			
-			SparqlConnection conn = requestBody.getJsonRenderedSparqlConnection();
+			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
 			oInfoCache.remove(conn);
 			

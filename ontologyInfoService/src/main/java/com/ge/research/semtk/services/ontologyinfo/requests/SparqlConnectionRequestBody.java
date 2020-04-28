@@ -16,10 +16,19 @@
  */
 
 
-package com.ge.research.semtk.services.ontologyinfo;
+package com.ge.research.semtk.services.ontologyinfo.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
+/*
+ *  WARNING/NOTE: This is identical but not compatible with:
+ * 						ontologyinfo.requests.OntologyInfoRequestBody  <= use this for oninfo service for now
+ * 
+ *               And there is an even better more general not compatible:
+ *               		springutillib.requests.SparqlConnectionRequest
+ */
+
+@Deprecated
 public class SparqlConnectionRequestBody {
 
 	private String sparqlConnectionJson = "";
