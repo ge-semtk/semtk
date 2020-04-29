@@ -15,8 +15,12 @@ import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-public class NodeGroupStoreTest {
+/**
+ * Test NgStore without any services, but still uses triplestore
+ * @author 200001934
+ *
+ */
+public class NodeGroupStoreTestLocal_IT {
 
 	@BeforeClass
 	public static void setup() {
