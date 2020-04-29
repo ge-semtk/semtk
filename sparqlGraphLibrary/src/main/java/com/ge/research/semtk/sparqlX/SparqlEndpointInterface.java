@@ -90,9 +90,9 @@ public abstract class SparqlEndpointInterface {
 	// details. doing so may lead to unexpected results
 
 	private final static String QUERY_SERVER = "kdl";
-	private final static String FUSEKI_SERVER = "fuseki";
-	private final static String VIRTUOSO_SERVER = "virtuoso";
-	private final static String NEPTUNE_SERVER = "neptune";
+	public final static String FUSEKI_SERVER = "fuseki";
+	public final static String VIRTUOSO_SERVER = "virtuoso";
+	public final static String NEPTUNE_SERVER = "neptune";
 	
 	// results types to request
 	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 

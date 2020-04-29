@@ -88,7 +88,7 @@
 	},
 	"importSpec": {
 		"version": "1",
-		"baseURI": "uri://durabattery/data_create",
+		"baseURI": "http://durabattery/data_create",
 		"columns": [
 			{
 				"colId": "col_0",

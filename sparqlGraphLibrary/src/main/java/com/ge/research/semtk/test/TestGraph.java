@@ -25,12 +25,17 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -134,7 +139,15 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getSparqlServer() throws Exception{
-		return IntegrationTestUtility.get("sparqlendpoint.server");
+		return IntegrationTestUtility.get("testgraph.server");
+	}
+	
+	/**
+	 * Get the SPARQL server type.
+	 * @throws Exception 
+	 */
+	public static String getSparqlServerType() throws Exception{
+		return IntegrationTestUtility.get("testgraph.type");
 	}
 	
 	/**
@@ -144,13 +157,7 @@ public class TestGraph {
 		return getSei().getGraph();
 	}
 	
-	/**
-	 * Get the SPARQL server type.
-	 * @throws Exception 
-	 */
-	public static String getSparqlServerType() throws Exception{
-		return IntegrationTestUtility.get("sparqlendpoint.type");
-	}
+	
 	
 	/**
 	 * Get the SPARQL server username.
@@ -216,12 +223,30 @@ public class TestGraph {
 		return res.getResults();
 	}
 	
+	public static Table execTableSelect(SparqlGraphJson sgJson) throws Exception {
+		// execute a select query
+		// exception if there's any problem
+		// return the table
+		
+		return SparqlGraphJson.executeSelectToTable(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+	}
+	
 	public static Table execTableSelect(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
 		// execute a select query
 		// exception if there's any problem
 		// return the table
 		
 		return SparqlGraphJson.executeSelectToTable(sgJsonJson, getSparqlConn(), oInfoClient);
+	}
+	
+	public static Table execSelectFromResource(Object o, String resourceName) throws Exception {
+		return execSelectFromResource(o.getClass(), resourceName);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static Table execSelectFromResource(Class c, String resourceName) throws Exception {
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
+		return execTableSelect(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
 	/**
@@ -347,6 +372,24 @@ public class TestGraph {
 		return sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
+	public static String addRuntimeConstraint(SparqlGraphJson sgjson, String sparqlID, SupportedOperations operator, String [] operandList) throws Exception {
+
+		NodeGroup ng = sgjson.getNodeGroup();
+		
+		// Try to call through the highest level of runtime constraint through value constraint code
+		RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
+		JSONObject constraint = RuntimeConstraintManager.buildRuntimeConstraintJson(
+				sparqlID, 
+				operator,
+				new ArrayList<String>(Arrays.asList(operandList)));
+		JSONArray runtimeConstraints = new JSONArray();
+		runtimeConstraints.add(constraint);
+		rtci.applyConstraintJson(runtimeConstraints);
+		String constraintSparql = ng.getItemBySparqlID(sparqlID).getValueConstraint().toString();
+		sgjson.setNodeGroup(ng);
+		return constraintSparql;
+	}
+	
 	public static SparqlGraphJson getSparqlGraphJsonFromResource(Object o, String resourceName) throws Exception {
 		return getSparqlGraphJsonFromJson(Utility.getResourceAsJson(o.getClass(), resourceName));
 	}
@@ -456,7 +499,10 @@ public class TestGraph {
 		// load the data
 		Dataset ds = new CSVDataset(dataOrPath, isData);
 		DataLoader dl = new DataLoader(sgJson, ds, getUsername(), getPassword());
-		dl.importData(true);
+		int rows = dl.importData(true);
+		if (rows == 0) {
+			throw new Exception(dl.getLoadingErrorReportBrief());
+		}
 		
 		return sgJson;
 	}

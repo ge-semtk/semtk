@@ -89,11 +89,36 @@ public enum XSDSupportedType {
 		return candidate.toUpperCase(); // since this passed the check for existence, we can just hand it back. 
 	}
 
+	public String buildRDF11ValueString(String val) {
+		return buildRDF11ValueString(val, null);
+	}
+	
+	public String buildRDF11ValueString(String val, String typePrefixOverride) {
+		
+		if (this.numericOperationAvailable()) {
+			return val;
+			
+		} else if (this.dateOperationAvailable()) {
+			return buildTypedValueString(val, typePrefixOverride);
+			
+		} else if (this == XSDSupportedType.NODE_URI) {
+			return buildTypedValueString(val, typePrefixOverride);
+			
+		} else {
+			return "\"" + val + "\"";
+		}
+				
+	}
+	/**
+	 * Force typed literal
+	 * Use buildRDF11ValueString() instead unless you're sure you want this.
+	 * @param val
+	 * @return
+	 */
 	public String buildTypedValueString(String val) {
 		return this.buildTypedValueString(val, null);
 	}
 	
-	// get a string version of a value with type trailer
 	public String buildTypedValueString(String val, String typePrefixOverride) {
 		
 		if (this == XSDSupportedType.NODE_URI) {
@@ -199,30 +224,33 @@ public enum XSDSupportedType {
 	//
 	
 	/**
-	 * Throw excpetion if proposedValue is not a legal value
+	 * Throw exception if proposedValue is not a legal value
 	 * @param proposedValue
 	 * @throws Exception
 	 */
-	public Object parse(String proposedValue) throws Exception{
+	public void validate(String proposedValue) throws Exception{
 		
 		// datetime: 2014-05-23T10:20:13+05:30
 		// date    : 2014-05-23
-		
+		Object ret;
 		// for each type: return object, throw special exception, or pass through to normal exception
 		switch (this) {
 		case DATE:
 			try{
 				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-				return formatter.parse(proposedValue);
+				ret = formatter.parse(proposedValue);
+				return;
 			}
 			catch(Exception e){
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is yyyy-MM-dd." );
 			}
 		case STRING:
-			return proposedValue;
+			ret = proposedValue;
+			return;
 		case BOOLEAN:
 			try {
-				return Boolean.parseBoolean(proposedValue);
+				ret = Boolean.parseBoolean(proposedValue);
+				return;
 			}
 			catch(Exception e){
 			}
@@ -248,26 +276,30 @@ public enum XSDSupportedType {
 				) {
 					break;
 			} else {
-				return i;
+				ret = i;
+				return;
 			}
 		case DECIMAL:	
 		case LONG:
 			try {
-				return Long.parseLong(proposedValue);
+				ret = Long.parseLong(proposedValue);
+				return;
 			}
 			catch(Exception e){
 			}
 			break;
 		case FLOAT:
 			try {
-				return Float.parseFloat(proposedValue);
+				ret = Float.parseFloat(proposedValue);
+				return;
 			}
 			catch(Exception e){
 			}
 			break;
 		case DOUBLE:
 			try {
-				return Double.parseDouble(proposedValue);
+				ret = Double.parseDouble(proposedValue);
+				return;
 			}
 			catch(Exception e){
 			}
@@ -275,7 +307,8 @@ public enum XSDSupportedType {
 		case DATETIME:
 			try{
 				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-				return formatter.parse(proposedValue);
+				ret = formatter.parse(proposedValue);
+				return;
 			}
 			catch(Exception e){
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is yyyy-MM-dd'T'HH:mm:ss." );
@@ -283,14 +316,16 @@ public enum XSDSupportedType {
 		case TIME:
 			try{
 				SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-				return formatter.parse(proposedValue);
+				ret = formatter.parse(proposedValue);
+				return;
 			}
 			catch(Exception e){
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is HH:mm:ss." );
 			}
 		case NODE_URI:
 			if (SparqlToXUtils.isLegalURI(proposedValue)) {
-				return proposedValue;
+				ret = proposedValue;
+				return;
 			}
 			// let these types slip through unchecked
 		case DURATION:
@@ -300,7 +335,8 @@ public enum XSDSupportedType {
 		case ANYSIMPLETYPE:
 		case UNSIGNEDBYTE:
 		default:
-			return proposedValue;
+			ret = proposedValue;
+			return;
 		}
 	
 		throw new Exception(proposedValue + " can't be converted to" + this.name());

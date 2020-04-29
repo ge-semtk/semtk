@@ -1,3 +1,3 @@
 Pet,Pet_type,name,nickname
-belmont/generateSparqlInsert#56a4f47a-162f-4190-b9c8-d7171738a2c5,http://research.ge.com/kdl/pet#Cat,bert,burt
-belmont/generateSparqlInsert#c8bb1e43-cfbd-4ccf-99f5-48e6018175d4,http://research.ge.com/kdl/pet#Cat,fluffy,beast
+http://semtk.research.ge.com/generated#56a4f47a-162f-4190-b9c8-d7171738a2c5,http://research.ge.com/kdl/pet#Cat,bert,burt
+http://semtk.research.ge.com/generated#c8bb1e43-cfbd-4ccf-99f5-48e6018175d4,http://research.ge.com/kdl/pet#Cat,fluffy,beast

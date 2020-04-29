@@ -46,8 +46,9 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 
 			} finally { this.ds.commit(); this.ds.end() ; }
 			
-			SimpleResultSet res = new SimpleResultSet(true);
-			return res.toJson();
+			JSONObject ret = new JSONObject();
+			ret.put(SimpleResultSet.MESSAGE_JSONKEY, "success");
+			return ret;
 			
 		} else {
 			ResultSet results = QueryExecutionFactory.create(query, this.ds).execSelect();

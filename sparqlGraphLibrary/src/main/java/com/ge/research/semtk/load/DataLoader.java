@@ -70,11 +70,12 @@ public class DataLoader implements Runnable {
 	ResultsClient rClient = null;
 	StatusClient sClient = null;
 	HeaderTable headerTable = null;
-	int datasetRows = 0;
+	int datasetNumRows = 0;
 	int percentStart = 0;
 	int percentEnd = 0;
 
 	InMemoryInterface cacheSei = null;
+	boolean doNotCache = false;
 	
 	public DataLoader(){
 		// default and does nothing special 
@@ -142,8 +143,9 @@ public class DataLoader implements Runnable {
 		this.batchHandler.setBatchSize(this.batchSize);
 	}
 	
-	public void setCacheSei(InMemoryInterface cacheSei) {
-		this.cacheSei = cacheSei;
+	// for testing
+	public void doNotCache() {
+		this.doNotCache = true;
 	}
 	/**
 	 * Override the ideal insert query size provided by the SparqlEndpointInterface
@@ -210,7 +212,21 @@ public class DataLoader implements Runnable {
 	public int importData(Boolean precheck, Boolean skipIngest) throws Exception{
 
 		// set up information for percent complete
-		this.datasetRows = batchHandler.getDsRows();
+		this.datasetNumRows = batchHandler.getDsRows();
+		
+		// Set up InMemory cache if 
+		//    virtuoso
+		//    dataset isn't tiny 
+		//    we're not skipping the ingestion
+		//    user did not set "noNotCache"
+		if (this.endpoint.getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER) && 
+				this.datasetNumRows > 10 && 
+				!skipIngest && 
+				!this.doNotCache) {
+			this.cacheSei = new InMemoryInterface("http://cache");
+		} else {
+			this .cacheSei = null;
+		}
 		
 		// check the nodegroup for consistency before continuing.			
 		this.master.validateAgainstModel(this.oInfo);
@@ -292,6 +308,9 @@ public class DataLoader implements Runnable {
 		
 		int recordsProcessed = 0;
 		int startingRow = 1;
+		int dumpCacheRowInterval = 0;
+		int dumpCacheNext = 0;
+		final int MAX_CACHE_LENGTH = (int) (Integer.MAX_VALUE * 0.5);
 		
 		String mode = "";
 		if (skipIngest && skipCheck) {
@@ -324,7 +343,7 @@ public class DataLoader implements Runnable {
 			// spin up a thread to do the work.
 			if(wrkrs.size() < numThreads){
 				// spin up the thread and do the work. 
-				SparqlEndpointInterface ingestSei = (this.cacheSei != null) ? this.cacheSei : this.endpoint;
+				SparqlEndpointInterface ingestSei = (!skipIngest && this.cacheSei != null) ? this.cacheSei : this.endpoint;
 				IngestionWorkerThread worker = new IngestionWorkerThread(ingestSei, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
 				if (this.insertQueryIdealSizeOverride > 0) {
 					worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
@@ -364,7 +383,7 @@ public class DataLoader implements Runnable {
 				if (nowMillis - lastMillis > 1000) {
 					
 					// calculate percent complete
-					double fraction = (double)startingRow / Math.max(1, this.datasetRows);
+					double fraction = (double)startingRow / Math.max(1, this.datasetNumRows);
 					int percent = this.percentStart + (int) Math.floor((this.percentEnd - this.percentStart) * fraction); 
 					percent = Math.min(99, percent);  // don't let it hit 100 due to rounding.  100 will fail in status service.
 					LocalLogger.logToStdOut("..." + recordsProcessed, false, false);
@@ -373,6 +392,22 @@ public class DataLoader implements Runnable {
 					// tell status client if there is one set up
 					if (this.sClient != null) {
 						this.sClient.execSetPercentComplete(percent);
+					}
+				}
+				
+				// if there is a cacheSei, make sure it isn't getting too large
+				if (!skipIngest && this.cacheSei != null) {
+					// after 100 rows, guess a good place to upload
+					if (dumpCacheRowInterval == 0 && startingRow > 100) {
+						long testSize = this.cacheSei.dumpToTurtle().length();
+						dumpCacheRowInterval = (int) ((startingRow * MAX_CACHE_LENGTH) / testSize);
+						dumpCacheNext = dumpCacheRowInterval;
+					}
+					// do upload when needed
+					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
+						uploadTempGraph();
+						this.cacheSei.clearGraph();
+						dumpCacheNext += dumpCacheRowInterval;
 					}
 				}
 			}
@@ -389,10 +424,7 @@ public class DataLoader implements Runnable {
 		
 		// If a temporary in-memory graph was used, then dump it to owl and upload it
 		if (!skipIngest && this.cacheSei != null) {
-			LocalLogger.logToStdOut("Uploading temporary graph...");
-			String s = this.cacheSei.dumpToTurtle();
-			this.endpoint.executeAuthUploadTurtle(s.getBytes());
-			LocalLogger.logToStdOut("done.");
+			uploadTempGraph();
 		}
 		
 		// tell status client if there is one set up
@@ -401,6 +433,13 @@ public class DataLoader implements Runnable {
 		}
 		
 		return recordsProcessed;
+	}
+	
+	private void uploadTempGraph() throws Exception {
+		LocalLogger.logToStdOut("Uploading temporary graph...");
+		String s = this.cacheSei.dumpToTurtle();
+		this.endpoint.executeAuthUploadTurtle(s.getBytes());
+		LocalLogger.logToStdErr("size " + s.length());
 	}
 	
 	public int getMaxThreads() {

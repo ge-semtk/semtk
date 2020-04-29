@@ -6,6 +6,8 @@
 package com.ge.research.semtk.belmont.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -48,8 +50,8 @@ public class DataLoadBatchHandlerTest_IT {
 		assertEquals("http://kdl.ge.com/batterydemo#Cell", ngArr.get(0).getNodeList().get(1).getFullUriName());
 		assertEquals("http://kdl.ge.com/batterydemo#Battery", ngArr.get(0).getNodeList().get(2).getFullUriName());
 		assertEquals("http://kdl.ge.com/batterydemo#red", ngArr.get(0).getNodeList().get(0).getInstanceValue());
-		assertEquals("belmont/generateSparqlInsert#Cell_cell200", ngArr.get(0).getNodeList().get(1).getInstanceValue());
-		assertEquals("belmont/generateSparqlInsert#Battery_battA", ngArr.get(0).getNodeList().get(2).getInstanceValue());
+		assertTrue(ngArr.get(0).getNodeList().get(1).getInstanceValue().contains("#Cell_cell200"));
+		assertTrue(ngArr.get(0).getNodeList().get(2).getInstanceValue().contains("#Battery_battA"));
 		assertEquals(1, ngArr.get(0).getNodeList().get(1).getPropertyItems().size());
 		assertEquals("cell200", ngArr.get(0).getNodeList().get(1).getPropertyItems().get(0).getInstanceValues().get(0));
 		assertEquals(2, ngArr.get(0).getNodeList().get(2).getPropertyItems().size());
