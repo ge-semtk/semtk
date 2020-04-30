@@ -178,35 +178,48 @@ public class OntologyInfoServiceRestController {
 	}
 	@ApiOperation(
 		    value= "Get all data and object properties of a class, including those inherited from superclasses.",
-		    notes= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: 'http://model#Tree' } ]"
+		    notes= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: ['http://model#Tree'] } ]"
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getClassInfo", method=RequestMethod.POST)
 	public JSONObject getClassInfo(@RequestBody OntologyInfoClassRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = null;
+		SimpleResultSet retval = new SimpleResultSet();;
 		
 		try{
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			OntologyClass oClass = requestBody.buildClass();
 			OntologyInfo oInfo = oInfoCache.get(conn);
 			
-			ArrayList<OntologyProperty> props = oInfo.getInheritedProperties(oClass);
-			JSONArray retArray = new JSONArray();
-			for (OntologyProperty p : props) {
-				JSONObject propJson = new JSONObject();
-				propJson.put("domain", p.getNameStr());
-				propJson.put("range", p.getRangeStr());
-				retArray.add(propJson);
+			if (oInfo.getClass(oClass.getName()) == null) {
+				retval.setSuccess(false);
+				retval.addRationaleMessage("/getClassInfo", "Class does not exist in model: " + oClass.getName());
+				
+			} else {
+				ArrayList<OntologyProperty> props = oInfo.getInheritedProperties(oClass);
+				JSONArray retArray = new JSONArray();
+				for (OntologyProperty p : props) {
+					JSONObject propJson = new JSONObject();
+					
+					propJson.put("domain", p.getNameStr());
+					
+					// Range can theoretically be complex (list of 'types')
+					// This will/should eventually be supported by SemTK too
+					// so make Range an array to prevent future backwards-compatibility issues
+					JSONArray rangeArr = new JSONArray();
+					rangeArr.add(p.getRangeStr());
+					propJson.put("range", rangeArr);
+					
+					retArray.add(propJson);
+				}
+
+				JSONObject retObj = new JSONObject();
+				retObj.put("name", oClass.getName());
+				retObj.put("properties", retArray);
+
+				retval.addResult("classInfo", retObj);
+				retval.setSuccess(true);
 			}
-			
-			JSONObject retObj = new JSONObject();
-			retObj.put("name", oClass.getName());
-			retObj.put("properties", retArray);
-			
-			retval = new SimpleResultSet();
-			retval.addResult("classInfo", retObj);
-			retval.setSuccess(true);
 		}
 		catch(Exception e){
 			retval = new SimpleResultSet(false);

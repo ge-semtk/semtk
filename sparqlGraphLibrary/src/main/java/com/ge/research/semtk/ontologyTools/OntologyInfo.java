@@ -227,17 +227,21 @@ public class OntologyInfo {
 		if(retval == null){ retval = new ArrayList<String>(); } // if it was null, initialize it.
 		
 		// add parent name to retval  &  parent class to superclasses
-		ArrayList<OntologyClass> superclasses = new ArrayList<OntologyClass>();
-		for(String currParentName : this.classHash.get(subclassName).getParentNameStrings(false)){
-			retval.add(currParentName);
-			superclasses.add(this.classHash.get(currParentName));
-		}
-		
-		// get the Parents' parents.
-		for(OntologyClass currParentClass : superclasses){
-			// ALWAYS A DUPLICATE, RIGHT? - Paul 5/23/17
-			//retval.add(currParentClass.getNameString(false));
-			retval = this.getSuperclassNames(currParentClass.getNameString(false), retval);
+		OntologyClass subclass = this.classHash.get(subclassName);
+		if (subclass != null) {
+			ArrayList<OntologyClass> superclasses = new ArrayList<OntologyClass>();
+
+			for(String currParentName : this.classHash.get(subclassName).getParentNameStrings(false)){
+				retval.add(currParentName);
+				superclasses.add(this.classHash.get(currParentName));
+			}
+			
+			// get the Parents' parents.
+			for(OntologyClass currParentClass : superclasses){
+				// ALWAYS A DUPLICATE, RIGHT? - Paul 5/23/17
+				//retval.add(currParentClass.getNameString(false));
+				retval = this.getSuperclassNames(currParentClass.getNameString(false), retval);
+			}
 		}
 		// ship out the results so far gathered. 
 		return retval;
@@ -567,6 +571,10 @@ public class OntologyInfo {
 	 **/
 	public ArrayList<OntologyProperty> getInheritedProperties(OntologyClass oClass){
 		ArrayList<OntologyProperty> retval = new ArrayList<OntologyProperty>();
+		if (!this.classHash.containsKey(oClass.getNameString(false))) {
+			return retval;
+		}
+		
 		HashMap<String, OntologyProperty> tempRetval = new HashMap<String, OntologyProperty>();
 		
 		// get the full list...
