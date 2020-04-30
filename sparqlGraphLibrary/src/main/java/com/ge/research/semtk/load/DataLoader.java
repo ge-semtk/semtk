@@ -225,7 +225,7 @@ public class DataLoader implements Runnable {
 				!this.doNotCache) {
 			this.cacheSei = new InMemoryInterface("http://cache");
 		} else {
-			this .cacheSei = null;
+			this.cacheSei = null;
 		}
 		
 		// check the nodegroup for consistency before continuing.			
