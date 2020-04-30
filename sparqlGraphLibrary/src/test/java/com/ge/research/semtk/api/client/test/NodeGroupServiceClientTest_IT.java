@@ -207,6 +207,11 @@ public class NodeGroupServiceClientTest_IT {
 			// get a nodegroup
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			
+			// make sure there's no orderBy so that it is legal to turn off isReturned
+			NodeGroup ng = sgJson.getNodeGroup();
+			ng.clearOrderBy();
+			sgJson.setNodeGroup(ng);
+			
 			// build some changes
 			ArrayList<SparqlIdReturnedTuple> tuples = new ArrayList<SparqlIdReturnedTuple>();
 			tuples.add(new SparqlIdReturnedTuple("Name", false));
