@@ -113,6 +113,21 @@
 				"valueConstraint": "",
 				"instanceValue": null
 			}
+		],
+		"orderBy": [
+
+			{
+
+				"sparqlID": "?Name"
+
+			},
+			{
+
+				"sparqlID": "?CellId"
+
+			}
+
+
 		]
 	},
 	"importSpec": {
