@@ -110,7 +110,7 @@ public class StatusServiceRestController {
 		    try {
 		    	JobTracker tracker = this.getTracker();
 		    
-			    res.addResult("percentComplete", String.valueOf(tracker.getJobPercentComplete(jobId)));
+			    res.addResult(SimpleResultSet.PERCENT_COMPLETE_RESULT_KEY, String.valueOf(tracker.getJobPercentComplete(jobId)));
 			    res.setSuccess(true);
 			    
 		    } catch (Exception e) {
@@ -151,7 +151,7 @@ public class StatusServiceRestController {
 		    	
 		    	JobTracker tracker = this.getTracker();
 		    
-			    res.addResult("status", String.valueOf(tracker.getJobStatus(jobId)));
+			    res.addResult(SimpleResultSet.STATUS_RESULT_KEY, String.valueOf(tracker.getJobStatus(jobId)));
 			    res.setSuccess(true);
 			    
 		    } catch (Exception e) {
@@ -189,7 +189,7 @@ public class StatusServiceRestController {
 		    try {
 		    	JobTracker tracker = this.getTracker();
 		    
-			    res.addResult("statusMessage", tracker.getJobStatusMessage(jobId));
+			    res.addResult(SimpleResultSet.STATUS_MESSAGE_RESULT_KEY, tracker.getJobStatusMessage(jobId));
 			    res.setSuccess(true);
 			    
 		    } catch (Exception e) {
@@ -323,8 +323,15 @@ public class StatusServiceRestController {
 		    try {
 		    	JobTracker tracker = this.getTracker();
 		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
-			    res.addResult("percentComplete", String.valueOf(percentComplete));
-			    res.addResult("statusMessage", tracker.getJobStatusMessage(jobId));
+			    res.addResult(SimpleResultSet.PERCENT_COMPLETE_RESULT_KEY, String.valueOf(percentComplete));
+			    
+			    if (percentComplete == 100) {
+		    		String [] statusAndMessage = tracker.getJobStatusAndMessage(jobId);
+		    		res.addResult(SimpleResultSet.STATUS_RESULT_KEY, statusAndMessage[0]);
+		    		res.addResult(SimpleResultSet.STATUS_MESSAGE_RESULT_KEY, statusAndMessage[1]);
+		    	} else {
+		    		res.addResult(SimpleResultSet.STATUS_MESSAGE_RESULT_KEY, tracker.getJobStatusMessage(jobId));
+		    	}
 			    res.setSuccess(true);
 			    
 		    } catch (Exception e) {

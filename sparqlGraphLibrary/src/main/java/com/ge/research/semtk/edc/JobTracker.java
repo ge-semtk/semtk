@@ -406,6 +406,53 @@ public class JobTracker {
 			return trList[0];
 		}
 	}
+	
+	/**
+	 * Get job status message
+	 * @param jobId
+	 * @return message string
+	 * @throws Exception if jobId can't be found 
+	 */
+	public String[] getJobStatusAndMessage(String jobId) throws AuthorizationException, Exception {
+		this.checkJobExistAndAuth(jobId);
+		String query = String.format("  \n" +
+				"prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
+				"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
+				"	  \n" +
+				"	SELECT DISTINCT ?status ?statusMessage ?userName \n" +
+		        "   from <" + this.sei.getGraph() + "> where { " +
+		        "	   ?Job a job:Job.  \n" +
+				"	   ?Job job:id '%s' .  \n" +
+				"	   ?Job job:userName ?userName .  \n" +
+				"	   ?Job job:status ?status .  \n" +
+				"	   optional { ?Job job:statusMessage ?statusMessage . } \n" +
+		    	"	}",
+				SparqlToXUtils.safeSparqlString(jobId));
+
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
+	    
+	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    res.throwExceptionIfUnsuccessful();
+	    Table tab = res.getTable();
+
+	    int rowCount = tab.getNumRows();
+		this.checkEndpointUserNames(jobId, tab);
+
+		if (rowCount > 1) {
+			throw new Exception(String.format("Job %s has %d status and message entries.  Expecting 1.", jobId, rowCount));
+		} else if (rowCount == 0) {
+			if (! this.jobExists(jobId) ) {
+	    		throw new Exception(String.format("Can't find Job %s", jobId));
+	    	} else {
+	    		throw new Exception(String.format("Can't find status and message for Job %s",  jobId));
+	    	}
+		} else {
+			this.throwExceptionIfNotOwner(endpoint, jobId);
+		    
+			return new String [] { tab.getCell(0, "status").split("#")[1], tab.getCell(0, "statusMessage") } ;
+		}
+	}
+
 
 	/**
 	 * Set job percent complete to 100, 

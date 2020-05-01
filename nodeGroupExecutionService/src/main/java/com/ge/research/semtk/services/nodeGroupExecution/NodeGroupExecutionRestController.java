@@ -163,7 +163,7 @@ public class NodeGroupExecutionRestController {
 				// try to get a job status
 				String results = ngExecutor.getJobStatus();
 				retval.setSuccess(true);
-				retval.addResult("status", results);
+				retval.addResult(SimpleResultSet.STATUS_RESULT_KEY, results);
 			}
 			catch(Exception e){
 				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -199,7 +199,9 @@ public class NodeGroupExecutionRestController {
 				// try to get a job status
 				String results = ngExecutor.getJobStatusMessage();
 				retval.setSuccess(true);
-				retval.addResult("message", results);
+				retval.addResult("message", results);  // backwards compatible
+				retval.addResult(SimpleResultSet.STATUS_MESSAGE_RESULT_KEY, results); // correct
+
 			}
 			catch(Exception e){
 				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -318,7 +320,16 @@ public class NodeGroupExecutionRestController {
 		    	requestBody.validate();
 		    	JobTracker tracker = this.getJobTracker();
 		    	int percentComplete = tracker.waitForPercentOrMsec(jobId, requestBody.percentComplete, requestBody.maxWaitMsec);
-		    	retval.addResult("percentComplete", String.valueOf(percentComplete));
+		    	retval.addResult(SimpleResultSet.PERCENT_COMPLETE_RESULT_KEY, String.valueOf(percentComplete));
+		    	
+		    	if (percentComplete == 100) {
+		    		String [] statusAndMessage = tracker.getJobStatusAndMessage(jobId);
+		    		retval.addResult(SimpleResultSet.STATUS_RESULT_KEY, statusAndMessage[0]);
+		    		retval.addResult(SimpleResultSet.STATUS_MESSAGE_RESULT_KEY, statusAndMessage[1]);
+		    	} else {
+		    		retval.addResult(SimpleResultSet.STATUS_MESSAGE_RESULT_KEY, tracker.getJobStatusMessage(jobId));
+		    	}
+		    	
 		    	retval.setSuccess(true);
 			    
 		    } catch (Exception e) {
