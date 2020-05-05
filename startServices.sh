@@ -23,7 +23,12 @@
 
 
 # SEMTK = directory holding this script
-SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# try windows style pwd -W first, then default to unix
+SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -W 2>/dev/null)"
+if [ -z $SEMTK ]
+then
+        SEMTK="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+fi
 echo SEMTK is $SEMTK
 
 # Handle $1 optional arg of alternate semtk dir that contains
