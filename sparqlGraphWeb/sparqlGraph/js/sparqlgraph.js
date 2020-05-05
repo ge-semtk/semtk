@@ -67,6 +67,7 @@
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/msiclientnodegroupstore',
+                  'sparqlgraph/js/nodegrouprenderer',
                   'sparqlgraph/js/uploadtab',
 
                   // shim
@@ -74,7 +75,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (EditTab, ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, UploadTab) {
+                function (EditTab, ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -82,12 +83,16 @@
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
 
 	    	 // set up the node group
-	        gNodeGroup = new SemanticNodeGroup(2000, 1400, 'canvas');
-	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
-	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
-            gNodeGroup.setAsyncSNodeRemover(snodeRemover);
-	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
-	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
+	        gNodeGroup = new SemanticNodeGroup();
+
+            canvasWrapper = document.getElementById("canvasWrapper");
+            canvasWrapper.innerHTML = "";
+            gRenderer = new NodegroupRenderer(canvasWrapper);
+	        gRenderer.setPropEditorCallback(launchPropertyItemDialog);
+	        gRenderer.setSNodeEditorCallback(launchSNodeItemDialog);
+            gRenderer.setSNodeRemoverCallback(snodeRemover);
+	        gRenderer.setLinkBuilderCallback(launchLinkBuilder);
+	        gRenderer.setLinkEditorCallback(launchLinkEditor);
 
             // edit tab
             gEditTab = new EditTab(document.getElementById("editTreeDiv"),
@@ -279,8 +284,8 @@
         // set up dropping from dynatree
         // "real" system drops get "drop" and
         // dynatree drops are "mouseup" while gDragLabel is set
-        var canvas = document.getElementById("canvas");
-        canvas.addEventListener("mouseup",
+        var canvasWrapper = document.getElementById("canvasWrapper");
+        canvasWrapper.addEventListener("mouseup",
                                 function(e) {
                                     if (gDragLabel != null) {
                                         dropClass(gDragLabel, e.shiftKey);
@@ -477,7 +482,6 @@
 
     var snodeRemover1 = function (snode) {
         snode.removeFromNodeGroup(false);
-        gNodeGroup.drawNodes();
         nodeGroupChanged(true)
     };
 
@@ -935,7 +939,6 @@
                 return;
             }
 
-            drawNodeGroup();
             guiGraphNonEmpty();
             nodeGroupChanged(false);
 
@@ -1373,16 +1376,6 @@
     	}
     };
 
-    var drawNodeGroup = function () {
-        // query limit
-        var limit = gNodeGroup.getLimit();
-        var elem = document.getElementById("SGQueryLimit");
-        elem.value = (limit < 1) ? "" : limit;
-
-        // canvas
-        gNodeGroup.drawNodes();
-    }
-
     var getQueryShowNamespace = function () {
     	return document.getElementById("SGQueryNamespace").checked;
     };
@@ -1401,10 +1394,16 @@
             document.getElementById("SGOrderBy").classList.remove("btn-primary");
         }
 
-        if (flag) {
-            gNodeGroup.drawNodes();
-            buildQuery();
+        // check up on LIMIT
+        var limit = gNodeGroup.getLimit();
+        var elem = document.getElementById("SGQueryLimit");
+        elem.value = (limit < 1) ? "" : limit;
 
+        // draw canvas
+        gRenderer.draw(gNodeGroup);
+
+        if (flag) {
+            buildQuery();
         } else {
             gMappingTab.setChangedFlag(false);
             queryTextChanged(false);
@@ -1849,7 +1848,6 @@
 	var clearGraph = function () {
     	gNodeGroup.clear();
         gNodeGroup.setSparqlConnection(gConn);
-        gNodeGroup.drawNodes();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();

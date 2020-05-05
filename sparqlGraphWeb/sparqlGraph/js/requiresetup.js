@@ -74,9 +74,7 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 	config.shim['sparqlgraph/jquery/jquery-ui-1.10.4.min'] =  {
 			deps : [ 'bootstrap/bootstrap-popover' ]
 		};
-	config.shim['sparqlgraph/js/belmont'] =  {
-			deps : [ 'sparqlgraph/js/dracula_graph']
-		};
+
 
     // special logic to include sparql generation for legacy
     // set gVERSION to 2 or more before requiresetup.js is included to stop this.
@@ -84,12 +82,6 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
         config.shim['sparqlgraph/js/belmont'].deps.push('sparqlgraph/js/belmont_v1');
     };
 
-	config.shim['sparqlgraph/js/dracula_graffle'] =  {
-			deps : [ 'sparqlgraph/js/raphael-min' ]
-		};
-	config.shim['sparqlgraph/js/dracula_graph'] =  {
-			deps : [ 'sparqlgraph/js/dracula_graffle' ]
-		};
 	config.shim['sparqlgraph/js/htmlform'] = {
 		deps: [
 		          'sparqlgraph/js/sparqlconnection',
