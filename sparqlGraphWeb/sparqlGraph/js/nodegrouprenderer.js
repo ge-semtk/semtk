@@ -45,32 +45,73 @@ define([	// properly require.config'ed
 
 		//============ local object  ExploreTab =============
 		var NodegroupRenderer = function(canvasdiv) {
-            this.canvasdiv = canvasdiv;
+            this.ctx = document.createElement("canvas").getContext("2d");
+
+            this.nodegroup = null;
+
             this.propEditorCallback = null;
-            this.snodeEditorCallback = null;
+            this.snodeEditorCallback = null;  //done
             this.snodeRemoverCallback = null;
             this.linkBuilderCallback = null;
             this.linkEditorCallback = null;
 
-            var options = {
-                physics: { stabilization: false },
-                edges: { smooth: false }
-            };
+            this.canvasdiv = document.createElement("div");
+            this.canvasdiv.style.margin="1ch";
+            this.canvasdiv.id="ExploreTab.canvasdiv_" + Math.floor(Math.random() * 10000).toString();
+            this.canvasdiv.style.height="100%";
+            this.canvasdiv.style.width="100%";
+            canvasdiv.appendChild(this.canvasdiv);
+
             var click = function(e) {
                 if (e.nodes.length > 0) {
                     var n = this.network.body.nodes[e.nodes[0]];
-                    var x = e.pointer.canvas.x - n.x;
-                    var y = e.pointer.canvas.y - n.y;
-                    console.log("x: " + x );
-                    console.log("y: " + y );
+                    var xp = (e.pointer.canvas.x - n.shape.left) / n.shape.width;
+                    var yp = (e.pointer.canvas.y - n.shape.top) / n.shape.height;
+
+                    var ndImageData = this.nodeImageData[n.id];
+                    var itemData = ndImageData[0];
+                    for (var i = 1; i < ndImageData.length; i++) {
+                        if (yp < ndImageData[i].y_perc) {
+                            break;
+                        } else {
+                            itemData = ndImageData[i];
+                        }
+                    }
+                    var snode = this.nodegroup.getNodeBySparqlID(n.id);
+                    if (itemData.type == "SemanticNode") {
+                        this.snodeEditorCallback(snode);
+                    } else if (itemData.type == "PropertyItem") {
+                        this.propEditorCallback(snode.getPropertyByKeyname(itemData.value),
+                                                n.id);
+                    }  else if (itemData.type == "NodeItem") {
+                        this.linkBuilderCallback(snode,
+                                                snode.getNodeItemByKeyname(itemData.value));
+                    }
+                } else if (e.edges.length > 0) {
+                    var edge = this.network.body.edges[e.edges[0]];
+                    var snode = this.nodegroup.getNodeBySparqlID(edge.fromId);
+                    var nItem = snode.getNodeItemByKeyname(edge.options.label);
+                    var targetSNode = this.nodegroup.getNodeBySparqlID(edge.toId);
+                    this.linkEditorCallback(snode, nItem, targetSNode);
                 }
                 console.log(e);
             }.bind(this);
-            this.network = new vis.Network(this.canvasdiv, {}, options);
+
+            this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
             this.network.on('click', click);
+
+            this.nodeImageData = {};
         };
 
-		NodegroupRenderer.CONSTANT = 100;
+        NodegroupRenderer.SIZE = 12;
+        NodegroupRenderer.VSPACE = 4;
+        NodegroupRenderer.STROKE = 2;
+        NodegroupRenderer.INDENT = 6;
+
+        NodegroupRenderer.getDefaultOptions = function(configdiv) {
+            return {
+            };
+        };
 
 		NodegroupRenderer.prototype = {
 
@@ -78,10 +119,10 @@ define([	// properly require.config'ed
                 this.propEditorCallback = callback;
             },
             setSNodeEditorCallback : function (callback) {
-                this.nodeEditorCallback = callback;
+                this.snodeEditorCallback = callback;
             },
             setSNodeRemoverCallback : function (callback) {
-                this.nodeRemoverCallback = callback;
+                this.snodeRemoverCallback = callback;
             },
             setLinkBuilderCallback : function (callback) {
                 this.linkBuilderCallback = callback;
@@ -90,69 +131,87 @@ define([	// properly require.config'ed
                 this.linkEditorCallback = callback;
             },
 
-            draw : function (nodegroup) {
-                var nodes = null;
-                var edges = null;
+            // unchangedIDs - nodes who don't need their images regenerated
+            draw : function (nodegroup, unchangedIDs) {
+                console.log("UNCHANGED: " + unchangedIDs);
+                this.nodegroup = nodegroup;
+                var nodegroupIDs = nodegroup.getSNodeSparqlIDs().slice();
+                var graphIDs = this.network.body.data.nodes.getIds();
 
-                var DIR = "img/refresh-cl/";
-                var LENGTH_MAIN = 150;
-                var LENGTH_SUB = 50;
+                // changed nodes
+                var changedIDs = [];
+                for (var id of graphIDs) {
+                    if (nodegroupIDs.indexOf(id) > -1 && unchangedIDs.indexOf(id) == -1) {
+                        var snode = this.nodegroup.getNodeBySparqlID(id);
+                        var im = this.buildNodeImage(snode);
+                        this.network.body.data.nodes.update([{id: id, image: im, shape: "image"}]);
+                        changedIDs.push(id);
+                    }
+                }
 
-                var sample = `
-                    <svg height="60" width="200" style="border: 1px solid black;">
-                    <text x="2" y="15" fill="red" font-size="15px" font-family="Arial">I one SVG</text>
-                    <text x="2" y="30" fill="red" font-size="15px" font-weight="Bold">I two SVG</text>
-                    <text x="2" y="45" fill="red" font-size="15px" font-style="italic">I three SVG</text>
-                    <text x="2" y="60" fill="red" font-size="15px">I four SVG</text>
-                    <text x="2" y="75" fill="red" font-size="15px">I five SVG</text>
-                    Sorry, your browser does not support inline SVG.
-                    </svg>`;
+                // new nodes
+                var newIDs = [];
+                for (var id of nodegroupIDs) {
+                    if (graphIDs.indexOf(id) == -1) {
+                        var snode = this.nodegroup.getNodeBySparqlID(id);
+                        var im = this.buildNodeImage(snode);
+                        this.network.body.data.nodes.add([{id: id, image: im, shape: "image"}]);
+                        newIDs.push(id);
+                    }
+                }
 
-                // https://www.w3schools.com/graphics/tryit.asp?filename=trysvg_text2
-                var liveSample = `
-                <!DOCTYPE html>
-                <html>
-                <body>
+                // deleted
+                var deletedIDs = [];
+                for (var id of graphIDs) {
+                    if (nodegroupIDs.indexOf(id) == -1) {
+                        deletedIDs.push(id);
+                        delete this.nodeImageData["id"]
+                    }
+                }
+                this.network.body.data.nodes.remove(deletedIDs);
 
-                <svg xmlns="http://www.w3.org/2000/svg" width="600" height="250">
-                  <rect x="0" y="0" width="100%" height="100%" fill="#F4F6F6" stroke-width="30" stroke="black"/>
-                  <line x1="0%" y1="50" x2="100%" y2="50"width="100%"  stroke-width="5" stroke="black"/>
+                // edges: update all since it is cheap
+                var leftoverEdgeIds = this.network.body.data.edges.getIds();
+                var edgeData = [];
+                for (var snode of nodegroup.getSNodeList()) {
+                    for (var nItem of snode.getNodeList()) {
+                        for (var snode2 of nItem.getSNodes()) {
+                            var fromID = snode.getSparqlID();
+                            var toID = snode2.getSparqlID();
+                            var id = fromID + "-" + toID;
+                            edgeData.push({
+                                id:     id,
+                                from:   fromID,
+                                to:     toID,
+                                label:  nItem.getKeyName(),
+                            });
+                            leftoverEdgeIds.splice(leftoverEdgeIds.indexOf(id));
+                        }
+                    }
+                }
+                this.network.body.data.edges.update(edgeData);
+                if (leftoverEdgeIds.length) {
+                    this.network.body.data.edges.remove(leftoverEdgeIds);
+                }
+            },
 
-                  <rect x="30" y="60" width="10px" height="10px" stroke="black" fill="#F4F6F6"/>
-                  <text x="30" y="70" font-size="128px" fill="black">x hello world</text>
-                  <text x="30" y="90" font-size="72px" fill="black">hello world</text>
-                 </svg>
 
-                </body>
-                </html>
-                `;
+            // build this.imageData and return the node img
+            buildNodeImage : function(node) {
 
-                var svgStr =
-                  '<svg xmlns="http://www.w3.org/2000/svg" height="200" width="600">' +
-                  '<rect x="0" y="0" width="100%" height="100%" fill="#7890A7" stroke-width="20" stroke="#ffffff" ></rect>' +
-                  '<foreignObject x="15" y="10" width="100%" height="100%">' +
-                  '<div xmlns="http://www.w3.org/1999/xhtml" style="font-size:40px">' +
-                  " <em>I</em> am" +
-                  '<span style="color:white; text-shadow:0 0 20px #000000;">' +
-                  " HTML in SVG!</span><br></br>hi" +
-                  "</div>" +
-                  "</foreignObject>" +
-                  "</svg>";
-
-                svgStr = `
-                  <svg xmlns="http://www.w3.org/2000/svg" height="60" width="200" style="border: 1px solid black;">
-                  <text x="2" y="15" fill="red" font-size="15px" font-family="Arial">I one SVG</text>
-                  <text x="2" y="30" fill="red" font-size="15px" font-weight="Bold">I two SVG</text>
-                  <text x="2" y="45" fill="red" font-size="15px" font-style="italic">I three SVG</text>
-                  <text x="2" y="60" fill="red" font-size="15px">I four SVG</text>
-                  <text x="2" y="75" fill="red" font-size="15px">I five SVG</text>
-                  Sorry, your browser does not support inline SVG.
-                  </svg>
-                  `;
+                var y = 0;
+                var hwd = [];
+                var HEIGHT=0;
+                var WIDTH=1;
+                var DATA=2;
+                var maxWidth = 0;
                 var svg = document.createElement("svg");
+                var imageData = [];
+
+
                 svg.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-                svg.setAttribute('width', '600');
-                svg.setAttribute('height', '250');
+                svg.setAttribute('width', '200');
+                svg.setAttribute('height', '200');
 
                 var rect = document.createElement("rect");
                 rect.setAttribute('x', "0");
@@ -160,83 +219,152 @@ define([	// properly require.config'ed
                 rect.setAttribute('width', "100%");
                 rect.setAttribute('height', "100%");
                 rect.setAttribute('fill', "#F4F6F6");
-                rect.setAttribute('stroke-width', "30");
+                rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
                 rect.setAttribute('stroke', "black");
                 svg.appendChild(rect);
+                y += NodegroupRenderer.STROKE;
 
-                var text;
-                text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', 30);
-                text.setAttribute('y', 102);
-                text.setAttribute('font-size', "128px");
-                text.setAttribute('font-family', "Arial");
-                text.setAttribute('fill', "black");
-                text.innerHTML="&nbsp &nbsp;  ?Element";
-                svg.appendChild(text);
+                var line = document.createElement("line");
+                line.setAttribute('x1',"0%");
+                line.setAttribute('y1', y + NodegroupRenderer.SIZE);
+                line.setAttribute('x2',"100%");
+                line.setAttribute('y2', y + NodegroupRenderer.SIZE);
+                line.setAttribute('stroke-width',NodegroupRenderer.STROKE);
+                line.setAttribute('stroke',"black");
+                svg.appendChild(line);
+                y += NodegroupRenderer.SIZE + NodegroupRenderer.STROKE;
+                imageData.push({ y: (y + NodegroupRenderer.SIZE)/2, type: "header", value: ""});
 
-                text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                text.setAttribute('x', 30);
-                text.setAttribute('y', 102);
-                text.setAttribute('font-size', "128px");
-                text.setAttribute('font-family', "Arial");
-                text.setAttribute('fill', "black");
-                text.innerHTML="&nbsp &nbsp;  ?Element";
-                svg.appendChild(text);
 
-                var url1 = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
-                console.log(svg.outerHTML);
-                var url2 = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
-                // Create a data table with nodes.
-                nodes = [];
-
-                // Create a data table with links.
-				edges = [];
-
-                var n = nodegroup.getNode(0);
-                var im = buildNodeImage(n);
-                nodes.push({ id: n.getSparqlID(), image: im, shape: "image"});
-				nodes.push({ id: 1, label: "Get HTML", image: url1, shape: "image" });
-				nodes.push({ id: 2, label: "Using SVG", image: url2, shape: "image" });
-				edges.push({ from: 1, to: 2, length: 300 });
-
-				// create a network
-				var data = {
-                    nodes: nodes,
-                    edges: edges
-				};
-				this.network.setData(data);
-            },
-
-            buildNodeImage(node) {
-
-                //var bbox = textElement.getBBox();
-                //var width = bbox.width;
-                //var height = bbox.height;
-
-                // get name
-                var sparqlID = node.getSparqlID();
+                hwd = this.appendSparqlID(svg, node, y);
+                y += hwd[HEIGHT];
+                maxWidth = hwd[WIDTH] > maxWidth ? hwd[WIDTH] : maxWidth;
+                imageData.push(hwd[DATA]);
 
                 // get property items
                 var propList = node.getPropList();
                 for (var p of propList) {
-
+                    hwd = this.appendProperty(svg, p, y);
+                    y += hwd[HEIGHT];
+                    maxWidth = hwd[WIDTH] > maxWidth ? hwd[WIDTH] : maxWidth;
+                    imageData.push(hwd[DATA]);
                 }
                 // get node items
                 var nodeList = node.getNodeList();
                 for (var n of nodeList) {
-
+                    hwd = this.appendProperty(svg, n, y);
+                    y += hwd[HEIGHT];
+                    maxWidth = hwd[WIDTH] > maxWidth ? hwd[WIDTH] : maxWidth;
+                    imageData.push(hwd[DATA]);
                 }
 
-                // find longest string to calculate width
-                // draw box
-                // draw header
-                // draw sparqlID
-                // draw property items
-                // draw node items
-                // can we figure out where the click happened?
+                // set height and width of svg
+                y += NodegroupRenderer.VSPACE;
+                //svg.setAttribute("height", y);
+                //svg.setAttribute("width", maxWidth + NodegroupRenderer.INDENT)
+
+                // add y_perc to all data
+                for (var i of imageData) {
+                    i.y_perc = i.y / y;
+                }
+                this.nodeImageData[node.getSparqlID()] = imageData;
+
+                console.log("=================================\n" + svg.outerHTML + "\n=================================");
+                return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
+
             },
 
-            last : function () {
+            appendSparqlID : function(svg, node, y) {
+
+                var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
+                var x = NodegroupRenderer.INDENT;
+                var size = NodegroupRenderer.SIZE * 1.5;
+
+                this.addCheckBox(svg, x, bot, size, node.getIsReturned() || node.getIsTypeReturned() );
+
+                var text = document.createElement('text');
+                text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
+                text.setAttribute('y', bot);
+                text.setAttribute('font-size', size + "px");
+                text.setAttribute('font-family', "Arial");
+                text.setAttribute('fill', "black");
+                text.innerHTML = node.getSparqlID();
+                svg.appendChild(text);
+
+                var height = NodegroupRenderer.VSPACE + size;
+                var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
+                var data = { y: y, type: node.getItemType(), value: text.innerHTML };
+
+                return([height, width, data]);
+            },
+
+            appendProperty : function(svg, item, y, data) {
+                var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
+                var x = NodegroupRenderer.INDENT;
+                var size = NodegroupRenderer.SIZE;
+
+                this.addCheckBox(svg, x, bot, size, item.getIsReturned());
+
+                var text = document.createElement('text');
+                text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
+                text.setAttribute('y', bot);
+                text.setAttribute('font-size', size + "px");
+                text.setAttribute('font-family', "Arial");
+                text.setAttribute('fill', "black");
+                text.innerHTML = item.getKeyName() + " : " + item.getValueType();
+                svg.appendChild(text);
+
+                var height = NodegroupRenderer.VSPACE + size;
+                var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
+                var data = { y: y, type: item.getItemType(), value: item.getKeyName() };
+
+                return([height, width, data]);
+            },
+
+            // Add a checkbox.
+            // Black when unchecked, Red when checked
+            // x,y is bottom left to match text
+            addCheckBox : function(svg, x, y, size, checked) {
+                // margin twice as big on top and right
+                var m = Math.floor(size/7);
+                var s = size - m - m - m;
+                var top = y - size + m + m;
+                var left = x + m;
+                var rect = document.createElement('rect');
+                rect.setAttribute('x', left);
+                rect.setAttribute('y', top);
+                rect.setAttribute('width', s + "px");
+                rect.setAttribute('height', s + "px");
+                rect.setAttribute('fill', "#F4F6F6");
+                rect.setAttribute('stroke', checked ? "red" : "black");
+                svg.appendChild(rect);
+
+                if (checked) {
+                    var x1 = left;
+                    var x2 = left + s;
+                    var y1 = top;
+                    var y2 = top + s;
+                    this.addLine(svg, x1,y1,x2,y2, 1,"red");
+                    this.addLine(svg, x1,y2,x2,y1, 1,"red");
+                }
+            },
+
+            // add a line
+            addLine : function(svg, x1, y1, x2, y2, strokeWidth, strokeColor) {
+                var line = document.createElement("line");
+                line.setAttribute('x1',x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2',x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke-width', strokeWidth);
+                line.setAttribute('stroke', strokeColor);
+                svg.appendChild(line);
+            },
+
+            measureTextWidth : function (textElem) {
+                var f = textElem.getAttribute("font-size") + " " + textElem.getAttribute("font-family");
+                this.ctx.font = f;
+                return this.ctx.measureText(textElem).width;
             }
         }
 

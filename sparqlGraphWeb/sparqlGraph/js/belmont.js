@@ -427,6 +427,9 @@ NodeItem.prototype = {
 		this.Connected = jObj.Connected;
 		this.UriConnectBy = jObj.UriConnectBy;
 	},
+    getIsReturned : function() {
+        return false;
+    },
 	// set values used by the NodeItem.
 	setKeyName : function(strName) {
 		this.KeyName = strName;
@@ -2545,6 +2548,14 @@ SemanticNodeGroup.prototype = {
 		return this.SNodeList;
 	},
 
+    getSNodeSparqlIDs : function() {
+        var ret = [];
+        for (var snode of this.SNodeList) {
+            ret.push(snode.getSparqlID());
+        }
+        return ret;
+    },
+
     getNode : function(i) {
         return this.SNodeList[i];
     },
@@ -2820,6 +2831,7 @@ SemanticNodeGroup.prototype = {
 		}
 		return ret;
 	},
+
 
 	getNodeItemParentSNode : function(nodeItem) {
 		for (var i=0; i < this.SNodeList.length; i++) {
@@ -3220,23 +3232,13 @@ SemanticNodeGroup.prototype = {
 				}
 
 				// remove the sNode from the nodeGroup
-				this.SNodeList[i].node.hide();
 				this.SNodeList.splice(i, 1);
-
 			}
-		}
-		// console.log("NODES STILL REMAINING AFTER REMOVAL:");
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			// console.log("node: " + this.SNodeList[i].getSparqlID() );
 		}
 
 	},
 
 	clear : function() {
-		// remove all nodes and redraw
-		for (var k = 0; k < this.SNodeList.length; k++) {
-			this.SNodeList[k].node.hide();
-		}
 
 		this.SNodeList = [];
 		this.sparqlNameHash = {};
