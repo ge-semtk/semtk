@@ -1338,6 +1338,16 @@ SemanticNode.prototype = {
         }
         return retprops;
     },
+    getReturnedPropertyItems : function() {
+		var retprops = [];
+		var t = this.propList.length;
+		for (var s = 0; s < t; s++) {
+			if (this.propList[s].getIsReturned()) {
+				retprops.push(this.propList[s]);
+			}
+		}
+		return retprops;
+	},
 	getReturnedPropsFullURI : function() {
 		var retprops = [];
 		var t = this.propList.length;

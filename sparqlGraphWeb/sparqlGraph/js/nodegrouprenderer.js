@@ -63,11 +63,10 @@ define([	// properly require.config'ed
             this.canvasdiv.style.width="100%";
             canvasdiv.appendChild(this.canvasdiv);
 
-
-
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
             this.network.on('click', this.click.bind(this));
 
+            // data for click(), sorted by Y ascending
             this.nodeCallbackData = {};
         };
 
@@ -76,13 +75,13 @@ define([	// properly require.config'ed
         NodegroupRenderer.STROKE = 2;
         NodegroupRenderer.INDENT = 6;
 
-        NodegroupRenderer.COLOR_NODE = "#F4F6F6";
+        NodegroupRenderer.COLOR_NODE = "#f7f8fa";
+        NodegroupRenderer.COLOR_GRAB_BAR = '#e1e2e5';
         NodegroupRenderer.COLOR_FOREGROUND = 'black';
-        NodegroupRenderer.COLOR_BACKGROUND = 'white';
-        NodegroupRenderer.COLOR_RETURNED = 'red';
-        NodegroupRenderer.COLOR_CONSTRAINED = 'green';
-        NodegroupRenderer.COLOR_RET_CONST = 'blue';
-        NodegroupRenderer.INDENT = 6;
+        NodegroupRenderer.COLOR_CANVAS = 'white';
+        NodegroupRenderer.COLOR_RETURNED = '#cf1e10';
+        NodegroupRenderer.COLOR_CONSTRAINED = '#3b73b9';
+        NodegroupRenderer.COLOR_RET_CONST = '#3ca17a';
         NodegroupRenderer.INDENT = 6;
 
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
@@ -131,13 +130,15 @@ define([	// properly require.config'ed
             click : function(e) {
                 if (e.nodes.length > 0) {
                     var n = this.network.body.nodes[e.nodes[0]];
-                    var xp = (e.pointer.canvas.x - n.shape.left) / n.shape.width;
-                    var yp = (e.pointer.canvas.y - n.shape.top) / n.shape.height;
+                    var x = e.pointer.canvas.x - n.shape.left;
+                    var y = e.pointer.canvas.y - n.shape.top
+                    var x_perc = x / n.shape.width;
+                    var y_perc = y / n.shape.height;
 
                     var ndCallbackData = this.nodeCallbackData[n.id];
                     var itemData = ndCallbackData[0];
                     for (var i = 1; i < ndCallbackData.length; i++) {
-                        if (yp < ndCallbackData[i].y_perc) {
+                        if (y_perc < ndCallbackData[i].y_perc) {
                             break;
                         } else {
                             itemData = ndCallbackData[i];
@@ -152,6 +153,14 @@ define([	// properly require.config'ed
                     }  else if (itemData.type == "NodeItem") {
                         this.linkBuilderCallback(snode,
                                                 snode.getNodeItemByKeyname(itemData.value));
+                    } else if (itemData.type = "header") {
+                        if (x_perc > itemData.x_close_perc) {
+                            this.snodeRemoverCallback(snode);
+                        } else if (x_perc > itemData.x_expand_perc) {
+                            // toggle the grabBar (position[0]) expandFlag and redraw
+                            this.setExpandFlag(snode, !this.getExpandFlag(snode));
+                            this.buildAndUpdateNodeSVG(snode);
+                        }
                     }
                 } else if (e.edges.length > 0) {
                     var edge = this.network.body.edges[e.edges[0]];
@@ -183,7 +192,7 @@ define([	// properly require.config'ed
                 for (var id of graphIDs) {
                     if (nodegroupIDs.indexOf(id) > -1 && unchangedIDs.indexOf(id) == -1) {
                         var snode = this.nodegroup.getNodeBySparqlID(id);
-                        this.updateNodeSVG(snode);
+                        this.buildAndUpdateNodeSVG(snode);
                         changedIDs.push(id);
                     }
                 }
@@ -193,7 +202,7 @@ define([	// properly require.config'ed
                 for (var id of nodegroupIDs) {
                     if (graphIDs.indexOf(id) == -1) {
                         var snode = this.nodegroup.getNodeBySparqlID(id);
-                        this.updateNodeSVG(snode);
+                        this.buildAndUpdateNodeSVG(snode);
                         newIDs.push(id);
                     }
                 }
@@ -229,7 +238,7 @@ define([	// properly require.config'ed
                             if (nItem.getOptionalMinus(snode2) != NodeItem.OPTIONAL_FALSE) {
                                 edge.font = {color: 'red', background: 'lightgray'};
                             } else  {
-                                edge.font = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_BACKGROUND};
+                                edge.font = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
                             }
                             edgeData.push(edge);
                             notYetUpdatedIDs.splice(notYetUpdatedIDs.indexOf(id));
@@ -247,12 +256,14 @@ define([	// properly require.config'ed
             //
             // Also pushes info to this.callbackData, which is used for callbacks
             //
-            updateNodeSVG : function(snode) {
+            buildAndUpdateNodeSVG : function(snode) {
                 var y = 0;
+                var x = 0;
                 var hwd;
                 var maxWidth = 0;
                 var svg = document.createElement("svg");
                 var myCallbackData = [];
+                var expandFlag = this.getExpandFlag(snode);
 
                 //  build support vector graphic with a default size
                 svg.setAttribute('xmlns', "http://www.w3.org/2000/svg");
@@ -267,52 +278,58 @@ define([	// properly require.config'ed
                 rect.setAttribute('height', "100%");
                 rect.setAttribute('fill', NodegroupRenderer.COLOR_NODE);
                 rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
-                rect.setAttribute('stroke', "black");
+                rect.setAttribute('stroke', NodegroupRenderer.COLOR_FOREGROUND);
                 svg.appendChild(rect);
                 y += NodegroupRenderer.STROKE;
 
-                // add header
-                var line = document.createElement("line");
-                line.setAttribute('x1',"0%");
-                line.setAttribute('y1', y + NodegroupRenderer.SIZE);
-                line.setAttribute('x2',"100%");
-                line.setAttribute('y2', y + NodegroupRenderer.SIZE);
-                line.setAttribute('stroke-width',NodegroupRenderer.STROKE);
-                line.setAttribute('stroke',"black");
-                svg.appendChild(line);
-                y += NodegroupRenderer.SIZE + NodegroupRenderer.STROKE;
-                myCallbackData.push({ y: (y + NodegroupRenderer.SIZE)/2, type: "header", value: ""});
+                // skip enough room for the grab bar at the end
+                y += this.getGrabBarHeight();
+                y += NodegroupRenderer.VSPACE;
 
                 // add the sparqlID
-                hwd = this.appendSparqlID(svg, snode, y);
+                hwd = this.addSparqlID(svg, snode, y);
                 y += hwd.height;
                 maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
                 myCallbackData.push(hwd.data);
 
-                // add property items
-                for (var p of snode.getPropList()) {
-                    hwd = this.appendProperty(svg, p, y);
-                    y += hwd.height;
-                    maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
-                    myCallbackData.push(hwd.data);
-                }
-                // add node items
-                for (var n of snode.getNodeList()) {
-                    hwd = this.appendProperty(svg, n, y);
-                    y += hwd.height;
-                    maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
-                    myCallbackData.push(hwd.data);
+                if (expandFlag) {
+                    // add property items
+                    for (var p of snode.getPropList()) {
+                        hwd = this.addProperty(svg, p, y);
+                        y += hwd.height;
+                        maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
+                        myCallbackData.push(hwd.data);
+                    }
+                    // add node items
+                    for (var n of snode.getNodeList()) {
+                        hwd = this.addProperty(svg, n, y);
+                        y += hwd.height;
+                        maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
+                        myCallbackData.push(hwd.data);
+                    }
                 }
 
+                // add a little padding on height and width
+                x = maxWidth + NodegroupRenderer.INDENT;
+                y += NodegroupRenderer.VSPACE * 2;
+
                 // set height and width of svg
-                y += NodegroupRenderer.VSPACE;
                 svg.setAttribute("height", y);
-                svg.setAttribute("width", maxWidth + NodegroupRenderer.INDENT)
+                svg.setAttribute("width", x)
+
+                // now that width is set, add the grab bar (with it's right-justified stuff)
+                var callbackData = this.addGrabBar(svg, expandFlag)
+                myCallbackData.unshift(callbackData);   // sneak it on the beginning of the list since it it supposed to be sorted by Y ascending
 
                 // add y_perc to all callback data: percentage of y at bottom of item
                 for (var i of myCallbackData) {
                     i.y_perc = i.y / y;
                 }
+
+                // change grab bar special cases to percent
+                myCallbackData[0].x_close_perc = myCallbackData[0].x_close / x;
+                myCallbackData[0].x_expand_perc = myCallbackData[0].x_expand / x;
+
                 this.nodeCallbackData[snode.getSparqlID()] = myCallbackData;
 
                 // build the svg image
@@ -324,7 +341,90 @@ define([	// properly require.config'ed
                 this.network.body.data.nodes.update([{id: snode.getSparqlID(), image: im, shape: "image", size: visjsNodeSize }]);
             },
 
-            appendSparqlID : function(svg, snode, y) {
+            // figure out if node is expanded
+            getExpandFlag : function(snode) {
+
+                if (this.nodeCallbackData.hasOwnProperty(snode.getSparqlID())) {
+                    // already drawn: get the grab bar (position [0]) expand flag
+                    expandFlag = this.nodeCallbackData[snode.getSparqlID()][0].expandFlag;
+                } else {
+                    // never drawn before: calculate whether or not it should be initialized as expanded
+                    expandFlag = snode.getReturnedPropertyItems().length + snode.getConstrainedPropertyItems().length > 0;
+                }
+                return expandFlag;
+            },
+
+            // change the expandFlag of an already-drawn node
+            setExpandFlag : function(snode, val) {
+                this.nodeCallbackData[snode.getSparqlID()][0].expandFlag = val;
+            },
+
+            // In order to allow items to be right-justified, grab bar must be added last
+            // So there are separate calls
+            //  1.  get the height to skip at the beginning of the node-building
+            //  2.  add the bar at the end (in the empty skipped space)-- after width is set
+            getGrabBarHeight : function (svg) {
+                return Math.floor(1.5 * NodegroupRenderer.SIZE);
+            },
+
+            addGrabBar : function(svg, expandFlag) {
+
+                var height = this.getGrabBarHeight();
+
+                // draw the basic rectangle
+                var rect = document.createElement("rect");
+                rect.setAttribute('x', "0");
+                rect.setAttribute('y', "0");
+                rect.setAttribute('width', "100%");
+                rect.setAttribute('height', height);
+                rect.setAttribute('fill', NodegroupRenderer.COLOR_GRAB_BAR);
+                rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
+                rect.setAttribute('stroke', NodegroupRenderer.COLOR_FOREGROUND);
+                svg.appendChild(rect);
+
+                var width = svg.getAttribute("width");
+                var callbackData = {};
+
+                // draw X
+                var elementTop = height * 0.2;
+                var elementSize = height * 0.6;
+                var elementBot = elementTop + elementSize;
+                var x = width - elementSize * 2;
+                this.drawX(svg, x, elementTop, x+elementSize, elementTop+ elementSize, 1,NodegroupRenderer.COLOR_FOREGROUND);
+                callbackData.x_close = x ;
+
+
+                // draw expand / collapse
+                x = width - elementSize * 4;
+                if (expandFlag) {
+                    var y = elementTop + elementSize * .75;
+                    this.drawLine(svg, x, y , x+elementSize, y, 1, NodegroupRenderer.COLOR_FOREGROUND);
+                } else {
+                    var y = elementTop;
+                    this.drawBox(svg, x, y, x+elementSize, y+elementSize, NodegroupRenderer.COLOR_GRAB_BAR, NodegroupRenderer.COLOR_FOREGROUND);
+                }
+                callbackData.x_expand = x;
+
+                // draw mover
+                x = NodegroupRenderer.INDENT;
+                elementTop = height * 0.2;
+                elementSize = height * 1;
+                elementBot = elementTop + height * .6 ;
+                for (var yy=elementTop; yy <= elementBot; yy += (elementBot - elementTop) / 3) {
+                    this.drawLine(svg, x, yy , x+elementSize, yy, 1,NodegroupRenderer.COLOR_FOREGROUND);
+                }
+
+                callbackData.y = height;
+                callbackData.type = "header";
+                callbackData.value="";
+                callbackData.expandFlag = expandFlag;
+
+                return(callbackData);
+            },
+
+            // add SparqlID line
+            // generate a [height, width, data]
+            addSparqlID : function(svg, snode, y) {
 
                 var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
                 var x = NodegroupRenderer.INDENT;
@@ -344,7 +444,7 @@ define([	// properly require.config'ed
                     checked = true;
                     foreground = NodegroupRenderer.COLOR_CONSTRAINED;
                 }
-                this.addCheckBox(svg, x, bot, size, checked, foreground );
+                this.drawCheckBox(svg, x, bot, size, checked, foreground );
 
                 var text = document.createElement('text');
                 text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
@@ -362,7 +462,9 @@ define([	// properly require.config'ed
                 return({"height":height, "width":width, "data":callbackData});
             },
 
-            appendProperty : function(svg, item, y, data) {
+            // add property line
+            // generate a [height, width, data]
+            addProperty : function(svg, item, y, data) {
                 var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE;
@@ -380,7 +482,7 @@ define([	// properly require.config'ed
                     checked = true;
                     foreground = NodegroupRenderer.COLOR_CONSTRAINED;
                 }
-                this.addCheckBox(svg, x, bot, size, checked, foreground);
+                this.drawCheckBox(svg, x, bot, size, checked, foreground);
 
                 var text = document.createElement('text');
                 text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
@@ -401,33 +503,38 @@ define([	// properly require.config'ed
             // Add a checkbox.
             // Black when unchecked, Red when checked
             // x,y is bottom left to match text
-            addCheckBox : function(svg, x, y, size, checked, foreground) {
+            drawCheckBox : function(svg, x, y, size, checked, foreground) {
                 // margin twice as big on top and right
                 var m = Math.floor(size/7);
                 var s = size - m - m - m;
                 var top = y - size + m + m;
                 var left = x + m;
-                var rect = document.createElement('rect');
-                rect.setAttribute('x', left);
-                rect.setAttribute('y', top);
-                rect.setAttribute('width', s + "px");
-                rect.setAttribute('height', s + "px");
-                rect.setAttribute('fill', NodegroupRenderer.COLOR_NODE);
-                rect.setAttribute('stroke', foreground);
-                svg.appendChild(rect);
+
+                this.drawBox(svg, left, top, left + s, top + s, NodegroupRenderer.COLOR_NODE, foreground)
 
                 if (checked) {
                     var x1 = left;
                     var x2 = left + s;
                     var y1 = top;
                     var y2 = top + s;
-                    this.addLine(svg, x1,y1,x2,y2, 1,foreground);
-                    this.addLine(svg, x1,y2,x2,y1, 1,foreground);
+                    this.drawX(svg, x1, y1, x2, y2, 1, foreground);
                 }
             },
 
             // add a line
-            addLine : function(svg, x1, y1, x2, y2, strokeWidth, strokeColor) {
+            drawBox : function(svg, x1, y1, x2, y2, fillColor, strokeColor) {
+                var rect = document.createElement('rect');
+                rect.setAttribute('x', x1);
+                rect.setAttribute('y', y1);
+                rect.setAttribute('width', (x2 - x1) + "px");
+                rect.setAttribute('height', (y2 - y1) + "px");
+                rect.setAttribute('fill', fillColor);
+                rect.setAttribute('stroke', strokeColor);
+                svg.appendChild(rect);
+            },
+
+            // add a line
+            drawLine : function(svg, x1, y1, x2, y2, strokeWidth, strokeColor) {
                 var line = document.createElement("line");
                 line.setAttribute('x1',x1);
                 line.setAttribute('y1', y1);
@@ -436,6 +543,11 @@ define([	// properly require.config'ed
                 line.setAttribute('stroke-width', strokeWidth);
                 line.setAttribute('stroke', strokeColor);
                 svg.appendChild(line);
+            },
+
+            drawX : function (svg, x1, y1, x2, y2, strokeWidth, strokeColor) {
+                this.drawLine(svg, x1, y1, x2, y2, strokeWidth,strokeColor);
+                this.drawLine(svg, x1, y2, x2, y1, strokeWidth,strokeColor);
             },
 
             measureTextWidth : function (textElem) {
