@@ -430,6 +430,9 @@ NodeItem.prototype = {
     getIsReturned : function() {
         return false;
     },
+    hasConstraints : function() {
+		return false;
+	},
 	// set values used by the NodeItem.
 	setKeyName : function(strName) {
 		this.KeyName = strName;

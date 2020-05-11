@@ -25,7 +25,8 @@
  *         - stopPropagation will stop the question from being bubbled up to a parent.
  */
 
-//  https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css
+//  Docs
+//  https://ww3.arb.ca.gov/ei/tools/lib/vis/docs/network.html
 
 define([	// properly require.config'ed
 
@@ -62,45 +63,12 @@ define([	// properly require.config'ed
             this.canvasdiv.style.width="100%";
             canvasdiv.appendChild(this.canvasdiv);
 
-            var click = function(e) {
-                if (e.nodes.length > 0) {
-                    var n = this.network.body.nodes[e.nodes[0]];
-                    var xp = (e.pointer.canvas.x - n.shape.left) / n.shape.width;
-                    var yp = (e.pointer.canvas.y - n.shape.top) / n.shape.height;
 
-                    var ndImageData = this.nodeImageData[n.id];
-                    var itemData = ndImageData[0];
-                    for (var i = 1; i < ndImageData.length; i++) {
-                        if (yp < ndImageData[i].y_perc) {
-                            break;
-                        } else {
-                            itemData = ndImageData[i];
-                        }
-                    }
-                    var snode = this.nodegroup.getNodeBySparqlID(n.id);
-                    if (itemData.type == "SemanticNode") {
-                        this.snodeEditorCallback(snode);
-                    } else if (itemData.type == "PropertyItem") {
-                        this.propEditorCallback(snode.getPropertyByKeyname(itemData.value),
-                                                n.id);
-                    }  else if (itemData.type == "NodeItem") {
-                        this.linkBuilderCallback(snode,
-                                                snode.getNodeItemByKeyname(itemData.value));
-                    }
-                } else if (e.edges.length > 0) {
-                    var edge = this.network.body.edges[e.edges[0]];
-                    var snode = this.nodegroup.getNodeBySparqlID(edge.fromId);
-                    var nItem = snode.getNodeItemByKeyname(edge.options.label);
-                    var targetSNode = this.nodegroup.getNodeBySparqlID(edge.toId);
-                    this.linkEditorCallback(snode, nItem, targetSNode);
-                }
-                console.log(e);
-            }.bind(this);
 
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
-            this.network.on('click', click);
+            this.network.on('click', this.click.bind(this));
 
-            this.nodeImageData = {};
+            this.nodeCallbackData = {};
         };
 
         NodegroupRenderer.SIZE = 12;
@@ -108,8 +76,37 @@ define([	// properly require.config'ed
         NodegroupRenderer.STROKE = 2;
         NodegroupRenderer.INDENT = 6;
 
+        NodegroupRenderer.COLOR_NODE = "#F4F6F6";
+        NodegroupRenderer.COLOR_FOREGROUND = 'black';
+        NodegroupRenderer.COLOR_BACKGROUND = 'white';
+        NodegroupRenderer.COLOR_RETURNED = 'red';
+        NodegroupRenderer.COLOR_CONSTRAINED = 'green';
+        NodegroupRenderer.COLOR_RET_CONST = 'blue';
+        NodegroupRenderer.INDENT = 6;
+        NodegroupRenderer.INDENT = 6;
+
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
             return {
+                edges: {
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            scaleFactor: 0.3
+                        }
+                    },
+                    color: {
+                        color: NodegroupRenderer.COLOR_FOREGROUND,
+                        hover: 'blue'
+                    },
+
+                    font: {
+                        color: NodegroupRenderer.COLOR_FOREGROUND,
+                        size: 10,
+                        face: 'arial',
+                        multi: 'html',  // allows <b> in label
+                    },
+                    width: 1
+                }
             };
         };
 
@@ -131,11 +128,54 @@ define([	// properly require.config'ed
                 this.linkEditorCallback = callback;
             },
 
+            click : function(e) {
+                if (e.nodes.length > 0) {
+                    var n = this.network.body.nodes[e.nodes[0]];
+                    var xp = (e.pointer.canvas.x - n.shape.left) / n.shape.width;
+                    var yp = (e.pointer.canvas.y - n.shape.top) / n.shape.height;
+
+                    var ndCallbackData = this.nodeCallbackData[n.id];
+                    var itemData = ndCallbackData[0];
+                    for (var i = 1; i < ndCallbackData.length; i++) {
+                        if (yp < ndCallbackData[i].y_perc) {
+                            break;
+                        } else {
+                            itemData = ndCallbackData[i];
+                        }
+                    }
+                    var snode = this.nodegroup.getNodeBySparqlID(n.id);
+                    if (itemData.type == "SemanticNode") {
+                        this.snodeEditorCallback(snode);
+                    } else if (itemData.type == "PropertyItem") {
+                        this.propEditorCallback(snode.getPropertyByKeyname(itemData.value),
+                                                n.id);
+                    }  else if (itemData.type == "NodeItem") {
+                        this.linkBuilderCallback(snode,
+                                                snode.getNodeItemByKeyname(itemData.value));
+                    }
+                } else if (e.edges.length > 0) {
+                    var edge = this.network.body.edges[e.edges[0]];
+                    var snode = this.nodegroup.getNodeBySparqlID(edge.fromId);
+                    var nItem = snode.getNodeItemByKeyname(edge.options.label.replace(/[\W]$/, ""));
+                    var targetSNode = this.nodegroup.getNodeBySparqlID(edge.toId);
+                    this.linkEditorCallback(snode, nItem, targetSNode);
+                }
+                console.log(e);
+            },
+
+            // Update the display to reflect the nodegroup
             // unchangedIDs - nodes who don't need their images regenerated
             draw : function (nodegroup, unchangedIDs) {
-                console.log("UNCHANGED: " + unchangedIDs);
-                this.nodegroup = nodegroup;
-                var nodegroupIDs = nodegroup.getSNodeSparqlIDs().slice();
+
+                this.nodegroup = nodegroup;  // mostly for callbacks
+
+                this.drawNodes(unchangedIDs);
+                this.drawEdges();
+
+            },
+
+            drawNodes : function(unchangedIDs) {
+                var nodegroupIDs = this.nodegroup.getSNodeSparqlIDs().slice();
                 var graphIDs = this.network.body.data.nodes.getIds();
 
                 // changed nodes
@@ -143,8 +183,7 @@ define([	// properly require.config'ed
                 for (var id of graphIDs) {
                     if (nodegroupIDs.indexOf(id) > -1 && unchangedIDs.indexOf(id) == -1) {
                         var snode = this.nodegroup.getNodeBySparqlID(id);
-                        var im = this.buildNodeImage(snode);
-                        this.network.body.data.nodes.update([{id: id, image: im, shape: "image"}]);
+                        this.updateNodeSVG(snode);
                         changedIDs.push(id);
                     }
                 }
@@ -154,8 +193,7 @@ define([	// properly require.config'ed
                 for (var id of nodegroupIDs) {
                     if (graphIDs.indexOf(id) == -1) {
                         var snode = this.nodegroup.getNodeBySparqlID(id);
-                        var im = this.buildNodeImage(snode);
-                        this.network.body.data.nodes.add([{id: id, image: im, shape: "image"}]);
+                        this.updateNodeSVG(snode);
                         newIDs.push(id);
                     }
                 }
@@ -165,65 +203,75 @@ define([	// properly require.config'ed
                 for (var id of graphIDs) {
                     if (nodegroupIDs.indexOf(id) == -1) {
                         deletedIDs.push(id);
-                        delete this.nodeImageData["id"]
+                        delete this.nodeCallbackData["id"]
                     }
                 }
                 this.network.body.data.nodes.remove(deletedIDs);
+            },
 
+            drawEdges : function() {
                 // edges: update all since it is cheap
-                var leftoverEdgeIds = this.network.body.data.edges.getIds();
+                var notYetUpdatedIDs = this.network.body.data.edges.getIds();
                 var edgeData = [];
-                for (var snode of nodegroup.getSNodeList()) {
+                for (var snode of this.nodegroup.getSNodeList()) {
                     for (var nItem of snode.getNodeList()) {
                         for (var snode2 of nItem.getSNodes()) {
                             var fromID = snode.getSparqlID();
                             var toID = snode2.getSparqlID();
                             var id = fromID + "-" + toID;
-                            edgeData.push({
+                            var label = nItem.getKeyName() + nItem.getQualifier(snode2);
+                            var edge = {
                                 id:     id,
                                 from:   fromID,
                                 to:     toID,
-                                label:  nItem.getKeyName(),
-                            });
-                            leftoverEdgeIds.splice(leftoverEdgeIds.indexOf(id));
+                                label:  label,
+                            };
+                            if (nItem.getOptionalMinus(snode2) != NodeItem.OPTIONAL_FALSE) {
+                                edge.font = {color: 'red', background: 'lightgray'};
+                            } else  {
+                                edge.font = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_BACKGROUND};
+                            }
+                            edgeData.push(edge);
+                            notYetUpdatedIDs.splice(notYetUpdatedIDs.indexOf(id));
                         }
                     }
                 }
                 this.network.body.data.edges.update(edgeData);
-                if (leftoverEdgeIds.length) {
-                    this.network.body.data.edges.remove(leftoverEdgeIds);
-                }
+
+                // remove any edges no longer in the nodegroup
+                this.network.body.data.edges.remove(notYetUpdatedIDs);
             },
-
-
-            // build this.imageData and return the node img
-            buildNodeImage : function(node) {
-
+            //
+            // Change an snode to a network node and call nodes.update
+            // (adding or replacing the existing node)
+            //
+            // Also pushes info to this.callbackData, which is used for callbacks
+            //
+            updateNodeSVG : function(snode) {
                 var y = 0;
-                var hwd = [];
-                var HEIGHT=0;
-                var WIDTH=1;
-                var DATA=2;
+                var hwd;
                 var maxWidth = 0;
                 var svg = document.createElement("svg");
-                var imageData = [];
+                var myCallbackData = [];
 
-
+                //  build support vector graphic with a default size
                 svg.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-                svg.setAttribute('width', '200');
-                svg.setAttribute('height', '200');
+                svg.setAttribute('width', 200);
+                svg.setAttribute('height', 60);
 
+                // fill with a rectangle
                 var rect = document.createElement("rect");
                 rect.setAttribute('x', "0");
                 rect.setAttribute('y', "0");
                 rect.setAttribute('width', "100%");
                 rect.setAttribute('height', "100%");
-                rect.setAttribute('fill', "#F4F6F6");
+                rect.setAttribute('fill', NodegroupRenderer.COLOR_NODE);
                 rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
                 rect.setAttribute('stroke', "black");
                 svg.appendChild(rect);
                 y += NodegroupRenderer.STROKE;
 
+                // add header
                 var line = document.createElement("line");
                 line.setAttribute('x1',"0%");
                 line.setAttribute('y1', y + NodegroupRenderer.SIZE);
@@ -233,69 +281,85 @@ define([	// properly require.config'ed
                 line.setAttribute('stroke',"black");
                 svg.appendChild(line);
                 y += NodegroupRenderer.SIZE + NodegroupRenderer.STROKE;
-                imageData.push({ y: (y + NodegroupRenderer.SIZE)/2, type: "header", value: ""});
+                myCallbackData.push({ y: (y + NodegroupRenderer.SIZE)/2, type: "header", value: ""});
 
+                // add the sparqlID
+                hwd = this.appendSparqlID(svg, snode, y);
+                y += hwd.height;
+                maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
+                myCallbackData.push(hwd.data);
 
-                hwd = this.appendSparqlID(svg, node, y);
-                y += hwd[HEIGHT];
-                maxWidth = hwd[WIDTH] > maxWidth ? hwd[WIDTH] : maxWidth;
-                imageData.push(hwd[DATA]);
-
-                // get property items
-                var propList = node.getPropList();
-                for (var p of propList) {
+                // add property items
+                for (var p of snode.getPropList()) {
                     hwd = this.appendProperty(svg, p, y);
-                    y += hwd[HEIGHT];
-                    maxWidth = hwd[WIDTH] > maxWidth ? hwd[WIDTH] : maxWidth;
-                    imageData.push(hwd[DATA]);
+                    y += hwd.height;
+                    maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
+                    myCallbackData.push(hwd.data);
                 }
-                // get node items
-                var nodeList = node.getNodeList();
-                for (var n of nodeList) {
+                // add node items
+                for (var n of snode.getNodeList()) {
                     hwd = this.appendProperty(svg, n, y);
-                    y += hwd[HEIGHT];
-                    maxWidth = hwd[WIDTH] > maxWidth ? hwd[WIDTH] : maxWidth;
-                    imageData.push(hwd[DATA]);
+                    y += hwd.height;
+                    maxWidth = hwd.width > maxWidth ? hwd.width : maxWidth;
+                    myCallbackData.push(hwd.data);
                 }
 
                 // set height and width of svg
                 y += NodegroupRenderer.VSPACE;
-                //svg.setAttribute("height", y);
-                //svg.setAttribute("width", maxWidth + NodegroupRenderer.INDENT)
+                svg.setAttribute("height", y);
+                svg.setAttribute("width", maxWidth + NodegroupRenderer.INDENT)
 
-                // add y_perc to all data
-                for (var i of imageData) {
+                // add y_perc to all callback data: percentage of y at bottom of item
+                for (var i of myCallbackData) {
                     i.y_perc = i.y / y;
                 }
-                this.nodeImageData[node.getSparqlID()] = imageData;
+                this.nodeCallbackData[snode.getSparqlID()] = myCallbackData;
 
-                console.log("=================================\n" + svg.outerHTML + "\n=================================");
-                return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
+                // build the svg image
+                var im = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.outerHTML);
 
+                // take a swag at node size based on height
+                var visjsNodeSize = y / 4;
+
+                this.network.body.data.nodes.update([{id: snode.getSparqlID(), image: im, shape: "image", size: visjsNodeSize }]);
             },
 
-            appendSparqlID : function(svg, node, y) {
+            appendSparqlID : function(svg, snode, y) {
 
                 var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE * 1.5;
 
-                this.addCheckBox(svg, x, bot, size, node.getIsReturned() || node.getIsTypeReturned() );
+                var checked = false;
+                var foreground = NodegroupRenderer.COLOR_FOREGROUND;
+
+                if (snode.getIsReturned() || snode.getIsTypeReturned()) {
+                    checked = true;
+                    if (snode.hasConstraints()) {
+                        foreground = NodegroupRenderer.COLOR_RET_CONST;
+                    } else {
+                        foreground = NodegroupRenderer.COLOR_RETURNED;
+                    }
+                } else if (snode.hasConstraints()) {
+                    checked = true;
+                    foreground = NodegroupRenderer.COLOR_CONSTRAINED;
+                }
+                this.addCheckBox(svg, x, bot, size, checked, foreground );
 
                 var text = document.createElement('text');
                 text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
                 text.setAttribute('y', bot);
                 text.setAttribute('font-size', size + "px");
                 text.setAttribute('font-family', "Arial");
-                text.setAttribute('fill', "black");
-                text.innerHTML = node.getSparqlID();
+                text.setAttribute('fill', foreground);
+                text.innerHTML = snode.getSparqlID();
                 svg.appendChild(text);
 
                 var height = NodegroupRenderer.VSPACE + size;
                 var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
-                var data = { y: y, type: node.getItemType(), value: text.innerHTML };
+                var callbackData = { y: y, type: snode.getItemType(), value: text.innerHTML };
 
-                return([height, width, data]);
+                return({"height":height, "width":width, "data":callbackData});
             },
 
             appendProperty : function(svg, item, y, data) {
@@ -303,28 +367,41 @@ define([	// properly require.config'ed
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE;
 
-                this.addCheckBox(svg, x, bot, size, item.getIsReturned());
+                var checked = false;
+                var foreground = NodegroupRenderer.COLOR_FOREGROUND;
+                if (item.getIsReturned() ) {
+                    checked = true;
+                    if (item.hasConstraints()) {
+                        foreground = NodegroupRenderer.COLOR_RET_CONST;
+                    } else {
+                        foreground = NodegroupRenderer.COLOR_RETURNED;
+                    }
+                } else if (item.hasConstraints()) {
+                    checked = true;
+                    foreground = NodegroupRenderer.COLOR_CONSTRAINED;
+                }
+                this.addCheckBox(svg, x, bot, size, checked, foreground);
 
                 var text = document.createElement('text');
                 text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
                 text.setAttribute('y', bot);
                 text.setAttribute('font-size', size + "px");
                 text.setAttribute('font-family', "Arial");
-                text.setAttribute('fill', "black");
+                text.setAttribute('fill', foreground);
                 text.innerHTML = item.getKeyName() + " : " + item.getValueType();
                 svg.appendChild(text);
 
                 var height = NodegroupRenderer.VSPACE + size;
                 var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
-                var data = { y: y, type: item.getItemType(), value: item.getKeyName() };
+                var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName() };
 
-                return([height, width, data]);
+                return({"height":height, "width":width, "data":callbackData});
             },
 
             // Add a checkbox.
             // Black when unchecked, Red when checked
             // x,y is bottom left to match text
-            addCheckBox : function(svg, x, y, size, checked) {
+            addCheckBox : function(svg, x, y, size, checked, foreground) {
                 // margin twice as big on top and right
                 var m = Math.floor(size/7);
                 var s = size - m - m - m;
@@ -335,8 +412,8 @@ define([	// properly require.config'ed
                 rect.setAttribute('y', top);
                 rect.setAttribute('width', s + "px");
                 rect.setAttribute('height', s + "px");
-                rect.setAttribute('fill', "#F4F6F6");
-                rect.setAttribute('stroke', checked ? "red" : "black");
+                rect.setAttribute('fill', NodegroupRenderer.COLOR_NODE);
+                rect.setAttribute('stroke', foreground);
                 svg.appendChild(rect);
 
                 if (checked) {
@@ -344,8 +421,8 @@ define([	// properly require.config'ed
                     var x2 = left + s;
                     var y1 = top;
                     var y2 = top + s;
-                    this.addLine(svg, x1,y1,x2,y2, 1,"red");
-                    this.addLine(svg, x1,y2,x2,y1, 1,"red");
+                    this.addLine(svg, x1,y1,x2,y2, 1,foreground);
+                    this.addLine(svg, x1,y2,x2,y1, 1,foreground);
                 }
             },
 
