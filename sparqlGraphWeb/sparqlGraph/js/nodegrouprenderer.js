@@ -31,7 +31,7 @@
 define([	// properly require.config'ed
 
             'sparqlgraph/js/visjshelper',
-
+            'sparqlgraph/js/modaliidx',
          	'jquery',
 
             'visjs/vis.min',
@@ -41,7 +41,7 @@ define([	// properly require.config'ed
 
 		],
 
-	function(VisJsHelper, $, vis) {
+	function(VisJsHelper, ModalIidx, $, vis) {
 
 
 		//============ local object  ExploreTab =============
@@ -55,6 +55,12 @@ define([	// properly require.config'ed
             this.snodeRemoverCallback = null;
             this.linkBuilderCallback = null;
             this.linkEditorCallback = null;
+
+            this.configdiv = document.createElement("div");
+            this.configdiv.style.margin="1ch";
+            this.configdiv.id="ngrConfigDiv";
+            this.configdiv.style.display="table";
+            this.configdiv.style.background = "rgba(32, 16, 16, 0.2)";
 
             this.canvasdiv = document.createElement("div");
             this.canvasdiv.style.margin="1ch";
@@ -86,6 +92,20 @@ define([	// properly require.config'ed
 
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
             return {
+                configure: {
+                    enabled: true,
+                    container: configdiv,
+                    filter: "layout physics",
+                    showButton: true
+                },
+                physics: {
+                    barnesHut: {
+                      gravitationalConstant: -2450,
+                      springLength: 110,
+                      avoidOverlap: 0.01
+                    },
+                    minVelocity: 0.75
+                },
                 edges: {
                     arrows: {
                         to: {
@@ -554,6 +574,20 @@ define([	// properly require.config'ed
                 var f = textElem.getAttribute("font-size") + " " + textElem.getAttribute("font-family");
                 this.ctx.font = f;
                 return this.ctx.measureText(textElem).width;
+            },
+
+            showConfigDialog() {
+                for (var e of this.configdiv.children) {
+                    e.style.backgroundColor='white';
+                    for (var ee of e.children) {
+                        if (! ee.innerHTML.contains("generate")) {
+                            ee.style.backgroundColor='white';
+                        }
+                    }
+                }
+
+                var m = new ModalIidx("ModalIidxAlert");
+                m.showOK("Network physics", this.configdiv, function(){});
             }
         }
 

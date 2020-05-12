@@ -1341,6 +1341,7 @@
 
    	var doCollapseUnused = function() {
         gNodeGroup.renderUnusedNodesCollapsed();
+        gRenderer.showConfigDialog();
     };
 
     // only used for non-microservice code
