@@ -209,7 +209,8 @@ public class RuntimeConstraintsTest {
 			constraints.applyConstraint("?durationInSeconds", SupportedOperations.MATCHES, names); 
 			
 			// check matches
-			if(ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().toString().equals("VALUES ?durationInSeconds { 23 37  }")){
+			String constraintStr = ng.getNodeBySparqlID("?AlbumTrack").getPropertyByKeyname("durationInSeconds").getValueConstraint().toString();
+			if(constraintStr.contains("VALUES ?durationInSeconds") && constraintStr.contains("23") && constraintStr.contains("37")){
 				System.err.println("testContraintsSetByType() :: expected value for ?durationInSeconds uri with Matches clause") ;
 			}
 			else{ 

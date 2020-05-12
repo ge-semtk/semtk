@@ -227,8 +227,11 @@ public class ValueConstraint {
 			valType.validate(v);
 			retval.append(valType.buildRDF11ValueString(v) + " ");
 			
-			// for strings only:  SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
-			if (valType == XSDSupportedType.STRING) {
+			// for strings only:  
+			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
+			// NOW ADDED FOR NUMERIC TYPES DUE TO INCONSISTENCIES IN NEPTUNE
+			if (valType == XSDSupportedType.STRING ||
+				valType.numericOperationAvailable()) {
 				retval.append(valType.buildTypedValueString(v) + " ");   
 			}
 		}
