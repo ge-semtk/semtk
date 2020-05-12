@@ -1335,13 +1335,15 @@
   	};
 
   	var doLayout = function() {
-   		setStatus("Laying out graph...");
-   		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, ""));
+        gRenderer.showConfigDialog();
    	};
 
    	var doCollapseUnused = function() {
-        gNodeGroup.renderUnusedNodesCollapsed();
-        gRenderer.showConfigDialog();
+        gRenderer.drawCollapsingUnused();
+    };
+
+    var doExpandAll = function() {
+        gRenderer.drawExpandAll();
     };
 
     // only used for non-microservice code
@@ -1745,7 +1747,8 @@
     };
 
     var guiGraphNonEmpty = function () {
-        document.getElementById("btnCollapseUnused").disabled = false;
+        document.getElementById("btnExpandAll").disabled = false;
+    	document.getElementById("btnCollapseUnused").disabled = false;
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
@@ -1753,7 +1756,8 @@
     };
 
     var giuGraphEmpty = function () {
-    	document.getElementById("btnCollapseUnused").disabled = true;
+        document.getElementById("btnExpandAll").disabled = true;
+        document.getElementById("btnCollapseUnused").disabled = true;
         document.getElementById("btnLayout").disabled = true;
         document.getElementById("SGOrderBy").disabled = true;
     	guiUpdateGraphRunButton();

@@ -192,6 +192,24 @@ define([	// properly require.config'ed
                 console.log(e);
             },
 
+            // redraw as if it had been dragged in fresh
+            // default behavior is to collapse any unused nodes
+            drawCollapsingUnused : function() {
+                for (var snode of this.nodegroup.getSNodeList()) {
+                    this.deleteExpandFlag(snode);
+                }
+                this.draw(this.nodegroup, []);
+            },
+
+            // redraw with all nodes expanded
+            drawExpandAll : function() {
+                for (var snode of this.nodegroup.getSNodeList()) {
+                    this.setExpandFlag(snode, true);
+                }
+
+                this.draw(this.nodegroup, []);
+            },
+
             // Update the display to reflect the nodegroup
             // unchangedIDs - nodes who don't need their images regenerated
             draw : function (nodegroup, unchangedIDs) {
@@ -364,12 +382,18 @@ define([	// properly require.config'ed
             // figure out if node is expanded
             getExpandFlag : function(snode) {
 
+                // if node has been drawn before
                 if (this.nodeCallbackData.hasOwnProperty(snode.getSparqlID())) {
-                    // already drawn: get the grab bar (position [0]) expand flag
-                    expandFlag = this.nodeCallbackData[snode.getSparqlID()][0].expandFlag;
+                    // if we haven't removed the expand flag to force re-computing
+                    if (this.nodeCallbackData[snode.getSparqlID()][0].hasOwnProperty("expandFlag")) {
+                        expandFlag = this.nodeCallbackData[snode.getSparqlID()][0].expandFlag;
+                    } else {
+                        // compute it
+                        expandFlag = snode.getReturnedPropertyItems().length + snode.getConstrainedPropertyItems().length > 0;
+                    }
                 } else {
-                    // never drawn before: calculate whether or not it should be initialized as expanded
-                    expandFlag = snode.getReturnedPropertyItems().length + snode.getConstrainedPropertyItems().length > 0;
+                    // first time draw: always expand
+                    expandFlag = true;
                 }
                 return expandFlag;
             },
@@ -377,6 +401,10 @@ define([	// properly require.config'ed
             // change the expandFlag of an already-drawn node
             setExpandFlag : function(snode, val) {
                 this.nodeCallbackData[snode.getSparqlID()][0].expandFlag = val;
+            },
+
+            deleteExpandFlag : function(snode) {
+                delete this.nodeCallbackData[snode.getSparqlID()][0].expandFlag;
             },
 
             // In order to allow items to be right-justified, grab bar must be added last
@@ -576,11 +604,13 @@ define([	// properly require.config'ed
                 return this.ctx.measureText(textElem).width;
             },
 
-            showConfigDialog() {
+            showConfigDialog : function() {
+
+                // hack at getting the UI colors so they don't look terrible
                 for (var e of this.configdiv.children) {
                     e.style.backgroundColor='white';
                     for (var ee of e.children) {
-                        if (! ee.innerHTML.contains("generate")) {
+                        if (! ee.innerHTML.startsWith("generate")) {
                             ee.style.backgroundColor='white';
                         }
                     }
