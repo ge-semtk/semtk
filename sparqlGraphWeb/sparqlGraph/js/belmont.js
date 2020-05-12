@@ -427,6 +427,12 @@ NodeItem.prototype = {
 		this.Connected = jObj.Connected;
 		this.UriConnectBy = jObj.UriConnectBy;
 	},
+    getIsReturned : function() {
+        return false;
+    },
+    hasConstraints : function() {
+		return false;
+	},
 	// set values used by the NodeItem.
 	setKeyName : function(strName) {
 		this.KeyName = strName;
@@ -856,13 +862,7 @@ PropertyItem.prototype = {
 /* to set nodes */
 var setNode = function(SNode) { // set up the node itself. this includes the
 								// creation of the node via dracula
-// var node = new Graph.Node(SNode.NodeName);
-	var node = new Graph.Node(SNode.NodeName, SNode.getSparqlID());
-	node.setPropLabels(SNode.propList);
-	node.setNodeLabels(SNode.nodeList);
-	node.setParent(SNode);
-
-	return node;
+    // deleted
 };
 /* we need an intermediate to the arrow generation */
 var edgeIntermediate = function(source, target, relation) {
@@ -909,8 +909,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 		this.instanceValue = null;
 		this.deletionMode = NodeDeletionTypes.NO_DELETE;
 	}
-	this.node = setNode(this); // the dracula node used in this Semantic Node.
-								// this is the thing that gets drawn
+
 	this.removalTag = false;
 	this.nodeGrp = nodeGroup; // a reference to the node group itself. this
 								// will be used for deletions
@@ -1165,7 +1164,6 @@ SemanticNode.prototype = {
 	removeLink : function(nodeItem, targetSNode) {
 
 		nodeItem.removeSNode(targetSNode);
-		this.nodeGrp.graph.removeEdge(this.node, targetSNode.node);
 	},
 
 	buildFilterConstraint : function(op, val) {
@@ -1232,7 +1230,7 @@ SemanticNode.prototype = {
 		this.NodeName = nome;
 	},
 	getNode : function() {
-		return this.node;
+		// deleted
 	},
 	getPropsForSparql : function(forceRet, queryType) {
 		// return properties needed for a SPARQLquery
@@ -1340,6 +1338,16 @@ SemanticNode.prototype = {
         }
         return retprops;
     },
+    getReturnedPropertyItems : function() {
+		var retprops = [];
+		var t = this.propList.length;
+		for (var s = 0; s < t; s++) {
+			if (this.propList[s].getIsReturned()) {
+				retprops.push(this.propList[s]);
+			}
+		}
+		return retprops;
+	},
 	getReturnedPropsFullURI : function() {
 		var retprops = [];
 		var t = this.propList.length;
@@ -1516,16 +1524,7 @@ SemanticNode.prototype = {
 		}
 		throw new Error("Internal error in SemanticNode.setConnection().  Couldn't find node item connection: " + this.getSparqlID() + "->" + connectionUri);
 	},
-	setPList : function(lst) {
-		this.propList = lst;
-		this.node.setPropLabels(this.propList);
-	},
-	setNList : function(lst) {
-		this.nodeList = lst;
-		this.node.setNodeLabels(this.nodeList);
-		// console.log("set node list for " + this.NodeName + ". the list size
-		// was " + lst.length);
-	},
+
 	getPropertyItem : function(i) {
 		return this.propList[i];
 	},
@@ -1590,6 +1589,9 @@ SemanticNode.prototype = {
 		return this.nodeList.indexOf(nodeItem) > -1;
 	},
 
+    getPropList : function() {
+		return this.propList;
+	},
 	callAsyncPropEditor : function (propKeyname, draculaLabel) {
 		var propItem = this.getPropertyByKeyname(propKeyname);
 		this.nodeGrp.asyncPropEditor(propItem, draculaLabel);
@@ -1796,39 +1798,11 @@ OrderElement.prototype = {
 };
 
 /* the semantic node group */
-var SemanticNodeGroup = function(width, height, divName) {
-    var drawFlag = (typeof width !== "undefined");
-
+var SemanticNodeGroup = function() {
 	this.SNodeList = [];
     this.limit = 0;
     this.offset = 0;
     this.orderBy = [];
-    if (drawFlag) {
-        this.graph = new Graph();
-        this.layouter = new Graph.Layout.Spring(this.graph, width, height);
-        this.renderer = new Graph.Renderer.Raphael(divName, this.graph, width,
-                height);
-        this.rangeSetter = '';
-        this.isRangeSetterAsync = false;
-        this.returnNameSetter = '';
-        this.isReturnNameSetterAsync = false;
-        this.asyncPropEditor = function(){alert("Internal error: SemanticNodeGroup asyncPropEditor function is not defined.")};
-        this.asyncSNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncSNodeEditor function is not defined.")};
-        this.asuncSNodeRemover = function() {};  //
-        this.asyncNodeEditor = function(){alert("Internal error: SemanticNodeGroup asyncNodeEditor function is not defined.")};
-        this.asyncLinkBuilder = function(){alert("Internal error: SemanticNodeGroup asyncLinkBuilder function is not defined.")};
-        this.asyncLinkEditor = function(){alert("Internal error: SemanticNodeGroup asyncLinkEditor function is not defined.")};
-
-
-        this.height = height;
-        this.width = width;
-        this.divName = divName;
-        this.drawable = true;    // when I make copies and delete stuff, drawing fails
-	                         // So I set this flag to false and skip drawing.
-	                         // JUSTIN / PAUL TODO.  Untangle this mess.
-    } else {
-        this.drawable = false;
-    }
 
 	this.sparqlNameHash = {};
 
@@ -2012,8 +1986,6 @@ SemanticNodeGroup.prototype = {
 				}
 
 			}
-			// add this to the node we made.
-			currSNode.setPList(propertyList);
 
 		}
 		// add nodeItems. strangely, this can only be done after all the nodes are created.
@@ -2061,8 +2033,6 @@ SemanticNodeGroup.prototype = {
 				}
 
 			}
-			// add this to the node we made.
-			currSNode.setNList(nodeList);
 
 			if (nodeList.length === 0 && currSNode.instanceValue) {
 				currSNode.setIsReturned(true);
@@ -2085,7 +2055,6 @@ SemanticNodeGroup.prototype = {
         }
 		ret.setSparqlConnection(conn);
 
-		ret.drawable = false;     // TODO: automatically make it illegal to draw a copy to get around raphael draw bugs.
 		return ret;
 	},
 
@@ -2368,27 +2337,22 @@ SemanticNodeGroup.prototype = {
 	},
 
 	setAsyncPropEditor : function (func) {
-		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
-		this.asyncPropEditor = func;
+			// deleted
 	},
 	setAsyncNodeEditor : function (func) {
-		// func(nodeItem) will edit the property
-		this.asyncNodeEditor = func;
+			// deleted
 	},
 	setAsyncLinkBuilder : function (func) {
-		// func(nodeItem) will edit the property
-		this.asyncLinkBuilder = func;
+			// deleted
 	},
 	setAsyncLinkEditor : function (func) {
-		// func(nodeItem) will edit the property
-		this.asyncLinkEditor = func;
+			// deleted
 	},
 	setAsyncSNodeEditor : function (func) {
-		// func(propertyItem) will edit the property (e.g. constraints, sparqlID, optional)
-		this.asyncSNodeEditor = func;
+			// deleted
 	},
     setAsyncSNodeRemover : function (func) {
-        this.asyncSNodeRemover = func;
+        	// deleted
     },
 
 	setSparqlConnection : function (sparqlConn) {
@@ -2399,46 +2363,20 @@ SemanticNodeGroup.prototype = {
 		return this.SNodeList.length;
 	},
 	drawNodes : function() {
-		if (! this.drawable) return;
-
-		// draws the Dracula nodes in the list, in no particular order.
-		var t = this.SNodeList.length;
-		var connectionList = [];
-		for (var l = 0; l < t; l++) {
-			// draw each node.
-			this.graph.addExistingNode(this.SNodeList[l].getNode());
-			connectionList = connectionList.concat(this.SNodeList[l].getConnections());
-		}
-
-		var t = connectionList.length;
-		for (var i = 0; i < t; i++) {
-			this.graph.addEdge(connectionList[i].getSrc(), connectionList[i]
-					.getTgt(), {
-				directed : true,
-				label : connectionList[i].getRel()
-			});
-		}
-
-		//this.layouter.layout();    //don't layout every time.  It doesn't work that well.
-		this.renderer.draw();
-
+		// deleted
 	},
 
     // render all unused nodes collapsed
-    renderUnusedNodesCollapsed() {
-        for (var i=0; i < this.SNodeList.length; i++) {
-            if (! this.SNodeList[i].isUsed()) {
-                this.renderNodeCollapsed(this.SNodeList[i]);
-            }
-        }
+    renderUnusedNodesCollapsed : function() {
+        	// deleted
     },
 
-    renderNodeCollapsed(snode) {
-        this.renderer.collapseNode(snode.node);
+    renderNodeCollapsed : function(snode) {
+        	// deleted
     },
 
-    renderNodeUncollapsed(snode) {
-        this.renderer.uncollapseNode(snode.node);
+    renderNodeUncollapsed : function(snode) {
+        	// deleted
     },
 
 	reserveNodeSparqlIDs : function(snode) {
@@ -2622,6 +2560,22 @@ SemanticNodeGroup.prototype = {
 	getSNodeList : function() {
 		return this.SNodeList;
 	},
+
+    getSNodeSparqlIDs : function() {
+        var ret = [];
+        for (var snode of this.SNodeList) {
+            ret.push(snode.getSparqlID());
+        }
+        return ret;
+    },
+
+    getNode : function(i) {
+        return this.SNodeList[i];
+    },
+
+    getNodeCount : function(i) {
+        return this.SNodeList.length;
+    },
 
 	getAllNodeItems : function() {
 		ret = [];
@@ -2890,6 +2844,7 @@ SemanticNodeGroup.prototype = {
 		}
 		return ret;
 	},
+
 
 	getNodeItemParentSNode : function(nodeItem) {
 		for (var i=0; i < this.SNodeList.length; i++) {
@@ -3288,37 +3243,17 @@ SemanticNodeGroup.prototype = {
 				for (var k = 0; k < this.SNodeList.length; k++) {
 					this.SNodeList[k].removeFromNodeList(this.SNodeList[i]);
 				}
-				// remove the node from the graph
-                if (this.drawable) {
-                    this.graph.removeNode(this.SNodeList[i].node.id);
-                }
 
 				// remove the sNode from the nodeGroup
-				this.SNodeList[i].node.hide();
 				this.SNodeList.splice(i, 1);
-
 			}
-		}
-		// console.log("NODES STILL REMAINING AFTER REMOVAL:");
-		for (var i = 0; i < this.SNodeList.length; i++) {
-			// console.log("node: " + this.SNodeList[i].getSparqlID() );
 		}
 
 	},
 
 	clear : function() {
-		// remove all nodes and redraw
-		for (var k = 0; k < this.SNodeList.length; k++) {
-			this.SNodeList[k].node.hide();
-		}
 
 		this.SNodeList = [];
-		// this.graph = new Graph();
-		// this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph,
-		// this.width, this.height);
-		this.graph = new Graph();
-		this.layouter = new Graph.Layout.Spring(this.graph, this.width, this.height);
-		this.renderer = new Graph.Renderer.Raphael(this.divName, this.graph, this.width, this.height);
 		this.sparqlNameHash = {};
 		this.conn = null;
         this.limit = 0;

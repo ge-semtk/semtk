@@ -67,6 +67,7 @@
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/msiclientnodegroupstore',
+                  'sparqlgraph/js/nodegrouprenderer',
                   'sparqlgraph/js/uploadtab',
 
                   // shim
@@ -74,7 +75,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (EditTab, ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, UploadTab) {
+                function (EditTab, ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -82,12 +83,16 @@
 	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
 
 	    	 // set up the node group
-	        gNodeGroup = new SemanticNodeGroup(2000, 1400, 'canvas');
-	        gNodeGroup.setAsyncPropEditor(launchPropertyItemDialog);
-	        gNodeGroup.setAsyncSNodeEditor(launchSNodeItemDialog);
-            gNodeGroup.setAsyncSNodeRemover(snodeRemover);
-	        gNodeGroup.setAsyncLinkBuilder(launchLinkBuilder);
-	        gNodeGroup.setAsyncLinkEditor(launchLinkEditor);
+	        gNodeGroup = new SemanticNodeGroup();
+
+            canvasWrapper = document.getElementById("canvasWrapper");
+            canvasWrapper.innerHTML = "";
+            gRenderer = new NodegroupRenderer(canvasWrapper);
+	        gRenderer.setPropEditorCallback(launchPropertyItemDialog);
+	        gRenderer.setSNodeEditorCallback(launchSNodeItemDialog);
+            gRenderer.setSNodeRemoverCallback(snodeRemover);
+	        gRenderer.setLinkBuilderCallback(launchLinkBuilder);
+	        gRenderer.setLinkEditorCallback(launchLinkEditor);
 
             // edit tab
             gEditTab = new EditTab(document.getElementById("editTreeDiv"),
@@ -279,8 +284,8 @@
         // set up dropping from dynatree
         // "real" system drops get "drop" and
         // dynatree drops are "mouseup" while gDragLabel is set
-        var canvas = document.getElementById("canvas");
-        canvas.addEventListener("mouseup",
+        var canvasWrapper = document.getElementById("canvasWrapper");
+        canvasWrapper.addEventListener("mouseup",
                                 function(e) {
                                     if (gDragLabel != null) {
                                         dropClass(gDragLabel, e.shiftKey);
@@ -373,11 +378,11 @@
     };
 
     // application-specific property editing
-    var launchPropertyItemDialog = function (propItem, draculaLabel) {
-        checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, draculaLabel));
+    var launchPropertyItemDialog = function (propItem, snodeID) {
+        checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, snodeID));
     };
 
-    var launchPropertyItemDialog1 = function (propItem, draculaLabel) {
+    var launchPropertyItemDialog1 = function (propItem, snodeID) {
     	require([ 'sparqlgraph/js/modalitemdialog',
 	            ], function (ModalItemDialog) {
 
@@ -385,7 +390,7 @@
                                             gNodeGroup,
                                             this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, propItem),
                                             propertyItemDialogCallback,
-    				                        {"draculaLabel" : draculaLabel}
+    				                        {"snodeID" : snodeID}
     		                                );
     		dialog.show();
 		});
@@ -425,16 +430,16 @@
     	}
 	};
 
-    var launchLinkEditor = function(snode, nItem, targetSNode, edge) {
-        checkQueryTextUnsavedThen(launchLinkEditor1.bind(this, snode, nItem, targetSNode, edge));
+    var launchLinkEditor = function(snode, nItem, targetSNode) {
+        checkQueryTextUnsavedThen(launchLinkEditor1.bind(this, snode, nItem, targetSNode));
     };
 
-    var launchLinkEditor1 = function(snode, nItem, targetSNode, edge) {
+    var launchLinkEditor1 = function(snode, nItem, targetSNode) {
 
 		require([ 'sparqlgraph/js/modallinkdialog',
 		            ], function (ModalLinkDialog) {
 
-	    		var dialog= new ModalLinkDialog(nItem, snode, targetSNode, gNodeGroup, linkEditorCallback, {"edge" : edge});
+	    		var dialog= new ModalLinkDialog(nItem, snode, targetSNode, gNodeGroup, linkEditorCallback, {});
 	    		dialog.show();
 			});
 	};
@@ -450,14 +455,14 @@
 			snode.removeLink(nItem, targetSNode);
 		}
 
-        nodeGroupChanged(true);
+        nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
 	};
 
-    var launchSNodeItemDialog = function (snodeItem, draculaLabel) {
-        checkQueryTextUnsavedThen(launchSNodeItemDialog1.bind(this, snodeItem, draculaLabel));
+    var launchSNodeItemDialog = function (snodeItem) {
+        checkQueryTextUnsavedThen(launchSNodeItemDialog1.bind(this, snodeItem));
     };
 
-    var launchSNodeItemDialog1 = function (snodeItem, draculaLabel) {
+    var launchSNodeItemDialog1 = function (snodeItem) {
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
@@ -465,7 +470,7 @@
                                             gNodeGroup,
                                             this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, snodeItem),
                                             snodeItemDialogCallback,
-                                            {"draculaLabel" : draculaLabel}
+                                            {} // no data
                                             );
             dialog.show();
         });
@@ -477,7 +482,6 @@
 
     var snodeRemover1 = function (snode) {
         snode.removeFromNodeGroup(false);
-        gNodeGroup.drawNodes();
         nodeGroupChanged(true)
     };
 
@@ -490,7 +494,7 @@
 	var buildLink = function(snode, nItem, rangeSnode) {
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
-
+        var unchangedIDs = gNodeGroup.getSNodeSparqlIDs();
 		if (rangeSnode == null) {
 			var rangeStr = nItem.getUriValueType();
 			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
@@ -498,7 +502,7 @@
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
-        nodeGroupChanged(true);
+        nodeGroupChanged(true, unchangedIDs);
 	};
 
     var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
@@ -514,10 +518,10 @@
         propItem.setIsMarkedForDeletion(delMarker);
 
         gNodeGroup.removeInvalidOrderBy();
-        // PEC TODO: pass draculaLabel through the dialog
-        displayLabelOptions(data.draculaLabel, propItem.getDisplayOptions());
 
-        nodeGroupChanged(true);
+        var unchangedIDs = gNodeGroup.getSNodeSparqlIDs();
+        unchangedIDs.splice(unchangedIDs.indexOf(data.snodeID));
+        nodeGroupChanged(true, unchangedIDs);
     };
 
     var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
@@ -540,11 +544,9 @@
     	// constraints
     	snodeItem.setConstraints(constraintStr);
 
-    	// PEC TODO: pass draculaLabel through the dialog
-    	changeLabelText(data.draculaLabel, snodeItem.getSparqlID());
-    	displayLabelOptions(data.draculaLabel, snodeItem.getDisplayOptions());
-
-        nodeGroupChanged(true);
+        var unchanged = gNodeGroup.getSNodeSparqlIDs();
+        unchanged.splice(unchanged.indexOf(snodeItem.getSparqlID()));
+        nodeGroupChanged(true, unchanged);
     };
 
     // window's onresize event
@@ -935,7 +937,6 @@
                 return;
             }
 
-            drawNodeGroup();
             guiGraphNonEmpty();
             nodeGroupChanged(false);
 
@@ -1334,12 +1335,15 @@
   	};
 
   	var doLayout = function() {
-   		setStatus("Laying out graph...");
-   		gNodeGroup.layouter.layoutLive(gNodeGroup.renderer, setStatus.bind(null, ""));
+        gRenderer.showConfigDialog();
    	};
 
    	var doCollapseUnused = function() {
-        gNodeGroup.renderUnusedNodesCollapsed();
+        gRenderer.drawCollapsingUnused();
+    };
+
+    var doExpandAll = function() {
+        gRenderer.drawExpandAll();
     };
 
     // only used for non-microservice code
@@ -1373,22 +1377,13 @@
     	}
     };
 
-    var drawNodeGroup = function () {
-        // query limit
-        var limit = gNodeGroup.getLimit();
-        var elem = document.getElementById("SGQueryLimit");
-        elem.value = (limit < 1) ? "" : limit;
-
-        // canvas
-        gNodeGroup.drawNodes();
-    }
-
     var getQueryShowNamespace = function () {
     	return document.getElementById("SGQueryNamespace").checked;
     };
 
     // Set nodeGroupChangedFlag and update GUI for new nodegroup
-    var nodeGroupChanged = function(flag) {
+    // unchangeSNodeIDs : snodes who shouldn't be redrawn and potentially moved
+    var nodeGroupChanged = function(flag, unchangedSNodeIDs) {
         gNodeGroupChangedFlag = flag;
 
         guiUpdateGraphRunButton();
@@ -1401,10 +1396,15 @@
             document.getElementById("SGOrderBy").classList.remove("btn-primary");
         }
 
-        if (flag) {
-            gNodeGroup.drawNodes();
-            buildQuery();
+        // check up on LIMIT
+        var limit = gNodeGroup.getLimit();
+        var elem = document.getElementById("SGQueryLimit");
+        elem.value = (limit < 1) ? "" : limit;
 
+        gRenderer.draw(gNodeGroup, unchangedSNodeIDs ? unchangedSNodeIDs : []);
+
+        if (flag) {
+            buildQuery();
         } else {
             gMappingTab.setChangedFlag(false);
             queryTextChanged(false);
@@ -1747,7 +1747,8 @@
     };
 
     var guiGraphNonEmpty = function () {
-        document.getElementById("btnCollapseUnused").disabled = false;
+        document.getElementById("btnExpandAll").disabled = false;
+    	document.getElementById("btnCollapseUnused").disabled = false;
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
@@ -1755,7 +1756,8 @@
     };
 
     var giuGraphEmpty = function () {
-    	document.getElementById("btnCollapseUnused").disabled = true;
+        document.getElementById("btnExpandAll").disabled = true;
+        document.getElementById("btnCollapseUnused").disabled = true;
         document.getElementById("btnLayout").disabled = true;
         document.getElementById("SGOrderBy").disabled = true;
     	guiUpdateGraphRunButton();
@@ -1849,7 +1851,6 @@
 	var clearGraph = function () {
     	gNodeGroup.clear();
         gNodeGroup.setSparqlConnection(gConn);
-        gNodeGroup.drawNodes();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();

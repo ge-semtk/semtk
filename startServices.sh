@@ -60,6 +60,13 @@ echo "=== START MICROSERVICES... ==="
 
 PID_ARRAY=()
 PROC_ARRAY=()
+echo ">> echo <<"
+echo semtk "$SEMTK"
+ls "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar 
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar 
+"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar 
+exit
+
 "$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
 PID_ARRAY+=($!)
 PROC_ARRAY+=("ontologyInfoService");
