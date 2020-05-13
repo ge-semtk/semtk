@@ -42,7 +42,7 @@
 	<link rel="stylesheet" type="text/css" href="../css/modaldialog.css" />
   <link href="../../vis-4.21.0/dist/vis.min.css" rel="stylesheet" type="text/css">
   <link rel="stylesheet" type="text/css" href="../css/visjs.css" />
-  
+
 	<!-- Include local javascript -->
 	<script type="text/javascript" src="./sparqlgraphconfigOss.js"></script>
 
@@ -133,6 +133,25 @@
 			var url = g.help.url.base;
 			window.open(url);
 		}
+
+    doCanvasSize = function(bigFlag) {
+      var percent = 1;
+      if (bigFlag) {
+        var btn = document.getElementById("btnMaximize");
+        var top = btn.getBoundingClientRect().y - document.body.getBoundingClientRect().y;
+        document.documentElement.scrollTop = top;
+      } else {
+        document.documentElement.scrollTop = 0;
+        percent = 0.8;
+      }
+
+      var wrap = document.getElementById("treeCanvasWrapper");
+      var rect = wrap.getBoundingClientRect();
+      var height = window.innerHeight - rect.top - 10;
+
+      wrap.style.height = height * percent +"px";
+    }
+
 	</script>
 
 	<!-- Right justification for spans -->
@@ -238,7 +257,7 @@
 		  <div id="tabs-1">
 			 <!--  ------------   PAGE ----------------  -->
 
-		    <div class="container">
+       <div style="margin: 4ch; width=100%;">
 		    	<br>
 		    	<!------------  button toolbar ------------>
 		   	    <form class="form-search" action="javascript:doSearch()" style="margin-bottom:1ch;">
@@ -252,6 +271,8 @@
 						    <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
 						</td>
 						<td align="right">
+              <button class="btn" id="btnMaximize"   onclick="javascript:doCanvasSize(true); return false;" ><i class="icon-resize-vertical"></i></button>
+              <button class="btn" id="btnNormal"   onclick="javascript:doCanvasSize(false); return false;" ><i class="icon-th-list"></i></button>
               <button class="btn" id="btnExpandAll"   onclick="javascript:doExpandAll(); return false;" disabled><i class="icon-double-angle-up"></i></button>
               <button class="btn" id="btnCollapseUnused"   onclick="javascript:doCollapseUnused(); return false;" disabled><i class="icon-double-angle-down"></i></button>
 							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
@@ -302,9 +323,7 @@
 					<div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
 						<div id="treeDiv" ></div>
 				    </div>
-					<div id="canvasWrapper" class="canvaswrap">
-						<div id="canvas" style="" class="canvas ui-widget-content">
-						</div>
+          <div id="canvasWrapper" class="canvaswrap" style="overflow:hidden">
 					</div>
 
 				</div>
