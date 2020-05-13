@@ -39,17 +39,11 @@ var g = {
 						    See the License for the specific language governing permissions and  \
 						    limitations under the License.  <br>\
 						    <br>\
-						    <b>Patents Pending.</b><br>\
+						    <b>Covered by US Patent: 9,760,614.</b><br>\
+						    <b>Additional Patents Pending.</b><br>\
 						    <br>\
 						    <u>Includes other open source code:</u><br>\
-							<i>Raphael 1.3.1 - JavaScript Vector Library. </i><br>\
-		    				Distributed under MIT license.<br>\
-						    - Copyright (c) 2008 - 2009 Dmitry Baranovskiy (http://raphaeljs.com)  <br>\
-						    <br>\
-							<i>Dracula Graph Layout and Drawing Framework 0.0.3alpha. </i><br>\
-		    				Distributed under MIT license.<br>\
-						    - (c) 2010 Philipp Strathausen <strathausen@gmail.com>, http://strathausen.eu Contributions by Jake Stothard <stothardj@gmail.com>.<br>\
-						    based on the Graph JavaScript framework, version 0.0.1<br>\
+						    - Vis.js (c) Almende B.V. licensed under Apache 2.0 and MIT
 						    - (c) 2006 Aslak Hellesoy <aslak.hellesoy@gmail.com><br>\
 						    - (c) 2006 Dave Hoover <dave.hoover@gmail.com><br>\
 						    <br>\
