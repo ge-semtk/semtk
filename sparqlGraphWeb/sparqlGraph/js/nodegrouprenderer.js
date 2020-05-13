@@ -92,6 +92,10 @@ define([	// properly require.config'ed
 
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
             return {
+                interaction: {
+                    navigationButtons: true,
+                    keyboard: true
+                },
                 configure: {
                     enabled: true,
                     container: configdiv,
@@ -258,7 +262,8 @@ define([	// properly require.config'ed
 
             drawEdges : function() {
                 // edges: update all since it is cheap
-                var notYetUpdatedIDs = this.network.body.data.edges.getIds();
+
+                var edgeIDsToRemove = this.network.body.data.edges.getIds();
                 var edgeData = [];
                 for (var snode of this.nodegroup.getSNodeList()) {
                     for (var nItem of snode.getNodeList()) {
@@ -279,14 +284,20 @@ define([	// properly require.config'ed
                                 edge.font = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
                             }
                             edgeData.push(edge);
-                            notYetUpdatedIDs.splice(notYetUpdatedIDs.indexOf(id));
+
+                            // remove this edge from edgeIDsToRemove
+                            var removeIndex = edgeIDsToRemove.indexOf(id);
+                            if (removeIndex > -1) {
+                                edgeIDsToRemove.splice(removeIndex, 1);
+                            }
                         }
                     }
                 }
+                // update all the new edge data
                 this.network.body.data.edges.update(edgeData);
 
                 // remove any edges no longer in the nodegroup
-                this.network.body.data.edges.remove(notYetUpdatedIDs);
+                this.network.body.data.edges.remove(edgeIDsToRemove);
             },
             //
             // Change an snode to a network node and call nodes.update
