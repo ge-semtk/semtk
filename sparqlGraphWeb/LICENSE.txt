@@ -16,11 +16,4 @@ Patents Pending.
 
 Includes other open source code:
 - Vis.js (C) 2010-2017 Almende B.V. Apache 2.0 and MIT license
-- (c) 2010 Philipp Strathausen , http://strathausen.eu Contributions by Jake Stothard .
-based on the Graph JavaScript framework, version 0.0.1
-- (c) 2006 Aslak Hellesoy
-- (c) 2006 Dave Hoover
 
-Curry - Function currying.
-Licensed under BSD (http://www.opensource.org/licenses/bsd-license.php)
-- Copyright (c) 2008 Ariel Flesler - aflesler(at)gmail(dot)com | http://flesler.blogspot.com
