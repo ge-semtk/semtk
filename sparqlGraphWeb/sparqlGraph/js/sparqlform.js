@@ -723,8 +723,6 @@ require([	'local/sparqlformconfig',
 			else
 				gui.innerHTML = FORM_UNCONSTRAINED_ICON;
 
-			// PEC TODO: I have no idea how to keep the debug canvas display up to date here.
-			//displayLabelOptions(draculaLabel, propItm.getDisplayOptions());
 			showDebug("filterCallback", gNodeGroup);
 			formConstraintsUpdateTable();
 

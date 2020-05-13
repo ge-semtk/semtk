@@ -61,12 +61,6 @@ define([	// properly require.config'ed   bootstrap-modal
 			// save error callback.
 			this.errCallback = typeof optionalFatalErrCallback === "undefined" ? null: optionalFatalErrCallback;
 
-			// create invisible canvas for nodegroup dracula
-			var elemDiv = document.createElement('div');
-			elemDiv.style.display = 'none';
-			elemDiv.id = "canvas_dracula";
-			document.body.appendChild(elemDiv);
-
 			// create empty ontology info
 			this.oInfo = null;
 
@@ -750,8 +744,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			 */
 			clearNodegroup : function () {
 
-				this.nodegroup = new SemanticNodeGroup(1000, 700, "canvas_dracula");
-				this.nodegroup.drawable = false;
+				this.nodegroup = new SemanticNodeGroup();
 			},
 
 			/**

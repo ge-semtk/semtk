@@ -44,7 +44,6 @@ define([	// properly require.config'ed
 
 		var ModalLinkDialog = function(item, sourceSNode, targetSNode, nodegroup, callback, data) {
 			// callback(snode, item, data, optionalFlag, deleteFlag)
-			// data = {draculaLabel: label}
 
 			this.item = item;
 			this.sourceSNode = sourceSNode;

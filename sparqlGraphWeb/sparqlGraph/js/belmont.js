@@ -570,8 +570,7 @@ NodeItem.prototype = {
 	},
 
 	getDisplayOptions : function() {
-		var bitmap = 0;
-		return bitmap;
+		//obsolete
 	},
 	removeSNode : function(nd) {
 		// iterate over the nodes, remove the one that makes no sense.
@@ -835,15 +834,7 @@ PropertyItem.prototype = {
 		}
 	},
 	getDisplayOptions : function() {
-		// give dracula_graph a list of binary display options
-		var bitmap = 0;
-		if (this.getIsReturned())
-			bitmap += 1;
-		if (this.hasConstraints())
-			bitmap += 2;
-        if (this.getIsRuntimeConstrained())
-            bitmap += 4;
-		return bitmap;
+		//obsolete
 	},
 
 	getItemType : function () {
@@ -860,8 +851,7 @@ PropertyItem.prototype = {
 };
 
 /* to set nodes */
-var setNode = function(SNode) { // set up the node itself. this includes the
-								// creation of the node via dracula
+var setNode = function(SNode) { 
     // deleted
 };
 /* we need an intermediate to the arrow generation */
@@ -1592,31 +1582,6 @@ SemanticNode.prototype = {
     getPropList : function() {
 		return this.propList;
 	},
-	callAsyncPropEditor : function (propKeyname, draculaLabel) {
-		var propItem = this.getPropertyByKeyname(propKeyname);
-		this.nodeGrp.asyncPropEditor(propItem, draculaLabel);
-	},
-	callAsyncSNodeEditor : function (draculaLabel) {
-		this.nodeGrp.asyncSNodeEditor(this, draculaLabel);
-	},
-    callAsyncSNodeRemover : function () {
-        this.nodeGrp.asyncSNodeRemover(this);
-    },
-	callAsyncNodeEditor : function (nodeKeyname, draculaLabel) {
-		var nodeItem = this.getNodeItemByKeyname(nodeKeyname);
-		this.nodeGrp.asyncNodeEditor(nodeItem, draculaLabel);
-	},
-	callAsyncLinkBuilder : function(nItemIndex) {
-		var nItem = this.nodeList[nItemIndex];
-		this.nodeGrp.asyncLinkBuilder(this, nItem);
-	},
-	callAsyncLinkEditor : function(nodeKeyname, targetSNode, edge) {
-		var nItem = this.getNodeItemByKeyname(nodeKeyname);
-		this.nodeGrp.asyncLinkEditor(this, nItem, targetSNode, edge);
-	},
-    callAsyncRedrawAll : function() {
-        this.nodeGrp.asyncRedrawAll();
-    },
 
 	toggleReturnType : function(lt) {
 		// synchronous since we're only using alert()
@@ -1629,7 +1594,6 @@ SemanticNode.prototype = {
 			this.setIsReturned(true);
 		}
 
-		displayLabelOptions(lt, this.getDisplayOptions());
 	},
 	removeFromNodeGroup : function(recurse) {
 		// simply call the deletion method of the node group itself.

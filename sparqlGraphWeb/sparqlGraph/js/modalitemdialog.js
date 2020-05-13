@@ -47,7 +47,6 @@ define([	// properly require.config'ed
 			// callback(item, sparqlID, optionalFlag, constraintStr, data)
 			//          where sparqlID and contraintStr could be ""
 			//          optionalFlag can be null, true, or false
-			// data.draculaLabel
 			// data.textId
 			//
 			// GHOST ITEM and NODEGROUP:
