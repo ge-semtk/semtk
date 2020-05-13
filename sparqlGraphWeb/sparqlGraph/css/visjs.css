@@ -1,0 +1,71 @@
+.vis-configuration-wrapper {
+   background-color: #ffffff !important;
+}
+.vis-config-item {
+   background-color: #ffffff !important;
+}
+        
+div.vis-network div.vis-navigation div.vis-button:hover {
+  box-shadow: none !important;
+}
+
+
+div.vis-network div.vis-navigation div.vis-button.vis-up, 
+div.vis-network div.vis-navigation div.vis-button.vis-down, 
+div.vis-network div.vis-navigation div.vis-button.vis-left, 
+div.vis-network div.vis-navigation div.vis-button.vis-right, 
+div.vis-network div.vis-navigation div.vis-button.vis-zoomIn, 
+div.vis-network div.vis-navigation div.vis-button.vis-zoomOut, 
+div.vis-network div.vis-navigation div.vis-button.vis-zoomExtends {
+  background-image: none !important;
+}
+
+div.vis-network div.vis-navigation div.vis-button:hover {
+  box-shadow: none !important;
+}
+
+.vis-button:after {
+  font-size: 1.5em;
+  color: #051e68;
+}
+
+.vis-button:hover:after {
+  font-size: 1.5em;
+  color: #274396;
+  background-color: #edeefc;
+}
+
+.vis-button.vis-up:after {
+  content: "˄";
+  font-weight: bold;
+}
+
+.vis-button.vis-down:after {
+  content: "˅";
+  font-weight: bold;
+}
+
+.vis-button.vis-left:after {
+  content: '˂';
+  font-weight: bold;
+}
+
+.vis-button.vis-right:after {
+  content: "˃";
+  font-weight: bold;
+}
+
+.vis-button.vis-zoomIn:after {
+  content: "+";
+  font-weight: bold;
+}
+
+.vis-button.vis-zoomOut:after {
+  content: "−";
+  font-weight: bold;
+}
+
+.vis-button.vis-zoomExtends:after {
+  content: "⟲";
+  font-weight: bold;
+}
