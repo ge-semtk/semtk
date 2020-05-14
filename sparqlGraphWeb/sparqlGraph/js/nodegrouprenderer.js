@@ -63,8 +63,7 @@ define([	// properly require.config'ed
             this.configdiv.style.background = "rgba(32, 16, 16, 0.2)";
 
             this.canvasdiv = document.createElement("div");
-            this.canvasdiv.style.margin="1ch";
-            this.canvasdiv.id="ExploreTab.canvasdiv_" + Math.floor(Math.random() * 10000).toString();
+            this.canvasdiv.id="NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString();
             this.canvasdiv.style.height="100%";
             this.canvasdiv.style.width="100%";
             canvasdiv.appendChild(this.canvasdiv);
