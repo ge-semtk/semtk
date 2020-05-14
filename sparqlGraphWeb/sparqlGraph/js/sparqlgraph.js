@@ -52,8 +52,8 @@
     // READY FUNCTION
     $('document').ready(function(){
 
-    	document.getElementById("upload-tab-but").disabled = true;
-    	document.getElementById("mapping-tab-but").disabled = true;
+    	setTabButton("upload-tab-but", true);
+    	setTabButton("mapping-tab-but", true);
 
     	// checkBrowser();
 
@@ -100,7 +100,7 @@
 	    								doLoadConnection,
 	    			                    g.service.ingestion.url,
 	    			                    g.service.sparqlQuery.url);
-	    	document.getElementById("upload-tab-but").disabled = false;
+	    	setTabButton("upload-tab-but", false);
 
             // edit tab
             gExploreTab = new ExploreTab( document.getElementById("exploreTreeDiv"),
@@ -108,11 +108,11 @@
                                        document.getElementById("exploreButtonDiv"),
                                        document.getElementById("exploreSearchForm")
                                       );
-            document.getElementById("explore-tab-but").disabled = false;
+            setTabButton("explore-tab-but", false);
 
 	    	// load gMappingTab
 			gMappingTab =  new MappingTab(importoptionsdiv, importcanvasdiv, importcolsdiv, gUploadTab.setDataFile.bind(gUploadTab), logAndAlert );
-	    	document.getElementById("mapping-tab-but").disabled = false;
+	    	setTabButton("mapping-tab-but", false);
 
             // load gExploreTab
 
@@ -1882,34 +1882,33 @@
 		});
 	});
 
+    var setTabButton = function(id, onTabFlag) {
+        var but = this.document.getElementById(id);
+        but.disabled = onTabFlag;
+        if (onTabFlag) {
+            but.classList.remove("semtktabdeselect");
+        } else {
+            but.classList.add("semtktabdeselect");
+        }
+    };
+
 	var tabSparqlGraphActivated = function() {
 		gCurrentTab = g.tab.query;
-        this.document.getElementById("query-tab-but").disabled = true;
-        this.document.getElementById("explore-tab-but").disabled = false;
- 		this.document.getElementById("mapping-tab-but").disabled = false;
-		this.document.getElementById("upload-tab-but").disabled = false;
+        setTabButton("query-tab-but", true);
+        setTabButton("explore-tab-but", false);
+ 		setTabButton("mapping-tab-but", false);
+		setTabButton("upload-tab-but", false);
 
         gExploreTab.stopLayout();
-	};
-
-	var tabEditActivated = function() {
-		gCurrentTab = g.tab.edit;
-
-		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("explore-tab-but").disabled = false;
- 		this.document.getElementById("mapping-tab-but").disabled = false;
-		this.document.getElementById("upload-tab-but").disabled = false;
-        gExploreTab.stopLayout();
-
 	};
 
     var tabExploreActivated = function() {
 		gCurrentTab = g.tab.explore;
 
-		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("explore-tab-but").disabled = true;
-		this.document.getElementById("mapping-tab-but").disabled = false;
-		this.document.getElementById("upload-tab-but").disabled = false;
+		setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", true);
+		setTabButton("mapping-tab-but", false);
+		setTabButton("upload-tab-but", false);
 
         gExploreTab.startLayout();
 	};
@@ -1917,10 +1916,10 @@
     var tabMappingActivated = function() {
 		gCurrentTab = g.tab.mapping;
 
-		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("explore-tab-but").disabled = false;
- 		this.document.getElementById("mapping-tab-but").disabled = true;
-		this.document.getElementById("upload-tab-but").disabled = false;
+		setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", false);
+ 		setTabButton("mapping-tab-but", true);
+		setTabButton("upload-tab-but", false);
 
         gExploreTab.stopLayout();
 
@@ -1933,10 +1932,10 @@
 	var tabUploadActivated = function() {
 		 gCurrentTab = g.tab.upload;
 
-		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("explore-tab-but").disabled = false;
-  		this.document.getElementById("mapping-tab-but").disabled = false;
-		this.document.getElementById("upload-tab-but").disabled = true;
+		setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", false);
+  		setTabButton("mapping-tab-but", false);
+		setTabButton("upload-tab-but", true);
 
         gExploreTab.stopLayout();
 
