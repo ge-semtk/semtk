@@ -56,7 +56,7 @@ div.vis-network div.vis-navigation div.vis-button:hover {
 }
 
 .vis-button.vis-zoomIn:after {
-  content: "+";
+  content: "＋";
   font-weight: bold;
 }
 

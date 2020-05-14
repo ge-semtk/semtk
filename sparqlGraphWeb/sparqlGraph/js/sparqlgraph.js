@@ -35,7 +35,6 @@
 
     var gCurrentTab = g.tab.query ;
 
-    var gEditTab = null;
     var gMappingTab = null;
     var gUploadTab = null;
     var gReady = false;
@@ -60,7 +59,7 @@
 
     	initDynatree();
 
-	    require([ 'sparqlgraph/js/edittab',
+	    require([
                   'sparqlgraph/js/exploretab',
                   'sparqlgraph/js/mappingtab',
                   'sparqlgraph/js/modaliidx',
@@ -75,7 +74,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (EditTab, ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -93,14 +92,6 @@
             gRenderer.setSNodeRemoverCallback(snodeRemover);
 	        gRenderer.setLinkBuilderCallback(launchLinkBuilder);
 	        gRenderer.setLinkEditorCallback(launchLinkEditor);
-
-            // edit tab
-            gEditTab = new EditTab(document.getElementById("editTreeDiv"),
-                                   document.getElementById("editCanvasDiv"),
-                                   document.getElementById("editButtonDiv"),
-                                   document.getElementById("editSearch")
-                                  );
-            document.getElementById("edit-tab-but").disabled = false;
 
 	    	// load gUploadTab
 	    	gUploadTab =  new UploadTab(document.getElementById("uploadtabdiv"),
@@ -592,9 +583,6 @@
     	gOTree.showAll();
 	    gOInfoLoadTime = new Date();
 
-        gEditTab.setOInfo(gOInfo);
-        gEditTab.draw();
-
         gExploreTab.setOInfo(gOInfo);
         gExploreTab.setConn(gConn);
         gExploreTab.draw();
@@ -617,9 +605,6 @@
 	    	clearTree();
 	    	gOInfo = new OntologyInfo();
 		    gOInfoLoadTime = new Date();
-
-            gEditTab.setOInfo(gOInfo);
-            gEditTab.draw();
 
             gExploreTab.setOInfo(gOInfo);
             gExploreTab.setConn(gConn);
@@ -1027,11 +1012,6 @@
         }
 
 
-   	};
-
-   	var activateOntologyEditor = function () {
-        document.getElementById("edit-tab-but").style="";
-        document.getElementById("edit-tab-but").disabled=false;
    	};
 
     var doTest = function () {
@@ -1871,7 +1851,6 @@
     var clearEverything = function () {
     	clearTree();
     	gOInfo = new OntologyInfo();
-        gEditTab.setOInfo(gOInfo);
         gExploreTab.setOInfo(gOInfo);
         gExploreTab.setConn(gConn);
         gExploreTab.draw();
@@ -1906,7 +1885,6 @@
 	var tabSparqlGraphActivated = function() {
 		gCurrentTab = g.tab.query;
         this.document.getElementById("query-tab-but").disabled = true;
-        this.document.getElementById("edit-tab-but").disabled = false;
         this.document.getElementById("explore-tab-but").disabled = false;
  		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = false;
@@ -1918,7 +1896,6 @@
 		gCurrentTab = g.tab.edit;
 
 		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("edit-tab-but").disabled = true;
         this.document.getElementById("explore-tab-but").disabled = false;
  		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = false;
@@ -1930,7 +1907,6 @@
 		gCurrentTab = g.tab.explore;
 
 		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("edit-tab-but").disabled = false;
         this.document.getElementById("explore-tab-but").disabled = true;
 		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = false;
@@ -1942,7 +1918,6 @@
 		gCurrentTab = g.tab.mapping;
 
 		this.document.getElementById("query-tab-but").disabled = false;
-        this.document.getElementById("edit-tab-but").disabled = false;
         this.document.getElementById("explore-tab-but").disabled = false;
  		this.document.getElementById("mapping-tab-but").disabled = true;
 		this.document.getElementById("upload-tab-but").disabled = false;
@@ -1959,7 +1934,6 @@
 		 gCurrentTab = g.tab.upload;
 
 		this.document.getElementById("query-tab-but").disabled = false;
-		this.document.getElementById("edit-tab-but").disabled = false;
         this.document.getElementById("explore-tab-but").disabled = false;
   		this.document.getElementById("mapping-tab-but").disabled = false;
 		this.document.getElementById("upload-tab-but").disabled = true;

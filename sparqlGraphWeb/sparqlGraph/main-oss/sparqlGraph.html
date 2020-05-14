@@ -83,6 +83,12 @@
 		.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:bold;padding:10px 5px;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;border-color:#999;color:#000000;background-color:#9CDEFF;border-top-width:1px;border-bottom-width:1px;}
 		.tg .tg-e3zv{font-weight:bold}
 		.tgembed {width:100%;}
+
+    .container { margin-left: 4ch; margin-right: 4ch; }
+    .semtkcontainer { margin-left: 4ch; margin-right: 4ch; }
+    .semtktab {width=100%; margin-top: 10px;}
+    .semtktabbut {border-radius:4px 4px 0 0;}
+
 	</style>
 
 	<script type="text/javascript">
@@ -186,7 +192,8 @@
 
 		<!---------------  Menu --------------->
 		<div class="primary-navbar nav-collapse">
-			<div class="container">
+      <div class="semtkcontainer">
+        <div style="position:relative; height: 40px;">
 		      <ul class="nav">
 					<li class="dropdown"><a href="#" data-toggle="dropdown">File<i class="icon-chevron-down"></i></a>
 						<ul class="dropdown-menu pull-right">
@@ -228,18 +235,16 @@
 
 				<span id="nav-but-span" class="right">
 
-					<div class="btn-group">
-						<button id="query-tab-but"  class="btn" onclick="anchorTab1.click();" disabled><i class="icon-sitemap"></i> Query</button>
-            <button id="edit-tab-but" class="btn" onclick="anchorTabE.click();" disabled style="display: none;"><i class="icon-edit"></i> Edit Ontology</button>
-						<button id="mapping-tab-but" class="btn" onclick="anchorTab2.click();" disabled><i class="icon-table"></i> Map Input</button>
-						<button id="upload-tab-but" class="btn" onclick="anchorTab3.click();" disabled><i class="icon-cloud-upload"></i> Import</button>
-            <button id="explore-tab-but" class="btn" onclick="anchorTabX.click();" disabled><i class="icon-beaker"></i> Explore</button>
-          </div>
+						<button id="query-tab-but"  class="btn semtktabbut" onclick="anchorTab1.click();" disabled><i class="icon-sitemap"></i> Query</button>
+						<button id="mapping-tab-but" class="btn semtktabbut" onclick="anchorTab2.click();" disabled><i class="icon-table"></i> Map Input</button>
+						<button id="upload-tab-but" class="btn semtktabbut" onclick="anchorTab3.click();" disabled><i class="icon-cloud-upload"></i> Import</button>
+            <button id="explore-tab-but" class="btn semtktabbut" onclick="anchorTabX.click();" disabled><i class="icon-beaker"></i> Explore</button>
 
-				</span>
-			</div>
-		</div>
-	</div>
+        </span>
+      </div>
+      </div>
+    </div>
+  </div>
 
 
 
@@ -248,7 +253,6 @@
 	<div id="tabs">
 		<ul hidden>
 			    <li><a id='anchorTab1' href="#tabs-1">SparqlGraph</a></li>
-			    <li><a id='anchorTabE' href="#tabs-e">Edit Ontology</a></li>
 			    <li><a id='anchorTab2' href="#tabs-2">Map Input</a></li>
 			    <li><a id='anchorTab3' href="#tabs-3">Import</a></li>
           <li><a id='anchorTabX' href="#tabs-x">Explore</a></li>
@@ -257,8 +261,8 @@
 		  <div id="tabs-1">
 			 <!--  ------------   PAGE ----------------  -->
 
-       <div style="margin: 4ch; width=100%;">
-		    	<br>
+       <div class="semtkcontainer semtktab">
+
 		    	<!------------  button toolbar ------------>
 		   	    <form class="form-search" action="javascript:doSearch()" style="margin-bottom:1ch;">
 		 			<table width="100%"><tr>
@@ -353,7 +357,7 @@
                     </table>
                 </section>
 
-                <div id="status" class="container"><br></div>
+                <div id="status"><br></div>
 
 				<!------------  Query Section ------------>
 
@@ -407,47 +411,9 @@
 			</div>
 		</div>
 
-    <!-- Edit Import Tab ------>
-    <div id="tabs-e" >
-      <br>
-			<div class="container">
-		      <!-- button toolbar ------------>
-          <form class="form-search" action="javascript:gEditTab.doSearch()" style="margin-bottom:1ch;">
-            <table width="100%"><tr>
-              <td align="left">
-                <div class="input-append">
-                  <input type="text" id="editSearch" class="input-medium search-query" align="left">
-                  <button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
-                </div>
-                <button class="btn" id="btnEditTreeExpand"   onclick="javascript:gEditTab.doExpand(); return false;" >Expand</button>
-                <button class="btn" id="btnEditTreeCollapse" onclick="javascript:gEditTab.doCollapse(); return false;" >Collapse</button>
-              </td>
-              <td align="right"> </td>
-            </tr></table>
-          </form>
-
-          <div id="editTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
-              <div id="editTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
-                  <div id="editTreeDiv" ></div>
-              </div>
-              <div id="editCanvasWrapper" class="canvaswrap">
-                  <div id="editCanvasDiv" style="" class="canvas ui-widget-content">
-                  </div>
-              </div>
-          </div>
-
-          <section class="module">
-              <div id="editButtonDiv">
-                  <form class="form-horizontal"></form>
-              </div>
-          </section>
-
-        </div>
-    </div>
-
     <!-- Explore Tab ------>
     <div id="tabs-x" >
-			<div style="margin: 4ch; width=100%;">
+      <div class="semtkcontainer semtktab">
           <form id=exploreSearchForm class="form-search"  style="margin-bottom:1ch;">
           </form>
           <div id="exploretTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden; resize: vertical;">
@@ -472,7 +438,8 @@
 
 		<!------  Data Import Tab ------>
 		<div id="tabs-2" >
-			<div class="container">
+      <div class="semtkcontainer semtktab">
+
 				<div id="importdiv">
 					<br>
 					<section class="module collapsible">
@@ -495,7 +462,8 @@
 
 		<!------  Data Upload Tab ------>
 		<div id="tabs-3">
-			<div class="container">
+      <div class="semtkcontainer semtktab">
+
 				<div id="uploaddiv">
 					<br>
 					<section class="module collapsible">

@@ -200,7 +200,8 @@ define([	// properly require.config'ed
             // default behavior is to collapse any unused nodes
             drawCollapsingUnused : function() {
                 for (var snode of this.nodegroup.getSNodeList()) {
-                    this.deleteExpandFlag(snode);
+                    var flag = this.calcExpandNeeded(snode);
+                    this.setExpandFlag(snode, flag);
                 }
                 this.draw(this.nodegroup, []);
             },
@@ -390,18 +391,16 @@ define([	// properly require.config'ed
                 this.network.body.data.nodes.update([{id: snode.getSparqlID(), image: im, shape: "image", size: visjsNodeSize }]);
             },
 
+            calcExpandNeeded : function(snode) {
+                return (snode.getReturnedPropertyItems().length + snode.getConstrainedPropertyItems().length) > 0;
+            },
+
             // figure out if node is expanded
             getExpandFlag : function(snode) {
 
-                // if node has been drawn before
+                // if node has been drawn before, retrieve
                 if (this.nodeCallbackData.hasOwnProperty(snode.getSparqlID())) {
-                    // if we haven't removed the expand flag to force re-computing
-                    if (this.nodeCallbackData[snode.getSparqlID()][0].hasOwnProperty("expandFlag")) {
-                        expandFlag = this.nodeCallbackData[snode.getSparqlID()][0].expandFlag;
-                    } else {
-                        // compute it
-                        expandFlag = snode.getReturnedPropertyItems().length + snode.getConstrainedPropertyItems().length > 0;
-                    }
+                    expandFlag = this.nodeCallbackData[snode.getSparqlID()][0].expandFlag;
                 } else {
                     // first time draw: always expand
                     expandFlag = true;
