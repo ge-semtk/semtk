@@ -193,7 +193,6 @@ define([	// properly require.config'ed
                     var targetSNode = this.nodegroup.getNodeBySparqlID(edge.toId);
                     this.linkEditorCallback(snode, nItem, targetSNode);
                 }
-                console.log(e);
             },
 
             // redraw as if it had been dragged in fresh
