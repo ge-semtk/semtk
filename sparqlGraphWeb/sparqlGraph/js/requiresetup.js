@@ -76,11 +76,12 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 		};
 
 
+
     // special logic to include sparql generation for legacy
     // set gVERSION to 2 or more before requiresetup.js is included to stop this.
-    if (typeof gVERSION == "undefined" || gVERSION < 2) {
-        config.shim['sparqlgraph/js/belmont'].deps.push('sparqlgraph/js/belmont_v1');
-    };
+    //if (typeof gVERSION == "undefined" || gVERSION < 2) {
+    //    config.shim['sparqlgraph/js/belmont'].deps.push('sparqlgraph/js/belmont_v1');
+    //};
 
 	config.shim['sparqlgraph/js/htmlform'] = {
 		deps: [
