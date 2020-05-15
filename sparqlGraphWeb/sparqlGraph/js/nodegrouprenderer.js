@@ -93,7 +93,9 @@ define([	// properly require.config'ed
             return {
                 interaction: {
                     navigationButtons: true,
-                    keyboard: true
+                    keyboard: {
+                        bindToWindow: false
+                    }
                 },
                 configure: {
                     enabled: true,
