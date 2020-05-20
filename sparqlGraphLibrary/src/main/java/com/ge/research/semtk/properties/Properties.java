@@ -1,10 +1,5 @@
 package com.ge.research.semtk.properties;
 
-import java.util.TreeMap;
-
-import javax.annotation.PostConstruct;
-
-import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Problem: I don't know how to validate properties in @spring when...
