@@ -19,6 +19,8 @@
 
   <link href="../../iidx-oss/css/iids.css" rel="stylesheet" type="text/css">
   <link href="../../iidx-oss/css/responsive.css" rel="stylesheet" type="text/css">
+  <link href="../../vis-4.21.0/dist/vis.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" href="../css/visjs.css" />
 
   <!--[if lt IE 9]>
     <link id="theme-ie" href="../../iidx-oss/css/ie.css" rel="stylesheet" type="text/css">
@@ -40,14 +42,15 @@
 	<!-- CSS stuff -->
 	<!--  PEC TODO use the iids modal dialog -->
 	<link rel="stylesheet" type="text/css" href="../css/modaldialog.css" />
-  <link href="../../vis-4.21.0/dist/vis.min.css" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" type="text/css" href="../css/visjs.css" />
+
 
 	<!-- Include local javascript -->
 	<script type="text/javascript" src="./sparqlgraphconfigOss.js"></script>
 
 	<!-- LOGGING  -->
-	<script type="text/javascript" src="KDLEasyLoggerConfigOss.js"></script>
+  <script type="text/javascript" src="../../EasyLogger/GuidMaker.js"></script>
+  <script type="text/javascript" src="../../EasyLogger/KDLEasyLogger.js"></script>
+  <script type="text/javascript" src="KDLEasyLoggerConfigOss.js"></script>
 
 	 <!-- long-term trouble with require.js unless I do this -->
 	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-modal.js"></script>
@@ -251,120 +254,122 @@
 
 	<script src="../../iidx-oss/components/respond/respond.src.js"></script>
 
-	<div id="tabs">
-		<ul hidden>
-			    <li><a id='anchorTab1' href="#tabs-1">SparqlGraph</a></li>
-			    <li><a id='anchorTab2' href="#tabs-2">Map Input</a></li>
-			    <li><a id='anchorTab3' href="#tabs-3">Import</a></li>
+  <div id="tabs">
+    <ul hidden>
+          <li><a id='anchorTab1' href="#tabs-1">SparqlGraph</a></li>
+          <li><a id='anchorTab2' href="#tabs-2">Map Input</a></li>
+          <li><a id='anchorTab3' href="#tabs-3">Import</a></li>
           <li><a id='anchorTabX' href="#tabs-x">Explore</a></li>
 
-		</ul>
-		  <div id="tabs-1">
-			 <!--  ------------   PAGE ----------------  -->
+    </ul>
+      <div id="tabs-1">
+       <!--  ------------   PAGE ----------------  -->
 
-       <div class="semtkcontainer semtktab">
+       <div class="semtkcontainer" style="width=100%; margin-top: 10px;">
 
-		    	<!------------  button toolbar ------------>
-		   	    <form class="form-search" action="javascript:doSearch()" style="margin-bottom:1ch;">
-		 			<table width="100%"><tr>
-		 				<td align="left">
-			 				<div class="input-append">
-				   				<input type="text" id="search" class="input-medium search-query" align="left">
-				   				<button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
-				   			</div>
-		   	    			<button class="btn" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled>Expand</button>
-						    <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
-						</td>
-						<td align="right">
+          <!------------  button toolbar ------------>
+            <form class="form-search" action="javascript:doSearch()" style="margin-bottom:1ch;">
+          <table width="100%"><tr>
+            <td align="left">
+              <div class="input-append">
+                  <input type="text" id="search" class="input-medium search-query" align="left">
+                  <button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
+                </div>
+                  <button class="btn" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled>Expand</button>
+                <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
+            </td>
+            <td align="right">
               <button class="btn" id="btnMaximize"   onclick="javascript:doCanvasSize(true); return false;" ><i class="icon-resize-vertical"></i></button>
               <button class="btn" id="btnNormal"   onclick="javascript:doCanvasSize(false); return false;" ><i class="icon-th-list"></i></button>
               <button class="btn" id="btnExpandAll"   onclick="javascript:doExpandAll(); return false;" disabled><i class="icon-double-angle-up"></i></button>
               <button class="btn" id="btnCollapseUnused"   onclick="javascript:doCollapseUnused(); return false;" disabled><i class="icon-double-angle-down"></i></button>
-							<button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
-							<button class="btn" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
-						</td>
-					</tr></table>
-		   		</form>
+              <button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
+              <button class="btn" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
+            </td>
+          </tr></table>
+          </form>
 
-				<!------------  Tree and canvas ------------>
-				<style>
-					div.outsidewrap {
-						padding:3px;
-						background-color:white;
-						resize:vertical;
-						height:500px;
-						overflow:auto
-					}
-					div.treewrap {
-						border: 1px solid gray;
-						height:100%;
-						width:22%;
-						resize:horizontal;
-						overflow:auto;
-						background-color:white;
-						float:left;
-					}
-					div.canvaswrap {
-						border: 1px solid gray;
-						background-color:white;
-						height:100%; width:auto;
-						overflow:auto;
-					}
-					div.importcanvas {
-						width:75%;
-						resize:horizontal;
-						background-color:white;
-						float:left;
-						overflow:auto;
-						margin-right:1ch;
-					}
-					div.importcols {
-						overflow: auto;
-						background-height:700px;
-					}
-				</style>
+        <!------------  Tree and canvas ------------>
+        <style>
+          div.outsidewrap {
+            padding:3px;
+            background-color:white;
+            resize:vertical;
+            height:500px;
+            overflow:auto
+          }
+          div.treewrap {
+            border: 1px solid gray;
+            height:100%;
+            width:22%;
+            resize:horizontal;
+            overflow:auto;
+            background-color:white;
+            float:left;
+          }
+          div.canvaswrap {
+            border: 1px solid gray;
+            background-color:white;
+            height:100%; width:auto;
+            overflow:auto;
+          }
+          div.importcanvas {
+            width:75%;
+            resize:horizontal;
+            background-color:white;
+            float:left;
+            overflow:auto;
+            margin-right:1ch;
+          }
+          div.importcols {
+            overflow: auto;
+            background-height:700px;
+          }
+        </style>
 
-				<div id="treeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
-					<div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
-						<div id="treeDiv" ></div>
-				    </div>
+        <div id="treeCanvasWrapper" class="outsidewrap" style="overflow:hidden">
+          <div id="treeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
+            <div id="treeDiv" ></div>
+            </div>
           <div id="canvasWrapper" class="canvaswrap" style="overflow:hidden">
-					</div>
+          </div>
 
-				</div>
+        </div>
 
-				<section class="module">
+        <section class="module">
                     <table width="100%">
                         <tbody>
                             <tr>
-							   	<td align="right">
-							   		<form class="form-horizontal" style="margin-bottom: 0px;">
-							 			&nbsp; query:
-							 			<select class="input-medium" id="SGQueryType" onchange="javascript:onchangeQueryType();" >
-							 				<option value="SELECT">select distinct</option>
-							 				<option value="COUNT">count</option>
-							 				<option value="CONSTRUCT">construct</option>
-							 				<option value="DELETE">delete</option>
-							 			</select>
-							   			&nbsp; order: <button class="btn btn-icon" id="SGOrderBy" onclick="javascript:editOrderBy(); return false;"><i class="icon-edit"></i></button>
-							   			&nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeyup="javascript:onkeyupLimit();">
-							   			&nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces
+                  <td align="right">
+                    <form class="form-horizontal" style="margin-bottom: 0px;">
+                    &nbsp; query:
+                    <select class="input-medium" id="SGQueryType" onchange="javascript:onchangeQueryType();" >
+                      <option value="SELECT">select distinct</option>
+                      <option value="COUNT">count</option>
+                      <option value="CONSTRUCT">construct</option>
+                      <option value="DELETE">delete</option>
+                    </select>
+
+                      &nbsp; order: <button class="btn btn-icon" id="SGOrderBy" onclick="javascript:editOrderBy(); return false;"><i class="icon-edit"></i></button>
+                      &nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeyup="javascript:onkeyupLimit();">
+                      &nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces
                                         <button class="btn btn-disabled" id="btnFormCancel"  onclick="javascript:doCancel(); return false;" disabled>Cancel</button>
-							            <button class="btn btn-primary" id="btnGraphExecute" onclick="javascript:runGraph(); return false;" disabled>Run</button>
-						   			</form>
-							   	</td>
-					   		</tr>
+                                        <button class="btn btn-primary" id="btnGraphExecute" onclick="javascript:runGraph(); return false;" disabled>Run</button>
+                    </form>
+                  </td>
+                </tr>
                         </tbody>
                     </table>
                 </section>
 
                 <div id="status"><br></div>
 
-				<!------------  Query Section ------------>
+        <!------------  Query Section ------------>
 
-				<section class="module collapsible in">
-					<header class="module-header">Query:</header>
-					<div class="module-body collapse">
+        <section class="module collapsible in">
+          <header class="module-header">Query:</header>
+
+          <div class="module-body collapse">
 
                         <!------------  Query Text Menu ------------>
                         <div class="btn-group" align="right" style="width: 100%;">
@@ -374,49 +379,52 @@
                             </ul>
                         </div>
 
-				  		<div id="querydiv"  class="control-group" style="width:100%">
-					   		<textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:99%" onkeyup="javascript:onkeyupQueryText();">
-					   		</textarea>
-				  		</div>
+              <div id="querydiv"  class="control-group" style="width:100%">
+                <textarea NAME="Query" id="queryText" ROWS=15 COLS=100 autocomplete="off" class="input-xlarge"  style="width:99%" onkeyup="javascript:onkeyupQueryText();">
+                </textarea>
+              </div>
                         <table width="100%">
                         <tbody>
                             <tr>
-				  				<td align="right">
-							   		<form class="form-horizontal" style="margin-bottom: 0px;">
-								   		<button class='btn btn-primary' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>Run</button>
-							   		</form>
-							   	</td>
-					   		</tr>
+                  <td align="right">
+                    <form class="form-horizontal" style="margin-bottom: 0px;">
+                      <button class='btn btn-primary' id="btnQueryRun"   onclick="javascript:runQuery(); return false;"   disabled>Run</button>
+                    </form>
+                  </td>
+                </tr>
                         </tbody>
                     </table>
-				  	</div>
-		  		</section>
+            </div>
+          </section>
 
-		  		<br>
+          <br>
 
-		  		<!------------  Results Section ------------>
-				<section id="resultsSection" class="module collapsible in">
-					<header class="module-header">Results</header>
-					<!--  div class="btn-group" align="right" style="width:100%">
-		               <button class="btn dropdown-toggle disabled" data-toggle="dropdown" id="btnDownloadCSV"><i class="icon-chevron-down" disabled></i></button>
-		               <ul class="dropdown-menu pull-right">
-		                 <li><a href="javascript:doDownloadCSV();">Save as CSV</a></li>
-		               </ul>
-		            </div -->
-					<div id="resultsDiv" class="module-body collapse in" style="width:100%">
-						<p id="resultsParagraph"><table id='resultsTable'></table>
-					</div>
-				</section>
-				<br>
+          <!------------  Results Section ------------>
+        <section id="resultsSection" class="module collapsible in">
+          <header class="module-header">Results</header>
+          <!--  div class="btn-group" align="right" style="width:100%">
+                   <button class="btn dropdown-toggle disabled" data-toggle="dropdown" id="btnDownloadCSV"><i class="icon-chevron-down" disabled></i></button>
+                   <ul class="dropdown-menu pull-right">
+                     <li><a href="javascript:doDownloadCSV();">Save as CSV</a></li>
+                   </ul>
+                </div -->
+          <div id="resultsDiv" class="module-body collapse in" style="width:100%">
+            <p id="resultsParagraph"><table id='resultsTable'></table>
+          </div>
+        </section>
+        <br>
 
-			</div>
-		</div>
+      </div>
+    </div>
+
 
     <!-- Explore Tab ------>
     <div id="tabs-x" >
       <div class="semtkcontainer semtktab">
+        <!------------  button toolbar ------------>
           <form id=exploreSearchForm class="form-search"  style="margin-bottom:1ch;">
           </form>
+
           <div id="exploretTreeCanvasWrapper" class="outsidewrap" style="overflow:hidden; resize: vertical;">
               <div id="exploreTreeWrapper"  class="treewrap ui-corner-all ui-widget-content" >
                   <div id="exploreTreeDiv" ></div>
@@ -437,60 +445,65 @@
     </div>
 
 
-		<!------  Data Import Tab ------>
-		<div id="tabs-2" >
+    <!------  Data Import Tab ------>
+    <div id="tabs-2" >
       <div class="semtkcontainer semtktab">
+        <div id="importdiv">
+          <br>
+          <section class="module collapsible">
+              <header class="module-header">Options</header>
+            <div id="importoptionsdiv" class="module-body collapse">
+            </div>
+            </section>
+          <br>
+            <section class="module">
+              <div id="mappingtabdiv" class="module-body">
+                <div id="importcanvasdiv" class="importcanvas">
+                </div>
+                <div id="importcolsdiv" class="importcols">
+                </div>
+              </div>
+            </section>
+        </div>
+      </div>
+    </div>
 
-				<div id="importdiv">
-					<br>
-					<section class="module collapsible">
-				    	<header class="module-header">Options</header>
-						<div id="importoptionsdiv" class="module-body collapse">
-						</div>
-				    </section>
-					<br>
-				    <section class="module">
-				      <div id="mappingtabdiv" class="module-body">
-					    	<div id="importcanvasdiv" class="importcanvas">
-					    	</div>
-					    	<div id="importcolsdiv" class="importcols">
-					    	</div>
-				      </div>
-				    </section>
-				</div>
-			</div>
-		</div>
-
-		<!------  Data Upload Tab ------>
-		<div id="tabs-3">
+    <!------  Data Upload Tab ------>
+    <div id="tabs-3">
       <div class="semtkcontainer semtktab">
-
-				<div id="uploaddiv">
-					<br>
-					<section class="module collapsible">
-				    	<header class="module-header">Graph Tools</header>
-						<div id="uploadtoolsdiv" class="module-body collapse">
-						</div>
-				    </section>
+        <div id="uploaddiv">
+          <br>
+          <section class="module collapsible">
+              <header class="module-header">Graph Tools</header>
+            <div id="uploadtoolsdiv" class="module-body collapse">
+            </div>
+            </section>
             <br>
             <section class="module collapsible">
-				    	<header class="module-header">Triplestore Tools</header>
-						<div id="uploadmiscdiv" class="module-body collapse">
-						</div>
-				    </section>
-					<br>
-				    <section class="module">
-						<div id="uploadtabdiv" class="module-body">
-						</div>
-				    </section>
-				</div>
-			</div>
-		</div>
-	</div>
+              <header class="module-header">Triplestore Tools</header>
+            <div id="uploadmiscdiv" class="module-body collapse">
+            </div>
+            </section>
+          <br>
+            <section class="module">
+            <div id="uploadtabdiv" class="module-body">
+            </div>
+            </section>
+        </div>
+      </div>
+    </div>
+  </div>
 
-	<script type="text/javascript">
-	// Things that need to be done after HTML is all loaded
+  <script type="text/javascript">
+  // Things that need to be done after HTML is all loaded
 
+  // Paul's html5 voodoo:  to allow json files to be dropped
+  var dropbox = document.getElementById("treeCanvasWrapper")
+  dropbox.addEventListener("dragenter", noOpHandler, false);
+  dropbox.addEventListener("dragexit",  noOpHandler, false);
+  dropbox.addEventListener("dragover",  noOpHandler, false);
+  dropbox.addEventListener("drop",      fileDrop, false);
+  // End html5 voodoo
 
     require(['modules'], function() {
     $('.module.collapsible').collapsible();
@@ -507,6 +520,7 @@
 
     $('body').find('i[rel=tooltip]').tooltip();
     </script>
+
 
   <div><footer class="module-footer"><small><center>
 		<a href="https://github.com/ge-semtk/semtk" target="_blank">Github</a>
