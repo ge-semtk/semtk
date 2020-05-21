@@ -2,7 +2,7 @@ SPARQLgraph
 Knowledge Discovery Lab
 GE Research, Niskayuna
 
-Copyright � 2014-2016 General Electric Company.
+Copyright � 2014-2020 General Electric Company.
 Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,3 +16,6 @@ Other Patents Pending.
 
 Includes other open source code:
 - vis.js (C) 2010-2017 Almende B.V.  Licensed under MIT and Apache 2.0
+  See https://github/visjs/vis-network/blob/master/LICENSE-MIT
+- jgit  Licensed under Eclipse Distribution License v1.0.  
+  See https://github.com/eclipse/jgit/blob/master/LICENSE 
