@@ -632,7 +632,8 @@
 	    	clearEverything();
 
 	    	// Get connection info from dialog return value
-	    	gConn = connProfile;
+	    	setConn(connProfile);
+
 	    	gNodeGroup.setSparqlConnection(gConn);
 
 	    	if (gConn != null) {
@@ -649,6 +650,11 @@
     	});
     };
 
+    var setConn = function (conn) {
+        gConn = conn;
+        var connStr = (gConn != null && gConn.getName() != null) ? ("<b>Conn: </b>" + gConn.getName()) : "";
+        document.getElementById("spanConnection").innerHTML = connStr;
+    }
     var getQueryClientOrInterface = function() {
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
@@ -1854,7 +1860,7 @@
         gExploreTab.setOInfo(gOInfo);
         gExploreTab.setConn(gConn);
         gExploreTab.draw();
-    	gConn = null;
+    	setConn(null);
 	    gOInfoLoadTime = new Date();
     };
 
