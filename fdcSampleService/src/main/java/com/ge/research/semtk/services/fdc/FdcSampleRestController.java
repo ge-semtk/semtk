@@ -25,10 +25,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 import javax.annotation.PostConstruct;
 
+import org.eclipse.jgit.api.CloneCommand;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PullCommand;
+import org.eclipse.jgit.api.PullResult;
+import org.eclipse.jgit.api.TransportConfigCallback;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.Transport;
+import org.eclipse.jgit.util.FS;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -36,9 +49,13 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.fdc.FdcProperties;
 import com.ge.research.semtk.springutilib.requests.FdcRequest;
+import com.ge.research.semtk.springutillib.controllers.GitAndNodegroupFDCRestController;
 import com.ge.research.semtk.springutillib.controllers.NodegroupProviderRestController;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -48,7 +65,7 @@ import io.swagger.annotations.ApiOperation;
 @CrossOrigin
 @RestController
 @RequestMapping("/fdcSample")
-public class FdcSampleRestController extends NodegroupProviderRestController {
+public class FdcSampleRestController extends GitAndNodegroupFDCRestController {
 	private static final String SERVICE_NAME = "fdcSample";
 	@Autowired
 	FdcProperties fdc_props;
@@ -195,6 +212,9 @@ public class FdcSampleRestController extends NodegroupProviderRestController {
 		    return res.toJson();
 		}  
 	}
+	
+	
+	
 	
 	// https://rosettacode.org/wiki/Haversine_formula#Java
 	public static final double R = 6372.8; // In kilometers

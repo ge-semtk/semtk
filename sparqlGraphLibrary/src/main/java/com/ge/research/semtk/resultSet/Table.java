@@ -18,7 +18,10 @@
 
 package com.ge.research.semtk.resultSet;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,10 +31,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -101,6 +108,41 @@ public class Table {
 		
 	}
 	
+
+	/**
+	 * Create from a csv file
+	 * @param filename
+	 * @return
+	 * @throws Exception
+	 */
+	public static Table fromCsvFile(String filename) throws Exception {
+		String [] colnames = null;
+		String [] coltypes = null;
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		
+		Reader in = new FileReader(filename);
+	    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
+	    
+	    for (CSVRecord record : records) {
+	    	if (colnames == null) {
+	    		colnames = new String[record.size()];
+	    		coltypes = new String[record.size()];
+	    		int i=0;
+		        for (String cell : record) {
+		        	colnames[i] = cell;
+		        	coltypes[i] = "unknown";
+		        	i++;
+		        }
+	    	} else {
+	    		ArrayList<String> row = new ArrayList<String>();
+	    		for (String cell : record) {
+	    			row.add(cell);
+		        }
+	    		rows.add(row);
+	    	}
+	    }
+	    return new Table(colnames, coltypes, rows);
+	}
 	private void hashColumnPositions() {
 		int colNum = 0;
 		// add all of the columns to the hash so we can make lookups faster.
@@ -429,7 +471,7 @@ public class Table {
 		Arrays.sort(myCols);
 		Arrays.sort(otherCols);
 		if (! Arrays.equals(myCols, otherCols)) {
-			throw new Exception("Can not append tables with different columns");
+			throw new Exception("Can not append tables with different columns.\nExpected: " + String.join(",", myCols) + "\nFound: " + String.join(",", otherCols));
 		}
 		
 		// build   map(myCol) = otherCol
