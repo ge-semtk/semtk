@@ -2302,7 +2302,7 @@ public class NodeGroup {
 	public Node addNodeInstance(String classUri, OntologyInfo oInfo, String instanceURI) throws Exception {
 		Node node = this.addNode(classUri, oInfo);
 		if (instanceURI != null && ! instanceURI.isEmpty()) {
-			node.addValueConstraint(ValueConstraint.buildValuesConstraint(node, instanceURI));
+			node.addValueConstraint(ValueConstraint.buildFilterInConstraint(node, instanceURI));
 		}
 		return node;
 	}

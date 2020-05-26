@@ -482,7 +482,7 @@ public class SparqlToXUtils {
 			throw new Exception("class values list is empty");
 		}
 		
-		sClassValuesClause =  ValueConstraint.buildValuesConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) ;
+		sClassValuesClause =  ValueConstraint.buildFilterInConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) ;
 
 		// Start the query
 		if (countQuery) {

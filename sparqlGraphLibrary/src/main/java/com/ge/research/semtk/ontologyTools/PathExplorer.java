@@ -190,7 +190,7 @@ public class PathExplorer {
 						// add the path
 						Node added = ng.addPath(pathList.get(i), anchor, oInfo);
 						if (endInstanceList.get(i).instanceUri != null) {
-							added.addValueConstraint(ValueConstraint.buildValuesConstraint(added, endInstanceList.get(i).instanceUri));
+							added.addValueConstraint(ValueConstraint.buildFilterInConstraint(added, endInstanceList.get(i).instanceUri));
 						}
 						
 						// try adding all the missing instances
@@ -342,7 +342,7 @@ public class PathExplorer {
 			ngTemp.addUniqueInstanceConstraint(nodeAdded);
 		} else {
 			// else constrain node to instance early (before we check data)
-			nodeAdded.addValueConstraint(ValueConstraint.buildValuesConstraint(nodeAdded, endClassInstanceUri));
+			nodeAdded.addValueConstraint(ValueConstraint.buildFilterInConstraint(nodeAdded, endClassInstanceUri));
 		}
 		
 		// see if any exist in instance data
@@ -392,7 +392,7 @@ public class PathExplorer {
 						PathExplorer.cache.get(this.cacheKey).delete(ngKey);
 						ng = null;
 					} else {
-						n.addValueConstraint(ValueConstraint.buildValuesConstraint(n, classInstanceList.get(i).instanceUri));
+						n.addValueConstraint(ValueConstraint.buildFilterInConstraint(n, classInstanceList.get(i).instanceUri));
 					}
 				}
 			}

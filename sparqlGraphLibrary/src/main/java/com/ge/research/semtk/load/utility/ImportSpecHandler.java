@@ -385,7 +385,7 @@ public class ImportSpecHandler {
 				Node node = lookupNg.getNodeBySparqlID(map.getNodeSparqlID());
 				
 				if (map.isNode()) {
-					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(node, sample)));
+					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(node, sample)));
 				} else {
 					PropertyItem propItem = node.getPropertyByURIRelation(map.getPropURI());
 					
@@ -396,7 +396,7 @@ public class ImportSpecHandler {
 					}
 					
 					// apply value constraint so it isn't pruned
-					propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(propItem, sample)));
+					propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(propItem, sample)));
 				}
 			}
 			
@@ -754,11 +754,11 @@ public class ImportSpecHandler {
 						builtString = this.oInfo.getMatchingEnumeration(node.getFullUriName(), builtString);
 					}
 					
-					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(node, builtString)));
+					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(node, builtString)));
 					
 				} else {
 					PropertyItem prop = node.getPropertyByURIRelation(mapping.getPropURI());
-					prop.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint(prop, builtString)));
+					prop.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(prop, builtString)));
 				}
 			}
 			

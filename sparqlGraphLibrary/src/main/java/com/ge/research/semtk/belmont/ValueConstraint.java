@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.jsonldjava.shaded.com.google.common.base.Strings;
+
 public class ValueConstraint {
 	// list of strings representing constraint clauses.
 	protected String constraint = null;
@@ -227,9 +229,8 @@ public class ValueConstraint {
 			valType.validate(v);
 			retval.append(valType.buildRDF11ValueString(v) + " ");
 			
-			// for strings only:  
+			// for strings and numbers:  
 			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
-			// NOW ADDED FOR NUMERIC TYPES DUE TO INCONSISTENCIES IN NEPTUNE
 			if (valType == XSDSupportedType.STRING ||
 				valType.numericOperationAvailable()) {
 				retval.append(valType.buildTypedValueString(v) + " ");   
@@ -239,6 +240,72 @@ public class ValueConstraint {
 		retval.append(" }");
 		
 		return retval.toString();
+	}
+	
+	/**
+	 * Build a FILTER IN clause
+	 * @param sparqlId
+	 * @param valList
+	 * @param valType
+	 * @return
+	 * @throws Exception
+	 */
+	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+		
+		
+		// FILTER (?trNum IN ( 1278, 1279 )) 
+		
+		ArrayList<String> list = new ArrayList<String>();
+		// go through each passed value and add them.
+		for(String v : valList){
+			v = BelmontUtil.sparqlSafe(v);
+			valType.validate(v);
+			list.add(valType.buildRDF11ValueString(v));
+			
+			// for strings only:  
+			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
+			// TODO: remove this some day
+			if (valType == XSDSupportedType.STRING ) {
+				list.add(valType.buildTypedValueString(v));   
+			}
+		}
+		
+		return "FILTER (" + sparqlId + " IN ( " + String.join(", ", list) + ")) ";
+	}
+	
+	/**
+	 * Build a FILTER IN clause
+	 * @param sparqlId
+	 * @param valList
+	 * @param valType
+	 * @return
+	 * @throws Exception
+	 */
+	public static String buildFilterInConstraint(String sparqlId, String val, XSDSupportedType valType) throws Exception{
+		
+		
+		// FILTER (?trNum IN ( 1278 )) 
+		
+		ArrayList<String> list = new ArrayList<String>();
+		list.add(val);
+		return ValueConstraint.buildFilterInConstraint(sparqlId, list, valType);
+		
+	}
+	
+	public static String buildFilterInConstraint(Returnable item, ArrayList<String> valList) throws Exception{
+
+		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), valList, item.getValueType());
+
+	}
+	
+	public static String buildFilterInConstraint(Returnable item, String val) throws Exception{
+
+
+
+		ArrayList<String> list = new ArrayList<String>();
+		list.add(val);
+		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), list, item.getValueType());
+
 	}
 	
 	/**
