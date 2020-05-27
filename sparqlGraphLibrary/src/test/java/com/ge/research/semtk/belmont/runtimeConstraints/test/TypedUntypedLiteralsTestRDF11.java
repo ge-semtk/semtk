@@ -35,6 +35,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Test typed and untyped literals.
@@ -90,7 +91,7 @@ public class TypedUntypedLiteralsTestRDF11 {
 				"INSERT DATA " + 
 				"  { GRAPH <" + TestGraph.getSei().getGraph() + ">   { " + 
 				"        <http:/test/book1> a                                         <http://semtk/junit/book#Book> . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#title>           \"Typed Raw SPARQL\"^^XMLSchema:string . " + 
+				"        <http:/test/book1> <http://semtk/junit/book#title>           \"OLD Typed Raw SPARQL\"^^XMLSchema:string . " + 
 				"        <http:/test/book1> <http://semtk/junit/book#publishDate>     \"1961-01-01\"^^XMLSchema:date . " + 
 				"        <http:/test/book1> <http://semtk/junit/book#publishDateTime> \"1961-01-01T01:00:00\"^^XMLSchema:dateTime . " + 
 				"        <http:/test/book1> <http://semtk/junit/book#publishTime>     \"1:00:00\"^^XMLSchema:time . " + 
@@ -98,7 +99,7 @@ public class TypedUntypedLiteralsTestRDF11 {
 				"        <http:/test/book1> <http://semtk/junit/book#price>           \"10.99\"^^XMLSchema:double . " + 
 
 				"        <http:/test/book2> a                                         <http://semtk/junit/book#Book> . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#title>           \"Untyped Raw SPARQL\" . " + 
+				"        <http:/test/book2> <http://semtk/junit/book#title>           \"NEW Untyped Raw SPARQL\" . " + 
 				"        <http:/test/book2> <http://semtk/junit/book#publishDate>     \"1962-02-02\"^^XMLSchema:date . " + 
 				"        <http:/test/book2> <http://semtk/junit/book#publishDateTime> \"1962-02-02T02:00:00\"^^XMLSchema:dateTime . " + 
 				"        <http:/test/book2> <http://semtk/junit/book#publishTime>     \"2:00:00\"^^XMLSchema:time . " + 
@@ -106,6 +107,8 @@ public class TypedUntypedLiteralsTestRDF11 {
 				"        <http:/test/book2> <http://semtk/junit/book#price>           20.99 . " + 
 
 				"      }  } ";
+		
+				// THIRD BOOK IS INGESTED
 		
 		TestGraph.getSei().executeQueryAndConfirm(insertQuery);
 		TestGraph.ingest(c, "/book.json", "/book.csv");
@@ -119,15 +122,16 @@ public class TypedUntypedLiteralsTestRDF11 {
 	
 	@Test
 	public void testStringMatches() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?title", 
 				SupportedOperations.MATCHES, 
-				new String[] {"Typed Raw SPARQL","Untyped Raw SPARQL","Ingested"});
+				new String[] {"OLD Typed Raw SPARQL","NEW Untyped Raw SPARQL","Ingested"});
 	}
+	
 	
 	@Test
 	public void testStringRegex() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?title", 
 				SupportedOperations.REGEX, 
 				new String[] {"e"});
@@ -135,14 +139,14 @@ public class TypedUntypedLiteralsTestRDF11 {
 	
 	@Test
 	public void testDateMatches() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?publishDate", 
 				SupportedOperations.MATCHES, 
 				new String[] {"1961-01-01","1962-02-02","1963-03-03"});
 	}
 	@Test
 	public void testDateGreater() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?publishDate", 
 				SupportedOperations.GREATERTHAN, 
 				new String[] {"1960-01-01"});
@@ -150,14 +154,14 @@ public class TypedUntypedLiteralsTestRDF11 {
 	
 	@Test
 	public void testDateTimeMatches() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?publishDateTime", 
 				SupportedOperations.MATCHES, 
 				new String[] {"1961-01-01T01:00:00","1962-02-02T02:00:00","1963-03-03T03:00:00"});
 	}
 	@Test
 	public void testDateTimeGreater() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?publishDateTime", 
 				SupportedOperations.GREATERTHAN, 
 				new String[] {"1960-01-01T01:00:00"});
@@ -167,14 +171,14 @@ public class TypedUntypedLiteralsTestRDF11 {
 //
 //	@Test
 //	public void testTimeMatches() throws Exception {
-//		queryAllThreeBooks(
+//		runQueryTest(
 //				"?publishTime", 
 //				SupportedOperations.MATCHES, 
 //				new String[] {"01:00:00","02:00:00","03:00:00"});
 //	}
 //	@Test
 //	public void testTimeGreater() throws Exception {
-//		queryAllThreeBooks(
+//		runQueryTest(
 //				"?publishTime", 
 //				SupportedOperations.GREATERTHAN, 
 //				new String[] {"00:00:01"});
@@ -182,28 +186,28 @@ public class TypedUntypedLiteralsTestRDF11 {
 	
 	@Test
 	public void testIntMatches() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?pages", 
 				SupportedOperations.MATCHES, 
 				new String[] {"100","200","300"});
 	}
 	@Test
 	public void testIntGreater() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?pages", 
 				SupportedOperations.GREATERTHAN, 
 				new String[] {"10"});
 	}
 	@Test
 	public void testPriceMatches() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?price", 
 				SupportedOperations.MATCHES, 
 				new String[] {"10.99","20.99","30.99"});
 	}
 	@Test
 	public void testPriceGreater() throws Exception {
-		queryAllThreeBooks(
+		testMatchesBoth(
 				"?price", 
 				SupportedOperations.GREATERTHAN, 
 				new String[] {"9.99"});
@@ -216,13 +220,30 @@ public class TypedUntypedLiteralsTestRDF11 {
 	 * @param operandList
 	 * @throws Exception
 	 */
-	private void queryAllThreeBooks(String sparqlID, SupportedOperations operator, String [] operandList) throws Exception {
+	private void testMatchesBoth(String sparqlID, SupportedOperations operator, String [] operandList) throws Exception {
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "/book.json");
+		String constraintSparql = TestGraph.addRuntimeConstraint(sgjson, sparqlID, operator, operandList);
+		
+		LocalLogger.logToStdOut(constraintSparql);
+		// run the query
+		Table tab = TestGraph.execTableSelect(sgjson);
+		assertEquals("With runtime constraint: \n" + constraintSparql + "\nQuery did not return all three books: \n" + tab.toCSVString(), 3, tab.getNumRows());
+	}
+	
+	/**
+	 * Build runtime constraint and run query, expecting all three books to come back
+	 * @param sparqlID
+	 * @param operator
+	 * @param operandList
+	 * @throws Exception
+	 */
+	private void testMatchesOne(String sparqlID, SupportedOperations operator, String [] operandList) throws Exception {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "/book.json");
 		String constraintSparql = TestGraph.addRuntimeConstraint(sgjson, sparqlID, operator, operandList);
 		
 		// run the query
 		Table tab = TestGraph.execTableSelect(sgjson);
-		assertEquals("With runtime constraint: \n" + constraintSparql + "\nQuery did not return all three books: \n" + tab.toCSVString(), 3, tab.getNumRows());
+		assertEquals("With runtime constraint: \n" + constraintSparql + "\nQuery did not return exactly 1 book: \n" + tab.toCSVString(), 1, tab.getNumRows());
 	}
 	
 	

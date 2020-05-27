@@ -300,8 +300,8 @@ public class Table {
 	/**
 	 * Return the values for a particular column, removing duplicates
 	 */
-	public String[] getColumnUniqueValues(String columnName){
-		return getColumnUniqueValues(getColumnIndex(columnName));
+	public String[] getColumnUniqueValues(String columnName) throws Exception {
+		return getColumnUniqueValues(getColumnIndexOrError(columnName));
 	}
 	
 	/**
@@ -349,16 +349,18 @@ public class Table {
 	 */
 	public int getColumnIndex(String colName){
 		int retval = -1;
-		if(this.columnPositionInfo.get(colName) != null){
-			retval = this.columnPositionInfo.get(colName);
+		String name = colName.startsWith("?") ? colName.substring(1) : colName;
+		
+		if(this.columnPositionInfo.get(name) != null){
+			retval = this.columnPositionInfo.get(name);
 		}		
 		return retval;
 	}
 	
 	private int getColumnIndexOrError(String colName) throws Exception {
-		if(this.columnPositionInfo.get(colName) != null){
-			return this.columnPositionInfo.get(colName);
-			
+		int pos = this.getColumnIndex(colName);
+		if(pos > -1){
+			return pos;
 		} else {
 			throw new Exception ("Can't find column in table: " + colName);
 		}
