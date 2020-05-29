@@ -3,17 +3,17 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>2.1.1-SNAPSHOT</version>
+		<version>2.2.0.RELEASE</version>
 	</parent>
 	<artifactId>standaloneExecutables</artifactId>
-	<version>2.1.1-SNAPSHOT</version>
+	<version>2.2.0.RELEASE</version>
 
 	<dependencies>
 
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
-			<version>2.1.1-SNAPSHOT</version>
+			<version>2.2.0.RELEASE</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->

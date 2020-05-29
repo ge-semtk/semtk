@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>2.1.1-SNAPSHOT</version>
+		<version>2.2.0.RELEASE</version>
 	</parent>
 	<artifactId>sparqlGraphLibrary</artifactId>
 
@@ -22,6 +22,7 @@
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
+			<version>1.1.1</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
