@@ -19,12 +19,12 @@
 		<repository>
 			<id>semtk</id>
 			<name>build.GE Artifactory-releases</name>
-			<url>https://devcloud.swcoe.ge.com/artifactory/UMKGF</url>
+			<url>https://artifactory.build.ge.com/artifactory/UMKGF</url>
 		</repository>
 		<snapshotRepository>
 			<id>semtk-snapshots</id>
 			<name>build.GE Artifactory-snapshots</name>
-			<url>https://devcloud.swcoe.ge.com/artifactory/UMKGF-SNAPSHOT</url>
+			<url>https://artifactory.build.ge.com/artifactory/UMKGF-SNAPSHOT</url>
 		</snapshotRepository>
 	</distributionManagement>
 
