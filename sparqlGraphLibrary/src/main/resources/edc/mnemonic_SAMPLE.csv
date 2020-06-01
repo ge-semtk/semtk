@@ -1,0 +1,9 @@
+mnemonic,triggerclassvalue,triggerclasssource,genclienttype,genprotocol,genurl,genport,genendpoint,execclienttype,execprotocol,execurl,execport,execendpoint,constraintname,constraintvarclass,constraintvarkeyname,paramclass,paramkeyname,paramsparqlid,restrictclass,restrictoperator,restrictoperand
+SampleMnemonic,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#TimeSeriesValue,http://research.ge.com/project/timeseries#Table,com.ge.research.semtk.edcquerygen.client.RDBTimeCoherentTimeSeriesQueryGenClient,http,myserver,12054,edcQueryGeneration/hive/generateTimeSeriesQueries,com.ge.research.semtk.edc.client.HiveClient,http,myserver,12055,hiveService/queryHive,timeSeriesRow,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#TimeSeriesGenerator,variableName,,,,,,
+SampleMnemonic,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#TimeSeriesGenerator,tag,TagName,,,
+SampleMnemonic,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#TimeSeriesGenerator,variableName,VarName,,,
+SampleMnemonic,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#Location,databaseServer,DatabaseServer,,,
+SampleMnemonic,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#Location,database,Database,,,
+SampleMnemonic,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#Location,tableName,TableName,,,
+SampleMnemonic,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#DateTimeMarker,timeStampColumnList,TimeStampColumnList,,,
+SampleMnemonic,,,,,,,,,,,,,,,,,,,http://research.ge.com/kdl/sparqlgraph/externalDataConnection#Location,<=,50
