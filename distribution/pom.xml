@@ -116,7 +116,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
-			  <finalName>semtk-opensource-${pom.version}</finalName>
+			  <finalName>semtk-opensource-${project.version}</finalName>
 			  <tarLongFileMode>posix</tarLongFileMode>
               <descriptors>
                 <descriptor>src/assembly/bin.xml</descriptor>

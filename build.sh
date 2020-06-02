@@ -16,11 +16,14 @@
 #
 #
 #
-# Runs JUnit unit and integration tests.
+# Builds all sources from scratch.
 #
 # Usage: Run from any directory.  Takes no arguments.
 #
-# NOTE: services must be running for integration tests to pass
+# NOTE: Removed -Djavax.net.ssl.trustStore=trust.jks  -Djavax.net.ssl.trustStorePassword=password since they didn't seem to be needed
 #
 
-mvn clean install -DskipTests -Djavax.net.ssl.trustStore=trust.jks  -Djavax.net.ssl.trustStorePassword=password
+DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)  # the directory containing the script
+cd $DIR
+echo "Building all sources in $DIR..."
+mvn clean install -DskipTests
