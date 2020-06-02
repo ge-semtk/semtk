@@ -144,7 +144,8 @@ public class NodeGroupStoreRestController {
 			
 			// ingest demo csv
 			demoSei.clearPrefix("http://demo/prefix");  // extra safe.  No clear graph inside nodegroup store
-			Dataset ds = new CSVDataset("src/main/resources/demoNodegroup_data.csv", false);
+			String data = Utility.getResourceAsString(this, "demoNodegroup_data.csv");
+			Dataset ds = new CSVDataset(data, true);
 			DataLoader dl = new DataLoader(sgJson, ds, demoSei.getUserName(), demoSei.getPassword());
 			dl.importData(false);
 		} catch (Exception e) {
