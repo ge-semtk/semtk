@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -74,7 +75,7 @@ public class DataLoaderTest_InMemory_IT {
 	}
 	
 	
-	
+	@Ignore
 	@Test
 	public void testLoadDataManualInMemory() throws Exception {
 		
