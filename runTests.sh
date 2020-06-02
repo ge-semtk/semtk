@@ -23,7 +23,6 @@
 # NOTE: services must be running for integration tests to pass
 #
 
-
 set -o nounset          # exit if any variable not set
 
 DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)  # the directory containing the script
@@ -35,7 +34,8 @@ cd $DIR
 echo "Running unit tests in $DIR..."
 mvn test &>> $LOG 
 echo "Running integration tests in $DIR..."
-mvn failsafe:integration-test &>> $LOG 
+. .env
+mvn failsafe:integration-test failsafe:verify &>> $LOG
 
 # print summary to console
 cat $LOG | grep "Tests run:" | grep -v "Time elapsed"
