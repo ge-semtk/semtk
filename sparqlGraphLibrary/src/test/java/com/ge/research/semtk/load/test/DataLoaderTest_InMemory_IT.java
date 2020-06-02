@@ -75,42 +75,38 @@ public class DataLoaderTest_InMemory_IT {
 	}
 	
 	
-	@Ignore
 	@Test
 	public void testLoadDataManualInMemory() throws Exception {
 		
-		InMemoryInterface sei = new InMemoryInterface("http://name");
+		InMemoryInterface inMemSei = new InMemoryInterface("http://name");
 		
 		// get the load sgjson
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/loadTest.json"));
-		sgJson.setSparqlConn(new SparqlConnection("anon", sei));
+		SparqlGraphJson inMemSgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/loadTest.json"));
+		inMemSgjson.setSparqlConn(new SparqlConnection("anon", inMemSei));
 		
 
-		// load owl
+		// load owl to inMem graph
 		Path path = Paths.get("src/test/resources/loadTest.owl");
 		byte[] owl = Files.readAllBytes(path);
-		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadOwl(owl));
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(inMemSei.executeAuthUploadOwl(owl));
 		resultSet.throwExceptionIfUnsuccessful();
 
-		// Pre changes:   19.5s 18.5s  18.64s  17.514
-		// During changes:  
-		// Bigger-ish test of many import spec features and timing
-		Dataset ds = new CSVDataset("src/test/resources/loadTestData.csv", false);
-				
-		TestGraph.clearGraph();
-		
-		// import
-		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		
+		// load data to inMem graph
+		Dataset ds = new CSVDataset("src/test/resources/loadTestData.csv", false);	
+		DataLoader dl = new DataLoader(inMemSgjson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		long start = IntegrationTestUtility.getStartTime();
 		dl.importData(true);
 		IntegrationTestUtility.logDuration(start, "done with import");		
 		
-		String resOwl = sei.dumpToOwl();
+		// dump inMem to owl
+		String resOwl = inMemSei.dumpToOwl();
+		
+		// load owl to TestGraph
+		TestGraph.clearGraph();
 		TestGraph.uploadOwlString(resOwl);
 		IntegrationTestUtility.logDuration(start, "testLoadData done upload owl");
 		
-		// no loading errors
+		// check no loading errors
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
 			LocalLogger.logToStdErr(err.toCSVString());
@@ -118,11 +114,12 @@ public class DataLoaderTest_InMemory_IT {
 		}
 		assertEquals(dl.getTotalRecordsProcessed(), 1998);
 		
-		// query back from sei
-		IntegrationTestUtility.querySeiAndCheckResults(sgJson.getNodeGroup(), sei, this, "/loadTestResults.csv");
+		// query back from inMem
+		IntegrationTestUtility.querySeiAndCheckResults(inMemSgjson.getNodeGroup(), inMemSei, this, "/loadTestResults.csv");
 		
 		// query back from TestGraph
-		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestResults.csv");
+		inMemSgjson.setSparqlConn(TestGraph.getSparqlConn());
+		TestGraph.queryAndCheckResults(inMemSgjson, this, "/loadTestResults.csv");
 		
 	}
 	
