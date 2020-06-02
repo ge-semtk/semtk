@@ -1324,7 +1324,25 @@ public class NodeGroupExecutionClient extends RestClient {
 		return this.dispatchSelectFromNodeGroup(sgjson, null, null);
 		
 	}
-	
+	/**
+	 * 
+	 * @param resourcePath
+	 * @param jarObj
+	 * @param conn
+	 * @param runtimeConstraintsJson
+	 * @return successful status message
+	 * @throws Exception
+	 */
+	public String dispatchDeleteFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn, JSONArray runtimeConstraintsJson) throws Exception {
+		SimpleResultSet res = this.execDispatchDeleteFromNodeGroupResource(resourcePath, jarObj, conn, runtimeConstraintsJson);
+		String jobId = res.getJobId();
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else {
+			throw new Exception("Ingestion failed:\n" + this.getResultsTable(jobId).toCSVString());
+		}
+	}
 	public SimpleResultSet execDispatchDeleteFromNodeGroupResource(String resourcePath, Object jarObj, SparqlConnection conn, JSONArray runtimeConstraintsJson) throws Exception {
 		
 		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(jarObj, resourcePath));
