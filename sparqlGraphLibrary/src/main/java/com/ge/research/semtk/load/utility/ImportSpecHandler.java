@@ -116,6 +116,10 @@ public class ImportSpecHandler {
 		this.uriCache = new UriCache(this.ng);
 		this.errorCheckImportSpec();
 	}
+	
+	public JSONArray getColumnsJson() {
+		return (JSONArray) this.importspec.get(SparqlGraphJson.JKEY_IS_COLUMNS);
+	}
 
 	public void setEndpoint(SparqlEndpointInterface endpoint) {
 		this.nonThreadSafeEndpoint = endpoint;
