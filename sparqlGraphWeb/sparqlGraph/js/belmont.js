@@ -209,6 +209,40 @@ SparqlFormatter.prototype = {
 		return ret;
 	},
 
+    // TODO: this should be a call to the service layer
+    buildFilterInConstraint : function(item, valList) {
+		// build a value constraint for an "item" (see item interface comment)
+		var ret = "";
+
+        if (item.getSparqlID() == "") {
+            throw new Error("Internal: trying to build FILTER IN constraint for property with empty sparql ID");
+        }
+		if (valList.length > 0) {
+			ret = "FILTER ( " + item.getSparqlID() + " IN (";
+            ret += this.buildRDF11Literal(item, valList[0]);
+			for (var i=1; i < valList.length; i++) {
+                ret += ", " + this.buildRDF11Literal(item, valList[i]);
+			}
+
+			ret += " ) ) ";
+		}
+		return ret;
+	},
+
+    buildRDF11Literal : function(item, val) {
+        var itemType = item.getValueType();
+
+        if (itemType == "string") {
+            return "'" + val + "', '" + val + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + itemType;
+        } else if (itemType == "int" || itemType == "long" || itemType == "float") {
+            return val;
+        } else if (itemType == "uri") {
+            return '<' + val + '>';
+        } else {
+            ret += " '" + val + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + itemType;
+        }
+    },
+
 	buildFilterConstraint : function(item, op, val) {
 		// generates a FILTER constraint
 		// item:  Does basic checking on types, passing through unknown types with an unlikely best guess
@@ -702,7 +736,12 @@ PropertyItem.prototype = {
 		f = new SparqlFormatter();
 		return f.buildFilterConstraint(this, op, val);
 	},
-	buildValueConstraint : function(valueList) {
+	buildFilterInConstraint : function(valueList) {
+		//  build but don't set  a value constraint from a list of values (basic types or fully qualified URIs)
+		f = new SparqlFormatter();
+		return f.buildFilterInConstraint(this, valueList);
+	},
+    buildValueConstraint : function(valueList) {
 		//  build but don't set  a value constraint from a list of values (basic types or fully qualified URIs)
 		f = new SparqlFormatter();
 		return f.buildValueConstraint(this, valueList);
@@ -851,7 +890,7 @@ PropertyItem.prototype = {
 };
 
 /* to set nodes */
-var setNode = function(SNode) { 
+var setNode = function(SNode) {
     // deleted
 };
 /* we need an intermediate to the arrow generation */
@@ -1161,7 +1200,12 @@ SemanticNode.prototype = {
 		f = new SparqlFormatter();
 		return f.buildFilterConstraint(this, op, val);
 	},
-	buildValueConstraint : function(valueList) {
+	buildFilterInConstraint : function(valueList) {
+		//  build but don't set  a value constraint from a list of values (basic types or fully qualified URIs)
+		f = new SparqlFormatter();
+		return f.buildFilterInConstraint(this, valueList);
+	},
+    buildValueConstraint : function(valueList) {
 		//  build but don't set  a value constraint from a list of values (basic types or fully qualified URIs)
 		f = new SparqlFormatter();
 		return f.buildValueConstraint(this, valueList);
@@ -1794,7 +1838,8 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 9;
+SemanticNodeGroup.JSON_VERSION = 10;
+// version 10 - import spec has dataValidator
 // version 9 - minus links
 // version 8 - fixes to order by
 // version 7 - offset, order by

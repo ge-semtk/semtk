@@ -114,7 +114,7 @@ define([	// properly require.config'ed
                                         "Selecting more than " +  this.maxValues + " values is not supported<br>" +
                                         "due to performance impact.<br>" +
                                         "Consider using REGEX.");
-                        // SparqlForm: disallow large VALUES clause.
+                        // SparqlForm: disallow large FILTER IN clause.
                         this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");
                         return;
 
@@ -123,7 +123,7 @@ define([	// properly require.config'ed
                                         "Warning: Large number of values selected: " + valList.length + "<br>" +
                                         "Query engine may error or misbehave.<br>" +
                                         "Consider using REGEX.");
-                        // SparqlGraph: allow large VALUES clause, at user's peril.
+                        // SparqlGraph: allow large FILTER IN clause, at user's peril.
                     }
                 }
 
@@ -131,7 +131,7 @@ define([	// properly require.config'ed
 				var savedID = this.item.getSparqlID();
 
 				this.item.setSparqlID(this.getSparqlIDText());
-				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, this.item.buildValueConstraint(valList));
+				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, this.item.buildFilterInConstraint(valList));
 
 				// swap sparqlID back out
 				this.item.setSparqlID(savedID);
@@ -325,7 +325,7 @@ define([	// properly require.config'ed
 				var select = this.getFieldElement(ModalItemDialog.SELECT);
 
 				var constraintSparql = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
-				var valuesFlag = (constraintSparql.search("VALUES ") > -1);
+				var valuesFlag = (constraintSparql.search(" IN ") > -1);
 				select.options.length = 0;
 
 				for (var i=0; i < element.length; i++) {
@@ -354,7 +354,7 @@ define([	// properly require.config'ed
 				// init the autoselect list and the value in the text box
 				var autoTextList = this.getFieldElement(ModalItemDialog.AUTO_TEXT_LIST);
 				var constraintSparql = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
-				var valuesFlag = (constraintSparql.search("VALUES ") > -1);
+				var valuesFlag = (constraintSparql.search(" IN  ") > -1);
 				autoTextList.options.length = 0;
 
 				for (var i=0; i < element.length; i++) {
@@ -379,7 +379,7 @@ define([	// properly require.config'ed
 
 			fillOptions : function (element, listElem) {
 				var constraintSparql = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
-				var valuesFlag = (constraintSparql.search("VALUES ") > -1);
+				var valuesFlag = (constraintSparql.search(" IN  ") > -1);
 				listElem.options.length = 0;
 
 				for (var i=0; i < element.length; i++) {
