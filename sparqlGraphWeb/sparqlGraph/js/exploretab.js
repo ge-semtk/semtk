@@ -687,7 +687,6 @@ define([	// properly require.config'ed
                 // create an array with nodes
 
                 this.network = new vis.Network(this.canvasdiv, {}, VisJsHelper.getDefaultOptions(this.configdiv));
-                this.network.body.data.nodes.add([{id: 1, label: "one"},{id: 2, label: "two"}]);
 
             },
 
