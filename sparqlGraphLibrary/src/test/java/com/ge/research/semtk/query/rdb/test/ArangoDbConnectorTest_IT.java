@@ -60,7 +60,7 @@ public class ArangoDbConnectorTest_IT {
 		
 		IntegrationTestUtility.authenticateJunit();	
 		PORT = IntegrationTestUtility.getInt("arangodb.port");
-		USER = IntegrationTestUtility.get("arangodb.username");
+		USER = IntegrationTestUtility.get("arangodb.user");
 		PASSWORD = IntegrationTestUtility.get("arangodb.password");
 	
 		// set up test database

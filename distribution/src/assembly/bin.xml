@@ -30,6 +30,7 @@
             <directory>../</directory>
             <outputDirectory>semtk-opensource/</outputDirectory>
             <includes>
+                <include>service.unit</include>
                 <include>startServices.sh</include>
                 <include>stopServices.sh</include>
                 <include>updateWebapps.sh</include>

@@ -34,7 +34,7 @@ cd $DIR
 echo "Running unit tests in $DIR..."
 mvn test &>> $LOG 
 echo "Running integration tests in $DIR..."
-. .env
+. ./.env
 mvn failsafe:integration-test failsafe:verify &>> $LOG
 
 # print summary to console

@@ -36,7 +36,7 @@ public class UtilityServiceStartup implements ApplicationListener<ApplicationRea
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {			  
-			  "ssl.enabled",
+			  "server.ssl.enabled",
 			  "utility.sparqlServiceServer",
 			  "utility.sparqlServicePort",
 			  "utility.sparqlServiceProtocol",

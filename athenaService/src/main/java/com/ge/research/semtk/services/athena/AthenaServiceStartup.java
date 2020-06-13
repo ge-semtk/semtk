@@ -36,7 +36,7 @@ public class AthenaServiceStartup implements ApplicationListener<ApplicationRead
 	  
 	  // print and validate properties - and exit if invalid
 	  String[] propertyNames = {
-			  "ssl.enabled",
+			  "server.ssl.enabled",
 			  "athena.awsRegionId",
 			  "athena.awsS3OutputBucket",
 			  "athena.awsKey",
