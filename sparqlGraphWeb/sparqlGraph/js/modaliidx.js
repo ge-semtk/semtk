@@ -112,10 +112,10 @@ define([	// properly require.config'ed   bootstrap-modal
 		 * Show a select,
 		 * submitCallback(v)  where v is selected value or null.
 		 */
-		ModalIidx.selectOption = function (titleTxt, textValArray, submitCallback, optOKButText, optWidthPercent) {
+		ModalIidx.selectOption = function (titleTxt, textValArray, submitCallback, optOKButText, optWidthPercent, optDisabledList) {
 			kdlLogEvent("selectOption", "title", titleTxt);
 			var div = document.createElement("div");
-			var select = IIDXHelper.createSelect("mdSelectOption_select", textValArray);
+			var select = IIDXHelper.createSelect("mdSelectOption_select", textValArray, [], false, "", optDisabledList);
 			select.size="20";
 			select.style.width = "95%";
 			div.appendChild(select);
@@ -513,7 +513,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 var callback1 = function () {
                     var msg = validate2();
                     if (msg) {
-                        alert(msg);
+                        if (msg.startsWith("<") || msg.indexOf("<br>") > -1 || msg.indexOf("<BR>") > -1) {
+                            ModalIidx.alert("Validation Failure", msg, false);
+                        } else {
+                            alert(msg);
+                        }
                     } else {
                         callback2();
                         this.hide();

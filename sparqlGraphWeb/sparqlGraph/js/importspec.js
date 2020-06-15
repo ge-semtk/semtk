@@ -9,9 +9,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@
  */
 
 define([// properly require.config'ed
+        'sparqlgraph/js/datavalidator',
         'sparqlgraph/js/importcsvspec',
         'sparqlgraph/js/importmapping',
         'sparqlgraph/js/mappingitem',
@@ -28,91 +29,96 @@ define([// properly require.config'ed
         'sparqlgraph/js/importcolumn',
 
         'jquery',
-         	
+
 		// shimmed
-		//'logconfig',	
+		//'logconfig',
 		],
 
-	function (ImportCsvSpec, ImportMapping, MappingItem, ImportTransform, ImportText, ImportColumn, $) {
-	
+	function (DataValidator, ImportCsvSpec, ImportMapping, MappingItem, ImportTransform, ImportText, ImportColumn, $) {
+
 		//============ main object  ImportSpec =============
 		var ImportSpec = function (alertCallback) {
 			this.alertCallback = (typeof alertCallback === "undefined") ? null: alertCallback;
-			
+
 			this.baseURI = "";
 			this.nodegroup = null;
 			this.mapList = [];    // ordered list rows
 			this.mapHash = {};
-			
+
+            this.dataValidator = new DataValidator([]);
 			this.colList = [];    // lists of these objects
 			this.textList = [];
 			this.transformList = [];
 		};
-		
+
 		ImportSpec.prototype = {
-			
+
 			addColumn : function (iCol) {
 				this.colList.push(iCol);
 			},
-			
+
 			addText : function (iText) {
 				this.textList.push(iText);
 			},
-			
+
 			clearMost : function () {
 				// first clear everything
 				this.baseURI = "";
-				
-				this.mapList = [];    
+
+				this.mapList = [];
 				this.mapHash = {};
-				
-				this.colList = [];    
+
+				this.colList = [];
 				this.textList = [];
-				this.transformList = []; 
-				
+				this.transformList = [];
+
 				// then re-apply nodegroup to build blank rows
 				this.updateNodegroup(this.nodegroup);
 			},
-			
+
 			addTransform : function (iTrans) {
 				this.transformList.push(iTrans);
 			},
-			
+
 			addRow : function (iMapping) {
 				this.mapList.push(iMapping);
 				this.mapHash[iMapping.genUniqueKey()] = iMapping;
 			},
-			
+
 			delText : function (iText) {
 				var index = this.textList.indexOf(iText);
 				if (index > -1) {
 					this.textList.splice(index, 1);
 				}
 			},
-			
+
 			delTransform : function (iTransform) {
 				var index = this.transformList.indexOf(iTransform);
 				if (index > -1) {
 					this.transformList.splice(index, 1);
 				}
 			},
-			
+
 			getBaseURI : function () {
 				return this.baseURI;
 			},
-			
+
 			setBaseURI : function (uri) {
 				this.baseURI = uri;
 			},
-			
+
+            getDataValidator : function() {
+                return this.dataValidator;
+            },
+
             getNodegroup : function() {
                 return this.nodegroup;
             },
-            
+
 			getNumColumns : function () {
 				return this.colList.length;
 			},
-			
+
 			getSortedColumns : function () {
 				// get list of column objects sorted by name
 				var ret = this.colList.sort(function(a,b) {
@@ -124,7 +130,7 @@ define([// properly require.config'ed
 				} );
 				return ret;
 			},
-			
+
 			getSortedTexts : function () {
 				// get list of column objects sorted by name
 				var ret = this.textList.sort(function(a,b) {
@@ -136,7 +142,7 @@ define([// properly require.config'ed
 				} );
 				return ret;
 			},
-			
+
 			getSortedTransforms : function () {
 				// get list of column objects sorted by name
 				var ret = this.transformList.sort(function(a,b) {
@@ -148,12 +154,12 @@ define([// properly require.config'ed
 				} );
 				return ret;
 			},
-			
+
 			getSortedMappings : function () {
 				// rows are always sorted by node and prop
 				return this.mapList;
 			},
-			
+
             getUriSparqlIDs : function () {
                 var ret = [];
                 for (var i=0; i < this.mapList.length; i++) {
@@ -163,10 +169,10 @@ define([// properly require.config'ed
                 }
                 return ret;
             },
-                
+
 			getMapping : function(sparqlId, propUri) {
 				// find a row
-				// propUri may be null				
+				// propUri may be null
 				var key = ImportMapping.staticGenUniqueKey(sparqlId, propUri);
 				if (key in this.mapHash) {
 					return this.mapHash[key];
@@ -174,7 +180,7 @@ define([// properly require.config'ed
 					kdlLogAndThrow("Internal error in ImportSpec.getMapping(). Can't find row: " + sparqlId + ", " + propUri);
 				}
 			},
-			
+
             // get any mappings that have uriLookups containing this mapping
             getLookupMappings : function(mapping) {
                 var mapName = mapping.getName();
@@ -186,57 +192,58 @@ define([// properly require.config'ed
 				}
                 return ret;
             },
-            
+
             // make sure URILookupModes are null iff no other node is looking it up
             updateEmptyUriLookupModes : function() {
                 for (var i=0; i < this.mapList.length; i++) {
 					var map = this.mapList[i];
-					
+
 					// if row is for a node (not a prop)
 					if (map.isNode()) {
-                        
+
                         // set back to null if no one is lookup up this node
                         if (map.getUriLookupMode() != null) {
                             if (this.getLookupMappings(map).length == 0) {
                                 map.setUriLookupMode(null);
                             }
-                        
+
                         // set to default if null and someone is looking up this node
                         } else {
                             if (this.getLookupMappings(map).length > 0) {
                                 map.setUriLookupMode(ImportMapping.LOOKUP_MODE_NO_CREATE);
                             }
                         }
-                        
-					} 
+
+					}
 				}
             },
-            
+
 			fromJson : function(jObj) {
-				// load from json.   
+				// load from json.
 				// Presume that nodegroup is loaded so rows exist but their items will be overwritten.
 				if (this.nodegroup === null) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  No nodegroup is loaded.");}
-				
+
 				// delete all itemLists
 				for (var i=0; i < this.mapList.length; i++) {
 					this.mapList[i].clearItems();
 				}
-				
+
 				// clear anything that has to do with items
 				this.colList = [];
 				this.textList = [];
 				this.transformList = [];
-				
+                this.dataValidator = null;
+
 				// temporary hash for cross referencing JSON things by "id"
 				var idHash = {};
-				
+
 				// base URI
 				if (jObj.hasOwnProperty("baseURI")) {
 					this.baseURI = jObj.baseURI;
 				} else {
 					this.baseURI = "";
 				}
-				
+
 				// columns
 				if (! jObj.hasOwnProperty("columns")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  No columns field.");}
 				for (var i=0; i < jObj.columns.length; i++) {
@@ -245,7 +252,10 @@ define([// properly require.config'ed
 					this.addColumn(c);
 					idHash[id] = c;
 				}
-				
+
+                // dataValidator (it may be null)
+                this.dataValidator = new DataValidator(jObj.dataValidator);
+
 				// texts
 				if (! jObj.hasOwnProperty("texts")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  No texts field.");}
 				for (var i=0; i < jObj.texts.length; i++) {
@@ -254,7 +264,7 @@ define([// properly require.config'ed
 					this.addText(t);
 					idHash[id] = t;
 				}
-				
+
 				// transforms
 				if (! jObj.hasOwnProperty("transforms")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  No transforms field.");}
 				for (var i=0; i < jObj.transforms.length; i++) {
@@ -263,41 +273,41 @@ define([// properly require.config'ed
 					this.addTransform(t);
 					idHash[id] = t;
 				}
-				
+
 				// nodes
 				// Rows should already exist with empty item lists (from updating the nodegroup)
 				if (! jObj.hasOwnProperty("nodes")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  No nodes field.");}
-				
+
 				for (var i=0; i < jObj.nodes.length; i++) {
 					if (! jObj.nodes[i].hasOwnProperty("sparqlID")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  Node has no sparqlId.");}
-					
+
 					// find node row and fill it in
 					var n = this.getMapping(jObj.nodes[i].sparqlID, null);
 					n.fromJsonNode(jObj.nodes[i], idHash, this.nodegroup);
-					
+
 					for (var j=0; j < jObj.nodes[i].props.length; j++) {
 						if (! jObj.nodes[i].props[j].hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  Prop has no URIRelation in node: " + jObj.nodes[i].sparqlID );}
-						
+
 						// find property row and fill it in
 						var p = this.getMapping(jObj.nodes[i].sparqlID, jObj.nodes[i].props[j].URIRelation);
 						p.fromJsonProp(jObj.nodes[i].props[j], n.getNode(), idHash, this.nodegroup);
 					}
 				}
 			},
-			
+
 			toJson : function(optCompressFlag) {
 				var compressFlag = (typeof optCompressFlag == "undefined") ? false : optCompressFlag;
 
 				var ret = {};
 				var idHash = {};
-				
+
 				ret.version = "1";
-				
+
                 this.updateEmptyUriLookupModes();
-                
+
 				// baseURI
 				ret.baseURI = this.baseURI;
-				
+
 				// columns
 				ret.columns = [];
 				for (var i=0; i < this.colList.length; i++) {
@@ -305,7 +315,9 @@ define([// properly require.config'ed
 					idHash[key] = this.colList[i];
 					ret.columns.push(this.colList[i].toJson(key));
 				}
-				
+
+                ret.dataValidator = this.dataValidator.toJson();
+
 				// text
 				ret.texts = [];
 				for (var i=0; i < this.textList.length; i++) {
@@ -313,7 +325,7 @@ define([// properly require.config'ed
 					idHash[key] = this.textList[i];
 					ret.texts.push(this.textList[i].toJson(key));
 				}
-				
+
 				// transforms
 				ret.transforms = [];
 				for (var i=0; i < this.transformList.length; i++) {
@@ -321,29 +333,29 @@ define([// properly require.config'ed
 					idHash[key] = this.transformList[i];
 					ret.transforms.push(this.transformList[i].toJson(key));
 				}
-				
+
 				// rows : they must be ordered (Node1, null), (Node1, prop1), (Node1, prop2), (Node2, null), etc.
 				ret.nodes = [];
 				var lastNodeObj = null;
 				for (var i=0; i < this.mapList.length; i++) {
 					var map = this.mapList[i];
-					
+
 					// if row is for a node (not a prop)
 					if (map.getPropItem() == null) {
 						// push the row on as a new node
 						lastNodeObj = map.toJson(idHash);
 						lastNodeObj.props = [];
 						ret.nodes.push(lastNodeObj);
-						
+
 					// if row is property and has items
 					} else if (map.getItemList().length > 0 || map.getUriLookupNodes().length > 0) {
-                        
+
 				        lastNodeObj.props.push(map.toJson(idHash));
 					}
 				}
 				return ret;
 			},
-			
+
 			// get list of all PropertyItems that have mappings
 			getUndeflatablePropItems() {
 				var ret = [];
@@ -359,43 +371,43 @@ define([// properly require.config'ed
 				}
 				return ret;
 			},
-			
+
 			updateNodegroup : function (nodegroup) {
 				// Build new mapList and mapHash based on this.nodegroup
 				// saving any existing itemLists
-				
+
 				this.nodegroup = nodegroup;
-				
+
 				// save copy of previous state
 				var oldRowHash = {};
 				for (var k in this.mapHash) {
 					oldRowHash[k] = this.mapHash[k];
 				}
-				
+
 				// reset rows
 				this.mapList = [];
 				this.mapHash = {};
-				
+
 				if (this.nodegroup === null) { return; }
-				
+
 				// nested loop through the nodegroup
 				var nodeList = this.nodegroup.getOrderedNodeList();
 				for (var i = 0; i < nodeList.length; i++) {
 					var node = nodeList[i];
-					
+
 					// Build a ImportMapping for the node URI
 					var prop = null;
 					var map = new ImportMapping(node, prop);
 					var key = map.genUniqueKey();
-					if (key in oldRowHash) { 
-						map.itemList = oldRowHash[key].itemList.slice(); 
+					if (key in oldRowHash) {
+						map.itemList = oldRowHash[key].itemList.slice();
                         map.setUriLookupMode(oldRowHash[key].getUriLookupMode());
                         map.setUriLookupNodes(oldRowHash[key].getUriLookupNodes());
 						oldRowHash[key] = null;
 					}
-					
+
 					this.addRow(map);
-					
+
 					// Build a ImportMapping for each property
 					var propItemList = nodeList[i].propList;
 					if (propItemList) {
@@ -403,25 +415,25 @@ define([// properly require.config'ed
 							prop = propItemList[j];
 							map = new ImportMapping(node, prop);
 							var keyP = map.genUniqueKey();
-							if (keyP in oldRowHash) { 
-								map.itemList = oldRowHash[keyP].itemList.slice(); 
+							if (keyP in oldRowHash) {
+								map.itemList = oldRowHash[keyP].itemList.slice();
                                 map.setUriLookupNodes(oldRowHash[keyP].getUriLookupNodes());
 								oldRowHash[keyP] = null;
 							}
-							
+
 							this.addRow(map);
 						}
 					}
 				}
-				
+
 				for (var key in oldRowHash) {
 					if (oldRowHash[key] !== null) {
-						this.alert("Threw out some mapping items that no longer exist in the query.  e.g.:  " + key);   
+						this.alert("Threw out some mapping items that no longer exist in the query.  e.g.:  " + key);
 						break;
 					};
 				}
 			},
-			
+
 			/**
 			 * Alert if there's a callback, otherwise log to console
 			 * @param: {string} msg the message
@@ -433,19 +445,19 @@ define([// properly require.config'ed
 					console.log("Importspec alert: " + msg);
 				}
 			},
-			
+
 			updateColsFromCsvAsync : function (csvFile, callback) {
 				this.importCsvSpec = new ImportCsvSpec();
-				
+
 				var fullCallback = function(x) {
 										this.updateColsFromCsvCallback();
 										callback();
 									}.bind(this);
 
 				this.importCsvSpec.loadCsvFileAsync(csvFile, fullCallback);
-											   
+
 			},
-			
+
 			updateColsFromCsvCallback : function () {
 				// looks at a (new) importCSVSpec for new column names
 				// 	- keeps any existing column MappingItems that have value pointing to valid column
@@ -456,18 +468,18 @@ define([// properly require.config'ed
 
 				//             GUI must redraw the available columns
 				var newColNames = this.importCsvSpec.getColNames();
-				
-				
+
+
 				// loop through all existing items
 				for (var i=0; i < this.mapList.length; i++) {
 					var itemList = this.mapList[i].getItemList();
 					for (var j=0; j < itemList.length; j++) {
 						var item = itemList[j];
-						
+
 						// find the columns in items
 						if (item.getType() == MappingItem.TYPE_COLUMN) {
 							var col = item.getColumnObj();
-							
+
 							// if column is still valid
 							if (newColNames.indexOf(col.getColName()) < 0) {
 								// delete the item
@@ -476,9 +488,9 @@ define([// properly require.config'ed
 						}
 					}
 				}
-				
+
 				var keepColNames = [];
-				
+
 				// delete any invalid cols
 				for (var i=0; i < this.colList.length; i++) {
 					if (newColNames.indexOf(this.colList[i].getColName()) < 0) {
@@ -497,7 +509,7 @@ define([// properly require.config'ed
 					}
 				}
 			},
-			
+
         };
         return ImportSpec;
 	}

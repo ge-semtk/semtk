@@ -164,8 +164,7 @@ public class DataLoader implements Runnable {
 	}
 	
 	private void validateColumns(Dataset ds) throws Exception {
-		// not sure we should care if dataset has some column(s) missing
-		// as the actual mapping process will decide if there's enough data
+		this.batchHandler.validateData();
 	}
 	
 
@@ -251,10 +250,14 @@ public class DataLoader implements Runnable {
 		
 		// PASS 1
 		if(precheck){
-			// perform "pre-check"
-			String exceptionHeader = "Error during ingest pre-check.  At least one thread threw exception.  e.g.: ";
-			this.totalRecordsProcessed = this.runIngestionThreads(true, false, exceptionHeader);  // skip ingest, don't skip check
-			this.batchHandler.generateNotFoundURIs();
+			int validationErrorCount = this.batchHandler.validateData();
+			
+			if (validationErrorCount == 0) {
+				// perform "pre-check"
+				String exceptionHeader = "Error during ingest pre-check.  At least one thread threw exception.  e.g.: ";
+				this.totalRecordsProcessed = this.runIngestionThreads(true, false, exceptionHeader);  // skip ingest, don't skip check
+				this.batchHandler.generateNotFoundURIs();
+			}
 			
 			// inspect the transformer to determine if the checks succeeded
 			if(this.batchHandler.getErrorReport().getRows().size() != 0){

@@ -2,6 +2,8 @@ package com.ge.research.semtk.load.test;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -9,6 +11,7 @@ import org.junit.Test;
 
 import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.resultSet.Table;
 
 public class DataValidatorTest {
 
@@ -23,9 +26,9 @@ public class DataValidatorTest {
 		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
 				"{ \"columns\": [{ \"colName\": \"a\", \"notEmpty\": true, \"regexMatches\": \"[0-9]+\" \"regexNoMatch\": \".*7.*\" }]}"
 				);
-		DataValidator validator = new DataValidator(ds, (JSONArray) colJson.get("columns"));
-		int errs = validator.validate();
-		assertEquals(validator.getErrorString(), 0, errs);
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		assertEquals(validator.getErrorTable().toCSVString(), 0, errCount);
 	}
 	
 	@Test
@@ -51,9 +54,9 @@ public class DataValidatorTest {
 		// Two errors are in same row.
 		// The blank also fails the regexMatches, but we shouldn't get two errors for same cell
 		//
-		DataValidator validator = new DataValidator(ds, (JSONArray) colJson.get("columns"));
-		int errs = validator.validate();
-		assertEquals("Found these errors: " + validator.getErrorString(), 3, errs);
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		assertEquals("Found these errors: " + validator.getErrorTable().toCSVString(), 3, errCount);
 	}
 	
 	@Test
@@ -73,9 +76,9 @@ public class DataValidatorTest {
 				"]}");
 		
 		// no errors
-		DataValidator validator = new DataValidator(ds, (JSONArray) colJson.get("columns"));
-		int errs = validator.validate();
-		assertEquals("Found these errors: \n" + validator.getErrorString(), 0, errs);
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		assertEquals("Found these errors: \n" + validator.getErrorTable().toCSVString(), 0, errCount);
 		
 		colJson = (JSONObject) (new JSONParser()).parse(
 				"{ \"columns\": [{ \"colName\": \"a\", \"notEmpty\": true, \"type\": \"float\", \"gt\": 1,    \"gte\": 3,   \"lt\": 3 },   " +
@@ -83,9 +86,9 @@ public class DataValidatorTest {
 				"]}");
 		// error for every cell in a,b
 		ds.reset();
-		validator = new DataValidator(ds, (JSONArray) colJson.get("columns"));
-		errs = validator.validate();
-		assertEquals("Found these errors:\n" + validator.getErrorString(), 6, errs);
+		validator = new DataValidator((JSONArray) colJson.get("columns"));
+		errCount = validator.validate(ds);
+		assertEquals("Found these errors:\n" + validator.getErrorTable().toCSVString(), 6, errCount);
 		
 		colJson = (JSONObject) (new JSONParser()).parse(
 				"{ \"columns\": [{ \"colName\": \"c\", \"notEmpty\": true, \"type\": \"float\", \"gt\": 1.0,    \"gte\": 3.0,   \"lt\": 3.0 },   " +
@@ -93,9 +96,43 @@ public class DataValidatorTest {
 				"]}");
 		// error for every cell in a,b
 		ds.reset();
-		validator = new DataValidator(ds, (JSONArray) colJson.get("columns"));
-		errs = validator.validate();
-		assertEquals("Found these errors:\n" + validator.getErrorString(), 5, errs);
+		validator = new DataValidator((JSONArray) colJson.get("columns"));
+		errCount = validator.validate(ds);
+		assertEquals("Found these errors:\n" + validator.getErrorTable().toCSVString(), 5, errCount);
+	}
+	
+	@Test
+	public void testDateTime() throws Exception {
+		
+		// note different date format (sparql date, not the ISO date)
+		String data = "d,t,dt     \n" +
+					  "01/01/2001,01:01:01 ,2001-01-01T01:01:01\n" + 
+					  "2002-02-02,02:02:02, 2002-02-02T02:02:02\n" +
+					  "2003-03-03,03:03:03,2003-03-03T03:03:03\n";
+		CSVDataset ds = new CSVDataset(data, true);
+		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
+				"{ \"columns\": [{ \"colName\": \"d\", \"notEmpty\": true, \"type\": \"date\", \"gt\":\"2001-01-01\", \"lt\":\"2003-03-03\", \"ne\": \"2002-02-02\"  },   " +
+				"                { \"colName\": \"t\", \"notEmpty\": true, \"type\": \"time\", \"gt\":\"01:01:01\", \"lt\":\"03:03:03\", \"ne\": \"02:02:02\" }, " +
+				"                { \"colName\": \"dt\",\"notEmpty\": true, \"type\": \"datetime\", \"gt\":\"2001-01-01T01:01:01\", \"lt\":\"2003-03-03T03:03:03\", \"ne\": \"2002-02-02T02:02:02\" }, " +
+				"]}");
+		
+		// no errors
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		assertEquals("Found these errors: \n" + validator.getErrorTable().toCSVString(), 9, errCount);
+		System.out.println(validator.getErrorTable().toCSVString());
+		ds = new CSVDataset(data, true);
+		colJson = (JSONObject) (new JSONParser()).parse(
+				"{ \"columns\": [{ \"colName\": \"d\", \"notEmpty\": true, \"type\": \"date\", \"gte\":\"2001-01-01\", \"lte\":\"2003-03-03\", \"ne\": \"2002-02-03\"  },   " +
+				"                { \"colName\": \"t\", \"notEmpty\": true, \"type\": \"time\", \"gte\":\"01:01:01\", \"lte\":\"03:03:03\", \"ne\": \"02:02:03\" }, " +
+				"                { \"colName\": \"dt\",\"notEmpty\": true, \"type\": \"datetime\", \"gte\":\"2001-01-01T01:01:01\", \"lte\":\"2003-03-03T03:03:03\", \"ne\": \"2002-02-02T02:02:03\" }, " +
+				"]}");
+		
+		// all errors
+		validator = new DataValidator((JSONArray) colJson.get("columns"));
+		errCount = validator.validate(ds);
+		assertEquals("Found these errors: \n" + validator.getErrorTable().toCSVString(), 0, errCount);
+		
 	}
 
 }

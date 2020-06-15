@@ -39,6 +39,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
+import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
 import com.ge.research.semtk.load.utility.UriResolver;
@@ -92,6 +93,8 @@ public class ImportSpecHandler {
 	
 	SparqlEndpointInterface nonThreadSafeEndpoint = null;  // Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
 	
+	DataValidator dataValidator = null;
+	
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn, OntologyInfo oInfo) throws Exception {
 		this.importspec = importSpecJson; 
 		
@@ -114,6 +117,8 @@ public class ImportSpecHandler {
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 		
 		this.uriCache = new UriCache(this.ng);
+		
+		this.dataValidator = new DataValidator((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_DATA_VALIDATOR));
 		this.errorCheckImportSpec();
 	}
 	
@@ -172,6 +177,14 @@ public class ImportSpecHandler {
 		
 		// use the new name-to-index hash
 		this.colNameToIndexHash = newNameToIndexHash;
+	}
+	
+	/**
+	 * Return may be an empty DataValidator, but not null
+	 * @return
+	 */
+	public DataValidator getDataValidator() {
+		return this.dataValidator;
 	}
 	
 	public String getUriPrefix() {

@@ -50,6 +50,7 @@ public class SparqlGraphJson {
 	static final String JKEY_IS_COLUMNS = "columns";
 	static final String JKEY_IS_COL_COL_ID = "colId";
 	static final String JKEY_IS_COL_COL_NAME = "colName";
+	static final String JKEY_IS_DATA_VALIDATOR = "dataValidator";
 	static final String JKEY_IS_TEXTS = "texts";
 	static final String JKEY_IS_TEXT_ID = "textId";
 	static final String JKEY_IS_TEXT_TEXT = "text";
@@ -72,6 +73,7 @@ public class SparqlGraphJson {
 	static final String JKEY_IS_MAPPING_TRANSFORM_LIST = "transformList";
 	static final String JKEY_IS_MAPPING_PROPS = "props";
 	static final String JKEY_IS_MAPPING_PROPS_URI_REL = "URIRelation";
+
 
 	
 	static final String JKEY_RUNTIMECONST = "RuntimeConstraints";

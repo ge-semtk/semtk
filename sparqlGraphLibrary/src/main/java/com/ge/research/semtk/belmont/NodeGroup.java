@@ -56,8 +56,9 @@ public class NodeGroup {
 	private static final String JSON_KEY_NODELIST = "sNodeList";
 	
 	// version 9: added snodeOptionals MINUS
-	// version 10: importSpec dataValidator
-	private static final int VERSION = 10;
+	// version 10: accidentally wasted in a push
+	// version 11: importSpec dataValidator
+	private static final int VERSION = 11;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;

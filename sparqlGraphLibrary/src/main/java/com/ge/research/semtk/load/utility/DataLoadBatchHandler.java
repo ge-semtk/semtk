@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.DataLoader;
+import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.DataSetExhaustedException;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
@@ -123,6 +124,20 @@ public class DataLoadBatchHandler {
 		
 		return this.convertToNodeGroups(recordList, startingRowNum, skipValidation);
 		
+	}
+	
+	/**
+	 * Single thread validate entire dataset
+	 * sets failuresEncountered if any found
+	 * @returns: errCount
+	 */
+	public int validateData() throws Exception {
+		DataValidator dv = this.importSpec.getDataValidator();
+		int errCount = dv.validate(this.ds);
+		if (errCount > 0) {
+			this.failuresEncountered = dv.getErrorTable();
+		}
+		return errCount;
 	}
 
 	/**

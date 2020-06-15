@@ -59,6 +59,18 @@ public class Table {
 	private ArrayList<ArrayList<String>> rows;   
 	private HashMap<String, Integer> columnPositionInfo = new HashMap<String, Integer>();
 
+	public Table(ArrayList<String> cols) throws Exception{
+		this(cols.toArray(new String[0]), null, new ArrayList<ArrayList<String>>());
+	}
+	
+	public Table(ArrayList<String> cols, ArrayList<String> colTypes) throws Exception{
+		this(cols.toArray(new String[0]), colTypes.toArray(new String[0]), new ArrayList<ArrayList<String>>());
+	}
+	
+	public Table(ArrayList<String> cols, ArrayList<String> colTypes, ArrayList<ArrayList<String>> rows) throws Exception{
+		this(cols.toArray(new String[0]), colTypes.toArray(new String[0]), rows);
+	}
+	
 	public Table(String[] cols) throws Exception{
 		this(cols, null, new ArrayList<ArrayList<String>>());
 	}

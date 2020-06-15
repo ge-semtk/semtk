@@ -234,6 +234,75 @@ public class DataLoaderTest_IT {
 		assertTrue(dl.getLoadingErrorReport().getRow(0).get(4).contains("ill-formed URI"));
 	}	
 	
+	// Validation:  these test basic integration.  DataLoaderTest_IT tests details of validation.
+	@Test
+	public void testValidatePasses() throws Exception { 
+
+		// set up the data
+		String contents = "Battery,Cell,birthday,color\n"
+				+ "MyBattery,cellA,01/01/1966,red\n";
+		Dataset ds = new CSVDataset(contents, true);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 1, records);
+	}	
+	
+	// Validation:  these test basic integration.  DataLoaderTest_IT tests details of validation.
+	@Test
+	public void testValidateFailsMissingCol() throws Exception { 
+
+		// set up the data
+		String contents = "Battery,Cell,birthday\n"
+				+ "MyBattery,cellA,01/01/1966\n";
+		Dataset ds = new CSVDataset(contents, true);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		// fails because column "color" is missing
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 0, records);
+		assertTrue(dl.getLoadingErrorReport().toCSVString().contains("color"));
+	}	
+	@Test
+	public void testValidateFailsColorRed() throws Exception { 
+
+		// set up the data
+		String contents = "Battery,Cell,birthday,color\n"
+				+ "MyBattery,cellA,01/01/1966,FAIL\n";
+		Dataset ds = new CSVDataset(contents, true);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		// fails because FAIL doesn't match the regex red
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 0, records);
+		assertTrue(dl.getLoadingErrorReport().toCSVString().contains("FAIL"));
+
+	}	
+	
 	@Test
 	public void testMessyString1() throws Exception {
 		// Test string with \r and \n
@@ -889,7 +958,6 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testLoadLookXNodesTwoConn() throws Exception {
-		doLoadLookXNodesTwoConn(false);
 		doLoadLookXNodesTwoConn(true);
 	}
 	public void doLoadLookXNodesTwoConn(boolean cacheFlag) throws Exception {

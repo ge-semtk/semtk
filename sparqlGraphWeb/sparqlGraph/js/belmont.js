@@ -1838,8 +1838,9 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 10;
-// version 10 - import spec has dataValidator
+SemanticNodeGroup.JSON_VERSION = 11;
+// version 11 - import spec has dataValidator
+// version 10 - (accidentally wasted in a push)
 // version 9 - minus links
 // version 8 - fixes to order by
 // version 7 - offset, order by

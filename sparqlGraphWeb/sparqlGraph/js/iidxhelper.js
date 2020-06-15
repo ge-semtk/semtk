@@ -193,7 +193,7 @@ define([	// properly require.config'ed
      * selectedTexts is a list of selected items
      * optClassName can be used to control the width of the select box (e.g. input-mini for a narrow dropdown)
      */
-    IIDXHelper.createSelect = function (id, textValArray, selectedTexts, optMultiFlag, optClassName) {
+    IIDXHelper.createSelect = function (id, textValArray, selectedTexts, optMultiFlag, optClassName, optDisabledList) {
         var select =  document.createElement("select");
 
         if (typeof id != "undefined" && id != null && id != "") {
@@ -223,6 +223,13 @@ define([	// properly require.config'ed
             option.text = text;
             option.value = val;
             option.selected = (selectedTexts.indexOf(text) > -1);
+
+            if (typeof optDisabledList != "undefined" && (optDisabledList.indexOf(text) > -1) ) {
+                option.disabled = true;
+                //option.classList.add("btn-danger");   // TODO find something better
+                option.style.color = "red";
+                option.style.textDecoration="line-through";
+            }
             select.options.add(option);
         }
 
