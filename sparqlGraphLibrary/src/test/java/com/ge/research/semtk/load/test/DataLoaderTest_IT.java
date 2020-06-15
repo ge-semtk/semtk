@@ -20,6 +20,8 @@ package com.ge.research.semtk.load.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
+
 
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
@@ -958,7 +960,9 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testLoadLookXNodesTwoConn() throws Exception {
+		assumeTrue(TestGraph.getSei().getServerType() != "virtuoso");
 		doLoadLookXNodesTwoConn(true);
+		doLoadLookXNodesTwoConn(false);
 	}
 	public void doLoadLookXNodesTwoConn(boolean cacheFlag) throws Exception {
 		// Repeat testLoadLookXNodes() with an extra data connection graph
