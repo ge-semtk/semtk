@@ -52,8 +52,8 @@ define([	// properly require.config'ed
 			 this.fileDiv = null;
 			 this.button = null;
 
-			 this.jsonFile = null;
-			 this.nodeGroupName = null;
+			 this.importJsonFile = null;
+			 this.importNgName = null;
 			 this.conn = null;
 			 this.dataFile = null;
 
@@ -101,6 +101,7 @@ define([	// properly require.config'ed
 
 				// title
 				var p = document.createElement("p");
+                p.id = "uploadtab_importcsv_p";
 				p.innerHTML = "Import CSV into a nodegroup's data endpoint:";
 				this.parentDiv.appendChild(p);
 
@@ -190,6 +191,7 @@ define([	// properly require.config'ed
 				var readyFlag = true;
 				var msgTxt;
 				var dropZone;
+                var uploadP;
 
 				// csv file
 				dropZone = document.getElementById("fileDropZone");
@@ -205,21 +207,27 @@ define([	// properly require.config'ed
 
 				// nodegroup json
 				dropZone = document.getElementById("jsonDropZone");
-				if (this.jsonFile == null) {
+				if (this.importJsonFile == null) {
 					msgTxt = "Drop Nodegroup Query Json";
 					IIDXHelper.setDropzoneLabel(dropZone, msgTxt, IIDXHelper.DROPZONE_EMPTY);
-
 					readyFlag = false;
 
-				} else if (this.jsonFile.hasOwnProperty(name)) {
-					msgTxt = this.jsonFile.name + " (" + Number(this.jsonFile.size / 1024).toFixed(1) + " KB)";
+				} else if (this.importJsonFile.hasOwnProperty(name)) {
+					msgTxt = this.importJsonFile.name + " (" + Number(this.importJsonFile.size / 1024).toFixed(1) + " KB)";
 					IIDXHelper.setDropzoneLabel(dropZone, msgTxt, IIDXHelper.DROPZONE_FULL);
-
 				// display node group
 				} else {
-					msgTxt = "Nodegroup from: " + this.nodeGroupName;
+					msgTxt = "Nodegroup from: " + this.importNgName;
 					IIDXHelper.setDropzoneLabel(dropZone, msgTxt, IIDXHelper.DROPZONE_FULL);
 				}
+
+                uploadP = document.getElementById("uploadtab_importcsv_p");
+                if (this.importJsonConn == null) {
+                    uploadP.innerHTML = "Import csv";
+                } else {
+                    var sei = this.importJsonConn.getDataInterface(0);
+                    uploadP.innerHTML = "Import csv into: <b>" + sei.getServerURL() + " </b>graph:<b> " + sei.getGraph() + "</b>";
+                }
 
 				this.button.disabled = (! readyFlag);
 
@@ -1000,8 +1008,9 @@ define([	// properly require.config'ed
 			 * Clear the nodegroup
 			 */
 			clearNodeGroup : function () {
-				this.jsonFile = null;
-				this.nodeGroupName = "";
+				this.importJsonFile = null;
+				this.importNgName = "";
+                this.importJsonConn = null;
 				this.conn = null;
 				this.nodegroup = null;
 				this.importTab = null;
@@ -1015,23 +1024,25 @@ define([	// properly require.config'ed
 
 				if (importTab !== null && nodegroup !== null && conn !== null) {
 					// set json, data, and suggested Prefix
-					var j = new SparqlGraphJson(conn, nodegroup, importTab);
-		    		this.jsonFile = new Blob( [j.stringify()], { type: "text/css"});
+					var sgjson = new SparqlGraphJson(conn, nodegroup, importTab);
+		    		this.importJsonFile = new Blob( [sgjson.stringify()], { type: "text/css"});
+                    this.importJsonConn = conn;
 
 		    		//only change this when setDataFile is called.
 		    		//this.dataFile = importTab.getCsvFile();
 		    		this.suggestedPrefix = importTab.getBaseURI();
 				} else {
-					this.jsonFile = null;
+					this.importJsonFile = null;
+                    this.importJsonConn = null;
 					//this.dataFile = null;
 					this.suggestedPrefix = null;
 				}
 
 				if (conn !== null) {
-		    		this.nodeGroupName = conn.name;
+		    		this.importNgName = conn.name;
 		    		this.conn = conn;
 				} else {
-					this.nodeGroupName = "";
+					this.importNgName = "";
 					this.conn = null;
 				}
 
@@ -1091,7 +1102,8 @@ define([	// properly require.config'ed
 			 * Drop json nodegroup callback
 			 */
 			ondropJson : function(ev, label) {
-				this.jsonFile = null;
+				this.importJsonFile = null;
+                this.importJsonConn = null;
 				label.data = "Drop Nodegroup Query Json";
 
 				if (ev.dataTransfer.files.length != 1) {
@@ -1157,12 +1169,10 @@ define([	// properly require.config'ed
                     var r = new FileReader();
                     r.onload = function(e) {
                         kdlLogEvent("SG: Sync Read Owl", "filename", f.name);
-                        // PEC HERE
+
                         this.syncOwlFile = f;
 
-                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                        IIDXHelper.progressBarRemove(this.progressDiv);
-                        this.fillAll();
+                        this.progressDone();
 
                     }.bind(this);
 
@@ -1171,9 +1181,7 @@ define([	// properly require.config'ed
                     } catch (e) {
                         logAndAlert("Error loading OWL file", err.message);
 
-                        IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-                        IIDXHelper.progressBarRemove(this.progressDiv);
-                        this.fillAll();
+                        this.progressDone();
                     }
                 } else {
                     alert("Failed to load file");
@@ -1195,9 +1203,7 @@ define([	// properly require.config'ed
 						kdlLogEvent("Import Service Load Csv", "filename", f.name);
 						this.dataFile = f;
 
-						IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-						IIDXHelper.progressBarRemove(this.progressDiv);
-						this.fillAll();
+						this.progressDone();
 					}.bind(this);
 
 					try {
@@ -1205,9 +1211,7 @@ define([	// properly require.config'ed
 					} catch (e) {
 						logAndAlert("Error loading data file", err.message);
 
-						IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-						IIDXHelper.progressBarRemove(this.progressDiv);
-						this.fillAll();
+						this.progressDone();
 					}
 
 				} else {
@@ -1215,6 +1219,11 @@ define([	// properly require.config'ed
 				}
 			},
 
+            progressDone : function() {
+                IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+                IIDXHelper.progressBarRemove(this.progressDiv);
+                this.fillAll();
+            },
 
 			/**
 			 * Read a nodegroup (JSON) file
@@ -1231,38 +1240,50 @@ define([	// properly require.config'ed
 					r.onload = function(e) {
 						kdlLogEvent("Import Service Load Json", "filename", f.name);
 
-			    		this.jsonFile = f;
-						this.nodeGroupName = f.name;
-
-						var jsonifier = new SparqlGraphJson();
+						var sgjson = new SparqlGraphJson();
 						try {
-			    			jsonifier.parse(r.result);
-			    			this.conn = jsonifier.getSparqlConn();
+			    			sgjson.parse(r.result);
 
+                            this.importJsonFile = f;
+    						this.importNgName = f.name;
+
+			    			this.importJsonConn = sgjson.getSparqlConn();
+                            if (this.conn && ! this.conn.equals(this.importJsonConn, true)) {
+                                ModalIidx.choose("New Connection",
+                                                 "Nodegroup json contains a different SPARQL connection<br><br>Which one do you want to use?",
+                                                 ["Keep Current",                            "From file"],
+                                                 [this.swapJsonFileConn.bind(this, sgjson),   function(){}]
+                                                 );
+                            }
+                            //HERE compare jsonConn to this.conn and decide whether to swap
+                            //     display the jsonConn.
 			    		} catch (e) {
-			    			this.jsonFile = null;
-			    			this.nodeGroupName = null;
-			    			this.conn = null;
+			    			this.importJsonFile = null;
+			    			this.importNgName = null;
 			    			this.logAndAlert("Error", "Error parsing the JSON query file: \n" + e);
 			    		}
 
-			    		IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-						IIDXHelper.progressBarRemove(this.progressDiv);
-						this.fillAll();
+			    		this.progressDone();
 					}.bind(this);
 
 					try {
 						r.readAsText(f);
 					} catch (e) {
 						logAndAlert("Error loading data file", err.message);
-						IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-						IIDXHelper.progressBarRemove(this.progressDiv);
-						this.fillAll();
+						this.progressDone();
 					}
 				} else {
 					alert("Failed to load file");
 				}
 			},
+
+            // inject this.conn into this.importJsonFile
+            swapJsonFileConn : function(jsonFileSgjson) {
+                this.importJsonConn = this.conn;
+                jsonFileSgjson.setSparqlConn(this.conn);
+                this.importJsonFile = new Blob( [jsonFileSgjson.stringify()], { type: "text/css"});
+                this.fillAll();
+            },
 
 			/**
 			 * Import button callback
@@ -1367,7 +1388,7 @@ define([	// properly require.config'ed
 
 			    var client = new MsiClientIngestion(this.ingestionServiceURL, this.msiFailureCallback.bind(this));
 				kdlLogEvent("SG: import fromCsvFilePrecheck");
-			    client.execFromCsvFilePrecheckAsync(this.jsonFile, this.dataFile, successCallback.bind(this, client));
+			    client.execFromCsvFilePrecheckAsync(this.importJsonFile, this.dataFile, successCallback.bind(this, client));
 
 
 			},
