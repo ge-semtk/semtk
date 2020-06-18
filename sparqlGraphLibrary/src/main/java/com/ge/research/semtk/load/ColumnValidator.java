@@ -54,12 +54,13 @@ public class ColumnValidator {
 	static final String KEY_ARITH_GTE = "gte";
 	static final String KEY_ARITH_NE = "ne";
 	
+	// types
 	static final String VAL_TYPE_INT = "int";
 	static final String VAL_TYPE_FLOAT = "float";
 	static final String VAL_TYPE_DATE = "date";
 	static final String VAL_TYPE_TIME = "time";
 	static final String VAL_TYPE_DATETIME = "datetime";
-	//TODO date, time, dateTime ISO format
+
 	/**
 	 * 
 	 * @param ds
