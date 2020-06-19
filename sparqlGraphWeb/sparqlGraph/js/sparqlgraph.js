@@ -1845,6 +1845,7 @@
 	var clearGraph = function () {
     	gNodeGroup.clear();
         gNodeGroup.setSparqlConnection(gConn);
+        gMappingTab.clear();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();
