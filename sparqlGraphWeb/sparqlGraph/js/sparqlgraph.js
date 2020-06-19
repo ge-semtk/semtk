@@ -191,51 +191,59 @@
 
         if ( gOInfo.containsClass(dragLabel) ){
             // the class was found. let's use it.
-            var nodelist = gNodeGroup.getArrayOfURINames();
-            var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
 
             // Handle no paths or shift key during drag: drop node with no connections
-            if (noPathFlag || paths.length == 0) {
+            if (noPathFlag) {
                 gNodeGroup.addNode(dragLabel, gOInfo);
                 nodeGroupChanged(true);
                 guiGraphNonEmpty();
 
             } else {
-                // find possible anchor node(s) for each path
-                // start with disconnected option
-                var pathStrList = ["** Disconnected " + dragLabel];
-                var valList = [[new OntologyPath(dragLabel), null, false]];
+                var nodelist = gNodeGroup.getArrayOfURINames();
+                var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
 
-                // for each path
-                for (var p=0; p < paths.length; p++) {
-                    // for each instance of the anchor class
-                    var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
-                    for (var n=0; n < nlist.length; n++) {
-
-                        pathStrList.push(paths[p].genPathString(nlist[n], false));
-                        valList.push( [paths[p], nlist[n], false ] );
-
-                        // push it again backwards if it is a special singleLoop
-                        if ( paths[p].isSingleLoop()) {
-                            pathStrList.push(paths[p].genPathString(nlist[n], true));
-                            valList.push( [paths[p], nlist[n], true ] );
-                        }
-                    }
-                }
-
-                // if choices are more than "** Disconnected" plus one other path...
-                if (valList.length > 2) {
-                     require([ 'sparqlgraph/js/modaliidx',
-                             ], function (ModalIidx) {
-
-                        // offer a choice, defaulting to the shortest non-disconnected path
-                        ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
-
-                     });
+                if (paths.length == 0) {
+                    gNodeGroup.addNode(dragLabel, gOInfo);
+                    nodeGroupChanged(true);
+                    guiGraphNonEmpty();
 
                 } else {
-                    // automatically add using the only path
-                    dropClassCallback(valList[1]);
+                    // find possible anchor node(s) for each path
+                    // start with disconnected option
+                    var pathStrList = ["** Disconnected " + dragLabel];
+                    var valList = [[new OntologyPath(dragLabel), null, false]];
+
+                    // for each path
+                    for (var p=0; p < paths.length; p++) {
+                        // for each instance of the anchor class
+                        var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
+                        for (var n=0; n < nlist.length; n++) {
+
+                            pathStrList.push(paths[p].genPathString(nlist[n], false));
+                            valList.push( [paths[p], nlist[n], false ] );
+
+                            // push it again backwards if it is a special singleLoop
+                            if ( paths[p].isSingleLoop()) {
+                                pathStrList.push(paths[p].genPathString(nlist[n], true));
+                                valList.push( [paths[p], nlist[n], true ] );
+                            }
+                        }
+                    }
+
+                    // if choices are more than "** Disconnected" plus one other path...
+                    if (valList.length > 2) {
+                         require([ 'sparqlgraph/js/modaliidx',
+                                 ], function (ModalIidx) {
+
+                            // offer a choice, defaulting to the shortest non-disconnected path
+                            ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
+
+                         });
+
+                    } else {
+                        // automatically add using the only path
+                        dropClassCallback(valList[1]);
+                    }
                 }
             }
         }
