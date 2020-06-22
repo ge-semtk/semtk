@@ -1891,7 +1891,7 @@ SemanticNodeGroup.prototype = {
 		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
 
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
-			throw new Error("SemanticNodeGroup.addJson only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
+			throw new Error("belmont.js:SemanticNodeGroup.addJson() only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
 		}
 
         if (jObj.hasOwnProperty("limit")) {
