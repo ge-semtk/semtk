@@ -47,10 +47,19 @@ else
 	echo Usage: startServices.sh [alt_env_dir]
 fi
 
-# JAVA_HOME
+# exit if no JAVA_HOME
 if [ -z "$JAVA_HOME" ]; then
         >&2 echo No JAVA_HOME
         exit 1
+fi
+
+# exit if services are still running
+NUM_SERVICES_RUNNING=`ps aux | grep jar | grep $SEMTK | grep Service | wc -l`
+if [ $NUM_SERVICES_RUNNING -gt 0 ]; then
+        >&2 echo "$NUM_SERVICES_RUNNING services are running in $SEMTK, cannot restart"
+        exit 1
+else
+        >&2 echo "Confirmed no services running in $SEMTK"
 fi
 
 # logs/
