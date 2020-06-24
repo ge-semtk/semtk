@@ -33,6 +33,7 @@
                 <include>service.unit</include>
                 <include>startServices.sh</include>
                 <include>stopServices.sh</include>
+                <include>updateWebapps.service</include>
                 <include>updateWebapps.sh</include>
                 <include>.env</include>
                 <include>.fun</include>

@@ -67,16 +67,11 @@ do
         DEST_DIR=$(dirname "${WEBAPPS}/${DIR}")
         
         # Wipe out and replace other known dirs
-        set -x
-        
         rm -rf "${WEBAPPS}/${DIR}"
         cp -r "${SG_WEB_OSS}/${DIR}" "${DEST_DIR}"
-		
-		set +x        
 done
 
 # --- special cases ---
-set -x
 
 # Allow other files to remain in ROOT
 mkdir -p "${SG_WEB_OSS}"/ROOT
@@ -86,15 +81,8 @@ cp -r "${SG_WEB_OSS}"/ROOT/* "${WEBAPPS}"/ROOT
 cp "${SG_WEB_OSS}"/sparqlForm/*.html "${WEBAPPS}"/sparqlForm
 cp "${SG_WEB_OSS}"/sparqlGraph/*.html "${WEBAPPS}"/sparqlGraph
 
-set +x
-   
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
         replace_vars_in_file "${WEBAPPS}/${v}" "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"
 done
-
-echo ==== updateWebapps.sh SUCCESS ====
-
-
-                

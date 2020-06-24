@@ -87,13 +87,10 @@ replace_vars_in_file() {
 
 	# replace each variable value into the file in place
 	# it must be exactly of the form ${VAR_NAME}
-	echo Configuring ${FILE_PATH}...
 	for ((i=0; $i<${#names[*]}; i++)); do
 		FIND='${'${names[$i]}'}'
 		REPL="${values[$i]}"
-		set -x
 		sed --in-place "s#${FIND}#${REPL}#g" "${FILE_PATH}"
-		set +x
 	done
 }
 ## End replace_vars_in_file function

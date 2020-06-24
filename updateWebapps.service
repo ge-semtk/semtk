@@ -1,0 +1,13 @@
+[Unit]
+Description=Update SemTK webapps
+Before=nginx.service
+
+[Service]
+User=${USER}
+WorkingDirectory=${PWD}
+ExecStart=/bin/bash -c 'SERVER_ADDRESS=$(hostname -I | tr " " "\n" | head -1) ./updateWebapps.sh /var/www/html'
+ExecStart=/bin/mv /var/www/html/ROOT /var/www/html/index.html
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
