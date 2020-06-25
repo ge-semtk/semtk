@@ -122,6 +122,14 @@ public class SimpleResultSet extends GeneralResultSet{
 		this.resultsContents.put(name, jObj);
 	}
 	
+	@SuppressWarnings("unchecked")
+	public void addResult(String name, JSONArray jArr) {
+		if (this.resultsContents == null) {
+			this.resultsContents = new JSONObject();
+		}
+		this.resultsContents.put(name, jArr);
+	}
+	
 	public void addResult(String name, String [] value) {
 		this.addResultStringArray(name, value);
 	}
@@ -167,6 +175,14 @@ public class SimpleResultSet extends GeneralResultSet{
 	public JSONObject getResultJSON(String name) throws Exception {
 		if (this.resultsContents.containsKey(name)) {
 			return (JSONObject) this.resultsContents.get(name);
+		} else {
+			throw new Exception(String.format("Can't find result field '%s'", name));
+		}
+	}
+	
+	public JSONArray getResultJSONArray(String name) throws Exception {
+		if (this.resultsContents.containsKey(name)) {
+			return (JSONArray) this.resultsContents.get(name);
 		} else {
 			throw new Exception(String.format("Can't find result field '%s'", name));
 		}

@@ -537,6 +537,33 @@ public class NodeGroupServiceRestController {
 	}
 	
 	@ApiOperation(
+			value="Get ingestion validation rules",
+			notes="Returns columnNames array and dataValidator json array"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getIngestionColumnInfo", method=RequestMethod.POST)
+	public JSONObject  getIngestionValidations(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			ImportSpecHandler handler = sgJson.getImportSpec();
+			retval.addResult("columnNames", handler.getColNamesUsed());
+			retval.addResult("dataValidator", handler.getDataValidator().toJsonArray());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getIngestionColumnInfo", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
 			value="Get a sample CSV that could be ingested",
 			notes="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
 			)

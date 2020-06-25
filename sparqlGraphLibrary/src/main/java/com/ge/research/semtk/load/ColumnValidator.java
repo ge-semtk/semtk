@@ -132,6 +132,10 @@ public class ColumnValidator {
 			
 	}
 	
+	public JSONObject toJson() {
+		return this.valJson;
+	}
+	
 	public String getColumnName() {
 		return (String) this.valJson.get(KEY_COL_NAME);
 	}

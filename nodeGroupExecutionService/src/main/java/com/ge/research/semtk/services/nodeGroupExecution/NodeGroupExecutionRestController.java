@@ -50,6 +50,7 @@ import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
@@ -79,6 +80,7 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
+import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
@@ -1080,7 +1082,6 @@ public class NodeGroupExecutionRestController {
 			try{
 				// create a new StoredQueryExecutor
 				NodeGroupExecutor ngExecutor = this.getExecutor(null );
-
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.getSparqlConnection();			
 	
@@ -1403,7 +1404,63 @@ public class NodeGroupExecutionRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+	
+	@ApiOperation(
+			value="Get columns required by import spec",
+			notes="Returns \"columnNames\" array"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getIngestionColumnsById", method=RequestMethod.POST)
+	public JSONObject  getIngestionColumnsById(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
 
+		try {
+			
+			SparqlGraphJson sgJson = this.getNodegroupById(requestBody.getId());
+			ImportSpecHandler handler = sgJson.getImportSpec();
+			String colNames[] = handler.getColNamesUsed();
+			
+			retval.addResult("columnNames", colNames);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getIngestionColumnsById", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+
+	
+	@ApiOperation(
+			value="Get ingestion validation rules",
+			notes="Returns columnNames array and dataValidator json array"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getIngestionColumnInfoById", method=RequestMethod.POST)
+	public JSONObject  getIngestionValidations(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			SparqlGraphJson sgJson = this.getNodegroupById(requestBody.getId());
+			ImportSpecHandler handler = sgJson.getImportSpec();
+			retval.addResult("columnNames", handler.getColNamesUsed());
+			retval.addResult("dataValidator", handler.getDataValidator().toJsonArray());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "getIngestionColumnInfo", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+			
+			
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;
@@ -1423,6 +1480,12 @@ public class NodeGroupExecutionRestController {
 		return retval;
 	}
 
+	private SparqlGraphJson getNodegroupById(String id) throws Exception {
+		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
+		NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
+		return nodegroupstoreclient.executeGetNodeGroupByIdToSGJson(id);
+	}
+	
 	// create the required StoredQueryExecutor
 	private NodeGroupExecutor getExecutor(String jobID) throws Exception{
 		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());

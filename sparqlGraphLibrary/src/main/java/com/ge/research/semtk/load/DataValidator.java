@@ -49,6 +49,14 @@ public class DataValidator {
 		}
 	}
 	
+	public JSONArray toJsonArray() {
+		JSONArray ret = new JSONArray();
+		for (ColumnValidator colVal : validationHash.values()) {
+			ret.add(colVal.toJson());
+		}
+		return ret;
+	}
+	
 	/**
 	 * loop through dataset and validates. 
 	 * @returns int - number of errors
