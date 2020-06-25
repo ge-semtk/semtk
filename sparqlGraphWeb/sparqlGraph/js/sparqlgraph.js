@@ -1319,6 +1319,7 @@
             // save user when done
             var doneCallback = function () {
                 localStorage.setItem("SPARQLgraph_user", gStoreDialog.getUser());
+                nodeGroupChanged(false);
             }
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
