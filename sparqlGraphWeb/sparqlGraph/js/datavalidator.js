@@ -18,12 +18,13 @@
 
 
 define([	// properly require.config'ed
+            'sparqlgraph/js/columnvalidator'
 
 			// shimmed
 
 		],
 
-	function() {
+	function(ColumnValidator) {
 
 
 		var DataValidator = function (json) {
