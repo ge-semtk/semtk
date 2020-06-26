@@ -42,6 +42,7 @@ public class ColumnValidator {
 	static final String KEY_COL_NAME = "colName";
 	
 	// supported validations
+	static final String KEY_MUST_EXIST = "mustExist";
 	static final String KEY_NOT_EMPTY = "notEmpty";
 	static final String KEY_REGEX_MATCHES = "regexMatches";
 	static final String KEY_REGEX_NOMATCH = "regexNoMatch";
@@ -346,6 +347,10 @@ public class ColumnValidator {
 	
 	public boolean isNonEmpty() {
 		return (this.valJson.containsKey(KEY_NOT_EMPTY) && (boolean) this.valJson.get(KEY_NOT_EMPTY));		
+	}
+	
+	public boolean mustExist() {
+		return (this.valJson.containsKey(KEY_MUST_EXIST) && (boolean) this.valJson.get(KEY_MUST_EXIST));		
 	}
 	
 	/**

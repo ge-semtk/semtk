@@ -32,6 +32,38 @@ public class DataValidatorTest {
 	}
 	
 	@Test
+	public void testMustExist() throws Exception {
+		// missing column d should throw an error
+		String data = "a,b,c\n" +
+					  "1,1,1\n" +
+					  "2,2,2\n";
+		CSVDataset ds = new CSVDataset(data, true);
+		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
+				"{ \"columns\": [{ \"colName\": \"x\", \"mustExist\": true}]}"
+				);
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		System.out.println(validator.getErrorTable().toCSVString());
+		assertEquals(validator.getErrorTable().toCSVString(), 1, errCount);
+	}
+	
+	@Test
+	public void testValidateMissingPasses() throws Exception {
+		// validation on missing column NOT "mustExist" should pass
+		String data = "a,b,c\n" +
+					  "1,1,1\n" +
+					  "2,2,2\n";
+		CSVDataset ds = new CSVDataset(data, true);
+		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
+				"{ \"columns\": [{ \"colName\": \"x\", \"regexMatches\": \"[0-9]+\"}]}"
+				);
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		System.out.println(validator.getErrorTable().toCSVString());
+		assertEquals(validator.getErrorTable().toCSVString(), 0, errCount);
+	}
+	
+	@Test
 	public void testEmptyAndRegex() throws Exception {
 		// Tests: two column validated
 		//        
@@ -41,8 +73,8 @@ public class DataValidatorTest {
 					  ",3,3\n";
 		CSVDataset ds = new CSVDataset(data, true);
 		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
-				"{ \"columns\": [{ \"colName\": \"a\", \"notEmpty\": true, \"regexMatches\": \"[0-9]+\" \"regexNoMatch\": \".*7.*\" },"+
-				"                { \"colName\": \"c\", \"notEmpty\": true, \"regexMatches\": \"[0-9]+\" \"regexNoMatch\": \".*2.*\" } " +
+				"{ \"columns\": [{ \"colName\": \"a\", \"notEmpty\": true, \"regexMatches\": \"[0-9]+\", \"regexNoMatch\": \".*7.*\" },"+
+				"                { \"colName\": \"c\", \"notEmpty\": true, \"regexMatches\": \"[0-9]+\", \"regexNoMatch\": \".*2.*\" } " +
 				"]}");
 		
 		// c should be fine
@@ -57,6 +89,24 @@ public class DataValidatorTest {
 		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
 		int errCount = validator.validate(ds);
 		assertEquals("Found these errors: " + validator.getErrorTable().toCSVString(), 3, errCount);
+	}
+	
+	@Test
+	public void emptiesDontFail() throws Exception {
+		// Tests: empties don't fail
+		//        
+		String data = "a,b,c\n" +
+					  ",,\n" ;
+		CSVDataset ds = new CSVDataset(data, true);
+		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
+				"{ \"columns\": [{ \"colName\": \"a\",  \"type\": \"int\",   \"gt\": 0, \"gte\": 1,   \"lt\": 4, \"lte\": 3,   \"ne\": 5},"+
+				"                { \"colName\": \"c\",  \"regexMatches\": \"[0-9]+\", \"regexNoMatch\": \".*2.*\" } " +
+				"]}");
+		
+		// no errors
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		assertEquals("Found these errors: " + validator.getErrorTable().toCSVString(), 0, errCount);
 	}
 	
 	@Test
@@ -120,7 +170,6 @@ public class DataValidatorTest {
 		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
 		int errCount = validator.validate(ds);
 		assertEquals("Found these errors: \n" + validator.getErrorTable().toCSVString(), 9, errCount);
-		System.out.println(validator.getErrorTable().toCSVString());
 		ds = new CSVDataset(data, true);
 		colJson = (JSONObject) (new JSONParser()).parse(
 				"{ \"columns\": [{ \"colName\": \"d\", \"notEmpty\": true, \"type\": \"date\", \"gte\":\"2001-01-01\", \"lte\":\"2003-03-03\", \"ne\": \"2002-02-03\"  },   " +

@@ -50,15 +50,16 @@ define([	// properly require.config'ed
 
         // list retains order
         ColumnValidator.CONFIG = [
-            { key: "notEmpty",     "alias": "required",       "type": "enum",  "enum": [true]},
-            { key: "regexMatches", "alias": "regex match",    "type": "regex"},
-            { key: "regexNoMatch", "alias": "regex no match", "type": "regex"},
-            { key: "type",         "alias": "type",           "type": "enum", "enum": ["int", "float", "date", "datetime", "time"]},
-            { key: "lt",           "alias": "<",              "type": "arith" },
-            { key: "gt",           "alias": ">",              "type": "arith" },
-            { key: "lte",          "alias": "<=",             "type": "arith" },
-            { key: "gte",          "alias": ">=",             "type": "arith" },
-            { key: "ne",           "alias": "!=",             "type": "arith" }
+            { key: "mustExist",     "alias": "column exists",       "type": "enum",  "enum": [true]},
+            { key: "notEmpty",      "alias": "not empty",       "type": "enum",  "enum": [true]},
+            { key: "regexMatches",  "alias": "regex match",    "type": "regex"},
+            { key: "regexNoMatch",  "alias": "regex no match", "type": "regex"},
+            { key: "type",          "alias": "type",           "type": "enum", "enum": ["int", "float", "date", "datetime", "time"]},
+            { key: "lt",            "alias": "<",              "type": "arith" },
+            { key: "gt",            "alias": ">",              "type": "arith" },
+            { key: "lte",           "alias": "<=",             "type": "arith" },
+            { key: "gte",           "alias": ">=",             "type": "arith" },
+            { key: "ne",            "alias": "!=",             "type": "arith" }
         ];
 
 		ColumnValidator.prototype = {

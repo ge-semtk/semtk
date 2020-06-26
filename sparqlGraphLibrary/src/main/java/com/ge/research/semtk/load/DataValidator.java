@@ -77,6 +77,7 @@ public class DataValidator {
 		colNames.add(DataLoader.FAILURE_CAUSE_COLUMN_NAME);
 		colNames.add(DataLoader.FAILURE_RECORD_COLUMN_NAME);
 		
+		// init empty error table
 		this.errorTable = new Table(colNames);
 		
 		HashMap<Integer, ColumnValidator> colToValidatorHash = new HashMap<Integer, ColumnValidator>();
@@ -84,7 +85,7 @@ public class DataValidator {
 		ArrayList<String> errors = new ArrayList<String>();
 		
 		// map ds colPos to their validation JsonObjects
-		// make sure all NON_EMPTY columns exist
+		// make sure all MUST_EXIST and NON_EMPTY columns exist
 		for (String colName : this.validationHash.keySet()) {
 			Integer colPos = ds.getColumnIndex(colName);
 			
@@ -92,7 +93,7 @@ public class DataValidator {
 				colToValidatorHash.put(colPos, this.validationHash.get(colName));
 				colToNameHash.put(colPos, colName);
 				
-			} else if (this.validationHash.get(colName).isNonEmpty()) {
+			} else if (this.validationHash.get(colName).mustExist() || this.validationHash.get(colName).isNonEmpty()) {
 				errors.add("Missing required column: " + colName);
 			}
 		}
