@@ -89,6 +89,6 @@ var g = {
 	},
 	userEndpoint : "${WEB_USER_ENDPOINT}",
 
-	longTimeoutMsec: 8000,
-	shortTimeoutMsec: 5000,
+	longTimeoutMsec: 30000,
+	shortTimeoutMsec: 15000,
 };

@@ -725,7 +725,7 @@
                                                                                  checkForCancel,
                                                                                  g.service.status.url,
                                                                                  g.service.results.url);
-                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
+                var execClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
 
                 statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, rtConstraints, jsonCallback, failureCallback);
@@ -1163,7 +1163,7 @@
 
             var runViaServices = true;
             guiDisableAll(runViaServices);
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.shortTimeoutMsec);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
 
             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
@@ -1210,7 +1210,7 @@
     	         'sparqlgraph/js/modaliidx'],
     	         function (MsiClientNodeGroupExec, ModalIidx) {
 
-    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, g.shortTimeoutMsec);
+    		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, g.longTimeoutMsec);
 
              var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,
