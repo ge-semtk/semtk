@@ -960,7 +960,7 @@ public class DataLoaderTest_IT {
 	
 	@Test
 	public void testLoadLookXNodesTwoConn() throws Exception {
-		//assumeTrue(TestGraph.getSei().getServerType() != "virtuoso");
+		assumeTrue("Test skipped due to recurring virtuoso error on v-test", TestGraph.getSei().getServerType() != "virtuoso");
 		doLoadLookXNodesTwoConn(true);
 		doLoadLookXNodesTwoConn(false);
 	}
