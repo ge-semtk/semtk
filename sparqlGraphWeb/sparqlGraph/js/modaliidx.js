@@ -222,6 +222,15 @@ define([	// properly require.config'ed   bootstrap-modal
             return IIDXHelper.createIconButton("icon-info-sign", ModalIidx.alert.bind(this, "Info", helpHTML, false, function(){}), ["icon-white", "btn-small", "btn-info"], optId);
         };
 
+        ModalIidx.createWikiButton = function(page, optId) {
+            return IIDXHelper.createIconButton("icon-info-sign",
+                                                function() {
+                                                    window.open(g.help.url.base + "/" + page, "_blank","location=yes");
+                                                },
+                                                ["icon-white", "btn-small", "btn-default"],
+                                                optId);
+        };
+
 		ModalIidx.prototype = {
 
             showOK : function (headerText, bodyDOM, callback, optWidthPercent) {

@@ -129,20 +129,6 @@
 			logAndAlert(g.help.buildHtml + '<br>' + g.help.aboutHtml + '<br>' + g.help.legalNoticeHtml, 'About SPARQLgraph');
 		}
 
-		doHelp = function () {
-			var url = g.help.url.base + "#" + g.help.url[gCurrentTab];
-			window.open(url);
-		}
-
-		doHelpBlog = function () {
-			var url = g.help.url.blog;
-			window.open(url);
-		}
-
-		doHelpSparqlGraph = function () {
-			var url = g.help.url.base;
-			window.open(url);
-		}
 
     doCanvasSize = function(bigFlag) {
       var percent = 1;
@@ -228,9 +214,7 @@
 						<ul class="dropdown-menu pull-right">
 							<li><a href="javascript:checkServices();"  >Check services...</a></li>
 							<li class="divider"></li>
-							<li><a href="javascript:doHelpSparqlGraph();">Docs for SPARQLGraph</a></li>
-							<li><a href="javascript:doHelp();">Docs for this tab</a></li>
-							<li><a href="javascript:doHelpBlog();">Blog bug or feature</a></li>
+							<li><a href="javascript:window.open(g.help.url.base, '_blank','location=yes');">SemTK Wiki</a></li>
 							<li><a href="javascript:doTest();">Test</a></li>
 							<li><a href="javascript:doAbout();">About</a></li>
 						</ul>

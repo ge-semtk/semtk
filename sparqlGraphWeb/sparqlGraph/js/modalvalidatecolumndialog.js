@@ -270,19 +270,30 @@ define([	// properly require.config'ed
                 }
             },
 
-            buildButtonDiv : function() {
-                var div = document.createElement("div");
-                div.style.align="right";
-                div.style.marginBottom = "0.5ch";
+            buildButtonTable : function() {
+                var table = document.createElement("table");
+                table.style.marginBottom = "0.5ch";
+                table.style.width = "100%";
+                var tr = document.createElement("tr");
+                table.appendChild(tr);
+                var td1 = document.createElement("td");
+                td1.align="left";
+                tr.appendChild(td1);
+                var td2 = document.createElement("td");
+                td2.align="right";
+                tr.appendChild(td2);
+
                 var but = null;
 
                 but = IIDXHelper.createIconButton("icon-plus", this.callbackPlus.bind(this));
-                div.appendChild(but);
+                td1.appendChild(but);
 
                 but = IIDXHelper.createIconButton("icon-remove", this.callbackRemove.bind(this));
-                div.appendChild(but);
+                td1.appendChild(but);
 
-                return div;
+                but = ModalIidx.createWikiButton("Ingesting-CSV-Data#data-validation");
+                td2.appendChild(but);
+                return table;
             },
 
             /**
@@ -294,7 +305,7 @@ define([	// properly require.config'ed
 
 
                 this.div = document.createElement("div");
-                this.div.appendChild(this.buildButtonDiv());
+                this.div.appendChild(this.buildButtonTable());
                 this.selTableDiv = document.createElement("div");
                 this.div.appendChild(this.selTableDiv);
 
