@@ -199,7 +199,7 @@
       <div class="semtkcontainer">
         <div style="position:relative; height: 40px;">
 		      <ul class="nav">
-					<li class="dropdown"><a href="#" data-toggle="dropdown">File<i class="icon-chevron-down"></i></a>
+					<li class="dropdown"><a href="#" data-toggle="dropdown">Connection<i class="icon-chevron-down"></i></a>
 						<ul class="dropdown-menu pull-right">
 							<li><a href="javascript:doLoad();">Load</a></li>
 							<li><a href="javascript:doUnload();">Unload</a></li>
@@ -237,7 +237,7 @@
 					</li>
 				</ul>
 
-				<span id="nav-but-span" class="right">
+        <span id="nav-but-span" style="position: absolute; right: 0; bottom: 0;">
 
 						<button id="query-tab-but"  class="btn semtktabbut" onclick="anchorTab1.click();" disabled><i class="icon-sitemap"></i> Query</button>
 						<button id="mapping-tab-but" class="btn semtktabbut" onclick="anchorTab2.click();" disabled><i class="icon-table"></i> Map Input</button>
@@ -280,7 +280,7 @@
             </td>
 
             <td><span id="spanConnection"></span></td>
-            
+
             <td align="right">
               <button class="btn" id="btnMaximize"   onclick="javascript:doCanvasSize(true); return false;" ><i class="icon-resize-vertical"></i></button>
               <button class="btn" id="btnNormal"   onclick="javascript:doCanvasSize(false); return false;" ><i class="icon-th-list"></i></button>
