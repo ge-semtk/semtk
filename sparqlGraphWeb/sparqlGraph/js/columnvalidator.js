@@ -50,7 +50,7 @@ define([	// properly require.config'ed
 
         // list retains order
         ColumnValidator.CONFIG = [
-            { key: "mustExist",     "alias": "column exists",       "type": "enum",  "enum": [true]},
+            { key: "mustExist",     "alias": "column exists",   "type": "enum",  "enum": [true]},
             { key: "notEmpty",      "alias": "not empty",       "type": "enum",  "enum": [true]},
             { key: "regexMatches",  "alias": "regex match",    "type": "regex"},
             { key: "regexNoMatch",  "alias": "regex no match", "type": "regex"},
@@ -97,17 +97,18 @@ define([	// properly require.config'ed
 
                 var ret = { "colName": this.json.colName };
 
-                if (this.json.notEmpty != undefined) { ret.notEmpty = this.json.notEmpty;}
-
-                if (this.json.regexMatches != undefined && this.json.regexMatches.length > 0) { ret.regexMatches = this.json.regexMatches;}
-                if (this.json.regexNoMatch != undefined && this.json.regexNoMatch.length > 0) { ret.regexNoMatch = this.json.regexNoMatch;}
-                if (this.json.type != undefined) { ret.type = this.json.type;}
-
-                if (this.json.lt != undefined) { ret.lt = this.json.lt;}
-                if (this.json.gt != undefined) { ret.gt = this.json.gt;}
-                if (this.json.lte != undefined) { ret.lte = this.json.lte;}
-                if (this.json.gte != undefined) { ret.gte = this.json.gte;}
-                if (this.json.ne != undefined) { ret.ne = this.json.ne;}
+                // set only those which are defined
+                for (var c of ColumnValidator.CONFIG) {
+                    if (c.type == "regex") {
+                        if (this.json[c.key] != undefined && this.json[c.key].length > 0) {
+                            ret[c.key] = this.json[c.key];
+                        }
+                    } else {
+                        if (this.json[c.key] != undefined) {
+                            ret[c.key] = this.json[c.key];
+                        }
+                    }
+                }
 
                 return ret;
 			},

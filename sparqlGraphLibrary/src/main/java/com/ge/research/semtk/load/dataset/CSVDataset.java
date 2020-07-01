@@ -209,7 +209,18 @@ public class CSVDataset extends Dataset {
 	}
 	
 	/**
-	 * Get the column names in order
+	 * Get the index of a column
+	 * @return the index, or -1 if the column does not exist
+	 */
+	@Override
+	public int getColumnIndex(String columnName) throws Exception {
+		String colNameLower = columnName.toLowerCase().trim();
+		return getColumnNamesinOrder().indexOf(colNameLower);
+	}
+	
+	/**
+	 * Get the column names in order.
+	 * This class' column names are trimmed lower case
 	 * @return an arraylist of column names
 	 */
 	@Override

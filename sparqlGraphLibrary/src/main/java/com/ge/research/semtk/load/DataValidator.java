@@ -93,8 +93,10 @@ public class DataValidator {
 				colToValidatorHash.put(colPos, this.validationHash.get(colName));
 				colToNameHash.put(colPos, colName);
 				
-			} else if (this.validationHash.get(colName).mustExist() || this.validationHash.get(colName).isNonEmpty()) {
+			} else if (this.validationHash.get(colName).mustExist()) {
 				errors.add("Missing required column: " + colName);
+			} else if (this.validationHash.get(colName).mustExist() || this.validationHash.get(colName).isNonEmpty()) {
+				errors.add("Missing column that must be non-empty: " + colName);
 			}
 		}
 		

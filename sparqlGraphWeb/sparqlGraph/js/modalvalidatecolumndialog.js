@@ -73,7 +73,7 @@ define([	// properly require.config'ed
                 var disabledList = [];
                 for (var o of validOps) {
                     ops.push([o.alias, o.name]);
-                    if (! o.avail) {
+                    if (o.alias != opAlias && o.avail) {
                         disabledList.push(o.alias);
                     }
                 }
