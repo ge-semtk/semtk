@@ -33,7 +33,7 @@ public class DataValidatorTest {
 	
 	@Test
 	public void testMustExist() throws Exception {
-		// missing column d should throw an error
+		// missing column should throw an error
 		String data = "a,b,c\n" +
 					  "1,1,1\n" +
 					  "2,2,2\n";
@@ -63,6 +63,22 @@ public class DataValidatorTest {
 		assertEquals(validator.getErrorTable().toCSVString(), 0, errCount);
 	}
 	
+	@Test
+	public void testCapitalization() throws Exception {
+		String data = "AppLe,b, cat\n" +
+					  "1,1,1\n" +
+					  "2,2,2\n";
+		CSVDataset ds = new CSVDataset(data, true);
+		JSONObject colJson = (JSONObject) (new JSONParser()).parse(
+				"{ \"columns\": [{ \"colName\": \"apple \", \"regexMatches\": \"[0-9]+\"}," +
+				"                { \"colName\": \"CaT\", \"notEmpty\": true } " +
+				"]}");
+
+		DataValidator validator = new DataValidator((JSONArray) colJson.get("columns"));
+		int errCount = validator.validate(ds);
+		System.out.println(validator.getErrorTable().toCSVString());
+		assertEquals(validator.getErrorTable().toCSVString(), 0, errCount);
+	}
 	@Test
 	public void testEmptyAndRegex() throws Exception {
 		// Tests: two column validated
