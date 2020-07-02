@@ -109,7 +109,9 @@ public class OntologyInfoServiceRestController {
 	    return res.toJson();
 	}
 	
-	
+	@ApiOperation(
+		    value= "Experimental"
+		)
 	@CrossOrigin
 	@RequestMapping(value="/getRdfOWL", method=RequestMethod.POST)
 	public JSONObject getRdfOWL(@RequestBody OntologyInfoJsonRequest requestBody, @RequestHeader HttpHeaders headers){
@@ -130,7 +132,9 @@ public class OntologyInfoServiceRestController {
 		
 		return retval.toJson();		
 	}
-	
+	@ApiOperation(
+		    value= "Experimental"
+		)
 	@CrossOrigin
 	@RequestMapping(value="/getSADL", method=RequestMethod.POST)
 	public JSONObject getSADL(@RequestBody OntologyInfoJsonRequest requestBody, @RequestHeader HttpHeaders headers){
@@ -152,7 +156,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();		
 	}
 
-	
+	@ApiOperation(
+		    value= "Deprecated complex version of json"
+		)
 	@CrossOrigin
 	@RequestMapping(value="/getOntologyInfo", method=RequestMethod.POST)
 	public JSONObject getOntologyInfo(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
@@ -329,7 +335,7 @@ public class OntologyInfoServiceRestController {
 			value="Un-cache any oInfo that was built from any model dataset in the given connection."
 			)
 	@CrossOrigin
-	@RequestMapping(value="/uncacheChangedModel", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value="/uncacheChangedModel", method=RequestMethod.POST)
 	public JSONObject uncacheChangedModel(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "uncacheChangedModel";
@@ -356,7 +362,7 @@ public class OntologyInfoServiceRestController {
 			notes="For very specific UI operations only.<p>Generally, use <i>/uncacheChangedModel</i> instead."
 			)
 	@CrossOrigin
-	@RequestMapping(value="/uncacheOntology", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(value="/uncacheOntology", method=RequestMethod.POST)
 	public JSONObject uncacheOntology(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "uncacheChangedModel";
