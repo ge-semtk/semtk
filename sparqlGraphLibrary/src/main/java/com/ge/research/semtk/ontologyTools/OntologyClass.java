@@ -29,6 +29,8 @@ public class OntologyClass extends AnnotatableElement {
 	// a given class could have more than one parent. 
 	private ArrayList<OntologyName> parentNames = new ArrayList<OntologyName>();
 	private ArrayList<OntologyProperty> properties = new ArrayList<OntologyProperty>();
+	// if we wanted, for sparql gen without an oInfo, we could store to json for nodegroup:
+	// private boolean hasSubClasses
 	
 	public OntologyClass(String name, ArrayList<String> parentNames) throws Exception {
 		
