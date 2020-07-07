@@ -1,0 +1,226 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Paul Test",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://paultest/model"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://paultest/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 11,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://AnimalSubProps#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?puppyName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Dog",
+				"fullURIName": "http://AnimalSubProps#Dog",
+				"subClassNames": [],
+				"SparqlID": "?Puppy",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://AnimalSubProps#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?childName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Animal",
+				"fullURIName": "http://AnimalSubProps#Animal",
+				"subClassNames": [
+					"http://AnimalSubProps#Cat",
+					"http://AnimalSubProps#Dog"
+				],
+				"SparqlID": "?AnimalChild",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://AnimalSubProps#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?dogName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?AnimalChild"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "hasChild",
+						"ValueType": "Animal",
+						"UriValueType": "http://AnimalSubProps#Animal",
+						"ConnectBy": "hasChild",
+						"Connected": true,
+						"UriConnectBy": "http://AnimalSubProps#hasChild"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Puppy"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "hasPuppies",
+						"ValueType": "Dog",
+						"UriValueType": "http://AnimalSubProps#Dog",
+						"ConnectBy": "hasPuppies",
+						"Connected": true,
+						"UriConnectBy": "http://AnimalSubProps#hasPuppies"
+					}
+				],
+				"NodeName": "Dog",
+				"fullURIName": "http://AnimalSubProps#Dog",
+				"subClassNames": [],
+				"SparqlID": "?Dog",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "child"
+			},
+			{
+				"colId": "col_1",
+				"colName": "dog"
+			},
+			{
+				"colId": "col_2",
+				"colName": "puppy"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Dog",
+				"type": "http://AnimalSubProps#Dog",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://AnimalSubProps#name",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?AnimalChild",
+				"type": "http://AnimalSubProps#Animal",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://AnimalSubProps#name",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Puppy",
+				"type": "http://AnimalSubProps#Dog",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://AnimalSubProps#name",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

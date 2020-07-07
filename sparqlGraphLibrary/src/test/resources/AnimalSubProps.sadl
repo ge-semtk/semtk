@@ -1,0 +1,17 @@
+uri "http://AnimalSubProps".
+
+Animal is a class,
+	described by name with a single value of type string,
+	described by hasChild with values of type Animal.
+
+Dog is a type of Animal,
+	described by hasPuppies with values of type Dog.
+	hasPuppies is a type of hasChild.
+	
+Cat is a type of Animal,
+	described by hasKitties with values of type Cat,
+	described by hasDemons.
+	hasKitties is a type of hasChild.
+	hasDemons is a type of hasChild.
+
+

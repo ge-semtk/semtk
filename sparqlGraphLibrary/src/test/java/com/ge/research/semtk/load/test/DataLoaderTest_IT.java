@@ -1474,6 +1474,63 @@ public class DataLoaderTest_IT {
 		doTypesAndConstraintsViaBook(true);
 	}
 	
+	@Test
+	public void testSubProperties() throws Exception {
+		// Test case has subProperties
+		String csvPathCat = "src/test/resources/animalSubPropsCats.csv";
+		String csvPathDog = "src/test/resources/animalSubPropsDogs.csv";
+		String csvFileAncestorRes = "animalSubPropsAncestorResults.csv";
+		String jsonFileCats = "animalSubPropsCats.json";
+		String jsonFileDogs = "animalSubPropsDogs.json";
+		String jsonFileAncestors = "animalSubPropsAncestorSelect.json";
+		String owlResource = "/AnimalSubProps.owl";
+		
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, owlResource);
+
+		// load cats
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, jsonFileCats);
+		CSVDataset csvDataset = new CSVDataset(csvPathCat, false);
+		DataLoader dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// select cats
+		Table res = TestGraph.execSelectFromResource(this, jsonFileCats);
+		assertEquals("Wrong number of cats", 6, res.getNumRows());
+		// (note: blank is one of the values that comes back)
+		assertEquals("Wrong number of demons", 2, res.getColumnUniqueValues("demonName").length);
+		assertEquals("Wrong number of kittens", 4, res.getColumnUniqueValues("kittenName").length);
+		
+		
+		// load dogs
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, jsonFileDogs);
+		csvDataset = new CSVDataset(csvPathDog, false);
+		dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// select dogs
+		res = TestGraph.execSelectFromResource(this, jsonFileDogs);
+		assertEquals("Wrong number of dogs", 1,  res.getColumnUniqueValues("dogName").length);
+		assertEquals("Wrong number of puppies", 1,  res.getColumnUniqueValues("puppyName").length);
+		assertEquals("Wrong number of children", 2,  res.getColumnUniqueValues("childName").length);
+		
+		// select ancestors:   all of dogs' and cat's children and puppies via Animal->hasChild
+		// this uses superProperty + in the query
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, jsonFileAncestors);
+		TestGraph.queryAndCheckResults(sgJson, this, csvFileAncestorRes);
+		
+
+	}
 	public void doTypesAndConstraintsViaBook(boolean cacheFlag) throws Exception {  
 		// Test important parts of RDF1.1 literal typing
 		// with semtk load and semtk query
