@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -58,10 +59,16 @@ public class OntologyInfo {
 	// --- "permanent" hashes of info about the Ontology ---- //
 	// indexed list of all the classes in the ontology of interst
 	private HashMap<String, OntologyClass> classHash = new HashMap<String, OntologyClass>();
-	// indexed list of all of the properties in the ontoogy of interest
+	// indexed list of all of the properties in the ontology of interest
 	private HashMap<String, OntologyProperty> propertyHash = new HashMap<String, OntologyProperty>();
 	// for each class, list its subclasses. the superclasses are stored in the class object itself. 
 	private HashMap<String, ArrayList<OntologyClass>> subclassHash = new HashMap<String, ArrayList<OntologyClass>>();
+	
+	// for each property with subprops, list the sub prop names
+	// with just names there are no worries about order of loading or whether props are even used
+	private HashMap<String, ArrayList<String>> subpropHash = new HashMap<String, ArrayList<String>>();
+
+	
 	// a list of all the enumerations available for a given class. these are handled as full uris for convenience sake. 
 	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
 	
@@ -76,7 +83,7 @@ public class OntologyInfo {
 
 	private final static int MAXPATHLENGTH = 50;	// how many hops, max, allowed in a returned path between arbitrary nodes
 	private static int restCount = 0;               // a list counter
-	private final static long JSON_VERSION = 2;
+	private final static long JSON_VERSION = 3;
 	// used in the serialization and have to be held internally in the event that an oInfo is generated 
 	// be de-serializing a json blob.
 	private SparqlConnection modelConnection;
@@ -136,6 +143,14 @@ public class OntologyInfo {
     		this.load(modelInterfaces.get(i), conn.getDomain(), conn.isOwlImportsEnabled());
     	}
     }
+	
+	public boolean hasSubProperties(OntologyProperty oProp) {
+		return this.subpropHash.containsKey(oProp.getNameStr());
+	}
+	
+	public boolean hasSubProperties(String propName) {
+		return this.subpropHash.containsKey(propName);
+	}
 
 	/**
 	 * Load from model sparql endpoint interfaces using a SparqlQueryClient
@@ -211,6 +226,27 @@ public class OntologyInfo {
 		}
 		// return the list so far.
 		return retval;
+	}
+	
+	public HashSet<String> getSubPropNames(String superPropertyName) {
+		HashSet<String> ret = new HashSet<String>();
+		this.addSubPropNames(superPropertyName, ret);
+		return ret;
+	}
+	/**
+	 * return a list of subclass names for a given class.
+	 * if there are no known subclasses, an empty list is returned.
+	 **/
+	public void addSubPropNames(String superPropertyName, HashSet<String> set){
+		
+		ArrayList<String> subpropNames = this.subpropHash.get(superPropertyName);
+		if (subpropNames != null) {
+			set.addAll(subpropNames);
+		
+			for (String subName : subpropNames) {
+				this.addSubPropNames(subName, set);
+			}
+		}
 	}
 	
 	public ArrayList<String> getSuperclassNames(String subClassName) {
@@ -777,6 +813,50 @@ public class OntologyInfo {
 	}
 	
 	/**
+	 * returns the sparql for getting the sub and super-property relationships for known classes.
+	 **/
+	private static String getSuperSubPropertyQuery(String graphName, String domain){
+		
+		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+				       	"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
+				       	"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
+				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+				       	"select distinct ?subProp ?superProp from <" + graphName + "> where { " +
+				       	"?subProp rdfs:subPropertyOf ?superProp " +
+				       	getDomainFilterStatement("subProp", domain) +
+				       	getDomainFilterStatement("y", domain) + 
+				        " filter (?subProp != ?superProp). } order by ?subProp";
+		
+		return retval;
+	}
+	
+	/**
+	 * process the results of the query to get all of the sub- and super-props query and loads
+	 * them into the OntologyInfo object.
+	 **/
+	public void loadSuperSubProperties(String subPropNames[], String superPropNames[]) throws Exception{
+				
+		for (int i=0; i < subPropNames.length; i++) {
+			// make sure subpropHash entry exists
+			if (! this.subpropHash.containsKey(superPropNames[i])) {
+				this.subpropHash.put(superPropNames[i], new ArrayList<String>());
+			}
+			
+			ArrayList<String> subList = this.subpropHash.get(superPropNames[i]);
+			if (! subList.contains(subPropNames[i])) {
+				subList.add(subPropNames[i]);
+			}
+			
+			// If range is just "Class", infer Range of super property
+			OntologyProperty oSubProp = this.propertyHash.get(subPropNames[i]);
+			if (oSubProp.getRange().isDefaultClass()) {
+				OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
+				oSubProp.setRange(oSuperProp.getRange().deepCopy());
+			}
+		}
+	}
+	
+	/**
 	 * process the results of the query to get all of the sub- and super-class query and loads
 	 * them into the OntologyInfo object.
 	 **/
@@ -1017,7 +1097,7 @@ public class OntologyInfo {
 		for(int i = 0; i < classList.length; i += 1){
 			OntologyProperty prop = null;
 			
-			// does property already exist
+			// get prop from propertyHash, or create it
 			if (this.propertyHash.containsKey(propertyList[i])) {
 				prop = this.propertyHash.get(propertyList[i]);
 				
@@ -1034,12 +1114,14 @@ public class OntologyInfo {
 				prop = new OntologyProperty(propertyList[i], rangeList[i]);
 			}
 
+			// Add property to the class
 			OntologyClass c = this.classHash.get(classList[i]);
 			if(c == null){
 				throw new Exception("Cannot find class " + classList[i] + " in the ontology");
 			}			
 			c.addProperty(prop);
 			
+			// Add property to propertyHash
 			this.propertyHash.put(propertyList[i], prop);
 		}
 	}
@@ -1362,6 +1444,9 @@ public class OntologyInfo {
 		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));
 		this.loadProperties(tab.getColumn("Class"),tab.getColumn("Property"),tab.getColumn("Range"));
 		
+		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubPropertyQuery(endpoint.getGraph(), domain));
+		this.loadSuperSubProperties(tab.getColumn("subProp"), tab.getColumn("superProp"));
+		
 		tab = endpoint.executeQueryToTable(OntologyInfo.getEnumQuery(endpoint.getGraph(), domain));
 		this.loadEnums(tab.getColumn("Class"),tab.getColumn("EnumVal"));
 		
@@ -1404,6 +1489,9 @@ public class OntologyInfo {
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadProperties(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("Property"), tableRes.getTable().getColumn("Range"));
 		
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(graphName, domain), SparqlResultTypes.TABLE);
+		this.loadSuperSubProperties(tableRes.getTable().getColumn("subProp"), tableRes.getTable().getColumn("superProp"));
+		
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
 		
@@ -1425,6 +1513,7 @@ public class OntologyInfo {
     	
     	JSONArray topLevelClassList =  new JSONArray();
     	JSONArray subClassSuperClassList =  new JSONArray();
+    	JSONArray subSuperPropList = new JSONArray();
     	JSONArray classPropertyRangeList =  new JSONArray();
     	JSONArray classEnumValList =  new JSONArray();
     	JSONArray annotationLabelList = new JSONArray();
@@ -1449,6 +1538,15 @@ public class OntologyInfo {
 	            	subClassSuperClassList.add(a);
             	}
             }
+        }
+        
+        for (String superName : this.subpropHash.keySet()) {
+        	for (String subName : this.subpropHash.get(superName)) {
+        		JSONArray a = new JSONArray();
+        		a.add(Utility.prefixURI(subName, prefixToIntHash));
+        		a.add(Utility.prefixURI(superName, prefixToIntHash));
+        		subSuperPropList.add(a);
+        	}
         }
         
         // classPropertyRangeList
@@ -1532,6 +1630,7 @@ public class OntologyInfo {
         json.put("topLevelClassList", topLevelClassList);
     	json.put("subClassSuperClassList", subClassSuperClassList);
     	json.put("classPropertyRangeList",classPropertyRangeList);
+    	json.put("subSuperPropList", subSuperPropList);
     	json.put("classEnumValList", classEnumValList);
     	json.put("annotationLabelList", annotationLabelList);
     	json.put("annotationCommentList", annotationCommentList);
@@ -1576,6 +1675,14 @@ public class OntologyInfo {
         					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 2, intToPrefixHash)
                             );
         
+        // backward-compatible old version won't have this
+        JSONArray superSubPropList = (JSONArray)json.get("subSuperPropList");
+        if (superSubPropList != null) {
+	        this.loadSuperSubProperties(Utility.unPrefixJsonTableColumn(superSubPropList, 0, intToPrefixHash),
+						        		Utility.unPrefixJsonTableColumn(superSubPropList, 1, intToPrefixHash)     
+						        		);
+        }
+
         this.loadEnums(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 0, intToPrefixHash),
         				Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 1, intToPrefixHash)
                       );
@@ -1925,6 +2032,8 @@ public class OntologyInfo {
     	return retval;
     }
 
+    // missing subProperty info et al
+    @Deprecated
     public void addAdvancedClientJson(JSONObject encodedOInfo) throws Exception{
     	    	
     	// check the version
@@ -1994,7 +2103,6 @@ public class OntologyInfo {
      		if(uriSub.size() == uriSuper.size()){
      			LocalLogger.logToStdErr("about to load super/sub class relationships... " + uriSub.size() + " units") ;
      			
-     			//this.loadSuperSubClasses((String[])uriSuper.toArray(), (String[]) uriSub.toArray());
      			this.loadSuperSubClasses(uriSub.toArray(new String[uriSub.size()]), uriSuper.toArray(new String[uriSuper.size()]));
      		}
      	}

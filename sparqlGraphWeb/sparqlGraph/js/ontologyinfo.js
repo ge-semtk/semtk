@@ -33,6 +33,7 @@ var OntologyInfo = function(optJson) {
     this.propertyHash = {};         // propertyHash[propURI] = oProp object
     this.subclassHash = {};     // for each class list of sub-classes names  (NOTE: super-classes are stored in the class itsself)
     this.enumHash = {};         // this.enumHash[className] = [ full-uri-of-enum-val, full-uri-of-enum_val2... ]
+    this.subPropHash = {};      // this.subPropHash[propURI] = [ full-uri-of-subprop, full-uri-of-subprop...]
 
     this.maxPathLen = 50;
     this.pathWarnings = [];
@@ -56,7 +57,7 @@ var OntologyInfo = function(optJson) {
     }
 };
 
-OntologyInfo.JSON_VERSION = 2;
+OntologyInfo.JSON_VERSION = 3;
 
 OntologyInfo.localizeNamespace = function(fullNamespace) {
    return fullNamespace.substring(fullNamespace.lastIndexOf('/')+1);
@@ -567,6 +568,18 @@ OntologyInfo.prototype = {
 			var oClass = tempClasses[keyName];
 			this.addClass(oClass);
 		}
+	},
+
+    loadSuperSubProperties : function(subPropNames, superPropNames) {
+        for (var i = 0; i < subPropNames.length; i++) {
+            var superName = superPropNames[i];
+            var subName = subPropNames[i];
+            if (! (superName in this.subPropHash)) {
+                this.subPropHash[superName] = [subName];
+            } else {
+                this.subPropHash[superName].push(subName);
+            }
+        }
 	},
 
 	getTopLevelClassQuery : function (domain) {
@@ -1213,6 +1226,7 @@ OntologyInfo.prototype = {
             "topLevelClassList" : [],
             "subClassSuperClassList" : [],
             "classPropertyRangeList" : [],
+            "subSuperPropList" : [],
             "classEnumValList" : [],
             "annotationLabelList" : [],
             "annotationCommentList" : [],
@@ -1234,6 +1248,12 @@ OntologyInfo.prototype = {
                     json.subClassSuperClassList.push([this.prefixURI(name, prefixToIntHash),
                                                       this.prefixURI(parents[i], prefixToIntHash) ]);
                 }
+            }
+        }
+
+        for (var superProp in this.subPropHash) {
+            for (var subProp of this.subPropHash[superProp]) {
+                json.subSuperPropList.push([subProp, superProp]);
             }
         }
 
@@ -1311,7 +1331,7 @@ OntologyInfo.prototype = {
             version = json.version;
         }
         if (version > OntologyInfo.JSON_VERSION) {
-            throw new Error("Can't decode OntologyInfo JSON with newer version > " + OntologyInfo.JSON_VERSION + " found: " + version);
+            throw new Error("Can't read OntologyInfo.  Services returned v" + version + " but SPARQLgraph js is older v" + OntologyInfo.JSON_VERSION);
         }
         /*
          * return one columns of data as a list
@@ -1335,6 +1355,13 @@ OntologyInfo.prototype = {
                             getColumn(json.classPropertyRangeList, 1),
                             getColumn(json.classPropertyRangeList, 2)
                             );
+
+        if (json.hasOwnProperty("subSuperPropList")) {
+            this.loadSuperSubProperties(getColumn(json.subSuperPropList, 0),
+                                        getColumn(json.subSuperPropList, 1)
+                                    );
+        }
+
         this.loadEnums(getColumn(json.classEnumValList, 0),
                        getColumn(json.classEnumValList, 1)
                       );
@@ -1357,6 +1384,15 @@ OntologyInfo.prototype = {
             this.loadWarnings = this.loadWarnings.concat(json.loadWarningsList);
         }
 
+    },
+
+    // returns a list, possibly []
+    getSubProperties : function(superPropUri) {
+        if (this.subPropHash[superPropUri]) {
+            return this.subPropHash[superPropUri]
+        } else {
+            return [];
+        }
     },
 
     /* =========== Edit functions =============== */

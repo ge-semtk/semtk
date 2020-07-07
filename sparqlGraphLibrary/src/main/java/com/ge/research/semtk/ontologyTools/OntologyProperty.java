@@ -32,7 +32,7 @@ public class OntologyProperty extends AnnotatableElement{
 	private OntologyRange range = null;
 	// if we wanted, for sparql gen without an oInfo, we could store to json for nodegroup:
 	// private boolean hasSubProps
-	
+
 	public OntologyProperty(String name, String range){
 		this.name  = new OntologyName(name);
 		this.range = new OntologyRange(range);
@@ -44,6 +44,10 @@ public class OntologyProperty extends AnnotatableElement{
 	
 	public OntologyRange getRange(){
 		return this.range;
+	}
+	
+	public void setRange(OntologyRange range) {
+		this.range = range;
 	}
 	
 	public String getNameStr() {

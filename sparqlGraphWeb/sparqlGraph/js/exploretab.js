@@ -151,7 +151,8 @@ define([	// properly require.config'ed
 
                     dnd: {
                         onDragStart: function(node) {
-                            return true;
+                            // no drag and drop on explore tab
+                            return false;
                         }.bind(this),
 
                         onDragStop: function(node, x, y, z, aa) {

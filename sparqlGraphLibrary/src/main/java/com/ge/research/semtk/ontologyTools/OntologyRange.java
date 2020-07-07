@@ -19,11 +19,19 @@
 package com.ge.research.semtk.ontologyTools;
 
 public class OntologyRange {
-
+	private static final String CLASS = "http://www.w3.org/2002/07/owl#Class";
 	private String name = "";
 	
 	public OntologyRange(String fullName) {
-		this.name = (fullName == null || fullName.isEmpty()) ? "http://www.w3.org/2002/07/owl#Class" : fullName;
+		this.name = (fullName == null || fullName.isEmpty()) ? CLASS : fullName;
+	}
+	
+	public OntologyRange deepCopy() {
+		return new OntologyRange(this.name);
+	}
+	
+	public boolean isDefaultClass() {
+		return name.equals(CLASS);
 	}
 	
 	public String getLocalName(){

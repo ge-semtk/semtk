@@ -32,6 +32,8 @@ var Attribute = function(attName, attType) {
 var OntologyTree = function(dynaTree, optEnumFlag, optCollapseNamespaceList) {
 	// EnumFlag : should enumerations appear
 	// CollapseNamespaceList : in this namespace, only show sub-classes that are outside the namespace
+
+
     this.tree = dynaTree;
 	this.HTMLOpenHighlight = "";
 	this.specialClassHTML1 = "";
@@ -41,6 +43,13 @@ var OntologyTree = function(dynaTree, optEnumFlag, optCollapseNamespaceList) {
 
 	this.enumFlag = (typeof optEnumFlag === 'undefined') ? true : optEnumFlag;
 	this.collapseList = (typeof optCollapseNamespaceList === 'undefined') ? [] : optCollapseNamespaceList;
+
+    // ----- options for all dynatrees (sparqlGraph, sparqlForm, ExploreTab) ------
+
+    // don't allow closing of non-folders (sub-properties)
+    this.tree.options.onQueryExpand = function(x, node) {
+          return node.data.isFolder;
+    };
 };
 
 
@@ -130,7 +139,12 @@ OntologyTree.prototype = {
         if (this.nodeIsClass(node)) {
             return [node.data.value];
         } else {
-            return [node.getParent().data.value, node.data.value];
+            var parentClassNode = node;
+            do {
+                parentClassNode = parentClassNode.getParent();
+            } while (! this.nodeIsClass(parentClassNode));
+
+            return [parentClassNode.data.value, node.data.value];
         }
     },
 
@@ -348,7 +362,17 @@ OntologyTree.prototype = {
 	addNodeProps : function(node, ontClass, propList) {
 		// add propList to node if they are not already there
 
-        var localProps = ontClass.getProperties();
+        var propListSubUris = [];   // URS's of properties in propList, that are subprops of others
+
+        // fill in propListSubUris
+        for (var oProp of propList) {
+            var propName = oProp.getNameStr();
+            var subs = this.oInfo.getSubProperties(propName);
+            for (var subPropName of subs) {
+                propListSubUris.push(subPropName);
+            }
+        }
+
         var title = "";
         for (var i=0; i < propList.length; i++) {
         	var propName = propList[i].getNameStr();
@@ -363,32 +387,62 @@ OntologyTree.prototype = {
         		}
         	}
 
-        	if (propNode == null ) {
-        		// format local properties different than inherited
-        		if (localProps.indexOf(propList[i]) > -1) {
-        			title = "<i>" + propList[i].getNameStr(true) + ": " + propList[i].getRangeStr(true) + "</i>";
+            // if prop is not already added, and if it is not a subProp
+            // then add it
+        	if (propNode == null && propListSubUris.indexOf(propName) == -1 ) {
+                this.addPropToNode(node, propList[i], ontClass, propList);
 
-        		} else {
-    	        	title = propList[i].getNameStr(true) + ": " + propList[i].getRangeStr(true);
-
-        		}
-
-	        	// highlight if range is a special class
-	        	if (this.classIsSpecial(propList[i].getRangeStr(false))) {
-	        		title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
-	        	}
-
-	        	var child = node.addChild({
-	        		title: title,
-	        		//key: propName,
-	        		tooltip: propName,
-	        		isFolder: false
-	        	});
-	        	child.data.value = propName;
         	}
         }
 
 	},
+
+    addPropToNode : function(node, ontProp, ontClass, propList) {
+        // format local properties different than inherited
+        if (ontClass.getProperties().indexOf(ontProp) > -1) {
+            title = "<i>" + ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true) + "</i>";
+
+        } else {
+            title = ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true);
+
+        }
+
+        // highlight if range is a special class
+        if (this.classIsSpecial(ontProp.getRangeStr())) {
+            title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
+        }
+
+        // build list of subProps
+        var subPropUris = this.oInfo.getSubProperties(ontProp.getNameStr());
+        var subProps = [];
+        for (var subUri of subPropUris) {
+
+            // find subProp in original propList
+            var subProp = null;
+            for (var p of propList) {
+                if (p.getNameStr() == subUri) {
+                    subProps.push(p);
+                }
+            }
+        }
+
+        // add
+        var propName = ontProp.getNameStr();
+        var child = node.addChild({
+            title: title,
+            //key: propName,
+            tooltip: propName,
+            isFolder: false,
+            expand: true
+        });
+        child.data.value = propName;
+
+        // recursively add any subProps
+        for (var subProp of subProps) {
+            // call recursively
+            this.addPropToNode(child, subProp, ontClass, propList);
+        }
+    },
 
 	// keys are now randomly generated
 	// URI is stored in node.data.value

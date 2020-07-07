@@ -317,9 +317,15 @@
                     /** This function MUST be defined to enable dragging for the tree.
                      *  Return false to cancel dragging of node.
                      */
-                       // console.log("dragging " + gOTree.nodeGetURI(node));
-                        gDragLabel = gOTree.nodeGetURI(node);
-                        return true;
+
+                       // only folders (classes) and those with parents (non-namespaces) can be dragged here
+                       if (node.data.isFolder && node.parent.parent != null) {
+                           gDragLabel = gOTree.nodeGetURI(node);
+                           return true;
+                       } else {
+                           gDragLabel = null;
+                           return false;
+                       }
                     },
 
                     onDragStop: function(node, x, y, z, aa) {
