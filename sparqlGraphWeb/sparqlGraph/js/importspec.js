@@ -121,7 +121,7 @@ define([// properly require.config'ed
 
 			getSortedColumns : function () {
 				// get list of column objects sorted by name
-				var ret = this.colList.sort(function(a,b) {
+                var ret = this.colList.slice().sort(function(a,b) {
 				    if ( a.getColName() < b.getColName() )
 				        return -1;
 				    if ( a.getColName() > b.getColName() )
