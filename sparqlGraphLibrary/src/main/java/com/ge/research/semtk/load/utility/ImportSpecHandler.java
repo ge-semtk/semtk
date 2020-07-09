@@ -767,11 +767,19 @@ public class ImportSpecHandler {
 				}
 				
 				if (mapping.isNode()) {
+					String uri;
 					if (this.oInfo.classIsEnumeration(node.getFullUriName())) {
-						builtString = this.oInfo.getMatchingEnumeration(node.getFullUriName(), builtString);
+						uri = this.oInfo.getMatchingEnumeration(node.getFullUriName(), builtString);
+						
+					} else if (! builtString.contains("#")) {
+						// add baseURI prefix if there is no prefix
+						uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), builtString);
+						
+					} else {
+						uri = builtString;
 					}
 					
-					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(node, builtString)));
+					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(node, uri)));
 					
 				} else {
 					PropertyItem prop = node.getPropertyByURIRelation(mapping.getPropURI());

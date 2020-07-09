@@ -1,0 +1,164 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Paul Test",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://paultest/model"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://paultest/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 11,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "nickname_string",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://person#nickname_string",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?nickname_string",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Nickname",
+				"fullURIName": "http://person#Nickname",
+				"subClassNames": [],
+				"SparqlID": "?Nickname",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "id",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://person#id",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?id",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Nickname"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "nickname",
+						"ValueType": "Nickname",
+						"UriValueType": "http://person#Nickname",
+						"ConnectBy": "nickname",
+						"Connected": true,
+						"UriConnectBy": "http://person#nickname"
+					}
+				],
+				"NodeName": "Person",
+				"fullURIName": "http://person#Person",
+				"subClassNames": [],
+				"SparqlID": "?Person",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "person_id"
+			},
+			{
+				"colId": "col_1",
+				"colName": "person_nick"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Person",
+				"type": "http://person#Person",
+				"URILookup": [
+					"?Nickname"
+				],
+				"mapping": [
+					{
+						"colId": "col_0"
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://person#id",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Nickname",
+				"type": "http://person#Nickname",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://person#nickname_string",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

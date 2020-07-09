@@ -1531,6 +1531,50 @@ public class DataLoaderTest_IT {
 		
 
 	}
+	
+	@Test
+	public void testUriLookupByUri() throws Exception {
+		// Test case sets a URI if it doesn't exist
+		// and also uses that URI to look up another.
+		// There are tricky combination of adding the baseURI for the lookup, etc.
+		String csv1Path = "src/test/resources/Person_test.csv";
+		String csv2Path = "src/test/resources/Person_test2.csv";
+		String csvFileRes = "PersonRes.csv";
+		String jsonFile = "Person.json";
+		String owlResource = "/Person.owl";
+		
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, owlResource);
+
+		// load 1
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, jsonFile);
+		CSVDataset csvDataset = new CSVDataset(csv1Path, false);
+		DataLoader dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		
+		// load 2
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, jsonFile);
+		csvDataset = new CSVDataset(csv2Path, false);
+		dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() != 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, jsonFile);
+		TestGraph.queryAndCheckResults(sgJson, this, csvFileRes);
+		
+
+	}
 	public void doTypesAndConstraintsViaBook(boolean cacheFlag) throws Exception {  
 		// Test important parts of RDF1.1 literal typing
 		// with semtk load and semtk query

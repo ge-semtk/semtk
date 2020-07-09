@@ -1,0 +1,8 @@
+uri "http://person" alias person version "1.0".
+
+Person is a class,
+	described by id with a single value of type string,
+	described by nickname with values of type Nickname.	
+	
+Nickname is a class,
+	described by nickname_string with a single value of type string.

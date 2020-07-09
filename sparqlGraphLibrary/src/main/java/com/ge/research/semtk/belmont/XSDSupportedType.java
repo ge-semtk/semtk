@@ -123,7 +123,7 @@ public enum XSDSupportedType {
 		
 		if (this == XSDSupportedType.NODE_URI) {
 			// check for angle brackets first
-			if( val.contains("#")){   // the uri given is not prefixed.
+			if( val.contains("#")){   // the uri given is prefixed.
 				if(val.startsWith("<") && val.endsWith(">")){
 					return val;  // already in brackets so probably will not break.
 				}
@@ -132,6 +132,9 @@ public enum XSDSupportedType {
 				}
 			}
 			else {  // the URI is assumed prefixed since it has no # . Assume the user/caller knows what they want and just use it. 
+				    // PAUL July 2020.  I'm not sure why this shouldn't be checked for <> also.
+			        //                  How could it work otherwise?
+				    //                  I don't really want to mess with it and find out there was a reason.
 				return val;
 			}
 			
