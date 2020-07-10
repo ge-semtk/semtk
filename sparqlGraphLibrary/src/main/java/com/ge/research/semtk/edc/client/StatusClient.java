@@ -366,7 +366,7 @@ public class StatusClient extends RestClient {
 	 * @param maxTries - throw exception after this many tries
 	 * @throws Exception
 	 */
-	public void waitForCompletion(String jobId, int freqMsec, int maxTries ) throws Exception {
+	private void waitForCompletion(String jobId, int freqMsec, int maxTries ) throws Exception {
 		int percent = 0;
 		
 		for (int i=0; i < maxTries; i++) {
@@ -378,9 +378,9 @@ public class StatusClient extends RestClient {
 		throw new Exception("Job " + jobId + " is only " + String.valueOf(percent) + "% complete after " + String.valueOf(maxTries) + " tries.");
 	}
 	
-	// try for 6 minutes
+	// wait essentially forever
 	public void waitForCompletion(String jobId) throws Exception {
-		this.waitForCompletion(jobId, 10000, 36);
+		this.waitForCompletion(jobId, 9000, Integer.MAX_VALUE);
 	}
 	
 	/**
