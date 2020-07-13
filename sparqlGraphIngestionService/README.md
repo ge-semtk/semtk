@@ -41,19 +41,6 @@ Use maven and the included pom.xml to build the source code.
 ## Running natively
 The run-native.sh script starts the Ingestion Service natively using java and the compiled jar file.
 
-## Docker support
-After the jar file is built from source, it can be packaged in a Docker container using the provided build.sh script.
-The following Docker-related scripts are provided:
-* env.sh - defines environment variables used by other scripts
-* build.sh - builds the Docker image
-* run.sh - runs this service in a Docker container
-* logs.sh - shows Docker container logs
-* stop.sh - stops and removes the Docker container
-* push.sh - pushes the image to a Docker registry
-* pull.sh - pulls the image from a Docker registry
-* status.sh - shows whether a Docker container is present and its status
-* bash.sh - opens a bash shell into the Docker container while it is running
-* entrypoint.sh - script that gets embedded in the Docker image, meant for execution inside the container only for starting the service
 
 
 

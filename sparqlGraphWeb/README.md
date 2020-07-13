@@ -37,17 +37,3 @@ This web project provides a user interface for drag-and-drop ingestion and query
 ## Publishing
 The web content is static and can be served from any http server. 
 
-## Docker support
-This web interface can be packaged in a Docker container in a Tomcat server using the provided build.sh script.
-The following Docker-related scripts are included:
-* env.sh - defines environment variables used by other scripts
-* build.sh - builds the Docker image
-* run.sh - runs this service in a Docker container
-* logs.sh - shows Docker container logs
-* stop.sh - stops and removes the Docker container
-* push.sh - pushes the image to a Docker registry
-* pull.sh - pulls the image from a Docker registry
-* status.sh - shows whether a Docker container is present and its status
-* bash.sh - opens a bash shell into the Docker container while it is running
-* entrypoint.sh - script that gets embedded in the Docker image, meant for execution inside the container only for starting the service
-
