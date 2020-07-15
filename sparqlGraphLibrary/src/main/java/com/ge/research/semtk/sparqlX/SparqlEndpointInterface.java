@@ -1116,7 +1116,7 @@ public abstract class SparqlEndpointInterface {
 		HashMap<String, Integer> colNumHash = new HashMap<String, Integer>();
 		HashMap<String, String> colTypeHash = new HashMap<String, String>();
 		String curType = null;
-		final String UNKNOWN = "unknown";
+		final String UNKNOWN = "";
 		final String MIXED = "http://www.w3.org/2001/XMLSchema#string";
 		
 		// **** Column Names and types.   Parallel arrays.  Types still unknown. ****
@@ -1160,18 +1160,21 @@ public abstract class SparqlEndpointInterface {
 					// check the type
 					curType = colTypeHash.get(key);
 					
-					// fix UNKNOWN's as they become known
-					if (curType.equals(MIXED)) {
-						// do nothing if cell is already MIXED
+					// fix UNKNOWN's as they become known.
+					// note an entire empty column will remain unknown
+					if (curType.equals(MIXED) || valueValue.equals("")) {
+						// do nothing if cell is already MIXED or it is empty
 					}
 					else if (curType.equals(UNKNOWN)) {
 						colTypeHash.put(key, valueDataType);
 						colTypesForNewTable.set(colNumHash.get(key), valueDataType);
 					
-					// insert MIXED if types are coming back funny
 					} else if (!curType.equals(valueDataType)) {
-						colTypeHash.put(key, MIXED);
-						colTypesForNewTable.set(colNumHash.get(key), MIXED);
+						// column contains mixed types.
+						
+						String newType = resolveTypes(curType, valueDataType, MIXED);
+						colTypeHash.put(key, newType);
+						colTypesForNewTable.set(colNumHash.get(key), newType);
 					}	
 				}
 			}
@@ -1184,6 +1187,39 @@ public abstract class SparqlEndpointInterface {
 		return new Table(colsForNewTableArray, colTypesForNewTableArray, rowsForNewTable);  
 		
 	}	
+	
+	/**
+	 * What to do when a column is curType and the next value is valueDataType
+	 * @param curType
+	 * @param valueDataType
+	 * @param defaultType
+	 * @return
+	 */
+	private static String resolveTypes(String curType, String valueDataType, String defaultType) {
+		final String DOUBLE = "http://www.w3.org/2001/XMLSchema#double";
+		final String INTEGER = "http://www.w3.org/2001/XMLSchema#integer";
+
+		String curLow = curType.toLowerCase();
+		String valLow = valueDataType.toLowerCase();
+		boolean curInt = curLow.contains("int") || curLow.contains("long") || curLow.contains("short");
+		boolean valInt = valLow.contains("int") || valLow.contains("long") || valLow.contains("short");
+		String newType = null;
+		if (curInt && valInt) {
+			// promote to "decimal" if all ints
+			newType = INTEGER;
+		} else {
+			boolean curDbl = curLow.contains("float") || curLow.contains("double") || curLow.contains("decimal");
+			boolean valDbl = valLow.contains("float") || valLow.contains("double") || curLow.contains("decimal");
+			if ((curDbl || curInt) && (valDbl || valInt)) {
+				// promote to double if all ints or floats
+				newType = DOUBLE;
+			} else {
+				// stumped: so use string
+				newType = defaultType;
+			}
+		}
+		return newType;
+	}
 	
 	/**
 	 * Checks an sei to see if any version of the owl in owlInputStream is loaded
