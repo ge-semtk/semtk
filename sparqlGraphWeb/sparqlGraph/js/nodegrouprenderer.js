@@ -190,7 +190,7 @@ define([	// properly require.config'ed
                 } else if (e.edges.length > 0) {
                     var edge = this.network.body.edges[e.edges[0]];
                     var snode = this.nodegroup.getNodeBySparqlID(edge.fromId);
-                    var nItem = snode.getNodeItemByKeyname(edge.options.label.replace(/[\W]$/, ""));
+                    var nItem = snode.getNodeItemByKeyname(this.getEdgeKeyname(edge));
                     var targetSNode = this.nodegroup.getNodeBySparqlID(edge.toId);
                     this.linkEditorCallback(snode, nItem, targetSNode);
                 }
@@ -261,6 +261,36 @@ define([	// properly require.config'ed
                 this.network.body.data.nodes.remove(deletedIDs);
             },
 
+            buildEdgeLabel : function(nItem, snode2) {
+                var label = nItem.getKeyName() + nItem.getQualifier(snode2);
+
+                var optMinus = nItem.getOptionalMinus(snode2);
+                if (optMinus == NodeItem.OPTIONAL_TRUE) {
+                    label = "optional {\n" + label;
+                } else if (optMinus == NodeItem.OPTIONAL_REVERSE) {
+                    label = label + "\n} optional";
+                } else if (optMinus == NodeItem.MINUS_TRUE) {
+                    label = "minus {\n" + label;
+                } else if (optMinus == NodeItem.MINUS_REVERSE) {
+                    label = label + "\n} minus";
+                }
+                return label;
+            },
+
+            getEdgeKeyname : function(edge) {
+                var ret;
+                // find line with no { or }
+                var lines = edge.options.label.split("\n");
+                for (var l of lines) {
+                    if (l.match(/[{}]/) == null) {
+                        ret = l;
+                        break;
+                    }
+                }
+                // strip out spaces and qualifiers
+                return ret.replace(/[\W]$/, "");
+            },
+
             drawEdges : function() {
                 // edges: update all since it is cheap
 
@@ -272,18 +302,24 @@ define([	// properly require.config'ed
                             var fromID = snode.getSparqlID();
                             var toID = snode2.getSparqlID();
                             var id = fromID + "-" + toID;
-                            var label = nItem.getKeyName() + nItem.getQualifier(snode2);
+                            var label = this.buildEdgeLabel(nItem, snode2);
+
+                            var edgeFont = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
+                            //var edgeFont;
+                            //if (nItem.getOptionalMinus(snode2) != NodeItem.OPTIONAL_FALSE) {
+                            //    edgeFont = {color: 'red', background: 'lightgray'};
+                            //} else  {
+                            //    edgeFont = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
+                            //}
+
                             var edge = {
                                 id:     id,
                                 from:   fromID,
                                 to:     toID,
                                 label:  label,
+                                color:  NodegroupRenderer.COLOR_FOREGROUND,
+                                font :  edgeFont
                             };
-                            if (nItem.getOptionalMinus(snode2) != NodeItem.OPTIONAL_FALSE) {
-                                edge.font = {color: 'red', background: 'lightgray'};
-                            } else  {
-                                edge.font = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
-                            }
                             edgeData.push(edge);
 
                             // remove this edge from edgeIDsToRemove
