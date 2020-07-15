@@ -1820,6 +1820,8 @@ var SemanticNodeGroup = function() {
 	this.prefixHash = {};
 	this.prefixNumberStart = 0;
 
+    this.unionHash = {};   // this unionhash.int_id = [ [item, reverse_flag], [item2, reverse]]
+
 	this.canvasOInfo = null;    // DEPRECATED
 	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
     							// that's why it has a funny name.
