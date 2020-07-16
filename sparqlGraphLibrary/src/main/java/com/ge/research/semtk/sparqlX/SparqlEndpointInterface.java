@@ -101,6 +101,12 @@ public abstract class SparqlEndpointInterface {
 	
 	private static final int MAX_QUERY_TRIES = 4;
 
+	// Column types used for mixed and missing types on cells
+	public static String COL_TYPE_UNKNOWN = "";                                         // no cell has a type
+	public static String COL_TYPE_MIXED = "http://www.w3.org/2001/XMLSchema#string";    // default mixed type cells
+	public static String COL_TYPE_DOUBLE = "http://www.w3.org/2001/XMLSchema#double";   // mixture of numeric cells
+	public static String COL_TYPE_INTEGER = "http://www.w3.org/2001/XMLSchema#integer"; // mixture of int-only numeric cells
+	
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 	private static URLStreamHandler handler = null; // set only by unit tests
 
@@ -1116,17 +1122,16 @@ public abstract class SparqlEndpointInterface {
 		HashMap<String, Integer> colNumHash = new HashMap<String, Integer>();
 		HashMap<String, String> colTypeHash = new HashMap<String, String>();
 		String curType = null;
-		final String UNKNOWN = "";
-		final String MIXED = "http://www.w3.org/2001/XMLSchema#string";
+		
 		
 		// **** Column Names and types.   Parallel arrays.  Types still unknown. ****
 		for (Object colObj : colNamesJsonArray ) {
 			String colStr = (String) colObj;
 			colsForNewTable.add(colStr);
-			colTypesForNewTable.add(UNKNOWN);	
+			colTypesForNewTable.add(COL_TYPE_UNKNOWN);	
 			
 			colNumHash.put(colStr, colsForNewTable.size()-1);   // hash the column indices
-			colTypeHash.put(colStr, UNKNOWN);                 // hash the column types
+			colTypeHash.put(colStr, COL_TYPE_UNKNOWN);                 // hash the column types
 		}
 		
 		// **** Rows ****
@@ -1162,17 +1167,17 @@ public abstract class SparqlEndpointInterface {
 					
 					// fix UNKNOWN's as they become known.
 					// note an entire empty column will remain unknown
-					if (curType.equals(MIXED) || valueValue.equals("")) {
+					if (curType.equals(COL_TYPE_MIXED) || valueValue.equals("")) {
 						// do nothing if cell is already MIXED or it is empty
 					}
-					else if (curType.equals(UNKNOWN)) {
+					else if (curType.equals(COL_TYPE_UNKNOWN)) {
 						colTypeHash.put(key, valueDataType);
 						colTypesForNewTable.set(colNumHash.get(key), valueDataType);
 					
 					} else if (!curType.equals(valueDataType)) {
 						// column contains mixed types.
 						
-						String newType = resolveTypes(curType, valueDataType, MIXED);
+						String newType = resolveTypes(curType, valueDataType, COL_TYPE_MIXED);
 						colTypeHash.put(key, newType);
 						colTypesForNewTable.set(colNumHash.get(key), newType);
 					}	
@@ -1196,8 +1201,6 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 */
 	private static String resolveTypes(String curType, String valueDataType, String defaultType) {
-		final String DOUBLE = "http://www.w3.org/2001/XMLSchema#double";
-		final String INTEGER = "http://www.w3.org/2001/XMLSchema#integer";
 
 		String curLow = curType.toLowerCase();
 		String valLow = valueDataType.toLowerCase();
@@ -1206,13 +1209,13 @@ public abstract class SparqlEndpointInterface {
 		String newType = null;
 		if (curInt && valInt) {
 			// promote to "decimal" if all ints
-			newType = INTEGER;
+			newType = COL_TYPE_INTEGER;
 		} else {
 			boolean curDbl = curLow.contains("float") || curLow.contains("double") || curLow.contains("decimal");
 			boolean valDbl = valLow.contains("float") || valLow.contains("double") || curLow.contains("decimal");
 			if ((curDbl || curInt) && (valDbl || valInt)) {
 				// promote to double if all ints or floats
-				newType = DOUBLE;
+				newType = COL_TYPE_DOUBLE;
 			} else {
 				// stumped: so use string
 				newType = defaultType;
