@@ -655,7 +655,7 @@ require([	'local/sparqlformconfig',
 			addFormRow(itemSNode, itemKeyName, childSNode);
 		};
 
-		itemDialogCallback = function(item, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
+		itemDialogCallback = function(item, sparqlID, returnFlag, returnTypeFlag, optMinus, union_IGNORE, delMarker_ALWAYS_NULL, rtConstrainedFlag, constraintStr, data) {
 			// data.textId is the html element id that holds the filter icon
 
 	    	// Note: ModalItemDialog validates that sparqlID is legal

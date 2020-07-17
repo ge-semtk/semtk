@@ -83,6 +83,7 @@ define([	// properly require.config'ed
 		ModalItemDialog.DELETE_SELECT = 9;
         ModalItemDialog.RETURN_TYPE_CHECK = 10;
         ModalItemDialog.SPARQL_ID_SPAN = 11;
+        ModalItemDialog.UNION_SELECT = 11;
 
 
 		ModalItemDialog.prototype = {
@@ -176,6 +177,7 @@ define([	// properly require.config'ed
 				var sparqlIDElem = this.getFieldElement(ModalItemDialog.SPARQL_ID_TEXT);
 				var sparqlID = this.getSparqlIDText();
 				var optMinSelectElem = this.getFieldElement(ModalItemDialog.OPTIONAL);
+                var unionSelectElem = this.getFieldElement(ModalItemDialog.UNION_SELECT);
 
 				var returnChecked = this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked;
                 var returnTypeChecked = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK) ? this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK).checked : false;
@@ -199,6 +201,7 @@ define([	// properly require.config'ed
 								returnChecked,
                                 returnTypeChecked,
                                 (optMinSelectElem == null) ? null : parseInt(IIDXHelper.getSelectValues(optMinSelectElem)[0]),
+                                parseInt(IIDXHelper.getSelectValues(optUnionSelectElem)[0]
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
@@ -668,8 +671,6 @@ define([	// properly require.config'ed
 
 				}
 
-				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-
 				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
                                             this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
                                             this.item.getIsRuntimeConstrained(),
@@ -677,6 +678,19 @@ define([	// properly require.config'ed
                                             this.rtConstrainedCheckOnClick.bind(this)
                                         );
 
+                var unionData = this.nodegroup.getUnionData();
+                var itemUnionBoss = this.nodegroup.getNodeOrPropUnionBoss(this.item);
+                var selectList = [  ["<no union>", -2], ["- new union -", -1] ];
+                for (var key in unionData) {
+                    selectList.push([",".join(this.nodegroup.getUnionLabels(key)), key]);
+                }
+                var unionSelect = IIDXHelper.createSelect(
+                        this.getFieldID(ModalItemDialog.UNION_SELECT),
+                        selectList,
+                        itemUnionBoss ? [",".join(this.nodegroup.getUnionLabels(itemUnionBoss))] : []
+                    );
+                var optDisabledList = "PEC TODO";
+``
 				// Top section is handled totally differently with sparqlformFlag
 				if (this.sparqlformFlag) {
 					// create a right-justified div just for optional
@@ -698,9 +712,13 @@ define([	// properly require.config'ed
 				} else {
 					// normal operation: put optional check into the top table
 					if (optionalFlag) {
+                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 						td.appendChild(optMinSelect);
                         td.appendChild(document.createElement("br"));
 					}
+                    td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+                    td.appendChild(unionSelect);
+                    td.appendChild(document.createElement("br"));
 
 					// deletion
 					if (this.item.getItemType() == "PropertyItem") {
@@ -732,6 +750,7 @@ define([	// properly require.config'ed
                         deleteSelect.options[3].disabled = true;
                         deleteSelect.options[4].disabled = true;
 
+                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 						td.appendChild(deleteSelect);
 					}
 
@@ -977,8 +996,6 @@ define([	// properly require.config'ed
 
 				}
 
-				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-
 				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
                                             this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
                                             this.item.getIsRuntimeConstrained(),
@@ -1007,6 +1024,7 @@ define([	// properly require.config'ed
 				} else {
 					// normal operation: put optional check into the top table
 					if (optionalFlag) {
+                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 						td.appendChild(optMinSelect);
                         td.appendChild(document.createElement("br"));
 					}
@@ -1041,6 +1059,7 @@ define([	// properly require.config'ed
                         deleteSelect.options[3].disabled = true;
                         deleteSelect.options[4].disabled = true;
 
+                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 						td.appendChild(deleteSelect);
 					}
 

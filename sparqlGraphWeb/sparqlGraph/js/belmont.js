@@ -488,11 +488,11 @@ NodeItem.prototype = {
 	},
 
     // deprecated
-    setSNodeOptional(snode, optional) {
+    setSNodeOptional: function(snode, optional) {
         this.setOptionalMinus(snode, optional);
     },
 
-	setOptionalMinus(snode, optionalMinus) {
+	setOptionalMinus: function(snode, optionalMinus) {
 		for (var i=0; i < this.SNodes.length; i++) {
 			if (this.SNodes[i] == snode) {
 				this.OptionalMinus[i] = optionalMinus;
@@ -503,11 +503,11 @@ NodeItem.prototype = {
 	},
 
     // deprecated
-    getSNodeOptional(snode) {
+    getSNodeOptional: function(snode) {
         return this.getOptionalMinus(snode);
     },
 
-	getOptionalMinus(snode) {
+	getOptionalMinus: function(snode) {
 		for (var i=0; i < this.SNodes.length; i++) {
 			if (this.SNodes[i] == snode) {
 				return this.OptionalMinus[i] ;
@@ -516,7 +516,7 @@ NodeItem.prototype = {
 		throw new Error("NodeItem can't find link to semantic node");
 	},
 
-    setQualifier(snode, qual) {
+    setQualifier: function(snode, qual) {
 		for (var i=0; i < this.SNodes.length; i++) {
 			if (this.SNodes[i] == snode) {
 				this.Qualifiers[i] = qual;
@@ -526,7 +526,7 @@ NodeItem.prototype = {
 		throw new Error("NodeItem can't find link to semantic node");
 	},
 
-    getQualifier(snode) {
+    getQualifier: function(snode) {
 		for (var i=0; i < this.SNodes.length; i++) {
 			if (this.SNodes[i] == snode) {
 				return this.Qualifiers[i] ;
@@ -1481,8 +1481,8 @@ SemanticNode.prototype = {
 		return false;
 	},
 
-	getConnectingNodeItems : function(other) {
-		// get the node items that connects this snode to other, or []
+	getConnectingNodeItems : function(otherSNode) {
+		// get the node items that connects this snode to otherSNode, or []
 		ret = [];
 		for (var i=0; i < this.nodeList.length; i++) {
 			var nItem = this.nodeList[i];
@@ -1491,7 +1491,7 @@ SemanticNode.prototype = {
 				var nodeList = this.nodeList[i].getSNodes(); // get the nodes this item connects to
 
 				for (var d = 0; d < nodeList.length; d++) {
-					if (nodeList[d].getSparqlID() == other.getSparqlID()) {
+					if (nodeList[d].getSparqlID() == otherSNode.getSparqlID()) {
 						ret.push(nItem);
 					}
 				}
@@ -1820,7 +1820,7 @@ var SemanticNodeGroup = function() {
 	this.prefixHash = {};
 	this.prefixNumberStart = 0;
 
-    this.unionHash = {};   // this unionhash.int_id = [ [item, reverse_flag], [item2, reverse]]
+    this.unionHash = {};   // this unionhash.int_id = [ [outSNode, inReturnable], [outSNode, inReturnable]]
 
 	this.canvasOInfo = null;    // DEPRECATED
 	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
@@ -1841,6 +1841,7 @@ SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
 SemanticNodeGroup.JSON_VERSION = 11;
+// version 12 - unionHash
 // version 11 - import spec has dataValidator
 // version 10 - (accidentally wasted in a push)
 // version 9 - minus links
@@ -2069,6 +2070,202 @@ SemanticNodeGroup.prototype = {
 
 		return ret;
 	},
+
+    // get an id for a new union
+    newUnion : function () {
+        var ret = 0;
+        while (this.unionHash.hasOwnProperty(ret)) {
+            ret += 1;
+        }
+        return ret;
+    },
+
+    rmUnion : function(id) {
+        delete this.unionHash[id];
+    },
+
+
+    // get a list of strings that describe this union
+    getUnionLabels : function(id) {
+        ret = [];
+        for (var pair of this.unionHash[id]) {
+            var outNode = pair[0];
+            var inItem = pair[1];
+            if (outNode == null) {
+                ret.push(inItem.getSparqlID());
+            } else if (inItem instanceof PropertyItem) {
+                ret.push(inItem.getKeyName());
+            } else {
+                var nodeItemList = this.getNodeItemsBetween(outNode, inItem)
+                if (nodeItemList.length == 0) {
+                    throw "Internal error: can't find object property connecting " + outNode.getSparqlID() + " and " + inItem.getSparqlID();
+                } else if (nodeItemList.length > 1) {
+                    throw "Internal error: can't found multiple object properties connecting " + outNode.getSparqlID() + " and " + inItem.getSparqlID();
+                } else {
+                    ret.push(nodeItemList[0].getKeyName());
+                }
+
+            }
+        }
+        return ret;
+    },
+
+    // rm item from anywhere in unionHash
+    rmNodeOrPropFromUnion : function(item) {
+        for (var key in this.unionHash) {
+            for (var i=0; i < this.unionHash[key].length; i++) {
+                var pair = this.unionHash[key][i];
+                if (pair[1] == item) {
+                    this.unionHash[key].splice(i,1);
+                    return;
+                }
+            }
+        }
+    },
+
+    // add item to union
+    // params:
+    //      id : existing union
+    //      item, optIndex : don't belong to any union yet.
+    addNodeOrPropToUnion : function(id, item) {
+        if (item instanceof PropertyItem) {
+            this.unionHash[id].push([this.getPropertyItemParentSNode(), item]);
+        } else if (item instanceof SemanticNode) {
+            this.unionHash[id].push([null, item]);
+        }
+    },
+
+    // remove node item from anywhere in unionHash
+    rmNodeItemFromUnion : function(nodeItem, index, reverse_flag) {
+        var parent = this.getNodeItemParentSNode();
+        var target = nodeItem.getSNodes()[index];
+        if (reverseFlag) {
+            var t = parent;
+            parent = target;
+            target = t;
+        }
+        for (var key in this.unionHash) {
+            for (var i=0; i < this.unionHash[key].length; i++) {
+                var pair = this.unionHash[key][i];
+                if (pair[0] == parent && pair[1] == target) {
+                    this.unionHash[key].splice(i,1);
+                    return;
+                }
+            }
+        }
+
+    }
+    // add node item to union
+    // params:
+    //    id : existing union
+    //    nodeItem, index : edge not in any union yet
+    //    reverse_flag : is edge reversed
+    addNodeItemToUnion : function(id, nodeItem, index, reverse_flag) {
+        var parent = this.getNodeItemParentSNode();
+        var target = nodeItem.getSNodes()[index];
+        if (reverseFlag) {
+            this.unionHash[id].push([target, parent]);
+        } else {
+            this.unionHash[id].push([parent, target]);
+        }
+    },
+
+    getNodeOrPropUnionBoss : function(item) {
+        for (var key in this.unionHash) {
+            for (var pair of this.unionHash[key]) {
+                if (pair[1] == item) {
+                    return key;
+                }
+            }
+        }
+        return null;
+    },
+
+    getNodeItemUnionBoss : function(nodeItem, index) {
+        var parent = this.getNodeItemParentSNode();
+        var target = nodeItem.getSNodes()[index];
+        if (reverseFlag) {
+            var t = parent;
+            parent = target;
+            target = t;
+        }
+        for (var key in this.unionHash) {
+            for (var pair of this.unionHash[key]) {
+                if (pair[0] == parent && pair[1] == target) {
+                    return key;
+                }
+            }
+        }
+        return null;
+    },
+
+    getItemUnionMembership : function(unionData, item, optIndex) {
+        var index = (typeof optIndex == "undefined") ? -1 : optIndex;
+
+        for (var i in unionData) {
+            for (var pairs of unionData[i]) {
+                if (pair[0] == item && pair[1] == index) {
+                    return i;
+                }
+            }
+        }
+        return null;
+    },
+
+    // expensive operation calculates all union memberships
+    //    ret.id = [[item, optNodeItemIndex], [item1, optNodeItemIndex1]...]
+    getUnionData  : function() {
+        var ret = {};
+
+        // loop through all unionHash entries
+        for (var key in this.unionHash) {
+            ret[i] = [];
+            for (var pair of this.unionHash[i]) {
+                var outSNode = pair[0];
+                var inNodeOrProp = pair[1];
+
+                if (inRet instanceof PropertyItem) {
+                    // property item is simple: just the item
+                    ret[i].push([inNodeOrProp,-1]);
+                } else {
+                    var subgraphNodeList = [];
+                    var inNode = inNodeOrProp;
+
+                    // get list of nodes in the Union
+                    var nodeList = this.getSubGraph(inNode, outNode == null ? [] : [outNode]);
+                    for (var subgraphNode of subgraphNodeList) {
+                        ret[i].push([subgraphNode, -1]);
+                        for (var prop of subgraphNode.getReturnedPropertyItems()) {
+                            ret[i].push([prop, -1]);
+                        }
+
+                        // loop through every node item in the nodegroup
+                        for (var snode of this.SNodeList) {
+                            var nodeItemList = this.getNodeItemsBetween(subgraphNode, snode);
+                            for (var nodeItem of nodeItemList) {
+
+                                if (subgraphNodeList.indexOf(this.getNodeItemParentSNode()) > -1) {
+                                    // parent is in the union: push with each SNode index
+                                    for (var j=0; j < nodeItem.getSNodes().length; j++) {
+                                        ret[i].push([nodeItem, j]);
+                                    }
+                                } else {
+                                    // has target(s) in the union: push only those SNode indices
+                                    var targetSNodes = nodeItem.getSNodes();
+                                    for (var j=0; j < targetSNodes.length; j++) {
+                                        if (subgraphNodeList.indexOf(targetSNodes[j]) > -1) {
+                                            ret[i].push([nodeItem, j]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
 
 	getPrefixedUri : function (originalUri) {
 		var retval = "";
@@ -2808,6 +3005,14 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
+    getPropertyItemParentSNode : function(propItem) {
+        for (var i=0; i < this.SNodeList.length; i++) {
+            if (this.SNodeList[i].propList.indexOf(propItem) > -1) {
+                return this.SNodeList[i];
+            }
+        }
+    },
+
 	getConnectingNodes : function(sNode) {
 		// get semantic nodes with a nodeItem pointing to sNode
 		var ret = [];
@@ -2845,6 +3050,8 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
+    // get all incoming nodeItems that point here AND
+    //         outgoing nodeItems that are connected to something
 	getAllConnectedConnectedNodeItems : function(sNode) {
 		// get the connectedNodeItems that are actually in use
 		var ret = [];

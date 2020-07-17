@@ -510,7 +510,7 @@
         nodeGroupChanged(true, unchangedIDs);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
@@ -518,6 +518,13 @@
         propItem.setIsReturned(returnFlag);
         // returnTypeFlag is not used for properties
         propItem.setOptMinus(optMinus);
+
+        // union
+        gNodeGroup.rmNodeOrPropFromUnion(propItem);
+        for (var u of union) {
+            gNodeGroup.addNodeOrPropToUnion(u, propItem);
+        }
+
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
         propItem.setConstraints(constraintStr);
         propItem.setIsMarkedForDeletion(delMarker);
@@ -529,7 +536,7 @@
         nodeGroupChanged(true, unchangedIDs);
     };
 
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
     	// Note: ModalItemDialog validates that sparqlID is legal
 
         // don't allow removal of node item's sparqlID
@@ -541,6 +548,12 @@
         snodeItem.setIsTypeReturned(returnTypeFlag);
 
     	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
+
+        // union
+        gNodeGroup.rmNodeOrPropFromUnion(snodeItem);
+        for (var u of union) {
+            gNodeGroup.addNodeOrPropToUnion(u, snodeItem);
+        }
 
 		// runtime constrained
     	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
