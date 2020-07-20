@@ -92,14 +92,15 @@ OntologyTree.prototype = {
 
         // save expanded and selected nodes
         this.tree.getRoot().visit(function(elist, slist, node){
+            var tooltipUri=node.data.tooltip.split("\n")[0];
 			if (node.bExpanded) {
-                var i = renameFrom.indexOf(node.data.tooltip);
-                var val = (i > -1) ? renameTo[i] : node.data.tooltip;
+                var i = renameFrom.indexOf(tooltipUri);
+                var val = (i > -1) ? renameTo[i] : tooltipUri;
                 elist.push(val);
 			}
             if (node.bSelected) {
-                var i = renameFrom.indexOf(node.data.tooltip);
-                var val = (i > -1) ? renameTo[i] : node.data.tooltip;
+                var i = renameFrom.indexOf(tooltipUri);
+                var val = (i > -1) ? renameTo[i] : tooltipUri;
                 slist.push(val);
 			}
 		}.bind(this,expandList,selectList));
@@ -110,8 +111,9 @@ OntologyTree.prototype = {
 
         // restore expanded and selected nodes
         this.tree.getRoot().visit(function(elist, slist, node){
-            node.expand(elist.indexOf(node.data.tooltip) > -1);
-            node.select(slist.indexOf(node.data.tooltip) > -1);
+            var tooltipUri=node.data.tooltip.split("\n")[0];
+            node.expand(elist.indexOf(tooltipUri) > -1);
+            node.select(slist.indexOf(tooltipUri) > -1);
 		}.bind(this,expandList,selectList));
     },
 
@@ -297,10 +299,13 @@ OntologyTree.prototype = {
             		title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
             	}
 
+                // due to update() function, tooltip.split('\n')[0] must equal full URI
+                var tipText = [className].concat(ontClass.getAnnotationLabels()).concat(ontClass.getAnnotationComments()).join('\n');
+
     	        newNode = parentNodes[i].addChild({
     	    		title: title,
     	    		//key: classKey,
-    	    		tooltip: className,
+    	    		tooltip: tipText",
     	    		isFolder: true,
     	    	});
     	        newNode.data.value = className;
@@ -428,10 +433,12 @@ OntologyTree.prototype = {
 
         // add
         var propName = ontProp.getNameStr();
+        // due to update() function, tooltip.split('\n')[0] must equal full URI
+        var tipText = [propName].concat(ontProp.getAnnotationLabels()).concat(ontProp.getAnnotationComments()).join('\n');
         var child = node.addChild({
             title: title,
             //key: propName,
-            tooltip: propName,
+            tooltip: tipText,
             isFolder: false,
             expand: true
         });
