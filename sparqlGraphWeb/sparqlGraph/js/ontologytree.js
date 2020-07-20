@@ -305,7 +305,7 @@ OntologyTree.prototype = {
     	        newNode = parentNodes[i].addChild({
     	    		title: title,
     	    		//key: classKey,
-    	    		tooltip: tipText",
+    	    		tooltip: tipText,
     	    		isFolder: true,
     	    	});
     	        newNode.data.value = className;
