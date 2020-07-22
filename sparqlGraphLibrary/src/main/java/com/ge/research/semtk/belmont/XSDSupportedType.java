@@ -94,17 +94,24 @@ public enum XSDSupportedType {
 	}
 	
 	public String buildRDF11ValueString(String val, String typePrefixOverride) {
-		
-		if (this.numericOperationAvailable()) {
+		if (this.isFloat() && ! val.equals("") && ! val.contains(".") && ! val.contains("e")) {
+			// add .0 if missing from a float
+			return val + ".0";
+			
+		} else if (this.numericOperationAvailable()) {
+			// return all numbers as-is
 			return val;
 			
 		} else if (this.dateOperationAvailable()) {
+			// dates get type suffix
 			return buildTypedValueString(val, typePrefixOverride);
 			
 		} else if (this == XSDSupportedType.NODE_URI) {
+			// nodes get their brackets, etc.
 			return buildTypedValueString(val, typePrefixOverride);
 			
 		} else {
+			// default is a plain quoted value
 			return "\"" + val + "\"";
 		}
 				
@@ -216,6 +223,11 @@ public enum XSDSupportedType {
 				this == FLOAT ||
 				this == DOUBLE);
 
+	}
+	
+	public boolean isFloat(){
+		return (this == FLOAT ||
+				this == DOUBLE);
 	}
 	
 	public boolean rangeOperationsAvailable() {
