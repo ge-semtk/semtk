@@ -63,7 +63,6 @@
                   'sparqlgraph/js/exploretab',
                   'sparqlgraph/js/mappingtab',
                   'sparqlgraph/js/modaliidx',
-                  'sparqlgraph/js/modalitemdialog',
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/msiclientnodegroupstore',
@@ -75,7 +74,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIIDX, ModalItemDialog, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -511,7 +510,7 @@
         nodeGroupChanged(true, unchangedIDs);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         // update the property
@@ -530,7 +529,7 @@
         nodeGroupChanged(true, unchangedIDs);
     };
 
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
     	// Note: ModalItemDialog validates that sparqlID is legal
 
         // don't allow removal of node item's sparqlID
