@@ -2154,7 +2154,7 @@ SemanticNodeGroup.prototype = {
             }
         }
 
-    }
+    },
     // add node item to union
     // params:
     //    id : existing union

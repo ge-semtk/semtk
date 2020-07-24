@@ -519,11 +519,16 @@
         // returnTypeFlag is not used for properties
         propItem.setOptMinus(optMinus);
 
-        // union
+        // union: presume that u is legal
         gNodeGroup.rmNodeOrPropFromUnion(propItem);
-        for (var u of union) {
-            gNodeGroup.addNodeOrPropToUnion(u, propItem);
+
+        if (union == ModalItemDialog.UNION_NONE) {
+        } else if (union == ModalItemDialog.UNION_NEW) {
+            gNodegroup.addNodeOrPropToUnion(gNodegroup.newUnion(), propItem);
+        } else {
+            gNodeGroup.addNodeOrPropToUnion(union, propItem);
         }
+
 
         propItem.setIsRuntimeConstrained(rtConstrainedFlag);
         propItem.setConstraints(constraintStr);
@@ -551,8 +556,12 @@
 
         // union
         gNodeGroup.rmNodeOrPropFromUnion(snodeItem);
-        for (var u of union) {
-            gNodeGroup.addNodeOrPropToUnion(u, snodeItem);
+
+        if (union == ModalItemDialog.UNION_NONE) {
+        } else if (union == ModalItemDialog.UNION_NEW) {
+            gNodegroup.addNodeOrPropToUnion(gNodegroup.newUnion(), snodeItem);
+        } else {
+            gNodeGroup.addNodeOrPropToUnion(union, snodeItem);
         }
 
 		// runtime constrained

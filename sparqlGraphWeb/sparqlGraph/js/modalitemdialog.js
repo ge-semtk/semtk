@@ -83,8 +83,11 @@ define([	// properly require.config'ed
 		ModalItemDialog.DELETE_SELECT = 9;
         ModalItemDialog.RETURN_TYPE_CHECK = 10;
         ModalItemDialog.SPARQL_ID_SPAN = 11;
-        ModalItemDialog.UNION_SELECT = 11;
+        ModalItemDialog.UNION_SELECT = 12;
 
+
+        ModalItemDialog.UNION_NONE = -2;
+        ModalItemDialog.UNION_NEW = -1;
 
 		ModalItemDialog.prototype = {
             /*
@@ -201,12 +204,12 @@ define([	// properly require.config'ed
 								returnChecked,
                                 returnTypeChecked,
                                 (optMinSelectElem == null) ? null : parseInt(IIDXHelper.getSelectValues(optMinSelectElem)[0]),
-                                parseInt(IIDXHelper.getSelectValues(optUnionSelectElem)[0]
+                                parseInt(IIDXHelper.getSelectValues(unionSelectElem)[0]),
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
 								this.data
-							  );
+                            );
 			},
 
 			setStatus : function (msg) {
@@ -680,7 +683,7 @@ define([	// properly require.config'ed
 
                 var unionData = this.nodegroup.getUnionData();
                 var itemUnionBoss = this.nodegroup.getNodeOrPropUnionBoss(this.item);
-                var selectList = [  ["<no union>", -2], ["- new union -", -1] ];
+                var selectList = [  ["<no union>", ModalItemDialog.UNION_NONE], ["- new union -", ModalItemDialog.UNION_NEW] ];
                 for (var key in unionData) {
                     selectList.push([",".join(this.nodegroup.getUnionLabels(key)), key]);
                 }
