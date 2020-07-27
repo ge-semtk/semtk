@@ -8,6 +8,7 @@ if [ -z "$WEBAPPS" ] ; then
 	exit 1
 fi
 
+. ./.fun
 
 # optional args
 OPT_VARNAME_FILTER=$1
