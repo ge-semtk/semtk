@@ -65,6 +65,14 @@ fi
 # logs/
 mkdir -p $LOGS
 
+#
+# "Legacy" startServices will not config webapps
+#
+if [ -n "${WEBAPPS}" ]; then
+	./configWebapps.sh
+fi
+
+
 echo "=== START MICROSERVICES... ==="
 
 PID_ARRAY=()

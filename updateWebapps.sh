@@ -12,7 +12,7 @@ if [ "$#" -ne 1 ]  && [ "$#" -ne 2 ] && [ "$#" -ne 4 ] ; then
 fi
 
 # Get args
-WEBAPPS=$1
+export WEBAPPS=$1
 OPT_VARNAME_FILTER=${2:-^WEB_}
 OPT_VARNAME_SEARCH=$3
 OPT_VARNAME_REPLACE=$4
@@ -29,12 +29,6 @@ SG_WEB_OSS=${SCRIPT_HOME}/sparqlGraphWeb
 
 # GET ENV
 pushd "${SCRIPT_HOME}" ; . ./.env ; popd
-
-# define array of versioned files
-declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
-                      "sparqlGraph/main-oss/KDLEasyLoggerConfigOss.js" 
-                      "sparqlForm/main-oss/sparqlformconfig.js"
-                      "sparqlForm/main-oss/KDLEasyLoggerConfig.js")
 
 # make sure these exist in webapps
 # or else the COPYDIRS might fail in weird ways
@@ -80,8 +74,6 @@ cp -r "${SG_WEB_OSS}"/ROOT/* "${WEBAPPS}"/ROOT
 cp "${SG_WEB_OSS}"/sparqlForm/*.html "${WEBAPPS}"/sparqlForm
 cp "${SG_WEB_OSS}"/sparqlGraph/*.html "${WEBAPPS}"/sparqlGraph
 
-# replace versioned files
-for v in "${VERSIONED[@]}"
-do
-        replace_vars_in_file "${WEBAPPS}/${v}" "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"
-done
+./configWebapps.sh "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"
+
+echo UpdateWebapps.sh done
