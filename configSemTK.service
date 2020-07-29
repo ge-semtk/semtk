@@ -1,0 +1,12 @@
+[Unit]
+Description=Configure SemTK
+Before=nginx.service
+
+[Service]
+User=${USER}
+WorkingDirectory=${PWD}
+ExecStart=${PWD}/configSemTK.sh ${WEBAPPS}
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
