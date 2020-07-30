@@ -23,10 +23,12 @@ fi
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)"
 cd "${DIR}"
 
-# If running in Docker and SERVER_ADDRESS is not set, then set
-# SERVER_ADDRESS to localhost before sourcing .env
+# If SERVER_ADDRESS is not set, then set SERVER_ADDRESS to localhost (if running
+# in Docker) or the host's IP address before sourcing .env
 if [ -f /.dockerenv ]; then
     export SERVER_ADDRESS="${SERVER_ADDRESS:-localhost}"
+else
+    export SERVER_ADDRESS="${SERVER_ADDRESS:-$(hostname -I | tr ' ' '\n' | head -1)}"
 fi
 source .env
 
