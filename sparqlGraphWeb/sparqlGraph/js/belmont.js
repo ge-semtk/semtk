@@ -1187,12 +1187,8 @@ SemanticNode.prototype = {
 	removeFromNodeList : function(nd) {
 		// remove any links in this SNode's nodeList which point to nd
 		for (var i = 0; i < this.nodeList.length; i++) {
-			this.nodeList[i].removeSNode(nd);
+    		this.nodeList[i].removeSNode(nd);
 		}
-	},
-	removeLink : function(nodeItem, targetSNode) {
-
-		nodeItem.removeSNode(targetSNode);
 	},
 
 	buildFilterConstraint : function(op, val) {
@@ -1805,6 +1801,11 @@ OrderElement.prototype = {
     }
 };
 
+var UnionMembership = function() {
+    this.idToListHash = {};
+};
+
+
 /* the semantic node group */
 var SemanticNodeGroup = function() {
 	this.SNodeList = [];
@@ -1820,11 +1821,12 @@ var SemanticNodeGroup = function() {
 	this.prefixHash = {};
 	this.prefixNumberStart = 0;
 
-    this.unionHash = {};   // this unionhash.int_id = [ [outSNode, inReturnable], [outSNode, inReturnable]]
+    this.unionHash = {};   // this unionhash.int_id = [[inSNnode], [inProp], [nodeItem, targetSnode, reverse_flag]]
+    this.tmpUnionMembersHash = {};  // hash.int_id = [[item, optTarget], [item, optTarget]]
 
 	this.canvasOInfo = null;    // DEPRECATED
 	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
-    							// that's why it has a funny name.
+    							// that's why it has a funny name
     							// Only sparqlgraph.js calls this after loading a new oInfo.
     							// All other code passes in an oInfo when needed.
 	                            // This feels dirty, and was done only after many other retro-fits were tried and failed.
@@ -2077,6 +2079,7 @@ SemanticNodeGroup.prototype = {
         while (this.unionHash.hasOwnProperty(ret)) {
             ret += 1;
         }
+        this.unionHash[ret]=[];
         return ret;
     },
 
@@ -2088,35 +2091,36 @@ SemanticNodeGroup.prototype = {
     // get a list of strings that describe this union
     getUnionLabels : function(id) {
         ret = [];
-        for (var pair of this.unionHash[id]) {
-            var outNode = pair[0];
-            var inItem = pair[1];
-            if (outNode == null) {
-                ret.push(inItem.getSparqlID());
-            } else if (inItem instanceof PropertyItem) {
-                ret.push(inItem.getKeyName());
-            } else {
-                var nodeItemList = this.getNodeItemsBetween(outNode, inItem)
-                if (nodeItemList.length == 0) {
-                    throw "Internal error: can't find object property connecting " + outNode.getSparqlID() + " and " + inItem.getSparqlID();
-                } else if (nodeItemList.length > 1) {
-                    throw "Internal error: can't found multiple object properties connecting " + outNode.getSparqlID() + " and " + inItem.getSparqlID();
-                } else {
-                    ret.push(nodeItemList[0].getKeyName());
-                }
+        if (id == null) {
+            return ret;
+        }
 
+        for (var pair of this.unionHash[id]) {
+            if (pair[0] instanceof SemanticNode) {
+                ret.push(pair[0].getSparqlID());
+            } else {
+                ret.push(pair[0].getKeyName());
             }
         }
         return ret;
     },
 
-    // rm item from anywhere in unionHash
-    rmNodeOrPropFromUnion : function(item) {
+    // rm item from unionHash
+    rmFromUnion : function(item, optSNode, optReverseFlag) {
+        var lookup;
+        if (item instanceof NodeItem) {
+            lookup = [item, optSNode, optReverseFlag];
+        } else {
+            lookup = [item, undefined, undefined];
+        }
         for (var key in this.unionHash) {
             for (var i=0; i < this.unionHash[key].length; i++) {
-                var pair = this.unionHash[key][i];
-                if (pair[1] == item) {
+                var entry = this.unionHash[key][i];
+                if (lookup[0] == entry[0] && lookup[1] == entry[1] && lookup[2] == entry[2]) {
                     this.unionHash[key].splice(i,1);
+                    if (this.unionHash[key].length == 0) {
+                        this.rmUnion(key);
+                    }
                     return;
                 }
             }
@@ -2125,147 +2129,180 @@ SemanticNodeGroup.prototype = {
 
     // add item to union
     // params:
-    //      id : existing union
+    //      id :
     //      item, optIndex : don't belong to any union yet.
-    addNodeOrPropToUnion : function(id, item) {
-        if (item instanceof PropertyItem) {
-            this.unionHash[id].push([this.getPropertyItemParentSNode(), item]);
-        } else if (item instanceof SemanticNode) {
-            this.unionHash[id].push([null, item]);
+    addToUnion : function(id, item, optSNode, optReverseFlag) {
+        var entry;
+        if (item instanceof NodeItem) {
+            entry = [item, optSNode, optReverseFlag];
+        } else {
+            entry = [item];
         }
+
+        if (!this.unionHash.hasOwnProperty(id)) {
+            this.unionHash[id] = [];
+        }
+
+        this.unionHash[id].push(entry);
     },
 
-    // remove node item from anywhere in unionHash
-    rmNodeItemFromUnion : function(nodeItem, index, reverse_flag) {
-        var parent = this.getNodeItemParentSNode();
-        var target = nodeItem.getSNodes()[index];
-        if (reverseFlag) {
-            var t = parent;
-            parent = target;
-            target = t;
+
+    // returns negative key if nodeItem with reverse_flag==true
+    getUnionKey : function(item, optSNode) {
+        var lookup;
+        if (item instanceof NodeItem) {
+            lookup = [item, optSNode];
+        } else {
+            lookup = [item, undefined];
         }
         for (var key in this.unionHash) {
             for (var i=0; i < this.unionHash[key].length; i++) {
-                var pair = this.unionHash[key][i];
-                if (pair[0] == parent && pair[1] == target) {
-                    this.unionHash[key].splice(i,1);
-                    return;
-                }
-            }
-        }
-
-    },
-    // add node item to union
-    // params:
-    //    id : existing union
-    //    nodeItem, index : edge not in any union yet
-    //    reverse_flag : is edge reversed
-    addNodeItemToUnion : function(id, nodeItem, index, reverse_flag) {
-        var parent = this.getNodeItemParentSNode();
-        var target = nodeItem.getSNodes()[index];
-        if (reverseFlag) {
-            this.unionHash[id].push([target, parent]);
-        } else {
-            this.unionHash[id].push([parent, target]);
-        }
-    },
-
-    getNodeOrPropUnionBoss : function(item) {
-        for (var key in this.unionHash) {
-            for (var pair of this.unionHash[key]) {
-                if (pair[1] == item) {
-                    return key;
+                var entry = this.unionHash[key][i];
+                if (lookup[0] == entry[0] && lookup[1] == entry[1]) {
+                    if (entry[2] == true) {
+                        return -key
+                    } else {
+                        return key;
+                    }
                 }
             }
         }
         return null;
     },
 
-    getNodeItemUnionBoss : function(nodeItem, index) {
-        var parent = this.getNodeItemParentSNode();
-        var target = nodeItem.getSNodes()[index];
-        if (reverseFlag) {
-            var t = parent;
-            parent = target;
-            target = t;
-        }
-        for (var key in this.unionHash) {
-            for (var pair of this.unionHash[key]) {
-                if (pair[0] == parent && pair[1] == target) {
-                    return key;
-                }
-            }
-        }
-        return null;
-    },
-
-    getItemUnionMembership : function(unionData, item, optIndex) {
-        var index = (typeof optIndex == "undefined") ? -1 : optIndex;
-
-        for (var i in unionData) {
-            for (var pairs of unionData[i]) {
-                if (pair[0] == item && pair[1] == index) {
-                    return i;
-                }
-            }
-        }
-        return null;
+    getAllUnionKeys : function() {
+        return Object.keys(this.unionHash);
     },
 
     // expensive operation calculates all union memberships
-    //    ret.id = [[item, optNodeItemIndex], [item1, optNodeItemIndex1]...]
-    getUnionData  : function() {
-        var ret = {};
+    updateUnionMemberships  : function() {
+        var addUnionMembership = function(id, item, optTargetNode) {
+            var niIndex = typeof(optNodeItemIndex) == "undefined" ? null : optNodeItemIndex;
+            if (! this.tmpUnionMembersHash.hasOwnProperty(id)) {
+                this.tmpUnionMembersHash[id] = [];
+            }
+            this.tmpUnionMembersHash[id].push([item, optTargetNode])
+        }.bind(this);
+
+        this.tmpUnionMembersHash = {};
 
         // loop through all unionHash entries
         for (var key in this.unionHash) {
-            ret[i] = [];
-            for (var pair of this.unionHash[i]) {
-                var outSNode = pair[0];
-                var inNodeOrProp = pair[1];
+            for (var entry of this.unionHash[key]) {
 
-                if (inRet instanceof PropertyItem) {
+                if (entry[0] instanceof PropertyItem) {
                     // property item is simple: just the item
-                    ret[i].push([inNodeOrProp,-1]);
-                } else {
-                    var subgraphNodeList = [];
-                    var inNode = inNodeOrProp;
+                    addUnionMembership(key, entry[0]);
 
+                } else {
                     // get list of nodes in the Union
-                    var nodeList = this.getSubGraph(inNode, outNode == null ? [] : [outNode]);
+                    var subgraphNodeList;
+                    if (entry[0] instanceof SemanticNode) {
+                        subgraphNodeList = this.getSubGraph(entry[0], []);
+                    } else {
+                        // nodeItems
+                        addUnionMembership(key, entry[0], entry[1]);
+
+                        // get subgraph to add
+                        var parent = this.getNodeItemParentSNode(entry[0]);
+                        if (entry[2] == false) {
+                            subgraphNodeList = this.getSubGraph(entry[1], [parent]);
+                        } else {
+                            subgraphNodeList = this.getSubGraph(parent, [entry[1]]);
+                        }
+                    }
+
                     for (var subgraphNode of subgraphNodeList) {
-                        ret[i].push([subgraphNode, -1]);
+                        // add the node
+                        addUnionMembership(key, subgraphNode);
+
+                        // add its props
                         for (var prop of subgraphNode.getReturnedPropertyItems()) {
-                            ret[i].push([prop, -1]);
+                            addUnionMembership(key, prop);
                         }
 
-                        // loop through every node item in the nodegroup
-                        for (var snode of this.SNodeList) {
-                            var nodeItemList = this.getNodeItemsBetween(subgraphNode, snode);
-                            for (var nodeItem of nodeItemList) {
-
-                                if (subgraphNodeList.indexOf(this.getNodeItemParentSNode()) > -1) {
-                                    // parent is in the union: push with each SNode index
-                                    for (var j=0; j < nodeItem.getSNodes().length; j++) {
-                                        ret[i].push([nodeItem, j]);
-                                    }
-                                } else {
-                                    // has target(s) in the union: push only those SNode indices
-                                    var targetSNodes = nodeItem.getSNodes();
-                                    for (var j=0; j < targetSNodes.length; j++) {
-                                        if (subgraphNodeList.indexOf(targetSNodes[j]) > -1) {
-                                            ret[i].push([nodeItem, j]);
-                                        }
-                                    }
-                                }
+                        // add its connected nodeItems
+                        var nodeItemList = subgraphNode.getNodeList();
+                        for (var nodeItem of nodeItemList) {
+                            // has target(s) in the union: push only those SNode indices
+                            var targetSNodes = nodeItem.getSNodes();
+                            for (var target of targetSNodes) {
+                                addUnionMembership(key, nodeItem, target);
                             }
                         }
                     }
                 }
             }
         }
+
     },
 
+    // Get a list of all unions to which this item belongs
+    //
+    // call updateUnionMemberships() first.
+    // then call this multiple times with no intervening nodegroup edits
+    getUnionMembershipList : function(item, optTargetNode) {
+        var target = (typeof optTargetNode == "undefined") ? null : optTargetNode;
+        var ret = [];
+        for (var id in this.tmpUnionMembersHash) {
+            for (var pair of this.tmpUnionMembersHash[id]) {
+                if (pair[0] == item && pair[1] == target) {
+                    ret.push(id);
+                }
+            }
+        }
+        return ret;
+    },
+
+    // Get the most deeply nested union to which this item belongs
+    //
+    // call updateUnionMemberships() first.
+    // then call this multiple times with no intervening nodegroup edits
+    getUnionMembership : function(item, optTargetNode) {
+        var memberOfKeys = this.getUnionMembershipList(item, optTargetNode);
+        if (memberOfKeys.length == 0) {
+            return null;
+        } else if (memberOfKeys.length == 1) {
+            return memberOfKeys[0];
+        } else {
+            var ret = null;
+            var depth = -1;
+            // loop through all unions this items belong to
+            for (var i=0; i < memberOfKeys.length; i++) {
+                var firstMember = this.unionHash[memberOfKeys[i]][0];
+                var firstMemberMembership = this.getUnionMembershipList(firstMember[0], firstMember[1]);
+                // find the union whose first member belongs to the longest list of other unions
+                if (firstMemberMembership.length > depth) {
+                    ret = memberOfKeys[i];
+                    depth = firstMemberMembership.length;
+                }
+            }
+            return ret;
+        }
+    },
+
+    // Get list of union keys which this item could reasonably join
+    //
+    // call updateUnionMemberships() first.
+    // then call this multiple times with no intervening nodegroup edits
+    getLegalUnions : function(item, optTargetNode) {
+        var ret = [];
+        var membership = this.getUnionMembershipList(item, optTargetNode);
+        var membershipStr = JSON.stringify(membership.sort());
+
+        for (var k in this.unionHash) {
+            var firstMember = this.unionHash[k][0];
+            var firstMemberMembership = this.getUnionMembershipList(firstMember[0], firstMember[1]);
+            // remove the member's union to be left with any other memberships
+            firstMemberMembership.splice(firstMemberMembership.indexOf(k),1);
+
+            var firstMembershipStr = JSON.stringify(firstMemberMembership.sort());
+            if (firstMembershipStr == membershipStr) {
+                ret.push(k);
+            }
+        }
+        return ret;
+    },
 
 	getPrefixedUri : function (originalUri) {
 		var retval = "";
@@ -3086,7 +3123,7 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
-	getNodeItemsBetween(sNode1, sNode2) {
+	getNodeItemsBetween : function(sNode1, sNode2) {
 		// return a list of node items between the two nodes
 		// Ahead of the curve: supports multiple links between snodes
 		var ret = [];
@@ -3457,17 +3494,39 @@ SemanticNodeGroup.prototype = {
 	removeTaggedNodes : function() {
 
 		for (var i = 0; i < this.SNodeList.length; i++) {
+            var snode = this.SNodeList[i];
 			if (this.SNodeList[i].getRemovalTag()) {
+
 				// remove the current sNode from all links.
 				for (var k = 0; k < this.SNodeList.length; k++) {
-					this.SNodeList[k].removeFromNodeList(this.SNodeList[i]);
+					this.SNodeList[k].removeFromNodeList(snode);
 				}
+
+                // remove nodeItems from unionHash
+                for (var nItem of snode.nodeList) {
+                    for (var target of nItem.SNodes) {
+                        this.rmFromUnion(nItem, target);
+                    }
+                }
+
+                // remove propItems from unionHash
+                for (var pItem of snode.propList) {
+                    this.rmFromUnion(pItem);
+                }
+
+                // remove the snode from unionHash
+                this.rmFromUnion(snode);
 
 				// remove the sNode from the nodeGroup
 				this.SNodeList.splice(i, 1);
 			}
 		}
 
+	},
+
+    removeLink : function(nodeItem, targetSNode) {
+        this.rmFromUnion(nodeItem, targetSNode);
+		nodeItem.removeSNode(targetSNode);
 	},
 
 	clear : function() {
@@ -3478,9 +3537,9 @@ SemanticNodeGroup.prototype = {
         this.limit = 0;
         this.offset = 0;
         this.orderBy = [];
+        this.unionHash = {};
 
 	},
-
 
 	deleteNode : function(nd, recurse) {
 		// delete a given node (nd), usually at its request.

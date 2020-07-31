@@ -53,6 +53,9 @@ define([	// properly require.config'ed
 			this.data = data;
 		};
 
+        ModalLinkDialog.UNION_NONE = -2;
+        ModalLinkDialog.UNION_NEW = -1;
+
 		ModalLinkDialog.prototype = {
 
 
@@ -70,6 +73,8 @@ define([	// properly require.config'ed
 								this.data,
 								document.getElementById("ModalLinkDialog.optionalMinusSelect").value,
                                 document.getElementById("ModalLinkDialog.qualifierSelect").value,
+                                document.getElementById("ModalLinkDialog.unionSelect").value,
+								document.getElementById("ModalLinkDialog.unionReverseCheck").checked,
 								document.getElementById("ModalLinkDialog.deleteSelect").value == "true",
 								document.getElementById("ModalLinkDialog.deleteCheck").checked
 							  );
@@ -121,6 +126,31 @@ define([	// properly require.config'ed
 												  [this.item.getQualifier(this.targetSNode)]);
                 select.style.width = "20ch";
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Qualifier: ", select));
+
+                // union
+                this.nodegroup.updateUnionMemberships();
+                var unionKeys = this.nodegroup.getLegalUnions(this.item, this.targetSNode);
+                var itemUnionKey = this.nodegroup.getUnionKey(this.item, this.targetSNode);
+                var unionReverse = (itemUnionKey < 0);
+                itemUnionKey = (itemUnionKey == null) ? null :  Math.abs(itemUnionKey);
+
+                var selectList = [  ["<no union>", ModalLinkDialog.UNION_NONE], ["- new union -", ModalLinkDialog.UNION_NEW] ];
+                for (var key of unionKeys) {
+                    selectList.push([this.nodegroup.getUnionLabels(key).join(","), key]);
+                }
+                select = IIDXHelper.createSelect(
+                        "ModalLinkDialog.unionSelect",
+                        selectList,
+                        [this.nodegroup.getUnionLabels(itemUnionKey).join(",")]
+                    );
+                var optDisabledList = "PEC TODO";
+                select.style.width = "20ch";
+
+                var unionReverseCheck = IIDXHelper.createVAlignedCheckbox("ModalLinkDialog.unionReverseCheck", unionReverse);
+                var span = document.createElement("span");
+                span.appendChild(select);
+                IIDXHelper.appendCheckBox(span, unionReverseCheck, "reversed");
+                fieldset.appendChild(IIDXHelper.buildControlGroup("Union: ", span));
 
 				// delete query checkbox
 				select = IIDXHelper.createSelect("ModalLinkDialog.deleteSelect",

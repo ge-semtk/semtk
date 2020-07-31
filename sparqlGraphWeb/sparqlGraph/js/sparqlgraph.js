@@ -449,18 +449,32 @@
 			});
 	};
 
-	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, deleteMarkerVal, deleteFlag) {
+	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, union, unionReverse, deleteMarkerVal, deleteFlag) {
+        require([ 'sparqlgraph/js/modallinkdialog',
+                         ], function (ModalLinkDialog) {
+    		// optionalFlag
+    		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
+            nItem.setQualifier(targetSNode, qualifierVal);
+    		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
 
-		// optionalFlag
-		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
-        nItem.setQualifier(targetSNode, qualifierVal);
-		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
-		// deleteFlag
-		if (deleteFlag) {
-			snode.removeLink(nItem, targetSNode);
-		}
+            // union
+            gNodeGroup.rmFromUnion(nItem, targetSNode, true);
+            gNodeGroup.rmFromUnion(nItem, targetSNode, false);
+            if (union == ModalLinkDialog.UNION_NONE) {
+            } else if (union == ModalLinkDialog.UNION_NEW) {
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), nItem, targetSNode, unionReverse);
+            } else {
+                gNodeGroup.addToUnion(union, nItem, targetSNode, unionReverse);
+            }
 
-        nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+
+    		// deleteFlag
+    		if (deleteFlag) {
+    			gNodeGroup.removeLink(nItem, targetSNode);
+    		}
+
+            nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+        });
 	};
 
     var launchSNodeItemDialog = function (snodeItem) {
@@ -499,7 +513,6 @@
 	var buildLink = function(snode, nItem, rangeSnode) {
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
-        var unchangedIDs = gNodeGroup.getSNodeSparqlIDs();
 		if (rangeSnode == null) {
 			var rangeStr = nItem.getUriValueType();
 			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
@@ -507,73 +520,76 @@
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
-        nodeGroupChanged(true, unchangedIDs);
+        nodeGroupChanged(true);
 	};
 
     var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
-        // update the property
-        gNodeGroup.changeSparqlID(propItem, sparqlID);
-        propItem.setIsReturned(returnFlag);
-        // returnTypeFlag is not used for properties
-        propItem.setOptMinus(optMinus);
+        require([ 'sparqlgraph/js/modalitemdialog',
+                ], function (ModalItemDialog) {
+            // update the property
+            gNodeGroup.changeSparqlID(propItem, sparqlID);
+            propItem.setIsReturned(returnFlag);
+            // returnTypeFlag is not used for properties
+            propItem.setOptMinus(optMinus);
 
-        // union: presume that u is legal
-        gNodeGroup.rmNodeOrPropFromUnion(propItem);
+            // union: presume that u is legal
+            gNodeGroup.rmFromUnion(propItem);
 
-        if (union == ModalItemDialog.UNION_NONE) {
-        } else if (union == ModalItemDialog.UNION_NEW) {
-            gNodegroup.addNodeOrPropToUnion(gNodegroup.newUnion(), propItem);
-        } else {
-            gNodeGroup.addNodeOrPropToUnion(union, propItem);
-        }
+            if (union == ModalItemDialog.UNION_NONE) {
+            } else if (union == ModalItemDialog.UNION_NEW) {
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), propItem);
+            } else {
+                gNodeGroup.addToUnion(union, propItem);
+            }
 
 
-        propItem.setIsRuntimeConstrained(rtConstrainedFlag);
-        propItem.setConstraints(constraintStr);
-        propItem.setIsMarkedForDeletion(delMarker);
+            propItem.setIsRuntimeConstrained(rtConstrainedFlag);
+            propItem.setConstraints(constraintStr);
+            propItem.setIsMarkedForDeletion(delMarker);
 
-        gNodeGroup.removeInvalidOrderBy();
+            gNodeGroup.removeInvalidOrderBy();
 
-        var unchangedIDs = gNodeGroup.getSNodeSparqlIDs();
-        unchangedIDs.splice(unchangedIDs.indexOf(data.snodeID));
-        nodeGroupChanged(true, unchangedIDs);
+            nodeGroupChanged(true);
+        });
     };
 
     var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
-    	// Note: ModalItemDialog validates that sparqlID is legal
+        require([ 'sparqlgraph/js/modalitemdialog',
+                ], function (ModalItemDialog) {
 
-        // don't allow removal of node item's sparqlID
-        if (sparqlID != "") {
-            gNodeGroup.changeSparqlID(snodeItem, sparqlID);
-        }
+            // Note: ModalItemDialog validates that sparqlID is legal
 
-        snodeItem.setIsReturned(returnFlag);
-        snodeItem.setIsTypeReturned(returnTypeFlag);
+            // don't allow removal of node item's sparqlID
+            if (sparqlID != "") {
+                gNodeGroup.changeSparqlID(snodeItem, sparqlID);
+            }
 
-    	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
+            snodeItem.setIsReturned(returnFlag);
+            snodeItem.setIsTypeReturned(returnTypeFlag);
 
-        // union
-        gNodeGroup.rmNodeOrPropFromUnion(snodeItem);
+        	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
 
-        if (union == ModalItemDialog.UNION_NONE) {
-        } else if (union == ModalItemDialog.UNION_NEW) {
-            gNodegroup.addNodeOrPropToUnion(gNodegroup.newUnion(), snodeItem);
-        } else {
-            gNodeGroup.addNodeOrPropToUnion(union, snodeItem);
-        }
+            // union
+            gNodeGroup.rmFromUnion(snodeItem);
 
-		// runtime constrained
-    	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
-    	snodeItem.setDeletionMode(delMarker);
+            if (union == ModalItemDialog.UNION_NONE) {
+            } else if (union == ModalItemDialog.UNION_NEW) {
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), snodeItem);
+            } else {
+                gNodeGroup.addToUnion(union, snodeItem);
+            }
 
-    	// constraints
-    	snodeItem.setConstraints(constraintStr);
+    		// runtime constrained
+        	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
+        	snodeItem.setDeletionMode(delMarker);
 
-        var unchanged = gNodeGroup.getSNodeSparqlIDs();
-        unchanged.splice(unchanged.indexOf(snodeItem.getSparqlID()));
-        nodeGroupChanged(true, unchanged);
+        	// constraints
+        	snodeItem.setConstraints(constraintStr);
+
+            nodeGroupChanged(true);
+        });
     };
 
     // window's onresize event
@@ -1406,7 +1422,7 @@
 
     // Set nodeGroupChangedFlag and update GUI for new nodegroup
     // unchangeSNodeIDs : snodes who shouldn't be redrawn and potentially moved
-    var nodeGroupChanged = function(flag, unchangedSNodeIDs) {
+    var nodeGroupChanged = function(flag) {
         gNodeGroupChangedFlag = flag;
 
         guiUpdateGraphRunButton();
@@ -1424,8 +1440,7 @@
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
-        gRenderer.draw(gNodeGroup, unchangedSNodeIDs ? unchangedSNodeIDs : []);
-
+        gRenderer.draw(gNodeGroup);
         if (flag) {
             buildQuery();
         } else {

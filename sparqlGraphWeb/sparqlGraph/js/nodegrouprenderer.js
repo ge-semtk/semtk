@@ -49,7 +49,6 @@ define([	// properly require.config'ed
             this.ctx = document.createElement("canvas").getContext("2d");
 
             this.nodegroup = null;
-
             this.propEditorCallback = null;
             this.snodeEditorCallback = null;  //done
             this.snodeRemoverCallback = null;
@@ -89,6 +88,12 @@ define([	// properly require.config'ed
         NodegroupRenderer.COLOR_RET_CONST = '#3ca17a';
         NodegroupRenderer.INDENT = 6;
 
+        // https://davidmathlogic.com/colorblind/
+        // Paul Tol
+        NodegroupRenderer.UNION_COLORS = ["#332288","#117733","#44AA99","#88CCEE","#DDCC77","#CC6677","#AA4499","#882255"];
+        // IBM
+        NodegroupRenderer.UNION_COLORS = ["#648FFF","#785EF0","#DC267F","#FE6100","#FFB000"];
+
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
             return {
                 interaction: {
@@ -105,7 +110,7 @@ define([	// properly require.config'ed
                 },
                 physics: {
                     barnesHut: {
-                      gravitationalConstant: -2450,
+                      gravitationalConstant: -4500,
                       springLength: 110,
                       avoidOverlap: 0.01
                     },
@@ -216,24 +221,25 @@ define([	// properly require.config'ed
             },
 
             // Update the display to reflect the nodegroup
-            // unchangedIDs - nodes who don't need their images regenerated
-            draw : function (nodegroup, unchangedIDs) {
+
+            draw : function (nodegroup) {
 
                 this.nodegroup = nodegroup;  // mostly for callbacks
+                this.nodegroup.updateUnionMemberships();  // do this expensive operation once per draw
 
-                this.drawNodes(unchangedIDs);
+                this.drawNodes();
                 this.drawEdges();
 
             },
 
-            drawNodes : function(unchangedIDs) {
+            drawNodes : function() {
                 var nodegroupIDs = this.nodegroup.getSNodeSparqlIDs().slice();
                 var graphIDs = this.network.body.data.nodes.getIds();
 
                 // changed nodes
                 var changedIDs = [];
                 for (var id of graphIDs) {
-                    if (nodegroupIDs.indexOf(id) > -1 && unchangedIDs.indexOf(id) == -1) {
+                    if (nodegroupIDs.indexOf(id) > -1) {
                         var snode = this.nodegroup.getNodeBySparqlID(id);
                         this.buildAndUpdateNodeSVG(snode);
                         changedIDs.push(id);
@@ -287,8 +293,11 @@ define([	// properly require.config'ed
                         break;
                     }
                 }
+                // strip out leading union symbol
+                ret = ret.replace(/^\W+\s+/, "");
                 // strip out spaces and qualifiers
-                return ret.replace(/[\W]$/, "");
+                ret = ret.replace(/\W+$/, "");
+                return ret;
             },
 
             drawEdges : function() {
@@ -311,13 +320,18 @@ define([	// properly require.config'ed
                             //} else  {
                             //    edgeFont = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
                             //}
-
+                            var unionMemberColor = this.getUnionMembershipColor(nItem, snode2) || NodegroupRenderer.COLOR_FOREGROUND;
+                            var unionColor = this.getUnionColor(nItem, snode2);
+                            if (unionColor != null) {
+                                label = "\u222A " + label;
+                                edgeFont.color = unionColor;
+                            }
                             var edge = {
                                 id:     id,
                                 from:   fromID,
                                 to:     toID,
                                 label:  label,
-                                color:  NodegroupRenderer.COLOR_FOREGROUND,
+                                color:  {color: unionMemberColor, highlight: unionMemberColor, inherit: false},
                                 font :  edgeFont
                             };
                             edgeData.push(edge);
@@ -336,6 +350,38 @@ define([	// properly require.config'ed
                 // remove any edges no longer in the nodegroup
                 this.network.body.data.edges.remove(edgeIDsToRemove);
             },
+
+            getUnionMembershipColor : function (item, optNodeItem) {
+                var target = typeof(optNodeItem) == "undefined" ? null : optNodeItem;
+                var union = this.nodegroup.getUnionMembership(item, target);
+                if (union != null) {
+                    return  NodegroupRenderer.UNION_COLORS[union % NodegroupRenderer.UNION_COLORS.length];
+                } else {
+                    return null;
+                }
+            },
+
+            getUnionColor : function (item, optNodeItem) {
+                var target = typeof(optNodeItem) == "undefined" ? null : optNodeItem;
+
+                var union;
+                if (item instanceof NodeItem) {
+                    union = this.nodegroup.getUnionKey(item, target);
+                    if (union != null) {
+                        union = Math.abs(union);
+                    }
+                } else {
+                    union = this.nodegroup.getUnionKey(item);
+                }
+
+                if (union != null) {
+                    return  NodegroupRenderer.UNION_COLORS[union % NodegroupRenderer.UNION_COLORS.length];
+                } else {
+                    return null;
+                }
+            },
+
+
             //
             // Change an snode to a network node and call nodes.update
             // (adding or replacing the existing node)
@@ -356,6 +402,8 @@ define([	// properly require.config'ed
                 svg.setAttribute('width', 200);
                 svg.setAttribute('height', 60);
 
+                var foreground = NodegroupRenderer.COLOR_FOREGROUND;
+
                 // fill with a rectangle
                 var rect = document.createElement("rect");
                 rect.setAttribute('x', "0");
@@ -364,7 +412,7 @@ define([	// properly require.config'ed
                 rect.setAttribute('height', "100%");
                 rect.setAttribute('fill', NodegroupRenderer.COLOR_NODE);
                 rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
-                rect.setAttribute('stroke', NodegroupRenderer.COLOR_FOREGROUND);
+                rect.setAttribute('stroke', foreground);
                 svg.appendChild(rect);
                 y += NodegroupRenderer.STROKE;
 
@@ -404,7 +452,7 @@ define([	// properly require.config'ed
                 svg.setAttribute("width", x)
 
                 // now that width is set, add the grab bar (with it's right-justified stuff)
-                var callbackData = this.addGrabBar(svg, expandFlag)
+                var callbackData = this.addGrabBar(svg, snode, expandFlag)
                 myCallbackData.unshift(callbackData);   // sneak it on the beginning of the list since it it supposed to be sorted by Y ascending
 
                 // add y_perc to all callback data: percentage of y at bottom of item
@@ -461,9 +509,10 @@ define([	// properly require.config'ed
                 return Math.floor(1.5 * NodegroupRenderer.SIZE);
             },
 
-            addGrabBar : function(svg, expandFlag) {
+            addGrabBar : function(svg, snode, expandFlag) {
 
                 var height = this.getGrabBarHeight();
+                var fill = this.getUnionMembershipColor(snode) || NodegroupRenderer.COLOR_GRAB_BAR;
 
                 // draw the basic rectangle
                 var rect = document.createElement("rect");
@@ -471,7 +520,7 @@ define([	// properly require.config'ed
                 rect.setAttribute('y', "0");
                 rect.setAttribute('width', "100%");
                 rect.setAttribute('height', height);
-                rect.setAttribute('fill', NodegroupRenderer.COLOR_GRAB_BAR);
+                rect.setAttribute('fill', fill);
                 rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
                 rect.setAttribute('stroke', NodegroupRenderer.COLOR_FOREGROUND);
                 svg.appendChild(rect);
@@ -520,12 +569,28 @@ define([	// properly require.config'ed
             // generate a [height, width, data]
             addSparqlID : function(svg, snode, y) {
 
+                var foreground = NodegroupRenderer.COLOR_FOREGROUND;
+
                 var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE * 1.5;
 
                 var checked = false;
-                var foreground = NodegroupRenderer.COLOR_FOREGROUND;
+
+                // add the union symbol
+                var unionColor = this.getUnionColor(snode);
+                if (unionColor != null) {
+                    var text = document.createElement('text');
+                    text.setAttribute('x', x);
+                    text.setAttribute('y', bot);
+                    text.setAttribute('font-size', size + "px");
+                    text.setAttribute('font-family', "Arial");
+                    text.setAttribute('font-weight', "bold");
+                    text.setAttribute('fill', unionColor);
+                    text.innerHTML = "&cup;";
+                    svg.appendChild(text);
+                }
+                x += (size);
 
                 if (snode.getIsReturned() || snode.getIsTypeReturned()) {
                     checked = true;
@@ -563,6 +628,21 @@ define([	// properly require.config'ed
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE;
 
+                // add the union symbol
+                var unionColor = this.getUnionColor(item);
+                if (unionColor != null) {
+                    var text = document.createElement('text');
+                    text.setAttribute('x', x);
+                    text.setAttribute('y', bot);
+                    text.setAttribute('font-size', size + "px");
+                    text.setAttribute('font-family', "Arial");
+                    text.setAttribute('font-weight', "bold");
+                    text.setAttribute('fill', unionColor);
+                    text.innerHTML = "&cup;";
+                    svg.appendChild(text);
+                }
+                x += (size);
+
                 var checked = false;
                 var foreground = NodegroupRenderer.COLOR_FOREGROUND;
                 if (item.getIsReturned() ) {
@@ -577,9 +657,10 @@ define([	// properly require.config'ed
                     foreground = NodegroupRenderer.COLOR_CONSTRAINED;
                 }
                 this.drawCheckBox(svg, x, bot, size, checked, foreground);
+                x += (size + NodegroupRenderer.INDENT);
 
                 var text = document.createElement('text');
-                text.setAttribute('x', x + size + NodegroupRenderer.INDENT);
+                text.setAttribute('x', x);
                 text.setAttribute('y', bot);
                 text.setAttribute('font-size', size + "px");
                 text.setAttribute('font-family', "Arial");

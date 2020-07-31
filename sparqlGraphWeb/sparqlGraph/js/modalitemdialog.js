@@ -681,16 +681,17 @@ define([	// properly require.config'ed
                                             this.rtConstrainedCheckOnClick.bind(this)
                                         );
 
-                var unionData = this.nodegroup.getUnionData();
-                var itemUnionBoss = this.nodegroup.getNodeOrPropUnionBoss(this.item);
+                this.nodegroup.updateUnionMemberships();
+                var unionKeys = this.nodegroup.getLegalUnions(this.item);
+                var itemUnionKey = this.nodegroup.getUnionKey(this.item);
                 var selectList = [  ["<no union>", ModalItemDialog.UNION_NONE], ["- new union -", ModalItemDialog.UNION_NEW] ];
-                for (var key in unionData) {
-                    selectList.push([",".join(this.nodegroup.getUnionLabels(key)), key]);
+                for (var key of unionKeys) {
+                    selectList.push([this.nodegroup.getUnionLabels(key).join(","), key]);
                 }
                 var unionSelect = IIDXHelper.createSelect(
                         this.getFieldID(ModalItemDialog.UNION_SELECT),
                         selectList,
-                        itemUnionBoss ? [",".join(this.nodegroup.getUnionLabels(itemUnionBoss))] : []
+                        [this.nodegroup.getUnionLabels(itemUnionKey).join(",")]
                     );
                 var optDisabledList = "PEC TODO";
 ``
