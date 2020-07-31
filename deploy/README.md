@@ -22,7 +22,7 @@ The following command will build, commit, and tag the Docker image.
 
 - If proxy not required: `packer build semtk-docker.json`
 
-- If proxy required, set http\_proxy and https\_proxy environment variables and then run: `packer build -var "http_proxy=${http_proxy}" -var "https_proxy=${https_proxy}" semtk-docker.json`
+- If proxy required, set the needed environment variables and then run: `packer build -var "http_proxy=${http_proxy}" -var "https_proxy=${https_proxy}" -var “no_proxy=${no_proxy}" semtk-docker.json`
 
 Note: Packer supports building images for many hypervisors and clouds (e.g. Docker, Hyper-V, 
 VirtualBox).  Currently only Docker files are provided here.  More may be added in the future.

@@ -2,8 +2,10 @@
   "variables": {
     "http_proxy": "",
     "https_proxy": "",
+    "no_proxy": "",
     "repository": "semtk",
-    "tags": "latest,2.2.1"
+    "tags": "latest,{{user `version`}}",
+    "version": "2.2.1"
   },
 
   "builders": [
@@ -29,7 +31,8 @@
       "type": "shell",
       "environment_vars": [  
         "http_proxy={{user `http_proxy`}}",
-        "https_proxy={{user `https_proxy`}}"
+        "https_proxy={{user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
       ],
       "scripts": [
         "scripts/install.sh",
