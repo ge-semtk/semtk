@@ -32,7 +32,8 @@ else
 fi
 source .env
 
-# Replace the environment file for the SemTK services
+# Create an environment file containing the environment variables used in services' application.properties
+# This file is used at service startup (via service.unit)
 cat ./*Service/BOOT-INF/classes/application.properties | grep "{" | sed -e 's/^.*{\(.*\)}$/\1=${\1}/' | sort | uniq | envsubst > environment
 
 # Replace the js configuration files for the SemTK webapps
