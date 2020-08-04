@@ -136,7 +136,7 @@ require([	'local/sparqlformconfig',
 
 		//-----  on load async callback chain functions -----//
 		doFileLoad = function() {
-			gLoadDialog.loadDialog(gConn, gAvoidQueryMicroserviceFlag, loadSuccess0);
+			gLoadDialog.loadDialog(gConn, loadSuccess0);
 		};
 
 		loadSuccess0 = function(connProfile, directFlag, optCallback) {
