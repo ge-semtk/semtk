@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 #
+
 #
 # Builds all sources from scratch.
 #
@@ -23,7 +24,8 @@
 # NOTE: Removed -Djavax.net.ssl.trustStore=trust.jks  -Djavax.net.ssl.trustStorePassword=password since they didn't seem to be needed
 #
 
-DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)  # the directory containing the script
-cd $DIR
+# DIR = directory containing this script
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)"
+cd "$DIR" || exit
 echo "Building all sources in $DIR..."
 mvn clean install -DskipTests

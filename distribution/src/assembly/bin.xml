@@ -30,14 +30,15 @@
             <directory>../</directory>
             <outputDirectory>semtk-opensource/</outputDirectory>
             <includes>
+                <include>.env</include>
+                <include>.fun</include>
+                <include>configSemTK.service</include>
+                <include>configSemTK.sh</include>
+                <include>configWebapps.sh</include>
                 <include>service.unit</include>
                 <include>startServices.sh</include>
                 <include>stopServices.sh</include>
-                <include>updateWebapps.service</include>
                 <include>updateWebapps.sh</include>
-                <include>configWebapps.sh</include>
-                <include>.env</include>
-                <include>.fun</include>
             </includes>
         </fileSet>
     </fileSets>
