@@ -334,7 +334,7 @@ define([	// properly require.config'ed
             },
             validDatetime : function (str) {
                 var d = str + "+00:00";   // add timezone, making it invalid if there was already one
-                return d.length() > 5 && String(new Date(d)).indexOf("nvalid") == -1;
+                return d.length > 5 && String(new Date(d)).indexOf("nvalid") == -1;
             },
             getTimeError : function(str) {
                 return this.validTime(str) ? null : "Invalid time.  e.g. 14:56:30";
@@ -348,7 +348,7 @@ define([	// properly require.config'ed
                 return this.validDate(str) ? null : "Invalid date.  e.g. 2000-12-25";
             },
             validDate : function (str) {
-                return str.length() > 5 && this.validDatetime(str) && str.indexOf(":") == -1;
+                return str.length > 5 && this.validDatetime(str) && str.indexOf(":") == -1;
             },
 
 		};

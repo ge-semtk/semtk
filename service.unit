@@ -5,6 +5,7 @@ After=fuseki.service virtuoso.service
 [Service]
 User=${USER}
 WorkingDirectory=${PWD}
+EnvironmentFile=-${OLDPWD}/environment
 ExecStart=/usr/bin/java org.springframework.boot.loader.JarLauncher
 Restart=on-abort
 SuccessExitStatus=143
