@@ -212,6 +212,7 @@ require([	'local/sparqlformconfig',
 			// PEC TODO: load cookie or launch dialog
 			setStatus("");
 		};
+		onLoad();
 
 	}
 
