@@ -129,19 +129,19 @@ define([	// properly require.config'ed
 
                 // union
                 this.nodegroup.updateUnionMemberships();
-                var unionKeys = this.nodegroup.getLegalUnions(this.item, this.targetSNode);
-                var itemUnionKey = this.nodegroup.getUnionKey(this.item, this.targetSNode);
+                var unionKeys = this.nodegroup.getLegalUnions(this.sourceSNode, this.item, this.targetSNode);
+                var itemUnionKey = this.nodegroup.getUnionKey(this.sourceSNode, this.item, this.targetSNode);
                 var unionReverse = (itemUnionKey < 0);
                 itemUnionKey = (itemUnionKey == null) ? null :  Math.abs(itemUnionKey);
 
                 var selectList = [  ["<no union>", ModalLinkDialog.UNION_NONE], ["- new union -", ModalLinkDialog.UNION_NEW] ];
                 for (var key of unionKeys) {
-                    selectList.push([this.nodegroup.getUnionLabels(key).join(","), key]);
+                    selectList.push([this.nodegroup.getUnionName(key).join(","), key]);
                 }
                 select = IIDXHelper.createSelect(
                         "ModalLinkDialog.unionSelect",
                         selectList,
-                        [this.nodegroup.getUnionLabels(itemUnionKey).join(",")]
+                        [this.nodegroup.getUnionName(itemUnionKey).join(",")]
                     );
                 var optDisabledList = "PEC TODO";
                 select.style.width = "20ch";

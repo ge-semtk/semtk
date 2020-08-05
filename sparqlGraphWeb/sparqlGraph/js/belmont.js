@@ -575,9 +575,9 @@ NodeItem.prototype = {
 
 	pushSNode : function(snode, optOptional, optDeletionFlag, optQualifier){
 		this.SNodes.push(snode);
-		this.OptionalMinus.push((typeof optOptional === "undefined")     ? NodeItem.OPTIONAL_FALSE : optOptional );
-		this.deletionFlags.push( (typeof optDeletionFlag === "undefined") ? false                   : optDeletionFlag);
-        this.Qualifiers.push( (typeof optQualifier === "undefined") ? ""                   : optQualifier);
+		this.OptionalMinus.push((optOptional === undefined)     ? NodeItem.OPTIONAL_FALSE : optOptional );
+		this.deletionFlags.push( (optDeletionFlag === undefined) ? false                   : optDeletionFlag);
+        this.Qualifiers.push( (optQualifier === undefined) ? ""                   : optQualifier);
 	},
 
 	// get values used by the NodeItem
@@ -916,7 +916,7 @@ edgeIntermediate.prototype = {
 var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 		nodeGroup, jObj, optInflateOInfo) {
 
-	var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
+	var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
 
 	if (jObj) {
 		this.fromJson(jObj, nodeGroup, inflateOInfo);
@@ -965,8 +965,8 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 SemanticNode.prototype = {
 
 	toJson : function(optDeflateFlag, optDontDeflatePropItems) {
-		var deflateFlag = (typeof optDeflateFlag === "undefined") ? false : optDeflateFlag;
-		var dontDeflatePropItems = (typeof optDontDeflatePropItems === "undefined") ? [] : optDontDeflatePropItems;
+		var deflateFlag = (optDeflateFlag === undefined) ? false : optDeflateFlag;
+		var dontDeflatePropItems = (optDontDeflatePropItems === undefined) ? [] : optDontDeflatePropItems;
 
 		// return a JSON object of things needed to serialize
 		var ret = {
@@ -1010,7 +1010,7 @@ SemanticNode.prototype = {
 
 	fromJson : function(jObj, nodeGroup, optInflateOInfo) {
 
-		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
+		var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
 
 		// presumes SparqlID's are reconciled already
 		// presumes that SNodes pointed to by NodeItems already exist
@@ -1285,7 +1285,7 @@ SemanticNode.prototype = {
 	},
 
 	isUsed : function (optInstanceOnly) {
-		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+		var instanceOnly = (optInstanceOnly === undefined) ? false : optInstanceOnly;
 
 		if (instanceOnly) {
 			if (this.instanceValue != null) return true;
@@ -1416,7 +1416,7 @@ SemanticNode.prototype = {
 	},
 
 	getURI : function(optLocalFlag) {
-		var localFlag = (typeof(optLocalFlag) == 'undefined') ? false : optLocalFlag;
+		var localFlag = (optLocalFlag === undefined) ? false : optLocalFlag;
 
 		if (localFlag) return new OntologyName(this.fullURIName).getLocalName();
 		else           return this.fullURIName;
@@ -1732,8 +1732,8 @@ var getNodeDeletionTypeByName = function(delVal){
 };
 
 var OrderElement = function(sparqlID, func) {
-    this.sparqlID = (typeof sparqlID != "undefined") ? sparqlID : "";
-    this.func = (typeof func != "undefined") ? func : "";
+    this.sparqlID = (sparqlID === undefined) ? "" : sparqlID;
+    this.func = (func === undefined) ? "" : func;
     this.fixID();
 };
 
@@ -1821,18 +1821,11 @@ var SemanticNodeGroup = function() {
 	this.prefixHash = {};
 	this.prefixNumberStart = 0;
 
-    this.unionHash = {};   // this unionhash.int_id = [[inSNnode], [inProp], [nodeItem, targetSnode, reverse_flag]]
-    this.tmpUnionMembersHash = {};  // hash.int_id = [[item, optTarget], [item, optTarget]]
-
-	this.canvasOInfo = null;    // DEPRECATED
-	                            // this is a late addition used by nothing except callbacks on the canvas which add nodes.
-    							// that's why it has a funny name
-    							// Only sparqlgraph.js calls this after loading a new oInfo.
-    							// All other code passes in an oInfo when needed.
-	                            // This feels dirty, and was done only after many other retro-fits were tried and failed.
-	                            // Next best thing:  all code anywhere should keep a node group's oInfo up to date.
-	                            //                   then all the oInfo params in functions could be removed.
-	                            //                   thus breaking legacy code outside semTK.
+    this.unionHash = {};   // list of unionValStrings specifying the branch points that define the union
+                           // this unionhash.int_id = [unionValStr, unionValStr]
+    this.tmpUnionMembersHash = {};  //  list of unions for each item that has any.  Deepest first.  So zeroth is most important.
+                                    // hash[memberValStr] = [deepest, nextdeep, ...]
+                                    // temporarily built and maintained on the javascript side
 };
 
 SemanticNodeGroup.QUERY_DISTINCT = 0;
@@ -1864,8 +1857,8 @@ SemanticNodeGroup.prototype = {
 
 
 	toJson : function(optDeflateFlag, optDontDeflatePropItems) {
-		var deflateFlag = (typeof optDeflateFlag === "undefined") ? false : optDeflateFlag;
-		var dontDeflatePropItems = (typeof optDontDeflatePropItems === "undefined") ? [] : optDontDeflatePropItems;
+		var deflateFlag = (optDeflateFlag === undefined) ? false : optDeflateFlag;
+		var dontDeflatePropItems = (optDontDeflatePropItems === undefined) ? [] : optDontDeflatePropItems;
 
 		// get list in order such that linked nodes always preceed the node that
 		// links to them
@@ -1893,7 +1886,7 @@ SemanticNodeGroup.prototype = {
 	},
 
 	addJson : function(jObj, optInflateOInfo) {
-		var inflateOInfo = (typeof optInflateOInfo === "undefined") ? null : optInflateOInfo;
+		var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
 
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
 			throw new Error("belmont.js:SemanticNodeGroup.addJson() only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
@@ -2073,6 +2066,62 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
+    // Build keystring for a union item.  One of:
+    //  snode
+    //  snode propItem
+    //  snode nodeItem target rev_flag
+
+    buildUnionValueStr : function(snode, optItem, optTarget, optReverse_flag) {
+        if (optTarget !== undefined) {
+            // nodeItem
+            return snode.getSparqlID() + "|" + optItem.getKeyName() + "|" + optTarget.getSparqlID() + "|" + String(optReverse_flag);
+
+        } else if (optItem !== undefined) {
+            // propItem
+            return snode.getSparqlID() + "|" + optItem.getKeyName();
+
+        } else {
+            // node
+            return snode.getSparqlID();
+        }
+    },
+
+    buildUnionMemberStr : function(snode, optItem, optTarget) {
+        if (optTarget !== undefined) {
+            // nodeItem
+            return snode.getSparqlID() + "|" + optItem.getKeyName() + "|" + optTarget.getSparqlID();
+        } else {
+            return this.buildUnionValueStr(snode, optItem);
+        }
+    },
+
+    // get text for menu
+    getUnionValueStrName : function (str) {
+        var entry = str.split("|");
+        if (entry.length == 1) {
+            return entry[0];
+        } else {
+            return entry[1];
+        }
+    },
+
+    // get [snode, node_item, target, reverse_flag]
+    //     [snode, prop_item]
+    //     [snode]
+    getEntryTuple : function(str) {
+        var entry = str.split("|");
+        var snode = this.getNodeBySparqlID(entry[0]);
+        if (entry.length == 1) {
+            return [snode];
+        } else if (entry.length == 2) {
+            return [snode, snode.getPropertyByKeyname(entry[1])];
+        } else if (entry.length == 3) {
+            return [snode, snode.getPropertyByKeyname(entry[1]), this.getNodeBySparqlID(entry[2])];
+        } else {
+            return [snode, snode.getNodeItemByKeyname(entry[1]), this.getNodeBySparqlID(entry[2]), entry[3] == "true"];
+        }
+    },
+
     // get an id for a new union
     newUnion : function () {
         var ret = 0;
@@ -2089,34 +2138,35 @@ SemanticNodeGroup.prototype = {
 
 
     // get a list of strings that describe this union
-    getUnionLabels : function(id) {
+    getUnionName : function(id) {
         ret = [];
         if (id == null) {
             return ret;
         }
 
-        for (var pair of this.unionHash[id]) {
-            if (pair[0] instanceof SemanticNode) {
-                ret.push(pair[0].getSparqlID());
-            } else {
-                ret.push(pair[0].getKeyName());
-            }
+        for (var str of this.unionHash[id]) {
+            ret.push(this.getUnionValueStrName(str))
         }
         return ret;
     },
 
     // rm item from unionHash
-    rmFromUnion : function(item, optSNode, optReverseFlag) {
-        var lookup;
-        if (item instanceof NodeItem) {
-            lookup = [item, optSNode, optReverseFlag];
+    // silent if item is not in unionHash
+    rmFromUnion : function(snode, item, optTarget) {
+        var lookup1 = undefined;
+        var lookup2 = "-";
+
+        if (optTarget === undefined) {
+            lookup1 = this.buildUnionValueStr(snode, item);
         } else {
-            lookup = [item, undefined, undefined];
+            lookup1 = this.buildUnionValueStr(snode, item, optTarget, true);
+            lookup2 = this.buildUnionValueStr(snode, item, optTarget, false);
         }
+
         for (var key in this.unionHash) {
             for (var i=0; i < this.unionHash[key].length; i++) {
-                var entry = this.unionHash[key][i];
-                if (lookup[0] == entry[0] && lookup[1] == entry[1] && lookup[2] == entry[2]) {
+
+                if (this.unionHash[key][i] == lookup1 || this.unionHash[key][i] == lookup2) {
                     this.unionHash[key].splice(i,1);
                     if (this.unionHash[key].length == 0) {
                         this.rmUnion(key);
@@ -2131,103 +2181,94 @@ SemanticNodeGroup.prototype = {
     // params:
     //      id :
     //      item, optIndex : don't belong to any union yet.
-    addToUnion : function(id, item, optSNode, optReverseFlag) {
-        var entry;
-        if (item instanceof NodeItem) {
-            entry = [item, optSNode, optReverseFlag];
-        } else {
-            entry = [item];
-        }
-
+    addToUnion : function(id, snode, item, optTarget, optReverseFlag) {
         if (!this.unionHash.hasOwnProperty(id)) {
             this.unionHash[id] = [];
         }
-
-        this.unionHash[id].push(entry);
-    },
-
-
-    // returns negative key if nodeItem with reverse_flag==true
-    getUnionKey : function(item, optSNode) {
-        var lookup;
-        if (item instanceof NodeItem) {
-            lookup = [item, optSNode];
-        } else {
-            lookup = [item, undefined];
-        }
-        for (var key in this.unionHash) {
-            for (var i=0; i < this.unionHash[key].length; i++) {
-                var entry = this.unionHash[key][i];
-                if (lookup[0] == entry[0] && lookup[1] == entry[1]) {
-                    if (entry[2] == true) {
-                        return -key
-                    } else {
-                        return key;
-                    }
-                }
-            }
-        }
-        return null;
+        this.unionHash[id].push(this.buildUnionValueStr(snode, item, optTarget, optReverseFlag));
     },
 
     getAllUnionKeys : function() {
         return Object.keys(this.unionHash);
     },
 
+    // get union key for this item
+    //     negative if nodeitem with reverse_flag == true
+    //     null if none
+    getUnionKey : function (snode, optItem, optTarget) {
+        var lookup1 = "@";
+        var lookup2 = "@";
+        if (optTarget === undefined) {
+            lookup1 = this.buildUnionValueStr(snode, optItem);
+        } else {
+            lookup1 = this.buildUnionValueStr(snode, optItem, optTarget, false);
+            lookup2 = this.buildUnionValueStr(snode, optItem, optTarget, true);
+        }
+        for (var key in this.unionHash) {
+            for (var valStr of this.unionHash[key]) {
+                if (valStr == lookup1) {
+                    return key;
+                } else if (valStr == lookup2) {
+                    return -key;
+                }
+            }
+        }
+        return null;
+    },
+
+    addToUnionMembershipHash : function(key, snode, optItem, optTarget) {
+        var entryStr = this.buildUnionMemberStr(snode, optItem, optTarget);
+        if (this.tmpUnionMembersHash[entryStr] == null) { this.tmpUnionMembersHash[entryStr] = []; }
+        this.tmpUnionMembersHash[entryStr].push(key);
+    },
+
     // expensive operation calculates all union memberships
     updateUnionMemberships  : function() {
-        var addUnionMembership = function(id, item, optTargetNode) {
-            var niIndex = typeof(optNodeItemIndex) == "undefined" ? null : optNodeItemIndex;
-            if (! this.tmpUnionMembersHash.hasOwnProperty(id)) {
-                this.tmpUnionMembersHash[id] = [];
-            }
-            this.tmpUnionMembersHash[id].push([item, optTargetNode])
-        }.bind(this);
 
-        this.tmpUnionMembersHash = {};
+        this.tmpUnionMembersHash = {};  // hash entry str (3 tuple, not 4) to a list of unions
 
         // loop through all unionHash entries
         for (var key in this.unionHash) {
-            for (var entry of this.unionHash[key]) {
-
-                if (entry[0] instanceof PropertyItem) {
-                    // property item is simple: just the item
-                    addUnionMembership(key, entry[0]);
-
+            for (var entryStr of this.unionHash[key]) {
+                var entry = this.getEntryTuple(entryStr);
+                if (entry.length == 2) {
+                    this.addToUnionMembershipHash(key, entry[0], entry[1]);
                 } else {
                     // get list of nodes in the Union
                     var subgraphNodeList;
-                    if (entry[0] instanceof SemanticNode) {
+                    if (entry.length == 0) {
                         subgraphNodeList = this.getSubGraph(entry[0], []);
                     } else {
                         // nodeItems
-                        addUnionMembership(key, entry[0], entry[1]);
+                        this.addToUnionMembershipHash(key, entry[0], entry[1], entry[2]);
 
                         // get subgraph to add
-                        var parent = this.getNodeItemParentSNode(entry[0]);
-                        if (entry[2] == false) {
-                            subgraphNodeList = this.getSubGraph(entry[1], [parent]);
+                        if (entry[3] == false) {
+                            subgraphNodeList = this.getSubGraph(entry[2], [entry[0]]);
                         } else {
-                            subgraphNodeList = this.getSubGraph(parent, [entry[1]]);
+                            subgraphNodeList = this.getSubGraph(entry[0], [entry[2]]);
                         }
                     }
 
+                    // add the nodes
                     for (var subgraphNode of subgraphNodeList) {
                         // add the node
-                        addUnionMembership(key, subgraphNode);
+                        this.addToUnionMembershipHash(key, subgraphNode);
 
                         // add its props
                         for (var prop of subgraphNode.getReturnedPropertyItems()) {
-                            addUnionMembership(key, prop);
+                            this.addToUnionMembershipHash(key, subgraphNode, prop);
                         }
 
                         // add its connected nodeItems
                         var nodeItemList = subgraphNode.getNodeList();
                         for (var nodeItem of nodeItemList) {
-                            // has target(s) in the union: push only those SNode indices
                             var targetSNodes = nodeItem.getSNodes();
                             for (var target of targetSNodes) {
-                                addUnionMembership(key, nodeItem, target);
+                                // - don't need membershipList, collapse it below (in this function)
+                                // - fix getUnionMembership  (document that "boss" is also a member)
+                                // - fix get LegalUnions
+                                this.addToUnionMembershipHash(key, subgraphNode, nodeItem, target);
                             }
                         }
                     }
@@ -2235,68 +2276,52 @@ SemanticNodeGroup.prototype = {
             }
         }
 
+        var deepestFirst = function(union0, union1) {
+            return this.getUnionDepth(union1) - this.getUnionDepth(union0);
+        }.bind(this);
+
+        // rearrange so entry [0] is the parent and grandparents are later
+        for (var keyStr in this.tmpUnionMembersHash) {
+            this.tmpUnionMembersHash[keyStr].sort(deepestFirst);
+        }
     },
 
-    // Get a list of all unions to which this item belongs
+    getUnionDepth : function(unionKey) {
+        var firstEntry = this.getEntryTuple(this.unionHash[unionKey][0]);
+        return this.tmpUnionMembersHash[this.buildUnionMemberStr(firstEntry[0], firstEntry[1], firstEntry[2])].length;
+    },
+
+    getUnionMembershipList : function(snode, item, optTarget) {
+        var keyVal = this.buildUnionMemberStr(snode, item, optTarget);
+        return this.tmpUnionMembersHash[keyVal] || [];
+    },
+    // Get the most deeply nested union to which this item belongs, or null
     //
     // call updateUnionMemberships() first.
     // then call this multiple times with no intervening nodegroup edits
-    getUnionMembershipList : function(item, optTargetNode) {
-        var target = (typeof optTargetNode == "undefined") ? null : optTargetNode;
-        var ret = [];
-        for (var id in this.tmpUnionMembersHash) {
-            for (var pair of this.tmpUnionMembersHash[id]) {
-                if (pair[0] == item && pair[1] == target) {
-                    ret.push(id);
-                }
-            }
-        }
-        return ret;
-    },
+    getUnionMembership : function(snode, item, optTarget) {
+        var memberOfList = this.getUnionMembershipList(snode, item, optTarget);
 
-    // Get the most deeply nested union to which this item belongs
-    //
-    // call updateUnionMemberships() first.
-    // then call this multiple times with no intervening nodegroup edits
-    getUnionMembership : function(item, optTargetNode) {
-        var memberOfKeys = this.getUnionMembershipList(item, optTargetNode);
-        if (memberOfKeys.length == 0) {
-            return null;
-        } else if (memberOfKeys.length == 1) {
-            return memberOfKeys[0];
-        } else {
-            var ret = null;
-            var depth = -1;
-            // loop through all unions this items belong to
-            for (var i=0; i < memberOfKeys.length; i++) {
-                var firstMember = this.unionHash[memberOfKeys[i]][0];
-                var firstMemberMembership = this.getUnionMembershipList(firstMember[0], firstMember[1]);
-                // find the union whose first member belongs to the longest list of other unions
-                if (firstMemberMembership.length > depth) {
-                    ret = memberOfKeys[i];
-                    depth = firstMemberMembership.length;
-                }
-            }
-            return ret;
-        }
+        return memberOfList[0] || null;
+
     },
 
     // Get list of union keys which this item could reasonably join
     //
     // call updateUnionMemberships() first.
     // then call this multiple times with no intervening nodegroup edits
-    getLegalUnions : function(item, optTargetNode) {
+    getLegalUnions : function(snode, item, optTarget) {
+        var membershipList = this.getUnionMembershipList(snode, item, optTarget);
+        var membershipStr = JSON.stringify(membershipList);
         var ret = [];
-        var membership = this.getUnionMembershipList(item, optTargetNode);
-        var membershipStr = JSON.stringify(membership.sort());
-
         for (var k in this.unionHash) {
-            var firstMember = this.unionHash[k][0];
-            var firstMemberMembership = this.getUnionMembershipList(firstMember[0], firstMember[1]);
+            var firstMemberStr = this.unionHash[k][0];
+            var firstMemberEntry = this.getEntryTuple(firstMemberStr);
+            var firstMemberMembership = this.getUnionMembershipList(firstMemberEntry[0], firstMemberEntry[1], firstMemberEntry[2]);
             // remove the member's union to be left with any other memberships
-            firstMemberMembership.splice(firstMemberMembership.indexOf(k),1);
+            firstMemberMembership.splice(0,1);
 
-            var firstMembershipStr = JSON.stringify(firstMemberMembership.sort());
+            var firstMembershipStr = JSON.stringify(firstMemberMembership);
             if (firstMembershipStr == membershipStr) {
                 ret.push(k);
             }
@@ -2577,9 +2602,8 @@ SemanticNodeGroup.prototype = {
         this.offset = offset;
     },
 
-	// DEPRECATED
 	setCanvasOInfo : function (oInfo) {
-		this.canvasOInfo = oInfo;
+            // deleted
 	},
 
 	setAsyncPropEditor : function (func) {
@@ -2693,10 +2717,10 @@ SemanticNodeGroup.prototype = {
 
 		// reverseFlag:  in diabolic case where path is one triple that starts and ends on same class
 		//               if reverseFlag, then connect
-		var reverseFlag = (typeof optReverseFlag === 'undefined') ? false : optReverseFlag;
+		var reverseFlag = (optReverseFlag === undefined) ? false : optReverseFlag;
 
 		// optionalFlag:  if set, the first link will be optional
-		var optionalFlag = (typeof optOptionalFlag  === "undefined") ? false : optOptionalFlag;
+		var optionalFlag = (optOptionalFlag  === undefined) ? false : optOptionalFlag;
 
 		// add the first class in the path
 		var retNode = this.addNode(path.getStartClassName(), oInfo);
@@ -3505,13 +3529,13 @@ SemanticNodeGroup.prototype = {
                 // remove nodeItems from unionHash
                 for (var nItem of snode.nodeList) {
                     for (var target of nItem.SNodes) {
-                        this.rmFromUnion(nItem, target);
+                        this.rmFromUnion(snode, nItem, target);
                     }
                 }
 
                 // remove propItems from unionHash
                 for (var pItem of snode.propList) {
-                    this.rmFromUnion(pItem);
+                    this.rmFromUnion(snode, pItem);
                 }
 
                 // remove the snode from unionHash
@@ -3525,7 +3549,7 @@ SemanticNodeGroup.prototype = {
 	},
 
     removeLink : function(nodeItem, targetSNode) {
-        this.rmFromUnion(nodeItem, targetSNode);
+        this.rmFromUnion(this.getNodeItemParentSNode(nodeItem), nodeItem, targetSNode);
 		nodeItem.removeSNode(targetSNode);
 	},
 
@@ -3589,7 +3613,7 @@ SemanticNodeGroup.prototype = {
 		//
 		// If node or multiple subgraphs have returns and constraints: does nothing and returns false
 		// If anything was deleted: return true
-		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+		var instanceOnly = (optInstanceOnly === undefined) ? false : optInstanceOnly;
 
 		if (! snode.isUsed(instanceOnly)) {
 			var subNodes = this.getAllConnectedNodes(snode);
@@ -3639,7 +3663,7 @@ SemanticNodeGroup.prototype = {
 	},
 
 	pruneAllUnused : function(optInstanceOnly) {
-		var instanceOnly = (typeof optInstanceOnly === "undefined") ? false : optInstanceOnly;
+		var instanceOnly = (optInstanceOnly === undefined) ? false : optInstanceOnly;
 
 		// prune all unused subgraphs
 
@@ -3669,8 +3693,8 @@ SemanticNodeGroup.prototype = {
 
 		// if gNodeGroup is empty: simple add
 		var sNode;
-		var scFlag =       (typeof optSuperclassFlag === "undefined") ? false : optSuperclassFlag;
-		var optionalFlag = (typeof optOptionalFlag   === "undefined") ? false : optOptionalFlag;
+		var scFlag =       (optSuperclassFlag === undefined) ? false : optSuperclassFlag;
+		var optionalFlag = (optOptionalFlag   === undefined) ? false : optOptionalFlag;
 
 		if (this.getNodeCount() === 0) {
 			sNode = this.addNode(classURI, oInfo);

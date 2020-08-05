@@ -682,16 +682,26 @@ define([	// properly require.config'ed
                                         );
 
                 this.nodegroup.updateUnionMemberships();
-                var unionKeys = this.nodegroup.getLegalUnions(this.item);
-                var itemUnionKey = this.nodegroup.getUnionKey(this.item);
+
+                var unionKeys;
+                var itemUnionKey;
+                if (this.item instanceof SemanticNode) {
+                    unionKeys = this.nodegroup.getLegalUnions(this.item);
+                    itemUnionKey = this.nodegroup.getUnionKey(this.item);
+                } else {
+                    var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
+                    unionKeys = this.nodegroup.getLegalUnions(snode, this.item);
+                    itemUnionKey = this.nodegroup.getUnionKey(snode, this.item);
+                }
+
                 var selectList = [  ["<no union>", ModalItemDialog.UNION_NONE], ["- new union -", ModalItemDialog.UNION_NEW] ];
                 for (var key of unionKeys) {
-                    selectList.push([this.nodegroup.getUnionLabels(key).join(","), key]);
+                    selectList.push([this.nodegroup.getUnionName(key).join(","), key]);
                 }
                 var unionSelect = IIDXHelper.createSelect(
                         this.getFieldID(ModalItemDialog.UNION_SELECT),
                         selectList,
-                        [this.nodegroup.getUnionLabels(itemUnionKey).join(",")]
+                        [this.nodegroup.getUnionName(itemUnionKey).join(",")]
                     );
                 var optDisabledList = "PEC TODO";
 ``

@@ -458,13 +458,12 @@
     		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
 
             // union
-            gNodeGroup.rmFromUnion(nItem, targetSNode, true);
-            gNodeGroup.rmFromUnion(nItem, targetSNode, false);
+            gNodeGroup.rmFromUnion(snode, nItem, targetSNode);
             if (union == ModalLinkDialog.UNION_NONE) {
             } else if (union == ModalLinkDialog.UNION_NEW) {
-                gNodeGroup.addToUnion(gNodeGroup.newUnion(), nItem, targetSNode, unionReverse);
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), snode, nItem, targetSNode, unionReverse);
             } else {
-                gNodeGroup.addToUnion(union, nItem, targetSNode, unionReverse);
+                gNodeGroup.addToUnion(union, snode, nItem, targetSNode, unionReverse);
             }
 
 
@@ -535,13 +534,13 @@
             propItem.setOptMinus(optMinus);
 
             // union: presume that u is legal
-            gNodeGroup.rmFromUnion(propItem);
+            gNodeGroup.rmFromUnion(gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
 
             if (union == ModalItemDialog.UNION_NONE) {
             } else if (union == ModalItemDialog.UNION_NEW) {
-                gNodeGroup.addToUnion(gNodeGroup.newUnion(), propItem);
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
             } else {
-                gNodeGroup.addToUnion(union, propItem);
+                gNodeGroup.addToUnion(union, gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
             }
 
 
@@ -641,7 +640,6 @@
 
 		setStatus("");
 		guiTreeNonEmpty();
-		//gNodeGroup.setCanvasOInfo(gOInfo);
 		gMappingTab.updateNodegroup(gNodeGroup);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 

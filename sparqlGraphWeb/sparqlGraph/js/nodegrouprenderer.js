@@ -320,7 +320,7 @@ define([	// properly require.config'ed
                             //} else  {
                             //    edgeFont = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
                             //}
-                            var unionMemberColor = this.getUnionMembershipColor(nItem, snode2) || NodegroupRenderer.COLOR_FOREGROUND;
+                            var unionMemberColor = this.getUnionMembershipColor(snode, nItem, snode2) || NodegroupRenderer.COLOR_FOREGROUND;
                             var unionColor = this.getUnionColor(nItem, snode2);
                             if (unionColor != null) {
                                 label = "\u222A " + label;
@@ -351,9 +351,9 @@ define([	// properly require.config'ed
                 this.network.body.data.edges.remove(edgeIDsToRemove);
             },
 
-            getUnionMembershipColor : function (item, optNodeItem) {
-                var target = typeof(optNodeItem) == "undefined" ? null : optNodeItem;
-                var union = this.nodegroup.getUnionMembership(item, target);
+            // get deepest union item belongs to, or null
+            getUnionMembershipColor : function (snode, optItem, optTarget) {
+                var union = this.nodegroup.getUnionMembership(snode, optItem, optTarget);
                 if (union != null) {
                     return  NodegroupRenderer.UNION_COLORS[union % NodegroupRenderer.UNION_COLORS.length];
                 } else {
@@ -361,16 +361,18 @@ define([	// properly require.config'ed
                 }
             },
 
-            getUnionColor : function (item, optNodeItem) {
-                var target = typeof(optNodeItem) == "undefined" ? null : optNodeItem;
-
+            // get union the item helps define, or null
+            getUnionColor : function (item, optTarget) {
                 var union;
                 if (item instanceof NodeItem) {
-                    union = this.nodegroup.getUnionKey(item, target);
+                    union = this.nodegroup.getUnionKey(this.nodegroup.getNodeItemParentSNode(item), item, optTarget);
                     if (union != null) {
                         union = Math.abs(union);
                     }
-                } else {
+                } else if (item instanceof PropertyItem) {
+                    union = this.nodegroup.getUnionKey(this.nodegroup.getPropertyItemParentSNode(item), item);
+
+                } else {      // snode
                     union = this.nodegroup.getUnionKey(item);
                 }
 
@@ -628,18 +630,20 @@ define([	// properly require.config'ed
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE;
 
-                // add the union symbol
-                var unionColor = this.getUnionColor(item);
-                if (unionColor != null) {
-                    var text = document.createElement('text');
-                    text.setAttribute('x', x);
-                    text.setAttribute('y', bot);
-                    text.setAttribute('font-size', size + "px");
-                    text.setAttribute('font-family', "Arial");
-                    text.setAttribute('font-weight', "bold");
-                    text.setAttribute('fill', unionColor);
-                    text.innerHTML = "&cup;";
-                    svg.appendChild(text);
+                // add the union symbol to propertyItems where needed
+                if (item instanceof PropertyItem) {
+                    var unionColor = this.getUnionColor(item);
+                    if (unionColor != null) {
+                        var text = document.createElement('text');
+                        text.setAttribute('x', x);
+                        text.setAttribute('y', bot);
+                        text.setAttribute('font-size', size + "px");
+                        text.setAttribute('font-family', "Arial");
+                        text.setAttribute('font-weight', "bold");
+                        text.setAttribute('fill', unionColor);
+                        text.innerHTML = "&cup;";
+                        svg.appendChild(text);
+                    }
                 }
                 x += (size);
 
