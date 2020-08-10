@@ -83,8 +83,6 @@ public class ImportSpecHandler {
 	
 	ImportMapping importMappings[] = null;
 	HashMap<String, ArrayList<ImportMapping>> lookupMappings = new HashMap<String, ArrayList<ImportMapping>>();  // for each node, the mappings that do URI lookup
-
-	String [] colsUsedKeys = null;
 	
 	UriResolver uriResolver;
 	OntologyInfo oInfo;
@@ -364,7 +362,9 @@ public class ImportSpecHandler {
 		
 		// create some final efficient arrays
 		this.importMappings = mappingsList.toArray(new ImportMapping[mappingsList.size()]);
-		this.colsUsedKeys = this.colsUsed.keySet().toArray(new String[this.colsUsed.size()]);
+		
+		
+		// lookups
 		this.setupLookupNodegroups();
 	}
 	
@@ -517,7 +517,7 @@ public class ImportSpecHandler {
 				String colId = (String) itemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID);
 				String colName = this.colNameHash.get(colId);
 				// colsUsed
-				if (this.colsUsed.containsKey(colId)) {
+				if (this.colsUsed.containsKey(colName)) {
 					this.colsUsed.put(colName, this.colsUsed.get(colName) + 1);
 				} else {
 					this.colsUsed.put(colName, 1);
@@ -941,7 +941,20 @@ public class ImportSpecHandler {
 	 * @return
 	 */
 	public String[] getColNamesUsed(){
-		return this.colsUsedKeys;
+		String ret [] = new String[this.colsUsed.size()];
+		int i=0;
+		
+		// loop through columns in json order
+		for (Object o : this.getColumnsJson()) {
+			// use col ids to get the properly-transformed name
+			String colId = (String) ((JSONObject) o).get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID);
+			String colName = this.colNameHash.get(colId);
+			
+			if (this.colsUsed.containsKey(colName)) {
+				ret[i++] = colName;
+			}
+		}
+		return ret;
 	}
 
 	
