@@ -257,6 +257,10 @@ public class ImportSpecHandler {
 			String colId = (String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_ID);      
 			String colName = ((String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_NAME)).toLowerCase().trim();  
 			this.colNameHash.put(colId, colName);
+			
+			if (colNameToIndexHash.containsKey(colName)) {
+				throw new Exception("Duplicate column name in nodegroup import spec: " + colName);
+			}
 			this.colNameToIndexHash.put(colName, j);      // initialize colIndexHash with columns in the order provided
 		}
 	}
