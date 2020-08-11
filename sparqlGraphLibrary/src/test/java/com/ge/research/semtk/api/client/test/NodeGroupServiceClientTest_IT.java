@@ -279,11 +279,13 @@ public class NodeGroupServiceClientTest_IT {
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			
 			String csv = ngServiceClient.getSampleIngestionCSV(sgJson);
-			assertTrue(csv.contains("birthday,color,battery,cell"));
+			// order changed so it now preserves original importspec
+			assertTrue(csv.contains("battery,cell,birthday,color"));
 			
-			assertTrue(csv.contains("2017-03-23T10:03:16,blue,string,string") ||
-					csv.contains("2017-03-23T10:03:16,red,string,string") ||
-					csv.contains("2017-03-23T10:03:16,white,string,string"));
+			// no way to predict the color, so OR them all
+			assertTrue(csv.contains("string,string,2017-03-23T10:03:16,blue") ||
+					csv.contains("string,string,2017-03-23T10:03:16,red") ||
+					csv.contains("string,string,2017-03-23T10:03:16,white"));
 
 		}
 
