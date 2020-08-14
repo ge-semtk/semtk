@@ -19,6 +19,8 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -26,6 +28,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -54,11 +57,13 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroup {
 	private static final String JSON_KEY_NODELIST = "sNodeList";
+	private static final String JSON_KEY_UNIONHASH = "unionHash";
 	
 	// version 9: added snodeOptionals MINUS
 	// version 10: accidentally wasted in a push
 	// version 11: importSpec dataValidator
-	private static final int VERSION = 11;
+	// version 12: unions
+	private static final int VERSION = 12;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private HashMap<String, String> sparqlNameHash = null;
@@ -82,6 +87,13 @@ public class NodeGroup {
 	// For historical reasons, many functions require oInfo params. 
 	//    These could be deprecated in favor of simpler signatures with no oInfo.
 	private OntologyInfo oInfo = null;
+	
+	// Unions are defined by an integer key and a list of UnionValueStrings that specify the branch points
+	private HashMap<Integer, ArrayList<String>> unionHash = new HashMap<Integer,  ArrayList<String>>();
+	// not saved.  generated when needed
+	// for every Node, NodeItem or PropItem: list if union integer keys sorted "closest" (leaf) to furthest (parent)
+	private HashMap<String, ArrayList<Integer>> tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();
+	private int nextQueryInt;
 	
 	public NodeGroup(){
 		this.sparqlNameHash = new HashMap<String, String>();
@@ -364,6 +376,8 @@ public class NodeGroup {
 			n.reset();
 		}
 		this.prefixHash = new HashMap<String, String>();
+		this.unionHash = new HashMap<Integer, ArrayList<String>>();
+		this.tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();
 	}
 	public int getLimit() {
 		return this.limit;
@@ -679,6 +693,20 @@ public class NodeGroup {
 		}
 		
 		this.validateOrderBy();
+		
+		// unionHash
+		this.unionHash = new HashMap<Integer, ArrayList<String>>();
+        if (version >= 12) {
+        	// unionHash
+    		JSONObject jobUnionHash = (JSONObject) jobj.get(JSON_KEY_UNIONHASH);
+            for (Object k : jobUnionHash.keySet()) {
+            	ArrayList<String> val = new ArrayList<String>();
+            	for (Object s : (JSONArray)jobUnionHash.get(k)) {
+            		val.add((String) s);
+            	}
+                this.unionHash.put(Integer.parseInt((String)k), val);
+            }
+		} 
 	}
 	
 	public void addJson(JSONArray nodeArr) throws Exception  {
@@ -730,10 +758,321 @@ public class NodeGroup {
 		this.orphanOnCreate.clear();
 	}
 	
-	public ArrayList<Node> getNodeList(){
-		return this.nodes;
+    public ArrayList<Node> getNodeList(){
+        return this.nodes;
+    }
+    
+	/**
+	 * Create a new union
+	 * @return an integer key
+	 */
+	public int newUnion() {
+        int ret = 0;
+        while (this.unionHash.containsKey(ret)) {
+            ret += 1;
+        }
+        this.unionHash.put(ret, new ArrayList<String>());
+        return ret;
+    }
+	
+	public void rmUnion(int id) {
+       this.unionHash.remove(id);
+    }
+	
+	// rm item from unionHash
+    // silent if item is not in unionHash
+    public void rmFromUnions(Node snode, NodeItem item, Node target) {
+        String lookup1 = new UnionKeyStr(snode, item, target, true).getStr();
+        String lookup2 = new UnionKeyStr(snode, item, target, false).getStr();
+
+        this.rmFromUnions(lookup1);
+        this.rmFromUnions(lookup2);
+    }
+    
+    public void rmFromUnions(Node snode, PropertyItem item) {
+        String lookup = new UnionKeyStr(snode, item).getStr();
+        this.rmFromUnions(lookup);
+    }
+    
+    public void rmFromUnions(Node snode) {
+        String lookup = new UnionKeyStr(snode).getStr();
+        this.rmFromUnions(lookup);
+    }
+    
+    private void rmFromUnions(String lookup) {
+        for (Integer key : this.unionHash.keySet()) {
+            for (String i : this.unionHash.get(key)) {
+
+                if (i.equals(lookup)) {
+                	ArrayList<String> val = this.unionHash.get(key);
+                    val.remove(i);
+                    if (val.size() == 0) {
+                        this.rmUnion(key);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+	
+    public void addToUnion(int id, Node snode, NodeItem nItem, Node target, boolean reverseFlag) {
+    	this.addToUnion(id, new UnionKeyStr(snode, nItem, target, reverseFlag).getStr());
+    }
+	public void addToUnion(int id, Node snode, PropertyItem pItem) {
+		this.addToUnion(id, new UnionKeyStr(snode, pItem).getStr());
+    }
+	public void addToUnion(int id, Node snode) {
+        this.addToUnion(id, new UnionKeyStr(snode).getStr());
+    }
+	public void addToUnion(int id, String keyStr) {
+		if (!this.unionHash.containsKey(id)) {
+			this.unionHash.put(id, new ArrayList<String>());
+		}
+		this.unionHash.get(id).add(keyStr);
 	}
 	
+	// rm item from unionHash
+    // silent if item is not in unionHash
+    public Integer getUnionKey(Node snode, NodeItem item, Node target) {
+        String lookup1 = new UnionKeyStr(snode, item, target, true).getStr();
+        String lookup2 = new UnionKeyStr(snode, item, target, false).getStr();
+
+        Integer ret = this.getUnionKey(lookup1);
+        if (ret == null) {
+        	ret = this.getUnionKey(lookup2);
+        }
+        return ret;
+    }
+    
+    public Integer getUnionKey(Node snode, PropertyItem item) {
+        String lookup = new UnionKeyStr(snode, item).getStr();
+        return this.getUnionKey(lookup);
+    }
+    
+    public Integer getUnionKey(Node snode) {
+        String lookup = new UnionKeyStr(snode).getStr();
+        return this.getUnionKey(lookup);
+    }
+    
+    /**
+     * Get union key for an item
+     * 	- negative if reverse flag
+     *  - null if none
+     * @param lookup
+     * @return
+     */
+    private Integer getUnionKey(String lookup) {
+        for (Integer key : this.unionHash.keySet()) {
+            for (String i : this.unionHash.get(key)) {
+
+                if (i.equals(lookup)) {
+                	if (i.toLowerCase().endsWith("|false")) {
+                		return -key;
+                	} else {
+                		return key;
+                	}
+                }
+            }
+        }
+        return null;
+    }
+	
+    public void addToUnionMembershipHash(int id, Node snode, NodeItem nItem, Node target) {
+    	this.addToUnionMembershipHash(id, new UnionKeyStr(snode, nItem, target).getStr());
+    }
+	public void addToUnionMembershipHash(int id, Node snode, PropertyItem pItem) {
+		this.addToUnionMembershipHash(id, new UnionKeyStr(snode, pItem).getStr());
+    }
+	public void addToUnionMembershipHash(int id, Node snode) {
+        this.addToUnionMembershipHash(id, new UnionKeyStr(snode).getStr());
+    }
+	public void addToUnionMembershipHash(int id, String keyStr) {
+		if (!this.tmpUnionMemberHash.containsKey(keyStr)) {
+			this.tmpUnionMemberHash.put(keyStr, new ArrayList<Integer>());
+		}
+		this.tmpUnionMemberHash.get(keyStr).add(id);
+	}
+	
+	private class DepthTuple implements Comparator {
+		public int key;
+		public int depth;
+		public DepthTuple(int key, int depth) {
+			this.key = key;
+			this.depth= depth;
+		}
+		// deepest first
+		public int compare(Object obj1, Object obj2) {
+	       Integer p1 = ((DepthTuple) obj1).depth;
+	       Integer p2 = ((DepthTuple) obj2).depth;
+
+	       if (p1 > p2) {
+	           return -1;
+	       } else if (p1 < p2){
+	           return 1;
+	       } else {
+	           return 0;
+	       }
+	    }
+	}
+	// expensive operation calculates all union memberships
+	// not sure if this will be needed on java side
+	// ported from js  aug 2020 Paul
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public void updateUnionMemberships() {
+
+        this.tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();  // hash entry str (3 tuple, not 4) to a list of unions
+
+        // loop through all unionHash entries
+        for (Integer key : this.unionHash.keySet()) {
+            for (String entryStr : this.unionHash.get(key)) {
+                UnionKeyStr entry = new UnionKeyStr(entryStr, this);
+            
+                if (entry.getType() == PropertyItem.class) {
+                    this.addToUnionMembershipHash(key, entry.getStr());
+                } else {
+                    // get list of nodes in the Union
+                    ArrayList<Node> subgraphNodeList;
+                    if (entry.getType() == Node.class) {
+                        subgraphNodeList = this.getSubGraph(entry.getSnode(), new ArrayList<Node>());
+                    } else {
+                        // nodeItems
+                        this.addToUnionMembershipHash(key, entry.getStrNoRevFlag());
+
+                        // get subgraph to add
+                    	ArrayList<Node> stopList = new ArrayList<Node>();
+                        if (entry.getReverseFlag() == false) {
+                        	stopList.add(entry.getSnode());
+                            subgraphNodeList = this.getSubGraph(entry.getTarget(), stopList);
+                        } else {
+                        	stopList.add(entry.getTarget());
+                            subgraphNodeList = this.getSubGraph(entry.getSnode(), stopList);
+                        }
+                    }
+
+                    // add the nodes
+                    for (Node subgraphNode : subgraphNodeList) {
+                        // add the node
+                        this.addToUnionMembershipHash(key, subgraphNode);
+
+                        // add its props
+                        for (PropertyItem prop : subgraphNode.getReturnedPropertyItems()) {
+                            this.addToUnionMembershipHash(key, subgraphNode, prop);
+                        }
+
+                        // add its connected nodeItems
+                        ArrayList<NodeItem> nodeItemList = subgraphNode.getNodeItemList();
+                        for (NodeItem nodeItem : nodeItemList) {
+                            ArrayList<Node> targetSNodes = nodeItem.getNodeList();
+                            for (Node target : targetSNodes) {
+                                // - don't need membershipList, collapse it below (in this function)
+                                // - fix getUnionMembership  (document that "boss" is also a member)
+                                // - fix get LegalUnions
+                                this.addToUnionMembershipHash(key, subgraphNode, nodeItem, target);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // rearrange so entry [0] is the parent and grandparents are later
+        // instead of reimplementing a sort, use the DepthTuple object in an ArrayList
+        for (String keyStr : this.tmpUnionMemberHash.keySet()) {
+        	ArrayList<Integer> val = this.tmpUnionMemberHash.get(keyStr);
+        	ArrayList tuples = new ArrayList();
+        	// build an arrayList of DepthTuples
+        	for (Integer v : val) {
+        		tuples.add(new DepthTuple(v, this.getUnionDepth(v)));
+        	}
+        	Collections.sort(tuples);
+        	// re-order val based on the order of sorted DepthTuples
+        	val.clear();
+        	for (Object t : tuples) {
+        		val.add(((DepthTuple) t).key);
+        	}
+        }
+    }
+
+    private int getUnionDepth(int unionKey) {
+        String firstEntryStr = this.unionHash.get(unionKey).get(0);
+        return this.tmpUnionMemberHash.get(UnionKeyStr.rmRevFlag(firstEntryStr)).size();
+    }
+	
+    /**
+     * Get a list of unions to which this item belongs
+     * @param snode
+     * @param nItem
+     * @param target
+     * @return
+     */
+    public ArrayList<Integer> getUnionMembershipList(Node snode, NodeItem nItem, Node target) {
+    	return this.tmpUnionMemberHash.get(new UnionKeyStr(snode, nItem, target).getStr());
+    }
+	public ArrayList<Integer> getUnionMembershipList(Node snode, PropertyItem pItem) {
+		return this.tmpUnionMemberHash.get(new UnionKeyStr(snode, pItem).getStr());
+    }
+	public ArrayList<Integer> getUnionMembershipList(Node snode) {
+		return this.tmpUnionMemberHash.get(new UnionKeyStr(snode).getStr());
+    }
+    
+	/**
+	 * Get int key of the most deeply-nested union to which this item belongs, or null
+	 * @param snode
+	 * @param nItem
+	 * @param target
+	 * @return
+	 */
+	public Integer getUnionMembership(Node snode, NodeItem nItem, Node target) {
+        ArrayList<Integer> memberOfList = this.getUnionMembershipList(snode, nItem, target);
+        return (memberOfList != null) ? memberOfList.get(0) : null;
+    }
+	public Integer getUnionMembership(Node snode, PropertyItem pItem) {
+		ArrayList<Integer> memberOfList = this.getUnionMembershipList(snode, pItem);
+        return (memberOfList != null) ? memberOfList.get(0) : null;    
+    }
+	public Integer getUnionMembership(Node snode) {
+		ArrayList<Integer> memberOfList = this.getUnionMembershipList(snode);
+        return (memberOfList != null) ? memberOfList.get(0) : null;    
+    }
+    
+	 public ArrayList<Integer> getLegalUnions(Node snode, NodeItem nItem, Node target) {
+	    	return this.tmpUnionMemberHash.get(new UnionKeyStr(snode, nItem, target).getStr());
+	 }
+	 public ArrayList<Integer> getLegalUnions(Node snode, PropertyItem pItem) {
+		 return this.tmpUnionMemberHash.get(new UnionKeyStr(snode, pItem).getStr());
+	 }
+	 public ArrayList<Integer> getLegalUnions(Node snode) {
+		 return this.tmpUnionMemberHash.get(new UnionKeyStr(snode).getStr());
+	 }
+	
+	 private ArrayList<Integer> getLegalUnions(String keyStr) {
+        ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
+        ArrayList<Integer> ret = new ArrayList<Integer>();
+        for (Integer unionKey : this.unionHash.keySet()) {
+        	// get first member of union, and it's membership list
+            String firstMemberStr = UnionKeyStr.rmRevFlag(this.unionHash.get(unionKey).get(0));
+            ArrayList<Integer> firstMemberMembership = this.tmpUnionMemberHash.get(firstMemberStr);
+            // remove the member's union to be left with any other memberships
+            firstMemberMembership.remove(0);
+
+            // add to ret if this union is a perfect match
+            if (firstMemberMembership.size() == membershipList.size()) {
+            	boolean same = true;
+            	for (int i=0; i < membershipList.size(); i++) {
+            		if (firstMemberMembership.get(i) != membershipList.get(i)) {
+            			same = false;
+            			break;
+            		}
+            	}
+            	if (same) {
+            		ret.add(unionKey);
+            	}
+            }
+        }
+        return ret;
+    }
+        
 	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri) throws Exception  {
 
 
@@ -1205,15 +1544,16 @@ public class NodeGroup {
 		sparql.append(" where {\n");
 		
 		ArrayList<Node> doneNodes = new ArrayList<Node>();
+		ArrayList<PropertyItem> doneProps = new ArrayList<PropertyItem>();
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 		
-			sparql.append(this.generateSparqlSubgraphClauses(	qt, 
-																headNode, 
-																null, null,   // skip nodeItem.  Null means do them all.
-																keepTargetConstraints ? null : targetObj, 
-																doneNodes, 
-																tab));
+			sparql.append(this.generateSparqlSubgraphClausesNode(	qt, 
+																	headNode, 
+																	null, null,   // skip nodeItem.  Null means do them all.
+																	keepTargetConstraints ? null : targetObj, 
+																	doneNodes, doneProps,
+																	tab));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
@@ -1315,16 +1655,17 @@ public class NodeGroup {
 		else{ queryType = AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION; }
 		
 		ArrayList<Node> doneNodes  = new ArrayList<Node>();
+		ArrayList<PropertyItem> doneProps = new ArrayList<PropertyItem>();
 		Node headNode = this.getNextHeadNode(doneNodes);
 
 		while (headNode != null) {
 			
-			sparql.append(this.generateSparqlSubgraphClauses(	queryType, 
-																headNode, 
-																null, null,    // skip nodeItem.  Null means do them all.
-																null,    // no targetObj
-																doneNodes, 
-																tab));
+			sparql.append(this.generateSparqlSubgraphClausesNode(	queryType, 
+																	headNode, 
+																	null, null,    // skip nodeItem.  Null means do them all.
+																	null,    // no targetObj
+																	doneNodes, doneProps,
+																	tab));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
@@ -1340,15 +1681,16 @@ public class NodeGroup {
 		else{ queryType = AutoGeneratedQueryTypes.QUERY_CONSTRUCT_WHERE_FOR_INSTANCE_MANIPULATION; }
 		
 		doneNodes = new ArrayList<Node>();
+		doneProps = new ArrayList<PropertyItem>();
 		headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 		
-			sparql.append(this.generateSparqlSubgraphClauses(	queryType, 
-																headNode, 
-																null, null,   // skip nodeItem.  Null means do them all.
-																null,         // no targetObj
-																doneNodes, 
-																tab));
+			sparql.append(this.generateSparqlSubgraphClausesNode(	queryType, 
+																	headNode, 
+																	null, null,   // skip nodeItem.  Null means do them all.
+																	null,         // no targetObj
+																	doneNodes, doneProps, 
+																	tab));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
@@ -1366,10 +1708,10 @@ public class NodeGroup {
 		String tab = SparqlToXUtils.tabIndent("");
 		
 		ArrayList<Node> doneNodes = new ArrayList<Node>();
-		
+		ArrayList<PropertyItem> doneProps = new ArrayList<PropertyItem>();
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
-			footer += this.generateSparqlSubgraphClauses(AutoGeneratedQueryTypes.QUERY_CONSTRUCT_WHERE, headNode, null, null, null, doneNodes, tab);
+			footer += this.generateSparqlSubgraphClausesNode(AutoGeneratedQueryTypes.QUERY_CONSTRUCT_WHERE, headNode, null, null, null, doneNodes, doneProps, tab);
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
@@ -1378,13 +1720,25 @@ public class NodeGroup {
  
 		return retval;
 	}
+	/**
+	 * Top-level subgraph SPARQL generator
+	 * @param queryType
+	 * @param snode
+	 * @param skipNodeItem nodeItem to skip
+	 * @param skipNodeTarget target snode to skip
+	 * @param targetObj - target of FILTER queries
+	 * @param doneNodes - nodes to skip
+	 * @param tab - text TAB
+	 * @return
+	 * @throws Exception
+	 */
 	
-	private String generateSparqlSubgraphClauses(AutoGeneratedQueryTypes queryType, Node snode, NodeItem skipNodeItem, Node skipNodeTarget, Returnable targetObj, ArrayList<Node> doneNodes, String tab) throws Exception  {
+	private String generateSparqlSubgraphClausesNode(AutoGeneratedQueryTypes queryType, Node snode, NodeItem skipNodeItem, Node skipNodeTarget, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<PropertyItem> doneProps, String tab) throws Exception  {
 		StringBuilder sparql = new StringBuilder();
 		
 		String QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION_POSTFIX = "___QCfIMP";
 		String SPARQLID_BINDING_TAG = "<@Original-SparqlId>";
-		int propCounter = 0;
+		this.nextQueryInt = 0;
 		
 		// check to see if this node has already been processed. 
 		if(doneNodes.contains(snode)){
@@ -1423,49 +1777,9 @@ public class NodeGroup {
 		// PropItems: generate sparql for property and constraints
 		// for(PropertyItem prop : snode.getReturnedPropertyItems()){
 		for(PropertyItem prop : snode.getPropsForSparql(targetObj, queryType)){	
-			boolean indentFlag = false;
-			
-			if (prop.getSparqlID().isEmpty()) {
-				throw new Error ("Can't create SPARQL for property with empty sparql ID: " + prop.getKeyName());
-			}
-			// check for being optional...
-			if(prop.getOptMinus() == PropertyItem.OPT_MINUS_OPTIONAL && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT){
-				sparql.append(tab + "optional{\n");
-				tab = SparqlToXUtils.tabIndent(tab);
-				indentFlag = true;
-			} else if(prop.getOptMinus() == PropertyItem.OPT_MINUS_MINUS && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT){
-				sparql.append(tab + "minus {\n");
-				tab = SparqlToXUtils.tabIndent(tab);
-				indentFlag = true;
-			}
-			
-			if (this.oInfo == null || ! this.oInfo.hasSubProperties(prop.getUriRelationship())) {
-				// regular prop
-				sparql.append(tab + snode.getSparqlID() + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getSparqlID() +  " .\n");
-			} else {
-				// prop with sub-property
-				String propSparqlId = "?" + prop.getKeyName() + "_type" + String.valueOf(propCounter++);
-				sparql.append(tab + propSparqlId + " rdfs:subPropertyOf* " + this.applyPrefixing(prop.getUriRelationship()) +  " .\n");
-				sparql.append(tab + snode.getSparqlID() + " " + propSparqlId + " " + prop.getSparqlID() +  " .\n");
-			}
-		
-			// add in attribute range constraint if there is one 
-			if(prop.getConstraints() != null && prop.getConstraints() != ""){
-				// add unless this is a CONSTRAINT query on targetObj
-				if((queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT) && (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) && (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRAINT || targetObj == null || prop.getSparqlID() != targetObj.getSparqlID())){
-					if(prop.getConstraints() != null && !prop.getConstraints().equalsIgnoreCase("")){
-						tab = SparqlToXUtils.tabIndent(tab);
-						sparql.append("\t" + prop.getConstraints() + " .\n");
-						tab = SparqlToXUtils.tabOutdent(tab);
-					}
-				}
-			}
-			
-			// close optional block.
-			if(indentFlag){
-				tab = SparqlToXUtils.tabOutdent(tab);
-				sparql.append(tab + "} \n");
-			}
+             sparql.append(
+            		 this.generateSparqlSubgraphClausesPropItem(queryType, snode, prop, targetObj, doneProps, tab)
+            		 );
 		}
 		
 		// add value constraints...
@@ -1482,114 +1796,214 @@ public class NodeGroup {
 			
 			// each nItem might point to multiple children
 			for(Node targetNode : nItem.getNodeList()) {
-				
-
 				if (nItem != skipNodeItem || targetNode != skipNodeTarget) {
-					boolean blockFlag = false;
-					
-					// open optional block
-					if(nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_TRUE && nItem.getNodeList().size() > 0 && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION){
-						sparql.append(tab + "optional {\n");
-						tab = SparqlToXUtils.tabIndent(tab);
-						blockFlag = true;
-					} else if(nItem.getOptionalMinus(targetNode) == NodeItem.MINUS_TRUE && nItem.getNodeList().size() > 0 && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION){
-						sparql.append(tab + "minus {\n");
-						tab = SparqlToXUtils.tabIndent(tab);
-						blockFlag = true;
-					}
-					
-					sparql.append("\n");
-					
-					String propStr;
-					// prepare propStr for nodeItem connection clause
-					if (this.oInfo == null || ! this.oInfo.hasSubProperties(nItem.getUriConnectBy())) {
-						// no subProperties: use the connecting URI
-						propStr = this.applyPrefixing(nItem.getUriConnectBy());
+					Integer unionKey = this.getUnionKey(snode, nItem, targetNode);
+					if (unionKey == null) {
+						sparql.append(this.generateSparqlSubgraphClausesNodeItem(queryType, false, snode, nItem, targetNode, targetObj, doneNodes, doneProps, tab));
 					} else {
-						propStr = "(" + this.applyPrefixing(nItem.getUriConnectBy());
-						for (String subProp : this.oInfo.getSubPropNames(nItem.getUriConnectBy())) {
-							propStr += "|" + this.applyPrefixing(subProp);
-						}
-						propStr += ")";
-							
-						// PEC July 2020: can't figure out how to make this work with qualifiers like * and +		
-						// connecting properties:  use a variable and add a subProp clause.
-						//propStr = "?" + nItem.getKeyName() + "_type" + String.valueOf(propCounter++);
-						//sparql.append(tab + propStr + " rdfs:subPropertyOf* " + this.applyPrefixing(nItem.getUriConnectBy()) +  " .\n");
-					}
-					
-					// qualifier (if not in construct clause)
-					if (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
-						propStr = this.applyQualifier(propStr, nItem.getQualifier(targetNode));
-					}
-					
-					// node connection, then recursive call
-					sparql.append(tab + snode.getSparqlID() + " " + propStr + " " + targetNode.getSparqlID() + " .\n");
-					
-					tab = SparqlToXUtils.tabIndent(tab);
-					
-					// RECURSION
-					sparql.append(this.generateSparqlSubgraphClauses(queryType, targetNode, nItem, targetNode, targetObj, doneNodes, tab));
-					tab = SparqlToXUtils.tabOutdent(tab);
-					
-					// close optional block
-					if (blockFlag) {
-						tab = SparqlToXUtils.tabOutdent(tab);
-						sparql.append(tab + "}\n");
+						sparql.append(this.generateSparqlSubgraphClausesUnion(queryType, unionKey, targetObj, doneNodes, doneProps, tab));
 					}
 				}
 			}
 		}
 		
-	
 		// Recursively process incoming nItems
 		for(NodeItem nItem : this.getConnectingNodeItems(snode)) {   
-
 			if (nItem != skipNodeItem || snode != skipNodeTarget) {
-				boolean blockFlag = false;
-				
-				// open optional
-				if (nItem.getOptionalMinus(snode) == NodeItem.OPTIONAL_REVERSE && nItem.getNodeList().size() > 0  && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
-					sparql.append(tab + "optional {\n");
-					tab = SparqlToXUtils.tabIndent(tab);
-					blockFlag = true;
-				} else if (nItem.getOptionalMinus(snode) == NodeItem.MINUS_REVERSE && nItem.getNodeList().size() > 0  && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
-					sparql.append(tab + "minus {\n");
-					tab = SparqlToXUtils.tabIndent(tab);
-					blockFlag = true;
-				}
-				
 				Node incomingSNode = this.getNodeItemParentSNode(nItem); 
-				
-				// the incoming connection
-				if (incomingSNode != null) {
-					sparql.append("\n");
-					String propStr = this.applyPrefixing(nItem.getUriConnectBy());
-					
-					// qualifier (if not in construct clause)
-					if (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
-						propStr = this.applyQualifier(propStr, nItem.getQualifier(snode));
-					}
-					sparql.append(tab + incomingSNode.getSparqlID() + " " + propStr + " " + snode.getSparqlID() + " .\n");
-					
-				}
-				
-				// RECURSION
-				tab = SparqlToXUtils.tabIndent(tab);
-				sparql.append(this.generateSparqlSubgraphClauses(queryType, incomingSNode, nItem, snode, targetObj, doneNodes, tab));
-				tab = SparqlToXUtils.tabOutdent(tab);
-				
-				// close optional block
-				if (blockFlag) {
-					tab = SparqlToXUtils.tabOutdent(tab);
-					sparql.append(tab + "}\n");
-				}
+				sparql.append(
+						this.generateSparqlSubgraphClausesNodeItem(queryType, true, incomingSNode, nItem, snode, targetObj, doneNodes, doneProps, tab )
+						);
 			}
 		}
 		
 		return sparql.toString();
 	}
 
+	private String generateSparqlSubgraphClausesUnion(AutoGeneratedQueryTypes queryType, Integer unionKey, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<PropertyItem> doneProps, String tab) throws Exception {
+		StringBuffer sparql = new StringBuffer();
+		
+		for (String itemStr : this.unionHash.get(unionKey)) {
+			UnionKeyStr keyStr = new UnionKeyStr(itemStr, this);
+			if (sparql.length() > 0) {
+				sparql.append(tab + " UNION \n");
+			}
+			sparql.append(tab + "{\n");
+			
+			if (keyStr.getType() == Node.class) {
+				tab = SparqlToXUtils.tabIndent(tab);
+				sparql.append(this.generateSparqlSubgraphClausesNode(queryType, keyStr.getSnode(), null, null, targetObj, doneNodes, doneProps, tab));
+				tab = SparqlToXUtils.tabOutdent(tab);
+			} else if (keyStr.getType() == NodeItem.class) {
+				tab = SparqlToXUtils.tabIndent(tab);
+				sparql.append(this.generateSparqlSubgraphClausesNodeItem(queryType, keyStr.getReverseFlag(), keyStr.getSnode(), keyStr.getnItem(), keyStr.getTarget(), targetObj, doneNodes, doneProps, tab));
+				tab = SparqlToXUtils.tabOutdent(tab);
+			} else { // prop
+				tab = SparqlToXUtils.tabIndent(tab);
+				sparql.append(this.generateSparqlSubgraphClausesPropItem(queryType, keyStr.getSnode(), keyStr.getpItem(), targetObj, doneProps, tab));
+						
+				tab = SparqlToXUtils.tabOutdent(tab);
+			}
+			
+			sparql.append(tab + "}\n");
+		}
+		
+		
+		return sparql.toString();
+	}
+	
+	/**
+	 * 
+	 * @param queryType
+	 * @param incomingFlag - recursion should proceed from the nItem's parent SNode
+	 * @param snode
+	 * @param nItem
+	 * @param targetNode
+	 * @param targetObj
+	 * @param doneNodes
+	 * @param tab
+	 * @return
+	 * @throws Exception
+	 */
+	private String generateSparqlSubgraphClausesNodeItem(AutoGeneratedQueryTypes queryType, boolean incomingFlag, Node snode, NodeItem nItem, Node targetNode, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<PropertyItem> doneProps, String tab) throws Exception {
+		boolean blockFlag = false;
+		StringBuilder sparql = new StringBuilder();
+		
+		// open optional block
+		if (incomingFlag) {
+			if (nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_REVERSE && nItem.getNodeList().size() > 0  && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
+				sparql.append(tab + "optional {\n");
+				tab = SparqlToXUtils.tabIndent(tab);
+				blockFlag = true;
+			} else if (nItem.getOptionalMinus(targetNode) == NodeItem.MINUS_REVERSE && nItem.getNodeList().size() > 0  && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
+				sparql.append(tab + "minus {\n");
+				tab = SparqlToXUtils.tabIndent(tab);
+				blockFlag = true;
+			}
+		} else {
+			if(nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_TRUE && nItem.getNodeList().size() > 0 && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION){
+				sparql.append(tab + "optional {\n");
+				tab = SparqlToXUtils.tabIndent(tab);
+				blockFlag = true;
+			} else if(nItem.getOptionalMinus(targetNode) == NodeItem.MINUS_TRUE && nItem.getNodeList().size() > 0 && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION){
+				sparql.append(tab + "minus {\n");
+				tab = SparqlToXUtils.tabIndent(tab);
+				blockFlag = true;
+			}
+		}
+		
+		sparql.append("\n");
+		
+		String propStr;
+		// prepare propStr for nodeItem connection clause
+		if (this.oInfo == null || ! this.oInfo.hasSubProperties(nItem.getUriConnectBy())) {
+			// no subProperties: use the connecting URI
+			propStr = this.applyPrefixing(nItem.getUriConnectBy());
+		} else {
+			propStr = "(" + this.applyPrefixing(nItem.getUriConnectBy());
+			for (String subProp : this.oInfo.getSubPropNames(nItem.getUriConnectBy())) {
+				propStr += "|" + this.applyPrefixing(subProp);
+			}
+			propStr += ")";
+				
+			// PEC July 2020: can't figure out how to make this work with qualifiers like * and +		
+			// connecting properties:  use a variable and add a subProp clause.
+			//propStr = "?" + nItem.getKeyName() + "_type" + String.valueOf(nextQueryInt++);
+			//sparql.append(tab + propStr + " rdfs:subPropertyOf* " + this.applyPrefixing(nItem.getUriConnectBy()) +  " .\n");
+		}
+		
+		// qualifier (if not in construct clause)
+		if (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) {
+			propStr = this.applyQualifier(propStr, nItem.getQualifier(targetNode));
+		}
+		
+		// node connection, then recursive call
+		sparql.append(tab + snode.getSparqlID() + " " + propStr + " " + targetNode.getSparqlID() + " .\n");
+		
+		tab = SparqlToXUtils.tabIndent(tab);
+		
+		// RECURSION
+		if (incomingFlag) {
+			sparql.append(this.generateSparqlSubgraphClausesNode(queryType, snode, nItem, targetNode, targetObj, doneNodes, doneProps, tab));
+		} else {
+			sparql.append(this.generateSparqlSubgraphClausesNode(queryType, targetNode, nItem, targetNode, targetObj, doneNodes, doneProps, tab));
+		}
+		tab = SparqlToXUtils.tabOutdent(tab);
+		
+		// close optional block
+		if (blockFlag) {
+			tab = SparqlToXUtils.tabOutdent(tab);
+			sparql.append(tab + "}\n");
+		}
+		return sparql.toString();
+	}
+	
+	/** PropertyItem portion of a subgraph clause.
+	 * (no recursion here)
+	 * @param queryType
+	 * @param snode
+	 * @param targetObj
+	 * @param prop
+	 * @param tab
+	 * @return
+	 * @throws Exception
+	 */
+	private String generateSparqlSubgraphClausesPropItem(AutoGeneratedQueryTypes queryType, Node snode, PropertyItem prop, Returnable targetObj, ArrayList<PropertyItem> doneProps, String tab) throws Exception {
+		boolean indentFlag = false;
+		StringBuilder sparql = new StringBuilder();
+		
+		// check to see if this node has already been processed. 
+		if(doneProps.contains(prop)){
+			// nothing to do.
+			return "";
+		} else{
+			doneProps.add(prop);
+		}
+				
+		if (prop.getSparqlID().isEmpty()) {
+			throw new Error ("Can't create SPARQL for property with empty sparql ID: " + prop.getKeyName());
+		}
+		// check for being optional...
+		if(prop.getOptMinus() == PropertyItem.OPT_MINUS_OPTIONAL && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT){
+			sparql.append(tab + "optional{\n");
+			tab = SparqlToXUtils.tabIndent(tab);
+			indentFlag = true;
+		} else if(prop.getOptMinus() == PropertyItem.OPT_MINUS_MINUS && queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT){
+			sparql.append(tab + "minus {\n");
+			tab = SparqlToXUtils.tabIndent(tab);
+			indentFlag = true;
+		}
+		
+		if (this.oInfo == null || ! this.oInfo.hasSubProperties(prop.getUriRelationship())) {
+			// regular prop
+			sparql.append(tab + snode.getSparqlID() + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getSparqlID() +  " .\n");
+		} else {
+			// prop with sub-property
+			String propSparqlId = "?" + prop.getKeyName() + "_type" + String.valueOf(this.nextQueryInt++);
+			sparql.append(tab + propSparqlId + " rdfs:subPropertyOf* " + this.applyPrefixing(prop.getUriRelationship()) +  " .\n");
+			sparql.append(tab + snode.getSparqlID() + " " + propSparqlId + " " + prop.getSparqlID() +  " .\n");
+		}
+	
+		// add in attribute range constraint if there is one 
+		if(prop.getConstraints() != null && prop.getConstraints() != ""){
+			// add unless this is a CONSTRAINT query on targetObj
+			if((queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT) && (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION) && (queryType != AutoGeneratedQueryTypes.QUERY_CONSTRAINT || targetObj == null || prop.getSparqlID() != targetObj.getSparqlID())){
+				if(prop.getConstraints() != null && !prop.getConstraints().equalsIgnoreCase("")){
+					tab = SparqlToXUtils.tabIndent(tab);
+					sparql.append("\t" + prop.getConstraints() + " .\n");
+					tab = SparqlToXUtils.tabOutdent(tab);
+				}
+			}
+		}
+		
+		// close optional block.
+		if(indentFlag){
+			tab = SparqlToXUtils.tabOutdent(tab);
+			sparql.append(tab + "} \n");
+		}
+		return sparql.toString();
+	}
+	
 	private String generateSparqlTypeClause(Node curr, String tab, AutoGeneratedQueryTypes queryType) throws Exception  {
 		String retval = "";
 		// Generates SPARQL to constrain the type of this node if
@@ -2014,11 +2428,29 @@ public class NodeGroup {
 			this.freeSparqlID(sparqlID);
 		}
 
+		//unionHash
+		for (NodeItem n : node.getNodeItemList()) {
+			for (Node s : n.getNodeList()) {
+				this.rmFromUnions(node, n, s);
+			}
+		}
+		for (PropertyItem p : node.getPropertyItems()) {
+			this.rmFromUnions(node, p);
+		}
+		this.rmFromUnions(node);
+		
 		// remove the sNode from the nodeGroup
 		this.nodes.remove(node);
 		this.idToNodeHash.remove(node.getSparqlID());
 	}
+	
+	public void removeLink(NodeItem nItem, Node target) {
+		this.rmFromUnions(this.getNodeItemParentSNode(nItem), nItem, target);
+		nItem.removeNode(target);
+	}
 
+	
+	
 	/**
 	 * Version for FILTER queries.  Make sure targetObj is also not optional.
 	 * @param targetObj
@@ -3057,10 +3489,11 @@ public class NodeGroup {
 		StringBuilder retval = new StringBuilder();
 		
 		ArrayList<Node> doneNodes = new ArrayList<Node>();
+		ArrayList<PropertyItem> doneProps = new ArrayList<PropertyItem>();
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 			// for each node, get the subgraph clauses, including constraints.
-			retval.append(this.generateSparqlSubgraphClauses(	AutoGeneratedQueryTypes.QUERY_DELETE_WHERE, headNode, null, null, null, doneNodes, "   "));
+			retval.append(this.generateSparqlSubgraphClausesNode(	AutoGeneratedQueryTypes.QUERY_DELETE_WHERE, headNode, null, null, null, doneNodes, doneProps, "   "));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
@@ -3344,6 +3777,16 @@ public class NodeGroup {
 		}
 		ret.put(JSON_KEY_NODELIST, sNodeList);
 		
+		// unionHash
+		JSONObject unionHash = new JSONObject();
+        for (Integer k : this.unionHash.keySet()) {
+        	JSONArray val = new JSONArray();
+        	for (String s : this.unionHash.get(k)) {
+        		val.add(s);
+        	}
+            unionHash.put(k.toString(), val);
+        }
+        ret.put(JSON_KEY_UNIONHASH, unionHash);
 		return ret;
 	}
 	

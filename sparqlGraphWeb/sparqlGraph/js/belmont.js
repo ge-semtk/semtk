@@ -1826,6 +1826,8 @@ var SemanticNodeGroup = function() {
     this.tmpUnionMembersHash = {};  //  list of unions for each item that has any.  Deepest first.  So zeroth is most important.
                                     // hash[memberValStr] = [deepest, nextdeep, ...]
                                     // temporarily built and maintained on the javascript side
+                                    // This is difficult to maintain during nodegroup editing,
+                                    // so it is re-generated when needed.
 };
 
 SemanticNodeGroup.QUERY_DISTINCT = 0;
@@ -1835,7 +1837,7 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 11;
+SemanticNodeGroup.JSON_VERSION = 12;
 // version 12 - unionHash
 // version 11 - import spec has dataValidator
 // version 10 - (accidentally wasted in a push)
@@ -1869,7 +1871,8 @@ SemanticNodeGroup.prototype = {
             limit : this.limit,
             offset : this.offset,
 			sNodeList : [],
-            orderBy : []
+            orderBy : [],
+            unionHash : {}
 		};
 
 		// add json snodes to sNodeList
@@ -1880,6 +1883,11 @@ SemanticNodeGroup.prototype = {
         // orderBy
         for (var i = 0; i < this.orderBy.length; i++) {
             ret.orderBy.push(this.orderBy[i].toJson());
+        }
+
+        // unionHash
+        for (var k in this.unionHash) {
+            ret.unionHash[k.toString()] = this.unionHash[k].slice();
         }
 
 		return ret;
@@ -1922,6 +1930,14 @@ SemanticNodeGroup.prototype = {
             }
         }
         this.validateOrderBy();
+
+        // unionHash
+        this.unionHash = {};
+        if (jObj.version >= 12) {
+            for (var k in jObj.unionHash) {
+                this.unionHash[parseInt(k)] = jObj.unionHash[k].slice();
+            }
+		}
 	},
 
 	fromConstructJson : function(jsonGraph, oInfo){
@@ -2152,7 +2168,7 @@ SemanticNodeGroup.prototype = {
 
     // rm item from unionHash
     // silent if item is not in unionHash
-    rmFromUnion : function(snode, item, optTarget) {
+    rmFromUnions : function(snode, item, optTarget) {
         var lookup1 = undefined;
         var lookup2 = "-";
 
@@ -2236,7 +2252,7 @@ SemanticNodeGroup.prototype = {
                 } else {
                     // get list of nodes in the Union
                     var subgraphNodeList;
-                    if (entry.length == 0) {
+                    if (entry.length == 1) {
                         subgraphNodeList = this.getSubGraph(entry[0], []);
                     } else {
                         // nodeItems
@@ -3529,17 +3545,17 @@ SemanticNodeGroup.prototype = {
                 // remove nodeItems from unionHash
                 for (var nItem of snode.nodeList) {
                     for (var target of nItem.SNodes) {
-                        this.rmFromUnion(snode, nItem, target);
+                        this.rmFromUnions(snode, nItem, target);
                     }
                 }
 
                 // remove propItems from unionHash
                 for (var pItem of snode.propList) {
-                    this.rmFromUnion(snode, pItem);
+                    this.rmFromUnions(snode, pItem);
                 }
 
                 // remove the snode from unionHash
-                this.rmFromUnion(snode);
+                this.rmFromUnions(snode);
 
 				// remove the sNode from the nodeGroup
 				this.SNodeList.splice(i, 1);
@@ -3549,7 +3565,7 @@ SemanticNodeGroup.prototype = {
 	},
 
     removeLink : function(nodeItem, targetSNode) {
-        this.rmFromUnion(this.getNodeItemParentSNode(nodeItem), nodeItem, targetSNode);
+        this.rmFromUnions(this.getNodeItemParentSNode(nodeItem), nodeItem, targetSNode);
 		nodeItem.removeSNode(targetSNode);
 	},
 

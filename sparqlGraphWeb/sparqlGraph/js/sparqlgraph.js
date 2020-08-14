@@ -458,7 +458,7 @@
     		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
 
             // union
-            gNodeGroup.rmFromUnion(snode, nItem, targetSNode);
+            gNodeGroup.rmFromUnions(snode, nItem, targetSNode);
             if (union == ModalLinkDialog.UNION_NONE) {
             } else if (union == ModalLinkDialog.UNION_NEW) {
                 gNodeGroup.addToUnion(gNodeGroup.newUnion(), snode, nItem, targetSNode, unionReverse);
@@ -534,7 +534,7 @@
             propItem.setOptMinus(optMinus);
 
             // union: presume that u is legal
-            gNodeGroup.rmFromUnion(gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
+            gNodeGroup.rmFromUnions(gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
 
             if (union == ModalItemDialog.UNION_NONE) {
             } else if (union == ModalItemDialog.UNION_NEW) {
@@ -571,7 +571,7 @@
         	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
 
             // union
-            gNodeGroup.rmFromUnion(snodeItem);
+            gNodeGroup.rmFromUnions(snodeItem);
 
             if (union == ModalItemDialog.UNION_NONE) {
             } else if (union == ModalItemDialog.UNION_NEW) {
