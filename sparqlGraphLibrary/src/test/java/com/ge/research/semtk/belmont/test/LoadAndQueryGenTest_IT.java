@@ -305,6 +305,5 @@ public class LoadAndQueryGenTest_IT {
 		
 		Table tab = tRes.getTable();
 		assertEquals(2, tab.getNumRows());
-		assertEquals(3, tab.getNumColumns());
 	}
 }

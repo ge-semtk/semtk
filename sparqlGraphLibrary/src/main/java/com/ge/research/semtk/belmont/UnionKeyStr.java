@@ -20,14 +20,17 @@ public class UnionKeyStr {
 		this.str = str;
 		String[] list = str.split("\\|");
 		this.snode = ng.getNodeBySparqlID(list[0]);
+		
 		if (list.length == 2) {
-			this.pItem = snode.getPropertyByKeyname(list[1]);
+			this.pItem = snode.getPropertyByURIRelation(list[1]);
+			
 		} else if (list.length > 2) {
 			this.nItem = snode.getNodeItem(list[1]);
 			this.target = ng.getNodeBySparqlID(list[2]);
 			if (list.length > 3) {
 				this.reverseFlag = Boolean.parseBoolean(list[3]);
 			}
+			
 		}
 	}
 
@@ -36,24 +39,25 @@ public class UnionKeyStr {
 		this.nItem = item;
 		this.target = target;
 		this.reverseFlag = reverseFlag;
-		this.str = snode.getSparqlID() + "|" + item.getKeyName() + "|" + target.getSparqlID() + "|" + reverseFlag.toString();  
-    }
-	public UnionKeyStr(Node snode, PropertyItem item) {
-		this.snode = snode;
-		this.pItem = item;
-		this.str = snode.getSparqlID() + "|" + item.getKeyName();
-	}
-	public UnionKeyStr(Node snode) {
-		this.snode = snode;
-		this.str = snode.getSparqlID();
+		this.str = snode.getSparqlID() + "|" + item.getUriConnectBy() + "|" + target.getSparqlID() + "|" + reverseFlag.toString();  
     }
 	
 	public UnionKeyStr(Node snode, NodeItem item, Node target) {
 		this.snode = snode;
 		this.nItem = item;
 		this.target = target;
-		this.str = snode.getSparqlID() + "|" + item.getKeyName() + "|" + target.getSparqlID();
+		this.str = snode.getSparqlID() + "|" + item.getUriConnectBy() + "|" + target.getSparqlID();
 	}
+	
+	public UnionKeyStr(Node snode, PropertyItem item) {
+		this.snode = snode;
+		this.pItem = item;
+		this.str = snode.getSparqlID() + "|" + item.getUriRelationship();
+	}
+	public UnionKeyStr(Node snode) {
+		this.snode = snode;
+		this.str = snode.getSparqlID();
+    }
 	
 	public Class<?> getType() {
 		if (nItem != null) return NodeItem.class;

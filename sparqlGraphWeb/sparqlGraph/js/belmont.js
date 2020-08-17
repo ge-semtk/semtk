@@ -2090,11 +2090,11 @@ SemanticNodeGroup.prototype = {
     buildUnionValueStr : function(snode, optItem, optTarget, optReverse_flag) {
         if (optTarget !== undefined) {
             // nodeItem
-            return snode.getSparqlID() + "|" + optItem.getKeyName() + "|" + optTarget.getSparqlID() + "|" + String(optReverse_flag);
+            return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID() + "|" + String(optReverse_flag);
 
         } else if (optItem !== undefined) {
             // propItem
-            return snode.getSparqlID() + "|" + optItem.getKeyName();
+            return snode.getSparqlID() + "|" + optItem.getUriRelation();
 
         } else {
             // node
@@ -2105,7 +2105,7 @@ SemanticNodeGroup.prototype = {
     buildUnionMemberStr : function(snode, optItem, optTarget) {
         if (optTarget !== undefined) {
             // nodeItem
-            return snode.getSparqlID() + "|" + optItem.getKeyName() + "|" + optTarget.getSparqlID();
+            return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID();
         } else {
             return this.buildUnionValueStr(snode, optItem);
         }
@@ -2117,7 +2117,7 @@ SemanticNodeGroup.prototype = {
         if (entry.length == 1) {
             return entry[0];
         } else {
-            return entry[1];
+            return (new OntologyName(entry[1])).getLocalName();
         }
     },
 
@@ -2130,11 +2130,11 @@ SemanticNodeGroup.prototype = {
         if (entry.length == 1) {
             return [snode];
         } else if (entry.length == 2) {
-            return [snode, snode.getPropertyByKeyname(entry[1])];
+            return [snode, snode.getPropertyByURIRelation(entry[1])];
         } else if (entry.length == 3) {
-            return [snode, snode.getPropertyByKeyname(entry[1]), this.getNodeBySparqlID(entry[2])];
+            return [snode, snode.getNodeItemByURIConnectBy(entry[1]), this.getNodeBySparqlID(entry[2])];
         } else {
-            return [snode, snode.getNodeItemByKeyname(entry[1]), this.getNodeBySparqlID(entry[2]), entry[3] == "true"];
+            return [snode, snode.getNodeItemByURIConnectBy(entry[1]), this.getNodeBySparqlID(entry[2]), entry[3] == "true"];
         }
     },
 

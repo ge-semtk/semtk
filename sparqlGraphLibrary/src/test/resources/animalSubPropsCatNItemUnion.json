@@ -20,7 +20,7 @@
 		]
 	},
 	"sNodeGroup": {
-		"version": 11,
+		"version": 12,
 		"limit": 0,
 		"offset": 0,
 		"sNodeList": [
@@ -33,7 +33,7 @@
 						"UriRelationship": "http://AnimalSubProps#name",
 						"Constraints": "FILTER regex(%id, \"white\")",
 						"fullURIName": "",
-						"SparqlID": "?name_1",
+						"SparqlID": "?name_0",
 						"isReturned": true,
 						"optMinus": 0,
 						"isRuntimeConstrained": false,
@@ -61,7 +61,7 @@
 						"UriRelationship": "http://AnimalSubProps#name",
 						"Constraints": "FILTER regex(%id, \"beelz\")",
 						"fullURIName": "",
-						"SparqlID": "?name_0",
+						"SparqlID": "?name",
 						"isReturned": true,
 						"optMinus": 0,
 						"isRuntimeConstrained": false,
@@ -84,22 +84,7 @@
 				"deletionMode": "NO_DELETE"
 			},
 			{
-				"propList": [
-					{
-						"KeyName": "name",
-						"ValueType": "string",
-						"relationship": "http://www.w3.org/2001/XMLSchema#string",
-						"UriRelationship": "http://AnimalSubProps#name",
-						"Constraints": "",
-						"fullURIName": "",
-						"SparqlID": "?name",
-						"isReturned": true,
-						"optMinus": 0,
-						"isRuntimeConstrained": false,
-						"instanceValues": [],
-						"isMarkedForDeletion": false
-					}
-				],
+				"propList": [],
 				"nodeList": [
 					{
 						"SnodeSparqlIDs": [
@@ -153,25 +138,18 @@
 				"deletionMode": "NO_DELETE"
 			}
 		],
-		"orderBy": []
+		"orderBy": [],
+		"unionHash": {
+			"0": [
+				"?Cat|http://AnimalSubProps#hasKitties|?Cat_0|false",
+				"?Cat|http://AnimalSubProps#hasDemons|?Animal|false"
+			]
+		}
 	},
 	"importSpec": {
 		"version": "1",
 		"baseURI": "",
-		"columns": [
-			{
-				"colId": "col_0",
-				"colName": "demon"
-			},
-			{
-				"colId": "col_1",
-				"colName": "kitty"
-			},
-			{
-				"colId": "col_2",
-				"colName": "mom"
-			}
-		],
+		"columns": [],
 		"dataValidator": [],
 		"texts": [],
 		"transforms": [],
@@ -179,21 +157,8 @@
 			{
 				"sparqlID": "?Cat",
 				"type": "http://AnimalSubProps#Cat",
-				"URILookupMode": "createIfMissing",
 				"mapping": [],
-				"props": [
-					{
-						"URIRelation": "http://AnimalSubProps#name",
-						"URILookup": [
-							"?Cat"
-						],
-						"mapping": [
-							{
-								"colId": "col_2"
-							}
-						]
-					}
-				]
+				"props": []
 			},
 			{
 				"sparqlID": "?Animal",
