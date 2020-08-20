@@ -130,18 +130,12 @@ public class Node extends Returnable {
 		ret.put("propList", jPropList);
 		ret.put("nodeList", jNodeList);
 		ret.put("NodeName", this.nodeName);
-		ret.put("fullURIName", this.fullURIname);;
-		ret.put("SparqlID", this.sparqlID);
-		ret.put("isReturned", this.isReturned);
-		ret.put("valueConstraint", this.getValueConstraintStr());
-		ret.put("instanceValue", this.getInstanceValue());
-		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
-		ret.put("deletionMode", this.deletionMode.name());
+		ret.put("fullURIName", this.fullURIname);
 		
-		// optional things
-		if (this.isTypeReturned) {
-			ret.put("isTypeReturned", true);
-		}
+		this.addReturnableJson(ret);
+		
+		ret.put("instanceValue", this.getInstanceValue());
+		ret.put("deletionMode", this.deletionMode.name());
 		
 		return ret;
 	}
@@ -396,38 +390,21 @@ public class Node extends Returnable {
 		fullURIname = null;
 		instanceValue = null;		
 		
+		this.fromReturnableJson(nodeEncoded);
+
 		// build all the parts we need from this incoming JSON Object...
 		this.nodeName = nodeEncoded.get("NodeName").toString();
 		this.fullURIname = nodeEncoded.get("fullURIName").toString();
-		this.sparqlID = nodeEncoded.get("SparqlID").toString();
+		
 				
 		// NOTE: removed OPTIONAL array of subclass names.
-		
-		this.isReturned = (Boolean)nodeEncoded.get("isReturned");
-		
 		try{
 			this.instanceValue = nodeEncoded.get("instanceValue").toString();
 		}
 		catch(Exception E){ // the value was missing
 			this.instanceValue = null;
 		}
-		try{
-			String vc = nodeEncoded.get("valueConstraint").toString();
-			if (vc.length() < 1) {  // change blank constraints to null
-				this.constraints = null;
-			} else {
-				this.constraints = new ValueConstraint(vc);
-			}
-		}
-		catch(Exception E){ // the value was not set
-			this.constraints = null;
-		}
-		try{
-			this.setIsRuntimeConstrained((Boolean)nodeEncoded.get("isRuntimeConstrained"));
-		}
-		catch(Exception E){
-			this.setIsRuntimeConstrained(false);
-		}
+		
 		try{
 			this.setDeletionMode(NodeDeletionTypes.valueOf((String)nodeEncoded.get("deletionMode")));
 		}
@@ -440,7 +417,6 @@ public class Node extends Returnable {
 		catch(Exception ee){
 			throw ee;   // other unexpected exception
 		}
-		
 		
 		// create the node items and property items.
 		// nodeItems 
@@ -456,14 +432,6 @@ public class Node extends Returnable {
 		while(pIt.hasNext()){
 			this.props.add(new PropertyItem(pIt.next()));
 		}
-		
-		// optional things
-		if (nodeEncoded.containsKey("isTypeReturned")) {
-			this.isTypeReturned = (Boolean)nodeEncoded.get("isTypeReturned");
-		} else {
-			this.isTypeReturned = false;
-		}
-		
 	}
 	
 	public NodeItem setConnection(Node curr, String connectionURI) throws Exception {
@@ -503,7 +471,7 @@ public class Node extends Returnable {
 		// spin through the list of values and add teh correct ones. 
 		for(int i = 0; i < this.props.size(); i += 1){
 			PropertyItem pi = this.props.get(i);
-			if(pi.getIsReturned()){		// we are returning this one. add it to the list. 
+			if(pi.hasAnyReturn()){		// we are returning this one. add it to the list. 
 				retval.add(pi);
 			}
 		}
@@ -607,11 +575,11 @@ public class Node extends Returnable {
 	}
 	
 	public boolean isUsed() {
-		if (this.isReturned || this.isTypeReturned || this.constraints != null || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE) {
+		if (this.hasAnyReturn() || this.constraints != null || this.instanceValue != null || this.isRuntimeConstrained || this.deletionMode != NodeDeletionTypes.NO_DELETE) {
 			return true;
 		}
 		for (PropertyItem item : this.props) {
-			if (item.isReturned || item.getConstraints() != null || item.getInstanceValues().size() > 0 || item.getIsRuntimeConstrained() || item.getIsMarkedForDeletion()) {
+			if (item.isUsed()) {
 				return true;
 			}
 		}
@@ -642,12 +610,6 @@ public class Node extends Returnable {
 			}
 		}
 		return ret;
-	}
-	
-	public void removeFromNodeList(Node node) {
-		for (NodeItem item : this.nodes) {
-			item.removeNode(node);
-		}
 	}
 	
 	/**

@@ -1056,8 +1056,10 @@ public class NodeGroup {
             // remove the member's union to be left with any other memberships
             firstMemberMembership.remove(0);
 
-            // add to ret if this union is a perfect match
-            if (firstMemberMembership.size() == membershipList.size()) {
+            // add to ret if either of:
+            //      this union is keyStr's parent union
+            //      keyStr's non-parent union memberships match this union's first member's non-parent memberships.
+            if (unionKey == membershipList.get(0) || firstMemberMembership.size() == membershipList.size()) {
             	boolean same = true;
             	for (int i=0; i < membershipList.size(); i++) {
             		if (firstMemberMembership.get(i) != membershipList.get(i)) {
@@ -1072,6 +1074,25 @@ public class NodeGroup {
         }
         return ret;
     }
+	 
+	/**
+	 * Set isBindingReturned for all items in the nodegroup that match this one
+	 * @param item
+	 * @param val
+	 */
+	public void setBindingIsReturned(Returnable item, boolean val) {
+		String bindingName = item.getBinding();
+		for (Node snode : this.getNodeList()) {
+			if (snode.getBinding() != null && snode.getBinding().equals(bindingName)) {
+				snode.setIsBindingReturned(val);
+			}
+			for (PropertyItem prop : snode.getPropertyItems()) {
+				if (prop.getBinding() != null && prop.getBinding().equals(bindingName)) {
+					prop.setIsBindingReturned(val);
+				}
+			}
+		}
+	}
         
 	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri) throws Exception  {
 
@@ -1287,13 +1308,15 @@ public class NodeGroup {
 		for(Returnable item : items) {
 			if (item != exceptThis) {
 				this.setIsReturned(item, false);
+			
+				item.setIsTypeReturned(false);
+				item.setIsBindingReturned(false);
 			}
-			item.setIsTypeReturned(false);
 		}
 	}
 	
 	/**
-	 * Get all returnable items in query "order"
+	 * Get all returned variables
 	 * @return
 	 */
 	
@@ -1311,6 +1334,11 @@ public class NodeGroup {
 			if (item.getIsTypeReturned()) {
 				ret.add(item.getTypeSparqlID());
 			}
+			if (item.getIsBindingReturned()) {
+				if (! ret.contains(item.getBinding())) {
+					ret.add(item.getBinding());
+				}
+			}
 		}
 		return ret;
 	}
@@ -1320,11 +1348,9 @@ public class NodeGroup {
 		ArrayList<Returnable> ret = new ArrayList<Returnable>();
 		for(Node n : this.getOrderedNodeList()) {
 			// check if node URI is returned
-			if (n.getIsReturned()) {
+			if (n.hasAnyReturn()) {
 				ret.add(n);
-			} else if (n.getIsTypeReturned()) {
-				ret.add(n);
-			}
+			} 
 			
 			ArrayList<PropertyItem> retPropItems = n.getReturnedPropertyItems();
 			for (PropertyItem p : retPropItems) {
@@ -1548,12 +1574,17 @@ public class NodeGroup {
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 		
-			sparql.append(this.generateSparqlSubgraphClausesNode(	qt, 
-																	headNode, 
-																	null, null,   // skip nodeItem.  Null means do them all.
-																	keepTargetConstraints ? null : targetObj, 
-																	doneNodes, doneUnions,
-																	tab));
+			Integer unionKey = this.getUnionKey(headNode);
+			if (unionKey == null) {
+				sparql.append(this.generateSparqlSubgraphClausesNode(	qt, 
+																		headNode, 
+																		null, null,   // skip nodeItem.  Null means do them all.
+																		keepTargetConstraints ? null : targetObj, 
+																		doneNodes, doneUnions,
+																		tab));
+			} else {
+				sparql.append(this.generateSparqlSubgraphClausesUnion(qt, unionKey, keepTargetConstraints ? null : targetObj, doneNodes, doneUnions, tab));
+			}
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
@@ -1774,6 +1805,10 @@ public class NodeGroup {
 		sparql.append(this.generateSparqlTypeClause(snode, tab, queryType));
 		//       If the first prop is optional and nothing matches then the whole query fails.
 				
+		if (snode.getBinding() != null) {
+			sparql.append(tab + "BIND(" + snode.getSparqlID() + " as " +  snode.getBinding() + ") .\n" );
+		}
+		
 		// PropItems: generate sparql for property and constraints
 		// for(PropertyItem prop : snode.getReturnedPropertyItems()){
 		for(PropertyItem prop : snode.getPropsForSparql(targetObj, queryType)){	
@@ -1980,6 +2015,10 @@ public class NodeGroup {
 			sparql.append(tab + propSparqlId + " rdfs:subPropertyOf* " + this.applyPrefixing(prop.getUriRelationship()) +  " .\n");
 			sparql.append(tab + snode.getSparqlID() + " " + propSparqlId + " " + prop.getSparqlID() +  " .\n");
 		}
+		
+		if (prop.getBinding() != null) {
+			sparql.append(tab + "BIND(" + prop.getSparqlID() + " as " +  prop.getBinding() + ") .\n" );
+		}
 	
 		// add in attribute range constraint if there is one 
 		if(prop.getConstraints() != null && prop.getConstraints() != ""){
@@ -2017,6 +2056,9 @@ public class NodeGroup {
 			if (this.oInfo != null && this.oInfo.getSubclassNames(curr.getFullUriName()).size() == 0) {
 				retval += tab + curr.getSparqlID() + " a " + this.applyPrefixing(curr.getFullUriName()) + " .\n";
 			
+				if (curr.getIsTypeReturned()) {
+					retval += tab + curr.getSparqlID() + " a " + curr.getTypeSparqlID() + " .\n";
+				}
 			} else{
 				
 				// always run this now.
@@ -2416,8 +2458,11 @@ public class NodeGroup {
 	private void removeNode(Node node) {
 		
 		// remove the current sNode from all links.
-		for (Node k : this.nodes) {
-			k.removeFromNodeList(node);
+		for (Node ngNode : this.nodes) {			
+			for (NodeItem item : ngNode.getNodeItemList()) {
+				this.rmFromUnions(ngNode, item, node);
+				item.removeNode(node);
+			}
 		}
 
 		// free sparql ids

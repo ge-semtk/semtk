@@ -18,16 +18,78 @@
 
 package com.ge.research.semtk.belmont;
 
+import org.json.simple.JSONObject;
+
 public abstract class Returnable {
 	
 	protected String sparqlID = null;
 	protected Boolean isReturned = false;
 	protected Boolean isTypeReturned = false;
 	protected Boolean isRuntimeConstrained = false;
+	protected String binding = null;
+	protected Boolean isBindingReturned = false;
 	
 	// the constraints which will be applied on qry
 	protected ValueConstraint constraints = null;
 	
+	protected void addReturnableJson(JSONObject ret) {
+		ret.put("SparqlID", this.sparqlID);///
+		ret.put("isReturned", this.isReturned);///
+		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());///
+		ret.put("Constraints", this.constraints != null ? this.constraints.toString() : "");///valueConstraint
+
+		if (this.isTypeReturned) {
+			ret.put("isTypeReturned", true);
+		}
+		if (this.binding != null) {
+			ret.put("binding", this.binding);
+			ret.put("isBindingReturned", this.isBindingReturned);
+
+		}
+	}
+	
+	protected void fromReturnableJson(JSONObject jObj) {
+		this.sparqlID = jObj.get("SparqlID").toString(); ///
+		this.isReturned = (Boolean)jObj.get("isReturned");///
+
+		try{
+			this.setBinding(jObj.get("binding").toString());///
+			this.setIsBindingReturned((Boolean)jObj.get("isBindingReturned"));///
+		
+		} catch(Exception E){ // the value was missing
+			this.setBinding(null);
+			this.setIsBindingReturned(false); 
+		}
+		
+		if (jObj.containsKey("isTypeReturned")) {
+			this.isTypeReturned = (Boolean)jObj.get("isTypeReturned"); ///
+		} else {
+			this.isTypeReturned = false;
+		}
+		
+		try{
+			this.setIsRuntimeConstrained((Boolean)jObj.get("isRuntimeConstrained"));  ///
+		}
+		catch(Exception E){
+			this.setIsRuntimeConstrained(false);
+		}
+		
+		String vc = null;
+		if (jObj.containsKey("valueConstraint")) {
+			vc = jObj.get("valueConstraint").toString();  
+		} else if (jObj.containsKey("Constraints")) {
+			// backwards compatible
+			vc = jObj.get("Constraints").toString();  
+		}
+		
+		if (vc != null && !vc.isEmpty()) {
+			this.constraints = new ValueConstraint(vc);
+		} else {  // change blank constraints to null
+			this.constraints = null;
+		} 
+		
+		
+	}
 	/**
 	 * 
 	 * @return sparqlID or "" (not null)
@@ -52,6 +114,27 @@ public abstract class Returnable {
 		this.isTypeReturned = b;
 	}
 	
+	public String getBinding() {
+		return binding;
+	}
+
+	public void setBinding(String binding) {
+		if (binding == null) {
+			this.binding = null;
+		} else {
+			this.binding = binding.startsWith("?") ? binding : "?" + binding;
+		}
+	}
+
+	// Is binding returned (it must also exist)
+	public Boolean getIsBindingReturned() {
+		return isBindingReturned && this.binding != null && !this.binding.isEmpty();
+	}
+
+	public void setIsBindingReturned(Boolean isBindingReturned) {
+		this.isBindingReturned = isBindingReturned;
+	}
+
 	public String getTypeSparqlID() {
         return this.sparqlID + "_type";
     }
@@ -62,6 +145,10 @@ public abstract class Returnable {
 	
 	public String getRuntimeConstraintID(){
 		return this.getSparqlID();
+	}
+	
+	public boolean hasAnyReturn() {
+		return this.isReturned || this.isTypeReturned || this.isBindingReturned;
 	}
 
 	public boolean getIsRuntimeConstrained(){

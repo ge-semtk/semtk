@@ -522,15 +522,28 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
-            // update the property
-            gNodeGroup.changeSparqlID(propItem, sparqlID);
-            propItem.setIsReturned(returnFlag);
+
+            // update the binding or sparqlID based on varName and returnFalg
+            if (propItem.getSparqlID() == "") {
+                gNodeGroup.changeSparqlID(propItem, varName);
+            }
+            if (varName == propItem.getSparqlID()) {
+                propItem.setBinding(null);
+                propItem.setIsBindingReturned(false);
+                propItem.setIsReturned(returnFlag);
+            } else {
+                propItem.setBinding(varName);
+                propItem.setIsBindingReturned(returnFlag);
+                propItem.setIsReturned(false);
+            }
+
             // returnTypeFlag is not used for properties
+
             propItem.setOptMinus(optMinus);
 
             // union: presume that u is legal
@@ -554,18 +567,23 @@
         });
     };
 
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
             // Note: ModalItemDialog validates that sparqlID is legal
 
-            // don't allow removal of node item's sparqlID
-            if (sparqlID != "") {
-                gNodeGroup.changeSparqlID(snodeItem, sparqlID);
+            // update the binding or sparqlID based on varName and returnFalg
+            if (varName == snodeItem.getSparqlID()) {
+                snodeItem.setBinding(null);
+                snodeItem.setIsBindingReturned(false);
+                snodeItem.setIsReturned(returnFlag);
+            } else {
+                snodeItem.setBinding(varName);
+                snodeItem.setIsBindingReturned(returnFlag);
+                snodeItem.setIsReturned(false);
             }
 
-            snodeItem.setIsReturned(returnFlag);
             snodeItem.setIsTypeReturned(returnTypeFlag);
 
         	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm

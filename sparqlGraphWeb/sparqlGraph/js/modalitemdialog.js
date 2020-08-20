@@ -478,31 +478,12 @@ define([	// properly require.config'ed
 					retName = f.genSparqlID("ID", gNodeGroup.sparqlNameHash);
 					ModalIidx.alert("Blank SparqlID Invalid", "Using " + retName + ".");
 
-				// check legality of non-blank sparqlID
-				} else {
-		    		// for legality-checking: make sure retName has "?"
-		    		if (retName[0][0] !== "?") {
-		    			retName = "?" + retName;
-		    		}
 
-		    		// if it is a new name
-		    		if (retName != this.item.getSparqlID()) {
-		    			// make sure new name is legal
-		    			var newName = f.genSparqlID(retName, gNodeGroup.sparqlNameHash);
-		    			if (newName != retName) {
-		    				ModalIidx.alert("SparqlID Invalid", "Using " + newName + " instead.");
-		    			}
-		    			retName = newName;
-		    		}
-		    	}
+				}
+
 				// set the new sparqlID (without the leading '?')
 				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, retName.slice(1));
 
-				this.updateConstraintSparqlID(this.lastSparqlID, retName);
-
-                // update ruturn_type checkbox text
-                var span = this.getFieldElement(ModalItemDialog.SPARQL_ID_SPAN);
-                if (span) span.innerHTML = retName + "_type";
 			},
 
 			updateConstraintSparqlID : function(oldID, newID) {
@@ -576,13 +557,14 @@ define([	// properly require.config'ed
 				sparqlIDTxt.type = "text";
 				sparqlIDTxt.style.margin = 0;
 				sparqlIDTxt.id = this.getFieldID(ModalItemDialog.SPARQL_ID_TEXT);
-				// get a legal sparqlID
-				var sparqlID = this.item.getSparqlID();
+
+                var binding = this.item.getBinding();
+                var sparqlID = this.item.getSparqlID();
 				if (sparqlID === "") {
 					var f = new SparqlFormatter();
 					sparqlID = f.genSparqlID(this.item.getKeyName(), gNodeGroup.sparqlNameHash);
 				}
-				sparqlIDTxt.value = sparqlID.slice(1);
+				sparqlIDTxt.value = binding ? binding.slice(1) : sparqlID.slice(1);
 
 				sparqlIDTxt.onfocus    = this.sparqlIDOnFocus.bind(this);
 				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
