@@ -162,7 +162,13 @@ public class CSVDataset extends Dataset {
 	
 	private CSVParser getParser() throws Exception{
 		// return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).parse(reader));
-		return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).withQuote('"').withEscape('\\').withIgnoreEmptyLines(true).parse(reader)); // changed toward handling quotes in stream. the were breaking
+		return (CSVFormat.EXCEL.withHeader()
+				.withIgnoreHeaderCase(true)
+				.withQuote('"')
+				.withEscape('\\')
+				.withIgnoreEmptyLines(true)
+				.withIgnoreSurroundingSpaces(true)
+				.parse(reader)); // changed toward handling quotes in stream. the were breaking
 																										// solution suggestion: http://stackoverflow.com/questions/26729799/invalid-char-between-encapsulated-token-and-delimiter-in-apache-commons-csv-libr
 	}
 	

@@ -414,6 +414,17 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
+	public void testTrimSpacesInCsv() throws Exception {
+
+		SparqlGraphJson sgJson = TestGraph.initGraphWithData(this.getClass(), "sampleBattery");
+		CSVDataset csvDataset = new CSVDataset("src/test/resources/sampleBatteryManySpaces.csv", false);
+		DataLoader dl = new DataLoader(sgJson, csvDataset, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		assertEquals(dl.getTotalRecordsProcessed(), 4);
+		TestGraph.queryAndCheckResults(sgJson, this, "/sampleBatteryResults.csv");
+
+	}
+	@Test
 	public void test_LoadData() throws Exception {
 		doLoadData(false);
 		doLoadData(true);
