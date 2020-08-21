@@ -228,6 +228,10 @@ public class OntologyInfo {
 		return retval;
 	}
 	
+	public boolean isSubclassOf(String sub, String maybeSuper) {
+		return this.getSubclassNames(maybeSuper).contains(sub);
+	}
+	
 	public HashSet<String> getSubPropNames(String superPropertyName) {
 		HashSet<String> ret = new HashSet<String>();
 		this.addSubPropNames(superPropertyName, ret);
@@ -247,6 +251,25 @@ public class OntologyInfo {
 				this.addSubPropNames(subName, set);
 			}
 		}
+	}
+	
+	public String findCommonSuperclass(String subClassName1, String subClassName2) {
+		ArrayList<String> superClassNames1 = this.getSuperclassNames(subClassName1);
+		ArrayList<String> superClassNames2 = this.getSuperclassNames(subClassName2);
+		
+		superClassNames1.add(0, subClassName1);
+		superClassNames2.add(0, subClassName2);
+		for (String c : superClassNames1) {
+			if (superClassNames2.contains(c)) {
+				return c;
+			}
+		}
+		for (String c : superClassNames2) {
+			if (superClassNames1.contains(c)) {
+				return c;
+			}
+		}
+		return null;
 	}
 	
 	public ArrayList<String> getSuperclassNames(String subClassName) {
@@ -1103,11 +1126,19 @@ public class OntologyInfo {
 				
 				// if property exists, make sure range is the same
 				if (! prop.getRangeStr().equals(rangeList[i])) {
-					throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
+					String superClass = this.findCommonSuperclass(prop.getRangeStr(), rangeList[i]);
+					if (superClass != null) {
+						// ignore subclass restrictions on ranges for now, until complex ranges are implemented
+						// Paul Aug 2020
+						prop.setRange(new OntologyRange(superClass));
+					} else {
+						// throw error
+						throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
 										  classList[i], 
 										  propertyList[i], 
 										  this.propertyHash.get(propertyList[i]).getRangeStr(),
 										  rangeList[i]));
+					}
 				}
 			} else {
 				// if property doesn't exist, create it
