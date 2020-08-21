@@ -664,11 +664,16 @@
 		logEvent("SG Load Success");
     };
 
+    var htmlize = function(msg) {
+        return msg.replace(/\n/g, "<br>")
+                    .replace(/\\n/g, "<br>");
+    };
+
     var doLoadFailure = function(msg) {
     	require(['sparqlgraph/js/ontologyinfo'],
    	         function () {
 
-	    	logAndAlert(msg);
+	    	logAndAlert(htmlize(msg));
 	    	setStatus("");
 	    	clearTree();
 	    	gOInfo = new OntologyInfo();
