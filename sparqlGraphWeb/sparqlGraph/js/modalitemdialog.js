@@ -60,7 +60,7 @@ define([	// properly require.config'ed
 			this.data = data;
 
 			this.limit = 10000;
-			this.lastSparqlID = "";
+			this.prevName = "";
 
             // Virtuoso has performance and maybe downright crash troubles
             // if a values clause has too many params.
@@ -464,25 +464,51 @@ define([	// properly require.config'ed
 			},
 
 			sparqlIDOnFocus : function () {
-				this.lastSparqlID = this.getSparqlIDText();
+				this.prevName = this.getSparqlIDText();
 			},
 
 			sparqlIDOnFocusOut : function() {
-				// keep sparqlID valid at all times
 
-				var retName = this.getSparqlIDText();
+				var newName = this.getSparqlIDText();
 				var f = new SparqlFormatter();
 
 				// handle blank sparqlID
-				if (retName === "") {
-					retName = f.genSparqlID("ID", gNodeGroup.sparqlNameHash);
-					ModalIidx.alert("Blank SparqlID Invalid", "Using " + retName + ".");
-
-
+				if (newName === "") {
+					newName = f.genSparqlID("ID", gNodeGroup.sparqlNameHash);
+					ModalIidx.alert("Blank name is invalid", "Using " + newName + ".");
 				}
 
+                //------------------------------------ keeping code here for posterity Aug 2020 Paul
+                // check legality of non-blank sparqlID:
+                if (false) {
+                    // for legality-checking: make sure newName has "?"
+                    if (newName[0][0] !== "?") {
+                        newName = "?" + newName;
+                    }
+
+                    // if it is a new name
+                    if (newName != this.item.getSparqlID()) {
+                        // make sure new name is legal
+                        var newName = f.genSparqlID(newName, gNodeGroup.sparqlNameHash);
+                        if (newName != newName) {
+                            ModalIidx.alert("SparqlID Invalid", "Using " + newName + " instead.");
+                        }
+                        newName = newName;
+                    }
+
+                    this.updateConstraintSparqlID(this.prevName, newName);
+
+                    // update ruturn_type checkbox text
+                    var span = this.getFieldElement(ModalItemDialog.SPARQL_ID_SPAN);
+                    if (span) span.innerHTML = newName + "_type";
+                }
+
+
+                //------------------------------------
+
 				// set the new sparqlID (without the leading '?')
-				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, retName.slice(1));
+				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, newName.slice(1));
+
 
 			},
 
