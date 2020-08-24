@@ -1926,9 +1926,6 @@ SemanticNodeGroup.prototype = {
             this.offset = jObj.offset;
         }
 
-		// clean up name collisions while still json
-		this.resolveSparqlIdCollisionsJson(jObj);
-
 		// loop through SNodes in the json
 		for (var i = 0; i < jObj.sNodeList.length; i++) {
 			var newNode = new SemanticNode(null, null, null, null, null, this,
@@ -2353,6 +2350,7 @@ SemanticNodeGroup.prototype = {
             var firstMemberEntry = this.getEntryTuple(firstMemberStr);
             var firstMemberMembership = this.getUnionMembershipList(firstMemberEntry[0], firstMemberEntry[1], firstMemberEntry[2]);
             // remove the member's union to be left with any other memberships
+            firstMemberMembership = firstMemberMembership.slice();   // make a copy so we don't break the hash
             firstMemberMembership.splice(0,1);
 
             // add to ret if either of:
@@ -2364,6 +2362,33 @@ SemanticNodeGroup.prototype = {
             }
         }
         return ret;
+    },
+
+    /*
+    ** Set isReturned, or isTypeReturned, or setIsBindingReturned
+    ** for anything in the nodegroup that matches varname
+    */
+    setIsReturned : function (varname, bool) {
+        for(var snode of this.SNodeList) {
+            if (snode.getSparqlID() == varname) {
+                snode.setIsReturned(bool);
+            }
+            if (snode.getTypeSparqlID() == varname) {
+                snode.setIsTypeReturned(bool);
+            }
+            if (snode.getBinding() == varname) {
+                snode.setIsBindingReturned(bool);
+            }
+
+            for (var pItem of snode.propList) {
+                if (pItem.getSparqlID() == varname) {
+                    pItem.setIsReturned(bool);
+                }
+                if (pItem.getBinding() == varname) {
+                    pItem.setIsBindingReturned(bool);
+                }
+			}
+        }
     },
 
 	getPrefixedUri : function (originalUri) {
@@ -2492,47 +2517,6 @@ SemanticNodeGroup.prototype = {
 		}
 	},
 
-	resolveSparqlIdCollisionsJson : function(jObj) {
-		// loop through a json object and resolve any SparqlID name collisions
-		// with this node group.
-
-		if (this.sparqlNameHash.length == 0) {
-			return;
-		}
-
-		// set up formatter, temporary name hash, and hash of changed names
-		var f = new SparqlFormatter();
-		var tmpNameHash = {};
-		for ( var key in this.sparqlNameHash) {
-			tmpNameHash[key] = this.sparqlNameHash[key];
-		}
-		var changedHash = {};
-
-		// loop through JSON SNodes
-		for (var i = 0; i < jObj.sNodeList.length; i++) {
-			// check snode sparqlId
-			var jnode = jObj.sNodeList[i];
-
-			this.helperUpdateId(jnode, "SparqlID", f, changedHash, tmpNameHash);
-
-			// loop through property items
-			for (var j = 0; j < jnode.propList.length; j++) {
-				var jprop = jnode.propList[j];
-				this.helperUpdateId(jprop, "SparqlID", f, changedHash,
-						tmpNameHash);
-			}
-
-			// loop through node items
-			for (var j = 0; j < jnode.nodeList.length; j++) {
-				var jnitem = jnode.nodeList[j];
-
-				for (var k = 0; k < jnitem.SnodeSparqlIDs.length; k++) {
-					this.helperUpdateId(jnitem.SnodeSparqlIDs, k, f,
-							changedHash, tmpNameHash);
-				}
-			}
-		}
-	},
 	helperUpdateId : function(obj, idx, fmt, changedHash, tmpNameHash) {
 		// helper function applies changedHash to obj.fieldname
 		// obj[idx] will be acted upon. In javascript: obj.idx is equivalent to
@@ -3466,22 +3450,20 @@ SemanticNodeGroup.prototype = {
     //
     getReturnedSparqlIDs : function() {
         var items = this.getReturnedItems();
-        var ret = [];
+        var retHash = {};
         for (var i=0; i < items.length; i++) {
             if (items[i].getIsReturned()) {
-                ret.push(items[i].getSparqlID());
+                retHash[items[i].getSparqlID()] = 1;
             }
             if (items[i].getIsBindingReturned()) {
-                if (ret.indexOf(items[i].getBinding()) == -1) {
-                    ret.push(items[i].getBinding());
-                }
+                retHash[items[i].getBinding()] = 1;
             }
             if (items[i].getIsTypeReturned()) {
-                ret.push(items[i].getTypeSparqlID());
+                retHash[items[i].getTypeSparqlID()] = 1;
             }
         }
 
-        return ret;
+        return Object.keys[retHash];
     },
 
     getItemBySparqlID : function(id) {

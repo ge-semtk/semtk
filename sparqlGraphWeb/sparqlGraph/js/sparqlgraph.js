@@ -533,14 +533,15 @@
                 gNodeGroup.changeSparqlID(propItem, varName);
             }
             if (varName == propItem.getSparqlID()) {
+                // varName is sparqlID: shut of binding
                 propItem.setBinding(null);
                 propItem.setIsBindingReturned(false);
-                propItem.setIsReturned(returnFlag);
             } else {
+                // varName is NOT sparqlID: use binding
                 propItem.setBinding(varName);
-                propItem.setIsBindingReturned(returnFlag);
                 propItem.setIsReturned(false);
             }
+            gNodeGroup.setIsReturned(varName, returnFlag);
 
             // returnTypeFlag is not used for properties
 
@@ -575,14 +576,15 @@
 
             // update the binding or sparqlID based on varName and returnFalg
             if (varName == snodeItem.getSparqlID()) {
+                // varname is sparqlID: shut off binding
                 snodeItem.setBinding(null);
                 snodeItem.setIsBindingReturned(false);
-                snodeItem.setIsReturned(returnFlag);
             } else {
+                // varname is NOT sparqlID: use binding
                 snodeItem.setBinding(varName);
-                snodeItem.setIsBindingReturned(returnFlag);
                 snodeItem.setIsReturned(false);
             }
+            gNodeGroup.setIsReturned(varName, returnFlag);
 
             snodeItem.setIsTypeReturned(returnTypeFlag);
 

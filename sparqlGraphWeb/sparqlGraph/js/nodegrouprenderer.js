@@ -594,7 +594,7 @@ define([	// properly require.config'ed
                 }
                 x += (size);
 
-                if (snode.getIsReturned() || snode.getIsTypeReturned()) {
+                if (snode.hasAnyReturn()) {
                     checked = true;
                     if (snode.hasConstraints()) {
                         foreground = NodegroupRenderer.COLOR_RET_CONST;
@@ -649,16 +649,18 @@ define([	// properly require.config'ed
 
                 var checked = false;
                 var foreground = NodegroupRenderer.COLOR_FOREGROUND;
-                if (item.getIsReturned() ) {
-                    checked = true;
-                    if (item.hasConstraints()) {
-                        foreground = NodegroupRenderer.COLOR_RET_CONST;
-                    } else {
-                        foreground = NodegroupRenderer.COLOR_RETURNED;
+                if (item instanceof PropertyItem) {
+                    if (item.hasAnyReturn() ) {
+                        checked = true;
+                        if (item.hasConstraints()) {
+                            foreground = NodegroupRenderer.COLOR_RET_CONST;
+                        } else {
+                            foreground = NodegroupRenderer.COLOR_RETURNED;
+                        }
+                    } else if (item.hasConstraints()) {
+                        checked = true;
+                        foreground = NodegroupRenderer.COLOR_CONSTRAINED;
                     }
-                } else if (item.hasConstraints()) {
-                    checked = true;
-                    foreground = NodegroupRenderer.COLOR_CONSTRAINED;
                 }
                 this.drawCheckBox(svg, x, bot, size, checked, foreground);
                 x += (size + NodegroupRenderer.INDENT);

@@ -1052,7 +1052,7 @@ public class NodeGroup {
         for (Integer unionKey : this.unionHash.keySet()) {
         	// get first member of union, and it's membership list
             String firstMemberStr = UnionKeyStr.rmRevFlag(this.unionHash.get(unionKey).get(0));
-            ArrayList<Integer> firstMemberMembership = this.tmpUnionMemberHash.get(firstMemberStr);
+            ArrayList<Integer> firstMemberMembership = new ArrayList<Integer>(this.tmpUnionMemberHash.get(firstMemberStr));
             // remove the member's union to be left with any other memberships
             firstMemberMembership.remove(0);
 
@@ -1324,7 +1324,7 @@ public class NodeGroup {
 		
 		// get returned items
 		ArrayList<Returnable> items = this.getReturnedItems();
-		ArrayList<String> ret = new ArrayList<String>();
+		HashSet<String> ret = new HashSet<String>();
 		
 		// build list of sparql ids
 		for(Returnable item : items) {
@@ -1340,7 +1340,10 @@ public class NodeGroup {
 				}
 			}
 		}
-		return ret;
+		// change to ArrayList for historical reasons
+		ArrayList<String> retArr = new ArrayList<String>();
+		retArr.addAll(ret);
+		return retArr;
 	}
 	
 	
