@@ -208,7 +208,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		this.authorizeUpload();
 		
 		if (this.s3Config == null) {
-			this.getEnvS3Config();
+			this.s3Config = new S3BucketConfig();  // reads from ENV
 		}
 		
 		Region region = Region.of(this.s3Config.region);
@@ -288,32 +288,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		return ret.toJson();
 	}
 	
-	/**
-	 * Read S3 Config from environment
-	 * @throws Exception
-	 */
-	private void getEnvS3Config() throws Exception {
-		String region = System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION");
-		String bucket = System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME");
-		String role = System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN");
-		String failedVariables = "";
-		
-		if (region == null || region.isEmpty()) {
-			failedVariables += "NEPTUNE_UPLOAD_S3_CLIENT_REGION ";
-		}
-		if (bucket == null || bucket.isEmpty()) {
-			failedVariables += "NEPTUNE_UPLOAD_S3_BUCKET_NAME ";
-		}
-		if (role == null || role.isEmpty()) {
-			failedVariables += "NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN ";
-		}
-		if (!failedVariables.isEmpty()) {
-			throw new Exception("Config error: can't perform Neptune upload with blank variable(s) in SemTK service environment: \n" + failedVariables);
-		}
-		
-		this.s3Config = new S3BucketConfig(region, bucket, role);
-
-	}
 	
 	/**
 	 * I can't find docs for using a Java API to do this.

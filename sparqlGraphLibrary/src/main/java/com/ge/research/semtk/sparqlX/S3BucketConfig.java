@@ -5,6 +5,30 @@ public class S3BucketConfig {
 	String name = null;
 	String iamRoleArn = null;
 
+	/** 
+	 * Create from standard environment variables
+	 * @throws Exception
+	 */
+	public S3BucketConfig() throws Exception {
+		this.region = System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION");
+		this.name = System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME");
+		this.iamRoleArn = System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN");
+		String failedVariables = "";
+		
+		if (region == null || region.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_CLIENT_REGION ";
+		}
+		if (this.name == null || this.name.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_BUCKET_NAME ";
+		}
+		if (this.iamRoleArn == null || this.iamRoleArn.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN ";
+		}
+		if (!failedVariables.isEmpty()) {
+			throw new Exception("Config error: can't perform Neptune upload with blank variable(s) in SemTK service environment: \n" + failedVariables);
+		}
+	}
+	
 	public S3BucketConfig(String region, String name, String iamRoleArn) {
 		this.region = region;
 		this.name = name;
