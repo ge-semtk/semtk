@@ -50,5 +50,6 @@ multikill edcQueryGenerationService
 multikill athenaService
 multikill arangoDbService
 multikill utilityService
+multikill fileStagingService
 
 echo "=== DONE ==="
