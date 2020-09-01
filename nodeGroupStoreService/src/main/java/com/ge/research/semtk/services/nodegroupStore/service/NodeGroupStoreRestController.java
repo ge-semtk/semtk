@@ -37,8 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
-import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
+
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
@@ -47,18 +46,13 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
-import com.ge.research.semtk.edc.JobTracker;
-import com.ge.research.semtk.load.DataLoader;
-import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.dataset.Dataset;
+
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @RestController
@@ -119,40 +113,11 @@ public class NodeGroupStoreRestController {
 	private void setupDemo() {
 		LocalLogger.logToStdOut("loading demo...");
 		try {
-			AuthorizationManager.setSemtkSuper();
-			
-			// setup demoSei and demoConn
-			SparqlEndpointInterface demoSei = servicesgraph_prop.buildSei();
-			demoSei.setGraph("http://semtk/demo");
-			SparqlConnection demoConn = new SparqlConnection("demoConn", demoSei);
-			
-			// put demoNodegroup into the store
-			JSONObject sgJsonJson = Utility.getResourceAsJson(this, "/nodegroups/demoNodegroup.json");
-			SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
-			sgJson.setSparqlConn(demoConn);
-			
-			NgStore store = new NgStore(this.getStoreDataSei());	
-			JSONObject connJson = sgJson.getSparqlConnJson();
-			store.deleteNodeGroup("demoNodegroup");
-			store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK", true);
-	
-			// load demo model owl
-			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/hardware.owl");
-			demoSei.uploadOwlModelIfNeeded(owlStream);
-			owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/testconfig.owl");
-			demoSei.uploadOwlModelIfNeeded(owlStream);
-			
-			// ingest demo csv
-			demoSei.clearPrefix("http://demo/prefix");  // extra safe.  No clear graph inside nodegroup store
-			String data = Utility.getResourceAsString(this, "demoNodegroup_data.csv");
-			Dataset ds = new CSVDataset(data, true);
-			DataLoader dl = new DataLoader(sgJson, ds, demoSei.getUserName(), demoSei.getPassword());
-			dl.importData(false);
+			DemoSetupThread thread = new DemoSetupThread(this.getStoreDataSei(), servicesgraph_prop.buildSei());
+			thread.start();
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(new Exception("Error setting up demo", e));
-		} finally {
-			AuthorizationManager.clearSemtkSuper();
-		}
+		} 
 	}
 	
 	/**
