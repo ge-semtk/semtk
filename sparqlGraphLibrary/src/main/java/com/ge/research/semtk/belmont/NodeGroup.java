@@ -93,6 +93,8 @@ public class NodeGroup {
 	// not saved.  generated when needed
 	// for every Node, NodeItem or PropItem: list if union integer keys sorted "closest" (leaf) to furthest (parent)
 	private HashMap<String, ArrayList<Integer>> tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();
+	// same key as tmpUnionMemberHash.  Val us a hash from unionKey to parentStr.  Parent is the branch in tmpUnionMemberHash
+	private HashMap<String, HashMap<Integer, String>> tmpUnionParentHash = new HashMap<String, HashMap<Integer, String>>();
 	private int nextQueryInt;
 	
 	public NodeGroup(){
@@ -233,7 +235,7 @@ public class NodeGroup {
 		        	property.addInstanceValue(propertyValue);		        
 		        }	
 		        if (property.getSparqlID().isEmpty()) {
-		        	property.setSparqlID(BelmontUtil.generateSparqlID(property.getKeyName(), nodeGroup.getSparqlNameHash()));
+		        	property.setSparqlID(BelmontUtil.generateSparqlID(property.getKeyName(), nodeGroup.getAllVariableNames(node, property)));
 		        }
 		        property.setIsReturned(true);	// note - Javascript had this inside the for loop
 		        properties.add(property);		// note - Javascript had this inside the for loop
@@ -666,7 +668,6 @@ public class NodeGroup {
 	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception {
 		this.oInfo = uncompressOInfo;
 		HashMap<String, String> changedHash = new HashMap<String, String>();
-		this.resolveSparqlIdCollisions(jobj, changedHash);
 		int version = Integer.parseInt(jobj.get("version").toString());
 		if (version > NodeGroup.VERSION) {
 			throw new Exception (String.format("This software reads NodeGroups through version %d.  Can't read version %d.", NodeGroup.VERSION, version));
@@ -877,20 +878,25 @@ public class NodeGroup {
         return null;
     }
 	
-    public void addToUnionMembershipHash(int id, Node snode, NodeItem nItem, Node target) {
-    	this.addToUnionMembershipHash(id, new UnionKeyStr(snode, nItem, target).getStr());
+    private void addToUnionMembershipHashes(int id, String parentEntryStr, Node snode, NodeItem nItem, Node target) {
+    	this.addToUnionMembershipHashes(id, parentEntryStr, new UnionKeyStr(snode, nItem, target).getStr());
     }
-	public void addToUnionMembershipHash(int id, Node snode, PropertyItem pItem) {
-		this.addToUnionMembershipHash(id, new UnionKeyStr(snode, pItem).getStr());
+    private void addToUnionMembershipHashes(int id, String parentEntryStr, Node snode, PropertyItem pItem) {
+		this.addToUnionMembershipHashes(id, parentEntryStr, new UnionKeyStr(snode, pItem).getStr());
     }
-	public void addToUnionMembershipHash(int id, Node snode) {
-        this.addToUnionMembershipHash(id, new UnionKeyStr(snode).getStr());
+    private void addToUnionMembershipHashes(int id, String parentEntryStr, Node snode) {
+        this.addToUnionMembershipHashes(id, parentEntryStr, new UnionKeyStr(snode).getStr());
     }
-	public void addToUnionMembershipHash(int id, String keyStr) {
+    private void addToUnionMembershipHashes(int id, String parentEntryStr, String keyStr) {
 		if (!this.tmpUnionMemberHash.containsKey(keyStr)) {
 			this.tmpUnionMemberHash.put(keyStr, new ArrayList<Integer>());
 		}
 		this.tmpUnionMemberHash.get(keyStr).add(id);
+		
+        if (!this.tmpUnionParentHash.containsKey(keyStr)) {
+            this.tmpUnionParentHash.put(keyStr, new HashMap<Integer,String>());
+        }
+        this.tmpUnionParentHash.get(keyStr).put(id, parentEntryStr);
 	}
 	
 	private class DepthTuple implements Comparator {
@@ -923,12 +929,12 @@ public class NodeGroup {
         this.tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();  // hash entry str (3 tuple, not 4) to a list of unions
 
         // loop through all unionHash entries
-        for (Integer key : this.unionHash.keySet()) {
-            for (String entryStr : this.unionHash.get(key)) {
+        for (Integer unionKey : this.unionHash.keySet()) {
+            for (String entryStr : this.unionHash.get(unionKey)) {
                 UnionKeyStr entry = new UnionKeyStr(entryStr, this);
             
                 if (entry.getType() == PropertyItem.class) {
-                    this.addToUnionMembershipHash(key, entry.getStr());
+                    this.addToUnionMembershipHashes(unionKey, entryStr, entry.getStr());
                 } else {
                     // get list of nodes in the Union
                     ArrayList<Node> subgraphNodeList;
@@ -936,7 +942,7 @@ public class NodeGroup {
                         subgraphNodeList = this.getSubGraph(entry.getSnode(), new ArrayList<Node>());
                     } else {
                         // nodeItems
-                        this.addToUnionMembershipHash(key, entry.getStrNoRevFlag());
+                        this.addToUnionMembershipHashes(unionKey, entryStr, entry.getStrNoRevFlag());
 
                         // get subgraph to add
                     	ArrayList<Node> stopList = new ArrayList<Node>();
@@ -952,11 +958,11 @@ public class NodeGroup {
                     // add the nodes
                     for (Node subgraphNode : subgraphNodeList) {
                         // add the node
-                        this.addToUnionMembershipHash(key, subgraphNode);
+                        this.addToUnionMembershipHashes(unionKey, entryStr, subgraphNode);
 
                         // add its props
                         for (PropertyItem prop : subgraphNode.getReturnedPropertyItems()) {
-                            this.addToUnionMembershipHash(key, subgraphNode, prop);
+                            this.addToUnionMembershipHashes(unionKey, entryStr, subgraphNode, prop);
                         }
 
                         // add its connected nodeItems
@@ -967,7 +973,7 @@ public class NodeGroup {
                                 // - don't need membershipList, collapse it below (in this function)
                                 // - fix getUnionMembership  (document that "boss" is also a member)
                                 // - fix get LegalUnions
-                                this.addToUnionMembershipHash(key, subgraphNode, nodeItem, target);
+                                this.addToUnionMembershipHashes(unionKey, entryStr, subgraphNode, nodeItem, target);
                             }
                         }
                     }
@@ -1036,18 +1042,28 @@ public class NodeGroup {
         return (memberOfList != null) ? memberOfList.get(0) : null;    
     }
     
+	/**
+	 * Get unions this item could join
+	 * @param snode
+	 * @param nItem
+	 * @param target
+	 * @return
+	 */
 	 public ArrayList<Integer> getLegalUnions(Node snode, NodeItem nItem, Node target) {
-	    	return this.tmpUnionMemberHash.get(new UnionKeyStr(snode, nItem, target).getStr());
+	    	return this.getLegalUnions(this.getUnionKey(snode, nItem, target), new UnionKeyStr(snode, nItem, target).getStr());
 	 }
 	 public ArrayList<Integer> getLegalUnions(Node snode, PropertyItem pItem) {
-		 return this.tmpUnionMemberHash.get(new UnionKeyStr(snode, pItem).getStr());
+		 return this.getLegalUnions(this.getUnionKey(snode, pItem), new UnionKeyStr(snode, pItem).getStr());
 	 }
 	 public ArrayList<Integer> getLegalUnions(Node snode) {
-		 return this.tmpUnionMemberHash.get(new UnionKeyStr(snode).getStr());
+		 return this.getLegalUnions(this.getUnionKey(snode), new UnionKeyStr(snode).getStr());
 	 }
 	
-	 private ArrayList<Integer> getLegalUnions(String keyStr) {
+	 private ArrayList<Integer> getLegalUnions(Integer key, String keyStr) {
         ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
+        if (membershipList.get(0) == key) {
+        	membershipList.remove(0);
+        }
         ArrayList<Integer> ret = new ArrayList<Integer>();
         for (Integer unionKey : this.unionHash.keySet()) {
         	// get first member of union, and it's membership list
@@ -1056,10 +1072,8 @@ public class NodeGroup {
             // remove the member's union to be left with any other memberships
             firstMemberMembership.remove(0);
 
-            // add to ret if either of:
-            //      this union is keyStr's parent union
-            //      keyStr's non-parent union memberships match this union's first member's non-parent memberships.
-            if (unionKey == membershipList.get(0) || firstMemberMembership.size() == membershipList.size()) {
+            // add to ret union non-key memberships match this union's first member's non-key memberships.
+            if (firstMemberMembership.size() == membershipList.size()) {
             	boolean same = true;
             	for (int i=0; i < membershipList.size(); i++) {
             		if (firstMemberMembership.get(i) != membershipList.get(i)) {
@@ -1118,82 +1132,35 @@ public class NodeGroup {
 
 	private void legalizeAndReserviceSparqlIDs(Node node) {
 		String ID = node.getSparqlID();
-		if(this.sparqlNameHash.containsKey(ID)){	// this name was already used. 
-			ID = BelmontUtil.generateSparqlID(ID, this.sparqlNameHash);
+		HashSet<String> nameHash = this.getAllVariableNames(node);
+		if(nameHash.contains(ID)){	// this name was already used. 
+			ID = BelmontUtil.generateSparqlID(ID, nameHash);
 			node.setSparqlID(ID);	// update it. 
 		}
-		this.reserveSparqlID(ID);	// actually hold the name now. 
 		
+		String binding = node.getBinding();
+		if (binding != null && nameHash.contains(binding))  {
+			binding = BelmontUtil.generateSparqlID(binding, nameHash);
+			node.setBinding(binding);	// update it. 
+		}
 		// check the properties...
 		ArrayList<PropertyItem> props = node.getReturnedPropertyItems();
 		for(int i = 0; i < props.size(); i += 1){
-			String pID = props.get(i).getSparqlID();
-			if(this.sparqlNameHash.containsKey(pID)){
-				pID = BelmontUtil.generateSparqlID(pID, this.sparqlNameHash);
-				props.get(i).setSparqlID(pID);
+			PropertyItem pItem = props.get(i);
+			nameHash = this.getAllVariableNames(node, pItem);
+			String pID = pItem.getSparqlID();
+			if(nameHash.contains(pID)){
+				pID = BelmontUtil.generateSparqlID(pID, nameHash);
+				pItem.setSparqlID(pID);
 			}
-			this.reserveSparqlID(pID);
-		}
-		
-	}
-
-	public void reserveSparqlID(String id) {
-		if (id != null && id.length() > 0) {
-			this.sparqlNameHash.put(id, "1");
-		}
-	}
-
-	public void freeSparqlID(String id) {
-		// alert("retiring " + id);
-		if (id != null && id.length() > 0) {
-			this.sparqlNameHash.remove(id);
+			binding = pItem.getBinding();
+			if(binding != null && nameHash.contains(binding)){
+				binding = BelmontUtil.generateSparqlID(binding, nameHash);
+				pItem.setBinding(binding);
+			}
 		}
 	}
 
-	private JSONObject resolveSparqlIdCollisions(JSONObject jobj, HashMap<String, String> changedHash) {
-		// loop through a json object and resolve any SparqlID name collisions
-		// with this node group.
-		JSONObject retval = jobj;
-		
-		if(this.sparqlNameHash.isEmpty()){	// nothing to do.
-			return retval;
-		}
-		
-		// set up a temp hashMap to store the values. 
-		HashMap<String, String> tempHash = new HashMap<String, String>();
-		tempHash.putAll(this.sparqlNameHash);
-		
-		
-		JSONArray nodeArr = (JSONArray)jobj.get(JSON_KEY_NODELIST);
-		// loop through the nodes in the JSONArray
-		for(int k = 0; k < nodeArr.size(); k += 1){
-			JSONObject jnode = (JSONObject) nodeArr.get(k);
-			
-			jnode = BelmontUtil.updateSparqlIdsForJSON(jnode, "SparqlID", changedHash, tempHash);
-			
-			// iterate over property objects
-			JSONArray propArr = (JSONArray) jnode.get("propList");
-			
-			for (int j = 0; j < propArr.size(); ++j) {
-				JSONObject prop = (JSONObject) propArr.get(j);
-				prop = BelmontUtil.updateSparqlIdsForJSON(prop, "SparqlID", changedHash, tempHash);
-			}
-			
-			// and the node list			
-			JSONArray nodeItemArr = (JSONArray) jnode.get("nodeList");
-			
-			for (int j = 0; j < nodeItemArr.size(); ++j) {
-				JSONObject node = (JSONObject) nodeItemArr.get(j);
-				JSONArray nodeConnections = (JSONArray)node.get("SnodeSparqlIDs");
-				for(int m = 0; m < nodeConnections.size(); m += 1){
-					// this should update the values we care about
-					BelmontUtil.updateSparqlIdsForJSON(nodeConnections, m, changedHash, tempHash);
-				}
-			}
-		}
-		
-		return retval;
-	}
 	
 	/**
 	 * 
@@ -1362,6 +1329,108 @@ public class NodeGroup {
 		}
 		return ret;
 	}
+	
+	/**
+	 * Get the keyStr of the object at the branch of this snode's union
+	 * @param snode
+	 * @return
+	 */
+	private String getUnionParentStr(Node snode) {
+		Integer unionKey = this.getUnionMembership(snode);
+		if (unionKey == null) {
+			return null;
+		} else {
+			String keyStr = new UnionKeyStr(snode).toString();
+			return this.tmpUnionParentHash.get(keyStr).get(unionKey);
+		}
+	}
+	
+	/**
+	 * Get the keyStr of the object at the branch of this prop's union
+	 * @param snode
+	 * @return
+	 */
+	private String getUnionParentStr(Node snode, PropertyItem pItem) {
+		Integer unionKey = this.getUnionMembership(snode, pItem);
+		if (unionKey == null) {
+			return null;
+		} else {
+			String keyStr = new UnionKeyStr(snode, pItem).toString();
+			return this.tmpUnionParentHash.get(keyStr).get(unionKey);
+		}
+	}
+	
+	
+	/**
+	 * Get all variable names in the nodegroup
+	 * @return
+	 */
+	public HashSet<String> getAllVariableNames() {
+		return this.getAllVariableNames((Returnable) null, (Integer) null, (String) null);
+	}
+	
+	public HashSet<String> getAllVariableNames(Node targetSNode) {
+		this.updateUnionMemberships();
+
+		Integer targetUnion = this.getUnionMembership(targetSNode);
+		String targetParentStr = this.getUnionParentStr(targetSNode);
+		return this.getAllVariableNames(targetSNode, targetUnion, targetParentStr);
+	}
+	
+	public HashSet<String> getAllVariableNames(Node targetSNode, PropertyItem targetPItem) {
+		this.updateUnionMemberships();
+
+		Integer targetUnion = this.getUnionMembership(targetSNode, targetPItem);
+		String targetParentStr = this.getUnionParentStr(targetSNode, targetPItem);
+		return this.getAllVariableNames(targetPItem, targetUnion, targetParentStr);
+	}
+	
+	
+	/**
+	 * Get all variable names in the nodegroup except those in same union and different parent as targetItem
+	 * @param targetItem
+	 * @return
+	 */
+	private HashSet<String> getAllVariableNames(Returnable target, Integer targetUnion, String targetParentStr) {
+		
+		HashSet<String> ret = new HashSet<String>();
+		
+		for (Node snode : this.nodes) {
+			Integer snodeUnion = this.getUnionMembership(snode);
+			String snodeParentStr = this.getUnionParentStr(snode);
+			// if different union or no union or same union parent
+			if (snodeUnion != targetUnion || snodeParentStr == null || targetParentStr.equals(snodeParentStr)) {
+				if (snode != target ) {
+					ret.add(snode.getSparqlID());
+				
+					if (snode.getBinding() != null) {
+						ret.add(snode.getBinding());
+					}
+					if (snode.getIsTypeReturned()) {
+						ret.add(snode.getTypeSparqlID());
+					}
+				}
+			}
+			
+			for (PropertyItem prop : snode.getPropertyItems()) {
+				if (prop != target) {
+					Integer propUnion = this.getUnionMembership(snode, prop);
+					String propParentStr = this.getUnionParentStr(snode, prop);
+					// if different union or no union or same union parent
+					if (propUnion != targetUnion || propParentStr == null || targetParentStr.equals(propParentStr)) {
+						if (prop.getSparqlID() != null) {
+							ret.add(prop.getSparqlID());
+						}
+						if (prop.getBinding() != null) {
+							ret.add(prop.getBinding());
+						}
+					}
+				}
+			}
+		}
+		return ret;
+	}
+	
 	
 	/**
 	 * Find next node in path
@@ -2091,7 +2160,7 @@ public class NodeGroup {
 			
 			// count optional and non-optional returns properties
 			int optRet = 0;
-			int nonOptRet = snode.getIsReturned() ? 1 : 0;
+			int nonOptRet = (snode.getIsReturned() || snode.getIsBindingReturned()) ? 1 : 0;
 			for (PropertyItem prop :  snode.getReturnedPropertyItems()) {
 				if (prop.getIsOptional()) {
 					optRet += 1;
@@ -2135,12 +2204,12 @@ public class NodeGroup {
 			// loop through all snodes
 			for (Node snode : this.nodes) {
 				// count non-optional returns and optional properties
-				int nonOptReturnCount = snode.getIsReturned() ? 1 : 0;
+				int nonOptReturnCount = (snode.getIsReturned() || snode.getIsBindingReturned()) ? 1 : 0;
 				int optPropCount = 0;
 				for (PropertyItem pItem : snode.getReturnedPropertyItems()) {
 					if (! pItem.getIsOptional()) {
 						nonOptReturnCount++;
-					} else if (pItem.getIsReturned()) {
+					} else if (pItem.getIsReturned() || pItem.getIsBindingReturned()) {
 						optPropCount++;
 					}
 				}
@@ -2468,10 +2537,7 @@ public class NodeGroup {
 			}
 		}
 
-		// free sparql ids
-		for (String sparqlID : node.getSparqlIDList()) {
-			this.freeSparqlID(sparqlID);
-		}
+		this.removeInvalidOrderBy();
 
 		//unionHash
 		for (NodeItem n : node.getNodeItemList()) {
@@ -2776,10 +2842,6 @@ public class NodeGroup {
 
 		return new Node(nome, belprops, belnodes, fullNome, this);
 	}
-	
-	public HashMap<String, String> getSparqlNameHash() {
-		return sparqlNameHash;
-	}
 
 	/**
 	 * Adds one node without making any connections
@@ -2927,22 +2989,25 @@ public class NodeGroup {
 			return requestID;
 		}
 		
-		// change the id
-		this.freeSparqlID(oldID);
-		String newID = BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
-		this.reserveSparqlID(newID);
-		obj.setSparqlID(newID);
-		
-		// if obj is a Node, update idToNodeHash 
+		String newID;
 		if (obj instanceof Node) {
+			newID = BelmontUtil.generateSparqlID(requestID, this.getAllVariableNames((Node) obj));
+			obj.setSparqlID(newID);
+			
 			this.idToNodeHash.remove(oldID);
 			this.idToNodeHash.put(newID, (Node) obj);
+			
+		} else {
+			Node snode = this.getPropertyItemParentSNode((PropertyItem) obj);
+			
+			newID = BelmontUtil.generateSparqlID(requestID, this.getAllVariableNames(snode, (PropertyItem) obj));
+			obj.setSparqlID(newID);
 		}
-		return newID;
-	}
+		
+		
+		this.removeInvalidOrderBy();
 
-	public String requestSparqlID(String requestID) {
-		return BelmontUtil.generateSparqlID(requestID, this.sparqlNameHash);
+		return newID;
 	}
 	
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo) throws Exception  {
@@ -3105,6 +3170,15 @@ public class NodeGroup {
 	public Node getNodeItemParentSNode(NodeItem nItem) {
 		for (Node n : this.nodes) {
 			if (n.getNodeItemList().contains(nItem)) {
+				return n;
+			}
+		}
+		return null;
+	}
+	
+	public Node getPropertyItemParentSNode(PropertyItem pItem) {
+		for (Node n : this.nodes) {
+			if (n.getPropertyItems().contains(pItem)) {
 				return n;
 			}
 		}

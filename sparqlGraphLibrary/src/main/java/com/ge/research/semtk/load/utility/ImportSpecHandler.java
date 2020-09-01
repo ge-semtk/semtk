@@ -412,7 +412,7 @@ public class ImportSpecHandler {
 					
 					// make sure there's a sparql ID
 					if (propItem.getSparqlID().equals("")) {
-						String sparqlID = BelmontUtil.generateSparqlID(propItem.getKeyName(), importNg.getSparqlNameHash());
+						String sparqlID = BelmontUtil.generateSparqlID(propItem.getKeyName(), importNg.getAllVariableNames());
 						propItem.setSparqlID(sparqlID); 
 					}
 					

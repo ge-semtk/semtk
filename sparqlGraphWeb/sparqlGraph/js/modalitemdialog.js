@@ -134,7 +134,7 @@ define([	// properly require.config'ed
                 // swap in sparqlID
 				var savedID = this.item.getSparqlID();
 
-				this.item.setSparqlID(this.getSparqlIDText());
+				this.item.setSparqlID(this.getSparqlIDFromText());
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, this.item.buildFilterInConstraint(valList));
 
 				// swap sparqlID back out
@@ -178,9 +178,8 @@ define([	// properly require.config'ed
 			submit : function () {
 
 				var sparqlIDElem = this.getFieldElement(ModalItemDialog.SPARQL_ID_TEXT);
-				var sparqlID = this.getSparqlIDText();
+				var sparqlID = this.getSparqlIDFromText();
 				var optMinSelectElem = this.getFieldElement(ModalItemDialog.OPTIONAL);
-                var unionSelectElem = this.getFieldElement(ModalItemDialog.UNION_SELECT);
 
 				var returnChecked = this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked;
                 var returnTypeChecked = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK) ? this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK).checked : false;
@@ -204,13 +203,26 @@ define([	// properly require.config'ed
 								returnChecked,
                                 returnTypeChecked,
                                 (optMinSelectElem == null) ? null : parseInt(IIDXHelper.getSelectValues(optMinSelectElem)[0]),
-                                parseInt(IIDXHelper.getSelectValues(unionSelectElem)[0]),
+                                this.getUnionFromSelect(),
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
 								this.data
                             );
 			},
+
+
+            getUnionFromSelect : function () {
+                var unionSelectElem = this.getFieldElement(ModalItemDialog.UNION_SELECT);
+                if (unionSelectElem) {
+                    // normal operation
+                    return parseInt(IIDXHelper.getSelectValues(unionSelectElem)[0]);
+                } else {
+                    // early on and select doesn't exist yet, grab from this.item.
+                    var ret = this.nodegroup.getUnionKey(this.getItemSnode(), this.getItemProp());
+                    return (ret == null) ? ModalItemDialog.UNION_NONE : ret;
+                }
+            },
 
 			setStatus : function (msg) {
 				document.getElementById("mcdstatus").innerHTML= "<font color='red'>" + msg + "</font>";
@@ -298,7 +310,7 @@ define([	// properly require.config'ed
 				};
 			},
 
-			getSparqlIDText : function() {
+			getSparqlIDFromText : function() {
 				// get sparqlID out of text box, ensure single leading '?', remove spaces
 				// may return ""
 
@@ -316,7 +328,7 @@ define([	// properly require.config'ed
 				// swap in sparqlID
 				var savedID = this.item.getSparqlID();
 
-				this.item.setSparqlID(this.getSparqlIDText());
+				this.item.setSparqlID(this.getSparqlIDFromText());
 
 				//  build the regex, swap id back out
 				var newConstraint = this.item.buildFilterConstraint(null, null);
@@ -464,36 +476,83 @@ define([	// properly require.config'ed
 			},
 
 			sparqlIDOnFocus : function () {
-				this.prevName = this.getSparqlIDText();
+				this.prevName = this.getSparqlIDFromText();
 			},
+
+            // for union operations that require this.item to be in snode,prop form
+            getItemSnode : function() {
+                if (this.item instanceof PropertyItem) {
+                    return gNodeGroup.getPropertyItemParentSNode(this.item);
+                } else {
+                    return this.item;
+                }
+            },
+
+            // for union operations that require this.item to be in snode,prop form
+            getItemProp : function () {
+                if (this.item instanceof PropertyItem) {
+                    return this.item;
+                } else {
+                    return undefined;
+                }
+            },
+
+            getNameHash : function () {
+                var ret = null;
+                var newUnion = this.getUnionFromSelect();
+
+                // get snode and prop for union operations
+                var snode = this.getItemSnode();
+                var prop = this.getItemProp();
+
+                var prevUnion = this.nodegroup.getUnionKey(snode, prop);
+
+                // temporarily add to union shown in the dialog
+                this.nodegroup.rmFromUnions(snode, prop);
+                if (newUnion > -1) {
+                    gNodeGroup.addToUnion(newUnion, snode, prop);
+                }
+
+                // calculate all variable names
+                ret = gNodeGroup.getAllVariableNamesHash(snode, prop);
+
+                // restore union
+                if (newUnion > -1) {
+                    this.nodegroup.rmFromUnions(snode, prop);
+                    if (prevUnion != null && prevUnion > -1) {
+                        this.item.addToUnion(prevUnion, snode, prop);
+                    }
+                }
+
+                return ret;
+            },
+            unionSelectOnFocus : function() {
+                this.sparqlIDOnFocus();
+            },
+            unionSelectOnFocusOut : function() {
+                this.sparqlIDOnFocusOut();
+            },
 
 			sparqlIDOnFocusOut : function() {
 
-				var newName = this.getSparqlIDText();
+				var displayedName = this.getSparqlIDFromText();
 				var f = new SparqlFormatter();
 
 				// handle blank sparqlID
-				if (newName === "") {
-					newName = f.genSparqlID("ID", gNodeGroup.sparqlNameHash);
+				if (displayedName === "") {
+					newName = f.genSparqlID("ID", this.getNameHash());
 					ModalIidx.alert("Blank name is invalid", "Using " + newName + ".");
-				}
 
-                //------------------------------------ keeping code here for posterity Aug 2020 Paul
-                // check legality of non-blank sparqlID:
-                if (false) {
+				} else {
                     // for legality-checking: make sure newName has "?"
-                    if (newName[0][0] !== "?") {
-                        newName = "?" + newName;
+                    if (displayedName[0][0] !== "?") {
+                        displayedName = "?" + displayedName;
                     }
 
-                    // if it is a new name
-                    if (newName != this.item.getSparqlID()) {
-                        // make sure new name is legal
-                        var newName = f.genSparqlID(newName, gNodeGroup.sparqlNameHash);
-                        if (newName != newName) {
-                            ModalIidx.alert("SparqlID Invalid", "Using " + newName + " instead.");
-                        }
-                        newName = newName;
+                    // make sure new name is legal
+                    var newName = f.genSparqlID(displayedName, this.getNameHash());
+                    if (newName != displayedName) {
+                        ModalIidx.alert("SparqlID Invalid", "Using " + newName + " instead.");
                     }
 
                     this.updateConstraintSparqlID(this.prevName, newName);
@@ -503,12 +562,8 @@ define([	// properly require.config'ed
                     if (span) span.innerHTML = newName + "_type";
                 }
 
-
-                //------------------------------------
-
 				// set the new sparqlID (without the leading '?')
 				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, newName.slice(1));
-
 
 			},
 
@@ -588,7 +643,7 @@ define([	// properly require.config'ed
                 var sparqlID = this.item.getSparqlID();
 				if (sparqlID === "") {
 					var f = new SparqlFormatter();
-					sparqlID = f.genSparqlID(this.item.getKeyName(), gNodeGroup.sparqlNameHash);
+					sparqlID = f.genSparqlID(this.item.getKeyName(), this.getNameHash());
 				}
 				sparqlIDTxt.value = binding ? binding.slice(1) : sparqlID.slice(1);
 
@@ -605,7 +660,7 @@ define([	// properly require.config'ed
 				// return checkbox
 				returnCheck = IIDXHelper.createVAlignedCheckbox(
                                 this.getFieldID(ModalItemDialog.RETURN_CHECK),
-                                this.item.getIsReturned(),
+                                this.item.getIsReturned() || this.item.getIsBindingReturned(),
                                 "btn",
                                 this.returnCheckOnClick.bind(this)
                                 );
@@ -711,8 +766,9 @@ define([	// properly require.config'ed
                         selectList,
                         [this.nodegroup.getUnionName(itemUnionKey).join(",")]
                     );
-                var optDisabledList = "PEC TODO";
-``
+                unionSelect.onfocus    = this.unionSelectOnFocus.bind(this);
+				unionSelect.onfocusout = this.unionSelectOnFocusOut.bind(this);
+
 				// Top section is handled totally differently with sparqlformFlag
 				if (this.sparqlformFlag) {
 					// create a right-justified div just for optional
@@ -896,7 +952,7 @@ define([	// properly require.config'ed
 					// this.query();
 
 					// Set returned if it looks like this dialog is totally empty
-					if (this.item.getIsReturned() == false && this.item.getConstraints() == "") {
+					if (this.item.getIsReturned() == false && this.item.getIsBindingReturned() == false && this.item.getConstraints() == "") {
 						returnCheck.checked = true;
 						this.returnCheckOnClick();
 					}

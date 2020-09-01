@@ -22,6 +22,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,7 +36,7 @@ public class BelmontUtil {
 		DateFormat xsdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		return xsdFormat.format(d);
 	}
-	public static String generateSparqlID(String proposedName, HashMap<String, String> reservedNameHash){
+	public static String generateSparqlID(String proposedName, HashSet<String> reservedNameHash){
 		// accepts a suggested sparqlID and outputs either that ID or one based off it.
 		String retval = proposedName; 	// assume the proposed name is fine. 
 		
@@ -59,13 +60,13 @@ public class BelmontUtil {
 		retval = legalizeSparqlID(retval);
 		
 		// check that the name is not already used. 
-		if(reservedNameHash != null && reservedNameHash.containsKey(retval)){
+		if(reservedNameHash != null && reservedNameHash.contains(retval)){
 			// remove any number from the end of the name. 
 			retval = retval.replace("_\\d+$", "");
 			
 			// check for a better option.
 			int i = 0;
-			while(reservedNameHash.containsKey(retval + "_" + i )){
+			while(reservedNameHash.contains(retval + "_" + i )){
 				i += 1;
 			}
 			retval = retval + "_" + i;
@@ -109,7 +110,7 @@ public class BelmontUtil {
 		return retval;
 	}
 
-	public static JSONObject updateSparqlIdsForJSON(JSONObject jobj, String IndexName, HashMap<String, String> changedHash, HashMap<String, String> tempNameHash){
+	public static JSONObject updateSparqlIdsForJSON(JSONObject jobj, String IndexName, HashMap<String, String> changedHash, HashSet<String> tempNameHash){
 		// updates the names used in the json object given. this had to be divided into separate methods
 		JSONObject retval = jobj;
 		
@@ -121,7 +122,7 @@ public class BelmontUtil {
 			String newId = BelmontUtil.generateSparqlID(ID, tempNameHash);
 			if(!newId.equals(ID)){
 				changedHash.put(ID, newId);  // when we come across the key ID when processing the new JSON, we will replace it with newId
-				tempNameHash.put(newId, "0");
+				tempNameHash.add(newId);
 				retval.remove(IndexName);
 				retval.put(IndexName, newId);
 			}
@@ -130,26 +131,6 @@ public class BelmontUtil {
 		return retval;
 	}
 
-	public static JSONArray updateSparqlIdsForJSON(JSONArray jobj, int IndexName, HashMap<String, String> changedHash, HashMap<String, String> tempNameHash){
-			// updates the names used in the json array given. this had to be divided into separate methods
-			JSONArray retval = jobj;
-			
-			String ID = retval.get(IndexName).toString();
-			if(changedHash.keySet().contains(ID)){
-				// no op
-			}
-			else{
-				String newId = BelmontUtil.generateSparqlID(ID, tempNameHash);
-				if(!newId.equals(ID)){
-					changedHash.put(ID, newId);  // when we come across the key ID when processing the new JSON, we will replace it with newId
-					tempNameHash.put(newId, "0");
-					retval.set(IndexName, newId);
-				}
-			}
-			
-			return retval;
-	}
-	
 	public static String prefixQuery(String query) throws Exception {
 			
 		String prefixes = "";
