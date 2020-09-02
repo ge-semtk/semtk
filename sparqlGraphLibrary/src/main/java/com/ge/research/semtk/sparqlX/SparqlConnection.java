@@ -74,6 +74,13 @@ public class SparqlConnection {
 		this.addModelInterface(sei);
 	}
 	
+	public SparqlConnection(String name, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {
+		this();
+		this.name = name;
+		this.addDataInterface(dataSei);
+		this.addModelInterface(modelSei);
+	}
+	
 	@Deprecated
 	public SparqlConnection(String name, String serverType, String dataServicetURL, String knowledgeServiceURL, String dataset) throws Exception{
 		this();

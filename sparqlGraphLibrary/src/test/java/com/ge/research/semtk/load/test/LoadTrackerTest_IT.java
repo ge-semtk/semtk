@@ -1,0 +1,81 @@
+package com.ge.research.semtk.load.test;
+
+import static org.junit.Assert.*;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.load.LoadTracker;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
+import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.test.TestGraph;
+
+public class LoadTrackerTest_IT {
+
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+		TestGraph.clearGraph();
+	}
+	
+	@Test
+	public void test() throws Exception {
+		TestGraph.clearGraph();
+		SparqlEndpointInterface sei2 = new VirtuosoSparqlEndpointInterface("http://server:0001", "http://graph001");
+
+		LoadTracker tracker = this.buildLoadTracker();
+		tracker.trackLoad("key1", "file1", TestGraph.getSei());
+		tracker.trackLoad("key2", "file2", sei2);
+		tracker.trackClear(TestGraph.getSei());
+		
+		Table tab = tracker.query(null, null, null, null);
+		System.out.println(tab.toCSVString());
+
+		// check keys
+		assertEquals("1st file key doesn't match", "key1", tab.getCell(0, "fileKey"));
+		assertEquals("2nd file key doesn't match", "key2", tab.getCell(1, "fileKey"));
+		assertEquals("3rd file key doesn't match", LoadTracker.CLEAR, tab.getCell(2, "fileKey"));
+		
+		// check files
+		assertEquals("1st file doesn't match", "file1", tab.getCell(0, "fileName"));
+		assertEquals("2nd file doesn't match", "file2", tab.getCell(1, "fileName"));
+		
+		// sei search gets 2 of 3
+		tab = tracker.query(TestGraph.getSei(), null, null, null);
+		assertEquals("Query matching on sei returned wrong number of rows", 2, tab.getNumRows());
+		long epoch = tab.getCellAsLong(1, "epoch");
+				
+		// adding valid user also gets 2
+		tab = tracker.query(TestGraph.getSei(), ThreadAuthenticator.getThreadUserName(), null, null);
+		assertEquals("Query matching on sei/user returned wrong number of rows", 2, tab.getNumRows());
+
+		// adding invalid user gets 0
+		tab = tracker.query(TestGraph.getSei(), "Fred Unknown", null, null);
+		assertEquals("Query matching on sei/user returned wrong number of rows", 0, tab.getNumRows());
+
+		// <=  last time gets all
+		tab = tracker.query(null, null, null, epoch);
+		assertEquals("Query matching on endTime returned wrong number of rows", 3, tab.getNumRows());
+
+		// <= >= last time gets one
+		tab = tracker.query(null, null, epoch, epoch);
+		assertEquals("Query matching on startTime/endTime returned wrong number of rows", 1, tab.getNumRows());
+			
+		// delete last
+		tracker.delete(null, null, epoch, epoch);
+		tab = tracker.queryAll();
+		assertEquals("Wrong number of results after deleting one", 2, tab.getNumRows());
+		
+		// delete rest
+		tracker.deleteAll();
+		tab = tracker.queryAll();
+		assertEquals("Wrong number of results after deleting all", 0, tab.getNumRows());
+	}
+
+	LoadTracker buildLoadTracker() throws Exception {
+		return new LoadTracker(TestGraph.getSei(), TestGraph.getSei(), TestGraph.getUsername(), TestGraph.getPassword());
+	}
+}
