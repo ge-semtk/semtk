@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -48,6 +49,9 @@ import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utilityge.Utility;
 
 import io.swagger.annotations.ApiOperation;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 
 /**
  * Service to retrieve files from an external file store (e.g. S3)
@@ -146,11 +150,22 @@ public class FileStagingServiceRestController {
 	
 	/**
 	 * Copy file from S3 to stage location
-	 * TODO implement
+	 * @objectKey the key within the bucket (e.g. document/file.txt)
+	 * @destinationPath the local copy destination
+	 * 
+	 * TODO this is untested
 	 */
-	private void copyFromS3(String sourceFile, String destinationFilePath) throws Exception{		
-		LocalLogger.logToStdOut("Copy " + sourceFile + " from S3 to " + destinationFilePath);
-		S3BucketConfig s3Config = new S3BucketConfig(); // gets bucket/region/role from environment variables  TODO perhaps allow service to specify bucket
+	private void copyFromS3(String objectKey, String destinationFilePath) throws Exception{		
+		LocalLogger.logToStdOut("Copy " + objectKey + " from S3 to " + destinationFilePath);
+		
+		// TODO allow service to specify bucket?
+		S3BucketConfig s3Config = new S3BucketConfig(); // gets bucket/region/role from environment variables
+		
+		// build an AWS S3Client, copy the file
+		// TODO this should be a reusable method somewhere - create s3 package with S3BucketConfig and S3Connector, and make NeptuneSEI use it too?
+		S3Client s3Client = S3Client.builder().region(Region.of(s3Config.getRegion())).build();
+		GetObjectRequest req = GetObjectRequest.builder().bucket(s3Config.getName()).key(objectKey).build();
+		s3Client.getObject(req, Paths.get(destinationFilePath)); // copy file
 	}
 	
 	
