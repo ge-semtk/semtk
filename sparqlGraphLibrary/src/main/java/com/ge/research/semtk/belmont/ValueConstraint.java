@@ -23,6 +23,9 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.jena.sparql.lang.SPARQLParserFactory;
+
+import com.ge.research.semtk.utility.Utility;
 import com.github.jsonldjava.shaded.com.google.common.base.Strings;
 
 public class ValueConstraint {
@@ -218,6 +221,7 @@ public class ValueConstraint {
 	 */
 	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
 		
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		// VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> '1279'^^<http://www.w3.org/2001/XMLSchema#int> } 
 	
@@ -251,6 +255,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		
 		// FILTER (?trNum IN ( 1278, 1279 )) 
@@ -317,6 +322,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildRegexConstraint(String sparqlId, String regexp, XSDSupportedType valType) throws Exception{
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		String retval = "";
 		
@@ -342,6 +348,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildGreaterThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean greaterOrEqual) throws Exception{
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		valType.validate(val);
 		String retval = "";
 		
@@ -370,6 +377,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildLessThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean lessOrEqual) throws Exception{
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		valType.validate(val);
 
 		String retval = "";
@@ -400,6 +408,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildRangeConstraint(String sparqlId, String valLow, String valHigh, XSDSupportedType valType, boolean greaterOrEqual, boolean lessThanOrEqual) throws Exception{
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		valType.validate(valHigh);
 		valType.validate(valLow);
 

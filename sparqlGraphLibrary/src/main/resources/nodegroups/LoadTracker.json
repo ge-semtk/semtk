@@ -1,0 +1,218 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://vesuvius-test.crd.ge.com:2420",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 11,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "epoch",
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#epoch",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?epoch",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "fileKey",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#fileKey",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?fileKey",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "fileName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#fileName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?fileName",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "graphName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#graphName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?graphName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "seiServerAndPort",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#seiServerAndPort",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?seiServerAndPort",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "user",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#user",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?user",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": true,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "UploadLogEntry",
+				"fullURIName": "http://research.ge.com/semtk/loadlog#UploadLogEntry",
+				"subClassNames": [],
+				"SparqlID": "?UploadLogEntry",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "FULL_DELETE"
+			}
+		],
+		"orderBy": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "fileKey"
+			},
+			{
+				"colId": "col_1",
+				"colName": "fileName"
+			},
+			{
+				"colId": "col_2",
+				"colName": "graphName"
+			},
+			{
+				"colId": "col_3",
+				"colName": "seiServerAndPort"
+			},
+			{
+				"colId": "col_4",
+				"colName": "epoch"
+			},
+			{
+				"colId": "col_5",
+				"colName": "user"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?UploadLogEntry",
+				"type": "http://research.ge.com/semtk/loadlog#UploadLogEntry",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#epoch",
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#fileKey",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#fileName",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#graphName",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#seiServerAndPort",
+						"mapping": [
+							{
+								"colId": "col_3"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#user",
+						"mapping": [
+							{
+								"colId": "col_5"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

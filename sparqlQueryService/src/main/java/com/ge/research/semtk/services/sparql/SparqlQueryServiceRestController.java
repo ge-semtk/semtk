@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -52,7 +53,6 @@ import com.ge.research.semtk.services.sparql.requests.SparqlPrefixesAuthRequestB
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryRequestBody;
 import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -463,12 +463,10 @@ public class SparqlQueryServiceRestController {
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
 			
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
-				// S3 bucket is option.  It can be filled with blanks and nulls
-				S3BucketConfig s3Config= new S3BucketConfig(
-						serviceProps.getS3ClientRegion(), 
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(
+						serviceProps.getS3ClientRegion(),
 						serviceProps.getS3BucketName(), 
 						serviceProps.getAwsIamRoleArn());
-				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 			
 			if (! sei.isAuth()) { 
@@ -523,11 +521,10 @@ public class SparqlQueryServiceRestController {
 			
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
 				// S3 bucket is option.  It can be filled with blanks and nulls
-				S3BucketConfig s3Config= new S3BucketConfig(
-						serviceProps.getS3ClientRegion(), 
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(
+						serviceProps.getS3ClientRegion(),
 						serviceProps.getS3BucketName(), 
 						serviceProps.getAwsIamRoleArn());
-				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 			
 			if (! sei.isAuth()) { 
@@ -582,12 +579,11 @@ public class SparqlQueryServiceRestController {
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graphName, user, password);
 						
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
-				// S3 bucket is option.  It can be filled with blanks and nulls
-				S3BucketConfig s3Config= new S3BucketConfig(
-						serviceProps.getS3ClientRegion(), 
+
+				((NeptuneSparqlEndpointInterface)sei).setS3Config(
+						serviceProps.getS3ClientRegion(),
 						serviceProps.getS3BucketName(), 
 						serviceProps.getAwsIamRoleArn());
-				((NeptuneSparqlEndpointInterface)sei).setS3Config(s3Config);
 			}
 			
 			if (! sei.isAuth()) { 

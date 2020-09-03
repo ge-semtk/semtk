@@ -18,14 +18,34 @@
 
 package com.ge.research.semtk.services.ingestion;
 
+import javax.validation.constraints.NotNull;
+
 import com.ge.research.semtk.utility.LocalLogger;
+
+import io.swagger.annotations.ApiModelProperty;
 
 
 public class IngestionFromStringsRequestBody {
-	
+	@NotNull
+	@ApiModelProperty(
+	   value = "template",
+	   required = true,
+	   example = "{ nodegroup json with ingestion template }")
 	public String template;
+	
+	@NotNull
+	@ApiModelProperty(
+	   value = "data",
+	   required = true,
+	   example = "csv,file\n1,2\n")
 	public String data;
 	
+	@ApiModelProperty(
+	   value = "data",
+	   required = false,
+	   example = "true")
+	public Boolean logFlag = false;
+
 	public String getTemplate() {
 		return template;
 	}
@@ -48,4 +68,11 @@ public class IngestionFromStringsRequestBody {
 		this.data = data;
 	}
 	
+	public Boolean getLogFlag() {
+		return logFlag;
+	}
+
+	public void setLogFlag(Boolean logFlag) {
+		this.logFlag = logFlag;
+	}
 }
