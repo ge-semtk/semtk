@@ -1,4 +1,4 @@
-package com.ge.research.semtk.amazonaws.http;
+package com.ge.research.semtk.aws;
 
 import java.io.IOException;
 

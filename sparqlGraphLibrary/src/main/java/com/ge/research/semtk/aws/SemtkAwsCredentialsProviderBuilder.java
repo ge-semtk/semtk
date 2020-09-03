@@ -1,4 +1,4 @@
-package com.ge.research.semtk.sparqlX;
+package com.ge.research.semtk.aws;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;

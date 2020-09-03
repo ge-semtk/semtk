@@ -1,4 +1,4 @@
-package com.ge.research.semtk.s3Bucket.test;
+package com.ge.research.semtk.aws;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
@@ -10,11 +10,10 @@ import java.util.UUID;
 import org.junit.Test;
 
 import com.arangodb.internal.util.IOUtils;
-import com.ge.research.semtk.sparqlX.S3BucketConfig;
+import com.ge.research.semtk.aws.S3Connector;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -22,22 +21,20 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
-public class s3BucketDemoTest_IT {
+public class S3ConnectorTest_IT {
 
 	@Test
-	public void test() throws IOException {
+	public void test() throws Exception, IOException {
 		// pull S3 environment variables, skipping the test if they aren't set
-		S3BucketConfig config;
+		S3Connector s3conn;
 		try {
-			config = new S3BucketConfig();
+			String region = System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION");
+			String name = System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME");
+			s3conn = new S3Connector(region, name);
 		} catch (Exception e) {
 			assumeTrue(e.getMessage(), false);
 			return;
 		}
-		
-		// build an AWS S3Client
-		Region region = Region.of(config.getRegion());
-		S3Client s3 = S3Client.builder().region(region).build();	
 		
 		// create an s3 object from some text
 		String keyName = UUID.randomUUID().toString() + ".txt";
@@ -45,18 +42,10 @@ public class s3BucketDemoTest_IT {
 		byte data[] = origStr.getBytes();
 		
 		// write object to S3
-		PutObjectResponse res = s3.putObject(PutObjectRequest.builder().bucket(config.getName()).key(keyName).build(),
-				RequestBody.fromBytes(data));
-        
-		assertTrue(
-				"Error putting object into s3: " + res.sdkHttpResponse().statusText(),
-				res.sdkHttpResponse().isSuccessful() );
+		s3conn.putObject(keyName, data);
 		
 		// read it back
-		ResponseInputStream<GetObjectResponse> s3objectResponse = s3.getObject(GetObjectRequest.builder().bucket(config.getName()).key(keyName).build());
-		
-		DataInputStream is = new DataInputStream(s3objectResponse);
-	    byte result[] = IOUtils.toByteArray(is);
+	    byte result[] = s3conn.getObject(keyName);
 		
 	    String resStr = new String(result);
 	    assertTrue(
@@ -64,7 +53,7 @@ public class s3BucketDemoTest_IT {
 	    		resStr.equals(origStr));
 	    
 	    // delete it
-		s3.deleteObject(DeleteObjectRequest.builder().bucket(config.getName()).key(keyName).build());
+		s3conn.deleteObject(keyName);
 	}
 
 }

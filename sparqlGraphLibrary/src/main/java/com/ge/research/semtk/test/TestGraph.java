@@ -33,6 +33,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
@@ -86,7 +87,12 @@ public class TestGraph {
 		}
 		
 		if (sei instanceof NeptuneSparqlEndpointInterface) {
-			((NeptuneSparqlEndpointInterface) sei).setS3Config(IntegrationTestUtility.getS3Config());
+
+			String region = IntegrationTestUtility.get("neptuneupload.s3ClientRegion");
+			String iamRoleArn = IntegrationTestUtility.get("neptuneupload.awsIamRoleArn");
+			String name =   IntegrationTestUtility.get("neptuneupload.s3BucketName");
+	       
+			((NeptuneSparqlEndpointInterface) sei).setS3Config(region, name, iamRoleArn);
 		}
 		return sei;
 	}

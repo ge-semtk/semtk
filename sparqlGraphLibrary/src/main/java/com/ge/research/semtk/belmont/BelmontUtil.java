@@ -102,11 +102,13 @@ public class BelmontUtil {
 		// removes illeagal characters from the sparqlID and then 
 		// adds a proper "?" as a prefix. 
 		
-		String retval = proposedName.replaceAll(ILLEGAL_CHAR, "_");
-		if(!retval.startsWith("?")){
-			retval = "?" + retval;
-		}
-		return retval;
+		// remove ? if any
+		String retval = proposedName.startsWith("?") ? proposedName.substring(1) : proposedName;
+		// clean
+		retval = retval.replaceAll(ILLEGAL_CHAR, "_");
+		// put ? (back) on
+		return "?" + retval;
+		
 	}
 
 	public static JSONObject updateSparqlIdsForJSON(JSONObject jobj, String IndexName, HashMap<String, String> changedHash, HashMap<String, String> tempNameHash){

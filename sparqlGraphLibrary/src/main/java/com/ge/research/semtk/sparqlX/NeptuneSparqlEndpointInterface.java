@@ -44,11 +44,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
-import com.ge.research.semtk.amazonaws.http.AWSSessionTokenApacheInterceptor;
-import com.ge.research.semtk.amazonaws.http.AwsCredentialsProviderAdaptor;
 import com.ge.research.semtk.auth.AuthorizationException;
-
+import com.ge.research.semtk.aws.AWSRequestSigningApacheInterceptor;
+import com.ge.research.semtk.aws.AWSSessionTokenApacheInterceptor;
+import com.ge.research.semtk.aws.AwsCredentialsProviderAdaptor;
+import com.ge.research.semtk.aws.S3Connector;
+import com.ge.research.semtk.aws.SemtkAwsCredentialsProviderBuilder;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -59,13 +60,6 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
-
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
@@ -79,25 +73,49 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	private static String STATUS_IN_PROGRESS = "LOAD_IN_PROGRESS";
 	private static String STATUS_NOT_STARTED = "LOAD_NOT_STARTED";
 	
-	private S3BucketConfig s3Config = null;
+	private S3Connector s3Conn = null;
+	private String iamRoleArn = null;
 	
 	TreeMap<String,String> addedParams = new TreeMap<String,String>();
 	
 	private static final String SUCCESS = "succeeded";
-	/**
-	 * Constructor
-	 */
-	public NeptuneSparqlEndpointInterface(String server, String graph)	throws Exception {
-		super(server, graph);
-	}
- 
+	
 	/**
 	 * Constructor used for authenticated connections... like insert/update/delete/clear
 	 */
 	public NeptuneSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
 		super(server, graph, user, pass);
+		this.readEnv();
 	}
 	
+	public NeptuneSparqlEndpointInterface(String server, String graph)	throws Exception {
+		super(server, graph);
+		this.readEnv();
+	}
+	
+	private void readEnv() throws Exception {
+		String region = System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION");
+		String name = System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME");
+		this.iamRoleArn = System.getenv("NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN");
+		String failedVariables = "";
+
+		if (region == null || region.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_CLIENT_REGION ";
+		}
+		if (name == null || name.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_BUCKET_NAME ";
+		}
+		if (iamRoleArn == null || iamRoleArn.isEmpty()) {
+			failedVariables += "NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN ";
+		}
+
+		if (!failedVariables.isEmpty()) {
+			throw new Exception("Config error: can't perform Neptune upload with blank variable(s) in SemTK service environment: \n" + failedVariables);
+		}
+
+		this.s3Conn = new S3Connector(region, name);
+	}
+ 
 	public int getInsertQueryMaxSize()    { return 100000; }
 	public int getInsertQueryOptimalSize()  { return 5000; }
 	
@@ -205,26 +223,15 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	public JSONObject executeUploadAPI(byte[] data, String format) throws Exception {
 		
-		this.authorizeUpload();
+		this.authorizeUpload();		
 		
-		if (this.s3Config == null) {
-			this.s3Config = new S3BucketConfig();  // reads from ENV
-		}
-		
-		Region region = Region.of(this.s3Config.region);
-		S3Client s3 = S3Client.builder().region(region).build();	
 		String keyName = UUID.randomUUID().toString() + "." + format;
 		SimpleResultSet ret = new SimpleResultSet();
 
 		try {
 			
 			// put the file
-			PutObjectResponse res = s3.putObject(PutObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build(),
-					RequestBody.fromBytes(data));
-	        
-			if (res.sdkHttpResponse().isSuccessful() == false) {
-				throw new Exception("Error putting object into s3: " + res.sdkHttpResponse().statusText());
-			}
+			this.s3Conn.putObject(keyName, data);
 			
 	        // try loading from S3, while being a little careful about concurrent load limit
 	        String loadId = null;
@@ -275,9 +282,9 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			
         } finally {
         	// try to delete file from s3
-        	LocalLogger.logToStdErr("Attempting to delete file " + keyName + " from bucket " + this.s3Config.name);
+        	LocalLogger.logToStdErr("Attempting to delete file " + keyName + " from bucket " + this.s3Conn.getName());
         	try {
-        		s3.deleteObject(DeleteObjectRequest.builder().bucket(this.s3Config.name).key(keyName).build());
+        		this.s3Conn.deleteObject(keyName);
         	} catch (Exception ee) {
         		// if it fails, log it but don't mess up the return
         		LocalLogger.printStackTrace(ee);
@@ -321,10 +328,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		httppost.addHeader("Content-Type", "application/json");
 		
 		JSONObject parametersJSON = new JSONObject();
-		parametersJSON.put("source", "s3://" + this.s3Config.getName() + "/" + keyName);
+		parametersJSON.put("source", "s3://" + this.s3Conn.getName() + "/" + keyName);
 		parametersJSON.put("format", format);
-		parametersJSON.put("iamRoleArn", this.s3Config.getIamRoleArn());
-		parametersJSON.put("region", this.s3Config.getRegion());
+		parametersJSON.put("iamRoleArn", this.iamRoleArn);
+		parametersJSON.put("region", this.s3Conn.getRegion());
 		parametersJSON.put("failOnError", "TRUE");
 		
 		JSONObject parserConfig = new JSONObject();
@@ -456,8 +463,9 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * @param s3Config
 	 */
 	
-	public void setS3Config(S3BucketConfig s3Config) {
-		this.s3Config = s3Config;
+	public void setS3Config(String region, String bucketName, String iamRoleArn) {
+		this.s3Conn = new S3Connector(region, bucketName);
+		this.iamRoleArn = iamRoleArn;
 	}
 	
 	@Override
