@@ -62,7 +62,9 @@ public class LoadTrackerTest_IT {
 
 		// <= >= last time gets one
 		tab = tracker.query(null, null, epoch, epoch);
-		assertEquals("Query matching on startTime/endTime returned wrong number of rows", 1, tab.getNumRows());
+		for (int i = 0; i < tab.getNumRows(); i++) {
+			assertEquals("Query matching on startTime/endTime returned row with wrong epoch", epoch, tab.getCellAsInt(i,  "epoch"));
+		}
 			
 		// delete last
 		tracker.delete(null, null, epoch, epoch);
