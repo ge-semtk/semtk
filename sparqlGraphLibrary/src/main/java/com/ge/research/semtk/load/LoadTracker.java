@@ -118,30 +118,35 @@ public class LoadTracker {
 	}
 	
 	public Table queryAll() throws Exception {
-		return this.query(null, null, null, null);
+		return this.query(null, null, null, null, null);
 	}
 	
-	public Table query(SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
-		NodeGroup ng = this.getConstrainedNodeGroup(sei, user, startEpoch, endEpoch);
+	public Table query(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
+		NodeGroup ng = this.getConstrainedNodeGroup(fileKey, sei, user, startEpoch, endEpoch);
 
 		String query = ng.generateSparqlSelect();
 		return this.dataSei.executeQueryToTable(query);
 	}
 	
 	public void deleteAll() throws Exception {
-		this.delete(null, null, null, null);
+		this.delete(null, null, null, null, null);
 	}
 	
-	public void delete(SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
-		NodeGroup ng = this.getConstrainedNodeGroup(sei, user, startEpoch, endEpoch);
+	public void delete(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
+		NodeGroup ng = this.getConstrainedNodeGroup(fileKey, sei, user, startEpoch, endEpoch);
 
 		String query = ng.generateSparqlDelete(null);
 		this.dataSei.executeQueryAndConfirm(query);
 	}
 	
-	private NodeGroup getConstrainedNodeGroup(SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
+	private NodeGroup getConstrainedNodeGroup(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
 		NodeGroup ng = this.sgjson.getNodeGroup();
 		PropertyItem pItem;
+		
+		if (fileKey != null) {
+			pItem = ng.getPropertyItemBySparqlID("fileKey");
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("fileKey", fileKey, XSDSupportedType.STRING));	
+		}
 		
 		if (sei != null) {
 			pItem = ng.getPropertyItemBySparqlID("seiServerAndPort");
