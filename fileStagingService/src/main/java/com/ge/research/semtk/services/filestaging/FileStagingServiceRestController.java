@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -36,12 +38,12 @@ import javax.annotation.PostConstruct;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.S3BucketConfig;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -158,14 +160,25 @@ public class FileStagingServiceRestController {
 	private void copyFromS3(String objectKey, String destinationFilePath) throws Exception{		
 		LocalLogger.logToStdOut("Copy " + objectKey + " from S3 to " + destinationFilePath);
 		
-		// TODO allow service to specify bucket?
-		S3BucketConfig s3Config = new S3BucketConfig(); // gets bucket/region/role from environment variables
+		S3Connector s3Conn = new S3Connector("region", "bucketName"); // TODO get from Service properties
 		
-		// build an AWS S3Client, copy the file
-		// TODO this should be a reusable method somewhere - create s3 package with S3BucketConfig and S3Connector, and make NeptuneSEI use it too?
-		S3Client s3Client = S3Client.builder().region(Region.of(s3Config.getRegion())).build();
-		GetObjectRequest req = GetObjectRequest.builder().bucket(s3Config.getName()).key(objectKey).build();
-		s3Client.getObject(req, Paths.get(destinationFilePath)); // copy file
+		// TODO move this to S3Connector as getObject(key, filename)?  add test
+		byte[] fileContents = s3Conn.getObject(objectKey);
+		OutputStream os = null;   
+		try {  
+			os = new FileOutputStream(destinationFilePath);
+			os.write(fileContents); 
+		} catch (Exception e) { 
+			throw e;
+		} finally{
+			os.close();
+			os = null;
+		}
+
+		// TODO alternative copy code
+		// GetObjectRequest req = GetObjectRequest.builder().bucket(s3Config.getName()).key(objectKey).build();
+		// s3Client.getObject(req, Paths.get(destinationFilePath)); // copy file
+		
 	}
 	
 	
