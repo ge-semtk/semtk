@@ -56,7 +56,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         if (nodegroupArr.length < 1) {
                              this.msi.userFailureCallback("<b>Failure retrieving nodegroup.</b><br>Nodegroup was not found: " + ngId);
                         } else {
-                            jsCallback(nodegroupArr[0]);
+                            jsCallback(nodegroupArr[0], id);
                         }
                     }
                 }.bind(this, jsonStrCallback, id);
