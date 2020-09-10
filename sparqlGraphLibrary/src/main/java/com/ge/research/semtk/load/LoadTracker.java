@@ -117,6 +117,16 @@ public class LoadTracker {
 		
 	}
 	
+	/**
+	 * throw exception of quick query fails
+	 * @throws Exception
+	 */
+	public void test() throws Exception {
+		// query should return no rows.  might return garbage.
+		Long epoch = Long.valueOf(1);
+		this.query(null, null, null, epoch, epoch);
+	}
+	
 	public Table queryAll() throws Exception {
 		return this.query(null, null, null, null, null);
 	}
