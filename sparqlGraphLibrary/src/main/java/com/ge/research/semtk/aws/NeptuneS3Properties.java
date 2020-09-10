@@ -1,4 +1,4 @@
-package com.ge.research.semtk.sparqlX;
+package com.ge.research.semtk.aws;
 
 import com.ge.research.semtk.properties.Properties;
 

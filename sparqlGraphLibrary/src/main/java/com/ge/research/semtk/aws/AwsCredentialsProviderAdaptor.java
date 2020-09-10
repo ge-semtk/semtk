@@ -1,4 +1,4 @@
-package com.ge.research.semtk.amazonaws.http;
+package com.ge.research.semtk.aws;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 

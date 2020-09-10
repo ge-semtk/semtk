@@ -17,7 +17,7 @@
 	</repositories>
 
 	<dependencies>
-
+	
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>

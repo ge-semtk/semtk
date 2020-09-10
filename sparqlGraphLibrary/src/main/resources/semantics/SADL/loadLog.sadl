@@ -1,0 +1,17 @@
+uri "http://research.ge.com/semtk/loadlog".
+
+
+LogEntry is a class,
+	described by epoch with a single value of type int,
+	described by seiServerAndPort with a single value of type string,
+	described by graphName with a single value of type string,
+	described by user with values of type string.
+	
+UploadLogEntry is a type of LogEntry,
+	described by fileName with a single value of type string,
+	described by fileKey with a single value of type string.
+	
+// Until we have union queries working nicely, we won't use this
+// but just look for UploadLogEntries with no fileName
+//
+// ClearLogEntry is a type of LogEntry.

@@ -39,6 +39,7 @@
     var gUploadTab = null;
     var gReady = false;
 
+    var gNodeGroupName = null;
     var gNodeGroupChangedFlag = false;
     var gQueryTextChangedFlag = false;
 
@@ -130,7 +131,7 @@
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
 
                                         var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);
+                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);   // PEC TODO +
                                     }
                                   );
 
@@ -725,11 +726,27 @@
     	});
     };
 
+    // update display of nodegroup store id and connection
+    var updateStoreConnStr = function() {
+        var connStr = "";
+        if (gNodeGroupName != null ) {
+            connStr = "<b>Name: </b>" + gNodeGroupName;
+
+            if (gNodeGroupChangedFlag == true) {
+                connStr += "*";
+            }
+            connStr += "&nbsp&nbsp&nbsp";
+        }
+        connStr += (gConn != null && gConn.getName() != null) ? ("<b>Conn: </b>" + gConn.getName()) : "";
+
+        document.getElementById("spanConnection").innerHTML = connStr;
+    };
+
     var setConn = function (conn) {
         gConn = conn;
-        var connStr = (gConn != null && gConn.getName() != null) ? ("<b>Conn: </b>" + gConn.getName()) : "";
-        document.getElementById("spanConnection").innerHTML = connStr;
-    }
+        this.updateStoreConnStr();
+    };
+
     var getQueryClientOrInterface = function() {
     	return (getQuerySource() == "DIRECT") ? gConn.getDefaultQueryInterface() : gQueryClient;
     };
@@ -804,11 +821,11 @@
     var doQueryLoadFile = function (file) {
     	var r = new FileReader();
 
-    	r.onload = function () {
+    	r.onload = function (name) {
 
-                checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, r.result));
+                checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, r.result, name));    // PEC TODO +
 
-    	};
+    	}.bind(this, file.name);
 	    r.readAsText(file);
 
     };
@@ -879,7 +896,7 @@
         }
     };
 
-    var doQueryLoadJsonStr = function(jsonStr) {
+    var doQueryLoadJsonStr = function(jsonStr, optNgName) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'],
                 function(SparqlGraphJson, ModalIidx) {
@@ -917,16 +934,16 @@
                 ModalIidx.choose("New Connection",
                                  "Nodegroup is from a different SPARQL connection<br><br>Which one do you want to use?",
                                  ["Cancel",     "Keep Current",                     "From File"],
-                                 [function(){}, doQueryLoadFile2.bind(this, sgJson), doQueryLoadConn.bind(this, sgJson, conn)]
+                                 [function(){}, doQueryLoadFile2.bind(this, sgJson, optNgName), doQueryLoadConn.bind(this, sgJson, conn, optNgName)]
                                  );
 
             // use the new connection
             } else if (!gConn) {
-                doQueryLoadConn(sgJson, conn);
+                doQueryLoadConn(sgJson, conn, optNgName);
 
             // keep the old connection
             } else {
-                doQueryLoadFile2(sgJson);
+                doQueryLoadFile2(sgJson, optNgName);
             }
 		});
 
@@ -936,7 +953,7 @@
      * loads connection and makes call to load rest of sgJson
      * part of doQueryLoadJsonStr callback chain
      */
-    var doQueryLoadConn = function(sgJson, conn) {
+    var doQueryLoadConn = function(sgJson, conn, optNgName) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'],
                 function(SparqlGraphJson, ModalIidx) {
@@ -945,7 +962,7 @@
 
             // function pointer for the thing we do next no matter what happens:
             //    doLoadConnection() with doQueryLoadFile2() as the callback
-            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson));
+            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson, optNgName));
 
             if (! existName) {
                 // new connection: ask if user wants to save it locally
@@ -980,7 +997,7 @@
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
-    var doQueryLoadFile2 = function(sgJson) {
+    var doQueryLoadFile2 = function(sgJson, optNgName) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
     	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper'],
@@ -988,6 +1005,9 @@
 
             clearGraph();
             logEvent("SG Loaded Nodegroup");
+
+            gNodeGroupName = optNgName != undefined ? optNgName : null;
+            gNodeGroupChangedFlag = false;
 
             try {
                 sgJson.getNodeGroup(gNodeGroup, gOInfo);
@@ -1370,7 +1390,7 @@
         // callback to the dialog is doQueryLoadJsonStr
         checkAnythingUnsavedThen(
             gStoreDialog.launchRetrieveDialog.bind(gStoreDialog, doQueryLoadJsonStr)
-        );
+        );                                                                                        // PEC TODO +
     };
 
    	var doDeleteFromNGStore = function() {
@@ -1470,6 +1490,7 @@
             gMappingTab.setChangedFlag(false);
             queryTextChanged(false);
         }
+        updateStoreConnStr();
     };
 
     var queryTextChanged = function(flag) {
@@ -1913,9 +1934,12 @@
     	gNodeGroup.clear();
         gNodeGroup.setSparqlConnection(gConn);
         gMappingTab.clear();
+        gNodeGroupName = null;
+        gNodeGroupChangedFlag = false;
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();
+
     };
 
     var clearMappingTab = function () {

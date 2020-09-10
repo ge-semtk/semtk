@@ -860,6 +860,8 @@ define([	// properly require.config'ed
 				elem.style.width = "100%";
 				elem.style.maxWidth = "100%";
 				elem.style.boxSizing = "border-box";
+                elem.onkeydown = function(event) { return event.keyCode != 13; };   // disallow line returns
+
 				dom.appendChild(elem);
 
 				// -----  Auto-complete section ------

@@ -32,6 +32,9 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	private String sparqlPassword = "";
 	private int batchSize = 50;
 	
+	private String loadTrackAwsRegion = "";
+	private String loadTrackS3Bucket = "";
+	
 	public IngestionProperties() {
 		super();
 		setPrefix("ingestion");
@@ -62,6 +65,22 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 		return this.batchSize;
 	}
 	
+	public String getLoadTrackAwsRegion() {
+		return loadTrackAwsRegion;
+	}
+
+	public void setLoadTrackAwsRegion(String loadTrackAwsRegion) {
+		this.loadTrackAwsRegion = loadTrackAwsRegion;
+	}
+
+	public String getLoadTrackS3Bucket() {
+		return loadTrackS3Bucket;
+	}
+
+	public void setLoadTrackS3Bucket(String loadTrackS3Bucket) {
+		this.loadTrackS3Bucket = loadTrackS3Bucket;
+	}
+
 	public void validate() throws Exception {
 		super.validate();
 // Neptune uses empty.  Maybe fuseki too?

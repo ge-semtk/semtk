@@ -14,11 +14,12 @@
 // downloaded from:  https://github.com/awslabs/aws-request-signing-apache-interceptor
 // MIT License
 
-package com.amazonaws.http;
+package com.ge.research.semtk.aws;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.Signer;
+import com.amazonaws.http.HttpMethodName;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntityEnclosingRequest;

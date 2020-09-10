@@ -17,11 +17,20 @@
 
 package com.ge.research.semtk.services.ingestion;
 
+import javax.validation.constraints.NotNull;
+
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * For requests that provide a SPARQL connection to override the connection in the template.
  */
 public class IngestionFromStringsWithNewConnectionRequestBody extends IngestionFromStringsRequestBody {
 
+	@NotNull
+	@ApiModelProperty(
+	   value = "connectionOverride",
+	   required = true,
+	   example = "{ connection json }")
 	private String connectionOverride;
 	
 	public String getConnectionOverride(){
