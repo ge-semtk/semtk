@@ -2,6 +2,10 @@ package com.ge.research.semtk.load.test;
 
 import static org.junit.Assert.*;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -77,6 +81,8 @@ public class LoadTrackerTest_IT {
 		assertEquals("Wrong number of results after deleting all", 0, tab.getNumRows());
 	}
 
+	
+	
 	LoadTracker buildLoadTracker() throws Exception {
 		return new LoadTracker(TestGraph.getSei(), TestGraph.getSei(), TestGraph.getUsername(), TestGraph.getPassword());
 	}

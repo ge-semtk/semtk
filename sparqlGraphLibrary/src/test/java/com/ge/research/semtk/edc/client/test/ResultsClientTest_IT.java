@@ -464,6 +464,35 @@ public class ResultsClientTest_IT {
 	}
 	
 	@Test
+	public void testBinaryFileSecurity() throws Exception {
+
+
+		// Happy path
+		File testFile = new File("src/test/resources/test.csv");
+		File testFile2 = new File("src/test/resources/test2.csv");
+		String jobId1 = "../../important.txt";
+		String jobId2 = "${cd}my/$%var*)(/important.txt";
+		try {
+
+			SimpleResultSet res = client.execStoreBinaryFile(jobId1, testFile);
+			fail("unexpected success with jobid=" + jobId1);
+		} catch (Exception e) {
+		}finally {
+			cleanup(client, jobId1);
+		}
+		
+		try {
+
+			SimpleResultSet res = client.execStoreBinaryFile(jobId2, testFile);
+			fail("unexpected success with jobid=" + jobId2);
+		} catch (Exception e) {
+		}finally {
+			cleanup(client, jobId2);
+		}
+		
+	}
+	
+	@Test
 	public void testStoreAndRetrieveBinaryFilePath() throws Exception {
 
 		

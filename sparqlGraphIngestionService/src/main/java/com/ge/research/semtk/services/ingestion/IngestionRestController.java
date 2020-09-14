@@ -19,6 +19,7 @@
 package com.ge.research.semtk.services.ingestion;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,9 +50,14 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -59,11 +65,13 @@ import io.swagger.annotations.ApiOperation;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.DataLoader;
+import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.dataset.ODBCDataset;
@@ -72,8 +80,10 @@ import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.query.rdb.PostgresConnector;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**
@@ -94,8 +104,14 @@ public class IngestionRestController {
 	ResultsServiceProperties results_prop;
 	
 	@Autowired
+	ServicesGraphProperties servicesgraph_prop;
+	
+	@Autowired
 	StatusServiceProperties status_prop;
-		
+	
+	@Autowired 
+	QueryServiceProperties query_prop;
+	
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -106,6 +122,8 @@ public class IngestionRestController {
 			"* if job's status is failure then fetch a results table with ingestion errors" + 
 			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
 	
+	static LoadTracker tracker = null;
+	static S3Connector s3Conn = null;
 	
 	@PostConstruct
     public void init() {
@@ -115,10 +133,26 @@ public class IngestionRestController {
 		prop.validateWithExit();
 		results_prop.validateWithExit();
 		status_prop.validateWithExit();
-		
+		servicesgraph_prop.validateWithExit();
+		query_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 
+		String loadTrackRegion = prop.getLoadTrackAwsRegion();
+		String loadTrackS3Bucket = prop.getLoadTrackS3Bucket();
+		try {
+			if (!loadTrackRegion.isEmpty() && !loadTrackS3Bucket.isEmpty()) {
+				s3Conn = new S3Connector(loadTrackRegion, loadTrackS3Bucket);
+				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
+				
+				s3Conn.test();
+				tracker.test();
+			}
+		} catch (Exception e) {
+			// load tracker failure will only cause errors if a request comes in asking for tracking
+			LocalLogger.printStackTrace(e);
+			tracker = null;
+		}
 	}
 	
 	/**
@@ -136,13 +170,16 @@ public class IngestionRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+	@ApiOperation(
+			value=	"Synchronous load from multipart file, with override connection and no precheck.",
+			notes=	ASYNC_NOTES
+			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvFileWithNewConnection(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFileWithNewConnection(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestParam(name="trackFlag", required=false) Boolean trackFlag, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			//debug("fromCsvFileWithNewConnection", templateFile, dataFile, connection);
-			return this.fromAnyCsv(templateFile, dataFile, connection, true, false, false);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, false, false, trackFlag);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -309,6 +346,146 @@ public class IngestionRestController {
 	    }
 	}
 	
+	@ApiOperation(
+			value=	"Clear a graph with optional trackFlag."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/clearGraph", method= RequestMethod.POST)
+	public JSONObject clearGraph(@RequestBody SparqlEndpointTrackRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet resultSet;
+		try {	
+			if (requestBody.getTrackFlag()) {
+				this.validateTracker();
+			}
+			
+			// clear using the query service
+			SparqlQueryAuthClientConfig config = new SparqlQueryAuthClientConfig(
+					query_prop.getProtocol(), 
+					query_prop.getServer(), 
+					query_prop.getPort(), 
+					"clearAll", 
+					requestBody.getServerAndPort(),
+					requestBody.getServerType(),
+					requestBody.getGraph(),
+					requestBody.getUser(),
+					requestBody.getPassword());
+			SparqlQueryClient client = new SparqlQueryClient(config);
+			resultSet = client.clearAll();
+				
+			if (requestBody.getTrackFlag()) {
+				this.trackClear(requestBody.buildSei());
+			}
+					
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "clearGraph", e);
+			return resultSet.toJson();
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+		
+		return resultSet.toJson();
+	}	
+	
+	@ApiOperation(
+			value=	"Run a query of tracked events."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/runTrackingQuery", method= RequestMethod.POST)
+	public JSONObject runTrackingQuery(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		GeneralResultSet resultSet = null;
+		try {	
+			this.validateTracker();
+
+			Table tab = this.runTrackSelectQuery(
+					requestBody.getKey(), 
+					requestBody.buildSei(), 
+					requestBody.getUser(), 
+					requestBody.getStartEpoch(), 
+					requestBody.getEndEpoch());
+			resultSet = new TableResultSet(true);
+			resultSet.addResultsJSON(tab.toJson());
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "runTrackingQuery", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+		
+		return resultSet.toJson();
+	}	
+	
+	@ApiOperation(
+			value=	"Delete tracked events."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/deleteTrackingEvents", method= RequestMethod.POST)
+	public JSONObject deleteTrackingEvents(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		GeneralResultSet resultSet = null;
+		try {	
+			this.validateTracker();
+
+			// get tracker entries with keys
+			Table tab = this.runTrackSelectQuery(
+					requestBody.getKey(), 
+					requestBody.buildSei(), 
+					requestBody.getUser(), 
+					requestBody.getStartEpoch(), 
+					requestBody.getEndEpoch());
+			
+			// delete objects
+			for (String key : tab.getColumn("fileKey")) {
+				IngestionRestController.s3Conn.deleteObject(key);
+			}
+			
+			// now delete tracker entries
+			this.runTrackDeleteQuery(
+					requestBody.getKey(), 
+					requestBody.buildSei(), 
+					requestBody.getUser(), 
+					requestBody.getStartEpoch(), 
+					requestBody.getEndEpoch());
+			
+			resultSet = new SimpleResultSet(true);
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet = new SimpleResultSet(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, "deleteTrackingEvents", e);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+		
+		return resultSet.toJson();
+	}	
+	
+	@ApiOperation(
+			value=	"Get contents of file key from /runTrackingQuery, returns 'contents' field in simple results"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getTrackedIngestFile", method= RequestMethod.POST)
+	public JSONObject getTrackedIngestFile(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet resultSet = new SimpleResultSet();
+		try {	
+			String contents = new String(this.getTrackedFile(requestBody.getId()), StandardCharsets.UTF_8);
+			resultSet.addResult("contents", contents);
+			resultSet.setSuccess(true);
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet.addRationaleMessage(SERVICE_NAME, "clearGraph", e);
+			resultSet.setSuccess(false);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+	
+		return resultSet.toJson();
+	}	
+	
 	public void debug(String endpoint, MultipartFile templateFile, MultipartFile dataFile) {
 		try {
 			LocalLogger.logToStdErr(endpoint);
@@ -353,7 +530,12 @@ public class IngestionRestController {
 	 * @param async perform async
 	 */
 	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
-
+		return this.fromAnyCsv(templateFile, dataFile, sparqlConnectionOverride, fromFiles, precheck, skipIngest, false);
+	}
+	
+	/** add track Flag **/
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest, Boolean trackFlag){
+		
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
 		int recordsProcessed = 0;
@@ -366,6 +548,10 @@ public class IngestionRestController {
 		RecordProcessResults retval = new RecordProcessResults();
 		
 		try {
+			if (trackFlag) {
+				// validate tracker before starting anything
+				this.validateTracker();
+			}
 			if(logger != null){ 
 				detailsToLog = LoggerRestClient.addDetails("Ingestion Type", "From CSV", null);
 			}
@@ -425,6 +611,9 @@ public class IngestionRestController {
 			} else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
 				retval.setSuccess(false);
 			} else if(!precheck && recordsProcessed > 0){
+				if (trackFlag) {
+					this.trackLoad((MultipartFile)dataFile, sgJson.getSparqlConn().getInsertInterface());
+				}
 				retval.setSuccess(true);
 			} else {
 				retval.setSuccess(false);
@@ -453,7 +642,44 @@ public class IngestionRestController {
 		return retval.toJson();
 	}	
 	
+	/** 
+	 * Are we configured for tracking loads
+	 * @throws Exception
+	 */
+	public void validateTracker() throws Exception {
+		if (IngestionRestController.tracker == null || IngestionRestController.s3Conn == null) {
+			throw new Exception("Tracking is not configured in the ingestion service");
+		}
+	}
 	
+	/**
+	 * Track a load
+	 * @param dataFile
+	 * @param sei
+	 * @throws Exception
+	 */
+	public void trackLoad(MultipartFile dataFile, SparqlEndpointInterface sei) throws Exception {
+		String key = UUID.randomUUID().toString();
+		String fileName = dataFile.getName();
+		IngestionRestController.s3Conn.putObject(key, dataFile.getBytes());
+		IngestionRestController.tracker.trackLoad(key, fileName, sei);
+	}
+	
+	public void trackClear(SparqlEndpointInterface sei) throws Exception {
+		IngestionRestController.tracker.trackClear(sei);
+	}
+	
+	public byte[] getTrackedFile(String key) throws Exception {
+		return IngestionRestController.s3Conn.getObject(key);
+	}
+	
+	public Table runTrackSelectQuery(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
+		return IngestionRestController.tracker.query(fileKey, sei, user, startEpoch, endEpoch);
+	}
+	
+	public void runTrackDeleteQuery(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
+		IngestionRestController.tracker.delete(fileKey, sei, user, startEpoch, endEpoch);
+	}
 
 	/**
 	 * Load data from csv.

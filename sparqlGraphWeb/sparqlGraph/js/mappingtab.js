@@ -423,7 +423,7 @@ define([	// properly require.config'ed
 
                 // return if this isn't a URI (node) row
                 var mapping = this.iSpecHash[rowCell.id];
-                if (! mapping.isNode()) {
+                if (!(mapping instanceof ImportMapping) || ! mapping.isNode()) {
                     return;
                 }
 

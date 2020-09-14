@@ -42,11 +42,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationException;
@@ -305,7 +307,7 @@ public class ResultsServiceRestController {
 				if (file != null) {
 					String fileId = this.generateFileId();
 					String originalFileName = file.getOriginalFilename();
-					String storagePath = prop.getFileLocation() + "/" + jobId + "/" + fileId;
+					String storagePath = this.buildStoragePath(jobId, fileId); 
 					
 					LocalLogger.logToStdOut("Saving original file: " + originalFileName + " to: " + storagePath);
 					
@@ -894,4 +896,23 @@ public class ResultsServiceRestController {
 		return UUID.randomUUID().toString();
 	}
 	
+	/**
+	 * Check for only simple path characters and build path
+	 * @param jobId
+	 * @param fileId
+	 * @return
+	 * @throws Exception
+	 */
+	private String buildStoragePath(String jobId, String fileId) throws Exception {
+		this.validatePathElement(jobId);
+		this.validatePathElement(fileId);
+		return prop.getFileLocation() + "/" + jobId + "/" + fileId;
+	}
+	
+	private void validatePathElement(String elem) throws Exception {
+		if (Pattern.matches("[^0-9a-zA-Z\\.\\s_-]", elem)  ||
+				elem.contains("..") ) {
+			throw new Exception("Value contains bad characters: " + elem);
+		}
+	}
 }
