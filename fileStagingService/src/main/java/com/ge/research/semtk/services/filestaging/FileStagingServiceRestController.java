@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -51,9 +50,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utilityge.Utility;
 
 import io.swagger.annotations.ApiOperation;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+
 
 /**
  * Service to retrieve files from an external file store (e.g. S3)
@@ -162,7 +159,7 @@ public class FileStagingServiceRestController {
 		
 		S3Connector s3Conn = new S3Connector("region", "bucketName"); // TODO get from Service properties
 		
-		// TODO move this to S3Connector as getObject(key, filename)?  add test
+		// TODO move this to S3Connector as getObject(key, filename)?
 		byte[] fileContents = s3Conn.getObject(objectKey);
 		OutputStream os = null;   
 		try {  
@@ -174,10 +171,6 @@ public class FileStagingServiceRestController {
 			os.close();
 			os = null;
 		}
-
-		// TODO alternative copy code
-		// GetObjectRequest req = GetObjectRequest.builder().bucket(s3Config.getName()).key(objectKey).build();
-		// s3Client.getObject(req, Paths.get(destinationFilePath)); // copy file
 		
 	}
 	
