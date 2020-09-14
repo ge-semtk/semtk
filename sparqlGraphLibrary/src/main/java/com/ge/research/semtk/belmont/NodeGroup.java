@@ -832,6 +832,11 @@ public class NodeGroup {
 		this.unionHash.get(id).add(keyStr);
 	}
 	
+	public boolean isReverseUnion(Node snode, NodeItem item, Node target) {
+        String lookup = new UnionKeyStr(snode, item, target, true).getStr();
+        return this.getUnionKey(lookup) != null;
+	}
+	
 	// rm item from unionHash
     // silent if item is not in unionHash
     public Integer getUnionKey(Node snode, NodeItem item, Node target) {
@@ -867,7 +872,7 @@ public class NodeGroup {
             for (String i : this.unionHash.get(key)) {
 
                 if (i.equals(lookup)) {
-                	if (i.toLowerCase().endsWith("|false")) {
+                	if (i.toLowerCase().endsWith("|true")) {
                 		return -key;
                 	} else {
                 		return key;
@@ -934,6 +939,7 @@ public class NodeGroup {
                 UnionKeyStr entry = new UnionKeyStr(entryStr, this);
             
                 if (entry.getType() == PropertyItem.class) {
+                    // propertyItem: easy add
                     this.addToUnionMembershipHashes(unionKey, entryStr, entry.getStr());
                 } else {
                     // get list of nodes in the Union
@@ -942,11 +948,11 @@ public class NodeGroup {
                         subgraphNodeList = this.getSubGraph(entry.getSnode(), new ArrayList<Node>());
                     } else {
                         // nodeItems
-                        this.addToUnionMembershipHashes(unionKey, entryStr, entry.getStrNoRevFlag());
 
                         // get subgraph to add
                     	ArrayList<Node> stopList = new ArrayList<Node>();
                         if (entry.getReverseFlag() == false) {
+                        	this.addToUnionMembershipHashes(unionKey, entryStr, entry.getStrNoRevFlag());
                         	stopList.add(entry.getSnode());
                             subgraphNodeList = this.getSubGraph(entry.getTarget(), stopList);
                         } else {
@@ -1060,6 +1066,7 @@ public class NodeGroup {
 	 }
 	
 	 private ArrayList<Integer> getLegalUnions(Integer key, String keyStr) {
+		assert false == true : "out of sync from javascript";   // PEC TODO
         ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
         if (membershipList.get(0) == key) {
         	membershipList.remove(0);
@@ -1908,8 +1915,10 @@ public class NodeGroup {
 					Integer unionKey = this.getUnionKey(snode, nItem, targetNode);
 					if (unionKey == null) {
 						sparql.append(this.generateSparqlSubgraphClausesNodeItem(queryType, false, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
-					} else {
+					} else if (unionKey >= 0) {
 						sparql.append(this.generateSparqlSubgraphClausesUnion(queryType, unionKey, targetObj, doneNodes, doneUnions, tab));
+					} else {
+						//throw new Exception("SPARQL-generation is confused at reversed UNION nodeItem " + snode.getBindingOrSparqlID()  + "->" + targetNode.getBindingOrSparqlID());
 					}
 				}
 			}
@@ -1919,9 +1928,16 @@ public class NodeGroup {
 		for(NodeItem nItem : this.getConnectingNodeItems(snode)) {   
 			if (nItem != skipNodeItem || snode != skipNodeTarget) {
 				Node incomingSNode = this.getNodeItemParentSNode(nItem); 
-				sparql.append(
-						this.generateSparqlSubgraphClausesNodeItem(queryType, true, incomingSNode, nItem, snode, targetObj, doneNodes, doneUnions, tab )
-						);
+				Integer unionKey = this.getUnionKey(incomingSNode, nItem, snode);
+				if (unionKey == null) {
+					sparql.append(
+							this.generateSparqlSubgraphClausesNodeItem(queryType, true, incomingSNode, nItem, snode, targetObj, doneNodes, doneUnions, tab )
+							);
+				} else if (unionKey >= 0) {		
+					//throw new Exception("SPARQL-generation is confused at non-reversed UNION nodeItem ...
+				} else {
+					sparql.append(this.generateSparqlSubgraphClausesUnion(queryType, -unionKey, targetObj, doneNodes, doneUnions, tab));
+				}
 			}
 		}
 		
@@ -3401,7 +3417,8 @@ public class NodeGroup {
 					for (Node toSnode : nodeItem.getNodeList()) {
 						
 						if (nodeItem.getOptionalMinus(toSnode) == NodeItem.OPTIONAL_REVERSE || 
-								nodeItem.getOptionalMinus(toSnode) == NodeItem.MINUS_REVERSE ) {
+								nodeItem.getOptionalMinus(toSnode) == NodeItem.MINUS_REVERSE  ||
+								this.isReverseUnion(fromSnode, nodeItem, toSnode)) {
 							// OPTIONAL_REVERSE reverses the direction of "incoming"
 							Integer val = linkHash.get(fromSnode.getSparqlID());
 							linkHash.put(fromSnode.getSparqlID(), val + 1);

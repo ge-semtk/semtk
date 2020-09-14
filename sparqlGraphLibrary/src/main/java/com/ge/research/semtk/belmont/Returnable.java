@@ -117,6 +117,14 @@ public abstract class Returnable {
 	public String getBinding() {
 		return binding;
 	}
+	
+	public String getBindingOrSparqlID() {
+		if (this.binding != null && ! this.binding.isEmpty()) {
+			return this.binding;
+		} else {
+			return this.getSparqlID();
+		}
+	}
 
 	public void setBinding(String binding) {
 		if (binding == null) {

@@ -2177,6 +2177,30 @@ SemanticNodeGroup.prototype = {
         return Object.keys(this.unionHash);
     },
 
+    // get union keys of snode and its props and nodeitems
+    getUnionKeyList : function(snode) {
+        var ret = [];
+        u = this.getUnionKey(snode);
+        if (u) {
+            ret.push(u);
+        }
+        for (var p of snode.getPropertyItems()) {
+            u = this.getUnionKey(snode, p);
+            if (u) {
+                ret.push(u);
+            }
+        }
+        for (var n of snode.getNodeList()) {
+            for (var t of n.getSNodes()) {
+                u = this.getUnionKey(snode, n, t);
+                if (u) {
+                    ret.push(Math.abs(u));
+                }
+            }
+        }
+        return ret;
+    },
+
     // get union key for this item
     //     negative if nodeitem with reverse_flag == true
     //     null if none
@@ -2223,9 +2247,11 @@ SemanticNodeGroup.prototype = {
 
         // loop through all unionHash entries
         for (var unionKey in this.unionHash) {
+            // for each parent item in the un
             for (var entryStr of this.unionHash[unionKey]) {
                 var entry = this.getEntryTuple(entryStr);
                 if (entry.length == 2) {
+                    // propertyItem: easy add
                     this.addtoUnionMembershipHashes(unionKey, entryStr, entry[0], entry[1]);
                 } else {
                     // get list of nodes in the Union
@@ -2234,10 +2260,10 @@ SemanticNodeGroup.prototype = {
                         subgraphNodeList = this.getSubGraph(entry[0], []);
                     } else {
                         // nodeItems
-                        this.addtoUnionMembershipHashes(unionKey, entryStr, entry[0], entry[1], entry[2]);
 
                         // get subgraph to add
                         if (entry[3] == false) {
+                            this.addtoUnionMembershipHashes(unionKey, entryStr, entry[0], entry[1], entry[2]);
                             subgraphNodeList = this.getSubGraph(entry[2], [entry[0]]);
                         } else {
                             subgraphNodeList = this.getSubGraph(entry[0], [entry[2]]);
@@ -2313,13 +2339,13 @@ SemanticNodeGroup.prototype = {
     // Get list of union keys which this item could reasonably join
     //
     // call updateUnionMemberships() first.
-    getLegalUnions : function(snode, item, optTarget) {
+    getLegalUnions : function(snode, optItem, optTarget, optReverse) {
         var ret = [];
 
         // (remember that membership lists are sorted closest to furthest)
         // get membership list.  Remove unionKey, if any
-        var membershipList = this.getUnionMembershipList(snode, item, optTarget);
-        var key = this.getUnionKey(snode, item, optTarget);
+        var membershipList = this.getUnionMembershipList(snode, optItem, optTarget);
+        var key = this.getUnionKey(snode, optItem, optTarget);
         if (membershipList[0] == key) {
             membershipList = membershipList.slice().splice(1);
         }
@@ -2336,9 +2362,44 @@ SemanticNodeGroup.prototype = {
             // add to ret union non-key memberships match this union's first member's non-key memberships.
             var firstMembershipStr = JSON.stringify(firstMemberMembership);
             if (firstMembershipStr == membershipStr) {
-                ret.push(unionKey);
+                ret.push(parseInt(unionKey));
             }
         }
+
+        // remove illegally connected unions for snodes or nodeitems
+        if (optItem == undefined || optTarget != undefined) {
+            var startNode;
+            var stopNodes;
+
+            if (optItem == undefined) {
+                // snode:  anything connected is illegal
+                startNode = snode;
+                stopNodes = [];
+            } else {
+                // nodeItem:  anything downstream is illegal
+                if (optReverse) {
+                    startNode = snode;
+                    stopNodes = [optTarget];
+                } else {
+                    startNode = optTarget;
+                    stopNodes = [snode];
+                }
+            }
+            subgraph = this.getSubGraph(startNode, stopNodes);
+
+            // do the removal
+            var illegals = [];
+            for (var nd of subgraph) {
+                illegals = illegals.concat(this.getUnionKeyList(nd));
+            }
+            for (var ill of illegals) {
+                var idx = ret.indexOf(ill);
+                if (idx > -1) {
+                    ret.splice(idx,1);
+                }
+            }
+        }
+
         return ret;
     },
 

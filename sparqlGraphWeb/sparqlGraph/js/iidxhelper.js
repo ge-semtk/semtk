@@ -204,6 +204,14 @@ define([	// properly require.config'ed
             select.className = optClassName;
         }
         select.multiple = ((typeof optMultiFlag) != "undefined" && optMultiFlag);
+        IIDXHelper.addOptions(select, textValArray, selectedTexts, optDisabledList);
+        return select;
+    };
+
+    /*
+     * See createSelect for description of addTextValArray
+     */
+    IIDXHelper.addOptions = function (select, textValArray, selectedTexts, optDisabledList) {
         var option;
         var text;
         var val;
@@ -226,14 +234,17 @@ define([	// properly require.config'ed
 
             if (typeof optDisabledList != "undefined" && (optDisabledList.indexOf(text) > -1) ) {
                 option.disabled = true;
-                //option.classList.add("btn-danger");   // TODO find something better
                 option.style.color = "red";
                 option.style.textDecoration="line-through";
             }
             select.options.add(option);
         }
+    };
 
-        return select;
+    IIDXHelper.removeAllOptions = function (select) {
+        while (select.length > 0) {
+           select.remove(select.length-1);
+        }
     };
 
     /* create a collapsible div
