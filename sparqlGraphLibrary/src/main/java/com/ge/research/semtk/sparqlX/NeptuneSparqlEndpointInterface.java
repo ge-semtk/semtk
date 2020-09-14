@@ -65,7 +65,7 @@ import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
  * Interface to Neptune SPARQL endpoint
  * 
  * NOTE: The role NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN is only used for uploading from the S3 bucket to Neptune - it is not used for placing the file in the S3 bucket.  
- * 		 The latter is typically enabled by an underlying role on the EC2 node.
+ * 		 The latter is enabled by an IAM role attached to the EC2 node.
  */
 public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	

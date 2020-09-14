@@ -17,6 +17,11 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
+/**
+ * Connector to put/get files from AWS S3.
+ * 
+ * NOTE: No IAM role is explicitly used here - the code will use the IAM role attached to the EC2 node.
+ */
 public class S3Connector extends FileSystemConnector {
 	private String region = null;
 	private String name = null;
