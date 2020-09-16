@@ -613,7 +613,8 @@ define([	// properly require.config'ed
                 text.setAttribute('font-size', size + "px");
                 text.setAttribute('font-family', "Arial");
                 text.setAttribute('fill', foreground);
-                text.innerHTML = snode.getSparqlID();
+
+                text.innerHTML = snode.getURI(true) + " - " + snode.getBindingOrSparqlID();
                 svg.appendChild(text);
 
                 var height = NodegroupRenderer.VSPACE + size;
@@ -671,7 +672,14 @@ define([	// properly require.config'ed
                 text.setAttribute('font-size', size + "px");
                 text.setAttribute('font-family', "Arial");
                 text.setAttribute('fill', foreground);
+
                 text.innerHTML = item.getKeyName() + " : " + item.getValueType();
+                if (! (item instanceof NodeItem)) {
+                    var retName = item.getBindingOrSparqlID();
+                    if (retName != "") {
+                        text.innerHTML += " - " + retName;
+                    }
+                }
                 svg.appendChild(text);
 
                 var height = NodegroupRenderer.VSPACE + size;

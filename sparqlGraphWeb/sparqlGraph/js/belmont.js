@@ -855,7 +855,13 @@ PropertyItem.prototype = {
 	getSparqlID : function() {
 		return this.SparqlID;
 	},
-
+    getBindingOrSparqlID : function() {
+        if (this.binding != null) {
+            return this.binding;
+        } else {
+            return this.getSparqlID();
+        }
+    },
     getTypeSparqlID : function() {
 		return "type_" + this.SparqlID;
 	},
@@ -1254,6 +1260,14 @@ SemanticNode.prototype = {
 
 	getSparqlID : function() {
 		return this.SparqlID;
+	},
+
+    getBindingOrSparqlID : function() {
+		if (this.binding != null) {
+			return this.binding;
+		} else {
+			return this.getSparqlID();
+		}
 	},
 
     getTypeSparqlID : function() {
@@ -2109,7 +2123,7 @@ SemanticNodeGroup.prototype = {
 
     // get an id for a new union
     newUnion : function () {
-        var ret = 0;
+        var ret = 1;
         while (this.unionHash.hasOwnProperty(ret)) {
             ret += 1;
         }

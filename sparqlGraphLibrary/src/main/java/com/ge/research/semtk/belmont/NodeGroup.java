@@ -195,7 +195,7 @@ public class NodeGroup {
 			Node node = new Node(name, null, null, classURI, nodeGroup); 
 			node.setInstanceValue(instanceURI);		
 			nodeHash.put(instanceURI, node); 				// add node to node hash
-			nodeGroup.addOneNode(node, null, null, null);	// add node to node group
+			nodeGroup.addOneNode(node, null, null, null, false);	// add node to node group
 						
 			ArrayList<PropertyItem> properties = new ArrayList<PropertyItem>();
 			@SuppressWarnings("unchecked")
@@ -666,7 +666,16 @@ public class NodeGroup {
 	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception {
 		this.oInfo = uncompressOInfo;
 		HashMap<String, String> changedHash = new HashMap<String, String>();
-		this.resolveSparqlIdCollisions(jobj, changedHash);
+		
+		// For backwards compatibility to I-don't-know-where, 
+		// we'll try to resolve sparqlId collisions as long as neither nodegroup
+		// has unions.
+		// Reality: we don't append nodegroups
+		boolean unionFlag = this.unionHash.size() > 0 || (jobj.containsKey(JSON_KEY_UNIONHASH) && ((JSONObject) jobj.get(JSON_KEY_UNIONHASH)).keySet().size() > 0);
+		
+		if (!unionFlag) {
+			this.resolveSparqlIdCollisions(jobj, changedHash);
+		}
 
 		int version = Integer.parseInt(jobj.get("version").toString());
 		if (version > NodeGroup.VERSION) {
@@ -731,7 +740,7 @@ public class NodeGroup {
 			
 			// create nodes we have never seen
 			if(check == null){
-				this.addOneNode(curr, null, null, null);
+				this.addOneNode(curr, null, null, null, false);
 			}
 			// modify the existing node:
 			else{
@@ -817,7 +826,7 @@ public class NodeGroup {
 	 * @return an integer key
 	 */
 	public int newUnion() {
-        int ret = 0;
+        int ret = 1;
         while (this.unionHash.containsKey(ret)) {
             ret += 1;
         }
@@ -1222,15 +1231,30 @@ public class NodeGroup {
 			}
 		}
 	}
-        
+    
 	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri) throws Exception  {
+		this.addOneNode(curr, existingNode, linkFromNewUri, linkToNewUri, true);
+	}
+
+	/**
+	 * 
+	 * @param curr
+	 * @param existingNode
+	 * @param linkFromNewUri
+	 * @param linkToNewUri
+	 * @param legalizeSparqlIDs - boolean allows override of sparqlID fixing if we're loading a json
+	 * @throws Exception
+	 */
+	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri, boolean legalizeSparqlIDs) throws Exception  {
 
 
-		// reserve the node SparqlID
-		this.legalizeAndReserviceSparqlIDs(curr);
-		
 		// add the node to the nodegroup control structure..
 		this.nodes.add(curr);
+		
+		if (legalizeSparqlIDs) {
+			this.legalizeSparqlIDs(curr);
+		}
+				
 		this.idToNodeHash.put(curr.getSparqlID(), curr);
 		// set up the connection info so this node participates in the graph
 		if(linkFromNewUri != null && linkFromNewUri != ""){
@@ -1245,7 +1269,7 @@ public class NodeGroup {
 		
 	}
 
-	private void legalizeAndReserviceSparqlIDs(Node node) {
+	private void legalizeSparqlIDs(Node node) {
 		String ID = node.getSparqlID();
 		HashSet<String> nameHash = this.getAllVariableNames(node);
 		if(nameHash.contains(ID)){	// this name was already used. 

@@ -736,7 +736,7 @@ define([	// properly require.config'ed
 					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
 				}
 				// is optional applicable to this item
-				var showSelect = (this.item.getItemType() == "PropertyItem" || singleNodeItem != null);
+				var showSelect = (this.item.getItemType() == "PropertyItem" || this.item.getItemType() == "SemanticNode" || singleNodeItem != null);
 
 				// optional select
 				if (showSelect) {
@@ -745,27 +745,42 @@ define([	// properly require.config'ed
                     if (this.item.getItemType() == "PropertyItem") {
                         optMinus = this.item.getOptMinus();
                         selectedText = this.getOptMinusText(optMinus);
-					} else {
+
+					} else if (this.item.getItemType() == "SemanticNode") {
+                        optMinus = NodeItem.OPT_MINUS_NONE;
+                        selectedText = "";
+
+                    } else {
                         var targetNode = singleNodeItem.getSNodes()[0];
                         optMinus = singleNodeItem.getOptionalMinus(targetNode);
                         if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
-                            selectedText = this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL);
+                            selectedText = this.getOptMinusText(NodeItem.OPT_MINUS_OPTIONAL);
                         } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
-                            selectedText = this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS);
+                            selectedText = this.getOptMinusText(NodeItem.OPT_MINUS_MINUS);
                         } else {
-                            selectedText = this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
+                            selectedText = this.getOptMinusText(NodeItem.OPT_MINUS_NONE);
                         }
 					}
 
                     // optional minus stuff is single digits
                     // unions will be 100 + [0-100]
                     // UNION_NONE or UNION_NEW are > 999
-                    var selectList = [
-                        [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
-    					[this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
-                        [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
-                        ["- new union -",    ModalItemDialog.UNION_NEW + 100]
-                    ];
+                    var selectList;
+
+                    if (this.item.getItemType() == "PropertyItem") {
+                        selectList = [
+                            [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
+        					[this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
+                            [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
+                            ["- new union -",    ModalItemDialog.UNION_NEW + 100]
+                        ];
+                    } else {
+                        selectList = [
+                            ["- no union -",     ModalItemDialog.UNION_NONE + 100],
+                            ["- new union -",    ModalItemDialog.UNION_NEW + 100]
+                        ];
+                    }
+                    selectList.push();
 
                     // add union keys
                     this.nodegroup.updateUnionMemberships();
