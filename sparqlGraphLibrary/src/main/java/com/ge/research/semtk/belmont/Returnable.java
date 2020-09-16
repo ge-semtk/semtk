@@ -49,16 +49,19 @@ public abstract class Returnable {
 	}
 	
 	protected void fromReturnableJson(JSONObject jObj) {
-		this.sparqlID = jObj.get("SparqlID").toString(); ///
+		
+		this.sparqlID = (String) jObj.get("SparqlID"); ///
 		this.isReturned = (Boolean)jObj.get("isReturned");///
 
-		try{
-			this.setBinding(jObj.get("binding").toString());///
-			this.setIsBindingReturned((Boolean)jObj.get("isBindingReturned"));///
-		
-		} catch(Exception E){ // the value was missing
+		if (jObj.containsKey("binding")) {
+			this.setBinding((String) jObj.get("binding"));///
+		} else {
 			this.setBinding(null);
-			this.setIsBindingReturned(false); 
+		}
+		if (jObj.containsKey("isBindingReturned")) {
+			this.setIsBindingReturned((Boolean)jObj.get("isBindingReturned"));///
+		} else {
+			this.setIsBindingReturned(false);///
 		}
 		
 		if (jObj.containsKey("isTypeReturned")) {

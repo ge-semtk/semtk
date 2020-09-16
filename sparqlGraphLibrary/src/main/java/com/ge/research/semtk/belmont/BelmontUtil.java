@@ -133,6 +133,26 @@ public class BelmontUtil {
 		return retval;
 	}
 
+	public static JSONArray updateSparqlIdsForJSON(JSONArray jobj, int IndexName, HashMap<String, String> changedHash, HashSet<String> tempNameHash){
+			// updates the names used in the json array given. this had to be divided into separate methods
+			JSONArray retval = jobj;
+			
+			String ID = retval.get(IndexName).toString();
+			if(changedHash.keySet().contains(ID)){
+				// no op
+			}
+			else{
+				String newId = BelmontUtil.generateSparqlID(ID, tempNameHash);
+				if(!newId.equals(ID)){
+					changedHash.put(ID, newId);  // when we come across the key ID when processing the new JSON, we will replace it with newId
+					tempNameHash.add(newId);
+					retval.set(IndexName, newId);
+				}
+			}
+			
+			return retval;
+	}
+
 	public static String prefixQuery(String query) throws Exception {
 			
 		String prefixes = "";

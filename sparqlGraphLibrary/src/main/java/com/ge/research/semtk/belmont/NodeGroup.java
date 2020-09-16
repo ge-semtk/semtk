@@ -66,7 +66,6 @@ public class NodeGroup {
 	private static final int VERSION = 12;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
-	private HashMap<String, String> sparqlNameHash = null;
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 	private HashMap<String, Node> idToNodeHash = new HashMap<String, Node>();
 	private int limit = 0;
@@ -98,7 +97,6 @@ public class NodeGroup {
 	private int nextQueryInt;
 	
 	public NodeGroup(){
-		this.sparqlNameHash = new HashMap<String, String>();
 	}
 	
 	/*
@@ -668,6 +666,8 @@ public class NodeGroup {
 	public void addJsonEncodedNodeGroup(JSONObject jobj, OntologyInfo uncompressOInfo) throws Exception {
 		this.oInfo = uncompressOInfo;
 		HashMap<String, String> changedHash = new HashMap<String, String>();
+		this.resolveSparqlIdCollisions(jobj, changedHash);
+
 		int version = Integer.parseInt(jobj.get("version").toString());
 		if (version > NodeGroup.VERSION) {
 			throw new Exception (String.format("This software reads NodeGroups through version %d.  Can't read version %d.", NodeGroup.VERSION, version));
@@ -759,6 +759,55 @@ public class NodeGroup {
 		this.orphanOnCreate.clear();
 	}
 	
+	/**
+	 * This seems to only be used when adding more json to a nodegroup.
+	 * It is retained for backwards compatibility
+	 * Paul sep-2020
+	 * @param jobj
+	 * @param changedHash
+	 * @return
+	 */
+	private JSONObject resolveSparqlIdCollisions(JSONObject jobj, HashMap<String, String> changedHash) {
+		// loop through a json object and resolve any SparqlID name collisions
+		// with this node group.
+		JSONObject retval = jobj;
+		
+		HashSet<String> tempHash = this.getAllVariableNames();
+		
+		if (tempHash.isEmpty()) {
+			return retval;
+		}
+	
+		JSONArray nodeArr = (JSONArray)jobj.get(JSON_KEY_NODELIST);
+		// loop through the nodes in the JSONArray
+		for(int k = 0; k < nodeArr.size(); k += 1){
+			JSONObject jnode = (JSONObject) nodeArr.get(k);
+			
+			jnode = BelmontUtil.updateSparqlIdsForJSON(jnode, "SparqlID", changedHash, tempHash);
+			
+			// iterate over property objects
+			JSONArray propArr = (JSONArray) jnode.get("propList");
+			
+			for (int j = 0; j < propArr.size(); ++j) {
+				JSONObject prop = (JSONObject) propArr.get(j);
+				prop = BelmontUtil.updateSparqlIdsForJSON(prop, "SparqlID", changedHash, tempHash);
+			}
+			
+			// and the node list			
+			JSONArray nodeItemArr = (JSONArray) jnode.get("nodeList");
+			
+			for (int j = 0; j < nodeItemArr.size(); ++j) {
+				JSONObject node = (JSONObject) nodeItemArr.get(j);
+				JSONArray nodeConnections = (JSONArray)node.get("SnodeSparqlIDs");
+				for(int m = 0; m < nodeConnections.size(); m += 1){
+					// this should update the values we care about
+					BelmontUtil.updateSparqlIdsForJSON(nodeConnections, m, changedHash, tempHash);
+				}
+			}
+		}
+		
+		return retval;
+	}
     public ArrayList<Node> getNodeList(){
         return this.nodes;
     }
