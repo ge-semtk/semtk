@@ -62,7 +62,10 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 
 /**
- * Interface to Virtuoso SPARQL endpoint
+ * Interface to Neptune SPARQL endpoint
+ * 
+ * NOTE: The role NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN is only used for uploading from the S3 bucket to Neptune - it is not used for placing the file in the S3 bucket.  
+ * 		 The latter is enabled by an IAM role attached to the EC2 node.
  */
 public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	
@@ -306,6 +309,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings({ "unchecked" })
 	private String uploadFromS3(String keyName, String format) throws Exception {
 		// start the upload
         //curl blast-cluster.cluster-ceg7ggop9fho.us-east-1.neptune.amazonaws.com:8182/loader
@@ -536,6 +540,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * but note that Virtuoso and Neptune return different MIME types and have quirkily different returns.
 	 * -Paul
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	protected JSONObject getJsonldResponse(Object responseObj) {
 		JSONObject ret =  new JSONObject();
@@ -564,6 +569,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 			throw new Exception("Unexepected response (no head.vars): " + resp.toJSONString());
 		}
 	}
+	@SuppressWarnings("unchecked")
 	@Override
 	protected CloseableHttpClient buildHttpClient(String schemeName) throws Exception {
 		
