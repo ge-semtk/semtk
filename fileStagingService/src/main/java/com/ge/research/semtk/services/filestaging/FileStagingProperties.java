@@ -39,6 +39,8 @@ public class FileStagingProperties extends ServiceProperties {
 	public void validate() throws Exception {
 		checkNotEmpty("stageDirectory", stageDirectory);
 		checkNotEmpty("storeType", storeType);
+		checkNone("s3Region", s3Region);
+		checkNone("s3Bucket", s3Bucket);
 	}
 	
 	public String getStoreType() {
