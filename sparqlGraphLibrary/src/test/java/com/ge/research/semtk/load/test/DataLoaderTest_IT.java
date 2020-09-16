@@ -260,6 +260,58 @@ public class DataLoaderTest_IT {
 	
 	// Validation:  these test basic integration.  DataLoaderTest_IT tests details of validation.
 	@Test
+	public void testValidateSpecialCharacterStr() throws Exception { 
+
+		// set up the data
+		String contents = "Battery,Cell,birthday,color\n"
+				+ "BatteryName, cell-micron-μm,01/01/1966,red\n";
+		Dataset ds = new CSVDataset(contents, true);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 1, records);
+		
+		Table resTab = TestGraph.execTableSelect(sgJson);
+		assertTrue(resTab.getCellAsString(0, 1).equals("cell-micron-μm"));
+		System.out.println(resTab.toCSVString());
+		System.out.println(resTab.toJson());
+	}	
+	
+
+	@Test
+	public void testValidateSpecialCharacterFile() throws Exception { 
+
+		// set up the data
+		CSVDataset csv = new CSVDataset("src/test/resources/sampleBatteryNonAscii.csv", false);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, csv, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 1, records);
+		
+		Table resTab = TestGraph.execTableSelect(sgJson);
+		assertTrue(resTab.getCellAsString(0, 1).equals("cell-micron-μm"));
+		System.out.println(resTab.toCSVString());
+		System.out.println(resTab.toJson());
+	}	
+	
+	// Validation:  these test basic integration.  DataLoaderTest_IT tests details of validation.
+	@Test
 	public void testValidateFailsMissingCol() throws Exception { 
 
 		// set up the data
