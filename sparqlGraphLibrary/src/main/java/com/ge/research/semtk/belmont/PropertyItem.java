@@ -173,7 +173,7 @@ public class PropertyItem extends Returnable {
 	}
 
 	public boolean isUsed() {
-		return (this.hasAnyReturn() || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion);
+		return (this.hasAnyReturn() || this.constraints != null || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion);
 	}
 	public ArrayList<String> getInstanceValues() {
 		return this.instanceValues;

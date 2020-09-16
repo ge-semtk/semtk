@@ -882,6 +882,30 @@ public class NodeGroup {
         }
         return null;
     }
+    
+    // get union keys of snode and its props and nodeitems
+    private ArrayList<Integer> getUnionKeyList(Node snode) {
+    	ArrayList<Integer> ret = new ArrayList<Integer>();
+        Integer u = this.getUnionKey(snode);
+        if (u != null) {
+            ret.add(u);
+        }
+        for (PropertyItem p : snode.getPropertyItems()) {
+            u = this.getUnionKey(snode, p);
+            if (u != null) {
+                ret.add(u);
+            }
+        }
+        for (NodeItem n : snode.getNodeItemList()) {
+            for (Node t : n.getNodeList()) {
+                u = this.getUnionKey(snode, n, t);
+                if (u != null) {
+                    ret.add(Math.abs(u));
+                }
+            }
+        }
+        return ret;
+    }
 	
     private void addToUnionMembershipHashes(int id, String parentEntryStr, Node snode, NodeItem nItem, Node target) {
     	this.addToUnionMembershipHashes(id, parentEntryStr, new UnionKeyStr(snode, nItem, target).getStr());
@@ -1056,44 +1080,79 @@ public class NodeGroup {
 	 * @return
 	 */
 	 public ArrayList<Integer> getLegalUnions(Node snode, NodeItem nItem, Node target) {
-	    	return this.getLegalUnions(this.getUnionKey(snode, nItem, target), new UnionKeyStr(snode, nItem, target).getStr());
+	    	return this.getLegalUnions(this.getUnionKey(snode, nItem, target), new UnionKeyStr(snode, nItem, target));
 	 }
 	 public ArrayList<Integer> getLegalUnions(Node snode, PropertyItem pItem) {
-		 return this.getLegalUnions(this.getUnionKey(snode, pItem), new UnionKeyStr(snode, pItem).getStr());
+		 return this.getLegalUnions(this.getUnionKey(snode, pItem), new UnionKeyStr(snode, pItem));
 	 }
 	 public ArrayList<Integer> getLegalUnions(Node snode) {
-		 return this.getLegalUnions(this.getUnionKey(snode), new UnionKeyStr(snode).getStr());
+		 return this.getLegalUnions(this.getUnionKey(snode), new UnionKeyStr(snode));
 	 }
 	
-	 private ArrayList<Integer> getLegalUnions(Integer key, String keyStr) {
-		assert false == true : "out of sync from javascript";   // PEC TODO
-        ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
-        if (membershipList.get(0) == key) {
-        	membershipList.remove(0);
-        }
-        ArrayList<Integer> ret = new ArrayList<Integer>();
-        for (Integer unionKey : this.unionHash.keySet()) {
-        	// get first member of union, and it's membership list
-            String firstMemberStr = UnionKeyStr.rmRevFlag(this.unionHash.get(unionKey).get(0));
-            ArrayList<Integer> firstMemberMembership = new ArrayList<Integer>(this.tmpUnionMemberHash.get(firstMemberStr));
-            // remove the member's union to be left with any other memberships
-            firstMemberMembership.remove(0);
+	 private ArrayList<Integer> getLegalUnions(Integer key, UnionKeyStr uKeyStr) {
+		 String keyStr = uKeyStr.getStr();
+		 ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
+		 if (membershipList.get(0) == key) {
+			 membershipList.remove(0);
+		 }
+		 ArrayList<Integer> ret = new ArrayList<Integer>();
+		 for (Integer unionKey : this.unionHash.keySet()) {
+			 // get first member of union, and it's membership list
+			 String firstMemberStr = UnionKeyStr.rmRevFlag(this.unionHash.get(unionKey).get(0));
+			 ArrayList<Integer> firstMemberMembership = new ArrayList<Integer>(this.tmpUnionMemberHash.get(firstMemberStr));
+			 // remove the member's union to be left with any other memberships
+			 firstMemberMembership.remove(0);
 
-            // add to ret union non-key memberships match this union's first member's non-key memberships.
-            if (firstMemberMembership.size() == membershipList.size()) {
-            	boolean same = true;
-            	for (int i=0; i < membershipList.size(); i++) {
-            		if (firstMemberMembership.get(i) != membershipList.get(i)) {
-            			same = false;
-            			break;
-            		}
-            	}
-            	if (same) {
-            		ret.add(unionKey);
-            	}
-            }
-        }
-        return ret;
+			 // add to ret union non-key memberships match this union's first member's non-key memberships.
+			 if (firstMemberMembership.size() == membershipList.size()) {
+				 boolean same = true;
+				 for (int i=0; i < membershipList.size(); i++) {
+					 if (firstMemberMembership.get(i) != membershipList.get(i)) {
+						 same = false;
+						 break;
+					 }
+				 }
+				 if (same) {
+					 ret.add(unionKey);
+				 }
+			 }
+		 }
+
+		 // remove illegally connected unions for snodes or nodeitems
+		 if (uKeyStr.getType() != PropertyItem.class) {
+			 Node startNode;
+			 ArrayList<Node> stopNodes = new ArrayList<Node>();
+
+			 Node snode = uKeyStr.getSnode();
+			 Node target = uKeyStr.getTarget();
+			 if (uKeyStr.getType() == Node.class) {
+				 // snode:  anything connected is illegal
+				 startNode = snode;
+			 } else {
+				 // nodeItem:  anything downstream is illegal
+				 if (uKeyStr.getReverseFlag()) {
+					 startNode = snode;
+					 stopNodes.add(target);
+				 } else {
+					 startNode = target;
+					 stopNodes.add(snode);
+				 }
+			 }
+			 ArrayList<Node> subgraph = this.getSubGraph(startNode, stopNodes);
+
+			 // do the removal
+			 ArrayList<Integer> illegals = new ArrayList<Integer>();
+			 for (Node nd : subgraph) {
+				 illegals.addAll(this.getUnionKeyList(nd));
+			 }
+			 for (Integer ill : illegals) {
+				 int idx = ret.indexOf(ill);
+				 if (idx > -1) {
+					 ret.remove(idx);
+				 }
+			 }
+		 }
+		 return ret;
     }
 	 
 	/**
@@ -1298,26 +1357,31 @@ public class NodeGroup {
 		
 		// get returned items
 		ArrayList<Returnable> items = this.getReturnedItems();
-		HashSet<String> ret = new HashSet<String>();
+		ArrayList<String> ret = new ArrayList<String>();
+		String id;
 		
 		// build list of sparql ids
 		for(Returnable item : items) {
 			if (item.getIsReturned()) {
-				ret.add(item.getSparqlID());
+				id = item.getSparqlID();
+				if (!ret.contains(id)) {
+					ret.add(id);
+				}
 			}
 			if (item.getIsTypeReturned()) {
-				ret.add(item.getTypeSparqlID());
+				id = item.getTypeSparqlID();
+				if (!ret.contains(id)) {
+					ret.add(id);
+				}
 			}
 			if (item.getIsBindingReturned()) {
-				if (! ret.contains(item.getBinding())) {
-					ret.add(item.getBinding());
+				id = item.getBinding();
+				if (!ret.contains(id)) {
+					ret.add(id);
 				}
 			}
 		}
-		// change to ArrayList for historical reasons
-		ArrayList<String> retArr = new ArrayList<String>();
-		retArr.addAll(ret);
-		return retArr;
+		return ret;
 	}
 	
 	

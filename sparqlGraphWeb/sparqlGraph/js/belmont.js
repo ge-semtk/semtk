@@ -3531,7 +3531,7 @@ SemanticNodeGroup.prototype = {
             }
         }
 
-        return Object.keys[retHash];
+        return Object.keys(retHash);
     },
 
     getItemBySparqlID : function(id) {
