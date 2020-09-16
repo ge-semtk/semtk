@@ -40,6 +40,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.load.FileSystemConnector;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -113,10 +114,26 @@ public class FileStagingServiceRestController {
 				final String stageFilePath = stageDir + "/" + stageFilename;  	// TODO do this using API for correct slashing
 				
 				LocalLogger.logToStdOut("Stage file " + sourceFile + " from " + storeType + " to " + stageFilePath);
+				FileSystemConnector conn = null;
 				if(storeType.equals(STORETYPE_S3)){ 
-					copyFromS3(sourceFile, stageFilePath);
+					conn = new S3Connector(filestaging_prop.getS3Region(), filestaging_prop.getS3Bucket());
+					LocalLogger.logToStdOut(conn.toString()); 
 				}else{
 					throw new Exception("Cannot stage file from unsupported store type '" + storeType + "'");
+				}
+				
+				// retrieve file as a byte array, and then write to file
+				// TODO FileSystemConnector should provide a utility to write to a file - remove from here when that is available
+				byte[] fileContents = conn.getObject(sourceFile);
+				OutputStream os = null;   
+				try {  
+					os = new FileOutputStream(stageFilePath);
+					os.write(fileContents); 
+				} catch (Exception e) { 
+					throw e;
+				} finally{
+					os.close();
+					os = null;
 				}
 				
 				// send file to Results Service
@@ -144,34 +161,6 @@ public class FileStagingServiceRestController {
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
-	}
-
-	
-	/**
-	 * Copy file from S3 to stage location
-	 * @objectKey the key within the bucket (e.g. document/file.txt)
-	 * @destinationPath the local copy destination
-	 * 
-	 * TODO this is untested
-	 */
-	private void copyFromS3(String objectKey, String destinationFilePath) throws Exception{		
-		LocalLogger.logToStdOut("Copy " + objectKey + " from S3 to " + destinationFilePath);
-		
-		S3Connector s3Conn = new S3Connector("region", "bucketName"); // TODO get from Service properties
-		
-		// TODO move this to S3Connector as getObject(key, filename)?
-		byte[] fileContents = s3Conn.getObject(objectKey);
-		OutputStream os = null;   
-		try {  
-			os = new FileOutputStream(destinationFilePath);
-			os.write(fileContents); 
-		} catch (Exception e) { 
-			throw e;
-		} finally{
-			os.close();
-			os = null;
-		}
-		
 	}
 	
 	

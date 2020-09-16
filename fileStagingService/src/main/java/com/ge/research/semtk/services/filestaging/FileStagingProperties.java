@@ -33,6 +33,8 @@ public class FileStagingProperties extends ServiceProperties {
 	
 	private String storeType;
 	private String stageDirectory;
+	private String s3Region;		// for store type S3 
+	private String s3Bucket;		// for store type S3 
 	
 	public void validate() throws Exception {
 		checkNotEmpty("stageDirectory", stageDirectory);
@@ -53,6 +55,22 @@ public class FileStagingProperties extends ServiceProperties {
 	
 	public void setStageDirectory(String stageDirectory) {
 		this.stageDirectory = stageDirectory;
+	}
+
+	public String getS3Region() {
+		return s3Region;
+	}
+
+	public void setS3Region(String s3Region) {
+		this.s3Region = s3Region;
+	}
+
+	public String getS3Bucket() {
+		return s3Bucket;
+	}
+
+	public void setS3Bucket(String s3Bucket) {
+		this.s3Bucket = s3Bucket;
 	}
 	
 }
