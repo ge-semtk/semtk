@@ -19,9 +19,11 @@ package com.ge.research.semtk.utility.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -163,5 +165,21 @@ public class UtilityTest {
 		System.out.println(
 				Utility.removeQuotedSubstrings("?sparql = 'insert ?junk into <graph>'", "\"replaced\"")
 				);
+	}
+	
+	@Test 
+	public void testReadWriteFile() throws Exception{
+		String uuidStr = UUID.randomUUID().toString();
+		String path = "src/test/resources/" + uuidStr + ".txt";
+		try{
+			Utility.writeFile(path, uuidStr.getBytes());		// write the file
+			assertTrue(Utility.readFile(path).equals(uuidStr));	// read the file
+		}catch(Exception e){
+			throw e;
+		}finally{
+			// remove file
+			File file = new File(path);
+			file.delete();
+		}
 	}
 }

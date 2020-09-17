@@ -28,8 +28,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -122,19 +120,8 @@ public class FileStagingServiceRestController {
 					throw new Exception("Cannot stage file from unsupported store type '" + storeType + "'");
 				}
 				
-				// retrieve file as a byte array, and then write to file
-				// TODO FileSystemConnector should provide a utility to write to a file - remove from here when that is available
-				byte[] fileContents = conn.getObject(sourceFile);
-				OutputStream os = null;   
-				try {  
-					os = new FileOutputStream(stageFilePath);
-					os.write(fileContents); 
-				} catch (Exception e) { 
-					throw e;
-				} finally{
-					os.close();
-					os = null;
-				}
+				// retrieve file
+				conn.getObjectAsLocalFile(sourceFile, stageFilePath);
 				
 				// send file to Results Service
 				String fileId = this.sendToResultsService(requestBody.jobId, stageFilePath, stageFilename);

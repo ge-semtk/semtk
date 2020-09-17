@@ -24,10 +24,12 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
@@ -295,6 +297,22 @@ public abstract class Utility {
 	
 	public static String readFile(String path) throws IOException {
 		  return FileUtils.readFileToString(new File(path));
+	}
+	
+	/**
+	 * Write a byte array to a local file
+	 */
+	public static void writeFile(String path, byte[] contents) throws Exception {
+		OutputStream os = null;   
+		try {  
+			os = new FileOutputStream(path);
+			os.write(contents); 
+		} catch (Exception e) { 
+			throw e;
+		} finally{
+			os.close();
+			os = null;
+		}
 	}
 	
 	/**
