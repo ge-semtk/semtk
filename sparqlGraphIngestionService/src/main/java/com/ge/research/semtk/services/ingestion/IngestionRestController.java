@@ -417,7 +417,7 @@ public class IngestionRestController {
 					query_prop.getProtocol(), 
 					query_prop.getServer(), 
 					query_prop.getPort(), 
-					"clearAll", 
+					"/sparqlQueryService/clearAll", 
 					requestBody.getServerAndPort(),
 					requestBody.getServerType(),
 					requestBody.getGraph(),

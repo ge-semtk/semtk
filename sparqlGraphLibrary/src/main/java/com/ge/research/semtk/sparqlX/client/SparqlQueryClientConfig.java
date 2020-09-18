@@ -35,9 +35,8 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 	public SparqlQueryClientConfig(String serviceProtocol,String serviceServer, int servicePort, String serviceEndpoint,
 			String sparqlServerAndPort, String sparqlServerType, String sparqlDataset)
 			throws Exception {
-		// some backwards-compatibility issues where the service name is missing off endpoint
-		// other Clients handle this better
-		super(serviceProtocol, serviceServer, servicePort, serviceEndpoint.startsWith("/sparqlQueryService") ? serviceEndpoint : "/sparqlQueryService/" + serviceEndpoint);
+
+		super(serviceProtocol, serviceServer, servicePort, serviceEndpoint);
 		this.sparqlServerAndPort = sparqlServerAndPort;
 		this.sparqlServerType = sparqlServerType;
 		this.sparqlDataset = sparqlDataset;
