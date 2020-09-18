@@ -41,6 +41,20 @@
 						"isMarkedForDeletion": false
 					},
 					{
+						"KeyName": "event",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#event",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?event",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
 						"KeyName": "fileKey",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
@@ -97,6 +111,20 @@
 						"isMarkedForDeletion": false
 					},
 					{
+						"KeyName": "serverType",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/loadlog#serverType",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?serverType",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
 						"KeyName": "user",
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
@@ -123,7 +151,11 @@
 				"deletionMode": "FULL_DELETE"
 			}
 		],
-		"orderBy": []
+		"orderBy": [
+			{
+				"sparqlID": "?epoch"
+			}
+		]
 	},
 	"importSpec": {
 		"version": "1",
@@ -131,26 +163,34 @@
 		"columns": [
 			{
 				"colId": "col_0",
-				"colName": "fileKey"
+				"colName": "event"
 			},
 			{
 				"colId": "col_1",
-				"colName": "fileName"
+				"colName": "fileKey"
 			},
 			{
 				"colId": "col_2",
-				"colName": "graphName"
+				"colName": "fileName"
 			},
 			{
 				"colId": "col_3",
-				"colName": "seiServerAndPort"
+				"colName": "graphName"
 			},
 			{
 				"colId": "col_4",
-				"colName": "epoch"
+				"colName": "seiServerAndPort"
 			},
 			{
 				"colId": "col_5",
+				"colName": "serverType"
+			},
+			{
+				"colId": "col_6",
+				"colName": "epoch"
+			},
+			{
+				"colId": "col_7",
 				"colName": "user"
 			}
 		],
@@ -167,12 +207,12 @@
 						"URIRelation": "http://research.ge.com/semtk/loadlog#epoch",
 						"mapping": [
 							{
-								"colId": "col_4"
+								"colId": "col_6"
 							}
 						]
 					},
 					{
-						"URIRelation": "http://research.ge.com/semtk/loadlog#fileKey",
+						"URIRelation": "http://research.ge.com/semtk/loadlog#event",
 						"mapping": [
 							{
 								"colId": "col_0"
@@ -180,7 +220,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://research.ge.com/semtk/loadlog#fileName",
+						"URIRelation": "http://research.ge.com/semtk/loadlog#fileKey",
 						"mapping": [
 							{
 								"colId": "col_1"
@@ -188,7 +228,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://research.ge.com/semtk/loadlog#graphName",
+						"URIRelation": "http://research.ge.com/semtk/loadlog#fileName",
 						"mapping": [
 							{
 								"colId": "col_2"
@@ -196,7 +236,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://research.ge.com/semtk/loadlog#seiServerAndPort",
+						"URIRelation": "http://research.ge.com/semtk/loadlog#graphName",
 						"mapping": [
 							{
 								"colId": "col_3"
@@ -204,10 +244,26 @@
 						]
 					},
 					{
-						"URIRelation": "http://research.ge.com/semtk/loadlog#user",
+						"URIRelation": "http://research.ge.com/semtk/loadlog#seiServerAndPort",
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#serverType",
 						"mapping": [
 							{
 								"colId": "col_5"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/semtk/loadlog#user",
+						"mapping": [
+							{
+								"colId": "col_7"
 							}
 						]
 					}

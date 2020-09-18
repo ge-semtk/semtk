@@ -54,6 +54,8 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
+import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -149,10 +151,13 @@ public class IngestionRestController {
 			if (!loadTrackRegion.isEmpty() && !loadTrackS3Bucket.isEmpty()) {
 				trackBucket = new S3Connector(loadTrackRegion, loadTrackS3Bucket);
 				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
+				tracker.updateOwlModel();
 				tracker.test();
+				
 			} else if (!loadTrackFolder.isEmpty()) {
 				trackBucket = new DirectoryConnector(loadTrackFolder);
 				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
+				tracker.updateOwlModel();
 				tracker.test();
 			}
 		} catch (Exception e) {
@@ -444,7 +449,7 @@ public class IngestionRestController {
 	@RequestMapping(value="/runTrackingQuery", method= RequestMethod.POST)
 	public JSONObject runTrackingQuery(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		GeneralResultSet resultSet = null;
+		
 		try {	
 			this.validateTracker();
 
@@ -454,17 +459,18 @@ public class IngestionRestController {
 					requestBody.getUser(), 
 					requestBody.getStartEpoch(), 
 					requestBody.getEndEpoch());
-			resultSet = new TableResultSet(true);
-			resultSet.addResultsJSON(tab.toJson());
+			TableResultSet resultSet = new TableResultSet(true);
+			resultSet.addResults(tab);
+			return resultSet.toJson();
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
-			resultSet = new SimpleResultSet(false);
+			SimpleResultSet resultSet = new SimpleResultSet(false);
 			resultSet.addRationaleMessage(SERVICE_NAME, "runTrackingQuery", e);
+			return resultSet.toJson();
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
-		return resultSet.toJson();
 	}	
 	
 	@ApiOperation(
@@ -525,7 +531,29 @@ public class IngestionRestController {
 			resultSet.setSuccess(true);
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
-			resultSet.addRationaleMessage(SERVICE_NAME, "clearGraph", e);
+			resultSet.addRationaleMessage(SERVICE_NAME, "getTrackedIngestFile", e);
+			resultSet.setSuccess(false);
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+	
+		return resultSet.toJson();
+	}	
+	
+	@ApiOperation(
+			value=	"Delete data from a tracked load"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/undoLoad", method= RequestMethod.POST)
+	public JSONObject undoLoad(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet resultSet = new SimpleResultSet();
+		try {	
+			tracker.undoLoad(requestBody.getId());
+			resultSet.setSuccess(true);
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			resultSet.addRationaleMessage(SERVICE_NAME, "undoLoad", e);
 			resultSet.setSuccess(false);
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
@@ -611,6 +639,7 @@ public class IngestionRestController {
 			
 			// get data file content
 			String dataFileContent = fromFiles ? new String(((MultipartFile)dataFile).getBytes()) : (String)dataFile; 
+			String dataFileName = fromFiles ? ((MultipartFile)dataFile).getName() : null;
 			if(dataFileContent != null){
 				LocalLogger.logToStdErr("data size: "  + dataFileContent.length());
 			}else{
@@ -653,12 +682,15 @@ public class IngestionRestController {
 			
 			// set success values
 			if(precheck && dl.getLoadingErrorReport().getRows().size() == 0){
+				if (trackFlag) {
+					this.trackLoad(trackKey, dataFileName, dataFileContent, sgJson.getSparqlConn().getInsertInterface());
+				}
 				retval.setSuccess(true);
 			} else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
 				retval.setSuccess(false);
 			} else if(!precheck && recordsProcessed > 0){
 				if (trackFlag) {
-					this.trackLoad(trackKey, (MultipartFile)dataFile, sgJson.getSparqlConn().getInsertInterface());
+					this.trackLoad(trackKey, dataFileName, dataFileContent, sgJson.getSparqlConn().getInsertInterface());
 				}
 				retval.setSuccess(true);
 			} else {
@@ -707,6 +739,11 @@ public class IngestionRestController {
 	public void trackLoad(String key, MultipartFile dataFile, SparqlEndpointInterface sei) throws Exception {
 		String fileName = dataFile.getName();
 		IngestionRestController.trackBucket.putObject(key, dataFile.getBytes());
+		IngestionRestController.tracker.trackLoad(key, fileName, sei);
+	}
+	
+	public void trackLoad(String key, String fileName, String dataStr, SparqlEndpointInterface sei) throws Exception {
+		IngestionRestController.trackBucket.putObject(key, dataStr.getBytes());
 		IngestionRestController.tracker.trackLoad(key, fileName, sei);
 	}
 	
@@ -827,11 +864,11 @@ public class IngestionRestController {
 			String override = overrideBaseURI.trim();
 			
 			// replace $TRACK_KEY
-			if (override.contains("$TRACK_KEY")) {
+			if (override.equals("$TRACK_KEY")) {
 				if (! trackFlag) {
-					throw new Exception("overrideBaseURI conatins $TRACK_KEY but trackFlag is false");
+					throw new Exception("overrideBaseURI is $TRACK_KEY but trackFlag is false");
 				} else {
-					override = override.replaceAll("\\$TRACK_KEY", overrideBaseURI);
+					override = LoadTracker.buildBaseURI(fileKey); 
 				}
 			}
 			

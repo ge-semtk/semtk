@@ -16,10 +16,8 @@
  */
 
 
-package com.ge.research.semtk.services.ingestion;
+package com.ge.research.semtk.springutilib.requests;
 
-
-import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 
 import io.swagger.annotations.ApiModelProperty;
 

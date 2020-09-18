@@ -26,17 +26,20 @@ import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.services.client.RestClientConfig;
 
 
-public class IngestorRestClient extends RestClient{
+public class IngestorRestClient extends SharedIngestNgeClient {
 
 	RecordProcessResults lastResult = null;
 	
 	public IngestorRestClient (IngestorClientConfig config){
-		this.conf = config;
+		super(config, "ingestion/");
 	}
+	public IngestorRestClient (){
+		super("ingestion/");
+	}
+
 	
 	@Override
 	public void buildParametersJSON() throws Exception {
@@ -217,6 +220,10 @@ public class IngestorRestClient extends RestClient{
 			this.parametersJSON.remove("data");
 		}
 	}
+	
+
+
+	
 	public RecordProcessResults getLastResult(){
 		return this.lastResult;
 	}

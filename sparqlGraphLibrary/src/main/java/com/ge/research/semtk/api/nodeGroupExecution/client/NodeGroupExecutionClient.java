@@ -21,20 +21,22 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.client.SharedIngestNgeClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-public class NodeGroupExecutionClient extends RestClient {
+public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	
 	// json keys
 	// TODO should probably move these elsewhere and/or consolidate with other classes
@@ -86,6 +88,21 @@ public class NodeGroupExecutionClient extends RestClient {
 	private static final String dispatchConstructByIdEndpointForInstanceManipulationEndpoint = "/dispatchConstructForInstanceManipulationById";
 	private static final String dispatchConstructFromNodegroupEndpointForInstanceManipulationEndpoint = "/dispatchConstructForInstanceManipulationFromNodegroup";
 
+	/**
+	 * Constructor
+	 */
+	public NodeGroupExecutionClient() {
+		super("nodeGroupExecution/");
+	}
+	
+	public NodeGroupExecutionClient(RestClientConfig conf, String mappingPrefix){
+		super(conf, "nodeGroupExecution/");
+	}
+	
+	public NodeGroupExecutionClient (NodeGroupExecutionClientConfig necc){
+		super(necc, "nodeGroupExecution/");
+	}
+	
 	@Override
 	public void buildParametersJSON() throws Exception {
 	}
@@ -94,9 +111,7 @@ public class NodeGroupExecutionClient extends RestClient {
 	public void handleEmptyResponse() throws Exception {
 	}
 	
-	public NodeGroupExecutionClient (NodeGroupExecutionClientConfig necc){
-		this.conf = necc;
-	}
+	
 	
 	public String getServiceUser() {
 		return ((NodeGroupExecutionClientConfig)this.conf).getServiceUser();
@@ -1308,6 +1323,8 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 	}
 	
+	
+	
 
 
 	/**
@@ -1454,4 +1471,5 @@ public class NodeGroupExecutionClient extends RestClient {
 		}
 		return this.execDispatchDeleteFromNodeGroup(ng, conn, null, null);
 	}
+	
 }

@@ -76,6 +76,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * Interface to SPARQL endpoint.
@@ -1247,6 +1248,17 @@ public abstract class SparqlEndpointInterface {
 		}
 		return false;
 	}
+	
+	public void updateOwlModel(InputStream owlInputStream) throws Exception {
+		
+		byte [] owl = IOUtils.toByteArray(owlInputStream);
+		String base = Utility.getXmlBaseFromOwlRdf(new ByteArrayInputStream(owl));
+		this.clearPrefix(base);
+		JSONObject retJson = this.executeAuthUploadOwl(owl);
+		SimpleResultSet res = SimpleResultSet.fromJson(retJson);
+		res.throwExceptionIfUnsuccessful();
+	}
+
 
 	public abstract SparqlEndpointInterface copy() throws Exception;
 	

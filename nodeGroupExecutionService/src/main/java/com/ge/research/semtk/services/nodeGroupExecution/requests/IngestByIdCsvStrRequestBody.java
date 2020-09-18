@@ -35,7 +35,7 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 	@ApiModelProperty(
 			value = "overrideBaseURI",
 			required = false,
-			example = "http://$TRACK_KEY/data")
+			example = "$TRACK_KEY  or  http://maries/data")
 	public String overrideBaseURI = null;
 	
 	public String getTemplateId() {

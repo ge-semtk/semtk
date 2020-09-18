@@ -141,7 +141,10 @@ public class RecordProcessResults extends GeneralResultSet{
 			if (rationale.contains("threw com.ge.research.semtk.auth.AuthorizationException")) {
 				throw new AuthorizationException(fullMessage);
 			} else {
-				LocalLogger.logToStdErr(this.getErrorTable().toCSVString());
+				try {
+					LocalLogger.logToStdErr(this.getErrorTable().toCSVString());
+				} catch (Exception e) {
+				}
 				throw new Exception(fullMessage);
 			}
 		}

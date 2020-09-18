@@ -2,8 +2,10 @@ uri "http://research.ge.com/semtk/loadlog".
 
 
 LogEntry is a class,
+	described by event with a single value of type string,
 	described by epoch with a single value of type int,
 	described by seiServerAndPort with a single value of type string,
+	described by serverType with a single value of type string,
 	described by graphName with a single value of type string,
 	described by user with values of type string.
 	

@@ -49,7 +49,7 @@ public class IngestionFromStringsRequestBody {
 	@ApiModelProperty(
 			value = "overrideBaseURI",
 			required = false,
-			example = "http://$TRACK_KEY/data")
+			example = "$TRACK_KEY  or  http://johns/data")
 	public String overrideBaseURI = null;
 
 	public String getTemplate() {
