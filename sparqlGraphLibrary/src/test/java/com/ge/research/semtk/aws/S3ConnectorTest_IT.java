@@ -35,7 +35,7 @@ public class S3ConnectorTest_IT {
 			assumeTrue(e.getMessage(), false);
 			return;
 		}
-		
+				
 		// create an s3 object from some text
 		String keyName = UUID.randomUUID().toString() + ".txt";
 		String origStr = "This is the content.";
@@ -54,6 +54,8 @@ public class S3ConnectorTest_IT {
 	    
 	    // delete it
 		s3conn.deleteObject(keyName);
+		assertFalse("Still exists after deleting: " + keyName, s3conn.checkExists(keyName));
+
 	}
 
 }

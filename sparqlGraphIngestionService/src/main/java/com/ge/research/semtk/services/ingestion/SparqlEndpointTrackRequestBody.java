@@ -32,7 +32,6 @@ public class SparqlEndpointTrackRequestBody extends SparqlEndpointRequestBody {
 	   example = "true")
 	public Boolean trackFlag = false;
 
-	
 	public Boolean getTrackFlag() {
 		return trackFlag;
 	}
@@ -40,4 +39,5 @@ public class SparqlEndpointTrackRequestBody extends SparqlEndpointRequestBody {
 	public void setTrackFlag(Boolean trackFlag) {
 		this.trackFlag = trackFlag;
 	}
+	
 }

@@ -66,15 +66,19 @@ import io.swagger.annotations.ApiOperation;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.aws.S3Connector;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.DataLoader;
+import com.ge.research.semtk.load.DirectoryConnector;
+import com.ge.research.semtk.load.FileBucketConnector;
 import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.dataset.ODBCDataset;
+import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
@@ -123,7 +127,7 @@ public class IngestionRestController {
 			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
 	
 	static LoadTracker tracker = null;
-	static S3Connector s3Conn = null;
+	static FileBucketConnector trackBucket = null;
 	
 	@PostConstruct
     public void init() {
@@ -138,14 +142,17 @@ public class IngestionRestController {
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 
-		String loadTrackRegion = prop.getLoadTrackAwsRegion();
-		String loadTrackS3Bucket = prop.getLoadTrackS3Bucket();
+		String loadTrackRegion = prop.getLoadTrackAwsRegion().trim();
+		String loadTrackS3Bucket = prop.getLoadTrackS3Bucket().trim();
+		String loadTrackFolder = prop.getLoadTrackFolder().trim();
 		try {
 			if (!loadTrackRegion.isEmpty() && !loadTrackS3Bucket.isEmpty()) {
-				s3Conn = new S3Connector(loadTrackRegion, loadTrackS3Bucket);
+				trackBucket = new S3Connector(loadTrackRegion, loadTrackS3Bucket);
 				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
-				
-				s3Conn.test();
+				tracker.test();
+			} else if (!loadTrackFolder.isEmpty()) {
+				trackBucket = new DirectoryConnector(loadTrackFolder);
+				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
 				tracker.test();
 			}
 		} catch (Exception e) {
@@ -160,11 +167,17 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFile", method= RequestMethod.POST)
-	public JSONObject fromCsvFile(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFile(
+			@RequestParam(name="template") MultipartFile templateFile, 
+			@RequestParam(name="data") MultipartFile dataFile, 
+			@RequestParam(name="trackFlag", required=false) Boolean trackFlag, 
+			@RequestParam(name="overrideBaseURI", required=false) String overrideBaseURI, 
+			@RequestHeader HttpHeaders headers) {
+		
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFile", templateFile, dataFile);
-			return this.fromAnyCsv(templateFile, dataFile, null, true, false, false);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, false, false, trackFlag, overrideBaseURI);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -176,10 +189,17 @@ public class IngestionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
-	public JSONObject fromCsvFileWithNewConnection(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile , @RequestParam("connectionOverride") MultipartFile connection, @RequestParam(name="trackFlag", required=false) Boolean trackFlag, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFileWithNewConnection(
+			@RequestParam(name="template") MultipartFile templateFile, 
+			@RequestParam(name="data") MultipartFile dataFile , 
+			@RequestParam(name="connectionOverride") MultipartFile connection, 
+			@RequestParam(name="trackFlag", required=false) Boolean trackFlag, 
+			@RequestParam(name="overrideBaseURI", required=false) String overrideBaseURI, 
+			@RequestHeader HttpHeaders headers) {
+		
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(templateFile, dataFile, connection, true, false, false, trackFlag);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, false, false, trackFlag, overrideBaseURI);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -188,11 +208,17 @@ public class IngestionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvFilePrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFilePrecheck(
+			@RequestParam(name="template") MultipartFile templateFile, 
+			@RequestParam(name="data") MultipartFile dataFile, 
+			@RequestParam(name="trackFlag", required=false) Boolean trackFlag, 
+			@RequestParam(name="overrideBaseURI", required=false) String overrideBaseURI, 
+			@RequestHeader HttpHeaders headers) {
+		
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFilePrecheck", templateFile, dataFile);
-			return this.fromAnyCsv(templateFile, dataFile, null, true, true, false);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, true, false, trackFlag, overrideBaseURI);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -201,11 +227,14 @@ public class IngestionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheckOnly", method= RequestMethod.POST)
-	public JSONObject fromCsvFilePrecheckOnly(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFilePrecheckOnly(
+			@RequestParam("template") MultipartFile templateFile, 
+			@RequestParam("data") MultipartFile dataFile,
+			@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFilePrecheck", templateFile, dataFile);
-			return this.fromAnyCsv(templateFile, dataFile, null, true, true, true);
+			return this.fromAnyCsv(templateFile, dataFile, null, true, true, true, false, null);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -214,11 +243,18 @@ public class IngestionRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheck", method= RequestMethod.POST)
-	public JSONObject fromCsvFileWithNewConnectionPrecheck(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFileWithNewConnectionPrecheck(
+			@RequestParam(name="template") MultipartFile templateFile, 
+			@RequestParam(name="data") MultipartFile dataFile,
+			@RequestParam(name="connectionOverride") MultipartFile connection, 
+			@RequestParam(name="trackFlag", required=false) Boolean trackFlag, 
+			@RequestParam(name="overrideBaseURI", required=false) String overrideBaseURI, 
+			@RequestHeader HttpHeaders headers) {
+		
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
-			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, false);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, false, trackFlag, overrideBaseURI);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -231,11 +267,16 @@ public class IngestionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheckAsync", method= RequestMethod.POST)
-	public JSONObject fromCsvFileAsync(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFileAsync(
+			@RequestParam("template") MultipartFile templateFile, 
+			@RequestParam("data") MultipartFile dataFile, 
+			@RequestParam(name="trackFlag", required=false) Boolean trackFlag, 
+			@RequestParam(name="overrideBaseURI", required=false) String overrideBaseURI, 
+			@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
 			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
-			SimpleResultSet retval = this.fromAnyCsvAsync(templateFile, dataFile, null, true, true, false);
+			SimpleResultSet retval = this.fromAnyCsvAsync(templateFile, dataFile, null, true, true, false, trackFlag, overrideBaseURI);
 		    return retval.toJson();
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -248,10 +289,14 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnectionPrecheckOnly", method= RequestMethod.POST)
-	public JSONObject fromCsvFilePrecheckOnly(@RequestParam("template") MultipartFile templateFile, @RequestParam("data") MultipartFile dataFile,@RequestParam("connectionOverride") MultipartFile connection, @RequestHeader HttpHeaders headers) {
+	public JSONObject fromCsvFilePrecheckOnly(
+			@RequestParam("template") MultipartFile templateFile, 
+			@RequestParam("data") MultipartFile dataFile,
+			@RequestParam("connectionOverride") MultipartFile connection, 
+			@RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, true);
+			return this.fromAnyCsv(templateFile, dataFile, connection, true, true, true, false, null);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -267,12 +312,15 @@ public class IngestionRestController {
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/fromCsv", method= RequestMethod.POST)
-	public JSONObject fromCsv(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+	public JSONObject fromCsv(
+			@RequestBody IngestionFromStringsRequestBody requestBody, 
+			@RequestHeader HttpHeaders headers) throws JsonParseException, JsonMappingException, IOException {
+		
 		HeadersManager.setHeaders(headers);
 		try {
 			// LocalLogger.logToStdErr("the request: " + requestBody);
 			//IngestionFromStringsRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsRequestBody.class);
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, false, false);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, false, false, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -286,7 +334,7 @@ public class IngestionRestController {
 		try {
 			// LocalLogger.logToStdErr("the request: " + requestBody);
 			//IngestionFromStringsWithNewConnectionRequestBody deserialized = (new ObjectMapper()).readValue(requestBody, IngestionFromStringsWithNewConnectionRequestBody.class);
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, false, false);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, false, false, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -298,7 +346,7 @@ public class IngestionRestController {
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true, false);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true, false, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -310,7 +358,7 @@ public class IngestionRestController {
 	public JSONObject fromCsvPrecheckOnly(@RequestBody IngestionFromStringsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true, true);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), null, false, true, true, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -322,7 +370,7 @@ public class IngestionRestController {
 	public JSONObject fromCsvPrecheck(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false);
+			return this.fromAnyCsv(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -338,7 +386,7 @@ public class IngestionRestController {
 	public JSONObject fromCsvPrecheckAsync(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			SimpleResultSet res = this.fromAnyCsvAsync(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false);
+			SimpleResultSet res = this.fromAnyCsvAsync(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			return res.toJson();
 		    
 		} finally {
@@ -440,7 +488,7 @@ public class IngestionRestController {
 			
 			// delete objects
 			for (String key : tab.getColumn("fileKey")) {
-				IngestionRestController.s3Conn.deleteObject(key);
+				IngestionRestController.trackBucket.deleteObject(key);
 			}
 			
 			// now delete tracker entries
@@ -529,12 +577,7 @@ public class IngestionRestController {
 	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
 	 * @param async perform async
 	 */
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
-		return this.fromAnyCsv(templateFile, dataFile, sparqlConnectionOverride, fromFiles, precheck, skipIngest, false);
-	}
-	
-	/** add track Flag **/
-	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest, Boolean trackFlag){
+	private JSONObject fromAnyCsv(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest, Boolean trackFlag, String overrideBaseURI){
 		
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
@@ -593,8 +636,11 @@ public class IngestionRestController {
 				detailsToLog = LoggerRestClient.addDetails("Start Time", startTime, detailsToLog); 				
 			}
 			
+			String trackKey = UUID.randomUUID().toString();
+			this.overrideBaseURI(sgJson, trackFlag, overrideBaseURI, trackKey);
+
 			// load
-			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
+			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			
 			recordsProcessed = dl.importData(precheck, skipIngest);
 	
@@ -612,7 +658,7 @@ public class IngestionRestController {
 				retval.setSuccess(false);
 			} else if(!precheck && recordsProcessed > 0){
 				if (trackFlag) {
-					this.trackLoad((MultipartFile)dataFile, sgJson.getSparqlConn().getInsertInterface());
+					this.trackLoad(trackKey, (MultipartFile)dataFile, sgJson.getSparqlConn().getInsertInterface());
 				}
 				retval.setSuccess(true);
 			} else {
@@ -647,7 +693,7 @@ public class IngestionRestController {
 	 * @throws Exception
 	 */
 	public void validateTracker() throws Exception {
-		if (IngestionRestController.tracker == null || IngestionRestController.s3Conn == null) {
+		if (IngestionRestController.tracker == null || IngestionRestController.trackBucket == null) {
 			throw new Exception("Tracking is not configured in the ingestion service");
 		}
 	}
@@ -658,10 +704,9 @@ public class IngestionRestController {
 	 * @param sei
 	 * @throws Exception
 	 */
-	public void trackLoad(MultipartFile dataFile, SparqlEndpointInterface sei) throws Exception {
-		String key = UUID.randomUUID().toString();
+	public void trackLoad(String key, MultipartFile dataFile, SparqlEndpointInterface sei) throws Exception {
 		String fileName = dataFile.getName();
-		IngestionRestController.s3Conn.putObject(key, dataFile.getBytes());
+		IngestionRestController.trackBucket.putObject(key, dataFile.getBytes());
 		IngestionRestController.tracker.trackLoad(key, fileName, sei);
 	}
 	
@@ -670,7 +715,7 @@ public class IngestionRestController {
 	}
 	
 	public byte[] getTrackedFile(String key) throws Exception {
-		return IngestionRestController.s3Conn.getObject(key);
+		return IngestionRestController.trackBucket.getObject(key);
 	}
 	
 	public Table runTrackSelectQuery(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
@@ -678,6 +723,14 @@ public class IngestionRestController {
 	}
 	
 	public void runTrackDeleteQuery(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
+		
+		// get and delete actual files
+		Table tab = IngestionRestController.tracker.query(fileKey, sei, user, startEpoch, endEpoch);
+		for (String key : tab.getColumn(LoadTracker.KEY_COL)) {
+			IngestionRestController.trackBucket.deleteObject(key);
+		}
+		
+		// remove entries from tracker
 		IngestionRestController.tracker.delete(fileKey, sei, user, startEpoch, endEpoch);
 	}
 
@@ -691,11 +744,10 @@ public class IngestionRestController {
 	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
 	 * @param precheck check that the ingest will succeed before starting it
 	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
-	 * @param async perform async
 	 */
-	private SimpleResultSet fromAnyCsvAsync(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest){
+	private SimpleResultSet fromAnyCsvAsync(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest, Boolean trackFlag, String overrideBaseURI){
 
-
+		// TODO, difficult to loadTrack because we don't know success
 		int recordsProcessed = 0;
 		SimpleResultSet simpleResult = new SimpleResultSet();
 		
@@ -703,6 +755,11 @@ public class IngestionRestController {
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(prop, ThreadAuthenticator.getThreadUserName());
 				
 		try {
+			
+			if (trackFlag) {
+				// validate tracker before starting anything
+				this.validateTracker();
+			}
 			
 			// get SparqlGraphJson from template
 			String templateContent = fromFiles ? new String(((MultipartFile)templateFile).getBytes()) : (String)templateFile;	
@@ -718,14 +775,30 @@ public class IngestionRestController {
 				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));   				
 			}
 					
+			String trackKey = UUID.randomUUID().toString();
+			String jobId = "job-" + UUID.randomUUID().toString();
+			this.overrideBaseURI(sgJson, trackFlag, overrideBaseURI, trackKey);
 			// get a CSV data set to use in the load. 
 			Dataset ds = new CSVDataset(dataFileContent, true);
-			DataLoader dl = new DataLoader(sgJson, prop.getBatchSize(), ds, prop.getSparqlUserName(), prop.getSparqlPassword());
-			String jobId = "job-" + UUID.randomUUID().toString();
+			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
+			
+			
+			
 			dl.runAsync(precheck, skipIngest, 
 					new StatusClient(new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobId)), 
 					new ResultsClient(new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort()))
 					);
+			
+			if (trackFlag) {
+				AsyncLoadTrackThread thread = new AsyncLoadTrackThread(
+						new JobTracker(servicesgraph_prop.buildSei()),
+						jobId, tracker, trackBucket, trackKey, 
+						((MultipartFile)dataFile).getName(), 
+						sgJson.getSparqlConn().getInsertInterface(), 
+						dataFileContent.getBytes());
+				thread.start();
+			}
+			
 			simpleResult.setSuccess(true);
 			simpleResult.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 					
@@ -741,6 +814,33 @@ public class IngestionRestController {
 		return simpleResult;
 	}	
 	
+	/**
+	 * Override baseURI.  
+	 * @param sgjson
+	 * @param trackFlag
+	 * @param overrideBaseURI - no-op if this is null or empty
+	 * @param fileKey
+	 * @throws Exception
+	 */
+	private void overrideBaseURI(SparqlGraphJson sgjson, boolean trackFlag, String overrideBaseURI, String fileKey) throws Exception {
+		if (overrideBaseURI != null && ! overrideBaseURI.trim().isEmpty()) {
+			String override = overrideBaseURI.trim();
+			
+			// replace $TRACK_KEY
+			if (override.contains("$TRACK_KEY")) {
+				if (! trackFlag) {
+					throw new Exception("overrideBaseURI conatins $TRACK_KEY but trackFlag is false");
+				} else {
+					override = override.replaceAll("\\$TRACK_KEY", overrideBaseURI);
+				}
+			}
+			
+			// set the new baseURI
+			JSONObject spec = sgjson.getImportSpecJson();
+			spec = ImportSpecHandler.overrideBaseURI(spec, override);
+			sgjson.setImportSpecJson(spec);
+		}
+	}
 	
 	@CrossOrigin
 	@RequestMapping(value="/fromPostgresODBC", method= RequestMethod.POST)

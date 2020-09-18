@@ -7,13 +7,15 @@ import com.ge.research.semtk.utility.Utility;
  * @author 200001934
  *
  */
-public abstract class FileSystemConnector {
+public abstract class FileBucketConnector {
 	
 	public abstract void putObject(String keyName, byte [] data) throws Exception;
 	
 	public abstract byte[] getObject(String keyName) throws Exception;
 	
 	public abstract void deleteObject(String keyName);
+	
+	public abstract boolean checkExists(String keyName) throws Exception;
 	
 	/**
 	 * Copy a file from the file system to local

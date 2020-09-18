@@ -1179,7 +1179,29 @@ public class NodeGroupExecutionClient extends RestClient {
 		return execIngestionFromCsvStrNewConnection(nodegroupAndTemplateId, csvContentStr, overrideConn);
 	}
 	
-	
+	/**
+	 * Ingest CSV using a nodegroup ID.
+	 */
+	@SuppressWarnings("unchecked")
+	public RecordProcessResults execIngestionFromCsvStrNewConnection(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn, boolean trackFlag, String overrideBaseURI) throws Exception {
+		RecordProcessResults retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsNewConnectionEndpoint);
+		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			retval = new RecordProcessResults(jobj);
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			this.reset();
+		}
+		return retval;
+	}
 	/**
 	 * execIngestFromCsvStringsByIdAsync
 	 * @param nodegroupAndTemplateId
@@ -1208,6 +1230,61 @@ public class NodeGroupExecutionClient extends RestClient {
 	}
 	
 	/**
+	 * execIngestFromCsvStringsByIdAsync
+	 * @param nodegroupAndTemplateId
+	 * @param csvContentStr
+	 * @param overrideConn
+	 * @return jobId string
+	 * @throws Exception if call is unsuccessful
+	 */
+	@SuppressWarnings("unchecked")
+	public String execIngestFromCsvStringsByIdAsync(String nodegroupAndTemplateId, String csvContentStr, SparqlConnection overrideConn, boolean trackFlag, String overrideBaseURI) throws Exception {
+		
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsByIdAsyncEndpoint);
+		this.parametersJSON.put("templateId", nodegroupAndTemplateId);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+		
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}
+		finally{
+			this.reset();
+		}
+	}
+	
+	/**
+	 * Ingest from a template
+	 * @param sgjsonWithOverride
+	 * @param csvContentStr
+	 * @return jobId
+	 * @throws Exception
+	 */
+	public String execIngestFromCsvStringsAndTemplateAsync(SparqlGraphJson sgjsonWithOverride, String csvContentStr, boolean trackFlag, String overrideBaseURI) throws Exception {
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateAsync);
+		this.parametersJSON.put("template", sgjsonWithOverride.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sgjsonWithOverride.getSparqlConn().toJson().toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+		
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}
+		finally{
+			this.reset();
+		}
+	}
+
+	/**
 	 * Ingest from a template
 	 * @param sgjsonWithOverride
 	 * @param csvContentStr
@@ -1230,6 +1307,8 @@ public class NodeGroupExecutionClient extends RestClient {
 			this.reset();
 		}
 	}
+	
+
 
 	/**
 	 * Ingest a csv table synchronously
@@ -1272,6 +1351,28 @@ public class NodeGroupExecutionClient extends RestClient {
 	/**
 	 * Ingest CSV using a nodegroup.
 	 */
+	@SuppressWarnings("unchecked")
+	public RecordProcessResults execIngestionFromCsvStr(SparqlGraphJson sparqlGraphJson, String csvContentStr, boolean trackFlag, String overrideBaseURI) throws Exception {
+		RecordProcessResults retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsAndTemplateNewConnectionEndpoint);
+		this.parametersJSON.put("template", sparqlGraphJson.getJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, sparqlGraphJson.getSparqlConnJson().toJSONString());
+		this.parametersJSON.put("csvContent", csvContentStr);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+		
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			retval = new RecordProcessResults(jobj);
+			retval.throwExceptionIfUnsuccessful();
+		}
+		finally{
+			this.reset();
+		}
+		return retval;
+	}
+
 	@SuppressWarnings("unchecked")
 	public RecordProcessResults execIngestionFromCsvStr(SparqlGraphJson sparqlGraphJson, String csvContentStr) throws Exception {
 		RecordProcessResults retval = null;

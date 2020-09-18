@@ -120,6 +120,17 @@ public class ImportSpecHandler {
 		this.errorCheckImportSpec();
 	}
 	
+	/**
+	 * Override baseURI in a JSON object.
+	 * @param importSpecJson
+	 * @param override
+	 * @return
+	 */
+	public static JSONObject overrideBaseURI(JSONObject importSpecJson, String override) {
+		importSpecJson.put(SparqlGraphJson.JKEY_IS_BASE_URI, override);
+		return importSpecJson;
+	}
+	
 	public JSONArray getColumnsJson() {
 		return (JSONArray) this.importspec.get(SparqlGraphJson.JKEY_IS_COLUMNS);
 	}

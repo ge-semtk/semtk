@@ -197,6 +197,12 @@ public class SparqlGraphJson {
 			return null;
 		}
 	}
+	
+	public void setImportSpecJson(JSONObject importSpecJson) {
+		this.jObj.put(JKEY_IMPORTSPEC, importSpecJson);
+		this.importSpec = null;   // wipe out any cached ImportSpecHandler
+	}
+	
 	/**
 	 * @return runtime constraints json or null
 	 */

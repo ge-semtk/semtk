@@ -49,6 +49,8 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class LoadTracker {
+	public static final String KEY_COL = "fileKey";
+	
 	static boolean firstConstruct = true;
 	SparqlEndpointInterface modelSei = null;
 	SparqlEndpointInterface dataSei = null;
@@ -154,8 +156,8 @@ public class LoadTracker {
 		PropertyItem pItem;
 		
 		if (fileKey != null) {
-			pItem = ng.getPropertyItemBySparqlID("fileKey");
-			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("fileKey", fileKey, XSDSupportedType.STRING));	
+			pItem = ng.getPropertyItemBySparqlID(KEY_COL);
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint(KEY_COL, fileKey, XSDSupportedType.STRING));	
 		}
 		
 		if (sei != null) {

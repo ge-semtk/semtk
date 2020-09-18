@@ -84,7 +84,7 @@ public class NodeGroupExecutorTest_IT {
 		assertEquals(123, TestGraph.getNumTriples());	// get count before loading
 		
 		// do the insert (using full nodegroup)
-		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA);
+		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA); 
 		assertTrue("Ingest failed:" + res.getRationaleAsString(" "), res.getSuccess());
 		assertEquals("Ingest has failures", 0, res.getFailuresEncountered());
 		

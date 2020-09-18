@@ -111,6 +111,52 @@ public class IngestorRestClient extends RestClient{
 		}
 	}
 	
+	public void execIngestionFromCsv(String template, String data, String sparqlConnectionOverride, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheck");
+		this.parametersJSON.put("template", template);
+		this.parametersJSON.put("data", data);
+		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+
+		try{
+			this.lastResult = this.execute();	
+			return;
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("template");
+			this.parametersJSON.remove("data");
+			this.parametersJSON.remove("connectionOverride");
+			this.parametersJSON.remove("trackFlag");
+			this.parametersJSON.remove("overrideBaseURI");
+
+		}
+	}
+	
+	public String execIngestionFromCsvAsync(String template, String data, String sparqlConnectionOverride, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheckAsync");
+		this.parametersJSON.put("template", template);
+		this.parametersJSON.put("data", data);
+		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+
+		try{
+			return this.executeToJobId();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("template");
+			this.parametersJSON.remove("data");
+			this.parametersJSON.remove("connectionOverride");
+			this.parametersJSON.remove("trackFlag");
+			this.parametersJSON.remove("overrideBaseURI");
+
+		}
+	}
 	/**
 	 * Simpler API with modern naming (not "exec" since it doesn't return a ResultSet)
 	 * Should be the default ingest function

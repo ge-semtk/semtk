@@ -482,10 +482,13 @@ public class NodeGroupExecutor {
 	 * @throws Exception
 	 */
 	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, String storedNodeGroupId, String csvContents) throws Exception{
-		
 		SparqlGraphJson sparqlGraphJson = this.getSparqlGraphJson(storedNodeGroupId);
-			
-		return ingestFromTemplateIdAndCsvString(conn, sparqlGraphJson, csvContents);
+		return ingestFromTemplateAndCsvString(conn, sparqlGraphJson, csvContents, false, null);
+	}
+
+	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, String storedNodeGroupId, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
+		SparqlGraphJson sparqlGraphJson = this.getSparqlGraphJson(storedNodeGroupId);
+		return ingestFromTemplateAndCsvString(conn, sparqlGraphJson, csvContents, trackFlag, overrideBaseURI);
 	}
 	
 	
@@ -497,11 +500,11 @@ public class NodeGroupExecutor {
 	 * @return
 	 * @throws Exception
 	 */
-	public String ingestFromTemplateIdAndCsvStringAsync(SparqlConnection conn, String storedNodeGroupId, String csvContents) throws Exception{
+	public String ingestFromTemplateIdAndCsvStringAsync(SparqlConnection conn, String storedNodeGroupId, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
 		
 		SparqlGraphJson sparqlGraphJson = this.getSparqlGraphJson(storedNodeGroupId);
 			
-		return ingestFromTemplateAndCsvStringAsync(conn, sparqlGraphJson, csvContents);
+		return ingestFromTemplateAndCsvStringAsync(conn, sparqlGraphJson, csvContents, trackFlag, overrideBaseURI);
 	}
 	
 	private SparqlGraphJson getSparqlGraphJson(String storedNodeGroupId) throws Exception {
@@ -528,7 +531,10 @@ public class NodeGroupExecutor {
 	 * @return
 	 * @throws Exception
 	 */
-	public RecordProcessResults ingestFromTemplateIdAndCsvString(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents) throws Exception{
+	public RecordProcessResults ingestFromTemplateAndCsvString(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents) throws Exception{
+		return this.ingestFromTemplateAndCsvString(conn, sparqlGraphJson, csvContents, false, null);
+	}
+	public RecordProcessResults ingestFromTemplateAndCsvString(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
 		
 		RecordProcessResults retval = null;
 		
@@ -540,7 +546,7 @@ public class NodeGroupExecutor {
 		
 		String sgjStr = sparqlGraphJson.getJson().toJSONString();
 		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
-		this.ingestClient.execIngestionFromCsv(sgjStr, csvContents, connStr);
+		this.ingestClient.execIngestionFromCsv(sgjStr, csvContents, connStr, trackFlag, overrideBaseURI);
 		retval = this.ingestClient.getLastResult();
 
 		LocalLogger.logToStdOut("Ingestion results: " + retval.toJson().toJSONString());
@@ -556,7 +562,7 @@ public class NodeGroupExecutor {
 	 * @return jobId
 	 * @throws Exception
 	 */
-	public String ingestFromTemplateAndCsvStringAsync(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents) throws Exception{
+	public String ingestFromTemplateAndCsvStringAsync(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
 				
 		// check to make sure there is an importspec attached. how to do this?
 		if(sparqlGraphJson.getJson().get("importSpec") == null){
@@ -567,7 +573,7 @@ public class NodeGroupExecutor {
 		String sgjStr = sparqlGraphJson.getJson().toJSONString();
 		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
 		
-		return this.ingestClient.execIngestionFromCsvAsync(sgjStr, csvContents, connStr);
+		return this.ingestClient.execIngestionFromCsvAsync(sgjStr, csvContents, connStr, trackFlag, overrideBaseURI);
 	}
 	
 	/**

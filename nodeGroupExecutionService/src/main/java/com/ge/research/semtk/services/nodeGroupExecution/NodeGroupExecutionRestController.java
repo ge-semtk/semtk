@@ -1184,7 +1184,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1218,7 +1218,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+				retval = nodeGroupExecutor.ingestFromTemplateAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1254,7 +1254,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 				
@@ -1289,7 +1289,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1323,7 +1323,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 			}catch(Exception e){
@@ -1546,6 +1546,8 @@ public class NodeGroupExecutionRestController {
 	private JobTracker getJobTracker() throws Exception{
 		return new JobTracker(servicesgraph_props.buildSei());
 	}
+	
+	
 }
 
 

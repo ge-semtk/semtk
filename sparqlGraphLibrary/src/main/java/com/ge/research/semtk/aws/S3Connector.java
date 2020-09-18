@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import com.arangodb.internal.util.IOUtils;
-import com.ge.research.semtk.load.FileSystemConnector;
+import com.ge.research.semtk.load.FileBucketConnector;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -22,7 +23,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
  * 
  * NOTE: No IAM role is explicitly used here - the code will use the IAM role attached to the EC2 node.
  */
-public class S3Connector extends FileSystemConnector {
+public class S3Connector extends FileBucketConnector {
 	private String region = null;
 	private String name = null;
 	private S3Client s3Client = null;
@@ -36,6 +37,10 @@ public class S3Connector extends FileSystemConnector {
 		this.region = region;
 		this.name = name;
 		this.s3Client = this.buildS3Client();		
+		
+		// test it
+		ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(this.name).maxKeys(1).build();
+		this.s3Client.listObjectsV2Paginator(request);
 	}
 	
 	private S3Client buildS3Client() {
@@ -56,17 +61,26 @@ public class S3Connector extends FileSystemConnector {
 		return name;
 	}
 	
-	public void test() throws Exception {
-		ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(this.name).maxKeys(1).build();
-		this.s3Client.listObjectsV2Paginator(request);
-	}
-		
 	public void putObject(String keyName, byte [] data) throws Exception {
+		
+		if (this.checkExists(keyName)) {
+			throw new Exception("Key already exists: " + keyName);
+		}
 		PutObjectResponse res = this.s3Client.putObject(PutObjectRequest.builder().bucket(this.name).key(keyName).build(),
 				RequestBody.fromBytes(data));
+	
         
 		if (res.sdkHttpResponse().isSuccessful() == false) {
 			throw new Exception("Error putting object into s3: " + res.sdkHttpResponse().statusText());
+		}
+	}
+	
+	public boolean checkExists(String keyName) throws Exception {
+		try {
+			ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(keyName).build());
+			return true;
+		} catch (NoSuchKeyException nske) {
+			return false;
 		}
 	}
 	
