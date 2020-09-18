@@ -38,7 +38,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.load.FileSystemConnector;
+import com.ge.research.semtk.load.FileBucketConnector;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -112,7 +112,7 @@ public class FileStagingServiceRestController {
 				final String stageFilePath = stageDir + "/" + stageFilename;  	// TODO do this using API for correct slashing
 				
 				LocalLogger.logToStdOut("Stage file " + sourceFile + " from " + storeType + " to " + stageFilePath);
-				FileSystemConnector conn = null;
+				FileBucketConnector conn = null;
 				if(storeType.equals(STORETYPE_S3)){ 
 					conn = new S3Connector(filestaging_prop.getS3Region(), filestaging_prop.getS3Bucket());
 					LocalLogger.logToStdOut(conn.toString()); 

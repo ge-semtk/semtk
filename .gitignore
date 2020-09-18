@@ -17,3 +17,4 @@ DOT_SETTINGS
 ENV_OVERRIDE
 auth_settings.json
 *.rej
+*.class
