@@ -26,19 +26,24 @@ import com.ge.research.semtk.properties.ServiceProperties;
 @ConfigurationProperties(prefix="filestaging", ignoreUnknownFields = true)
 public class FileStagingProperties extends ServiceProperties {
 	
+	public final static String STORETYPE_DIR = "directory";	// retrieve from a directory in a locally-accessible file system
+	public final static String STORETYPE_S3 = "s3";			// retrieve from an S3 bucket
+	
 	public FileStagingProperties() {
 		super();
 		setPrefix("filestaging");
 	}
 	
-	private String storeType;
-	private String stageDirectory;
-	private String s3Region;		// for store type S3 
+	private String storeType;		// see valid options above
+	private String stageDirectory;	// directory into which to stage the file
+	private String directory;		// for store type directory
+	private String s3Region;		// for store type S3
 	private String s3Bucket;		// for store type S3 
 	
 	public void validate() throws Exception {
 		checkNotEmpty("stageDirectory", stageDirectory);
 		checkNotEmpty("storeType", storeType);
+		checkNone("directory", directory);
 		checkNone("s3Region", s3Region);
 		checkNone("s3Bucket", s3Bucket);
 	}
@@ -59,6 +64,14 @@ public class FileStagingProperties extends ServiceProperties {
 		this.stageDirectory = stageDirectory;
 	}
 
+	public String getDirectory() {
+		return directory;
+	}
+
+	public void setDirectory(String directory) {
+		this.directory = directory;
+	}
+	
 	public String getS3Region() {
 		return s3Region;
 	}
