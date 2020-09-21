@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import com.arangodb.internal.util.IOUtils;
-import com.ge.research.semtk.load.FileBucketConnector;
+import com.ge.research.semtk.load.FileSystemConnector;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -23,7 +23,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
  * 
  * NOTE: No IAM role is explicitly used here - the code will use the IAM role attached to the EC2 node.
  */
-public class S3Connector extends FileBucketConnector {
+public class S3Connector extends FileSystemConnector {
 	private String region = null;
 	private String name = null;
 	private S3Client s3Client = null;
@@ -61,12 +61,12 @@ public class S3Connector extends FileBucketConnector {
 		return name;
 	}
 	
-	public void putObject(String keyName, byte [] data) throws Exception {
+	public void putObject(String fileName, byte [] data) throws Exception {
 		
-		if (this.checkExists(keyName)) {
-			throw new Exception("Key already exists: " + keyName);
+		if (this.checkExists(fileName)) {
+			throw new Exception("Key already exists: " + fileName);
 		}
-		PutObjectResponse res = this.s3Client.putObject(PutObjectRequest.builder().bucket(this.name).key(keyName).build(),
+		PutObjectResponse res = this.s3Client.putObject(PutObjectRequest.builder().bucket(this.name).key(fileName).build(),
 				RequestBody.fromBytes(data));
 	
         
@@ -75,24 +75,24 @@ public class S3Connector extends FileBucketConnector {
 		}
 	}
 	
-	public boolean checkExists(String keyName) throws Exception {
+	public boolean checkExists(String fileName) throws Exception {
 		try {
-			ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(keyName).build());
+			ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(fileName).build());
 			return true;
 		} catch (NoSuchKeyException nske) {
 			return false;
 		}
 	}
 	
-	public byte[] getObject(String keyName) throws IOException {
-		ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(keyName).build());
+	public byte[] getObject(String fileName) throws IOException {
+		ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(fileName).build());
 		
 		DataInputStream is = new DataInputStream(s3objectResponse);
 	    return IOUtils.toByteArray(is);
 	}
 	
-	public void deleteObject(String keyName) {
-		this.s3Client.deleteObject(DeleteObjectRequest.builder().bucket(this.name).key(keyName).build());
+	public void deleteObject(String fileName) {
+		this.s3Client.deleteObject(DeleteObjectRequest.builder().bucket(this.name).key(fileName).build());
 	}
 
 }

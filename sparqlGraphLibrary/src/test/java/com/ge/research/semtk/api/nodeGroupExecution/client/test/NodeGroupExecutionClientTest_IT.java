@@ -20,6 +20,8 @@ import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assume.assumeTrue;
+
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
@@ -30,13 +32,9 @@ import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -341,7 +339,15 @@ public class NodeGroupExecutionClientTest_IT {
 			String user = ThreadAuthenticator.getThreadUserName();
 			
 			// delete all tracking info
-			nodeGroupExecutionClient.deleteTrackingEvents(null, null, user, null, null);
+			try {
+				nodeGroupExecutionClient.deleteTrackingEvents(null, null, user, null, null);
+			} catch (Exception e) {
+				if (e.getMessage().contains("Tracking is not configured")) {
+					assumeTrue("Tracking is not configured", false);
+				} else {
+					throw e;
+				}
+			}
 			Table tab = nodeGroupExecutionClient.runTrackingQuery(null, null, user, null, null);
 			assertEquals("Tracking query was not empty after deleting all", 0, tab.getNumRows());
 			

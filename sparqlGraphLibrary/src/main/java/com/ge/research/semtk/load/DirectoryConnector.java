@@ -10,10 +10,10 @@ import java.nio.file.Paths;
 
 import org.apache.commons.io.IOUtils;
 
-import com.ge.research.semtk.load.FileBucketConnector;
+import com.ge.research.semtk.load.FileSystemConnector;
 
 
-public class DirectoryConnector extends FileBucketConnector {
+public class DirectoryConnector extends FileSystemConnector {
 	String folderStr = null;
 	/** 
 	 * 
@@ -31,15 +31,19 @@ public class DirectoryConnector extends FileBucketConnector {
 		}
 	}
 	
-	public void putObject(String keyName, byte [] data) throws Exception {
-		File f = Paths.get(this.folderStr, keyName).toFile();
+	public void putObject(String fileName, byte [] data) throws Exception {
+		File f = Paths.get(this.folderStr, fileName).toFile();
+		
+		if (this.checkExists(fileName)) {
+			throw new Exception("Key already exists: " + fileName);
+		}
 		FileOutputStream output = new FileOutputStream(f);
 		IOUtils.write(data, output);
 		output.close();
 	}
 	
-	public byte[] getObject(String keyName) throws IOException {
-		File f = Paths.get(this.folderStr, keyName).toFile();
+	public byte[] getObject(String fileName) throws IOException {
+		File f = Paths.get(this.folderStr, fileName).toFile();
 		FileInputStream is = new FileInputStream(f);
 		
 		byte [] ret = IOUtils.toByteArray(is);
@@ -47,14 +51,14 @@ public class DirectoryConnector extends FileBucketConnector {
 		return ret;
 	}
 	
-	public boolean checkExists(String keyName) throws Exception {
-		File f = Paths.get(this.folderStr, keyName).toFile();
-		return f.exists() && f.isDirectory();
+	public boolean checkExists(String fileName) throws Exception {
+		File f = Paths.get(this.folderStr, fileName).toFile();
+		return f.exists();
 		
 	}
 	
-	public void deleteObject(String keyName) {
-		File f = Paths.get(this.folderStr, keyName).toFile();
+	public void deleteObject(String fileName) {
+		File f = Paths.get(this.folderStr, fileName).toFile();
 		f.delete();
 	}
 

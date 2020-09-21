@@ -75,7 +75,7 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.DirectoryConnector;
-import com.ge.research.semtk.load.FileBucketConnector;
+import com.ge.research.semtk.load.FileSystemConnector;
 import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -129,7 +129,7 @@ public class IngestionRestController {
 			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
 	
 	static LoadTracker tracker = null;
-	static FileBucketConnector trackBucket = null;
+	static FileSystemConnector trackBucket = null;
 	
 	@PostConstruct
     public void init() {
