@@ -36,7 +36,9 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
  * Client to call the SparqlQueryService
  */
 public class SparqlQueryClient extends RestClient {
-		
+	
+	private String savedEndpoint = "";
+	
 	/**
 	 * Constructor
 	 */
@@ -89,13 +91,16 @@ public class SparqlQueryClient extends RestClient {
 	 * TODO could have made this simply execute(). Chose dropGraph() to reduce accidental drops.
 	 */
 	public SimpleResultSet dropGraph() throws Exception{
-		if(conf.getServiceEndpoint().indexOf("dropGraph") == -1){
-			throw new Exception("To drop a graph, must use the drop graph endpoint");
+		this.overrideConfEndpoint("dropGraph");
+		
+		try {
+			JSONObject resultJSON = (JSONObject)super.execute();
+			SimpleResultSet retval = new SimpleResultSet(true);
+			retval.readJson(resultJSON);
+			return retval;
+		} finally {
+			this.restoreConfEndpoint();
 		}
-		JSONObject resultJSON = (JSONObject)super.execute();
-		SimpleResultSet retval = new SimpleResultSet(true);
-		retval.readJson(resultJSON);
-		return retval;
 	}
 	
 	/**
@@ -103,41 +108,48 @@ public class SparqlQueryClient extends RestClient {
 	 * TODO could have made this simply execute(). Chose dropGraph() to reduce accidental drops.
 	 */
 	public SimpleResultSet clearAll() throws Exception{
-		if(conf.getServiceEndpoint().indexOf("clearAll") == -1){
-			throw new Exception("To clear a graph, must use the clearAll endpoint");
+		this.overrideConfEndpoint("clearAll");
+		
+		try {
+			JSONObject resultJSON = (JSONObject)super.execute();
+			SimpleResultSet retval = new SimpleResultSet(true);
+			retval.readJson(resultJSON);
+			return retval;
+		} finally {
+			this.restoreConfEndpoint();
 		}
-		JSONObject resultJSON = (JSONObject)super.execute();
-		SimpleResultSet retval = new SimpleResultSet(true);
-		retval.readJson(resultJSON);
-		return retval;
 	}
 	
 	public SimpleResultSet uploadOwl(File owlFile) throws Exception{
-		if(conf.getServiceEndpoint().indexOf("uploadOwl") == -1){
-			throw new Exception("To upload owl, must use the uploadOwl endpoint");
+		this.overrideConfEndpoint("uploadOwl");
+		
+		try {
+			this.fileParameter = owlFile;
+			this.fileParameterName = "owlFile";
+
+			JSONObject resultJSON = (JSONObject)super.execute();
+			SimpleResultSet retval = new SimpleResultSet(true);
+			retval.readJson(resultJSON);
+			return retval;
+		} finally {
+			this.restoreConfEndpoint();
 		}
-		
-		this.fileParameter = owlFile;
-		this.fileParameterName = "owlFile";
-		
-		JSONObject resultJSON = (JSONObject)super.execute();
-		SimpleResultSet retval = new SimpleResultSet(true);
-		retval.readJson(resultJSON);
-		return retval;
 	}
 	
 	public SimpleResultSet syncOwl(File owlFile) throws Exception{
-		if(conf.getServiceEndpoint().indexOf("syncOwl") == -1){
-			throw new Exception("To upload owl, must use the syncOwl endpoint");
+		this.overrideConfEndpoint("syncOwl");
+		
+		try {
+			this.fileParameter = owlFile;
+			this.fileParameterName = "owlFile";
+			
+			JSONObject resultJSON = (JSONObject)super.execute();
+			SimpleResultSet retval = new SimpleResultSet(true);
+			retval.readJson(resultJSON);
+			return retval;
+		} finally {
+			this.restoreConfEndpoint();
 		}
-		
-		this.fileParameter = owlFile;
-		this.fileParameterName = "owlFile";
-		
-		JSONObject resultJSON = (JSONObject)super.execute();
-		SimpleResultSet retval = new SimpleResultSet(true);
-		retval.readJson(resultJSON);
-		return retval;
 	}
 
 	/**
@@ -179,6 +191,15 @@ public class SparqlQueryClient extends RestClient {
 		retval = new SparqlQueryClient(new SparqlQueryClientConfig(serviceProtocol, serviceServer, servicePort, serviceEndpoint, serverAndPort, endpointType, dataSet)); 		
 		
 		return retval;
+	}
+	
+	private void overrideConfEndpoint(String endpoint) {
+		this.savedEndpoint = this.conf.getServiceEndpoint();
+		this.conf.setServiceEndpoint("/sparqlQueryService/" + endpoint);
+	}
+	
+	private void restoreConfEndpoint() {
+		this.conf.setServiceEndpoint(this.savedEndpoint);
 	}
 
 }

@@ -92,6 +92,12 @@ public class RuntimeConstraintManager {
 		}
 	}
 	
+	public static JSONObject buildRuntimeConstraintJson(String sparqlID, SupportedOperations operation, String operand ) throws Exception {
+		ArrayList operandList = new ArrayList<String>();
+		operandList.add(operand);
+		return buildRuntimeConstraintJson(sparqlID, operation, operandList);
+	}
+	
 	/**
 	 * Build runtime constraint json with no checking
 	 * @param sparqlID

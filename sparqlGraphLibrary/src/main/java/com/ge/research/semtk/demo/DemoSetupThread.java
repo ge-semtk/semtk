@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.nodegroupStore.service;
+package com.ge.research.semtk.demo;
 
 import java.io.InputStream;
 

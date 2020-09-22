@@ -46,7 +46,7 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
-
+import com.ge.research.semtk.demo.DemoSetupThread;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
