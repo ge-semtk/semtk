@@ -619,7 +619,7 @@ public class IngestionRestController {
 		RecordProcessResults retval = new RecordProcessResults();
 		
 		try {
-			if (trackFlag) {
+			if (trackFlag != null && trackFlag) {
 				// validate tracker before starting anything
 				this.validateTracker();
 			}
@@ -682,14 +682,14 @@ public class IngestionRestController {
 			
 			// set success values
 			if(precheck && dl.getLoadingErrorReport().getRows().size() == 0){
-				if (trackFlag) {
+				if (trackFlag != null && trackFlag) {
 					this.trackLoad(trackKey, dataFileName, dataFileContent, sgJson.getSparqlConn().getInsertInterface());
 				}
 				retval.setSuccess(true);
 			} else if(precheck && dl.getLoadingErrorReport().getRows().size() != 0){
 				retval.setSuccess(false);
 			} else if(!precheck && recordsProcessed > 0){
-				if (trackFlag) {
+				if (trackFlag != null && trackFlag) {
 					this.trackLoad(trackKey, dataFileName, dataFileContent, sgJson.getSparqlConn().getInsertInterface());
 				}
 				retval.setSuccess(true);
@@ -793,7 +793,7 @@ public class IngestionRestController {
 				
 		try {
 			
-			if (trackFlag) {
+			if (trackFlag != null && trackFlag) {
 				// validate tracker before starting anything
 				this.validateTracker();
 			}
@@ -826,7 +826,7 @@ public class IngestionRestController {
 					new ResultsClient(new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort()))
 					);
 			
-			if (trackFlag) {
+			if (trackFlag != null && trackFlag) {
 				AsyncLoadTrackThread thread = new AsyncLoadTrackThread(
 						new JobTracker(servicesgraph_prop.buildSei()),
 						jobId, tracker, trackBucket, trackKey, 
