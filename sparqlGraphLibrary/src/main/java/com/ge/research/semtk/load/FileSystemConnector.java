@@ -3,9 +3,8 @@ package com.ge.research.semtk.load;
 import com.ge.research.semtk.utility.Utility;
 
 /**
- * Connect to an abstract place to dump files by unique key
+ * File system connector for writing and reading files
  * @author 200001934
- *
  */
 public abstract class FileSystemConnector {
 	

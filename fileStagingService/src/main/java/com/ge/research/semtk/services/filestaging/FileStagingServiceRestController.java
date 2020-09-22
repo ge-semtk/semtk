@@ -38,6 +38,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.load.DirectoryConnector;
 import com.ge.research.semtk.load.FileSystemConnector;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
@@ -70,8 +71,6 @@ public class FileStagingServiceRestController {
 	private ApplicationContext appContext;
 	
 	private static final String SERVICE_NAME = "FileStagingService";
-	
-	private final String STORETYPE_S3 = "s3";
 	
 	@PostConstruct
     public void init() {
@@ -112,8 +111,12 @@ public class FileStagingServiceRestController {
 				final String stageFilePath = stageDir + "/" + stageFilename;  	// TODO do this using API for correct slashing
 				
 				LocalLogger.logToStdOut("Stage file " + sourceFile + " from " + storeType + " to " + stageFilePath);
+				
 				FileSystemConnector conn = null;
-				if(storeType.equals(STORETYPE_S3)){ 
+				if(storeType.equals(FileStagingProperties.STORETYPE_DIR)){ 
+					conn = new DirectoryConnector(filestaging_prop.getDirectory());
+					LocalLogger.logToStdOut(conn.toString());
+				}else if(storeType.equals(FileStagingProperties.STORETYPE_S3)){ 
 					conn = new S3Connector(filestaging_prop.getS3Region(), filestaging_prop.getS3Bucket());
 					LocalLogger.logToStdOut(conn.toString()); 
 				}else{
