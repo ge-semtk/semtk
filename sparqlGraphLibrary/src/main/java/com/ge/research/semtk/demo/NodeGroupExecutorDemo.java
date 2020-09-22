@@ -17,7 +17,6 @@
 package com.ge.research.semtk.demo;
 
 import java.io.File;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
@@ -31,17 +30,10 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
-import com.ge.research.semtk.edc.JobTracker;
-import com.ge.research.semtk.load.DataLoader;
-import com.ge.research.semtk.load.client.IngestorClientConfig;
-import com.ge.research.semtk.load.client.IngestorRestClient;
-import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
