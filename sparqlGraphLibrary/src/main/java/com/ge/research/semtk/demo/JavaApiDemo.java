@@ -44,7 +44,7 @@ import com.ge.research.semtk.utility.Utility;
  * @author 200001934
  *
  */
-public class NodeGroupExecutorDemo {
+public class JavaApiDemo {
 	// Set up the nodegroup execution service
 	static String PROTOCOL = "http";
 	static String SERVER = "localhost";
@@ -66,7 +66,19 @@ public class NodeGroupExecutorDemo {
 	static String RTC_QUERY_NODEGROUP = "demoNodegroupRTC";
 
 	
+	/**
+	 * Run a demo
+	 * @param args:  type url  optional
+	 *               e.g. (fuseki|virtuoso|neptune) http://localhost:port/OPTIONAL_DATASET
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
+		
+		if (args.length == 2) {
+			CONN_TYPE = args[0];
+			CONN_URL = args[1];
+			System.out.println("Using: " + CONN_TYPE + " connection " + CONN_URL);
+		}
 		
 		// build the nodegroup executor client
 		NodeGroupExecutionClientConfig config = new NodeGroupExecutionClientConfig(PROTOCOL, SERVER, NGE_PORT);
@@ -184,14 +196,23 @@ public class NodeGroupExecutorDemo {
 		pItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
 		pItem.addConstraint(ValueConstraint.buildFilterInConstraint(pItem, "CODE1"));
 		
-		// show some SPARQL
-		System.out.println("SPARQL: " + ng.generateSparqlSelect());
-		
 		// run a select with a nodegroup
 		Table ngSelectTable = client.dispatchSelectFromNodeGroup(ng, override, null, mgr);
 		System.out.println("--select by nodegroup--");
 		System.out.println(ngSelectTable.toCSVString());
 		
+		// show some SPARQL
+		String rawSparql = ng.generateSparqlSelect();
+		System.out.println("SPARQL: " + rawSparql);
+		
+		// run raw sparql
+		Table ngSparqlTable = client.dispatchRawSparql(rawSparql, override);
+		System.out.println("--select using  raw sparql--");
+		System.out.println(ngSparqlTable.toCSVString());
+		
+		System.out.println("\nSuccess.");
+
+				
 	}
 	
 	/**
@@ -234,11 +255,11 @@ public class NodeGroupExecutorDemo {
 			
 		// load demo model owl		
 		queryClientModel.clearAll();
+		queryClientData.clearAll();
 		queryClientModel.uploadOwl(Utility.getResourceAsFile(aSemtkLibClass, "/semantics/OwlModels/hardware.owl"));
 		queryClientModel.uploadOwl(Utility.getResourceAsFile(aSemtkLibClass, "/semantics/OwlModels/testconfig.owl"));
 		
 		// ingest demo csv
-		queryClientData.clearAll();
 		String data = Utility.getResourceAsString(aSemtkLibClass, "demoNodegroup_data.csv");
 		ngeClient.dispatchIngestFromCsvStringsSync(sgJson, data);
 		
