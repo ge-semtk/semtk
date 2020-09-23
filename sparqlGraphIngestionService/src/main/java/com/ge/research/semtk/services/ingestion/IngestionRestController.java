@@ -859,13 +859,13 @@ public class IngestionRestController {
 	 * @param fileKey
 	 * @throws Exception
 	 */
-	private void overrideBaseURI(SparqlGraphJson sgjson, boolean trackFlag, String overrideBaseURI, String fileKey) throws Exception {
+	private void overrideBaseURI(SparqlGraphJson sgjson, Boolean trackFlag, String overrideBaseURI, String fileKey) throws Exception {
 		if (overrideBaseURI != null && ! overrideBaseURI.trim().isEmpty()) {
 			String override = overrideBaseURI.trim();
 			
 			// replace $TRACK_KEY
 			if (override.equals("$TRACK_KEY")) {
-				if (! trackFlag) {
+				if (trackFlag != true) {
 					throw new Exception("overrideBaseURI is $TRACK_KEY but trackFlag is false");
 				} else {
 					override = LoadTracker.buildBaseURI(fileKey); 
