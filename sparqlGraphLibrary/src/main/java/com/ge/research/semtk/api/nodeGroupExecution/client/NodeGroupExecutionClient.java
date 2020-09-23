@@ -51,6 +51,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String JSON_KEY_NODEGROUP  = "jsonRenderedNodeGroup";
 	private static final String JSON_KEY_PERCENT_COMPLETE  = "percentComplete";
 	private static final String JSON_KEY_SPARQL_CONNECTION = "sparqlConnection";
+	private static final String JSON_KEY_SPARQL = "sparql";
 	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
 	private static final String JSON_KEY_EDC_CONSTRAINTS = "externalDataConnectionConstraints";
 	private static final String JSON_KEY_FLAGS = "flags";
@@ -643,6 +644,32 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		return retval;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public SimpleResultSet execDispatchRawSparql(String sparql, SparqlConnection conn) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + dispatchRawSparqlEndpoint);
+		this.parametersJSON.put(JSON_KEY_SPARQL, sparql);
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, conn.toJson().toJSONString());
+	
+		
+		try{
+			LocalLogger.logToStdErr("sending raw sparql request");
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful(String.format("Error running raw sparql"));
+		}
+		finally{
+			this.reset();
+		}
+		LocalLogger.logToStdErr("executeDispatchRawSparql request finished without exception");
+		return retval;
+	}
+	
+	public Table dispatchRawSparql(String sparql, SparqlConnection conn) throws Exception{
+		SimpleResultSet ret = this.execDispatchRawSparql(sparql, conn);
+		Table tab = this.waitForJobAndGetTable(ret.getResult("JobId"));
+		return tab;		
+	}
 	
 	/**
 		 * 	
