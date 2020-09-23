@@ -164,7 +164,6 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			// test the test
 			OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
-			System.out.println(oInfo.getClassNames());
 			
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			
@@ -245,7 +244,6 @@ public class NodeGroupExecutionClientTest_IT {
 				 
 				// delete some by nodegroup ID
 				String success = nodeGroupExecutionClient.dispatchDeleteByIdToSuccessMsg(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
-				System.out.println(success);
 				
 				// select back the data post delete
 				tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
@@ -386,7 +384,9 @@ public class NodeGroupExecutionClientTest_IT {
 			int triples3 = TestGraph.getNumTriples();
 			assertTrue("undo left triples behind", triples3 == triples2);
 
-
+			// make sure undo ingestion was tracked
+			tab = nodeGroupExecutionClient.runTrackingQuery(null, null, user, null, null);
+			assertTrue("Tracking query did not return an 'undo' event", tab.toCSVString().contains("undo"));
 			
 			// delete tracking
 			nodeGroupExecutionClient.deleteTrackingEvents(null, fileKey, null, null, null);

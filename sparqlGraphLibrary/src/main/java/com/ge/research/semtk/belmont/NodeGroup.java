@@ -586,7 +586,7 @@ public class NodeGroup {
 	private void addAllToPrefixHash(){
 
 		this.addToPrefixHash(UriResolver.DEFAULT_URI_PREFIX);   // make sure to force the inclusion of the old ones.
-		this.addToPrefixHash("http://www.w3.org/2001/XMLSchema#");
+		this.addToPrefixHash("xsd", "http://www.w3.org/2001/XMLSchema");
 		this.addToPrefixHash("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns");
 		this.addToPrefixHash("rdfs", "http://www.w3.org/2000/01/rdf-schema");
 		
@@ -3222,7 +3222,7 @@ public class NodeGroup {
 				// insert each property we know of. 
 				for(PropertyItem prop : curr.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildRDF11ValueString(inst, "XMLSchema") + " .\n";  
+						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildRDF11ValueString(inst, "xsd") + " .\n";  
 					}
 				}
 				

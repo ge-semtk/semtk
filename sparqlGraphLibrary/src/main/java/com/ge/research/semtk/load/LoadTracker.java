@@ -44,8 +44,7 @@ import com.ge.research.semtk.utility.Utility;
 
 
 /**
- *   JobTracker instantiates a connection to the tripleStore
- *   and uses it to fulfill requests for info about a jobId.
+ *   LoadTracker tracks ingestion activities
  *
  */
 public class LoadTracker {
@@ -93,7 +92,7 @@ public class LoadTracker {
 		
 		int rows = DataLoader.loadFromCsvString(
 				this.sgjson.toJson(), 
-				this.getCsv("load",fileKey, fileName, sei), 
+				this.buildCsvString("load",fileKey, fileName, sei), 
 				this.dbUser, 
 				this.dbPassword, 
 				true);
@@ -109,7 +108,7 @@ public class LoadTracker {
 		
 		int rows = DataLoader.loadFromCsvString(
 				this.sgjson.toJson(), 
-				this.getCsv("clear", CLEAR, null, sei), 
+				this.buildCsvString("clear", CLEAR, null, sei), 
 				this.dbUser, 
 				this.dbPassword, 
 				true);
@@ -189,7 +188,7 @@ public class LoadTracker {
 		return ng;
 	}
 	
-	private String getCsv(String event, String fileKey, String fileName, SparqlEndpointInterface sei) {
+	private String buildCsvString(String event, String fileKey, String fileName, SparqlEndpointInterface sei) {
 		return "event, fileKey, fileName, graphName, seiServerAndPort, serverType, epoch, user\n" +
 				event + "," +
 				fileKey + "," + 
@@ -244,7 +243,12 @@ public class LoadTracker {
 		return "http://" + fileKey + "/data";
 	}
 
-	
+	/**
+	 * Delete any data from a load, provided it was loaded with overrideBaseURI "$TRACK_KEY"
+	 * Also track this event.
+	 * @param fileKey
+	 * @throws Exception
+	 */
 	public void undoLoad(String fileKey) throws Exception {
 		Table tab = this.query(fileKey, null, null, null, null);
 		if (tab.getNumRows() != 1) {
@@ -262,7 +266,7 @@ public class LoadTracker {
 		// track this
 		int rows = DataLoader.loadFromCsvString(
 				this.sgjson.toJson(), 
-				this.getCsv("undo",fileKey, "", sei), 
+				this.buildCsvString("undo",fileKey, "", sei), 
 				this.dbUser, 
 				this.dbPassword, 
 				true);

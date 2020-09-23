@@ -771,17 +771,15 @@ public abstract class Utility {
 	public static File getResourceAsFile(Class c, String fileName) throws Exception {
 		File ret = null;
 		
-		URL url = c.getResource(fixResourceName(fileName));
-		if (url == null) {
-			throw new Exception("Could find resource file: " + fileName);
-		}
+		// fat jars and other deployments seem to choke on returning a File
+		// so copy the data into a temp file
+		byte data[] = null;
+		data = getResourceAsBytes(c, fileName);
+		File tempFile = File.createTempFile("resource", "fileName");
+		tempFile.deleteOnExit();
+		FileUtils.writeByteArrayToFile(tempFile, data);
 		
-		ret = new File(url.getPath());
-		if (ret == null) {
-			throw new Exception("Resource file is empty: " + fileName);
-		}
-		
-		return ret;
+		return tempFile;
 	}
 	
 	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception {
