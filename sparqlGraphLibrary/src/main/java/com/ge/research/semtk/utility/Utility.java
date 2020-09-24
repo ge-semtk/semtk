@@ -21,6 +21,7 @@ package com.ge.research.semtk.utility;
 import static org.hamcrest.CoreMatchers.containsString;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,6 +34,8 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -54,12 +57,15 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.zip.Deflater;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.Inflater;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.codec.CharEncoding;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
@@ -627,7 +633,7 @@ public abstract class Utility {
 	/**
 	 * Compress a string.
 	 */
-	public static String compress(String s) throws Exception {  
+	public static String compressOLD(String s) throws Exception {  
 		byte[] inputBytes = s.getBytes(CHAR_ENCODING);
 		Deflater deflater = new Deflater();  
 		deflater.setInput(inputBytes);  
@@ -641,12 +647,29 @@ public abstract class Utility {
 		outputStream.close();  
 		byte[] compressedBytes = outputStream.toByteArray();  
 		return new String(compressedBytes, CHAR_ENCODING);
-	}  
+	}
+	
+	public static String compress(String str) {
+		String inEncoding = "UTF-8";
+        if (str == null || str.length() == 0) {
+            return str;
+        }
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            GZIPOutputStream gzip = new GZIPOutputStream(out);
+            gzip.write(str.getBytes(inEncoding));
+            gzip.close();
+            return URLEncoder.encode(out.toString("ISO-8859-1"), "UTF-8");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 	/**
 	 * Decompress a string.
 	 */
-	public static String decompress(String s) throws Exception {   
+	public static String decompressOLD(String s) throws Exception {   
 		byte[] inputBytes = s.getBytes(CHAR_ENCODING);
 		Inflater inflater = new Inflater();   
 		inflater.setInput(inputBytes);  
@@ -661,6 +684,30 @@ public abstract class Utility {
 		return new String(decompressedBytes, CHAR_ENCODING);
 	}  
 
+	public static String decompress(String str) {
+		String outEncoding = "UTF-8";
+
+        if (str == null || str.length() == 0) {
+            return str;
+        }
+
+        try {
+            String decode = URLDecoder.decode(str, "UTF-8");
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ByteArrayInputStream in = new ByteArrayInputStream(decode.getBytes("ISO-8859-1"));
+            GZIPInputStream gunzip = new GZIPInputStream(in);
+            byte[] buffer = new byte[256];
+            int n;
+            while ((n = gunzip.read(buffer)) >= 0) {
+                out.write(buffer, 0, n);
+            }
+            return out.toString(outEncoding);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 	/**
 	 *    Prefix a "http://normal/looking#uri" into "1:uri", using and/or updating prefixToIntHash
 	 */

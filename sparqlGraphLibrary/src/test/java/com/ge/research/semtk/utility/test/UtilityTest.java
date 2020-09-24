@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.HashSet;
@@ -145,6 +146,22 @@ public class UtilityTest {
 			builder.append("here is some text " + i + " " + (new BigInteger(130, random).toString(32)) + " "); // make sure it's not too repetitive
 		}
 		String s = builder.toString();
+		String compressedString = Utility.compress(s);
+		String decompressedString = Utility.decompress(compressedString);
+		assertEquals(s, decompressedString);
+	}
+	
+	@Test
+	public void testCompressMicron() throws Exception{
+		Random random = new Random();
+		String s = "μr μicron";
+		
+		// just swap back and forth string and byte[]
+		byte [] b1 = s.getBytes("utf-8");
+		String s1 = new String(b1, "utf-8");
+		assertTrue("not equal:" + s1, s1.equals(s));
+		
+		// run compression
 		String compressedString = Utility.compress(s);
 		String decompressedString = Utility.decompress(compressedString);
 		assertEquals(s, decompressedString);

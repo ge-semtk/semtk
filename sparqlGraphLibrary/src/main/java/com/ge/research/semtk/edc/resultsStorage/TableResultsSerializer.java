@@ -19,8 +19,10 @@ package com.ge.research.semtk.edc.resultsStorage;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
 import org.json.simple.JSONArray;
@@ -112,8 +114,9 @@ public class TableResultsSerializer {
 		int processedRows = 0;
 		boolean endOfInput = false;
 		
-		FileReader fr = new FileReader(dataFile);
-		BufferedReader bfr = new BufferedReader(fr);
+		FileInputStream fis = new FileInputStream(dataFile.getPath());
+		InputStreamReader isr = new InputStreamReader(fis,"utf-8");
+		BufferedReader bfr = new BufferedReader(isr);
 		
 		// fast foward
 		bfr = this.fastForwardResultsFile(bfr);
@@ -190,11 +193,10 @@ public class TableResultsSerializer {
 		// process the data file rows until the cutoff is reached.
 		int processedRows = 0;
 		
-		FileReader fr = new FileReader(dataFile);
-		if(fr == null){	throw new IOException("FileReader is null for " + dataFile.getAbsolutePath()); }		// TODO troubleshooting NullPointerException - delete if fixed
-		BufferedReader bfr = new BufferedReader(fr);
-		if(bfr == null){ throw new IOException("BufferedReader is null for " + dataFile.getAbsolutePath()); }	// TODO troubleshooting NullPointerException - delete if fixed
-		
+		FileInputStream fis = new FileInputStream(dataFile.getAbsolutePath());
+		InputStreamReader isr = new InputStreamReader(fis,"utf-8");
+		BufferedReader bfr = new BufferedReader(isr);
+				
 		// fast foward
 		bfr = this.fastForwardResultsFile(bfr);
 		if(bfr == null){ throw new IOException("BufferedReader is null after fastForwardResults() for " + dataFile.getAbsolutePath()); }	// TODO troubleshooting NullPointerException - delete if fixed	 
@@ -203,9 +205,7 @@ public class TableResultsSerializer {
 			// read the next row from the data set and write to the stream. 
 			
 			String currRow = bfr.readLine();
-			if(currRow == null){ throw new IOException("currRow is null from " + dataFile.getAbsolutePath()); }	// TODO troubleshooting NullPointerException - delete if fixed	 
-			// conversion should not be required in this case as it was read as written.
-			aOutputStream.write(currRow); 					// TODO NullPointerException is happening here - delete above troubleshooting throws if fixed							
+			aOutputStream.write(currRow); 											
 			
 			// add the comma, if needed.
 			if(processedRows < stopRowNumber -1){  aOutputStream.write(","); }

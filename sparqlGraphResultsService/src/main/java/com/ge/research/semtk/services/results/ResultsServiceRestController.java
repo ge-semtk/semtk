@@ -157,7 +157,8 @@ public class ResultsServiceRestController {
 	public void getJsonLdResults(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
-		
+		resp.addHeader("content-type", "application/json; charset=utf-8");
+
 		try {
 			try{
 		    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -216,6 +217,7 @@ public class ResultsServiceRestController {
 	public void getJsonBlobResults(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		resp.addHeader("content-type", "application/json; charset=utf-8");
 		try {
 			try{
 		    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -600,6 +602,7 @@ public class ResultsServiceRestController {
 	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		resp.addHeader("content-type", "text/plain; charset=utf-8");
 
 		try{			
 			
@@ -642,6 +645,7 @@ public class ResultsServiceRestController {
 	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		resp.addHeader("content-type", "application/json; charset=utf-8");
 
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
@@ -672,6 +676,8 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		TableResultsSerializer retval = null;
+		resp.addHeader("content-type", "text/plain; charset=utf-8");
+
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
@@ -734,9 +740,11 @@ public class ResultsServiceRestController {
 					  "This is good for a preview, for example, in a browser with limited memory.<br>" +
 				      "GET /getTableResultsCsvForWebClient safely retrieves entire large files.")
 	@CrossOrigin
-	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
+	@RequestMapping(value="/getTableResultsJson", method=RequestMethod.POST)
 	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		resp.addHeader("content-type", "application/json; charset=utf-8");
+        
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		final String ENDPOINT = "getTableResultsJson";
 		try{
@@ -777,6 +785,7 @@ public class ResultsServiceRestController {
 		// write table result set preamble.
 		outPrint.write("{\"message\":\"operations succeeded.\",\"table\":{\"@table\":");
 		outPrint.flush();
+		
 		trs.writeToStream(resp.getWriter());
 		// close table result set.
 		outPrint.write("},\"status\":\"success\"}");
