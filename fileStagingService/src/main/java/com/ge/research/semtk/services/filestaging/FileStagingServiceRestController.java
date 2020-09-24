@@ -104,13 +104,14 @@ public class FileStagingServiceRestController {
 				requestBody.validate();
 				final String sourceFile = requestBody.getSourceFile();			// path/name of file to stage
 				final String stageFilename = requestBody.getStageFilename();	// name for file when staged 
+				final String jobId = requestBody.getJobId();
 				
 				// info about source/destination
 				final String storeType = filestaging_prop.getStoreType();		// store to retrieve from (e.g. s3)
 				final String stageDir = filestaging_prop.getStageDirectory();   // local directory in which the file will be staged, e.g. /mnt/isilon/location
 				final String stageFilePath = stageDir + "/" + stageFilename;  	// TODO do this using API for correct slashing
 				
-				LocalLogger.logToStdOut("Stage file " + sourceFile + " from " + storeType + " to " + stageFilePath);
+				LocalLogger.logToStdOut("Stage file from " + storeType + ": " + sourceFile + " to " + stageFilePath);
 				
 				FileSystemConnector conn = null;
 				if(storeType.equals(FileStagingProperties.STORETYPE_DIR)){ 
@@ -127,7 +128,7 @@ public class FileStagingServiceRestController {
 				conn.getObjectAsLocalFile(sourceFile, stageFilePath);
 				
 				// send file to Results Service
-				String fileId = this.sendToResultsService(requestBody.jobId, stageFilePath, stageFilename);
+				String fileId = this.sendToResultsService(jobId, stageFilePath, stageFilename);
 				LocalLogger.logToStdOut("File staged to fileId: " + fileId);
 				
 				// return staged file in a result set
