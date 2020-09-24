@@ -1198,6 +1198,10 @@ public class JobTracker {
 	 */
 	public boolean jobExists(String jobId) throws AuthorizationException, Exception {
 
+		if(jobId == null){
+			throw new Exception("Cannot check if job exists: jobId is null");
+		}
+		
 		String query = String.format("  \n" +
 				"prefix job:<http://research.ge.com/semtk/services/job#> \n" +
 		        "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +

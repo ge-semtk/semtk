@@ -46,7 +46,7 @@ public class DirectoryConnector extends FileSystemConnector {
 		}catch(Exception e){
 			throw e;
 		}finally{
-			output.close();
+			if(output != null) { output.close(); }
 		}
 	}
 
@@ -60,7 +60,7 @@ public class DirectoryConnector extends FileSystemConnector {
 		}catch(Exception e){
 			throw e;
 		}finally{
-			is.close();
+			if(is != null){ is.close(); }
 		}
 		return ret;
 	}
