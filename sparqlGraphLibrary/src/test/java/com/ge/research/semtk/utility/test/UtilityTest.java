@@ -153,7 +153,6 @@ public class UtilityTest {
 	
 	@Test
 	public void testCompressMicron() throws Exception{
-		Random random = new Random();
 		String s = "μr μicron";
 		
 		// just swap back and forth string and byte[]

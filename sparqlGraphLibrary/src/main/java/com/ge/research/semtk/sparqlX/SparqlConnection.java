@@ -27,11 +27,10 @@ import org.json.simple.parser.JSONParser;
 
 public class SparqlConnection {
 /**
- * SparqlConnection is a "SparqlGraph" connection consisting of TWO Sparql Endpoints
- * 1) Ontology
- * 2) Data
+ * SparqlConnection is a "SparqlGraph" connection consisting of multiple Sparql Endpoints
+ *    1) Ontology Model
+ *    2) Data
  * 
- * To match files written by historical javascript, this is mostly a JSON wrangler.
  * 
  */
 	
@@ -43,6 +42,9 @@ public class SparqlConnection {
 	private ArrayList<SparqlEndpointInterface> dataInterfaces = null;
 	private boolean enableOwlImports = false;
 	
+	/**
+	 * Empty constructor
+	 */
 	public SparqlConnection () {
 		this.name = "";
 		this.domain = "";
@@ -51,11 +53,24 @@ public class SparqlConnection {
 		this.enableOwlImports = false;
 	}
 	
+	/**
+	 * Construct from json text
+	 * @param jsonText
+	 * @throws Exception
+	 */
 	public SparqlConnection(String jsonText) throws Exception {
 		this();
 	    this.fromString(jsonText);
 	}
 	
+	/**
+	 * Constructor
+	 * @param name
+	 * @param serverType virtuoso|fuseki|neptune
+	 * @param serverURL  http://localhost:3030/DATASET where some triplestores don't accept /DATASET
+	 * @param dataset  - will be used for model and data
+	 * @throws Exception
+	 */
 	public SparqlConnection(String name, String serverType, String serverURL, String dataset) throws Exception{
 		this();
 		this.name = name;
@@ -67,6 +82,12 @@ public class SparqlConnection {
 				dataset);
 	}
 	
+	/**
+	 * Constructor
+	 * @param name
+	 * @param sei for model and data
+	 * @throws Exception
+	 */
 	public SparqlConnection(String name, SparqlEndpointInterface sei) throws Exception {
 		this();
 		this.name = name;
@@ -74,6 +95,13 @@ public class SparqlConnection {
 		this.addModelInterface(sei);
 	}
 	
+	/**
+	 * Constructor
+	 * @param name
+	 * @param modelSei - model endpoint
+	 * @param dataSei - data endpoint
+	 * @throws Exception
+	 */
 	public SparqlConnection(String name, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {
 		this();
 		this.name = name;
@@ -116,6 +144,10 @@ public class SparqlConnection {
 				dataset);
 	}
 	
+	/**
+	 * build json
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject jObj = new JSONObject();
@@ -140,6 +172,11 @@ public class SparqlConnection {
 		return jObj;
 	}
 	
+	/**
+	 * Instantiate empty object from json
+	 * @param jObj
+	 * @throws Exception
+	 */
 	public void fromJson(JSONObject jObj) throws Exception {
 		
 		if(jObj.entrySet().size() == 1 && jObj.containsKey("sparqlConn")){
@@ -201,10 +238,21 @@ public class SparqlConnection {
 		}
 	}
 	
+	/**
+	 * Create deep copy
+	 * @param other
+	 * @return
+	 * @throws Exception
+	 */
 	public static SparqlConnection deepCopy(SparqlConnection other) throws Exception {
 		return new SparqlConnection(other.toJson().toString());
 	}
 	
+	/**
+	 * Instantiate from json text
+	 * @param jsonText
+	 * @throws Exception
+	 */
 	public void fromString(String jsonText) throws Exception {
 		JSONParser parser = new JSONParser();
 		JSONObject jObj = (JSONObject) parser.parse(jsonText);
@@ -212,10 +260,19 @@ public class SparqlConnection {
 
 	}
 	
+	/**
+	 * To json string
+	 */
 	public String toString() {
 		return toJson().toString();
 	}
 	
+	/**
+	 * Compare
+	 * @param other
+	 * @param ignoreName
+	 * @return
+	 */
 	public boolean equals(SparqlConnection other, boolean ignoreName) {
 		String thisStr = this.toString();
 		String otherStr = other.toString();
@@ -328,7 +385,10 @@ public class SparqlConnection {
 		this.enableOwlImports = enableOwlImports;
 	}
 
-	// Is number of endpoint serverURLs == 1
+	/**
+	 * Do all endpoints point to the same server
+	 * @return
+	 */
 	public boolean isSingleServerURL() {
 		String url = "";
 		for (int i=0; i < this.modelInterfaces.size(); i++) {
@@ -358,7 +418,10 @@ public class SparqlConnection {
 		}
 	}
 	
-	// Is number of endpoint serverURLs == 1
+	/**
+	 * Do all data endpoints refer to the same server
+	 * @return
+	 */
 	public boolean isSingleDataServerURL() {
 		String url = "";
 		
@@ -380,7 +443,11 @@ public class SparqlConnection {
 		}
 	}
 	
-	// get list of graphs for a given serverURL
+	/**
+	 * get list of graphs for a given serverURL
+	 * @param serverURL
+	 * @return
+	 */
 	public ArrayList<String> getAllGraphsForServer(String serverURL) {
 		ArrayList<String> ret = new ArrayList<String>();
 		
@@ -397,7 +464,11 @@ public class SparqlConnection {
 		return ret;
 	}
 	
-	// get list of DATA datasets for a given serverURL
+	/**
+	 *  get list of DATA datasets for a given serverURL
+	 * @param serverURL
+	 * @return
+	 */
 	public ArrayList<String> getDataDatasetsForServer(String serverURL) {
 		ArrayList<String> ret = new ArrayList<String>();
 		
@@ -411,7 +482,11 @@ public class SparqlConnection {
 		return ret;
 	}
 	
-	// get list of MODEL datasets for a given serverURL
+	/**
+	 *  get list of MODEL datasets for a given serverURL
+	 * @param serverURL
+	 * @return
+	 */
 	public ArrayList<String> getModelDatasetsForServer(String serverURL) {
 		ArrayList<String> ret = new ArrayList<String>();
 		
@@ -434,7 +509,7 @@ public class SparqlConnection {
 		String modelKeys[] = new String[this.getModelInterfaceCount()];
 		
 		for (int i=0; i < this.getModelInterfaceCount(); i++) {
-			modelKeys[i] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getDataset();
+			modelKeys[i] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getGraph();
 		}
 		Arrays.sort(modelKeys);
 		

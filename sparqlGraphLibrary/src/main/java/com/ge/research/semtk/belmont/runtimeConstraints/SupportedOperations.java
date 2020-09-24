@@ -17,6 +17,11 @@
 
 package com.ge.research.semtk.belmont.runtimeConstraints;
 
+/**
+ * Runtimne constraint operations
+ * @author 200001934
+ *
+ */
 public enum SupportedOperations {
 
 	MATCHES(1,1000), 		        // value matches one of the operands (accepts collections)

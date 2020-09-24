@@ -21,10 +21,22 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
 
+/**
+ * Configuration class for the NodeGroupExecutionClient
+ * @author 200001934
+ *
+ */
 public class NodeGroupExecutionClientConfig  extends RestClientConfig{
 	protected String serviceUser = null; 
 	protected String servicePassword = null;
 	
+	/**
+	 * Constructor
+	 * @param serviceProtocol - e.g. http
+	 * @param serviceServer - e.g. localhost
+	 * @param servicePort - e.g. 12058
+	 * @throws Exception
+	 */
 	public NodeGroupExecutionClientConfig(String serviceProtocol, String serviceServer,
 			int servicePort) throws Exception {
 		
@@ -33,6 +45,15 @@ public class NodeGroupExecutionClientConfig  extends RestClientConfig{
 		
 	}
 	
+	/**
+	 * Constructor
+	 * @param serviceProtocol - e.g. http
+	 * @param serviceServer - e.g. localhost
+	 * @param servicePort - e.g. 12058
+	 * @param user - user for virtuoso inserts
+	 * @param password - password for virtuoso inserts
+	 * @throws Exception
+	 */
 	public NodeGroupExecutionClientConfig(String serviceProtocol, String serviceServer, int servicePort, String user, String password) throws Exception {
 		
 		super(serviceProtocol, serviceServer, servicePort, "fake");

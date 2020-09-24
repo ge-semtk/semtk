@@ -116,6 +116,53 @@ public class ResultsClientTest_IT {
 		}
 	}
 	
+	@Test
+	/**
+	 * Make sure the UTF-8 ish micron character survives the results service
+	 * @throws Exception
+	 */
+	public void testStoreTableMicronChar() throws Exception {
+
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"col1", "col2"};
+		String [] types = {"String", "String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("one-µ");
+		row.add("two");
+		ArrayList<String> row2 = new ArrayList<String>();
+		row2.add("three");
+		row2.add("four");
+		
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			table.addRow(row2);
+			
+			client.execStoreTableResults(jobId, table);
+
+			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one-µ\",\"two\"],[\"three\",\"four\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}";		
+			
+			Table tbl = client.getTableResultsJson(jobId, null);
+			String resultJSONString = tbl.toJson().toJSONString();		
+			
+			assertEquals(resultJSONString, expectedJsonString); 		// check the JSON results
+						
+			// check getting results as json
+			Table jTable = client.getTableResultsJson(jobId, null);
+			assertEquals(jTable.toJson().toString(), expectedJsonString);
+			
+			// check getting results as csv
+			CSVDataset resCsvDataset = client.getTableResultsCSV(jobId, null);
+			ArrayList<ArrayList<String>> resCsvRows = resCsvDataset.getNextRecords(5);
+			assertEquals(resCsvRows.get(0).get(0), "one-µ");
+			
+			
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
 	
 	@Test
 	public void testStoreTable_WithQuotesAndCommas() throws Exception {
