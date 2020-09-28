@@ -1226,7 +1226,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}	
 	
 	/**
-	 * Run a construct query given a nodegroup
+	 * Run a construct query given a nodegroup and wait for results JSON
 	 * @param ng
 	 * @param conn
 	 * @param edcConstraintsJson
@@ -1242,7 +1242,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}
 	
 	/**
-	 * Run a delete query given a nodegroup
+	 * Run a delete query given a nodegroup and wait for results Table
 	 * @param ng
 	 * @param conn
 	 * @param edcConstraintsJson
@@ -1257,7 +1257,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}
 	
 	/**
-	 * Run a select query given a nodegroup
+	 * Run a select query given a nodegroup and wait for results Table
 	 * @param ng
 	 * @param conn
 	 * @param edcConstraintsJson
@@ -1272,7 +1272,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}
 	
 	/**
-	 * Run a select query given a nodegroup
+	 * Run a select query given a nodegroup and wait for results Table
 	 * @param ng
 	 * @param conn
 	 * @param edcConstraintsJson
@@ -1288,7 +1288,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}
 	
 	/**
-	 * Run a select query given a nodegroup
+	 * Run a select query given a nodegroup and wait for results Table
 	 * @param sgjson
 	 * @param edcConstraintsJson
 	 * @param runtimeConstraints

@@ -41,6 +41,10 @@ import com.ge.research.semtk.utility.Utility;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class NodeGroupExecutionClientTest_IT {
@@ -398,5 +402,43 @@ public class NodeGroupExecutionClientTest_IT {
 			} catch (Exception e) {
 			}
 		}
+		
+		/**
+		 * Do full round trip testing of more challenging UTF-8 characters.
+		 * 
+		 * @throws Exception
+		 */
+		@Test
+		public void testUTFRoundTrip() throws Exception {
+			TestGraph.clearGraph();
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+			SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBatteryUTF8.json");
+			
+			// This file has
+			//   column[0] "Battery" as a character description
+			//   column[1] "Cell"    as a character sequence
+			File contentFile = Utility.getResourceAsFile(this, "/sampleBatteryUTF8.csv");
+			Table inTab = Table.fromCsvFile(contentFile.getAbsolutePath());
+			inTab.sortByColumnStr(inTab.getColumnNames()[0]);
+			
+			// ingest and read back using java clients and full service layer
+			nodeGroupExecutionClient.dispatchIngestFromCsvStringsSync(sgjson, inTab.toCSVString());
+			Table outTab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjson, null, null);
+			outTab.sortByColumnStr(outTab.getColumnNames()[0]);
+			
+			// loop through Cell column return and make sure bytes match column 1 as input
+			//
+			// https://stackoverflow.com/questions/2817752/java-code-to-convert-byte-to-hexadecimal/50846880
+			BigInteger inCell;
+			BigInteger outCell;
+			for (int i=0; i < inTab.getNumColumns(); i++) {
+				inCell = new BigInteger(1, inTab.getCellAsString(i, 1).getBytes("utf-8"));
+				outCell = new BigInteger(1, outTab.getCellAsString(i, 1).getBytes("utf-8"));
+				// print and compare 
+				System.out.println(inTab.getCellAsString(i, 0) + ":" + inCell.toString(16) + "," + outCell.toString(16));
+				assertTrue("UTF-8 strings did not match", outCell.equals(inCell));
+			}
+		}
+		
 	}
 

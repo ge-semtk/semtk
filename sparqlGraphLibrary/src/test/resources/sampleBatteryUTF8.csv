@@ -1,0 +1,3 @@
+Battery,Cell,Notes
+a U+03BC micron,μ,  renders ok (Paul version
+b U+00B5 micron,µ,  trouble rendering (LIF version)
