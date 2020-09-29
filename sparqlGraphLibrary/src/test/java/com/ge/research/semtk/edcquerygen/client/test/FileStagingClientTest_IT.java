@@ -66,7 +66,7 @@ public class FileStagingClientTest_IT {
 		client.setJobId(jobId);
 		TableResultSet result = (TableResultSet)client.execute("nonexistentfile.txt###stagedfile.txt");
 		assertFalse(result.getSuccess());
-		assertTrue(result.getRationaleAsString("").contains("No such file or directory"));
+		assertTrue(result.getRationaleAsString("").contains("No such file or directory") || result.getRationaleAsString("").contains("The system cannot find the file specified"));
 	}
 
 }
