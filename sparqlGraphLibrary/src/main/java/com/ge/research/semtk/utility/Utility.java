@@ -66,6 +66,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.codec.CharEncoding;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
@@ -100,7 +101,7 @@ public abstract class Utility {
 	
 	public static final DateTimeFormatter DATE_FORMATTER_yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");	// e.g. 20141031 
 	
-	private static StrSubstitutor envSubstitutor = new StrSubstitutor(System.getenv());
+	private static StrSubstitutor envSubstitutor = new StrSubstitutor(new CaseInsensitiveMap(System.getenv()));
 	public static final Boolean ENV_TEST = ! envSubstitutor.replace("${HOST_IP}").equals("${HOST_IP}");
 	public static final String ENV_TEST_EXCEPTION_STRING = "Can't find environment variable $HOST_IP, suggesting a testing setup problem.";
 	static{

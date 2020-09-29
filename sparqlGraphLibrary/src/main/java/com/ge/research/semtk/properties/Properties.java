@@ -1,5 +1,6 @@
 package com.ge.research.semtk.properties;
 
+import java.util.Arrays;
 
 /**
  * Problem: I don't know how to validate properties in @spring when...
@@ -132,8 +133,15 @@ public class Properties {
 	 * @return
 	 */
 	private String getPrefixedNameValue(String name, Object v) {
-		
-		return this.prefix + name + "=" + (v == null ? "<null>" : v.toString());
+		String out;
+		if (v == null) {
+			out = "<null>";
+		} else if (v.getClass().isArray()) {
+			out = Arrays.toString((String []) v);
+		} else {
+			out = v.toString();
+		}
+		return this.prefix + name + "=" + out;
 	}
 	
 }

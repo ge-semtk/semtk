@@ -40,6 +40,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -388,8 +390,11 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String storageFileName) throws Exception {
-		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, storageFileName);
+	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String fullPath) throws Exception {
+		
+		this.validatePath(fullPath);
+		
+		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, fullPath);
 	
 		SimpleResultSet res = new SimpleResultSet(true);
 		res.addResult("fileId", fileId);
@@ -913,8 +918,6 @@ public class ResultsServiceRestController {
 	 * @throws Exception
 	 */
 	private String buildStoragePath(String jobId, String fileId) throws Exception {
-		this.validatePathElement(jobId);
-		this.validatePathElement(fileId);
 		return prop.getFileLocation() + "/" + jobId + "/" + fileId;
 	}
 	
@@ -922,6 +925,38 @@ public class ResultsServiceRestController {
 		if (Pattern.matches("[^0-9a-zA-Z\\.\\s_-]", elem)  ||
 				elem.contains("..") ) {
 			throw new Exception("Value contains bad characters: " + elem);
+		}
+	}
+	
+	/**
+	 * Make sure path starts with fileLocation or additionalFileLocations
+	 * Make sure path contains no wonky characters
+	 * @param path
+	 * @throws Exception
+	 */
+	private void validatePath(String path) throws Exception {
+		
+		// is path in prop.fileLocation or prop.additionalFileLocations
+		Path p = Paths.get(path);
+		boolean found = p.startsWith(Paths.get(prop.getFileLocation()));
+		for (String legal : prop.getAdditionalFileLocations()) {
+			if (p.startsWith(Paths.get(legal))) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			throw new Exception("Permission is denied.  Path is not white-listed in properties fileLocation or additionalFileLocations: " + path);
+		}
+		
+		// are all path elements legal.
+		// Skip the root path component since it would be in prop.fileLocation or prop.additionalFileLocations
+		// nameCount will be number of path components not including the root.
+		int nameCount = p.getNameCount();
+		for (int i=0; i < nameCount; i++) {
+			Path last = p.getFileName();                // pull last component
+			this.validatePathElement(last.toString());  // validate it
+			p = p.getParent();                          // shift to parent
 		}
 	}
 }
