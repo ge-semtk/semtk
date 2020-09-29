@@ -559,7 +559,7 @@ public class ResultsClientTest_IT {
 			client.execStoreBinaryFilePath(jobId, path, "file1");
 			fail("unexpected success with path=" + path);
 		} catch (Exception e) {
-			assertTrue(e.getMessage().contains("white-listed"));
+			assertTrue(e.getMessage() + " does not contain 'white-listed'", e.getMessage().contains("white-listed"));
 		}
 
 		String fileLocation = IntegrationTestUtility.get("integrationtest.resultsservice.fileLocation");
@@ -572,7 +572,7 @@ public class ResultsClientTest_IT {
 			fail("unexpected success with path=" + path);
 		} catch (Exception e) {
 			// not readable error instead of white-list error
-			assertTrue(e.getMessage().contains("not readable"));
+			assertTrue(e.getMessage() + " does not contain 'not readable'", e.getMessage().contains("not readable"));
 		}
 		
 		// try white-listed file additionalFileLocations
@@ -583,7 +583,7 @@ public class ResultsClientTest_IT {
 				fail("unexpected success with path=" + path);
 			} catch (Exception e) {
 				// not readable error instead of white-list error
-				assertTrue(e.getMessage().contains("not readable"));
+				assertTrue(e.getMessage() + " does not contain 'not readable'", e.getMessage().contains("not readable"));
 			}
 		}
 		

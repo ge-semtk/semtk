@@ -48,7 +48,7 @@ public class FileStagingClientTest_IT {
 		TableResultSet result = (TableResultSet)client.execute(testFileName + "###" + stagedFileName);
 
 		// check that the file is staged
-		assertTrue(result.getSuccess());
+		assertTrue(result.getRationaleAsString("\n"), result.getSuccess());
 		assertEquals(result.getResults().getRows().size(), 1);
 		String stagedFileId = result.getTable().getCell(0,"fileID");
 		String stagedFileContents = IntegrationTestUtility.getResultsClient().execReadBinaryFile(stagedFileId);

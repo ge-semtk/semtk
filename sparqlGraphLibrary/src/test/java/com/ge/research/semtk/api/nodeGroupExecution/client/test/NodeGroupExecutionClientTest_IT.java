@@ -426,6 +426,8 @@ public class NodeGroupExecutionClientTest_IT {
 			Table outTab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjson, null, null);
 			outTab.sortByColumnStr(outTab.getColumnNames()[0]);
 			
+			
+			assertEquals("wrong number of results", inTab.getNumColumns(), outTab.getNumColumns());
 			// loop through Cell column return and make sure bytes match column 1 as input
 			//
 			// https://stackoverflow.com/questions/2817752/java-code-to-convert-byte-to-hexadecimal/50846880
