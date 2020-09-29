@@ -427,13 +427,13 @@ public class NodeGroupExecutionClientTest_IT {
 			outTab.sortByColumnStr(outTab.getColumnNames()[0]);
 			
 			
-			assertEquals("wrong number of results", inTab.getNumColumns(), outTab.getNumColumns());
+			assertEquals("wrong number of results", inTab.getNumRows(), outTab.getNumRows());
 			// loop through Cell column return and make sure bytes match column 1 as input
 			//
 			// https://stackoverflow.com/questions/2817752/java-code-to-convert-byte-to-hexadecimal/50846880
 			BigInteger inCell;
 			BigInteger outCell;
-			for (int i=0; i < inTab.getNumColumns(); i++) {
+			for (int i=0; i < inTab.getNumRows(); i++) {
 				inCell = new BigInteger(1, inTab.getCellAsString(i, 1).getBytes("utf-8"));
 				outCell = new BigInteger(1, outTab.getCellAsString(i, 1).getBytes("utf-8"));
 				// print and compare 
