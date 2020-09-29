@@ -364,9 +364,9 @@ define([	// properly require.config'ed
                 // COL  Name: if URI label with sparqlID, else use property keyname
 				cell = row.insertCell(-1);
                 if (iMapping.isNode()) {
-					cell.innerHTML = "<b>" + iMapping.getName() + "</b>";
+					cell.innerHTML = "<b>" + IIDXHelper.htmlSafe(iMapping.getName()) + "</b>";
 				} else {
-					cell.innerHTML = iMapping.getName();
+					cell.innerHTML = IIDXHelper.htmlSafe(iMapping.getName());
 				}
 
                 cell = row.insertCell(-1);
@@ -619,7 +619,7 @@ define([	// properly require.config'ed
 				this.iSpecHash[elem.id] = iText;
 
 				elem.className = MappingTab.classTextUnused;
-				elem.innerHTML = iText.getText();
+				elem.innerHTML = IIDXHelper.htmlSafe(iText.getText());
 
 				// draggable
 				elem.style.cursor = "grab";
@@ -686,7 +686,7 @@ define([	// properly require.config'ed
 
 				// appearance
 				span.className = MappingTab.classTransformUnused;
-				span.innerHTML = name;
+				span.innerHTML = IIDXHelper.htmlSafe(name);
 
 				// draggable
 				span.style.cursor = "grab";
@@ -755,10 +755,10 @@ define([	// properly require.config'ed
 
 				// set main element
 				var name = iTrans.getName();
-				transElem.innerHTML = name;
+				transElem.innerHTML = IIDXHelper.htmlSafe(name);
 
 				// change names on any elements already in use
-				this.visitTransformInItemElements(iTrans, function (elem) { elem.innerHTML = name; });
+				this.visitTransformInItemElements(iTrans, function (elem) { elem.innerHTML = IIDXHelper.htmlSafe(name); });
 
 				kdlLogEvent("Import Tab Edit Transform OK");
 			},
@@ -897,14 +897,14 @@ define([	// properly require.config'ed
 				this.setChangedFlag(true);
 
 				// set the text button
-				textElem.innerHTML = text;
+				textElem.innerHTML = IIDXHelper.htmlSafe(text);
 				var iText = this.iSpecHash[textElem.id];
 
 				// set the ImportText value
 				iText.setText(text);
 
 				// fix all text items over in rows so they show the new name
-				this.visitItemElements(iText, function(elem) {elem.innerHTML = text;});
+				this.visitItemElements(iText, function(elem) {elem.innerHTML = IIDXHelper.htmlSafe(text);});
 			},
 
 			visitItemElements : function (iTextOrCol, applyFunc) {
@@ -970,7 +970,7 @@ define([	// properly require.config'ed
 
 				// appearance
 				span.className = MappingTab.classColumnUnused;
-				span.innerHTML = iCol.getColName();
+				span.innerHTML = IIDXHelper.htmlSafe(iCol.getColName());
 
 				// draggable
 				span.style.cursor = "grab";
