@@ -367,6 +367,7 @@ public class ResultsServiceRestController {
 				// make sure file is readable
 				File f = new File(requestBody.getPath());
 				if(! f.exists() ) { 
+					this.validatePath(requestBody.getPath());  // throw validation error before not-readable exception
 				    throw new Exception("File is not readable from results service: " + requestBody.getPath());
 				}
 				
