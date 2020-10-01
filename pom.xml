@@ -25,6 +25,7 @@
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
 
+                <!-- GE INTERNAL REPOS -----
 		<repository>
 			<id>semtk</id>
 			<name>build.GE Artifactory-releases</name>
@@ -35,6 +36,8 @@
 			<name>build.GE Artifactory-snapshots</name>
 			<url>https://artifactory.build.ge.com/artifactory/UMKGF-SNAPSHOT</url>
 		</snapshotRepository>
+		<------------>
+
 	</distributionManagement>
 
 	<modules>
@@ -105,7 +108,17 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<useReleaseProfile>false</useReleaseProfile>
+					<releaseProfiles>release</releaseProfiles>
+					<goals>deploy</goals>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-gpg-plugin</artifactId>
