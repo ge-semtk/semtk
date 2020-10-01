@@ -1,0 +1,51 @@
+name: Release
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build:
+    name: Build and release SemTK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: maven-${{ hashFiles('**/pom.xml') }}
+
+      - shell: bash
+        name: Build SemTK
+        run: |
+          # TODO: The tests currently fail in Github Actions.
+          mvn --batch-mode clean install -DskipTests
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+
+      - name: Upload release assets
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: "distribution/target/semtk-opensource-${{ steps.get_version.outputs.VERSION }}-bin.tar.gz"
+          asset_name: semtk-opensource-${{ steps.get_version.outputs.VERSION }}-bin.tar.gz
+          asset_content_type: application/gzip
+
