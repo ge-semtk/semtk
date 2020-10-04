@@ -3,10 +3,10 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>2.2.1-SNAPSHOT</version>
+		<version>2.2.1</version>
 	</parent>
 	<artifactId>sparqlQueryService</artifactId>
-	<version>2.2.1-SNAPSHOT</version>
+	<version>2.2.1</version>
 
 	<dependencies>
 	
@@ -27,13 +27,13 @@
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
-			<version>2.2.1-SNAPSHOT</version>
+			<version>2.2.1</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>springUtilLibrary</artifactId>
-			<version>2.2.1-SNAPSHOT</version>
+			<version>2.2.1</version>
 		</dependency>
 		
 		<!-- License: Apache 2.0 -->
