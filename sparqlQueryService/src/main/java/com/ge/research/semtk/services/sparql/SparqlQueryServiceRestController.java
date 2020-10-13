@@ -565,7 +565,7 @@ public class SparqlQueryServiceRestController {
 		SimpleResultSet resultSet = null;
 		JSONObject simpleResultSetJson = null;
 		SparqlEndpointInterface sei = null;
-		LocalLogger.logToStdOut("Sparql Query Service start uploadOwl");
+		LocalLogger.logToStdOut("Sparql Query Service start syncOwl");
 
 		
 		try {	
