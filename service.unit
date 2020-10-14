@@ -1,6 +1,6 @@
 [Unit]
 Description=${SERVICE}
-After=fuseki.service virtuoso.service
+After=fuseki.service virtuoso.service ontologyInfoService.service
 
 [Service]
 User=${USER}
