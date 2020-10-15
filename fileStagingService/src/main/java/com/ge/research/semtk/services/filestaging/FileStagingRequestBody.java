@@ -46,7 +46,7 @@ public class FileStagingRequestBody extends JobIdRequest{
 			throw new Exception("Error: missing query");
 		}
 		if(query.split(DELIMITER).length != 2){
-			throw new Exception("Input is not in format \"URL filename\": '" + query + "'");
+			throw new Exception("Input is not in format \"URL" + DELIMITER + "filename\": '" + query + "'");
 		}
     }
     

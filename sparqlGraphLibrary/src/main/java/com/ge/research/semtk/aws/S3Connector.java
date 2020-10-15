@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -36,6 +37,10 @@ public class S3Connector extends FileSystemConnector {
 		this.region = region;
 		this.name = name;
 		this.s3Client = this.buildS3Client();		
+		
+		// test it
+		ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(this.name).maxKeys(1).build();
+		this.s3Client.listObjectsV2Paginator(request);
 	}
 	
 	private S3Client buildS3Client() {
@@ -56,29 +61,38 @@ public class S3Connector extends FileSystemConnector {
 		return name;
 	}
 	
-	public void test() throws Exception {
-		ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(this.name).maxKeys(1).build();
-		this.s3Client.listObjectsV2Paginator(request);
-	}
+	public void putObject(String fileName, byte [] data) throws Exception {
 		
-	public void putObject(String keyName, byte [] data) throws Exception {
-		PutObjectResponse res = this.s3Client.putObject(PutObjectRequest.builder().bucket(this.name).key(keyName).build(),
+		if (this.checkExists(fileName)) {
+			throw new Exception("Key already exists: " + fileName);
+		}
+		PutObjectResponse res = this.s3Client.putObject(PutObjectRequest.builder().bucket(this.name).key(fileName).build(),
 				RequestBody.fromBytes(data));
+	
         
 		if (res.sdkHttpResponse().isSuccessful() == false) {
 			throw new Exception("Error putting object into s3: " + res.sdkHttpResponse().statusText());
 		}
 	}
 	
-	public byte[] getObject(String keyName) throws IOException {
-		ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(keyName).build());
+	public boolean checkExists(String fileName) throws Exception {
+		try {
+			ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(fileName).build());
+			return true;
+		} catch (NoSuchKeyException nske) {
+			return false;
+		}
+	}
+	
+	public byte[] getObject(String fileName) throws IOException {
+		ResponseInputStream<GetObjectResponse> s3objectResponse = this.s3Client.getObject(GetObjectRequest.builder().bucket(this.name).key(fileName).build());
 		
 		DataInputStream is = new DataInputStream(s3objectResponse);
 	    return IOUtils.toByteArray(is);
 	}
 	
-	public void deleteObject(String keyName) {
-		this.s3Client.deleteObject(DeleteObjectRequest.builder().bucket(this.name).key(keyName).build());
+	public void deleteObject(String fileName) {
+		this.s3Client.deleteObject(DeleteObjectRequest.builder().bucket(this.name).key(fileName).build());
 	}
 
 }

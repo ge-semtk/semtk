@@ -35,6 +35,7 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 	public SparqlQueryClientConfig(String serviceProtocol,String serviceServer, int servicePort, String serviceEndpoint,
 			String sparqlServerAndPort, String sparqlServerType, String sparqlDataset)
 			throws Exception {
+
 		super(serviceProtocol, serviceServer, servicePort, serviceEndpoint);
 		this.sparqlServerAndPort = sparqlServerAndPort;
 		this.sparqlServerType = sparqlServerType;

@@ -82,6 +82,8 @@ import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
+import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
+import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -1184,7 +1186,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1218,7 +1220,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+				retval = nodeGroupExecutor.ingestFromTemplateAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1254,7 +1256,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent());
+				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 				
@@ -1289,7 +1291,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1323,7 +1325,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent());
+				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 			}catch(Exception e){
@@ -1459,7 +1461,102 @@ public class NodeGroupExecutionRestController {
 
 		return retval.toJson();		
 	}
+	
+	@ApiOperation(
+			value=	"Clear a graph with optional trackFlag."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/clearGraph", method= RequestMethod.POST)
+	public JSONObject clearGraph(@RequestBody SparqlEndpointTrackRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		// pass-through to ingestion service
+		HeadersManager.setHeaders(headers);
+		try {
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			return iclient.execClearGraph(requestBody.buildSei(), requestBody.getTrackFlag()).toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "clearGraph", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
+	
+	@ApiOperation(
+			value=	"Run a query of tracked events."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/runTrackingQuery", method= RequestMethod.POST)
+	public JSONObject runTrackingQuery(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			return iclient.execRunTrackingQuery(requestBody.buildSei(), requestBody.getKey(), requestBody.getUser(), requestBody.getStartEpoch(), requestBody.getEndEpoch()).toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "runTrackingQuery", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
+	
+	@ApiOperation(
+			value=	"Delete tracked events."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/deleteTrackingEvents", method= RequestMethod.POST)
+	public JSONObject deleteTrackingEvents(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			return iclient.execDeleteTrackingEvents(requestBody.buildSei(), requestBody.getKey(), requestBody.getUser(), requestBody.getStartEpoch(), requestBody.getEndEpoch()).toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "deleteTrackingEvents", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
 			
+	@ApiOperation(
+			value=	"Get contents of file key from /runTrackingQuery, returns 'contents' field in simple results"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getTrackedIngestFile", method= RequestMethod.POST)
+	public JSONObject getTrackedIngestFile(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			return iclient.execGetTrackedIngestFile(requestBody.getId()).toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "getTrackedIngestFile", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
+	
+	@ApiOperation(
+			value=	"Delete data from a tracked load"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/undoLoad", method= RequestMethod.POST)
+	public JSONObject undoLoad(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			return iclient.execUndoLoad(requestBody.getId()).toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "getTrackedIngestFile", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
 			
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
@@ -1546,6 +1643,8 @@ public class NodeGroupExecutionRestController {
 	private JobTracker getJobTracker() throws Exception{
 		return new JobTracker(servicesgraph_props.buildSei());
 	}
+	
+	
 }
 
 

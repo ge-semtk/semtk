@@ -32,6 +32,7 @@ public class ResultsProperties extends Properties {
 	private int sampleLines = 1;
 	private Boolean cleanUpThreadEnabled = true;
 	private Integer cleanUpThreadFrequency;
+	private String[]  additionalFileLocations = null;
 	
 	public ResultsProperties() {
 		super();
@@ -45,6 +46,8 @@ public class ResultsProperties extends Properties {
 		checkNone("sampleLines", sampleLines);
 		checkNotEmpty("cleanUpThreadEnabled", cleanUpThreadEnabled);
 		checkNotEmpty("cleanUpThreadFrequency", cleanUpThreadFrequency);
+		checkNone("additionalFileLocations", additionalFileLocations);
+		
 	}
 	
 	public String getBaseURL() {
@@ -77,4 +80,11 @@ public class ResultsProperties extends Properties {
 	public void setCleanUpThreadFrequency(Integer cleanUpThreadFrequency) {
 		this.cleanUpThreadFrequency = cleanUpThreadFrequency;
 	}
+	public String[] getAdditionalFileLocations() {
+		return additionalFileLocations;
+	}
+	public void setAdditionalFileLocations(String [] fileStorageLocations) {
+		this.additionalFileLocations = fileStorageLocations;
+	}
+	
 }

@@ -76,9 +76,16 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  * Interface to SPARQL endpoint.
+ * 
+ * INTERNAL USE NOTE: 
+ * 		External users will use only the constructor and save/restore from JSON methods.
+ *    	Query methods are for use by internal SemTk code, and will be blocked by security, etc.
+ *      Use the NodeGroupExecutionClient or SparqlQueryClient instead.
+ *       
  * This is an abstract class - create a subclass per implementation (Virtuoso, etc)
  * 
  * NOTE: for HTTPS connections, does not validate certificate chain.
@@ -132,9 +139,14 @@ public abstract class SparqlEndpointInterface {
 		this(serverAndPort, graph, null, null);
 	}
 
-
+	
 	/**
 	 * Constructor used for authenticated connections... like insert/update/delete/clear
+	 * @param serverAndPort
+	 * @param graph
+	 * @param user
+	 * @param pass
+	 * @throws Exception
 	 */
 	public SparqlEndpointInterface(String serverAndPort, String graph, String user, String pass) throws Exception {
 		this.graph = graph;		
@@ -246,6 +258,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Override in order to separate out DontRetryException from regular ones
 	 * and add in any known SemTK explanation
+	 * See "internal use" note
 	 * @param responseTxt
 	 * @param resulttype
 	 * @return (JSONObject) version of an acceptable result
@@ -282,6 +295,15 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Static method to get an instance of this abstract class
 	 */
+	
+	/**
+	 * Static method to get an instance of this abstract class
+	 * @param serverTypeString - virtuoso|fuseki|neptune
+	 * @param server - full url of server (including /dataset for some implementations)
+	 * @param graph - graph name
+	 * @return
+	 * @throws Exception
+	 */
 	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String graph) throws Exception{
 		return getInstance(serverTypeString, server, graph, null, null);
 	}	
@@ -292,6 +314,13 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Static method to get an instance of this abstract class
+	 * @param serverTypeString - virtuoso|fuseki|neptune
+	 * @param server - full url of server (including /dataset for some implementations)
+	 * @param graph - graph name
+	 * @param user - for implementations (e.g. virtuoso) that require it for inserts
+	 * @param password - for implementations (e.g. virtuoso) that require it for inserts
+	 * @return
+	 * @throws Exception
 	 */
 	public static SparqlEndpointInterface getInstance(String serverTypeString, String server, String graph, String user, String password) throws Exception{
 		if(serverTypeString.equalsIgnoreCase(VIRTUOSO_SERVER)){
@@ -308,6 +337,12 @@ public abstract class SparqlEndpointInterface {
 		}	
 	}
 	
+	/**
+	 * Read json representation
+	 * @param jObj
+	 * @return
+	 * @throws Exception
+	 */
 	public static SparqlEndpointInterface getInstance(JSONObject jObj) throws Exception {
 		for (String key : new String[] {"type", "url"}) {
 			if (!jObj.containsKey(key)) {
@@ -322,6 +357,10 @@ public abstract class SparqlEndpointInterface {
 			throw new Exception("Invalid SparqlEndpointInterface JSON does not contain 'graph' or 'dataset': " + jObj.toJSONString());
 		}
 	}
+	/**
+	 * Write json
+	 * @return
+	 */
 	public JSONObject toJson() {
 		JSONObject ret = new JSONObject();
 		
@@ -333,14 +372,32 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * Static method to create an endpoint and execute a query
+	 * Create a SPARQLEndpointInterface and execute a query
+	 * See "internal use" note
+	 * @param server
+	 * @param graph
+	 * @param serverTypeString
+	 * @param query
+	 * @param resultType
+	 * @return
+	 * @throws Exception
 	 */
 	public static SparqlEndpointInterface executeQuery(String server, String graph, String serverTypeString, String query, SparqlResultTypes resultType) throws Exception {
 		return executeQuery(server, graph, serverTypeString, query, null, null, resultType);
 	}
   
 	/**
-	 * Static method to create an endpoint and execute a query
+	 * Create a SPARQLEndpointInterface and execute a query
+	 * See "internal use" note
+	 * @param server
+	 * @param graph
+	 * @param serverTypeString
+	 * @param query
+	 * @param user
+	 * @param pass
+	 * @param resultType
+	 * @return
+	 * @throws Exception
 	 */
 	public static SparqlEndpointInterface executeQuery(String server, String graph, String serverTypeString, String query, String user, String pass, SparqlResultTypes resultType) throws Exception {
 		try {
@@ -360,6 +417,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute a TABLE result query.   High-level helper function.
+	 * See "internal use" note
 	 * @param query
 	 * @return
 	 * @throws Exception if unsuccessful
@@ -372,6 +430,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute query and assemble a GeneralResultSet object.
+	 * See "internal use" note
 	 * 
 	 * Returns:
 	 * 	  TableResultSet for a select query (success or failure)
@@ -403,6 +462,13 @@ public abstract class SparqlEndpointInterface {
 		return resultSet;
 	}	
 	
+	/**
+	 * Execute query to table
+	 * See "internal use" note
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
 	public Table executeQueryToTable(String query) throws Exception {
 		TableResultSet res = (TableResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 		res.throwExceptionIfUnsuccessful();
@@ -411,6 +477,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Executes a confirm query and throws exception
+	 * See "internal use" note
 	 * @param query
 	 * @throws Exception if unsuccessful
 	 */
@@ -422,7 +489,8 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query. Uses http POST.  
 	 * Depending on the type of query (select, insert, construct, etc), decides whether to use auth or non-auth.
-	 * 
+	 * See "internal use" note
+	  
 	 * Sample result from a SELECT query:
 	 *  
 	 * Sample result from a CONSTRUCT query:
@@ -484,6 +552,7 @@ public abstract class SparqlEndpointInterface {
 
 	/**
 	 * Run a test query depending on isAuth()
+	 * See "internal use" note
 	 * @return
 	 * @throws Exception
 	 */
@@ -538,6 +607,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query using POST
 	 * Adds Auth elements ONLY IF this.userName != null
+	 * See "internal use" note
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -574,6 +644,11 @@ public abstract class SparqlEndpointInterface {
 		}
 	}
 	
+	/**
+	 * clear the graph
+	 * See "internal use" note
+	 * @throws Exception
+	 */
 	public void clearGraph() throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateClearGraphSparql(this), SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
@@ -581,6 +656,11 @@ public abstract class SparqlEndpointInterface {
         
 	}
 	
+	/**
+	 * See "internal use" note
+	 * @param res
+	 * @throws Exception
+	 */
 	protected void throwExceptionIfClearGraphFailed(SimpleResultSet res) throws Exception {
 		String s = res.getMessage();
         String sLower = s.toLowerCase();
@@ -589,6 +669,12 @@ public abstract class SparqlEndpointInterface {
         }
 	}
 	
+	/**
+	 * Delete all URI's starting with prefix
+	 * See "internal use" note
+	 * @param prefix
+	 * @throws Exception
+	 */
 	public void clearPrefix(String prefix) throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDeletePrefixQuery(this, prefix), SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
@@ -601,6 +687,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
+	 * See "internal use" note
 	 * It has been observed that this behaves differently on different triple-stores.
 	 * e.g. virtuoso throws an error if you create a graph that already exists
 	 *      Neptune doesn't seem to support this command at all (?)
@@ -618,6 +705,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
+	 * See "internal use" note
 	 * It has been observed that this behaves differently on different triple-stores.
 	 * e.g. virtuoso throws an error if you drop a graph that doesn't exist
 	 *      while Neptune succeeds.
@@ -779,6 +867,7 @@ public abstract class SparqlEndpointInterface {
 
 	/**
 	 * Should system perform the default retry when it receives this exception from the triplestore
+	 * See "internal use" note
 	 * @param e
 	 * @return
 	 */
@@ -794,6 +883,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Upload turtle.  Many triplestores treat ttl and owl the same.
+	 * See "internal use" note
 	 * @param turtle
 	 * @return
 	 * @throws AuthorizationException
@@ -809,6 +899,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute an auth query using POST
+	 * See "internal use" note
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -819,6 +910,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute an auth query using POST, and using AUTH if this.userName != null
+	 * See "internal use" note
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -841,6 +933,7 @@ public abstract class SparqlEndpointInterface {
 
 	/**
 	 * Execute query using GET (use should be rare - in cases where POST is not supported) 
+	 * See "internal use" note
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -857,6 +950,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute an auth query using GET (use should be rare - in cases where POST is not supported)
+	 * See "internal use" note
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -899,6 +993,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute a query, retrieving a HashMap of data for a given set of headers.
+	 * See "internal use" note
 	 */
 	public HashMap<String,String[]> executeQuery(String query, String[] colNames) throws Exception {
 		return executeQuery(query, colNames, false);
@@ -908,6 +1003,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query, retrieving a HashMap of data for a given set of headers.
 	 *
+	 * See "internal use" note
 	 * Note: PEC 3/17/2020 Not sure why this is here.  Only seems to be used by testing.
 	 * 
 	 * @param query	the query
@@ -1228,6 +1324,7 @@ public abstract class SparqlEndpointInterface {
 	 * Checks an sei to see if any version of the owl in owlInputStream is loaded
 	 * (any class with the base specified in the owl)
 	 * If owl is not loaded to the sei, then load it
+	 * See "internal use" note
 	 * @param sei
 	 * @param owlInputStream
 	 * @return True if load occurred, False if it wasn't needed
@@ -1247,6 +1344,23 @@ public abstract class SparqlEndpointInterface {
 		}
 		return false;
 	}
+	
+	/**
+	 * 
+	 * See "internal use" note
+	 * @param owlInputStream
+	 * @throws Exception
+	 */
+	public void updateOwlModel(InputStream owlInputStream) throws Exception {
+		
+		byte [] owl = IOUtils.toByteArray(owlInputStream);
+		String base = Utility.getXmlBaseFromOwlRdf(new ByteArrayInputStream(owl));
+		this.clearPrefix(base);
+		JSONObject retJson = this.executeAuthUploadOwl(owl);
+		SimpleResultSet res = SimpleResultSet.fromJson(retJson);
+		res.throwExceptionIfUnsuccessful();
+	}
+
 
 	public abstract SparqlEndpointInterface copy() throws Exception;
 	

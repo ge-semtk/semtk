@@ -40,6 +40,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -157,7 +159,8 @@ public class ResultsServiceRestController {
 	public void getJsonLdResults(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
-		
+		resp.addHeader("content-type", "application/json; charset=utf-8");
+
 		try {
 			try{
 		    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -216,6 +219,7 @@ public class ResultsServiceRestController {
 	public void getJsonBlobResults(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		resp.addHeader("content-type", "application/json; charset=utf-8");
 		try {
 			try{
 		    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -363,6 +367,7 @@ public class ResultsServiceRestController {
 				// make sure file is readable
 				File f = new File(requestBody.getPath());
 				if(! f.exists() ) { 
+					this.validatePath(requestBody.getPath());  // throw validation error before not-readable exception
 				    throw new Exception("File is not readable from results service: " + requestBody.getPath());
 				}
 				
@@ -386,8 +391,11 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String storageFileName) throws Exception {
-		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, storageFileName);
+	private SimpleResultSet addBinaryFile(String jobId, String fileId, String originalFileName, String fullPath) throws Exception {
+		
+		this.validatePath(fullPath);
+		
+		this.getJobTracker().addBinaryFile(jobId, fileId, originalFileName, fullPath);
 	
 		SimpleResultSet res = new SimpleResultSet(true);
 		res.addResult("fileId", fileId);
@@ -600,6 +608,7 @@ public class ResultsServiceRestController {
 	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		resp.addHeader("content-type", "text/plain; charset=utf-8");
 
 		try{			
 			
@@ -642,6 +651,7 @@ public class ResultsServiceRestController {
 	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		resp.addHeader("content-type", "application/json; charset=utf-8");
 
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
@@ -672,6 +682,8 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		TableResultsSerializer retval = null;
+		resp.addHeader("content-type", "text/plain; charset=utf-8");
+
 		try{
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
@@ -734,9 +746,11 @@ public class ResultsServiceRestController {
 					  "This is good for a preview, for example, in a browser with limited memory.<br>" +
 				      "GET /getTableResultsCsvForWebClient safely retrieves entire large files.")
 	@CrossOrigin
-	@RequestMapping(value="/getTableResultsJson", method= RequestMethod.POST)
+	@RequestMapping(value="/getTableResultsJson", method=RequestMethod.POST)
 	public void getTableResultsJson(@RequestBody ResultsRequestBodyMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
+		resp.addHeader("content-type", "application/json; charset=utf-8");
+        
 		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
 		final String ENDPOINT = "getTableResultsJson";
 		try{
@@ -777,6 +791,7 @@ public class ResultsServiceRestController {
 		// write table result set preamble.
 		outPrint.write("{\"message\":\"operations succeeded.\",\"table\":{\"@table\":");
 		outPrint.flush();
+		
 		trs.writeToStream(resp.getWriter());
 		// close table result set.
 		outPrint.write("},\"status\":\"success\"}");
@@ -904,8 +919,6 @@ public class ResultsServiceRestController {
 	 * @throws Exception
 	 */
 	private String buildStoragePath(String jobId, String fileId) throws Exception {
-		this.validatePathElement(jobId);
-		this.validatePathElement(fileId);
 		return prop.getFileLocation() + "/" + jobId + "/" + fileId;
 	}
 	
@@ -913,6 +926,38 @@ public class ResultsServiceRestController {
 		if (Pattern.matches("[^0-9a-zA-Z\\.\\s_-]", elem)  ||
 				elem.contains("..") ) {
 			throw new Exception("Value contains bad characters: " + elem);
+		}
+	}
+	
+	/**
+	 * Make sure path starts with fileLocation or additionalFileLocations
+	 * Make sure path contains no wonky characters
+	 * @param path
+	 * @throws Exception
+	 */
+	private void validatePath(String path) throws Exception {
+		
+		// is path in prop.fileLocation or prop.additionalFileLocations
+		Path p = Paths.get(path);
+		boolean found = p.startsWith(Paths.get(prop.getFileLocation()));
+		for (String legal : prop.getAdditionalFileLocations()) {
+			if (p.startsWith(Paths.get(legal))) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			throw new Exception("Permission is denied.  Path is not white-listed in properties fileLocation or additionalFileLocations: " + path);
+		}
+		
+		// are all path elements legal.
+		// Skip the root path component since it would be in prop.fileLocation or prop.additionalFileLocations
+		// nameCount will be number of path components not including the root.
+		int nameCount = p.getNameCount();
+		for (int i=0; i < nameCount; i++) {
+			Path last = p.getFileName();                // pull last component
+			this.validatePathElement(last.toString());  // validate it
+			p = p.getParent();                          // shift to parent
 		}
 	}
 }

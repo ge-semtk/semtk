@@ -33,7 +33,10 @@ import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.resultSet.Table;
 
 /**
- * @author Justin, then 200001934
+ * Helps manage all of the runtime constraints in a given nodegroup
+ * 
+ * Includes static functions for building runtime constraints 
+ * for nodegroups that are only known by ID
  *
  */
 public class RuntimeConstraintManager {
@@ -47,6 +50,10 @@ public class RuntimeConstraintManager {
 	public static String KEY_OPERANDS = "Operands";
 	private HashMap<String, RuntimeConstraintMetaData> rtcObjectHash;
 	
+	/**
+	 * Constructor
+	 * @param ng
+	 */
 	public RuntimeConstraintManager(NodeGroup ng){
 		
 		// set up the constraint items
@@ -93,7 +100,21 @@ public class RuntimeConstraintManager {
 	}
 	
 	/**
-	 * Build runtime constraint json with no checking
+	 * Build a runtime constraint that can be used with any nodegroup containing the given sparqlID
+	 * @param sparqlID
+	 * @param operation
+	 * @param operand
+	 * @return
+	 * @throws Exception
+	 */
+	public static JSONObject buildRuntimeConstraintJson(String sparqlID, SupportedOperations operation, String operand ) throws Exception {
+		ArrayList operandList = new ArrayList<String>();
+		operandList.add(operand);
+		return buildRuntimeConstraintJson(sparqlID, operation, operandList);
+	}
+	
+	/**
+	 * Build runtime constraint json that can be used with any nodegroup containing the given sparqlID
 	 * @param sparqlID
 	 * @param operation
 	 * @param operandList
@@ -117,6 +138,11 @@ public class RuntimeConstraintManager {
 		return ret;
 	}
 	
+	/**
+	 * To json string
+	 * @return
+	 * @throws Exception
+	 */
 	public String toJSONString() throws Exception {
 		if (this.toJson() == null) {
 			return "";
@@ -127,6 +153,7 @@ public class RuntimeConstraintManager {
 	
 	/**
 	 * Apply runtimeConstraints as value constraints to the nodegroup
+	 * Typically used inside of SemTK during query execution
 	 * @param runtimeConstraints
 	 * @throws Exception
 	 */
@@ -202,6 +229,7 @@ public class RuntimeConstraintManager {
 	
 	/**
 	 * Apply a constraint to the nodegroup
+	 * Typically used inside of SemTk
 	 * @param sparqlId
 	 * @param operation
 	 * @param operands  ArrayList
@@ -290,6 +318,12 @@ public class RuntimeConstraintManager {
 		return retval;
 	}
 	
+	/**
+	 * Get a list of sparql ids with runtime constraints
+	 * @param runtimeConstraintJson
+	 * @return
+	 * @throws Exception
+	 */
 	public static ArrayList<String> getConstraintSparqlIdList(JSONArray runtimeConstraintJson) throws Exception {
 		ArrayList<String> ret = new ArrayList<String>();
 		

@@ -24,8 +24,6 @@ import static org.junit.Assume.assumeTrue;
 
 
 import org.apache.commons.io.FileUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,7 +31,6 @@ import org.junit.Test;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
 
@@ -42,7 +39,6 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -52,7 +48,6 @@ import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.sparqlX.InMemoryInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -256,6 +251,58 @@ public class DataLoaderTest_IT {
 
 		int records = dl.importData(true);
 		assertEquals(dl.getLoadingErrorReport().toCSVString(), 1, records);
+	}	
+	
+	// Validation:  these test basic integration.  DataLoaderTest_IT tests details of validation.
+	@Test
+	public void testValidateSpecialCharacterStr() throws Exception { 
+
+		// set up the data
+		String contents = "Battery,Cell,birthday,color\n"
+				+ "BatteryName, cell-micron-μm,01/01/1966,red\n";
+		Dataset ds = new CSVDataset(contents, true);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 1, records);
+		
+		Table resTab = TestGraph.execTableSelect(sgJson);
+		assertTrue(resTab.getCellAsString(0, 1).equals("cell-micron-μm"));
+		System.out.println(resTab.toCSVString());
+		System.out.println(resTab.toJson());
+	}	
+	
+
+	@Test
+	public void testValidateSpecialCharacterFile() throws Exception { 
+
+		// set up the data
+		CSVDataset csv = new CSVDataset("src/test/resources/sampleBatteryNonAscii.csv", false);
+
+		// get json
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_ValidateDateRed.json");
+
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, csv, TestGraph.getUsername(), TestGraph.getPassword());
+
+		int records = dl.importData(true);
+		assertEquals(dl.getLoadingErrorReport().toCSVString(), 1, records);
+		
+		Table resTab = TestGraph.execTableSelect(sgJson);
+		assertTrue(resTab.getCellAsString(0, 1).equals("cell-micron-μm"));
+		System.out.println(resTab.toCSVString());
+		System.out.println(resTab.toJson());
 	}	
 	
 	// Validation:  these test basic integration.  DataLoaderTest_IT tests details of validation.

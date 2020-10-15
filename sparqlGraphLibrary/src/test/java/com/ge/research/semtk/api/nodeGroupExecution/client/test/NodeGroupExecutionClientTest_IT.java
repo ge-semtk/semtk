@@ -20,27 +20,31 @@ import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assume.assumeTrue;
+
 
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 
 public class NodeGroupExecutionClientTest_IT {
@@ -74,7 +78,7 @@ public class NodeGroupExecutionClientTest_IT {
 		public void testIngestOldName() throws Exception{				
 			
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+			TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 			
 			String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 			
@@ -93,7 +97,7 @@ public class NodeGroupExecutionClientTest_IT {
 		public void testIngest() throws Exception{				
 			
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+			TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 			
 			String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 			
@@ -112,7 +116,7 @@ public class NodeGroupExecutionClientTest_IT {
 		public void testIngestNGConn() throws Exception{				
 			
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+			TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 			
 			String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 			
@@ -132,7 +136,7 @@ public class NodeGroupExecutionClientTest_IT {
 		public void testIngestWithMissingColumn() throws Exception{				
 
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+			TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 			
 			String DATA = "cell000,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 			
@@ -156,7 +160,7 @@ public class NodeGroupExecutionClientTest_IT {
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
 			
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 			
 			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 			
@@ -164,7 +168,6 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			// test the test
 			OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
-			System.out.println(oInfo.getClassNames());
 			
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			
@@ -186,7 +189,7 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			try {
 				TestGraph.clearGraph();
-				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 				
 				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 				
@@ -231,7 +234,7 @@ public class NodeGroupExecutionClientTest_IT {
 			
 			try {
 				TestGraph.clearGraph();
-				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 				
 				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 				
@@ -245,7 +248,6 @@ public class NodeGroupExecutionClientTest_IT {
 				 
 				// delete some by nodegroup ID
 				String success = nodeGroupExecutionClient.dispatchDeleteByIdToSuccessMsg(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
-				System.out.println(success);
 				
 				// select back the data post delete
 				tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
@@ -266,7 +268,7 @@ public class NodeGroupExecutionClientTest_IT {
 				
 			try {
 				TestGraph.clearGraph();
-				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 				
 				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 				
@@ -292,7 +294,7 @@ public class NodeGroupExecutionClientTest_IT {
 				
 			try {
 				TestGraph.clearGraph();
-				TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+				TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 				
 				String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 				csvStr += "\ngarbage,garbage,";
@@ -324,7 +326,7 @@ public class NodeGroupExecutionClientTest_IT {
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
 			
 			TestGraph.clearGraph();
-			TestGraph.uploadOwl("src/test/resources/sampleBattery.owl");
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
 			
 			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
 			nodeGroupExecutionClient.execIngestionFromCsvStrById(ID, csvStr, NodeGroupExecutor.get_USE_NODEGROUP_CONN());
@@ -332,6 +334,112 @@ public class NodeGroupExecutionClientTest_IT {
 			TableResultSet res = nodeGroupExecutionClient.execDispatchSelectByIdSync(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null, null);
 			Table tab = res.getTable();
 			assert(true);
+		}
+		
+		@Test
+		public void testLoadTracking() throws Exception {	
+			String user = ThreadAuthenticator.getThreadUserName();
+			
+			// delete all tracking info
+			try {
+				nodeGroupExecutionClient.deleteTrackingEvents(null, null, user, null, null);
+			} catch (Exception e) {
+				if (e.getMessage().contains("Tracking is not configured")) {
+					assumeTrue("Tracking is not configured", false);
+				} else {
+					throw e;
+				}
+			}
+			Table tab = nodeGroupExecutionClient.runTrackingQuery(null, null, user, null, null);
+			assertEquals("Tracking query was not empty after deleting all", 0, tab.getNumRows());
+			
+			// clear graph
+			nodeGroupExecutionClient.clearGraph(TestGraph.getSei(), true);
+			tab = nodeGroupExecutionClient.runTrackingQuery(null, null, user, null, null);
+			assertEquals("Tracking query didn't find clearGraph", 1, tab.getNumRows());
+			
+			Thread.sleep(1000);  // make sure epochs are different
+			
+			String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
+			SparqlGraphJson sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+			TestGraph.uploadOwlResource(this, "/testTransforms.owl");
+			
+			// ingest one with no tracking
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA);
+						
+			// ingest one with tracking
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgJson_TestGraph, DATA, true, "$TRACK_KEY");
+			
+			// make sure one ingestion was tracked
+			tab = nodeGroupExecutionClient.runTrackingQuery(null, null, user, null, null);
+			assertEquals("Tracking query didn't find ingest", 2, tab.getNumRows());
+			
+			// retrieve contents
+			String fileKey = tab.getCell(1, "fileKey");
+			String contents = nodeGroupExecutionClient.getTrackedIngestFile(fileKey);
+			assertTrue("tracked file contents didn't match", contents.equals(DATA));
+			
+			// try an undo
+			int triples1 = TestGraph.getNumTriples();
+			nodeGroupExecutionClient.undoLoad(fileKey);
+			int triples2 = TestGraph.getNumTriples();
+			assertTrue("Nothing was deleted by undo", triples2 < triples1);
+			TestGraph.getSei().clearPrefix(LoadTracker.buildBaseURI(fileKey));
+			int triples3 = TestGraph.getNumTriples();
+			assertTrue("undo left triples behind", triples3 == triples2);
+
+			// make sure undo ingestion was tracked
+			tab = nodeGroupExecutionClient.runTrackingQuery(null, null, user, null, null);
+			assertTrue("Tracking query did not return an 'undo' event", tab.toCSVString().contains("undo"));
+			
+			// delete tracking
+			nodeGroupExecutionClient.deleteTrackingEvents(null, fileKey, null, null, null);
+
+			// retrieve contents should fail
+			try {
+				nodeGroupExecutionClient.getTrackedIngestFile(fileKey);
+				fail("Missing exception when retrieving deleted tracking file");
+			} catch (Exception e) {
+			}
+		}
+		
+		/**
+		 * Do full round trip testing of more challenging UTF-8 characters.
+		 * 
+		 * @throws Exception
+		 */
+		@Test
+		public void testUTFRoundTrip() throws Exception {
+			TestGraph.clearGraph();
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+			SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBatteryUTF8.json");
+			
+			// This file has
+			//   column[0] "Battery" as a character description
+			//   column[1] "Cell"    as a character sequence
+			File contentFile = Utility.getResourceAsFile(this, "/sampleBatteryUTF8.csv");
+			Table inTab = Table.fromCsvFile(contentFile.getAbsolutePath());
+			inTab.sortByColumnStr(inTab.getColumnNames()[0]);
+			
+			// ingest and read back using java clients and full service layer
+			nodeGroupExecutionClient.dispatchIngestFromCsvStringsSync(sgjson, inTab.toCSVString());
+			Table outTab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjson, null, null);
+			outTab.sortByColumnStr(outTab.getColumnNames()[0]);
+			
+			
+			assertEquals("wrong number of results", inTab.getNumRows(), outTab.getNumRows());
+			// loop through Cell column return and make sure bytes match column 1 as input
+			//
+			// https://stackoverflow.com/questions/2817752/java-code-to-convert-byte-to-hexadecimal/50846880
+			BigInteger inCell;
+			BigInteger outCell;
+			for (int i=0; i < inTab.getNumRows(); i++) {
+				inCell = new BigInteger(1, inTab.getCellAsString(i, 1).getBytes("utf-8"));
+				outCell = new BigInteger(1, outTab.getCellAsString(i, 1).getBytes("utf-8"));
+				// print and compare 
+				System.out.println(inTab.getCellAsString(i, 0) + ":" + inCell.toString(16) + "," + outCell.toString(16));
+				assertTrue("UTF-8 strings did not match", outCell.equals(inCell));
+			}
 		}
 		
 	}

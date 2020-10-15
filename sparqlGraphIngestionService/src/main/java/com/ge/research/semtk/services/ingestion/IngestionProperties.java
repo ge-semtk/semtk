@@ -34,6 +34,7 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	
 	private String loadTrackAwsRegion = "";
 	private String loadTrackS3Bucket = "";
+	private String loadTrackFolder = "";
 	
 	public IngestionProperties() {
 		super();
@@ -79,6 +80,14 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 
 	public void setLoadTrackS3Bucket(String loadTrackS3Bucket) {
 		this.loadTrackS3Bucket = loadTrackS3Bucket;
+	}
+
+	public String getLoadTrackFolder() {
+		return loadTrackFolder;
+	}
+
+	public void setLoadTrackFolder(String loadTrackFolder) {
+		this.loadTrackFolder = loadTrackFolder;
 	}
 
 	public void validate() throws Exception {

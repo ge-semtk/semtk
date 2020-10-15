@@ -19,10 +19,24 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 
 	private String templateId = "";
 	private String csvContent = "";
+	
+	@ApiModelProperty(
+			value = "trackFlag",
+			required = false,
+			example = "true")
+	public Boolean trackFlag = false;
+
+	@ApiModelProperty(
+			value = "overrideBaseURI",
+			required = false,
+			example = "$TRACK_KEY  or  http://maries/data")
+	public String overrideBaseURI = null;
 	
 	public String getTemplateId() {
 		return templateId;
@@ -35,5 +49,20 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 	}
 	public void setCsvContent(String csvContent) {
 		this.csvContent = csvContent;
+	}
+	public Boolean getTrackFlag() {
+		return trackFlag;
+	}
+
+	public void setTrackFlag(Boolean trackFlag) {
+		this.trackFlag = trackFlag;
+	}
+
+	public String getOverrideBaseURI() {
+		return overrideBaseURI;
+	}
+
+	public void setOverrideBaseURI(String overrideBaseURI) {
+		this.overrideBaseURI = overrideBaseURI;
 	}
 }

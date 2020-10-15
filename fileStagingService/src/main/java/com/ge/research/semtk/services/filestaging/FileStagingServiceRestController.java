@@ -28,8 +28,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -40,6 +38,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
+import com.ge.research.semtk.load.DirectoryConnector;
 import com.ge.research.semtk.load.FileSystemConnector;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
@@ -73,8 +72,6 @@ public class FileStagingServiceRestController {
 	
 	private static final String SERVICE_NAME = "FileStagingService";
 	
-	private final String STORETYPE_S3 = "s3";
-	
 	@PostConstruct
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
@@ -107,37 +104,31 @@ public class FileStagingServiceRestController {
 				requestBody.validate();
 				final String sourceFile = requestBody.getSourceFile();			// path/name of file to stage
 				final String stageFilename = requestBody.getStageFilename();	// name for file when staged 
+				final String jobId = requestBody.getJobId();
 				
 				// info about source/destination
 				final String storeType = filestaging_prop.getStoreType();		// store to retrieve from (e.g. s3)
 				final String stageDir = filestaging_prop.getStageDirectory();   // local directory in which the file will be staged, e.g. /mnt/isilon/location
 				final String stageFilePath = stageDir + "/" + stageFilename;  	// TODO do this using API for correct slashing
 				
-				LocalLogger.logToStdOut("Stage file " + sourceFile + " from " + storeType + " to " + stageFilePath);
+				LocalLogger.logToStdOut("Stage file from " + storeType + ": " + sourceFile + " to " + stageFilePath);
+				
 				FileSystemConnector conn = null;
-				if(storeType.equals(STORETYPE_S3)){ 
+				if(storeType.equals(FileStagingProperties.STORETYPE_DIR)){ 
+					conn = new DirectoryConnector(filestaging_prop.getDirectory());
+					LocalLogger.logToStdOut(conn.toString());
+				}else if(storeType.equals(FileStagingProperties.STORETYPE_S3)){ 
 					conn = new S3Connector(filestaging_prop.getS3Region(), filestaging_prop.getS3Bucket());
 					LocalLogger.logToStdOut(conn.toString()); 
 				}else{
 					throw new Exception("Cannot stage file from unsupported store type '" + storeType + "'");
 				}
 				
-				// retrieve file as a byte array, and then write to file
-				// TODO FileSystemConnector should provide a utility to write to a file - remove from here when that is available
-				byte[] fileContents = conn.getObject(sourceFile);
-				OutputStream os = null;   
-				try {  
-					os = new FileOutputStream(stageFilePath);
-					os.write(fileContents); 
-				} catch (Exception e) { 
-					throw e;
-				} finally{
-					os.close();
-					os = null;
-				}
+				// retrieve file
+				conn.getObjectAsLocalFile(sourceFile, stageFilePath);
 				
 				// send file to Results Service
-				String fileId = this.sendToResultsService(requestBody.jobId, stageFilePath, stageFilename);
+				String fileId = this.sendToResultsService(jobId, stageFilePath, stageFilename);
 				LocalLogger.logToStdOut("File staged to fileId: " + fileId);
 				
 				// return staged file in a result set

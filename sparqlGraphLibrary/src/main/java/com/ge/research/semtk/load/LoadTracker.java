@@ -44,11 +44,12 @@ import com.ge.research.semtk.utility.Utility;
 
 
 /**
- *   JobTracker instantiates a connection to the tripleStore
- *   and uses it to fulfill requests for info about a jobId.
+ *   LoadTracker tracks ingestion activities
  *
  */
 public class LoadTracker {
+	public static final String KEY_COL = "fileKey";
+	
 	static boolean firstConstruct = true;
 	SparqlEndpointInterface modelSei = null;
 	SparqlEndpointInterface dataSei = null;
@@ -91,7 +92,7 @@ public class LoadTracker {
 		
 		int rows = DataLoader.loadFromCsvString(
 				this.sgjson.toJson(), 
-				this.getCsv(fileKey, fileName, sei), 
+				this.buildCsvString("load",fileKey, fileName, sei), 
 				this.dbUser, 
 				this.dbPassword, 
 				true);
@@ -102,11 +103,12 @@ public class LoadTracker {
 		
 	}
 	
+	/** clear graph with tracking **/
 	public void trackClear(SparqlEndpointInterface sei) throws Exception {
 		
 		int rows = DataLoader.loadFromCsvString(
 				this.sgjson.toJson(), 
-				this.getCsv(CLEAR, null, sei), 
+				this.buildCsvString("clear", CLEAR, null, sei), 
 				this.dbUser, 
 				this.dbPassword, 
 				true);
@@ -154,8 +156,8 @@ public class LoadTracker {
 		PropertyItem pItem;
 		
 		if (fileKey != null) {
-			pItem = ng.getPropertyItemBySparqlID("fileKey");
-			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("fileKey", fileKey, XSDSupportedType.STRING));	
+			pItem = ng.getPropertyItemBySparqlID(KEY_COL);
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint(KEY_COL, fileKey, XSDSupportedType.STRING));	
 		}
 		
 		if (sei != null) {
@@ -186,12 +188,14 @@ public class LoadTracker {
 		return ng;
 	}
 	
-	private String getCsv(String fileKey, String fileName, SparqlEndpointInterface sei) {
-		return "fileKey, fileName, graphName, seiServerAndPort, epoch, user\n" +
+	private String buildCsvString(String event, String fileKey, String fileName, SparqlEndpointInterface sei) {
+		return "event, fileKey, fileName, graphName, seiServerAndPort, serverType, epoch, user\n" +
+				event + "," +
 				fileKey + "," + 
 				((fileName == null) ? "" : fileName) + "," + 
 				sei.getGraph() + "," + 
 				sei.getServerAndPort() + "," + 
+				sei.getServerType() + "," +
 				this.getNowEpoch() + "," + 
 				ThreadAuthenticator.getThreadUserName() + "\n";
 	}
@@ -201,6 +205,17 @@ public class LoadTracker {
 		return timeStampSeconds;  
 	}
 	
+	/**
+	 * Make sure the latest owl is in the model
+	 * @param tracker
+	 * @throws Exception
+	 */
+	public void updateOwlModel() throws Exception {
+		InputStream owlStream = LoadTracker.class.getResourceAsStream("/semantics/OwlModels/loadLog.owl");
+		this.getModelSei().updateOwlModel(owlStream);
+		owlStream.close();
+	}
+
 	/**
 	 * If needed, upload model to given tracker's model sei
 	 * @param tracker
@@ -224,4 +239,40 @@ public class LoadTracker {
 		}
 	}
 	
+	public static String buildBaseURI(String fileKey) {
+		return "http://" + fileKey + "/data";
+	}
+
+	/**
+	 * Delete any data from a load, provided it was loaded with overrideBaseURI "$TRACK_KEY"
+	 * Also track this event.
+	 * @param fileKey
+	 * @throws Exception
+	 */
+	public void undoLoad(String fileKey) throws Exception {
+		Table tab = this.query(fileKey, null, null, null, null);
+		if (tab.getNumRows() != 1) {
+			throw new Exception("found " + String.valueOf(tab.getNumRows()) + " loads associated with key: " + fileKey);
+		}
+		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(
+				tab.getCell(0, "serverType"), 
+				tab.getCell(0, "seiServerAndPort"), 
+				tab.getCell(0, "graphName"),
+				this.dbUser, 
+				this.dbPassword);
+		
+		sei.clearPrefix(buildBaseURI(fileKey));
+		
+		// track this
+		int rows = DataLoader.loadFromCsvString(
+				this.sgjson.toJson(), 
+				this.buildCsvString("undo",fileKey, "", sei), 
+				this.dbUser, 
+				this.dbPassword, 
+				true);
+		
+		if (rows != 1) {
+			throw new Exception("LoadTracker ingest internal error: rows ingested != 1: " + String.valueOf(rows));
+		}
+	}
 }

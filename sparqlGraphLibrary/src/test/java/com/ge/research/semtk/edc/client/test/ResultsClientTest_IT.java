@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -29,9 +30,11 @@ import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.properties.ResultsServiceProperties;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -110,6 +113,53 @@ public class ResultsClientTest_IT {
 			assertEquals(resCsvRows.get(0).get(1), "two");
 			assertEquals(resCsvRows.get(1).get(0), "three");
 			assertEquals(resCsvRows.get(1).get(1), "four");
+			
+		} finally {
+			cleanup(client, jobId);
+		}
+	}
+	
+	@Test
+	/**
+	 * Make sure the UTF-8 ish micron character survives the results service
+	 * @throws Exception
+	 */
+	public void testStoreTableMicronChar() throws Exception {
+
+		String jobId = "test_jobid_" + UUID.randomUUID();
+		
+		String [] cols = {"col1", "col2"};
+		String [] types = {"String", "String"};
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("one-µ");
+		row.add("two");
+		ArrayList<String> row2 = new ArrayList<String>();
+		row2.add("three");
+		row2.add("four");
+		
+		try {
+			Table table = new Table(cols, types, null);
+			table.addRow(row);
+			table.addRow(row2);
+			
+			client.execStoreTableResults(jobId, table);
+
+			String expectedJsonString = "{\"col_names\":[\"col1\",\"col2\"],\"rows\":[[\"one-µ\",\"two\"],[\"three\",\"four\"]],\"type\":\"TABLE\",\"col_type\":[\"String\",\"String\"],\"col_count\":2,\"row_count\":2}";		
+			
+			Table tbl = client.getTableResultsJson(jobId, null);
+			String resultJSONString = tbl.toJson().toJSONString();		
+			
+			assertEquals(resultJSONString, expectedJsonString); 		// check the JSON results
+						
+			// check getting results as json
+			Table jTable = client.getTableResultsJson(jobId, null);
+			assertEquals(jTable.toJson().toString(), expectedJsonString);
+			
+			// check getting results as csv
+			CSVDataset resCsvDataset = client.getTableResultsCSV(jobId, null);
+			ArrayList<ArrayList<String>> resCsvRows = resCsvDataset.getNextRecords(5);
+			assertEquals(resCsvRows.get(0).get(0), "one-µ");
+			
 			
 		} finally {
 			cleanup(client, jobId);
@@ -473,7 +523,7 @@ public class ResultsClientTest_IT {
 		String jobId1 = "../../important.txt";
 		String jobId2 = "${cd}my/$%var*)(/important.txt";
 		try {
-
+			// fail due to ".." in path
 			SimpleResultSet res = client.execStoreBinaryFile(jobId1, testFile);
 			fail("unexpected success with jobid=" + jobId1);
 		} catch (Exception e) {
@@ -482,7 +532,7 @@ public class ResultsClientTest_IT {
 		}
 		
 		try {
-
+			// fail due to wonky characters in path
 			SimpleResultSet res = client.execStoreBinaryFile(jobId2, testFile);
 			fail("unexpected success with jobid=" + jobId2);
 		} catch (Exception e) {
@@ -492,19 +542,53 @@ public class ResultsClientTest_IT {
 		
 	}
 	
+	/**
+	 * Don't know how to test success because
+	 * how do we get a file onto the results service machine reliably?
+	 * @throws Exception
+	 */
 	@Test
-	public void testStoreAndRetrieveBinaryFilePath() throws Exception {
+	public void testStoreBinaryFilePath() throws Exception {
 
+		String path;
+		String jobId = JobTracker.generateJobId();
 		
-		String pathOfFileAccessibleToServer = "????";
-		pathOfFileAccessibleToServer = "C:\\Users\\200001934\\Desktop\\Temp\\working.txt";
+		// try a non-white-listed file
+		try {
+			path = "C:\\Users\\200001934\\Desktop\\Temp\\working.txt";
+			client.execStoreBinaryFilePath(jobId, path, "file1");
+			fail("unexpected success with path=" + path);
+		} catch (Exception e) {
+			assertTrue(e.getMessage() + " does not contain 'white-listed'", e.getMessage().contains("white-listed"));
+		}
+
+		String fileLocation = IntegrationTestUtility.get("integrationtest.resultsservice.fileLocation");
+		String additionalFileLocations = IntegrationTestUtility.get("integrationtest.resultsservice.additionalFileLocations");
 		
-		/*
-		 * I don't know how to test with a file name that's guaranteed to be on the results server.
-		 * So this test is commented out.
-		 */
+		// try a white-listed file in fileLocation
+		try {
+			path = Paths.get(fileLocation, "test.txt").toString();
+			client.execStoreBinaryFilePath(jobId, path, "file1");
+			fail("unexpected success with path=" + path);
+		} catch (Exception e) {
+			// not readable error instead of white-list error
+			assertTrue(e.getMessage() + " does not contain 'not readable'", e.getMessage().contains("not readable"));
+		}
 		
+		// try white-listed file additionalFileLocations
+		for (String loc : additionalFileLocations.split(",")) {
+			try {
+				path = Paths.get(loc, "test.txt").toString();
+				client.execStoreBinaryFilePath(jobId, path, "file1");
+				fail("unexpected success with path=" + path);
+			} catch (Exception e) {
+				// not readable error instead of white-list error
+				assertTrue(e.getMessage() + " does not contain 'not readable'", e.getMessage().contains("not readable"));
+			}
+		}
 		
+		// there is no way to predict a successful location on the server
+		// so leave "success" test to the fileStagingService Client test
 	}
 	
 	@Test

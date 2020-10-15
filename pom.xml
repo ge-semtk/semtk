@@ -12,21 +12,107 @@
 
 	<groupId>com.ge.research.semtk</groupId>
 	<artifactId>semtk-oss</artifactId>
-	<version>2.2.1-SNAPSHOT</version>
+	<version>2.2.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
+
+
+	<name>SemTK-demo</name>
+	<description>Semantics toolkit.  Visual SPARQL and app service layer.</description>
+	<url>http://github.com/ge-semtk/semtk</url>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+		<name>Paul Cuddihy</name>
+		<email>cuddihy@ge.com</email>
+		<organization>GE Research</organization>
+		<organizationUrl>https://ge.com/research</organizationUrl>
+		</developer>
+	</developers>
+
+	<scm>
+		<developerConnection>scm:git:https://github.com/ge-semtk/semtk</developerConnection>
+	  <tag>semtk-oss-2.2.1-SNAPSHOT</tag>
+  </scm>
 
 	<distributionManagement>
 		<repository>
-			<id>semtk</id>
-			<name>build.GE Artifactory-releases</name>
-			<url>https://artifactory.build.ge.com/artifactory/UMKGF</url>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 		<snapshotRepository>
-			<id>semtk-snapshots</id>
-			<name>build.GE Artifactory-snapshots</name>
-			<url>https://artifactory.build.ge.com/artifactory/UMKGF-SNAPSHOT</url>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
+
+                <!-- GE INTERNAL REPOS 
+			<repository>
+				<id>semtk</id>
+				<name>build.GE Artifactory-releases</name>
+				<url>https://artifactory.build.ge.com/artifactory/UMKGF</url>
+			</repository>
+			<snapshotRepository>
+				<id>semtk-snapshots</id>
+				<name>build.GE Artifactory-snapshots</name>
+				<url>https://artifactory.build.ge.com/artifactory/UMKGF-SNAPSHOT</url>
+			</snapshotRepository>
+		-->
+
 	</distributionManagement>
+
+	<!-- use these plugins only with mvn -DperformRelease=true -->
+	<profiles>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+ 					<plugin>  
+ 						<groupId>org.apache.maven.plugins</groupId>
+ 						<artifactId>maven-javadoc-plugin</artifactId>
+ 						<version>2.9.1</version>
+ 						<executions>
+ 							<execution>
+ 								<id>attach-javadocs</id>
+ 								<goals>
+ 									<goal>jar</goal>
+ 								</goals>
+								<!-- disable checking -->
+								<configuration>
+                							<additionalparam>-Xdoclint:none</additionalparam>
+            							</configuration>
+ 							</execution>
+ 						</executions>
+ 					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<modules>
 		<module>sparqlGraphLibrary</module>
@@ -96,17 +182,18 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<useReleaseProfile>false</useReleaseProfile>
+					<releaseProfiles>release</releaseProfiles>
+					<goals>deploy</goals>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>central</id>
-			<url>https://repo1.maven.org/maven2</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
 
 </project>

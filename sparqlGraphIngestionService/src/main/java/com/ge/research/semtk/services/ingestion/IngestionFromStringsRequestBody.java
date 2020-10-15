@@ -28,23 +28,29 @@ import io.swagger.annotations.ApiModelProperty;
 public class IngestionFromStringsRequestBody {
 	@NotNull
 	@ApiModelProperty(
-	   value = "template",
-	   required = true,
-	   example = "{ nodegroup json with ingestion template }")
+			value = "template",
+			required = true,
+			example = "{ nodegroup json with ingestion template }")
 	public String template;
-	
+
 	@NotNull
 	@ApiModelProperty(
-	   value = "data",
-	   required = true,
-	   example = "csv,file\n1,2\n")
+			value = "data",
+			required = true,
+			example = "csv,file\n1,2\n")
 	public String data;
-	
+
 	@ApiModelProperty(
-	   value = "data",
-	   required = false,
-	   example = "true")
+			value = "trackFlag",
+			required = false,
+			example = "true")
 	public Boolean trackFlag = false;
+
+	@ApiModelProperty(
+			value = "overrideBaseURI",
+			required = false,
+			example = "$TRACK_KEY  or  http://johns/data")
+	public String overrideBaseURI = null;
 
 	public String getTemplate() {
 		return template;
@@ -75,4 +81,13 @@ public class IngestionFromStringsRequestBody {
 	public void setTrackFlag(Boolean trackFlag) {
 		this.trackFlag = trackFlag;
 	}
+
+	public String getOverrideBaseURI() {
+		return overrideBaseURI;
+	}
+
+	public void setOverrideBaseURI(String overrideBaseURI) {
+		this.overrideBaseURI = overrideBaseURI;
+	}
+	
 }

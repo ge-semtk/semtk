@@ -59,31 +59,61 @@ public class Table {
 	private ArrayList<ArrayList<String>> rows;   
 	private HashMap<String, Integer> columnPositionInfo = new HashMap<String, Integer>();
 
+	/**
+	 * Constructor from array list of column names
+	 * @param cols
+	 * @throws Exception
+	 */
 	public Table(ArrayList<String> cols) throws Exception{
 		this(cols.toArray(new String[0]), null, new ArrayList<ArrayList<String>>());
 	}
 	
+	/**
+	 * Constructor from array lists of column names and types
+	 * @param cols
+	 * @param colTypes
+	 * @throws Exception
+	 */
 	public Table(ArrayList<String> cols, ArrayList<String> colTypes) throws Exception{
 		this(cols.toArray(new String[0]), colTypes.toArray(new String[0]), new ArrayList<ArrayList<String>>());
 	}
 	
+	/**
+	 * Constructor from lists of column names, types, and rows
+	 * @param cols
+	 * @param colTypes
+	 * @param rows
+	 * @throws Exception
+	 */
 	public Table(ArrayList<String> cols, ArrayList<String> colTypes, ArrayList<ArrayList<String>> rows) throws Exception{
 		this(cols.toArray(new String[0]), colTypes.toArray(new String[0]), rows);
 	}
 	
+	/**
+	 * Construct from array of column names
+	 * @param cols
+	 * @throws Exception
+	 */
 	public Table(String[] cols) throws Exception{
 		this(cols, null, new ArrayList<ArrayList<String>>());
 	}
 	
 	/**
-	 * Create an empty table with the given column names and column types.
+	 * Construct from arrays of column names and types
+	 * @param cols
+	 * @param colTypes
+	 * @throws Exception
 	 */
 	public Table(String[] cols, String[] colTypes) throws Exception{
 		this(cols, colTypes, new ArrayList<ArrayList<String>>());
 	}
 	
 	/**
-	 * Create a table with the given column names, column types, and rows.
+	 * Construct from arrays of column names and types, and array list of row array lists
+	 * @param cols
+	 * @param colTypes
+	 * @param rows
+	 * @throws Exception
 	 */
 	public Table(String[] cols, String[] colTypes, ArrayList<ArrayList<String>> rows) throws Exception{
 		
@@ -164,6 +194,11 @@ public class Table {
 		}
 	}
 	
+	/**
+	 * Remove the named column
+	 * @param colName
+	 * @throws Exception
+	 */
 	public void removeColumn(String colName) throws Exception {
 		// find colName's pos
 		int pos = this.getColumnIndex(colName);
@@ -182,6 +217,12 @@ public class Table {
 		}
 	}
 	
+	/**
+	 * Append a column
+	 * @param colName
+	 * @param colType
+	 * @throws Exception
+	 */
 	public void appendColumn(String colName, String colType) throws Exception {
 		
 		this.columnNames = (String[]) ArrayUtils.add(this.columnNames, colName);
@@ -215,9 +256,13 @@ public class Table {
 		}
 	}
 	
-	/**
-	 * Replace the existing column names with a new set.
-	 */
+
+	 /**
+	  *  Replace the existing column names with a new set.
+	  * @param newColumnNames
+	  * @throws Exception
+	  */
+	
 	public void replaceColumnNames(String [] newColumnNames) throws Exception{
 		if(this.columnNames.length != newColumnNames.length){
 			throw new Exception("replaceColumnNames: the incoming column name count (" + newColumnNames.length + ") does not match the target column names count (" + this.columnNames.length + ")");
@@ -227,13 +272,16 @@ public class Table {
 	
 	/**
 	 * Get the number of rows in the table.
+	 * @return
 	 */
+
 	public int getNumRows(){
 		return rows.size();
 	}
 	
 	/**
 	 * Get the number of columns in the table.
+	 * @return
 	 */
 	public int getNumColumns(){
 		return columnNames.length;
@@ -241,6 +289,7 @@ public class Table {
 	
 	/**
 	 * Get the column names.
+	 * @return
 	 */
 	public String[] getColumnNames(){
 		return columnNames;
@@ -275,6 +324,8 @@ public class Table {
 	
 	/**
 	 * Returns true if the column exists in this table, else false
+	 * @param colName
+	 * @return
 	 */
 	public boolean hasColumn(String colName) {
 		if(getColumnIndex(colName) == -1){
@@ -293,6 +344,8 @@ public class Table {
 	
 	/**
 	 * Return the values for a particular column
+	 * @param columnName
+	 * @return
 	 */
 	public String[] getColumn(String columnName){
 		return getColumn(getColumnIndex(columnName));
@@ -300,6 +353,8 @@ public class Table {
 	
 	/**
 	 * Return the values for a particular column
+	 * @param index
+	 * @return
 	 */
 	public String[] getColumn(int index){
 		ArrayList<String> column = new ArrayList<String>();
@@ -311,6 +366,9 @@ public class Table {
 	
 	/**
 	 * Return the values for a particular column, removing duplicates
+	 * @param columnName
+	 * @return
+	 * @throws Exception
 	 */
 	public String[] getColumnUniqueValues(String columnName) throws Exception {
 		return getColumnUniqueValues(getColumnIndexOrError(columnName));
@@ -318,6 +376,8 @@ public class Table {
 	
 	/**
 	 * Return the values for a particular column, removing duplicates
+	 * @param index
+	 * @return
 	 */
 	public String[] getColumnUniqueValues(int index){
 		ArrayList<String> column = new ArrayList<String>();
@@ -329,6 +389,11 @@ public class Table {
 		return column.toArray(new String[column.size()]);
 	}
 	
+	/**
+	 * Add a row of data to the bottom
+	 * @param newRow
+	 * @throws Exception
+	 */
 	public void addRow(ArrayList<String> newRow) throws Exception{
 		if(newRow.size() != this.columnNames.length){
 			// panic
@@ -337,10 +402,20 @@ public class Table {
 		this.rows.add(newRow);
 	}
 	
+	/** 
+	 * Add a row of data to the bottom
+	 * @param newRow
+	 * @throws Exception
+	 */
 	public void addRow(String [] newRow)  throws Exception {
 		this.addRow(new ArrayList<String>(Arrays.asList(newRow)));
 	}
 	
+	/**
+	 * Add a new row of data to the bottom
+	 * @param newRow
+	 * @throws Exception
+	 */
 	public void addRow(Object [] newRow) throws Exception {
 		ArrayList<String> row = new ArrayList<String>();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -358,6 +433,8 @@ public class Table {
 	
 	/**
 	 * Get the index for a given column name, or -1 if does not exist
+	 * @param colName
+	 * @return
 	 */
 	public int getColumnIndex(String colName){
 		int retval = -1;
@@ -369,6 +446,12 @@ public class Table {
 		return retval;
 	}
 	
+	/**
+	 * Get the index for a given column name, or exception if it does not exist
+	 * @param colName
+	 * @return
+	 * @throws Exception
+	 */
 	private int getColumnIndexOrError(String colName) throws Exception {
 		int pos = this.getColumnIndex(colName);
 		if(pos > -1){
@@ -380,7 +463,8 @@ public class Table {
 	}
 	
 	/**
-	 * Get the table rows
+	 * Get all table data
+	 * @return
 	 */
 	public ArrayList<ArrayList<String>> getRows(){
 		return this.rows;
@@ -388,6 +472,8 @@ public class Table {
 	
 	/**
 	 * Get a single table row by index
+	 * @param rowNum
+	 * @return
 	 */
 	public ArrayList<String> getRow(int rowNum){
 		return this.rows.get(rowNum);
@@ -395,12 +481,20 @@ public class Table {
 	
 	/**
 	 * Get a single table row by index, and convert it to a CSV string.
+	 * @param rowNum
+	 * @return
+	 * @throws IOException
 	 */
 	public String getRowAsCSVString(int rowNum) throws IOException{		
 		ArrayList<String> row = this.getRow(rowNum);
 		return Utility.getCSVString(row);
 	}
 	
+	/**
+	 * Get only the headers converted to a CSV string
+	 * @return
+	 * @throws IOException
+	 */
 	public String getHeaderAsCSVString() throws IOException {
 		ArrayList<String> headers = new ArrayList<String>( Arrays.asList( this.getColumnNames() ) ); // gets col names in order
 		return (Utility.getCSVString(headers));
@@ -479,6 +573,11 @@ public class Table {
 		}
 	}
 	
+	/**
+	 * Join with another table with identical column names
+	 * @param other
+	 * @throws Exception
+	 */
 	public void append(Table other) throws Exception {
 		String [] myCols = Arrays.copyOf(this.getColumnNames(), Math.toIntExact(this.getNumColumns()));
 		String [] otherCols = Arrays.copyOf(other.getColumnNames(), Math.toIntExact(other.getNumColumns()));
@@ -510,7 +609,7 @@ public class Table {
 	}
 	
 	/**
-	 * 
+	 * Remove rows whose values in given columns duplicate an earlier row
 	 * @param colNames
 	 * @throws Exception - bad value in colnames
 	 */
@@ -634,16 +733,29 @@ public class Table {
 		return Utility.hashMD5(hashInput);
 	}
 	
+	/**
+	 * Get headers as JSON
+	 * @return
+	 * @throws Exception
+	 */
 	public JSONObject getHeaderJson() throws Exception{
 		return toJson(false);
 	}
 	
+	/**
+	 * Get table as json
+	 * @return
+	 * @throws Exception
+	 */
 	public JSONObject toJson() throws Exception{
 		return toJson(true);
 	}
 	
 	/**
-	 * Create a JSON object from a data table
+	 * Get table as json
+	 * @param includeDataRows
+	 * @return
+	 * @throws Exception
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public JSONObject toJson(Boolean includeDataRows) throws Exception {
@@ -711,6 +823,9 @@ public class Table {
 		
 	}
 
+	/**
+	 * Clear all data
+	 */
 	public void clearRows() {
 		this.rows.clear();
 	}
@@ -718,6 +833,9 @@ public class Table {
 	
 	/**
 	 * Merge multiple tables into a single table
+	 * @param tables
+	 * @return
+	 * @throws Exception
 	 */
 	public static Table merge(ArrayList<Table> tables) throws Exception {
 
@@ -890,8 +1008,10 @@ public class Table {
 		return ret;
 	}
 	
-	// some sorting samples.
-	// we'll need multi columns and descending, etc.
+	/**
+	 * Sort by a string column
+	 * @param colName
+	 */
 	public void sortByColumnStr(String colName) {
 		int col = this.getColumnIndex(colName);
 		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
@@ -899,6 +1019,10 @@ public class Table {
 						);
 	}
 	
+	/** 
+	 * Sort by an int column
+	 * @param colName
+	 */
 	public void sortByColumnInt(String colName) {
 		int col = this.getColumnIndex(colName);
 		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
@@ -906,6 +1030,10 @@ public class Table {
 						);	
 	}
 	
+	/**
+	 * Sort by a double column
+	 * @param colName
+	 */
 	public void sortByColumnDouble(String colName) {
 		int col = this.getColumnIndex(colName);
 		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 
@@ -913,6 +1041,10 @@ public class Table {
 						);	
 	}
 	
+	/**
+	 * Sort reverse by double column
+	 * @param colName
+	 */
 	public void sortByColumnDoubleRev(String colName) {
 		int col = this.getColumnIndex(colName);
 		this.rows.sort	(	(ArrayList<String> rowA, ArrayList<String> rowB) -> 

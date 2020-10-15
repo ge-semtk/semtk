@@ -19,9 +19,12 @@ package com.ge.research.semtk.utility.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.TreeMap;
+import java.util.UUID;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -149,6 +152,21 @@ public class UtilityTest {
 	}
 	
 	@Test
+	public void testCompressMicron() throws Exception{
+		String s = "μr μicron";
+		
+		// just swap back and forth string and byte[]
+		byte [] b1 = s.getBytes("utf-8");
+		String s1 = new String(b1, "utf-8");
+		assertTrue("not equal:" + s1, s1.equals(s));
+		
+		// run compression
+		String compressedString = Utility.compress(s);
+		String decompressedString = Utility.decompress(compressedString);
+		assertEquals(s, decompressedString);
+	}
+	
+	@Test
 	public void testGetResourceAsString() throws Exception {
 		String s = Utility.getResourceAsString(this, "/Pet.owl");
 		assertTrue(s.trim().startsWith("<rdf:RDF"));
@@ -163,5 +181,21 @@ public class UtilityTest {
 		System.out.println(
 				Utility.removeQuotedSubstrings("?sparql = 'insert ?junk into <graph>'", "\"replaced\"")
 				);
+	}
+	
+	@Test 
+	public void testReadWriteFile() throws Exception{
+		String uuidStr = UUID.randomUUID().toString();
+		String path = "src/test/resources/" + uuidStr + ".txt";
+		try{
+			Utility.writeFile(path, uuidStr.getBytes());		// write the file
+			assertTrue(Utility.readFile(path).equals(uuidStr));	// read the file
+		}catch(Exception e){
+			throw e;
+		}finally{
+			// remove file
+			File file = new File(path);
+			file.delete();
+		}
 	}
 }
