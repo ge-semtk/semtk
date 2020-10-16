@@ -771,7 +771,7 @@
             // make sure there is a sparqlID
             if (item.getSparqlID() == "") {
                 // set it, make a copy, set it back
-                item.setSparqlID("SG_runSuggestValuesQuery_Temp");
+                item.setSparqlID("?SG_SuggestedValues");
                 runNodegroup = ng.deepCopy();
                 runId = item.getSparqlID();
                 item.setSparqlID("");

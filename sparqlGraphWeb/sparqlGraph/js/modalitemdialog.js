@@ -612,7 +612,7 @@ define([	// properly require.config'ed
 
             getOptMinusText : function (optMin) {
                 if (optMin == PropertyItem.OPT_MINUS_NONE) {
-                    optMinusText = "<no optional/minus>";
+                    optMinusText = "- no optional/minus/union -";
                 } else if (optMin == PropertyItem.OPT_MINUS_OPTIONAL) {
                     optMinusText = "optional";
                 } else if (optMin == PropertyItem.OPT_MINUS_MINUS) {
@@ -797,13 +797,13 @@ define([	// properly require.config'ed
                     }
 
                     for (var key of unionKeys) {
-                        selectList.push([this.nodegroup.getUnionName(key).join(","), key + 100]);
+                        selectList.push([this.nodegroup.getUnionNameStr(key), key + 100]);
                     }
 
                     // set selected
                     var selected = [];
                     if (itemUnionKey != null) {
-                        selected = [this.nodegroup.getUnionName(itemUnionKey).join(",")];
+                        selected = [this.nodegroup.getUnionNameStr(itemUnionKey)];
                     } else {
                         selected = [selectedText];
                     }

@@ -1,0 +1,96 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Junit laptop localhost",
+		"domain": "http://",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:8890",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:8890",
+				"graph": "http://junit/NSK1200001934C/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 12,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "chainDesc",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#chainDesc",
+						"Constraints": "FILTER regex(?name, \"descA\")",
+						"fullURIName": "",
+						"SparqlID": "?chainDesc",
+						"isReturned": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?name",
+						"isBindingReturned": true
+					},
+					{
+						"KeyName": "chainName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#chainName",
+						"Constraints": "FILTER regex(?name, \"chainB\")",
+						"fullURIName": "",
+						"SparqlID": "?chainName",
+						"isReturned": false,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?name",
+						"isBindingReturned": true
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Chain",
+				"fullURIName": "http://kdl.ge.com/junit/chain#Chain",
+				"subClassNames": [],
+				"SparqlID": "?Chain",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"unionHash": {
+			"1": [
+				"?Chain|http://kdl.ge.com/junit/chain#chainDesc",
+				"?Chain|http://kdl.ge.com/junit/chain#chainName"
+			]
+		}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Chain",
+				"type": "http://kdl.ge.com/junit/chain#Chain",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}

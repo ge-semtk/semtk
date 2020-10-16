@@ -124,7 +124,7 @@ define([	// properly require.config'ed
                 itemUnionKey = (itemUnionKey == null) ? null :  Math.abs(itemUnionKey);
 
                 for (var key of unionKeys) {
-                    selectList.push([this.nodegroup.getUnionName(key).join(","), key + 100]);
+                    selectList.push([this.nodegroup.getUnionNameStr(key), key + 100]);
                 }
 
                 // set selected
@@ -132,7 +132,7 @@ define([	// properly require.config'ed
                 var optMinus = this.item.getOptionalMinus(this.targetSNode);
 
                 if (itemUnionKey != null) {
-                    selected = [this.nodegroup.getUnionName(itemUnionKey).join(",")];
+                    selected = [this.nodegroup.getUnionNameStr(itemUnionKey)];
                 } else if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
                     selected = ["optional"];
                 } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {

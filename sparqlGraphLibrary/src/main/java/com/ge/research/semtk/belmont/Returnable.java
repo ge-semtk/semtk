@@ -102,7 +102,13 @@ public abstract class Returnable {
 	}
 
 	public void setSparqlID(String iD) {
-		this.sparqlID = iD;		
+		if (iD == null) {
+			this.sparqlID = null;
+		} else if (iD.length() > 0 && !iD.startsWith("?")) {
+			this.sparqlID = "?" + iD;
+		} else {
+			this.sparqlID =iD;
+		}
 	}
 	
 	public boolean getIsReturned() {

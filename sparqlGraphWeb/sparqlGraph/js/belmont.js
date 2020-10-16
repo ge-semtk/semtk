@@ -796,7 +796,12 @@ PropertyItem.prototype = {
 		if (this.SparqlID != null && this.hasConstraints()) {
 			this.Constraints = this.Constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);
 		}
-		this.SparqlID = id;
+        if (id != null && id != "" && ! id.startsWith("?")) {
+            this.SparqlID = "?" + id;
+        } else {
+            this.SparqlID = id;
+        }
+
 	},
 	setConstraints : function(con) {
 		var f = new SparqlFormatter();
@@ -1255,7 +1260,11 @@ SemanticNode.prototype = {
 		if (this.SparqlID != null && this.hasConstraints()) {
 			this.Constraints = this.Constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);
 		}
-		this.SparqlID = id;
+        if (id != null && id != "" && ! id.startsWith("?")) {
+            this.SparqlID = "?" + id;
+        } else {
+            this.SparqlID = id;
+        }
 	},
 
 	getSparqlID : function() {
@@ -2136,17 +2145,16 @@ SemanticNodeGroup.prototype = {
     },
 
 
-    // get a list of strings that describe this union
-    getUnionName : function(id) {
-        ret = [];
+    getUnionNameStr : function(id) {
+        var names = [];
         if (id == null) {
-            return ret;
+            return "Union: unnamed";
         }
 
         for (var str of this.unionHash[id]) {
-            ret.push(this.getUnionValueStrName(str))
+            names.push(this.getUnionValueStrName(str))
         }
-        return ret;
+        return "Union: " + names.join(",")
     },
 
     // rm item from unionHash
