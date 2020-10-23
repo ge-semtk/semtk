@@ -53,7 +53,15 @@ public class FdcDispatcher extends EdcDispatcher {
 	public FdcDispatcher(String jobId, SparqlGraphJson sgJson, SparqlEndpointInterface jobTrackerSei, ResultsClientConfig resConfig, SparqlEndpointInterface extConfigSei, boolean heedRestrictions, OntologyInfoClient oInfoClient, NodeGroupStoreRestClient ngStoreClient) throws Exception{
 		
 		super(jobId, sgJson, jobTrackerSei, resConfig, extConfigSei, false, oInfoClient, ngStoreClient);
-		this.fdcServiceManager = new FdcServiceManager(extConfigSei, this.queryNodeGroup, this.oInfo, jobId, this.querySei, oInfoClient);
+		
+		try {
+			this.fdcServiceManager = new FdcServiceManager(extConfigSei, this.queryNodeGroup, this.oInfo, jobId, this.querySei, oInfoClient);
+		} catch (FdcConfigException e) {
+			// on failure: try reloading the FdcCache
+			FdcServiceManager.cacheFdcConfig(extConfigSei, oInfoClient);
+			this.fdcServiceManager = new FdcServiceManager(extConfigSei, this.queryNodeGroup, this.oInfo, jobId, this.querySei, oInfoClient);
+		}
+		
 		this.tmpGraphUser = extConfigSei.getUserName();
 		this.tmpGraphPassword = extConfigSei.getPassword();
 		this.extConfigSei = extConfigSei;
@@ -80,7 +88,14 @@ public class FdcDispatcher extends EdcDispatcher {
 					this.updateStatusToFailed(msg);
 				// fdc
 				} else {
-					this.executeFdc(qt, targetSparqlID);
+					try {
+						this.executeFdc(qt, targetSparqlID);
+					} catch (Exception e) {
+						// on failure: try reloading the FdcCache
+						FdcServiceManager.cacheFdcConfig(extConfigSei, oInfoClient);
+						this.executeFdc(qt, targetSparqlID);
+					}
+					
 				}
 			} else {
 				// EDC or plain queries

@@ -68,7 +68,7 @@ public class FdcServiceManager {
 	 * @param nodegroupSei - the nodegroup's default query sei
 	 * @throws Exception
 	 */
-	public FdcServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, String domain, SparqlEndpointInterface nodegroupSei,  OntologyInfoClient oInfoClient) throws Exception {
+	public FdcServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, String domain, SparqlEndpointInterface nodegroupSei,  OntologyInfoClient oInfoClient) throws FdcConfigException, Exception {
 		Object UNUSED;
 		
 		this.nodegroup = nodegroup;
@@ -108,7 +108,7 @@ public class FdcServiceManager {
 		FdcServiceManager.suggestReCache(extConfigSei, oInfoClient);
 	}
 	
-	private void calculate() throws Exception {
+	private void calculate() throws FdcConfigException, Exception {
 		
 		// inflate in case some of the fdc parameters aren't yet used and have been deflated away
 		this.nodegroup.inflateAndValidate(oInfo);
@@ -143,13 +143,13 @@ public class FdcServiceManager {
 			try {
 				this.calcParameterNodegroups(n);
 				this.unprocessedFdcNodes.add(sparqlId);
-				
+			} catch (FdcConfigException f) {
+				throw f;
 			} catch (Exception e) {
 				LocalLogger.logToStdOut("Can't process FDC node " + n.getSparqlID() + ": " + e.getMessage() );
 				LocalLogger.printStackTrace(e);
 			}
 		}
-
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public class FdcServiceManager {
 	 * @return
 	 * @throws Exception
 	 */
-	private void calcParameterNodegroups(Node fdcNode) throws Exception {
+	private void calcParameterNodegroups(Node fdcNode) throws FdcConfigException, Exception {
 
 		HashMap<String, NodeGroup> paramSetToNgHash = new HashMap<String, NodeGroup>();
 		String className = fdcNode.getFullUriName();
@@ -168,7 +168,7 @@ public class FdcServiceManager {
 		
 		// make sure some config rows exist
 		if (thisConfigCache.getNumRows() < 1) {
-			throw new Exception("Could not find FDC configuration for class: " + className);
+			throw new FdcConfigException("Could not find FDC configuration for class: " + className);
 		}
 		
 		this.paramHeadNodes.put(fdcNode.getSparqlID(), new HashMap<String, Node>());
@@ -216,7 +216,7 @@ public class FdcServiceManager {
 				// get or add node
 				Node paramNode = ng.getClosestOrAddNode(inputHeadNode, classURI, this.oInfo, true);
 				if (paramNode == null) {
-					throw new Exception("Error trying to add node " + classURI + " to input set " + inputIndex + " nodegroup");
+					throw new FdcConfigException("Error trying to add node " + classURI + " to input set " + inputIndex + " nodegroup");
 				}
 
 				Returnable paramItem = null;
@@ -233,7 +233,7 @@ public class FdcServiceManager {
 				String oldId = paramItem.getSparqlID();
 				String newId = ng.changeSparqlID(paramItem, suggestedId);
 				if (! newId.equals(suggestedId)) {
-					throw new Exception("Duplicate sparqlID problem in param retrieval nodegroup.  SparqlID: " + suggestedId);
+					throw new FdcConfigException("Duplicate sparqlID problem in param retrieval nodegroup.  SparqlID: " + suggestedId);
 				}
 
 				origIdHash.put(newId, oldId);
