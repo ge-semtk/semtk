@@ -1,0 +1,22 @@
+name: Build
+on: [push]
+
+jobs:
+  build:
+    name: Build SemTK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: maven-${{ hashFiles('**/pom.xml') }}
+
+      - shell: bash
+        name: Build SemTK
+        run: |
+          # TODO: The tests currently fail in Github Actions.
+          mvn --batch-mode clean install -DskipTests
+
