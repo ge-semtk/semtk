@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>2.2.2-SNAPSHOT</version>
+		<version>2.2.2</version>
 	</parent>
 	<artifactId>nodeGroupService</artifactId>
 	<name>NodeGroup Service</name>
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
-			<version>2.2.2-SNAPSHOT</version>
+			<version>2.2.2</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphIngestionService</artifactId>
-			<version>2.2.2-SNAPSHOT</version>
+			<version>2.2.2</version>
 		</dependency>
 
 	</dependencies>
