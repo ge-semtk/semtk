@@ -38,8 +38,8 @@
 
 	<scm>
 		<developerConnection>scm:git:https://github.com/ge-semtk/semtk</developerConnection>
-    <tag>semtk-oss-2.2.2-retry</tag>
-  </scm>
+		<tag>2.2.2-RELEASE</tag>
+  	</scm>
 
 	<distributionManagement>
 		<repository>
