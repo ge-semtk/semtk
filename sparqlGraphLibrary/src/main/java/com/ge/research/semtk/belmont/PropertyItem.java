@@ -67,6 +67,8 @@ public class PropertyItem extends Returnable {
 	public PropertyItem(JSONObject jObj) throws Exception {
 		// keeps track of the properties who are in the domain of a given node.
 		
+		this.fromReturnableJson(jObj);
+		
 		this.keyName = jObj.get("KeyName").toString();
 		
 		String typeStr = (String) (jObj.get("ValueType"));
@@ -81,15 +83,7 @@ public class PropertyItem extends Returnable {
 		this.valueTypeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
 		this.uriRelationship = jObj.get("UriRelationship").toString();
 		
-		String vStr = (String) jObj.get("Constraints");
-		if (vStr != null && ! vStr.isEmpty()) { 
-			this.constraints = new ValueConstraint(vStr); 
-		} else {
-			this.constraints = null;
-		}
-		
 		this.fullURIName = (String) jObj.get("fullURIName");
-		this.sparqlID = (String) jObj.get("SparqlID");
 		
 		this.optMinus = OPT_MINUS_NONE;
 		if (jObj.containsKey("isOptional")) {
@@ -97,16 +91,7 @@ public class PropertyItem extends Returnable {
 		} else if (jObj.containsKey("optMinus")) {
 			this.optMinus = Integer.parseInt(jObj.get("optMinus").toString());
 		}
-
 		
-		this.isReturned = (Boolean)jObj.get("isReturned");
-		
-		try{
-			this.setIsRuntimeConstrained((Boolean)jObj.get("isRuntimeConstrained"));
-		}
-		catch(Exception E){
-			this.setIsRuntimeConstrained(false);
-		}
 		try{
 			this.setIsMarkedForDeletion((Boolean)jObj.get("isMarkedForDeletion"));
 		}
@@ -131,19 +116,16 @@ public class PropertyItem extends Returnable {
 		}
 
 		JSONObject ret = new JSONObject();
+		this.addReturnableJson(ret);
 		ret.put("KeyName", this.keyName);		
 		ret.put("ValueType", this.valueType.getSimpleName());
 		ret.put("relationship", this.valueTypeURI);
 		ret.put("UriRelationship", this.uriRelationship);
-		ret.put("Constraints", this.constraints != null ? this.constraints.toString() : "");
 		ret.put("fullURIName", this.fullURIName);
-		ret.put("SparqlID", this.sparqlID);
-		ret.put("isReturned", this.isReturned);
 		ret.put("optMinus", this.optMinus);
 		ret.put("isMarkedForDeletion", this.isMarkedForDeletion);
-		ret.put("isRuntimeConstrained", this.getIsRuntimeConstrained());
 		ret.put("instanceValues", iVals);
-
+                                           
 		return ret;
 	}
 
@@ -191,7 +173,7 @@ public class PropertyItem extends Returnable {
 	}
 
 	public boolean isUsed() {
-		return (this.isReturned || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion);
+		return (this.hasAnyReturn() || this.constraints != null || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion);
 	}
 	public ArrayList<String> getInstanceValues() {
 		return this.instanceValues;

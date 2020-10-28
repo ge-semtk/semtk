@@ -67,7 +67,7 @@ public class OntologyInfoTests_IT {
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
 
 		assertTrue("Expecting 0 enums.  found: " + oInfo.getNumberOfEnum(),              oInfo.getNumberOfEnum() == 0);
-		assertTrue("Expecting 2 classes.  found: " + oInfo.getNumberOfClasses(),        oInfo.getNumberOfClasses() == 3);
+		assertTrue("Expecting 3 classes.  found: " + oInfo.getNumberOfClasses(),        oInfo.getNumberOfClasses() == 3);
 		assertTrue("Expecting 6 properties.  found: " + oInfo.getNumberOfProperties(), oInfo.getNumberOfProperties() == 6);
 
 		OntologyClass cat = oInfo.getClass("http://research.ge.com/kdl/pet#Cat");

@@ -60,7 +60,7 @@ define([	// properly require.config'ed
 			this.data = data;
 
 			this.limit = 10000;
-			this.lastSparqlID = "";
+			this.prevName = "";
 
             // Virtuoso has performance and maybe downright crash troubles
             // if a values clause has too many params.
@@ -71,10 +71,10 @@ define([	// properly require.config'ed
 		};
 
 
-		ModalItemDialog.SELECT = 0;
+		ModalItemDialog.VALS_SELECT = 0;
 		ModalItemDialog.CONSTRAINT_TEXT = 1;
 		ModalItemDialog.SPARQL_ID_TEXT = 2;
-		ModalItemDialog.OPTIONAL = 3;
+		ModalItemDialog.UNUSED = 3;
 		ModalItemDialog.RETURN_CHECK = 4;
 		ModalItemDialog.AUTO_TEXT = 5;
 		ModalItemDialog.AUTO_TEXT_LIST = 6;
@@ -83,7 +83,11 @@ define([	// properly require.config'ed
 		ModalItemDialog.DELETE_SELECT = 9;
         ModalItemDialog.RETURN_TYPE_CHECK = 10;
         ModalItemDialog.SPARQL_ID_SPAN = 11;
+        ModalItemDialog.OPTMINUNI_SELECT = 12;
 
+
+        ModalItemDialog.UNION_NONE = 1000;
+        ModalItemDialog.UNION_NEW =  1001;
 
 		ModalItemDialog.prototype = {
             /*
@@ -103,7 +107,7 @@ define([	// properly require.config'ed
 			selectChanged : function () {
 				// build the text field using the selected fields in the <select>
 
-				var select = this.getFieldElement(ModalItemDialog.SELECT);
+				var select = this.getFieldElement(ModalItemDialog.VALS_SELECT);
 				var opt;
 				var valList = IIDXHelper.getSelectValues(select);
 
@@ -130,7 +134,7 @@ define([	// properly require.config'ed
                 // swap in sparqlID
 				var savedID = this.item.getSparqlID();
 
-				this.item.setSparqlID(this.getSparqlIDText());
+				this.item.setSparqlID(this.getSparqlIDFromText());
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, this.item.buildFilterInConstraint(valList));
 
 				// swap sparqlID back out
@@ -148,7 +152,7 @@ define([	// properly require.config'ed
 				}
 
 				// uncheck "optional"
-				var optMinSelect = this.getFieldElement(ModalItemDialog.OPTIONAL);
+				var optMinSelect = this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT);
 				if (optMinSelect != null) {
                     IIDXHelper.selectFirstMatchingText(optMinSelect,
                                                  this.getOptMinusText(PropertyItem.OPT_MINUS_NONE));
@@ -159,7 +163,7 @@ define([	// properly require.config'ed
 				rtConstrainedCheck.checked = false;
 
 				// unselect everything
-				var select = this.getFieldElement(ModalItemDialog.SELECT);
+				var select = this.getFieldElement(ModalItemDialog.VALS_SELECT);
 				var len = select.length;
 				for (var i=0; i < len ;i++) {
 					select[i].selected = false;
@@ -174,8 +178,7 @@ define([	// properly require.config'ed
 			submit : function () {
 
 				var sparqlIDElem = this.getFieldElement(ModalItemDialog.SPARQL_ID_TEXT);
-				var sparqlID = this.getSparqlIDText();
-				var optMinSelectElem = this.getFieldElement(ModalItemDialog.OPTIONAL);
+				var sparqlID = this.getSparqlIDFromText();
 
 				var returnChecked = this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked;
                 var returnTypeChecked = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK) ? this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK).checked : false;
@@ -198,13 +201,42 @@ define([	// properly require.config'ed
 								(returnChecked || rtConstrainedChecked || constraintTxt != "" || delMarker != null) ? sparqlID : "",
 								returnChecked,
                                 returnTypeChecked,
-                                (optMinSelectElem == null) ? null : parseInt(IIDXHelper.getSelectValues(optMinSelectElem)[0]),
+                                this.getOptMinFromSelect(),
+                                this.getUnionFromSelect(),
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
 								this.data
-							  );
+                            );
 			},
+
+
+            // Get UNION
+            // including possible UNION_NONE and UNION_NEW
+
+            getUnionFromSelect : function () {
+                var selectElem = this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT);
+                if (selectElem) {
+                    var selValue = parseInt(IIDXHelper.getSelectValues(selectElem)[0]);
+                    return selValue < 100 ? ModalItemDialog.UNION_NONE : selValue - 100;
+                } else {
+                    // early on and select doesn't exist yet, grab from this.item.
+                    var ret = this.nodegroup.getUnionKey(this.getItemSnode(), this.getItemProp());
+                    return (ret == null) ? ModalItemDialog.UNION_NONE : ret;
+                }
+            },
+
+            getOptMinFromSelect : function () {
+                var selectElem = this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT);
+                if (selectElem) {
+                    // normal operation
+                    var selValue = parseInt(IIDXHelper.getSelectValues(selectElem)[0]);
+                    return selValue >= 100 ? ModalItemDialog.OPT_MINUS_NONE : selValue;
+                } else {
+                    // early on and select doesn't exist yet, grab from this.item.
+                    return this.item.getOptionalMinus();
+                }
+            },
 
 			setStatus : function (msg) {
 				document.getElementById("mcdstatus").innerHTML= "<font color='red'>" + msg + "</font>";
@@ -287,12 +319,12 @@ define([	// properly require.config'ed
 						element[this.limit].val = null;
 					};
 
-					this.fillSelect(element);
+					this.fillValsSelect(element);
 					this.fillAutoText(element);
 				};
 			},
 
-			getSparqlIDText : function() {
+			getSparqlIDFromText : function() {
 				// get sparqlID out of text box, ensure single leading '?', remove spaces
 				// may return ""
 
@@ -310,7 +342,7 @@ define([	// properly require.config'ed
 				// swap in sparqlID
 				var savedID = this.item.getSparqlID();
 
-				this.item.setSparqlID(this.getSparqlIDText());
+				this.item.setSparqlID(this.getSparqlIDFromText());
 
 				//  build the regex, swap id back out
 				var newConstraint = this.item.buildFilterConstraint(null, null);
@@ -319,10 +351,10 @@ define([	// properly require.config'ed
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, newConstraint);
 			},
 
-			fillSelect : function (element) {
+			fillValsSelect : function (element) {
 				// element should be an array of items with ".name" and ".val" fields
 				// populate the SELECT with given parallel arrays of names and values
-				var select = this.getFieldElement(ModalItemDialog.SELECT);
+				var select = this.getFieldElement(ModalItemDialog.VALS_SELECT);
 
 				var constraintSparql = this.getFieldValue(ModalItemDialog.CONSTRAINT_TEXT);
 				var valuesFlag = (constraintSparql.search(" IN ") > -1);
@@ -425,7 +457,7 @@ define([	// properly require.config'ed
 				// toggle the corresponding value in SELECT
 				// and, if successful, empty out AUTO_TEXT
 				var text = this.getFieldValue(ModalItemDialog.AUTO_TEXT);
-				var select = this.getFieldElement(ModalItemDialog.SELECT);
+				var select = this.getFieldElement(ModalItemDialog.VALS_SELECT);
 
 				// find text in select
 				var pos = this.binarySearch(select, text, function(text, el) {
@@ -458,45 +490,111 @@ define([	// properly require.config'ed
 			},
 
 			sparqlIDOnFocus : function () {
-				this.lastSparqlID = this.getSparqlIDText();
+				this.prevName = this.getSparqlIDFromText();
 			},
 
-			sparqlIDOnFocusOut : function() {
-				// keep sparqlID valid at all times
+            // for union operations that require this.item to be in snode,prop form
+            getItemSnode : function() {
+                if (this.item instanceof PropertyItem) {
+                    return gNodeGroup.getPropertyItemParentSNode(this.item);
+                } else {
+                    return this.item;
+                }
+            },
 
-				var retName = this.getSparqlIDText();
+            // for union operations that require this.item to be in snode,prop form
+            getItemProp : function () {
+                if (this.item instanceof PropertyItem) {
+                    return this.item;
+                } else {
+                    return undefined;
+                }
+            },
+
+            getNameHash : function () {
+                var ret = null;
+                var newUnion = this.getUnionFromSelect();
+
+                // get snode and prop for union operations
+                var snode = this.getItemSnode();
+                var prop = this.getItemProp();
+
+                var prevUnion = this.nodegroup.getUnionKey(snode, prop);
+                var prevIsReturned = undefined;
+                var prevSparqlId = undefined;
+                if (prop != undefined) {
+                    prevIsReturned = prop.getIsReturned();
+                    prevSparqlId = prop.getSparqlID();
+                }
+
+                // temporarily add to union shown in the dialog
+                this.nodegroup.rmFromUnions(snode, prop);
+                if (newUnion < ModalItemDialog.UNION_NONE) {
+                    gNodeGroup.addToUnion(newUnion, snode, prop);
+                }
+                // temporarily make property returned
+                if (prevIsReturned == false) {
+                    prop.setSparqlID("?Throw__Away___ModalItemDialog");
+                    this.nodegroup.setIsReturned(prop.getSparqlID(), true);
+                }
+
+                // calculate all variable names
+                ret = gNodeGroup.getAllVariableNamesHash(snode, prop);
+
+                // restore union
+                if (newUnion < ModalItemDialog.UNION_NONE) {
+                    this.nodegroup.rmFromUnions(snode, prop);
+                    if (prevUnion != null && prevUnion > -1 && prevUnion < ModalItemDialog.UNION_NONE) {
+                        gNodeGroup.addToUnion(prevUnion, snode, prop);
+                    }
+                }
+                // retstore is returned
+                if (prevIsReturned == false) {
+                    prop.setSparqlID(prevSparqlId);
+                    this.nodegroup.setIsReturned(prop.getSparqlID(), false);
+                }
+
+                return ret;
+            },
+            unionSelectOnFocus : function() {
+                this.sparqlIDOnFocus();
+            },
+            unionSelectOnFocusOut : function() {
+                this.sparqlIDOnFocusOut();
+            },
+
+			sparqlIDOnFocusOut : function() {
+
+				var displayedName = this.getSparqlIDFromText();
 				var f = new SparqlFormatter();
 
 				// handle blank sparqlID
-				if (retName === "") {
-					retName = f.genSparqlID("ID", gNodeGroup.sparqlNameHash);
-					ModalIidx.alert("Blank SparqlID Invalid", "Using " + retName + ".");
+				if (displayedName === "") {
+					newName = f.genSparqlID("ID", this.getNameHash());
+					ModalIidx.alert("Blank name is invalid", "Using " + newName + ".");
 
-				// check legality of non-blank sparqlID
 				} else {
-		    		// for legality-checking: make sure retName has "?"
-		    		if (retName[0][0] !== "?") {
-		    			retName = "?" + retName;
-		    		}
+                    // for legality-checking: make sure newName has "?"
+                    if (displayedName[0][0] !== "?") {
+                        displayedName = "?" + displayedName;
+                    }
 
-		    		// if it is a new name
-		    		if (retName != this.item.getSparqlID()) {
-		    			// make sure new name is legal
-		    			var newName = f.genSparqlID(retName, gNodeGroup.sparqlNameHash);
-		    			if (newName != retName) {
-		    				ModalIidx.alert("SparqlID Invalid", "Using " + newName + " instead.");
-		    			}
-		    			retName = newName;
-		    		}
-		    	}
+                    // make sure new name is legal
+                    var newName = f.genSparqlID(displayedName, this.getNameHash());
+                    if (newName != displayedName) {
+                        ModalIidx.alert("SparqlID Invalid", "Using " + newName + " instead.");
+                    }
+
+                    this.updateConstraintSparqlID(this.prevName, newName);
+
+                    // update ruturn_type checkbox text
+                    var span = this.getFieldElement(ModalItemDialog.SPARQL_ID_SPAN);
+                    if (span) span.innerHTML = newName + "_type";
+                }
+
 				// set the new sparqlID (without the leading '?')
-				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, retName.slice(1));
+				this.setFieldValue(ModalItemDialog.SPARQL_ID_TEXT, newName.slice(1));
 
-				this.updateConstraintSparqlID(this.lastSparqlID, retName);
-
-                // update ruturn_type checkbox text
-                var span = this.getFieldElement(ModalItemDialog.SPARQL_ID_SPAN);
-                if (span) span.innerHTML = retName + "_type";
 			},
 
 			updateConstraintSparqlID : function(oldID, newID) {
@@ -514,7 +612,7 @@ define([	// properly require.config'ed
 
             getOptMinusText : function (optMin) {
                 if (optMin == PropertyItem.OPT_MINUS_NONE) {
-                    optMinusText = "<no optional/minus>";
+                    optMinusText = "- no optional/minus/union -";
                 } else if (optMin == PropertyItem.OPT_MINUS_OPTIONAL) {
                     optMinusText = "optional";
                 } else if (optMin == PropertyItem.OPT_MINUS_MINUS) {
@@ -570,13 +668,14 @@ define([	// properly require.config'ed
 				sparqlIDTxt.type = "text";
 				sparqlIDTxt.style.margin = 0;
 				sparqlIDTxt.id = this.getFieldID(ModalItemDialog.SPARQL_ID_TEXT);
-				// get a legal sparqlID
-				var sparqlID = this.item.getSparqlID();
+
+                var binding = this.item.getBinding();
+                var sparqlID = this.item.getSparqlID();
 				if (sparqlID === "") {
 					var f = new SparqlFormatter();
-					sparqlID = f.genSparqlID(this.item.getKeyName(), gNodeGroup.sparqlNameHash);
+					sparqlID = f.genSparqlID(this.item.getKeyName(), this.getNameHash());
 				}
-				sparqlIDTxt.value = sparqlID.slice(1);
+				sparqlIDTxt.value = binding ? binding.slice(1) : sparqlID.slice(1);
 
 				sparqlIDTxt.onfocus    = this.sparqlIDOnFocus.bind(this);
 				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
@@ -591,7 +690,7 @@ define([	// properly require.config'ed
 				// return checkbox
 				returnCheck = IIDXHelper.createVAlignedCheckbox(
                                 this.getFieldID(ModalItemDialog.RETURN_CHECK),
-                                this.item.getIsReturned(),
+                                this.item.getIsReturned() || this.item.getIsBindingReturned(),
                                 "btn",
                                 this.returnCheckOnClick.bind(this)
                                 );
@@ -637,38 +736,86 @@ define([	// properly require.config'ed
 					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
 				}
 				// is optional applicable to this item
-				var optionalFlag = (this.item.getItemType() == "PropertyItem" || singleNodeItem != null);
+				var showSelect = (this.item.getItemType() == "PropertyItem" || this.item.getItemType() == "SemanticNode" || singleNodeItem != null);
 
 				// optional select
-				if (optionalFlag) {
-                    var optMinusText = "";
+				if (showSelect) {
+                    var selectedText = "";
+                    var optMinus;
                     if (this.item.getItemType() == "PropertyItem") {
-                        optMinusText = this.getOptMinusText(this.item.getOptMinus());
-					} else {
+                        optMinus = this.item.getOptMinus();
+                        selectedText = this.getOptMinusText(optMinus);
+
+					} else if (this.item.getItemType() == "SemanticNode") {
+                        optMinus = NodeItem.OPT_MINUS_NONE;
+                        selectedText = "";
+
+                    } else {
                         var targetNode = singleNodeItem.getSNodes()[0];
-                        var optMinus = singleNodeItem.getOptionalMinus(targetNode);
+                        optMinus = singleNodeItem.getOptionalMinus(targetNode);
                         if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
-                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL);
+                            selectedText = this.getOptMinusText(NodeItem.OPT_MINUS_OPTIONAL);
                         } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
-                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS);
+                            selectedText = this.getOptMinusText(NodeItem.OPT_MINUS_MINUS);
                         } else {
-                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
+                            selectedText = this.getOptMinusText(NodeItem.OPT_MINUS_NONE);
                         }
 					}
 
-                    optMinSelect = IIDXHelper.createSelect(
-                        this.getFieldID(ModalItemDialog.OPTIONAL),
-    					[  [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
-    					   [this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
-                           [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
-    					],
-    					[optMinusText]);
+                    // optional minus stuff is single digits
+                    // unions will be 100 + [0-100]
+                    // UNION_NONE or UNION_NEW are > 999
+                    var selectList;
 
-					optMinSelect.disabled = false;
+                    if (this.item.getItemType() == "PropertyItem") {
+                        selectList = [
+                            [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
+        					[this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
+                            [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
+                            ["- new union -",    ModalItemDialog.UNION_NEW + 100]
+                        ];
+                    } else {
+                        selectList = [
+                            ["- no union -",     ModalItemDialog.UNION_NONE + 100],
+                            ["- new union -",    ModalItemDialog.UNION_NEW + 100]
+                        ];
+                    }
+                    selectList.push();
 
+                    // add union keys
+                    this.nodegroup.updateUnionMemberships();
+
+                    var unionKeys;
+                    var itemUnionKey;
+                    if (this.item instanceof SemanticNode) {
+                        unionKeys = this.nodegroup.getLegalUnions(this.item);
+                        itemUnionKey = this.nodegroup.getUnionKey(this.item);
+                    } else {
+                        var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
+                        unionKeys = this.nodegroup.getLegalUnions(snode, this.item);
+                        itemUnionKey = this.nodegroup.getUnionKey(snode, this.item);
+                    }
+
+                    for (var key of unionKeys) {
+                        selectList.push([this.nodegroup.getUnionNameStr(key), key + 100]);
+                    }
+
+                    // set selected
+                    var selected = [];
+                    if (itemUnionKey != null) {
+                        selected = [this.nodegroup.getUnionNameStr(itemUnionKey)];
+                    } else {
+                        selected = [selectedText];
+                    }
+
+                    var select = IIDXHelper.createSelect(
+                            this.getFieldID(ModalItemDialog.OPTMINUNI_SELECT),
+                            selectList,
+                            selected
+                        );
+                    select.onfocus    = this.unionSelectOnFocus.bind(this);
+                    select.onfocusout = this.unionSelectOnFocusOut.bind(this);
 				}
-
-				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 
 				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
                                             this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
@@ -684,8 +831,8 @@ define([	// properly require.config'ed
 					div.align = "right";
 
 					// assemble
-					if (optionalFlag) {
-						div.appendChild(optMinSelect);
+					if (showSelect) {
+						div.appendChild(select);
                         div.appendChild(document.createElement("br"));
 					}
 					div.appendChild(runtimeConstrainedCheck)
@@ -697,10 +844,12 @@ define([	// properly require.config'ed
 
 				} else {
 					// normal operation: put optional check into the top table
-					if (optionalFlag) {
-						td.appendChild(optMinSelect);
+					if (showSelect) {
+                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+                        td.appendChild(select);
                         td.appendChild(document.createElement("br"));
 					}
+
 
 					// deletion
 					if (this.item.getItemType() == "PropertyItem") {
@@ -732,6 +881,7 @@ define([	// properly require.config'ed
                         deleteSelect.options[3].disabled = true;
                         deleteSelect.options[4].disabled = true;
 
+                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 						td.appendChild(deleteSelect);
 					}
 
@@ -815,7 +965,7 @@ define([	// properly require.config'ed
 				// ------ value <select> ------
 				elem = document.createElement("select");
 				elem.multiple = true;
-				elem.id = this.getFieldID(ModalItemDialog.SELECT);
+				elem.id = this.getFieldID(ModalItemDialog.VALS_SELECT);
 				elem.size = "10";
 				elem.onchange = this.selectChanged.bind(this);
 				elem.style.width = "100%";
@@ -857,199 +1007,15 @@ define([	// properly require.config'ed
 					// this.query();
 
 					// Set returned if it looks like this dialog is totally empty
-					if (this.item.getIsReturned() == false && this.item.getConstraints() == "") {
+					if (this.item.getIsReturned() == false && this.item.getIsBindingReturned() == false && this.item.getConstraints() == "") {
 						returnCheck.checked = true;
 						this.returnCheckOnClick();
 					}
 				}
 
 				// tooltips
-				$("#" + this.getFieldID(ModalItemDialog.OPTIONAL)).tooltip({placement: "left"});
+				$("#" + this.getFieldID(ModalItemDialog.OPTMINUNI_SELECT)).tooltip({placement: "left"});
 			},
-
-            showTopSection : function (dom, sparqlformFlag) {
-				var returnCheck;
-				var runtimeConstrainedCheck;
-				var sparqlIDTxt;
-				var optMinSelect;
-
-				// table for return items
-				var table = document.createElement("table");
-				dom.appendChild(table);
-
-				var tr = document.createElement("tr");
-				table.appendChild(tr);
-
-				// row 1 col 1:  "Name: "
-				var td = document.createElement("td");
-				td.style.verticalAlign = "top";
-				tr.appendChild(td);
-				var elem = document.createElement("b");
-				elem.appendChild(document.createTextNode("Name: " ) );
-				td.appendChild(elem);
-
-				// row 1 col 2   "text input box"
-				td = document.createElement("td");
-				tr.appendChild(td);
-
-				// return input
-				sparqlIDTxt = document.createElement("input");
-				sparqlIDTxt.type = "text";
-				sparqlIDTxt.style.margin = 0;
-				sparqlIDTxt.id = this.getFieldID(ModalItemDialog.SPARQL_ID_TEXT);
-				// get a legal sparqlID
-				var sparqlID = this.item.getSparqlID();
-				if (sparqlID === "") {
-					var f = new SparqlFormatter();
-					sparqlID = f.genSparqlID(this.item.getKeyName(), gNodeGroup.sparqlNameHash);
-				}
-				sparqlIDTxt.value = sparqlID.slice(1);
-
-				sparqlIDTxt.onfocus    = this.sparqlIDOnFocus.bind(this);
-				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
-				sparqlIDTxt.style.disabled = this.sparqlformFlag;
-				td.appendChild(sparqlIDTxt);
-
-				// row 1 col 3  "returned checkbox"
-				td = document.createElement("td");
-				td.style.verticalAlign = "top";
-				tr.appendChild(td);
-
-				// return checkbox
-				returnCheck = IIDXHelper.createVAlignedCheckbox(
-                                this.getFieldID(ModalItemDialog.RETURN_CHECK),
-                                this.item.getIsReturned(),
-                                "btn",
-                                this.returnCheckOnClick.bind(this)
-                            );
-
-                IIDXHelper.appendCheckBox(td, returnCheck, "return");
-				// row #2
-				tr = document.createElement("tr");
-				table.appendChild(tr);
-
-				// first cell row 3 is empty
-				td = document.createElement("td");
-				tr.appendChild(td);
-
-				// second cell row 3 is empty
-				td = document.createElement("td");
-				tr.appendChild(td);
-
-				// third cell row 3
-				td = document.createElement("td");
-				td.style.verticalAlign = "top";
-				tr.appendChild(td);
-
-				// if sparqlform and this is a node, look for singleNodeItem
-				var singleNodeItem = null;
-
-				if (this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
-					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
-				}
-				// is optional applicable to this item
-				var optionalFlag = (this.item.getItemType() == "PropertyItem" || singleNodeItem != null);
-
-				// optional select
-				if (optionalFlag) {
-                    var optMinusText = "";
-                    if (this.item.getItemType() == "PropertyItem") {
-                        optMinusText = this.getOptMinusText(this.item.getOptMinus());
-					} else {
-                        var targetNode = singleNodeItem.getSNodes()[0];
-                        var optMinus = singleNodeItem.getOptionalMinus(targetNode);
-                        if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
-                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL);
-                        } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
-                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS);
-                        } else {
-                            optMinusText = this.getOptMinusText(PropertyItem.OPT_MINUS_NONE);
-                        }
-					}
-
-                    optMinSelect = IIDXHelper.createSelect(
-                        this.getFieldID(ModalItemDialog.OPTIONAL),
-    					[  [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
-    					   [this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
-                           [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
-    					],
-    					[optMinusText]);
-
-					optMinSelect.disabled = false;
-
-				}
-
-				td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-
-				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
-                                            this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
-                                            this.item.getIsRuntimeConstrained(),
-                                            "btn",
-                                            this.rtConstrainedCheckOnClick.bind(this)
-                                        );
-
-				// Top section is handled totally differently with sparqlformFlag
-				if (this.sparqlformFlag) {
-					// create a right-justified div just for optional
-					var div = document.createElement("div");
-					div.align = "right";
-
-					// assemble
-					if (optionalFlag) {
-						div.appendChild(optMinSelect);
-                        div.appendChild(document.createElement("br"));
-					}
-					div.appendChild(runtimeConstrainedCheck)
-					div.appendChild(document.createTextNode(" runtime constrained"));
-					dom.appendChild(div);
-
-					// make top table invisible
-					table.style.display = "none";
-
-				} else {
-					// normal operation: put optional check into the top table
-					if (optionalFlag) {
-						td.appendChild(optMinSelect);
-                        td.appendChild(document.createElement("br"));
-					}
-
-					// deletion
-					if (this.item.getItemType() == "PropertyItem") {
-                        // deleting a property is just a check box
-						var deleteCheck = IIDXHelper.createVAlignedCheckbox(
-                                            this.getFieldID(ModalItemDialog.DELETE_CHECK),
-                                            this.item.getIsMarkedForDeletion()
-                                        );
-                        IIDXHelper.appendCheckBox(td, deleteCheck, "mark for delete");
-
-					} else {
-                        // deleting a Semantic node has many options
-						var options = [];
-                        var selectedText = [];
-						for (var key in NodeDeletionTypes) {
-							options.push([key, NodeDeletionTypes[key]]);
-
-                            if (NodeDeletionTypes[key] == this.item.getDeletionMode()) {
-                                selectedText.push(key);
-                            }
-						}
-						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
-                                                                      options,
-                                                                      selectedText);
-						deleteSelect.classList.add("input-medium");
-
-                        // TODO: last two aren't implemented on the other end
-                        //       They probably shouldn't be in belmont.js
-                        deleteSelect.options[3].disabled = true;
-                        deleteSelect.options[4].disabled = true;
-
-						td.appendChild(deleteSelect);
-					}
-
-					td.appendChild(document.createElement("br"));
-                    IIDXHelper.appendCheckBox(td, runtimeConstrainedCheck, "runtime constrained");
-				}
-            },
 
 			// ------ manage unique id's ------
 			// would be actually unique if there were GUID in the constructor.  overkill.

@@ -450,18 +450,31 @@
 			});
 	};
 
-	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, deleteMarkerVal, deleteFlag) {
+	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, union, unionReverse, deleteMarkerVal, deleteFlag) {
+        require([ 'sparqlgraph/js/modallinkdialog',
+                         ], function (ModalLinkDialog) {
+    		// optionalFlag
+    		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
+            nItem.setQualifier(targetSNode, qualifierVal);
+    		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
 
-		// optionalFlag
-		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
-        nItem.setQualifier(targetSNode, qualifierVal);
-		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
-		// deleteFlag
-		if (deleteFlag) {
-			snode.removeLink(nItem, targetSNode);
-		}
+            // union
+            gNodeGroup.rmFromUnions(snode, nItem, targetSNode);
+            if (union == ModalLinkDialog.UNION_NONE) {
+            } else if (union == ModalLinkDialog.UNION_NEW) {
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), snode, nItem, targetSNode, unionReverse);
+            } else {
+                gNodeGroup.addToUnion(union, snode, nItem, targetSNode, unionReverse);
+            }
 
-        nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+
+    		// deleteFlag
+    		if (deleteFlag) {
+    			gNodeGroup.removeLink(nItem, targetSNode);
+    		}
+
+            nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+        });
 	};
 
     var launchSNodeItemDialog = function (snodeItem) {
@@ -500,7 +513,6 @@
 	var buildLink = function(snode, nItem, rangeSnode) {
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
-        var unchangedIDs = gNodeGroup.getSNodeSparqlIDs();
 		if (rangeSnode == null) {
 			var rangeStr = nItem.getUriValueType();
 			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
@@ -508,51 +520,96 @@
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
-        nodeGroupChanged(true, unchangedIDs);
+        nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
-        // update the property
-        gNodeGroup.changeSparqlID(propItem, sparqlID);
-        propItem.setIsReturned(returnFlag);
-        // returnTypeFlag is not used for properties
-        propItem.setOptMinus(optMinus);
-        propItem.setIsRuntimeConstrained(rtConstrainedFlag);
-        propItem.setConstraints(constraintStr);
-        propItem.setIsMarkedForDeletion(delMarker);
+        require([ 'sparqlgraph/js/modalitemdialog',
+                ], function (ModalItemDialog) {
 
-        gNodeGroup.removeInvalidOrderBy();
+            // update the binding or sparqlID based on varName and returnFalg
+            if (propItem.getSparqlID() == "") {
+                gNodeGroup.changeSparqlID(propItem, varName);
+            }
+            if (varName == propItem.getSparqlID()) {
+                // varName is sparqlID: shut of binding
+                propItem.setBinding(null);
+                propItem.setIsBindingReturned(false);
+            } else {
+                // varName is NOT sparqlID: use binding
+                propItem.setBinding(varName);
+                propItem.setIsReturned(false);
+            }
+            gNodeGroup.setIsReturned(varName, returnFlag);
 
-        var unchangedIDs = gNodeGroup.getSNodeSparqlIDs();
-        unchangedIDs.splice(unchangedIDs.indexOf(data.snodeID));
-        nodeGroupChanged(true, unchangedIDs);
+            // returnTypeFlag is not used for properties
+
+            propItem.setOptMinus(optMinus);
+
+            // union: presume that u is legal
+            gNodeGroup.rmFromUnions(gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
+
+            if (union == ModalItemDialog.UNION_NONE) {
+            } else if (union == ModalItemDialog.UNION_NEW) {
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
+            } else {
+                gNodeGroup.addToUnion(union, gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
+            }
+
+
+            propItem.setIsRuntimeConstrained(rtConstrainedFlag);
+            propItem.setConstraints(constraintStr);
+            propItem.setIsMarkedForDeletion(delMarker);
+
+            gNodeGroup.removeInvalidOrderBy();
+
+            nodeGroupChanged(true);
+        });
     };
 
-    var snodeItemDialogCallback = function(snodeItem, sparqlID, returnFlag, returnTypeFlag, optMinus, delMarker, rtConstrainedFlag, constraintStr, data) {
-    	// Note: ModalItemDialog validates that sparqlID is legal
+    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+        require([ 'sparqlgraph/js/modalitemdialog',
+                ], function (ModalItemDialog) {
 
-        // don't allow removal of node item's sparqlID
-        if (sparqlID != "") {
-            gNodeGroup.changeSparqlID(snodeItem, sparqlID);
-        }
+            // Note: ModalItemDialog validates that sparqlID is legal
 
-        snodeItem.setIsReturned(returnFlag);
-        snodeItem.setIsTypeReturned(returnTypeFlag);
+            // update the binding or sparqlID based on varName and returnFalg
+            if (varName == snodeItem.getSparqlID()) {
+                // varname is sparqlID: shut off binding
+                snodeItem.setBinding(null);
+                snodeItem.setIsBindingReturned(false);
+            } else {
+                // varname is NOT sparqlID: use binding
+                snodeItem.setBinding(varName);
+                snodeItem.setIsReturned(false);
+            }
+            gNodeGroup.setIsReturned(varName, returnFlag);
 
-    	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
+            snodeItem.setIsTypeReturned(returnTypeFlag);
 
-		// runtime constrained
-    	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
-    	snodeItem.setDeletionMode(delMarker);
+        	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
 
-    	// constraints
-    	snodeItem.setConstraints(constraintStr);
+            // union
+            gNodeGroup.rmFromUnions(snodeItem);
 
-        var unchanged = gNodeGroup.getSNodeSparqlIDs();
-        unchanged.splice(unchanged.indexOf(snodeItem.getSparqlID()));
-        nodeGroupChanged(true, unchanged);
+            if (union == ModalItemDialog.UNION_NONE) {
+            } else if (union == ModalItemDialog.UNION_NEW) {
+                gNodeGroup.addToUnion(gNodeGroup.newUnion(), snodeItem);
+            } else {
+                gNodeGroup.addToUnion(union, snodeItem);
+            }
+
+    		// runtime constrained
+        	snodeItem.setIsRuntimeConstrained(rtConstrainedFlag);
+        	snodeItem.setDeletionMode(delMarker);
+
+        	// constraints
+        	snodeItem.setConstraints(constraintStr);
+
+            nodeGroupChanged(true);
+        });
     };
 
     // window's onresize event
@@ -604,7 +661,6 @@
 
 		setStatus("");
 		guiTreeNonEmpty();
-		//gNodeGroup.setCanvasOInfo(gOInfo);
 		gMappingTab.updateNodegroup(gNodeGroup);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
@@ -715,7 +771,7 @@
             // make sure there is a sparqlID
             if (item.getSparqlID() == "") {
                 // set it, make a copy, set it back
-                item.setSparqlID("SG_runSuggestValuesQuery_Temp");
+                item.setSparqlID("?SG_SuggestedValues");
                 runNodegroup = ng.deepCopy();
                 runId = item.getSparqlID();
                 item.setSparqlID("");
@@ -1409,7 +1465,7 @@
 
     // Set nodeGroupChangedFlag and update GUI for new nodegroup
     // unchangeSNodeIDs : snodes who shouldn't be redrawn and potentially moved
-    var nodeGroupChanged = function(flag, unchangedSNodeIDs) {
+    var nodeGroupChanged = function(flag) {
         gNodeGroupChangedFlag = flag;
 
         guiUpdateGraphRunButton();
@@ -1427,8 +1483,7 @@
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
-        gRenderer.draw(gNodeGroup, unchangedSNodeIDs ? unchangedSNodeIDs : []);
-
+        gRenderer.draw(gNodeGroup);
         if (flag) {
             buildQuery();
         } else {

@@ -29,6 +29,7 @@ import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 /*
  * Takes multiple data records and uses them to populate NodeGroups.
  * 
@@ -197,6 +198,8 @@ public class DataLoadBatchHandler {
 				// add line number column
 				newErrorReport.add(String.valueOf(startingRowNum + i));
 				this.addFailureRow(newErrorReport);
+				
+				LocalLogger.printStackTrace(e);
 			}
 		}
 			
