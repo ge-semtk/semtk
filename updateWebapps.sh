@@ -28,7 +28,7 @@ SG_WEB_OSS="${SCRIPT_HOME}/sparqlGraphWeb"
 
 # get environment variables
 pushd "${SCRIPT_HOME}"
-. .env
+. ./.env
 popd
 
 # make sure these exist in webapps

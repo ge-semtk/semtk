@@ -22,7 +22,7 @@ if [ ! -d "${WEBAPPS}" ]; then
     exit 1
 fi
 
-. .fun
+. ./.fun
 
 # define array of versioned files
 declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
@@ -33,6 +33,7 @@ declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
 # replace versioned files
 for v in "${VERSIONED[@]}"
 do
+    echo ${v}
     cp "./sparqlGraphWeb/${v}" "${WEBAPPS}/${v}"
     replace_vars_in_file "${WEBAPPS}/${v}" "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"
 done
