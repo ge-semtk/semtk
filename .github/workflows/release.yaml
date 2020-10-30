@@ -36,7 +36,11 @@ jobs:
 
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+        run: |
+          tagname=${GITHUB_REF#refs/tags/}
+          yyyymmddhh=$(date +%Y%m%d%H)
+          version=${tagname/SNAPSHOT/$yyyymmddhh}
+          echo ::set-output name=version::${version}
 
       - name: Upload release assets
         id: upload_release_asset
@@ -46,6 +50,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: "distribution/target/semtk-opensource-${{ steps.get_version.outputs.VERSION }}-bin.tar.gz"
-          asset_name: semtk-opensource-${{ steps.get_version.outputs.VERSION }}-bin.tar.gz
+          asset_name: semtk-opensource-dist-${{ steps.get_version.outputs.version }}.tar.gz
           asset_content_type: application/gzip
-
