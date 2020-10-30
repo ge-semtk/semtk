@@ -34,6 +34,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: semtk-opensource/distribution/target/semtk-opensource-dist.tar.gz
+        asset_path: ./distribution/target/semtk-opensource-dist.tar.gz
         asset_name: semtk-opensource-${{ steps.get_version.outputs.version }}-dist.tar.gz
         asset_content_type: application/gzip
