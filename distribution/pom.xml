@@ -1,133 +1,128 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
+  
   <parent>
     <groupId>com.ge.research.semtk</groupId>
     <artifactId>semtk-oss</artifactId>
     <version>2.3.0-SNAPSHOT</version>
   </parent>
-
+  
   <artifactId>distribution</artifactId>
-
+ 
   <packaging>pom</packaging>
-
+ 
   <name>Distribution</name>
-
+  
   <!-- NOTE: These dependency declarations are only required to force this project to go LAST in the multimodule build. -->
   <dependencies>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>sparqlGraphLibrary</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>sparqlGraphIngestionService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>hiveService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>sparqlQueryService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>sparqlGraphStatusService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>sparqlGraphResultsService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>nodeGroupStoreService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>ontologyInfoService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>sparqlExtDispatchService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>nodeGroupExecutionService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>nodeGroupService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>fdcCacheService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>fdcSampleService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>edcQueryGenerationService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>athenaService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>arangoDbService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.ge.research.semtk</groupId>
-      <artifactId>utilityService</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+  	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphLibrary</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphIngestionService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>hiveService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlQueryService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphStatusService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlGraphResultsService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>nodeGroupStoreService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>ontologyInfoService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>sparqlExtDispatchService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>nodeGroupExecutionService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>nodeGroupService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>fdcCacheService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>fdcSampleService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>edcQueryGenerationService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>	
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>athenaService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>arangoDbService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
+  	<dependency>
+	  <groupId>com.ge.research.semtk</groupId>
+	  <artifactId>utilityService</artifactId>
+	  <version>${project.version}</version>
+	</dependency>
   </dependencies>
-
-  <profiles>
-    <profile>
-      <id>release</id>
-      <!-- Build the dist tarball only when building a release -->
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-                <configuration>
-                  <finalName>semtk-opensource</finalName>
-                  <tarLongFileMode>posix</tarLongFileMode>
-                  <descriptors>
-                    <descriptor>src/assembly/bin.xml</descriptor>
-                  </descriptors>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+ 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>distro-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+			  <finalName>semtk-opensource</finalName>
+			  <tarLongFileMode>posix</tarLongFileMode>
+              <descriptors>
+                <descriptor>src/assembly/bin.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
