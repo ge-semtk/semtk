@@ -9,7 +9,7 @@ Manually download or copy the files below into the `files` subdirectory before b
 - `packer/files/apache-jena-fuseki-3.16.0.tar.gz`: latest Fuseki release
   (download it from <https://jena.apache.org/download/>)
 
-- `packer/files/semtk-opensource-2.2.1-SNAPSHOT-bin.tar.gz`: latest SemTK
+- `packer/files/semtk-opensource-dist.tar.gz`: latest SemTK
   distribution (clone semtk-opensource, run ./build.sh, and copy
   distribution/target/*.tar.gz to files/)
 
