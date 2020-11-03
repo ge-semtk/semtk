@@ -19,7 +19,7 @@ jobs:
     - name: Build SemTK release
       run: |
         mvn -version
-        mvn -B install -DskipTests -Prelease
+        mvn -B install -DskipTests
 
     - name: Upload SemTK dist tarball
       uses: actions/upload-release-asset@v1
@@ -29,4 +29,14 @@ jobs:
         upload_url: ${{ github.event.release.upload_url }}
         asset_path: distribution/target/semtk-opensource-dist.tar.gz
         asset_name: semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload SemTK fat standaloneExecutables jar
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: standaloneExecutables/target/standaloneExecutables-jar-with-dependencies.jar
+        asset_name: semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar
         asset_content_type: application/gzip

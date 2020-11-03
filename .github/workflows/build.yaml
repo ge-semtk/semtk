@@ -21,4 +21,4 @@ jobs:
       # TODO: The tests currently fail in Github Actions
       run: |
         mvn -version
-        mvn -B install -DskipTests
+        mvn -B install -DskipTests -pl '!standaloneExecutables,!distribution'
