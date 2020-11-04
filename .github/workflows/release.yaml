@@ -1,6 +1,7 @@
-# Builds SemTK dist tarball when a release is published:
-#  - Builds SemTK sources
+# Builds SemTK release assets when a release is published:
+#  - Builds SemTK source
 #  - Uploads SemTK dist tarball to GitHub release page
+#  - Uploads SemTK standalone jar to GitHub release page
 
 name: SemTK release build
 
@@ -16,10 +17,16 @@ jobs:
     - name: Check out SemTK source
       uses: actions/checkout@v2
 
-    - name: Build SemTK release
+    - name: Cache local Maven repository
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: maven-${{ hashFiles('**/pom.xml') }}
+
+    - name: Build SemTK source
       run: |
         mvn -version
-        mvn -B install -DskipTests
+        mvn -B package -DskipTests
 
     - name: Upload SemTK dist tarball
       uses: actions/upload-release-asset@v1
