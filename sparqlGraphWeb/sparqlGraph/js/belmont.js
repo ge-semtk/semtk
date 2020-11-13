@@ -2366,8 +2366,10 @@ SemanticNodeGroup.prototype = {
 
         // (remember that membership lists are sorted closest to furthest)
         // get membership list.  Remove unionKey, if any
+        // result: all unions item is a member of but NOT a key member
         var membershipList = this.getUnionMembershipList(snode, optItem, optTarget);
         var key = this.getUnionKey(snode, optItem, optTarget);
+        key = (key == null) ? null : Math.abs(key);
         if (membershipList[0] == key) {
             membershipList = membershipList.slice().splice(1);
         }
@@ -2409,15 +2411,20 @@ SemanticNodeGroup.prototype = {
             }
             subgraph = this.getSubGraph(startNode, stopNodes);
 
-            // do the removal
+            // find all illegal union keys to remove
             var illegals = [];
             for (var nd of subgraph) {
                 illegals = illegals.concat(this.getUnionKeyList(nd));
             }
+
+            // remove illegals
             for (var ill of illegals) {
-                var idx = ret.indexOf(ill);
-                if (idx > -1) {
-                    ret.splice(idx,1);
+                // don't remove key.  It slips in if reverseFlag==true.
+                if (ill != key) {
+                    var idx = ret.indexOf(ill);
+                    if (idx > -1) {
+                        ret.splice(idx,1);
+                    }
                 }
             }
         }

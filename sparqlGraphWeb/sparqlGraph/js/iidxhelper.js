@@ -233,11 +233,21 @@ define([	// properly require.config'ed
             option.selected = (selectedTexts.indexOf(text) > -1);
 
             if (typeof optDisabledList != "undefined" && (optDisabledList.indexOf(text) > -1) ) {
-                option.disabled = true;
-                option.style.color = "red";
-                option.style.textDecoration="line-through";
+                IIDXHelper.setOptionDisabled(option, true);
             }
             select.options.add(option);
+        }
+    };
+
+    IIDXHelper.setOptionDisabled = function(option, value) {
+        if (value) {
+            option.disabled = true;
+            option.style.backgroundColor = "gray";
+            option.style.textDecoration="line-through";
+        } else {
+            option.disabled = false;
+            option.style.backgroundColor = "";
+            option.style.textDecoration="";
         }
     };
 
@@ -312,6 +322,41 @@ define([	// properly require.config'ed
     };
 
     /*
+     * Get list of values for each selected option
+     *
+     * Handle performance and compatibility.
+     * Work for single or multi-select.
+     */
+    IIDXHelper.getSelectTexts = function (select) {
+        var ret = [];
+
+        // fast but not universally supported
+        if (select.selectedOptions != undefined) {
+            for (var i=0; i < select.selectedOptions.length; i++) {
+                ret.push(select.selectedOptions[i].text);
+            }
+
+        // compatible, but can be painfully slow
+        } else {
+            for (var i=0; i < select.options.length; i++) {
+                if (select.options[i].selected) {
+                    ret.push(select.options[i].text);
+                }
+            }
+        }
+        return ret;
+    };
+
+    IIDXHelper.setSelectOptionDisabled = function (select, itemValue, disabledValue) {
+
+        for (var i=0; i < select.options.length; i++) {
+            if (select.options[i].value == itemValue) {
+                IIDXHelper.setOptionDisabled(select.options[i], disabledValue);
+            }
+        }
+    };
+
+    /*
      * Set a select's selectedIndex to the first option with given text
      * If none, de-select all
      * @returns {void}
@@ -320,6 +365,21 @@ define([	// properly require.config'ed
         select.selectedIndex = -1;
         for (var i=0; i < select.options.length; i++) {
             if (select.options[i].text == text) {
+                select.selectedIndex = i;
+                return;
+            }
+        }
+    };
+
+    /*
+     * Set a select's selectedIndex to the first option with given val
+     * If none, de-select all
+     * @returns {void}
+     */
+    IIDXHelper.selectFirstMatchingVal = function (select, val) {
+        select.selectedIndex = -1;
+        for (var i=0; i < select.options.length; i++) {
+            if (select.options[i].value == val) {
                 select.selectedIndex = i;
                 return;
             }

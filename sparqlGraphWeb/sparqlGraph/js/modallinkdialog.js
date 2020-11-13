@@ -55,7 +55,8 @@ define([	// properly require.config'ed
 
         ModalLinkDialog.UNION_NONE = 1000;
         ModalLinkDialog.UNION_NEW =  1001;
-
+        ModalLinkDialog.EMPTY_TEXT = "";
+        ModalLinkDialog.NEW_TEXT = "- new union -";
 		ModalLinkDialog.prototype = {
 
 
@@ -67,29 +68,19 @@ define([	// properly require.config'ed
 			submit : function () {
 
                 // unpack these two UI elements
-                var optMinusUnion = parseInt(document.getElementById("ModalLinkDialog.optMinusUnionSelect").value);
+                var optMinus = parseInt(document.getElementById("ModalLinkDialog.optMinusSelect").value);
                 var reverse = document.getElementById("ModalLinkDialog.reverseCheck").checked;
                 // ...into these three callback params
-                var union;
-                var optMinus;
-                var unionReverse;
-                if (optMinusUnion > 99) {
-                    // union, not optional or minus
-                    union = optMinusUnion - 100 ;
-                    optMinus = NodeItem.OPTIONAL_FALSE;
-                    unionReverse = reverse;
-                } else {
-                    // optional or minus
-                    union = ModalLinkDialog.UNION_NONE;
-                    optMinus = optMinusUnion;
-                    if (reverse) {
-                        if (optMinus == NodeItem.OPTIONAL_TRUE) {
-                            optMinus = NodeItem.OPTIONAL_REVERSE;
-                        } else if (optMinus == NodeItem.MINUS_TRUE) {
-                            optMinus = NodeItem.MINUS_REVERSE;
-                        }
+                var union = parseInt(document.getElementById("ModalLinkDialog.unionSelect").value);
+
+                if (reverse) {
+                    if (optMinus == NodeItem.OPTIONAL_TRUE) {
+                        optMinus = NodeItem.OPTIONAL_REVERSE;
+                    } else if (optMinus == NodeItem.MINUS_TRUE) {
+                        optMinus = NodeItem.MINUS_REVERSE;
                     }
                 }
+
 
 				// return a list containing just the text field
 				this.callback(	this.sourceSNode,
@@ -99,49 +90,58 @@ define([	// properly require.config'ed
 								optMinus,
                                 document.getElementById("ModalLinkDialog.qualifierSelect").value,
                                 union,
-								unionReverse,
+								reverse,
 								document.getElementById("ModalLinkDialog.deleteSelect").value == "true",
 								document.getElementById("ModalLinkDialog.deleteCheck").checked
 							  );
 			},
 
+            // update the select after other inputs on the screen have changed
+            // call with initUnionText to force union, otherwise null rebuilds list and keeps value
+            updateAll : function (e, itemUnionKey) {
+                var itemUnionText = (itemUnionKey == null) ? ModalLinkDialog.EMPTY_TEXT : this.nodegroup.getUnionNameStr(Math.abs(itemUnionKey));
 
-            updateOptMinUnionSelect : function () {
-                var reverseChecked = document.getElementById("ModalLinkDialog.reverseCheck").checked;
+                var reverseCheckbox = document.getElementById("ModalLinkDialog.reverseCheck");
+                var unionSelect = document.getElementById("ModalLinkDialog.unionSelect");
+                var optMinusSelect = document.getElementById("ModalLinkDialog.optMinusSelect");
+                var optMinus = parseInt(optMinusSelect.value);
 
-                var selectList = [
-                    [" ",                NodeItem.OPTIONAL_FALSE   ],
-                    ["optional",         NodeItem.OPTIONAL_TRUE    ],
-                    ["minus",            NodeItem.MINUS_TRUE    ],
-                    ["- new union -",    ModalLinkDialog.UNION_NEW + 100]
+                // get current union selection, or null
+                var selectedUnionTexts = itemUnionText ? [itemUnionText] : IIDXHelper.getSelectTexts(unionSelect);
+
+                // add unions valid for this value of reverseCheckbox
+                var unionList = [
+                    [ModalLinkDialog.EMPTY_TEXT, ModalLinkDialog.UNION_NONE],
+                    [ModalLinkDialog.NEW_TEXT,    ModalLinkDialog.UNION_NEW]
                 ];
 
-                // add unions
                 this.nodegroup.updateUnionMemberships();
-                var unionKeys = this.nodegroup.getLegalUnions(this.sourceSNode, this.item, this.targetSNode, reverseChecked);
-                var itemUnionKey = this.nodegroup.getUnionKey(this.sourceSNode, this.item, this.targetSNode);
-
-                itemUnionKey = (itemUnionKey == null) ? null :  Math.abs(itemUnionKey);
+                var unionKeys = this.nodegroup.getLegalUnions(this.sourceSNode, this.item, this.targetSNode, reverseCheckbox.checked);
 
                 for (var key of unionKeys) {
-                    selectList.push([this.nodegroup.getUnionNameStr(key), key + 100]);
+                    unionList.push([this.nodegroup.getUnionNameStr(key), key]);
                 }
 
-                // set selected
-                var selected = [];
-                var optMinus = this.item.getOptionalMinus(this.targetSNode);
+                // ---- Enable / disable rules ----
 
-                if (itemUnionKey != null) {
-                    selected = [this.nodegroup.getUnionNameStr(itemUnionKey)];
-                } else if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
-                    selected = ["optional"];
-                } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
-                    selected = ["minus"];
-                }
+                // union disables changing reverseCheckbox or opt / minus
+                var unionFlag = (   selectedUnionTexts.length > 0 &&
+                                    selectedUnionTexts[0] != ModalLinkDialog.EMPTY_TEXT &&
+                                    selectedUnionTexts[0] != ModalLinkDialog.NEW_TEXT
+                                );
+                reverseCheckbox.disabled = unionFlag;
 
-                var select = document.getElementById("ModalLinkDialog.optMinusUnionSelect");
-                IIDXHelper.removeAllOptions(select);
-                IIDXHelper.addOptions(select, selectList, selected);
+                // union disables OPTIONAL_TRUE
+                var unionFlag = (   selectedUnionTexts.length > 0 &&
+                                    selectedUnionTexts[0] != ModalLinkDialog.EMPTY_TEXT
+                                );
+                IIDXHelper.setSelectOptionDisabled(optMinusSelect, NodeItem.OPTIONAL_TRUE, unionFlag);
+
+                // OPTIONAL_TRUE disables unions
+                unionSelect.disabled = (optMinus == NodeItem.OPTIONAL_TRUE);
+
+                IIDXHelper.removeAllOptions(unionSelect);
+                IIDXHelper.addOptions(unionSelect, unionList, selectedUnionTexts);
             },
 
 			show : function () {
@@ -155,24 +155,47 @@ define([	// properly require.config'ed
 				var fieldset = IIDXHelper.addFieldset(form);
                 var optMinus = this.item.getOptionalMinus(this.targetSNode);
 
-				// ---- optional minus unions select -----
+				// optional minus select
+                var selectList = [
+                    [" ",                NodeItem.OPTIONAL_FALSE   ],
+                    ["optional",         NodeItem.OPTIONAL_TRUE    ],
+                    ["minus",            NodeItem.MINUS_TRUE    ]
+                ];
 
-                var itemUnionKey = this.nodegroup.getUnionKey(this.sourceSNode, this.item, this.targetSNode);
-                var unionReverse = (itemUnionKey < 0);
+                // set selected
+                var selected = [];
+                var optMinus = this.item.getOptionalMinus(this.targetSNode);
 
+                if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
+                    selected = ["optional"];
+                } else if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
+                    selected = ["minus"];
+                }
 
-				var select = IIDXHelper.createSelect("ModalLinkDialog.optMinusUnionSelect",[],[]);
+				var select = IIDXHelper.createSelect("ModalLinkDialog.optMinusSelect", selectList, selected);
 				select.style.width = "20ch";
-
-                // add reverse check
-                var reverseCheck = IIDXHelper.createVAlignedCheckbox("ModalLinkDialog.reverseCheck",
-                    unionReverse || optMinus == NodeItem.OPTIONAL_REVERSE || optMinus== NodeItem.MINUS_REVERSE );
-                reverseCheck.onclick = this.updateOptMinUnionSelect.bind(this);
-
+                select.onchange = this.updateAll.bind(this);
                 var span = document.createElement("span");
                 span.appendChild(select);
+
+                // add reverse check
+                var itemUnionKey = this.nodegroup.getUnionKey(this.sourceSNode, this.item, this.targetSNode);
+                var unionReverse = (itemUnionKey < 0);
+                var reverseCheck = IIDXHelper.createVAlignedCheckbox("ModalLinkDialog.reverseCheck",
+                    unionReverse || optMinus == NodeItem.OPTIONAL_REVERSE || optMinus== NodeItem.MINUS_REVERSE );
+                reverseCheck.onchange = this.updateAll.bind(this);
                 IIDXHelper.appendCheckBox(span, reverseCheck, "reversed");
-				fieldset.appendChild(IIDXHelper.buildControlGroup("Opt/Minus/Union: ", span));
+				fieldset.appendChild(IIDXHelper.buildControlGroup("Opt/Minus: ", span));
+
+                // union select: create empty placeholder.  updates at the end of this function.
+				var unionSelect = IIDXHelper.createSelect("ModalLinkDialog.unionSelect",[],[]);
+				unionSelect.style.width = "20ch";
+                unionSelect.onchange = this.updateAll.bind(this);
+
+                var span = document.createElement("span");
+                span.appendChild(unionSelect);
+
+				fieldset.appendChild(IIDXHelper.buildControlGroup("Union: ", span));
 
                 // ---- Qualifier ----
                 select = IIDXHelper.createSelect("ModalLinkDialog.qualifierSelect",
@@ -221,7 +244,7 @@ define([	// properly require.config'ed
 
 				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this), "OK", width.toString() + "ch");
 
-                this.updateOptMinUnionSelect();
+                this.updateAll(null, itemUnionKey);
 			},
 
 		};

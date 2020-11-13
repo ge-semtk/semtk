@@ -1151,7 +1151,8 @@ public class NodeGroup {
 	 private ArrayList<Integer> getLegalUnions(Integer key, UnionKeyStr uKeyStr) {
 		 String keyStr = uKeyStr.getStr();
 		 ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
-		 if (membershipList.get(0) == key) {
+		 Integer k = key != null ? Math.abs(key) : null;
+		 if (membershipList.get(0) == k) {
 			 membershipList.remove(0);
 		 }
 		 ArrayList<Integer> ret = new ArrayList<Integer>();
@@ -1205,9 +1206,12 @@ public class NodeGroup {
 				 illegals.addAll(this.getUnionKeyList(nd));
 			 }
 			 for (Integer ill : illegals) {
-				 int idx = ret.indexOf(ill);
-				 if (idx > -1) {
-					 ret.remove(idx);
+				 // don't remove key.  It slips in if reverseFlag==true.
+				 if (ill != key) {
+					 int idx = ret.indexOf(ill);
+					 if (idx > -1) {
+						 ret.remove(idx);
+					 }
 				 }
 			 }
 		 }
