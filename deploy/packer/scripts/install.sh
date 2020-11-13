@@ -46,7 +46,7 @@ systemctl start fuseki
 # Unpack the SemTK distribution
 
 export USER=ubuntu
-tar xfzC semtk-opensource-2.2.1-SNAPSHOT-bin.tar.gz /home/${USER}
+tar xfzC semtk-opensource-dist.tar.gz /home/${USER}
 #mv ENV_OVERRIDE /home/${USER}/semtk-opensource
 cd /home/${USER}/semtk-opensource
 

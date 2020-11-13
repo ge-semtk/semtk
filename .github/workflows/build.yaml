@@ -1,22 +1,30 @@
-name: Build
-on: [push]
+# Builds SemTK on every pull request/push (while ignoring tag-only pushes):
+
+name: SemTK continuous build
+
+on:
+  pull_request:
+    branches: [ '*' ]
+  push:
+    branches: [ '*' ]
+    tags-ignore: [ '*' ]
 
 jobs:
   build:
-    name: Build SemTK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+
     steps:
-      - uses: actions/checkout@v2
+    - name: Check out SemTK source
+      uses: actions/checkout@v2
 
-      - name: Cache Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: maven-${{ hashFiles('**/pom.xml') }}
+    - name: Cache local Maven repository
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: maven-${{ hashFiles('**/pom.xml') }}
 
-      - shell: bash
-        name: Build SemTK
-        run: |
-          # TODO: The tests currently fail in Github Actions.
-          mvn --batch-mode clean install -DskipTests
-
+    - name: Build SemTK source
+      # TODO: The tests currently fail in Github Actions
+      run: |
+        mvn -version
+        mvn -B package -DskipTests -pl '!standaloneExecutables,!distribution'

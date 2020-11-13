@@ -1,7 +1,7 @@
-# Builds SemTK distribution tarball when a release is published:
-#  - Caches Maven repository needed to build SemTK
-#  - Builds SemTK sources
-#  - Uploads SemTK distribution tarball to GitHub release page
+# Builds SemTK release assets when a release is published:
+#  - Builds SemTK source
+#  - Uploads SemTK dist tarball to GitHub release page
+#  - Uploads SemTK standalone jar to GitHub release page
 
 name: SemTK release build
 
@@ -17,23 +17,33 @@ jobs:
     - name: Check out SemTK source
       uses: actions/checkout@v2
 
-    - name: Cache Maven repository
+    - name: Cache local Maven repository
       uses: actions/cache@v2
       with:
-        path: ~/.m2
+        path: ~/.m2/repository
         key: maven-${{ hashFiles('**/pom.xml') }}
 
-    - name: Build SemTK
+    - name: Build SemTK source
       run: |
-        # TODO: The tests currently fail in Github Actions.
-        mvn --batch-mode clean install -DskipTests
+        mvn -version
+        mvn -B package -DskipTests
 
-    - name: Upload SemTK distribution tarball
+    - name: Upload SemTK dist tarball
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./distribution/target/semtk-opensource-dist.tar.gz
-        asset_name: semtk-opensource-${{ steps.get_version.outputs.version }}-dist.tar.gz
+        asset_path: distribution/target/semtk-opensource-dist.tar.gz
+        asset_name: semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload SemTK fat standaloneExecutables jar
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: standaloneExecutables/target/standaloneExecutables-jar-with-dependencies.jar
+        asset_name: semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar
         asset_content_type: application/gzip
