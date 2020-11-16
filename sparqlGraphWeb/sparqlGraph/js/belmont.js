@@ -1910,7 +1910,8 @@ SemanticNodeGroup.prototype = {
 
 			// add the node without messing with any connections...they are
 			// already there.
-			this.addOneNode(newNode, null, null, null);
+            this.SNodeList.push(newNode);
+			this.addOneNode(newNode, null, null, null, false);
 		}
 
         if (jObj.hasOwnProperty("orderBy")) {
@@ -2765,9 +2766,9 @@ SemanticNodeGroup.prototype = {
         	// deleted
     },
 
-	reserveNodeSparqlIDs : function(snode) {
-		// reserve all of a node's sparqlID's
-		// changing them if they are already in use.
+	reserveNodeSparqlIDs : function(snode, legalizeSparqlIDs=true) {
+		// reserve all of a snode's sparqlID's
+		// optLegalizeSparqlIDs: change them if they are already in use.
         // Presumes node is not yet in the nodeGroup
 		var id;
 		var f = new SparqlFormatter();
@@ -2777,7 +2778,7 @@ SemanticNodeGroup.prototype = {
 
 		// sparqlID
 		id = snode.getSparqlID();
-		if (id in nameHash) {
+		if (legalizeSparqlIDs && id in nameHash) {
 			id = f.genSparqlID(id, nameHash);
 			snode.setSparqlID(id);
 		}
@@ -2786,22 +2787,21 @@ SemanticNodeGroup.prototype = {
 		var props = snode.getReturnedPropertyItems();
 		for (var i = 0; i < props.length; i++) {
 			id = props[i].getSparqlID();
-			if (id in nameHash) {
+			if (legalizeSparqlIDs && id in nameHash) {
 				id = f.genSparqlID(id, nameHash);
 				props[i].setSparqlID(id);
 			}
 		}
 	},
 
-	addOneNode : function(newNode, existingNode, linkFromNewUri, linkToNewUri) {
+	addOneNode : function(newNode, existingNode, linkFromNewUri, linkToNewUri, legalizeSparqlIDs=true) {
 		// add a newNode, possibly with a connection either from it or to it
 		// newNode is a SemanticNode. Link it to existingNodeUri
 		// if existingNode != null, then either linkFromNewUri or linkToNewUri
 		// should also be non-null
 		//
 		// return the nodeItem (or null if there was an error)
-
-		this.reserveNodeSparqlIDs(newNode);
+		this.reserveNodeSparqlIDs(newNode, legalizeSparqlIDs);
 
 		this.SNodeList.push(newNode);
 
