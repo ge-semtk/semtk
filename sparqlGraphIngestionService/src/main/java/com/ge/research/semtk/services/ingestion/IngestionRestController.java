@@ -613,7 +613,7 @@ public class IngestionRestController {
 		
 		// set up the logger
 		LoggerRestClient logger = null;
-		logger = loggerConfigInitialization(logger, null);	
+		logger = getLoggerRestClient(logger, null);	
 		ArrayList<DetailsTuple> detailsToLog = null;	
 		
 		RecordProcessResults retval = new RecordProcessResults();
@@ -789,7 +789,7 @@ public class IngestionRestController {
 		SimpleResultSet simpleResult = new SimpleResultSet();
 		
 		// set up the logger
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(prop, ThreadAuthenticator.getThreadUserName());
 				
 		try {
 			
@@ -929,7 +929,7 @@ public class IngestionRestController {
 		return retval.toJson();
 	}	
 	
-	private LoggerRestClient loggerConfigInitialization(LoggerRestClient logger, LoggerClientConfig lcc){
+	private LoggerRestClient getLoggerRestClient(LoggerRestClient logger, LoggerClientConfig lcc){
 		// send a log of the load having occurred.
 		try{	// wrapped in a try block because logging never announces a failure.
 			if(prop.getLoggingEnabled()){

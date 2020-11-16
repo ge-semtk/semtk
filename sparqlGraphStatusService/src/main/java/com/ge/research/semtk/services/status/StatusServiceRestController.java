@@ -103,7 +103,7 @@ public class StatusServiceRestController {
 			String jobId = requestBody.jobId;
 			    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 		    LocalLogger.logToStdOut("Status Service getPercentComplete start JobId=" + jobId);
 	
 	
@@ -142,7 +142,7 @@ public class StatusServiceRestController {
 			String jobId = requestBody.jobId;
 			    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "getStatus start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service getStatus start JobId=" + jobId);
 	
@@ -181,7 +181,7 @@ public class StatusServiceRestController {
 			String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "getStatusMessage start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service getStatusMessage start JobId=" + jobId);
 	
@@ -276,7 +276,7 @@ public class StatusServiceRestController {
 	    
 	    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service waitForPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
 	    	
@@ -314,7 +314,7 @@ public class StatusServiceRestController {
 		    LocalLogger.logToStdErr(Thread.currentThread().getName() + " PRE-LOG: waitForPercentOrMsec sees user: " + ThreadAuthenticator.getThreadUserName());
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "waitForPercentComplete start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service waitForPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
 	    	
@@ -361,7 +361,7 @@ public class StatusServiceRestController {
 		    String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 		    LocalLogger.logToStdOut("Status Service setName: " + requestBody.name );
 	
 		    try {
@@ -400,7 +400,7 @@ public class StatusServiceRestController {
 		    String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 		    LocalLogger.logToStdOut("Status Service/" + ENDPOINT + " increment=" + requestBody.increment + " JobId=" + jobId);
 	
 		    try {
@@ -436,7 +436,7 @@ public class StatusServiceRestController {
 		    String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 		    LocalLogger.logToStdOut("Status Service setPercentComplete " + requestBody.percentComplete + "% JobId=" + jobId);
 	
 		    try {
@@ -472,7 +472,7 @@ public class StatusServiceRestController {
 		    String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "setSuccess start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service setSuccess start JobId=" + jobId);
 	    	try {
@@ -508,7 +508,7 @@ public class StatusServiceRestController {
 		    String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "setFailure start", "JobId", jobId, "Message", requestBody.message);
 	    	LocalLogger.logToStdOut("Status Service setFailure start JobId=" + jobId + " Message=" + requestBody.message);
 	    	
@@ -546,7 +546,7 @@ public class StatusServiceRestController {
 		    String jobId = requestBody.jobId;
 		    
 		    SimpleResultSet res = new SimpleResultSet();
-		    LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop);
+		    LoggerRestClient logger = LoggerRestClient.getInstance(log_prop);
 	    	LoggerRestClient.easyLog(logger, "Status Service", "deleteJob start", "JobId", jobId);
 	    	LocalLogger.logToStdOut("Status Service deleteJob start JobId=" + jobId);
 		    try {

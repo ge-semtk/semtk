@@ -139,12 +139,10 @@ public class NodeGroupExecutionRestController {
 		status_prop.validateWithExit();
 		ingest_prop.validateWithExit();
 
-
 		servicesgraph_props.validateWithExit();
 		log_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
-
 	}
 	
 	@ApiOperation(
@@ -156,7 +154,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getJobStatus(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers){
 		//final String ENDPOINT_NAME="jobStatus";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
@@ -193,7 +191,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getJobStatusMessage(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		//final String ENDPOINT_NAME="jobStatusMessage";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -231,7 +229,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getJobCompletion(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		//final String ENDPOINT_NAME="getJobCompletionCheck";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -272,7 +270,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getJobCompletionPercent(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		//final String ENDPOINT_NAME="getJobCompletionPercentage";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retval = new SimpleResultSet();
 			
@@ -316,7 +314,7 @@ public class NodeGroupExecutionRestController {
 	    
 	    //final String ENDPOINT_NAME="getResultsTable";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 	    	SimpleResultSet retval = new SimpleResultSet();    	
     	
@@ -359,7 +357,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getResultsTable(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		//final String ENDPOINT_NAME="getResultsTable";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			TableResultSet retval = new TableResultSet();
 			
@@ -389,7 +387,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		//final String ENDPOINT_NAME="getResultsJsonLd";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			NodeGroupResultSet retval = new NodeGroupResultSet();
 			
@@ -429,7 +427,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getResultsLocation(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		//final String ENDPOINT_NAME="getResultsLocation";
 		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			TableResultSet retval = new TableResultSet();
 			
@@ -596,7 +594,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
@@ -615,7 +613,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
@@ -635,7 +633,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchSelectJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchSelectById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
@@ -654,7 +652,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchSelectByIdSync(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchSelectByIdSync";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			final int TIMEOUT_SEC = 55;
@@ -711,7 +709,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchSelectJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchSelectFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
@@ -731,7 +729,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchConstructJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchConstructById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
@@ -750,7 +748,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchConstructJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchConstructFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
@@ -766,7 +764,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchConstructForInstanceManipulationById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
@@ -781,7 +779,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchConstructForInstanceManipulationFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
@@ -801,7 +799,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchCountJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchCountById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
@@ -820,7 +818,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchCountJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchCountFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
@@ -840,7 +838,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchFilterJobById(@RequestBody FilterDispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchFilterById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
@@ -859,7 +857,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchFilterJobFromNodegroup(@RequestBody FilterDispatchFromNodeGroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchFilterFromNodegroup";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
@@ -880,7 +878,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchSelectInstanceDataPredicates(@RequestBody InstanceDataPredicatesRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchSelectInstanceDataPredicates";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
 
 		try {		    
@@ -936,7 +934,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchSelectInstanceDataSubjects(@RequestBody InstanceDataClassesRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchSelectInstanceDataSubjects";
 		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
 
 		try {		    
@@ -992,7 +990,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchDeleteJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchDeleteById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
@@ -1011,7 +1009,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchDeleteJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers ){	
 		final String ENDPOINT_NAME="dispatchDeleteFromNodegroup";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
@@ -1031,7 +1029,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchRawSparql(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchRawSparql";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			SimpleResultSet retval = new SimpleResultSet();
@@ -1076,7 +1074,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchRawSparqlUpdate(@RequestBody DispatchRawSparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchRawSparqlUpdate";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			SimpleResultSet retval = new SimpleResultSet();
@@ -1120,7 +1118,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject dispatchClearGraph(@RequestBody SparqlEndpointRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="dispatchClearGraph";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			SimpleResultSet retval = new SimpleResultSet();
@@ -1179,7 +1177,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsNewConnection";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			RecordProcessResults retval = null;
@@ -1212,7 +1210,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsAndTemplateNewConnection";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			RecordProcessResults retval = null;
@@ -1248,7 +1246,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject ingestFromCsvStringsAndTemplateAsync(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsAndTemplateAsync";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			SimpleResultSet retval = null;
@@ -1284,7 +1282,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject ingestFromCsvStringsById(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsById";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getTemplateId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			RecordProcessResults retval = null;
@@ -1318,7 +1316,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject ingestFromCsvStringsByIdAsync(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsByIdAsync";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getTemplateId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			SimpleResultSet retval = null;
@@ -1350,7 +1348,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getRuntimeConstraints(@RequestBody ConstraintsFromIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="getRuntimeConstraintsByNodeGroupID";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodegroupId());
     	try {
 			TableResultSet retval = null;
@@ -1382,7 +1380,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getRuntimeConstraintsFromNodegroup(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="getRuntimeConstraintsByNodeGroup";
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			TableResultSet retval = null;

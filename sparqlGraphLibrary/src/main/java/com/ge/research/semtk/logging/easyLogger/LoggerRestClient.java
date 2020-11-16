@@ -73,8 +73,8 @@ public class LoggerRestClient {
 
 	private String[] getBrowserDetails(){
 		String[] retval = new String[2];
-		retval[0] = this.VERSION_MAKE_AND_MODEL;
-		retval[1] = this.VERSION_IDENTIFIER;
+		retval[0] = VERSION_MAKE_AND_MODEL;
+		retval[1] = VERSION_IDENTIFIER;
 		
 		return retval;
 	}
@@ -145,6 +145,7 @@ public class LoggerRestClient {
 		this.logEvent(action, details, tenants, highLevelTask, eventID, useParent ? this.parentEventStack.peek().toString() : null);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, String parent) throws Exception{
 		if (this.conf.getServerName().isEmpty()) {
 			LocalLogger.logToStdErr("logging is off.  action=" + action);
@@ -181,9 +182,9 @@ public class LoggerRestClient {
 		// create a JSON params object. 
 		JSONObject paramsJson = new JSONObject();
 		paramsJson.put("AppID", this.conf.getApplicationName());
-		paramsJson.put("Browser", this.VERSION_MAKE_AND_MODEL);
-		paramsJson.put("Version", this.VERSION_IDENTIFIER);
-		paramsJson.put("URL", this.URL_PLACEHOLDER);
+		paramsJson.put("Browser", VERSION_MAKE_AND_MODEL);
+		paramsJson.put("Version", VERSION_IDENTIFIER);
+		paramsJson.put("URL", URL_PLACEHOLDER);
 		paramsJson.put("Main", action);
 		if (bigDetailsString != null && !bigDetailsString.isEmpty()) {
 			paramsJson.put("Details", bigDetailsString);
@@ -293,7 +294,7 @@ public class LoggerRestClient {
 	 *  <ampersand>Autowired
 	 *  ResultsLoggingProperties log_prop;
 	 *  
-	 *  Logger logger = Logger.loggerConfigInitialization(log_prop);	
+	 *  Logger logger = Logger.getInstance(log_prop);	
 	 *  Logger.easyLog(logger, "action start", "task weather station");
 	 *  ...
 	 *  Logger.easyLog(logger, "action done", "task weather station", "temperature", "37 deg", "humidity", "60%");
@@ -332,16 +333,26 @@ public class LoggerRestClient {
 		}
 	}
 	
+	@Deprecated // renamed to getInstance()
 	public static LoggerRestClient loggerConfigInitialization(EasyLogEnabledConfigProperties logProps, String userName) {
-		LoggerRestClient ret = loggerConfigInitialization(logProps);
+		return getInstance(logProps, userName);
+	}
+	
+	public static LoggerRestClient getInstance(EasyLogEnabledConfigProperties logProps, String userName) {
+		LoggerRestClient ret = getInstance(logProps);
 		if (ret != null) { ret.setUser(userName); }
 		return ret;
 	}
 	
-	/**
-	 *  Create a logger from an EasyLogEnabledConfigProperties
-	 */
+	@Deprecated // renamed to getInstance()
 	public static LoggerRestClient loggerConfigInitialization(EasyLogEnabledConfigProperties logProps){
+		return getInstance(logProps);
+	}
+	
+	/**
+	 *  Create a logger client from an EasyLogEnabledConfigProperties
+	 */
+	public static LoggerRestClient getInstance(EasyLogEnabledConfigProperties logProps){
 		// send a log of the load having occurred.
 		LoggerRestClient logger = null;
 		try{	// wrapped in a try block because logging never announces a failure.

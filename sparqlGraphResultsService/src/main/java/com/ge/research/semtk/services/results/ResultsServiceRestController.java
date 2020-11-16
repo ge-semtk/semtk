@@ -128,7 +128,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeJsonLdResults", method=RequestMethod.POST)
 	public JSONObject storeJsonLdResults(@RequestBody JsonLdStoreRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
 			// logging
@@ -158,7 +158,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getJsonLdResults", method= RequestMethod.POST)
 	public void getJsonLdResults(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		resp.addHeader("content-type", "application/json; charset=utf-8");
 
 		try {
@@ -184,7 +184,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeJsonBlobResults", method=RequestMethod.POST)
 	public JSONObject storeJsonBlobResults(@RequestBody JsonBlobRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			String blobStr = requestBody.getJsonBlobString();
 			// logging
@@ -218,7 +218,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getJsonBlobResults", method=RequestMethod.POST)
 	public void getJsonBlobResults(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		resp.addHeader("content-type", "application/json; charset=utf-8");
 		try {
 			try{
@@ -247,7 +247,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getResultsFiles", method=RequestMethod.POST)
 	public JSONObject getResultsFiles(@RequestBody JobIdRequest requestBody,  @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
 			final String ENDPOINT_NAME = "getResultsFiles";
@@ -299,7 +299,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
 	public JSONObject storeBinaryFile(@RequestParam("file") MultipartFile file, @RequestParam("jobId") String jobId, HttpServletRequest req, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
 			SimpleResultSet res = null;
@@ -355,7 +355,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeBinaryFilePath", method=RequestMethod.POST)
 	public JSONObject storeBinaryFilePath(@RequestBody ResultsRequestBodyPath requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			LocalLogger.logToStdOut("storeBinaryFilePath as " + ThreadAuthenticator.getThreadUserName());
 			SimpleResultSet res = null;
@@ -410,7 +410,7 @@ public class ResultsServiceRestController {
     @ResponseBody
     public FileSystemResource getBinaryFile(@PathVariable("fileId") String fileId, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			LocalLogger.logToStdOut("getBinaryFile as " + ThreadAuthenticator.getThreadUserName());
 		
@@ -484,7 +484,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeTableResultsJsonInitialize", method=RequestMethod.POST)
 	public JSONObject storeTableResultsJsonInitialize(@RequestBody ResultsRequestBodyInitializeTableResultsJson requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			// logging
 			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonInitialize", "jobId", requestBody.jobId);
@@ -530,7 +530,7 @@ public class ResultsServiceRestController {
 	public JSONObject storeTableResultsJsonAddIncremental(@RequestBody ResultsRequestBodyFileExtContents requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		SimpleResultSet res = new SimpleResultSet();
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 
 		try{
 			String decompressed = Utility.decompress(requestBody.getContents());
@@ -567,7 +567,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/storeTableResultsJsonFinalize", method=RequestMethod.POST)
 	public JSONObject storeTableResultsJsonFinalize(@RequestBody ResultsRequestBodyFinalizeTableResultsJson requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 
 		try {
 			// logging
@@ -607,7 +607,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getTableResultsCsv", method= RequestMethod.POST)
 	public void getTableResultsCsv(@RequestBody ResultsRequestBodyCsvMaxRows requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		resp.addHeader("content-type", "text/plain; charset=utf-8");
 
 		try{			
@@ -650,7 +650,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value= "/getTableResultsJsonForWebClient" , method= RequestMethod.GET)
 	public ResponseEntity<Resource> getTableResultsJsonForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		resp.addHeader("content-type", "application/json; charset=utf-8");
 
 		try{
@@ -680,7 +680,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
 	public void getTableResultsCsvForWebClient(@RequestParam String jobId, @RequestParam(required=false) Integer maxRows, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		TableResultsSerializer retval = null;
 		resp.addHeader("content-type", "text/plain; charset=utf-8");
 
@@ -714,7 +714,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getTableResultsRowCount", method= RequestMethod.POST)
 	public JSONObject getTableResultsRowCount(@RequestBody JobIdRequest requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			SimpleResultSet retTrue = null;
 			
@@ -751,7 +751,7 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		resp.addHeader("content-type", "application/json; charset=utf-8");
         
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		final String ENDPOINT = "getTableResultsJson";
 		try{
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -816,7 +816,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/getResults", method= RequestMethod.POST)
 	public JSONObject getResults(@RequestBody JobIdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try { 
 		    SimpleResultSet res = new SimpleResultSet();
 	    	//LoggerRestClient.easyLog(logger, "Results Service", "getResults", "JobId", requestBody.jobId);    	
@@ -859,7 +859,7 @@ public class ResultsServiceRestController {
 	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)
 	public JSONObject deleteStorage(@RequestBody JobIdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.loggerConfigInitialization(log_prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
 			LocalLogger.logToStdOut("Results Service deleteStorage JobId=" + requestBody.jobId);
