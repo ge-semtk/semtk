@@ -1,0 +1,231 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "Get log events",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://server:port",
+				"dataset": "DATASET"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 12,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "SSO",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/UsageLogging/logEvent#SSO",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?SSO",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "userInfo",
+				"fullURIName": "http://com.ge.research/knowledge/UsageLogging/logEvent#userInfo",
+				"subClassNames": [],
+				"SparqlID": "?userInfo",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "detailValue",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/UsageLogging/logEvent#detailValue",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?detailValue",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "keyName",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/UsageLogging/logEvent#keyName",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?keyName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "detailsTuple",
+				"fullURIName": "http://com.ge.research/knowledge/UsageLogging/logEvent#detailsTuple",
+				"subClassNames": [],
+				"SparqlID": "?detailsTuple",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "description",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/UsageLogging/logEvent#description",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?description",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "eventTime",
+						"ValueType": "dateTime",
+						"relationship": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"UriRelationship": "http://com.ge.research/knowledge/UsageLogging/logEvent#eventTime",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?eventTime",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "parentTask",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://com.ge.research/knowledge/UsageLogging/logEvent#parentTask",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?parentTask",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?detailsTuple"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "details",
+						"ValueType": "detailsTuple",
+						"UriValueType": "http://com.ge.research/knowledge/UsageLogging/logEvent#detailsTuple",
+						"ConnectBy": "details",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/knowledge/UsageLogging/logEvent#details"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?userInfo"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "user",
+						"ValueType": "userInfo",
+						"UriValueType": "http://com.ge.research/knowledge/UsageLogging/logEvent#userInfo",
+						"ConnectBy": "user",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/knowledge/UsageLogging/logEvent#user"
+					}
+				],
+				"NodeName": "event",
+				"fullURIName": "http://com.ge.research/knowledge/UsageLogging/logEvent#event",
+				"subClassNames": [],
+				"SparqlID": "?event",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?eventTime",
+				"func": "desc"
+			}
+		],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?event",
+				"type": "http://com.ge.research/knowledge/UsageLogging/logEvent#event",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?detailsTuple",
+				"type": "http://com.ge.research/knowledge/UsageLogging/logEvent#detailsTuple",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?userInfo",
+				"type": "http://com.ge.research/knowledge/UsageLogging/logEvent#userInfo",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}
