@@ -418,7 +418,7 @@
 
     	for (var i=0; i < targetSNodes.length; i++) {
     		if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
-    			unlinkedTargetNames.push(targetSNodes[i].getSparqlID());
+    			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
     			unlinkedTargetSNodes.push(targetSNodes[i]);
     		}
     	}

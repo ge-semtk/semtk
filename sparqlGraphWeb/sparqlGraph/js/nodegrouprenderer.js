@@ -65,6 +65,7 @@ define([	// properly require.config'ed
             this.canvasdiv.id="NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString();
             this.canvasdiv.style.height="100%";
             this.canvasdiv.style.width="100%";
+
             canvasdiv.appendChild(this.canvasdiv);
 
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
@@ -93,6 +94,16 @@ define([	// properly require.config'ed
         NodegroupRenderer.UNION_COLORS = ["#332288","#117733","#44AA99","#88CCEE","#DDCC77","#CC6677","#AA4499","#882255"];
         // IBM
         NodegroupRenderer.UNION_COLORS = ["#648FFF","#785EF0","#DC267F","#FE6100","#FFB000"];
+        // wong
+        NodegroupRenderer.UNION_COLORS = [
+            "#56B4E9",  // sky blue
+            "#009E73",  // bluish green
+            "#E69F00",  // orange
+            "#D55E00",  // burnt red
+            "#0072B2",  // blue
+            "#F0E442"   // yellow
+        ];
+
 
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
             return {
@@ -268,33 +279,40 @@ define([	// properly require.config'ed
             },
 
             buildEdgeLabel : function(nItem, snode2) {
-                var label = nItem.getKeyName() + nItem.getQualifier(snode2);
-
+                var UNION_SYMBOL = "\u222A ";
+                var label = "";
+                var unionKey = this.nodegroup.getUnionKey(this.nodegroup.getNodeItemParentSNode(nItem), nItem, snode2);
                 var optMinus = nItem.getOptionalMinus(snode2);
-                if (optMinus == NodeItem.OPTIONAL_TRUE) {
-                    label = "optional {\n" + label;
-                } else if (optMinus == NodeItem.OPTIONAL_REVERSE) {
-                    label = label + "\n} optional";
-                } else if (optMinus == NodeItem.MINUS_TRUE) {
-                    label = "minus {\n" + label;
-                } else if (optMinus == NodeItem.MINUS_REVERSE) {
-                    label = label + "\n} minus";
+                var reverseFlag = (unionKey < 0 || optMinus == NodeItem.OPTIONAL_REVERSE || optMinus == NodeItem.MINUS_REVERSE)
+
+                if (reverseFlag) {
+                    label += "} ";
+                }
+                if (unionKey != null) {
+                    label += UNION_SYMBOL + " ";
+                }
+
+                if (optMinus == NodeItem.OPTIONAL_TRUE || optMinus == NodeItem.OPTIONAL_REVERSE) {
+                    label += "optional ";
+                }
+                if (optMinus == NodeItem.MINUS_TRUE || optMinus == NodeItem.MINUS_REVERSE) {
+                    label += "minus ";
+                }
+
+                label += nItem.getKeyName() + nItem.getQualifier(snode2);
+
+                if (false && !reverseFlag) {
+                    label += " {";
                 }
                 return label;
             },
 
             getEdgeKeyname : function(edge) {
                 var ret;
-                // find line with no { or }
-                var lines = edge.options.label.split("\n");
-                for (var l of lines) {
-                    if (l.match(/[{}]/) == null) {
-                        ret = l;
-                        break;
-                    }
-                }
-                // strip out leading union symbol
-                ret = ret.replace(/^\W+\s+/, "");
+                var words = edge.options.label.split(" ");
+
+                // get last word, e.g.: keyname+
+                ret = words[words.length - 1];
                 // strip out spaces and qualifiers
                 ret = ret.replace(/\W+$/, "");
                 return ret;
@@ -323,7 +341,6 @@ define([	// properly require.config'ed
                             var unionMemberColor = this.getUnionMembershipColor(snode, nItem, snode2) || NodegroupRenderer.COLOR_FOREGROUND;
                             var unionColor = this.getUnionColor(nItem, snode2);
                             if (unionColor != null) {
-                                label = "\u222A " + label;
                                 edgeFont.color = unionColor;
                             }
                             var edge = {
@@ -446,7 +463,7 @@ define([	// properly require.config'ed
                 }
 
                 // add a little padding on height and width
-                x = maxWidth + NodegroupRenderer.INDENT;
+                x = maxWidth + NodegroupRenderer.INDENT * 5;
                 y += NodegroupRenderer.VSPACE * 2;
 
                 // set height and width of svg
@@ -614,7 +631,9 @@ define([	// properly require.config'ed
                 text.setAttribute('font-family', "Arial");
                 text.setAttribute('fill', foreground);
 
-                text.innerHTML = snode.getURI(true) + " - " + snode.getBindingOrSparqlID();
+                var uri = snode.getURI(true);
+                var binding = snode.getBindingOrSparqlID();
+                text.innerHTML = uri + ((binding != "?"+uri) ? (" - " + snode.getBindingOrSparqlID()) : "");
                 svg.appendChild(text);
 
                 var height = NodegroupRenderer.VSPACE + size;
@@ -742,7 +761,9 @@ define([	// properly require.config'ed
             measureTextWidth : function (textElem) {
                 var f = textElem.getAttribute("font-size") + " " + textElem.getAttribute("font-family");
                 this.ctx.font = f;
-                return this.ctx.measureText(textElem).width;
+                var ctx_ret =  this.ctx.measureText(textElem.innerHTML).width;
+                console.log("WIDTH " + f + ":" + textElem.innerHTML + "= " + ctx_ret);
+                return ctx_ret;
             },
 
             showConfigDialog : function() {
