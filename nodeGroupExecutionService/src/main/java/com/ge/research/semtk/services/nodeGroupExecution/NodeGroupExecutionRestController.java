@@ -487,6 +487,7 @@ public class NodeGroupExecutionRestController {
 	
 	public JSONObject dispatchAnyJobById(@RequestBody DispatchByIdRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 		
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
@@ -521,6 +522,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
+			LoggerRestClient.easyLog(logger, SERVICE_NAME, "dispatchAnyJobById exception", "message", e.toString());
 			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
@@ -533,6 +535,7 @@ public class NodeGroupExecutionRestController {
 
 	public JSONObject dispatchAnyJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		SimpleResultSet retval = new SimpleResultSet();
 		
 		try{
@@ -573,6 +576,7 @@ public class NodeGroupExecutionRestController {
 
 		}
 		catch(Exception e){
+			LoggerRestClient.easyLog(logger, SERVICE_NAME, "dispatchAnyJobFromNodegroup exception", "message", e.toString());
 			LocalLogger.printStackTrace(e);
 			retval = new SimpleResultSet();
 			retval.setSuccess(false);
