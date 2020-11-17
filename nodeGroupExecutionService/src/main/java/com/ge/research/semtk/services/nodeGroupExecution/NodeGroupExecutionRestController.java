@@ -598,9 +598,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -619,9 +617,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -641,9 +637,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -719,9 +713,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -741,9 +733,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -762,9 +752,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -780,9 +768,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -797,9 +783,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -819,9 +803,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.COUNT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -840,9 +822,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.COUNT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -862,9 +842,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -883,9 +861,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -998,9 +974,7 @@ public class NodeGroupExecutionRestController {
 			} 
 
 			return retval.toJson();
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+
 		} finally {
 			HeadersManager.clearHeaders();
 		}
@@ -1020,9 +994,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
     	try {
 			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.DELETE);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -1041,9 +1013,7 @@ public class NodeGroupExecutionRestController {
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
     	try {
 			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.DELETE);
-    	} catch(Exception e){
-    		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-    		throw e;
+		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
@@ -1318,6 +1288,7 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
+
 				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -1420,6 +1391,7 @@ public class NodeGroupExecutionRestController {
 				
 				retval = new TableResultSet(true);
 				retval.addResults( rtci.getConstrainedItemsDescription() );
+			
 			}
 			catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -1587,6 +1559,7 @@ public class NodeGroupExecutionRestController {
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;
+		
 		try{
 			if(potentialConstraints != null && potentialConstraints.length() > 0 && !potentialConstraints.isEmpty()){
 				// we have something of meaning in the constraints. 
@@ -1598,6 +1571,7 @@ public class NodeGroupExecutionRestController {
 			throw new Exception("getRuntimeConstraintsAsJsonArray :: Unable to deserialize runtime constraints. error recieved was: " + ez.getMessage());
 		}
 		// TODO: add a method for consistency checking the JSON once some constraints are made from the string.
+		
 		return retval;
 	}
 
