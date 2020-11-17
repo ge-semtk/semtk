@@ -25,13 +25,13 @@ package com.ge.research.semtk.load;
 import java.io.InputStream;
 
 import java.time.Instant;
-
-
+import java.util.ArrayList;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 
@@ -146,7 +146,15 @@ public class LoadTracker {
 	
 	public void delete(String fileKey, SparqlEndpointInterface sei, String user, Long startEpoch, Long endEpoch) throws Exception {
 		NodeGroup ng = this.getConstrainedNodeGroup(fileKey, sei, user, startEpoch, endEpoch);
-
+		
+		// nodegroup is too complex for virtuoso??
+		// for FULL_DELETE delete query, remove anything unconstrained
+		ArrayList<Returnable> retList = ng.getReturnedItems();
+		for (Returnable r : retList) {
+			if (r.getValueConstraint() == null) {
+				r.setIsReturned(false);
+			}
+		}
 		String query = ng.generateSparqlDelete(null);
 		this.dataSei.executeQueryAndConfirm(query);
 	}
