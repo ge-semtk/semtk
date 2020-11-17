@@ -37,8 +37,8 @@ define([	// properly require.config'ed
             'visjs/vis.min',
 
 			// shimmed
-            'sparqlgraph/js/belmont'
-
+            'sparqlgraph/js/belmont',
+            'sparqlgraph/js/cookiemanager'
 		],
 
 	function(VisJsHelper, ModalIidx, $, vis) {
@@ -75,6 +75,7 @@ define([	// properly require.config'ed
             this.nodeCallbackData = {};
         };
 
+        NodegroupRenderer.OPTIONS_COOKIE = "ngrenderOptions";
         NodegroupRenderer.SIZE = 12;
         NodegroupRenderer.VSPACE = 4;
         NodegroupRenderer.STROKE = 2;
@@ -106,6 +107,25 @@ define([	// properly require.config'ed
 
 
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
+
+            // try to retrieve physics from cookies
+            var cookiemgr = new CookieManager(document);
+            var optionsStr = cookiemgr.getCookie(NodegroupRenderer.OPTIONS_COOKIE);
+            var physics;
+
+            if (optionsStr && optionsStr != "{}") {
+                physics = JSON.parse(optionsStr);
+            } else {
+                physics = {
+                    barnesHut: {
+                      gravitationalConstant: -4500,
+                      springLength: 110,
+                      avoidOverlap: 0.01,
+                          minVelocity: 0.75
+                      }
+                };
+            }
+
             return {
                 interaction: {
                     navigationButtons: true,
@@ -119,14 +139,7 @@ define([	// properly require.config'ed
                     filter: "layout physics",
                     showButton: true
                 },
-                physics: {
-                    barnesHut: {
-                      gravitationalConstant: -4500,
-                      springLength: 110,
-                      avoidOverlap: 0.01
-                    },
-                    minVelocity: 0.75
-                },
+                physics: physics,
                 edges: {
                     arrows: {
                         to: {
@@ -149,6 +162,7 @@ define([	// properly require.config'ed
                 }
             };
         };
+
 
 		NodegroupRenderer.prototype = {
 
@@ -779,8 +793,18 @@ define([	// properly require.config'ed
                 }
 
                 var m = new ModalIidx("ModalIidxAlert");
-                m.showOK("Network physics", this.configdiv, function(){});
+                m.showOK("Network physics", this.configdiv, this.saveConfigToCookie.bind(this));
+            },
+
+            saveConfigToCookie : function() {
+                var options = this.network.getOptionsFromConfigurator();
+                
+                var cookiemgr = new CookieManager(document);
+                cookiemgr.setCookie(NodegroupRenderer.OPTIONS_COOKIE, JSON.stringify(options.physics));
+
             }
+
+
         }
 
 		return NodegroupRenderer;            // return the constructor

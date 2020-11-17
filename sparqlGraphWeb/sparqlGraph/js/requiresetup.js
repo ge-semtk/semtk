@@ -103,6 +103,10 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 			       ],
 			exports: 'OntologyInfo',
 		};
+    config.shim['sparqlgraph/js/nodegrouprenderer'] = {
+			deps : [ 'sparqlgraph/js/cookiemanager'
+			       ]
+		};
 
 	config.waitseconds = 45;
 
