@@ -35,24 +35,30 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.logging.Details;
 import com.ge.research.semtk.logging.DetailsTuple;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
 
-public class LoggerRestClient {
+// TODO fully take advantage of extending RestClient
+public class LoggerRestClient extends RestClient {
 
 	// short hand to identify the logs written by this tool. 
 	private static final String VERSION_IDENTIFIER = "000002.EXPERIMENTAL";   		// bumped for debug later
 	private static final String VERSION_MAKE_AND_MODEL = "JAVA EASY LOG CLIENT";
 	private static final String URL_PLACEHOLDER = "FROM APPLICATION API CALL";
 	
-	private LoggerClientConfig conf	= null;			// used to coordinate all the actual writing. 
+	private LoggerClientConfig loggerClientConfig	= null;			// used to coordinate all the actual writing. 
 	private Stack parentEventStack = new Stack<UUID>();		// this may be used in the long run.
 	private String sessionID = UUID.randomUUID().toString();		// the ID that is used for the logging session.
 	private long sequenceNumber = -1;				// starts at -1 because the first call will result in it being set to zero
 	private String user;
 	
-	public LoggerRestClient(LoggerClientConfig conf){
-		this.conf = conf;
+	public LoggerRestClient(LoggerClientConfig loggerClientConfig) throws Exception {
+		super(new RestClientConfig(loggerClientConfig.getProtocol(), loggerClientConfig.getServerName(), loggerClientConfig.getLoggingPort(), loggerClientConfig.getLoggingServiceLocation()));
+		this.loggerClientConfig = loggerClientConfig;
 	}
 
 	// get
@@ -147,7 +153,7 @@ public class LoggerRestClient {
 	
 	@SuppressWarnings("unchecked")
 	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, String parent) throws Exception{
-		if (this.conf.getServerName().isEmpty()) {
+		if (this.loggerClientConfig.getServerName().isEmpty()) {
 			LocalLogger.logToStdErr("logging is off.  action=" + action);
 			return;
 		}
@@ -176,12 +182,12 @@ public class LoggerRestClient {
 		 */
 		
 		DefaultHttpClient httpclient = new DefaultHttpClient();
-		HttpPost httppost = new HttpPost(this.conf.getLoggingURLInfo());
-		//LocalLogger.logToStdErr("Logging to: " + this.conf.getLoggingURLInfo() );
+		HttpPost httppost = new HttpPost(this.loggerClientConfig.getLoggingURLInfo());
+		//LocalLogger.logToStdErr("Logging to: " + this.loggerClientConfig.getLoggingURLInfo() );
 
 		// create a JSON params object. 
 		JSONObject paramsJson = new JSONObject();
-		paramsJson.put("AppID", this.conf.getApplicationName());
+		paramsJson.put("AppID", this.loggerClientConfig.getApplicationName());
 		paramsJson.put("Browser", VERSION_MAKE_AND_MODEL);
 		paramsJson.put("Version", VERSION_IDENTIFIER);
 		paramsJson.put("URL", URL_PLACEHOLDER);
@@ -206,7 +212,7 @@ public class LoggerRestClient {
 		HttpEntity entity = new ByteArrayEntity(paramsJson.toJSONString().getBytes("UTF-8"));
 		//httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	    httppost.setEntity(entity);
-		HttpHost targetHost = new HttpHost(this.conf.getServerName(), this.conf.getLoggingPort(), this.conf.getProtocol());
+		HttpHost targetHost = new HttpHost(this.loggerClientConfig.getServerName(), this.loggerClientConfig.getLoggingPort(), this.loggerClientConfig.getProtocol());
 
 		// attempt the logging
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
@@ -214,6 +220,30 @@ public class LoggerRestClient {
 	
 	}
 
+	/**
+	 * Get log events
+	 */
+	public Table execGetLogEvents(String applicationID) throws Exception {
+		TableResultSet retval = new TableResultSet();
+		
+		conf.setServiceEndpoint("/Logging/getLogEvents");
+		this.parametersJSON.put("AppID", applicationID);
+		
+		try{
+			retval = this.executeWithTableResultReturn();
+		} finally{
+			this.reset();
+		}
+		
+		if (! retval.getSuccess()) {
+			throw new Exception(String.format("Failed to retrieve log events for application '%s' Message='%s'", applicationID, retval.getRationaleAsString("\n")));
+		}
+		
+		return retval.getTable();
+	}
+
+	
+	
 	private String serializeTenants(ArrayList<String> tenants) {
 		String retval = null;
 		
