@@ -81,29 +81,40 @@ define([	// properly require.config'ed
         NodegroupRenderer.STROKE = 2;
         NodegroupRenderer.INDENT = 6;
 
-        NodegroupRenderer.COLOR_NODE = "#f7f8fa";
-        NodegroupRenderer.COLOR_GRAB_BAR = '#e1e2e5';
+        NodegroupRenderer.COLOR_NODE = "#f7f8fa";  // light grey
+        NodegroupRenderer.COLOR_GRAB_BAR = "#bbbbbb"; //<-tol '#e1e2e5';  // darker grey
         NodegroupRenderer.COLOR_FOREGROUND = 'black';
         NodegroupRenderer.COLOR_CANVAS = 'white';
-        NodegroupRenderer.COLOR_RETURNED = '#cf1e10';
-        NodegroupRenderer.COLOR_CONSTRAINED = '#3b73b9';
-        NodegroupRenderer.COLOR_RET_CONST = '#3ca17a';
+        NodegroupRenderer.COLOR_RETURNED = "#cc3311"; //<-tol '#cf1e10';     // 'red'
+        NodegroupRenderer.COLOR_CONSTRAINED = "#0077bb"; //<-tol '#3b73b9';  // 'blue'
+        NodegroupRenderer.COLOR_RET_CONST = "#009988"; //<-tol '#3ca17a';    // 'green'
         NodegroupRenderer.INDENT = 6;
 
         // https://davidmathlogic.com/colorblind/
-        // Paul Tol
-        NodegroupRenderer.UNION_COLORS = ["#332288","#117733","#44AA99","#88CCEE","#DDCC77","#CC6677","#AA4499","#882255"];
-        // IBM
-        NodegroupRenderer.UNION_COLORS = ["#648FFF","#785EF0","#DC267F","#FE6100","#FFB000"];
-        // wong
+        // vibrant
+        // Paul Tol  https://personal.sron.nl/~pault/
         NodegroupRenderer.UNION_COLORS = [
-            "#56B4E9",  // sky blue
-            "#009E73",  // bluish green
-            "#E69F00",  // orange
-            "#D55E00",  // burnt red
-            "#0072B2",  // blue
-            "#F0E442"   // yellow
+            "#0077bb",  // blue   (used last  COLOR_CONSTRAINED)
+            "#33bbee",  // cyan     (1st union)
+            "#ee7733",  // orange   (2nd union)
+            "#ee3377",   // magenta (3rd union)
+            "#009988",  // teal     (4th + COLOR_RET_CONST)
+            "#cc3311",  // red      (5th + COLOR_RETURNED)
+            //"#bbbbbb",   // grey
         ];
+
+        //NodegroupRenderer.UNION_COLORS = ["#332288","#117733","#44AA99","#88CCEE","#DDCC77","#CC6677","#AA4499","#882255"];
+        // IBM
+        //NodegroupRenderer.UNION_COLORS = ["#648FFF","#785EF0","#DC267F","#FE6100","#FFB000"];
+        // wong
+        //NodegroupRenderer.UNION_COLORS = [
+        //    "#56B4E9",  // sky blue
+        //    "#009E73",  // bluish green
+        //    "#E69F00",  // orange
+        //    "#D55E00",  // burnt red
+        //    "#0072B2",  // blue
+        //    "#F0E442"   // yellow
+        //];
 
 
         NodegroupRenderer.getDefaultOptions = function(configdiv) {
@@ -798,7 +809,7 @@ define([	// properly require.config'ed
 
             saveConfigToCookie : function() {
                 var options = this.network.getOptionsFromConfigurator();
-                
+
                 var cookiemgr = new CookieManager(document);
                 cookiemgr.setCookie(NodegroupRenderer.OPTIONS_COOKIE, JSON.stringify(options.physics));
 
