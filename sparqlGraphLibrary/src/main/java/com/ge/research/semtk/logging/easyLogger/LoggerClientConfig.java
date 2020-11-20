@@ -16,80 +16,37 @@
  */
 
 
-package com.ge.research.semtk.logging.easyLogger; 
+package com.ge.research.semtk.logging.easyLogger;
 
+import com.ge.research.semtk.services.client.RestClientConfig;
 
-// TODO refactor to extend ClientConfig
-public class LoggerClientConfig {
-	// the Logger Client Config class is used to tell the logging client 
-	// where it expects to find the matching logging service
+public class LoggerClientConfig extends RestClientConfig {
 
-	// required values
-	private String protocol;
-	private String serverName; // may be either the FQDN or IP address.
-	private int loggingPort;
-	private String loggingServiceLocation; // the service endpoint (i.e "/Logging/LogEvent")
-	private String applicationName = "UNKNOWN_APPLICATION";	// should be set by the user at some point.
+	private String applicationName = "UNKNOWN_APPLICATION";	// default
 
-	// constructor default
-	public LoggerClientConfig(String applicationName, String protocol, String serverName, int loggingPort, String loggingServiceLocation) throws Exception{
-		// just create the basic logger config. 
-		if (protocol.isEmpty() && serverName.isEmpty() && loggingServiceLocation.isEmpty()) {
-			// all blank is valid way to turn logging off
-		} else {
-			//validity and null checks.
-			if(!protocol.equalsIgnoreCase("HTTP") && !protocol.equalsIgnoreCase("HTTPS")){
-				throw new Exception("unrecognized protocol used for logger: " + protocol + ". HTTP and HTTPS supported.");
-			}
-			if(serverName == null || serverName == ""){
-				throw new Exception("no logging server name provided.");
-			}
-		}
-		
-		this.protocol = protocol;
-		this.serverName = serverName;
-		this.loggingPort = loggingPort;
-		this.loggingServiceLocation = loggingServiceLocation;
-		
+	public LoggerClientConfig(String applicationName, String serviceProtocol, String serviceServer, int servicePort, String serviceEndpoint) throws Exception{
+		super(serviceProtocol, serviceServer, servicePort, serviceEndpoint);
+
 		if(applicationName != null && applicationName != ""){
-			// if this check fails. the default name will be used. oh well. at least it was logged. 
 			applicationName = applicationName.replaceAll(" ", "_");
 			this.applicationName = applicationName;
 		}
-	}
-	// constructor from 
+	} 
 	
+	public String getApplicationName(){ 
+		return this.applicationName;
+	}
 	
-	// get
-	public String getProtocol(){ return this.protocol; }
-	public String getServerName(){ return this.serverName; }
-	public int getLoggingPort(){ return this.loggingPort; }
-	public String getLoggingServiceLocation(){ return this.loggingServiceLocation; }
-	public String getApplicationName(){ return this.applicationName;}
-	public String getLoggingURLInfo(){
-		return this.protocol + "://" + this.serverName + ":" + this.loggingPort + "/" + this.loggingServiceLocation;
-	}
-	// set
- 	public void setProtocol(String protocol) throws Exception{
-		if(!protocol.equalsIgnoreCase("HTTPS") && !protocol.equalsIgnoreCase("HTTP")){
-			throw new Exception("unrecognized protocol used for logger: " + protocol + ". HTTP and HTTPS supported.");	
-		}
-		this.protocol = protocol;
-	}
-	public void setServerName(String serverName) throws Exception{
-		if(this.serverName == null || this.serverName == ""){
-			throw new Exception("no logging server name provided.");
-		}
-		this.serverName = serverName;
-	}
-	public void setLoggingPort(int loggingPort) throws Exception{
-		// check for valid range:
-		if(loggingPort <= 1024){
-			throw new Exception("Port was null or lower than 1024. this is considered invalid.");
-		}
-		this.loggingPort = loggingPort;
-	}
-	public void setLoggingServiceLocation(String loggingServiceLocation){
-		this.loggingServiceLocation = loggingServiceLocation;
-	}
+	// TODO REMOVE THESE
+	@Deprecated
+	public String getProtocol(){ return getServiceProtocol(); }
+	@Deprecated
+	public String getServerName(){ return getServiceServer(); }
+	@Deprecated
+	public int getLoggingPort(){ return getServicePort(); }
+	@Deprecated
+	public String getLoggingServiceLocation(){ return getServiceEndpoint(); }
+	@Deprecated
+	public String getLoggingURLInfo(){ return getServiceURL(); }
+
 }

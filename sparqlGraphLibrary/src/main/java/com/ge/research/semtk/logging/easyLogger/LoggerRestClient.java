@@ -38,11 +38,12 @@ import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
-import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
 
-// TODO fully take advantage of extending RestClient
+/**
+ * Client for the logging service
+ */
 public class LoggerRestClient extends RestClient {
 
 	// short hand to identify the logs written by this tool. 
@@ -50,18 +51,15 @@ public class LoggerRestClient extends RestClient {
 	private static final String VERSION_MAKE_AND_MODEL = "JAVA EASY LOG CLIENT";
 	private static final String URL_PLACEHOLDER = "FROM APPLICATION API CALL";
 	
-	private LoggerClientConfig loggerClientConfig	= null;			// used to coordinate all the actual writing. 
 	private Stack parentEventStack = new Stack<UUID>();		// this may be used in the long run.
 	private String sessionID = UUID.randomUUID().toString();		// the ID that is used for the logging session.
 	private long sequenceNumber = -1;				// starts at -1 because the first call will result in it being set to zero
 	private String user;
 	
-	public LoggerRestClient(LoggerClientConfig loggerClientConfig) throws Exception {
-		super(new RestClientConfig(loggerClientConfig.getProtocol(), loggerClientConfig.getServerName(), loggerClientConfig.getLoggingPort(), loggerClientConfig.getLoggingServiceLocation()));
-		this.loggerClientConfig = loggerClientConfig;
+	public LoggerRestClient(LoggerClientConfig config) throws Exception {
+		this.conf = config;
 	}
 
-	// get
 	public long getLastSequenceNumber(){
 		// what is the current count
 		return this.sequenceNumber;
@@ -81,10 +79,9 @@ public class LoggerRestClient extends RestClient {
 		String[] retval = new String[2];
 		retval[0] = VERSION_MAKE_AND_MODEL;
 		retval[1] = VERSION_IDENTIFIER;
-		
 		return retval;
 	}
-	//etc
+	
 	public void pushParentEvent(UUID pEvent){
 		this.parentEventStack.push(pEvent); 	// push a new parent event
 	}
@@ -143,6 +140,7 @@ public class LoggerRestClient extends RestClient {
 
 		}
 	}
+	
 	public void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, String parent) throws Exception{
 		logEvent(action, details, tenants, highLevelTask, this.generateActionID(), parent);
 	}
@@ -151,19 +149,13 @@ public class LoggerRestClient extends RestClient {
 		this.logEvent(action, details, tenants, highLevelTask, eventID, useParent ? this.parentEventStack.peek().toString() : null);
 	}
 	
+	// TODO now that this class extends RestClient, use RestClient execute method to simplify the code below
 	@SuppressWarnings("unchecked")
 	private void logEvent(String action,  ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, UUID eventID, String parent) throws Exception{
-		if (this.loggerClientConfig.getServerName().isEmpty()) {
-			LocalLogger.logToStdErr("logging is off.  action=" + action);
-			return;
-		}
-		
-		// the method actually perform the log message sent
-	
+
 		// used to serialize and send the details. 
 		String bigDetailsString = this.serializeDetails(details);
 		String bigTenantString = this.serializeTenants(tenants);
-		
 		
 		/*
 		 *  @RequestParam("AppID") String applicationID, 
@@ -182,12 +174,11 @@ public class LoggerRestClient extends RestClient {
 		 */
 		
 		DefaultHttpClient httpclient = new DefaultHttpClient();
-		HttpPost httppost = new HttpPost(this.loggerClientConfig.getLoggingURLInfo());
-		//LocalLogger.logToStdErr("Logging to: " + this.loggerClientConfig.getLoggingURLInfo() );
+		HttpPost httppost = new HttpPost(((LoggerClientConfig)this.conf).getServiceURL());
 
 		// create a JSON params object. 
 		JSONObject paramsJson = new JSONObject();
-		paramsJson.put("AppID", this.loggerClientConfig.getApplicationName());
+		paramsJson.put("AppID", ((LoggerClientConfig)this.conf).getApplicationName());
 		paramsJson.put("Browser", VERSION_MAKE_AND_MODEL);
 		paramsJson.put("Version", VERSION_IDENTIFIER);
 		paramsJson.put("URL", URL_PLACEHOLDER);
@@ -212,7 +203,7 @@ public class LoggerRestClient extends RestClient {
 		HttpEntity entity = new ByteArrayEntity(paramsJson.toJSONString().getBytes("UTF-8"));
 		//httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	    httppost.setEntity(entity);
-		HttpHost targetHost = new HttpHost(this.loggerClientConfig.getServerName(), this.loggerClientConfig.getLoggingPort(), this.loggerClientConfig.getProtocol());
+		HttpHost targetHost = new HttpHost(conf.getServiceServer(), conf.getServicePort(), conf.getServiceProtocol());
 
 		// attempt the logging
 		httppost.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
@@ -238,11 +229,8 @@ public class LoggerRestClient extends RestClient {
 		if (! retval.getSuccess()) {
 			throw new Exception(String.format("Failed to retrieve log events for application '%s' Message='%s'", applicationID, retval.getRationaleAsString("\n")));
 		}
-		
 		return retval.getTable();
 	}
-
-	
 	
 	private String serializeTenants(ArrayList<String> tenants) {
 		String retval = null;
@@ -285,14 +273,12 @@ public class LoggerRestClient extends RestClient {
 			if(key.equalsIgnoreCase("template")){
 				LocalLogger.logToStdErr(val);
 			}
-			
 			retval += key + "," + val;
-						
 			counterForBreaks += 1;
 		}
-		// send it back.
 		return retval;
 	}
+	
 	/**
 	 * take a new K,V and add it to an existing ArrayList of Details. 
 	 * if the list is null, make one.
@@ -302,22 +288,19 @@ public class LoggerRestClient extends RestClient {
 	 * @return
 	 */
 	public static ArrayList<DetailsTuple> addDetails(String currentKey, String currentValue, ArrayList<DetailsTuple> details){
-		if(details == null){ details = new ArrayList<DetailsTuple>();} // initialize it.
-	
-		// create the new tuple and add it.
+		if(details == null){ details = new ArrayList<DetailsTuple>();}
 		DetailsTuple dt = new DetailsTuple(currentKey, currentValue);
 		details.add(dt);
-		
-		return details;	// send it back
+		return details;
 	}
+	
 	public static String renderSafeString(String inputStr){
 		// a lot of sparql queries (and other objects with embedded quotes and the like0 need to be preprocessed 
 		// to avoid creating issues when inserting into the logs.
 		String retval = "";
-		
-		
 		return retval;
 	}
+	
 	/*
 	 *  Example code for static "easy" functions:
 	 *  
