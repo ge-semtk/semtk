@@ -63,7 +63,7 @@ define([	// properly require.config'ed
 
                 // change sparqlID's into belmont Nodes
                 for (var i=0; i < uriLookupSparqlIDs.length; i++) {
-                    var node = this.importSpec.getNodegroup().getNodeBySparqlID(uriLookupSparqlIDs[i]);
+                    var node = this.importSpec.getNodegroup().getNodeByBindingOrSparqlID(uriLookupSparqlIDs[i]);
                     if (node == null) {
                         throw new Error("Internal error.  Bad sparql id: " + uriLookupSparqlIDs[i]);
                     }
@@ -112,7 +112,7 @@ define([	// properly require.config'ed
                 }
 
                 // get current lookup sparql ids
-                var uriLookup = this.mapping.getUriLookupSparqlIDs();
+                var uriLookup = this.mapping.getUriLookupIDs();
 
                 this.div = document.createElement("div");
 

@@ -157,10 +157,10 @@ define([	// properly require.config'ed
                     return this.uriLookupNodes;
                 },
 
-                getUriLookupSparqlIDs : function () {
+                getUriLookupIDs : function () {
                     var ret = [];
                     for (var i=0; i < this.uriLookupNodes.length; i++) {
-                        ret.push(this.uriLookupNodes[i].getSparqlID());
+                        ret.push(this.uriLookupNodes[i].getBindingOrSparqlID());
                     }
                     return ret;
                 },
@@ -209,7 +209,7 @@ define([	// properly require.config'ed
                         return this.propItem.getKeyName();
                     }
                 },
-                
+
                 isProperty : function() {
                     return (this.propItem != null);
                 },
@@ -243,7 +243,7 @@ define([	// properly require.config'ed
                     }
 
                     if (this.uriLookupNodes.length != 0) {
-                        ret.URILookup = this.getUriLookupSparqlIDs();
+                        ret.URILookup = this.getUriLookupIDs();
                     }
 
 					//mapping

@@ -186,7 +186,7 @@ define([// properly require.config'ed
                 var mapName = mapping.getName();
                 var ret = [];
                 for (var i=0; i < this.mapList.length; i++) {
-					if (this.mapList[i].getUriLookupSparqlIDs().indexOf(mapName) > -1) {
+					if (this.mapList[i].getUriLookupIDs().indexOf(mapName) > -1) {
                         ret.push(this.mapList[i]);
                     }
 				}

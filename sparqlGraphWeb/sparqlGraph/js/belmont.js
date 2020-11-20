@@ -3512,6 +3512,16 @@ SemanticNodeGroup.prototype = {
 		return null;
 	},
 
+    getNodeByBindingOrSparqlID : function(id) {
+		// gets first node by uri, or null if it doesn't exist
+		for (var i = 0; i < this.SNodeList.length; i++) {
+			if (this.SNodeList[i].getBindingOrSparqlID() == id) {
+				return this.SNodeList[i];
+			}
+		}
+		return null;
+	},
+
     getReturnedItems : function () {
         var ret = [];
 
