@@ -135,7 +135,7 @@ public class Node extends Returnable {
 		
 		this.addReturnableJson(ret);
 		
-		ret.put("instanceValue", this.instanceValue != null ? this.instanceValue : new JSONArray());
+		ret.put("instanceValue", this.instanceValue);
 		ret.put("deletionMode", this.deletionMode.name());
 		
 		return ret;
