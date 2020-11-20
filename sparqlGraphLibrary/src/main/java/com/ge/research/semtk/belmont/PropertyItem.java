@@ -38,7 +38,7 @@ public class PropertyItem extends Returnable {
 	private String valueTypeURI = null;  
 	private String uriRelationship = null; // the full URI of the relationship
 	
-	private String fullURIName = null;
+	private String fullURIName = "";
 	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
 	

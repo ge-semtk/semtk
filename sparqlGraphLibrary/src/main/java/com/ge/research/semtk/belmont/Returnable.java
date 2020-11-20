@@ -22,7 +22,7 @@ import org.json.simple.JSONObject;
 
 public abstract class Returnable {
 	
-	protected String sparqlID = null;
+	protected String sparqlID = "";
 	protected Boolean isReturned = false;
 	protected Boolean isTypeReturned = false;
 	protected Boolean isRuntimeConstrained = false;

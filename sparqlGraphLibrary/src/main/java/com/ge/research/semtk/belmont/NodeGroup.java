@@ -3174,6 +3174,13 @@ public class NodeGroup {
 		return newID;
 	}
 	
+	/**
+	 * Adds a class if there is a path, otherwise returns null
+	 * @param classURI
+	 * @param oInfo
+	 * @return Node
+	 * @throws Exception
+	 */
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo) throws Exception  {
 		return this.addClassFirstPath(classURI, oInfo, null, false);
 	}

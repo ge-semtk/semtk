@@ -44,35 +44,35 @@ public class SparqlGraphJson {
 	
 	static final String JKEY_SPARQLCONN = "sparqlConn";
 	
-	static final String JKEY_IMPORTSPEC = "importSpec";
-	static final String JKEY_IS_VERSION = "version";
-	static final String JKEY_IS_BASE_URI = "baseURI";
-	static final String JKEY_IS_COLUMNS = "columns";
-	static final String JKEY_IS_COL_COL_ID = "colId";
-	static final String JKEY_IS_COL_COL_NAME = "colName";
-	static final String JKEY_IS_DATA_VALIDATOR = "dataValidator";
-	static final String JKEY_IS_TEXTS = "texts";
-	static final String JKEY_IS_TEXT_ID = "textId";
-	static final String JKEY_IS_TEXT_TEXT = "text";
-	static final String JKEY_IS_TRANSFORMS = "transforms";
-	static final String JKEY_IS_TRANS_ID = "transId";
-	static final String JKEY_IS_TRANS_NAME = "name";
-	static final String JKEY_IS_TRANS_TYPE = "transType";
-	static final String JKEY_IS_TRANS_ARG1 = "arg1";
-	static final String JKEY_IS_TRANS_ARG2 = "arg2";
-	static final String JKEY_IS_NODES = "nodes";
-	static final String JKEY_IS_NODE_SPARQL_ID = "sparqlID";
-	static final String JKEY_IS_NODE_TYPE = "type";
-	static final String JKEY_IS_NODE_LOOKUP_MODE = "URILookupMode";
-	static final String JKEY_IS_URI_LOOKUP = "URILookup";
-	static final String JKEY_IS_MAPPING = "mapping";
-	static final String JKEY_IS_MAPPING_TEXT_ID = "textId";
-	static final String JKEY_IS_MAPPING_TEXT = "text";
-	static final String JKEY_IS_MAPPING_COL_ID = "colId";
-	static final String JKEY_IS_MAPPING_COL_NAME = "colName";
-	static final String JKEY_IS_MAPPING_TRANSFORM_LIST = "transformList";
-	static final String JKEY_IS_MAPPING_PROPS = "props";
-	static final String JKEY_IS_MAPPING_PROPS_URI_REL = "URIRelation";
+	public static final String JKEY_IMPORTSPEC = "importSpec";
+	public static final String JKEY_IS_VERSION = "version";
+	public static final String JKEY_IS_BASE_URI = "baseURI";
+	public static final String JKEY_IS_COLUMNS = "columns";
+	public static final String JKEY_IS_COL_COL_ID = "colId";
+	public static final String JKEY_IS_COL_COL_NAME = "colName";
+	public static final String JKEY_IS_DATA_VALIDATOR = "dataValidator";
+	public static final String JKEY_IS_TEXTS = "texts";
+	public static final String JKEY_IS_TEXT_ID = "textId";
+	public static final String JKEY_IS_TEXT_TEXT = "text";
+	public static final String JKEY_IS_TRANSFORMS = "transforms";
+	public static final String JKEY_IS_TRANS_ID = "transId";
+	public static final String JKEY_IS_TRANS_NAME = "name";
+	public static final String JKEY_IS_TRANS_TYPE = "transType";
+	public static final String JKEY_IS_TRANS_ARG1 = "arg1";
+	public static final String JKEY_IS_TRANS_ARG2 = "arg2";
+	public static final String JKEY_IS_NODES = "nodes";
+	public static final String JKEY_IS_NODE_SPARQL_ID = "sparqlID";
+	public static final String JKEY_IS_NODE_TYPE = "type";
+	public static final String JKEY_IS_NODE_LOOKUP_MODE = "URILookupMode";
+	public static final String JKEY_IS_URI_LOOKUP = "URILookup";
+	public static final String JKEY_IS_MAPPING = "mapping";
+	public static final String JKEY_IS_MAPPING_TEXT_ID = "textId";
+	public static final String JKEY_IS_MAPPING_TEXT = "text";
+	public static final String JKEY_IS_MAPPING_COL_ID = "colId";
+	public static final String JKEY_IS_MAPPING_COL_NAME = "colName";
+	public static final String JKEY_IS_MAPPING_TRANSFORM_LIST = "transformList";
+	public static final String JKEY_IS_PROPS = "props";
+	public static final String JKEY_IS_MAPPING_PROPS_URI_REL = "URIRelation";
 
 
 	

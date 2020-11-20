@@ -61,9 +61,9 @@ import com.ge.research.semtk.utility.Utility;
  * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
  */
 public class ImportSpecHandler {
-	static final String LOOKUP_MODE_NO_CREATE = 	"noCreate";    // should be 'errorIfMissing'
-	static final String LOOKUP_MODE_CREATE =        "createIfMissing";
-	static final String LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";  // this is a place-holder, not implemented yet
+	public static final String LOOKUP_MODE_NO_CREATE = 	   "noCreate";    // should be 'errorIfMissing'
+	public static final String LOOKUP_MODE_CREATE =        "createIfMissing";
+	public static final String LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";  // this is a place-holder, not implemented yet
 	
 	JSONObject importspec = null;
 	
@@ -338,8 +338,8 @@ public class ImportSpecHandler {
 			}
 			
 			// ---- Properties ----
-			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_PROPS)) {
-				JSONArray propsJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS);
+			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_PROPS)) {
+				JSONArray propsJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_PROPS);
 				Node snode = tmpImportNg.getNode(nodeIndex);
 				
 				for (int p=0; p < propsJsonArr.size(); p++) {

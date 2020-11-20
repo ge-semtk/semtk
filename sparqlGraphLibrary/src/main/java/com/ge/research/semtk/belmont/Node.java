@@ -131,10 +131,11 @@ public class Node extends Returnable {
 		ret.put("nodeList", jNodeList);
 		ret.put("NodeName", this.nodeName);
 		ret.put("fullURIName", this.fullURIname);
+		ret.put("valueConstraint", this.constraints != null ? this.constraints.toString(): "");
 		
 		this.addReturnableJson(ret);
 		
-		ret.put("instanceValue", this.getInstanceValue());
+		ret.put("instanceValue", this.instanceValue != null ? this.instanceValue : new JSONArray());
 		ret.put("deletionMode", this.deletionMode.name());
 		
 		return ret;
