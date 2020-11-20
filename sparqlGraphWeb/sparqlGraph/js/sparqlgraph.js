@@ -933,7 +933,7 @@
             } else if (gConn && ! conn.equals(gConn, true)) {
                 ModalIidx.choose("New Connection",
                                  "Nodegroup is from a different SPARQL connection<br><br>Which one do you want to use?",
-                                 ["Cancel",     "Keep Current",                     "From File"],
+                                 ["Cancel",     "Keep Current",                     "From Nodegroup"],
                                  [function(){}, doQueryLoadFile2.bind(this, sgJson, optNgName), doQueryLoadConn.bind(this, sgJson, conn, optNgName)]
                                  );
 
