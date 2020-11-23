@@ -135,6 +135,7 @@ public class PropertyItem extends Returnable {
 	public void reset() {
 		this.constraints = null;
 		this.isReturned = false;
+		this.isBindingReturned = false;
 		this.optMinus = OPT_MINUS_NONE;
 		this.isMarkedForDeletion = false;
 		this.isRuntimeConstrained = false;

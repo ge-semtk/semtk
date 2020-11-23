@@ -363,6 +363,7 @@ public class Node extends Returnable {
 	public void reset() {
 		this.instanceValue = null;
 		this.isReturned = false;
+		this.isBindingReturned = false;
 		this.deletionMode = NodeDeletionTypes.NO_DELETE;
 		this.constraints = null;
 		this.isRuntimeConstrained = false;

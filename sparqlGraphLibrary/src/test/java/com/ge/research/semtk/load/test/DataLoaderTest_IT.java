@@ -870,7 +870,9 @@ public class DataLoaderTest_IT {
 				
 				
 		// Try URI lookup
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+		// This nodegroup has some cells that should be pruned
+		// One cell has bindings
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDescXtras.json");
 
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescData.csv", false);
 		
@@ -878,6 +880,7 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		loadData(dl, "doLookupBatteryIdAddDesc LOOKUP", cacheFlag);
 		
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescResults.csv");
 		
 	}
