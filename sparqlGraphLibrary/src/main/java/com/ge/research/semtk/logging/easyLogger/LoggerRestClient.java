@@ -74,13 +74,6 @@ public class LoggerRestClient extends RestClient {
 	private UUID generateActionID(){
 		return UUID.randomUUID();
 	}
-
-	private String[] getBrowserDetails(){
-		String[] retval = new String[2];
-		retval[0] = VERSION_MAKE_AND_MODEL;
-		retval[1] = VERSION_IDENTIFIER;
-		return retval;
-	}
 	
 	public void pushParentEvent(UUID pEvent){
 		this.parentEventStack.push(pEvent); 	// push a new parent event
@@ -98,15 +91,14 @@ public class LoggerRestClient extends RestClient {
 		logEvent(action, details == null ? null : details.asList(), tenants, highLevelTask);
 	}
 	
-	// log event
+	// log event without a known/labeled parent
 	public void logEvent(String action, ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask){
-		// log an event without a known/labeled parent.
 		try {
 			UUID eventID = this.generateActionID();	
 			this.logEvent(action, details, tenants, highLevelTask, eventID, false);
 		} catch (Exception e) {
-			// Exceptions are swallowed as a log attempt generates no feedback
-			LocalLogger.logToStdErr("logging failed due to: " + e.getMessage());
+			// swallow exception but print failure to log
+			LocalLogger.logToStdErr("Logging to " + this.conf.getServiceURL() + " failed: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
 		}
 	}
@@ -127,17 +119,16 @@ public class LoggerRestClient extends RestClient {
 		logEventUseParent(action, details, null, highLevelTask, pushParent);
 	}
 	
+	// log an event which includes a parent event from the stack
 	public void logEventUseParent(String action, ArrayList<DetailsTuple> details, ArrayList<String> tenants, String highLevelTask, Boolean pushParent){
-		// log an event which includes a parent event from the stack
 		try {
 			UUID eventID = this.generateActionID();
 			if(pushParent){ this.parentEventStack.push(eventID); }
 			this.logEvent(action, details, tenants, highLevelTask, eventID, true);
-			
 		} catch (Exception e) {
-			// Exceptions are swallowed as a log attempt generates no feedback
-			LocalLogger.logToStdErr("logging failed due to: " + e.getMessage());
-
+			// swallow exception but print failure to log
+			LocalLogger.logToStdErr("Logging to " + this.conf.getServiceURL() + " failed: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
 		}
 	}
 	
@@ -214,6 +205,7 @@ public class LoggerRestClient extends RestClient {
 	/**
 	 * Get log events
 	 */
+	@SuppressWarnings("unchecked")
 	public Table execGetLogEvents(String applicationID) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
@@ -381,10 +373,10 @@ public class LoggerRestClient extends RestClient {
 				logger = new LoggerRestClient(lcc);
 			}
 		}
-		catch(Exception eee){
-			// do nothing. 
-			LocalLogger.logToStdErr("logging failed. No other details available.");
-			LocalLogger.printStackTrace(eee);
+		catch(Exception e){
+			// swallow exception but print failure to log
+			LocalLogger.logToStdErr("Failed to create instance of LoggerRestClient: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
 		}
 		return logger;
 	}
