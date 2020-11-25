@@ -36,6 +36,9 @@ public class BelmontUtil {
 		DateFormat xsdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		return xsdFormat.format(d);
 	}
+	
+	private static Pattern PATTERN_IS2 = Pattern.compile("^is[A-Z].*");
+	private static Pattern PATTERN_IS3 = Pattern.compile("^is[-_].*");
 	public static String generateSparqlID(String proposedName, HashSet<String> reservedNameHash){
 		// accepts a suggested sparqlID and outputs either that ID or one based off it.
 		String retval = proposedName; 	// assume the proposed name is fine. 
@@ -48,9 +51,14 @@ public class BelmontUtil {
 		if(retval.startsWith("has")){
 			retval = retval.substring(3);
 		}
-		if(retval.startsWith("is")){
+		
+		if (PATTERN_IS2.matcher(retval).matches()) {
 			retval = retval.substring(2);
 		}
+		if (PATTERN_IS3.matcher(retval).matches()) {
+			retval = retval.substring(3);
+		}
+	
 		// remove leading underscore, if any
 		if(retval.startsWith("_")){
 			retval = retval.substring(1);
