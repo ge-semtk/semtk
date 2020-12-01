@@ -1910,7 +1910,6 @@ SemanticNodeGroup.prototype = {
 
 			// add the node without messing with any connections...they are
 			// already there.
-            this.SNodeList.push(newNode);
 			this.addOneNode(newNode, null, null, null, false);
 		}
 
