@@ -206,7 +206,7 @@ define([	// properly require.config'ed
                     if (this.isNode()) {
                         return this.node.getBindingOrSparqlID();
                     } else {
-                        return this.propItem.getKeyName();
+                        return this.propItem.getBindingOrSparqlID() || this.propItem.getKeyName();
                     }
                 },
 
