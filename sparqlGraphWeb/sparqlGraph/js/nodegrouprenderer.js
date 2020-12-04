@@ -128,12 +128,16 @@ define([	// properly require.config'ed
                 physics = JSON.parse(optionsStr);
             } else {
                 physics = {
-                    barnesHut: {
-                      gravitationalConstant: -4500,
-                      springLength: 110,
-                      avoidOverlap: 0.01,
-                          minVelocity: 0.75
-                      }
+                    "barnesHut": {
+                      "gravitationalConstant": -11500,
+                      "centralGravity": 0.1,
+                      "springLength": 215,
+                      "springConstant": 0.04,
+                      "damping": 0.09,
+                      "avoidOverlap": 0
+                    },
+                    "maxVelocity": 50,
+                    "minVelocity": 0.75
                 };
             }
 
