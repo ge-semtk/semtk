@@ -160,7 +160,7 @@ define([	// properly require.config'ed
                 getUriLookupIDs : function () {
                     var ret = [];
                     for (var i=0; i < this.uriLookupNodes.length; i++) {
-                        ret.push(this.uriLookupNodes[i].getBindingOrSparqlID());
+                        ret.push(this.uriLookupNodes[i].getSparqlID());
                     }
                     return ret;
                 },
@@ -201,7 +201,18 @@ define([	// properly require.config'ed
 					return ImportMapping.staticGenUniqueKey(this.getNodeSparqlId(), this.getPropUri());
 				},
 
-                // return ?SparqlID of node or keyname of propItem
+                // get the name that would match a URI LOOKUP
+                // e.g. nodes are looked up by sparqlID
+                getUriLookupName : function () {
+                    if (this.isNode()) {
+                        return this.node.getSparqlID();
+                    } else {
+                        return this.propItem.getKeyName();
+                    }
+                },
+
+                // get the display name
+                // e.g. bindings are displayed where available
                 getName : function () {
                     if (this.isNode()) {
                         return this.node.getBindingOrSparqlID();

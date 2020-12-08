@@ -183,7 +183,7 @@ define([// properly require.config'ed
 
             // get any mappings that have uriLookups containing this mapping
             getLookupMappings : function(mapping) {
-                var mapName = mapping.getName();
+                var mapName = mapping.getUriLookupName();
                 var ret = [];
                 for (var i=0; i < this.mapList.length; i++) {
 					if (this.mapList[i].getUriLookupIDs().indexOf(mapName) > -1) {
