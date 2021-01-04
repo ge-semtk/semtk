@@ -45,7 +45,7 @@ public class DataLoadBatchHandler {
 	
 	public DataLoadBatchHandler(SparqlGraphJson sgJson, SparqlEndpointInterface endpoint) throws Exception{
 		this.oInfo = sgJson.getOntologyInfo();
-		this.importSpec = sgJson.getImportSpec();
+		this.importSpec = sgJson.getImportSpecHandler();
 		this.importSpec.setEndpoint(endpoint);
 		
 		if (sgJson.getImportSpecJson() == null) {

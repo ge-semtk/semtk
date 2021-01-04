@@ -66,6 +66,7 @@
                   'sparqlgraph/js/modaliidx',
 	              'sparqlgraph/js/modalloaddialog',
                   'sparqlgraph/js/modalstoredialog',
+                  'sparqlgraph/js/msiclientnodegroupservice',
                   'sparqlgraph/js/msiclientnodegroupstore',
                   'sparqlgraph/js/nodegrouprenderer',
                   'sparqlgraph/js/uploadtab',
@@ -75,7 +76,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -112,7 +113,8 @@
             setTabButton("explore-tab-but", false);
 
 	    	// load gMappingTab
-			gMappingTab =  new MappingTab(importoptionsdiv, importcanvasdiv, importcolsdiv, gUploadTab.setDataFile.bind(gUploadTab), logAndAlert );
+            var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+			gMappingTab =  new MappingTab(importoptionsdiv, importcanvasdiv, importcolsdiv, gUploadTab.setDataFile.bind(gUploadTab), logAndAlert, ngClient );
 	    	setTabButton("mapping-tab-but", false);
 
             // load gExploreTab
@@ -661,7 +663,7 @@
 
 		setStatus("");
 		guiTreeNonEmpty();
-		gMappingTab.updateNodegroup(gNodeGroup);
+		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 		logEvent("SG Load Success");
@@ -686,7 +688,7 @@
             gExploreTab.setConn(gConn);
             gExploreTab.draw();
 
-	    	gMappingTab.updateNodegroup(gNodeGroup);
+	    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
     	});
@@ -1028,7 +1030,7 @@
 
             buildQuery();
 
-            gMappingTab.load(gNodeGroup, sgJson.getMappingTabJson());
+            gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
 
         });
     };
@@ -1052,9 +1054,9 @@
                      'sparqlgraph/js/iidxhelper'],
                     function(SparqlGraphJson, IIDXHelper) {
     			// make sure importSpec is in sync
-    			gMappingTab.updateNodegroup(gNodeGroup);
+    			gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, deflateFlag);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag);
 
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
@@ -1401,7 +1403,7 @@
 
         require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
 
-            gMappingTab.updateNodegroup(gNodeGroup);
+            gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
             // save user when done
             var doneCallback = function () {
@@ -1409,7 +1411,7 @@
                 nodeGroupChanged(false);
             }
 
-            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab, true);
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true);
             gStoreDialog.launchStoreDialog(sgJson, doneCallback);
 
         });
@@ -1550,7 +1552,7 @@
     var doUnload = function () {
     	clearEverything();
 
-    	gMappingTab.updateNodegroup(gNodeGroup);
+    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
     };
 
@@ -2030,7 +2032,7 @@
         gExploreTab.stopLayout();
 
 		// PEC TODO: this overwrites everything each time
-		gMappingTab.updateNodegroup(gNodeGroup);
+		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
         resizeWindow();
 	};

@@ -185,7 +185,7 @@ public class DataLoaderTest_IT {
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
-		String prefix = sgJson.getImportSpec().getUriPrefix();
+		String prefix = sgJson.getImportSpecHandler().getUriPrefix();
 		String uri = prefix + "Cell_abcdE_tEst";
 
 		// import
@@ -365,7 +365,7 @@ public class DataLoaderTest_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the "E"s in the column value but not the text "Cell_"
-		String prefix = sgJson.getImportSpec().getUriPrefix();
+		String prefix = sgJson.getImportSpecHandler().getUriPrefix();
 		uri = prefix + "Cell_" + uri.replaceAll("e", "E");
 
 		TestGraph.clearGraph();
@@ -1392,7 +1392,7 @@ public class DataLoaderTest_IT {
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
-		String prefix = sgJson.getImportSpec().getUriPrefix();
+		String prefix = sgJson.getImportSpecHandler().getUriPrefix();
 		uri = prefix + "Cell_" + uri.replaceAll("e", "E");
 
 

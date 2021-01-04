@@ -791,7 +791,7 @@ define([	// properly require.config'ed
                 var f = textElem.getAttribute("font-size") + " " + textElem.getAttribute("font-family");
                 this.ctx.font = f;
                 var ctx_ret =  this.ctx.measureText(textElem.innerHTML).width;
-                console.log("WIDTH " + f + ":" + textElem.innerHTML + "= " + ctx_ret);
+                //console.log("WIDTH " + f + ":" + textElem.innerHTML + "= " + ctx_ret);
                 return ctx_ret;
             },
 

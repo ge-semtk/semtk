@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.utility.ImportSpec;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
@@ -521,7 +522,7 @@ public class NodeGroupServiceRestController {
 		try {
 			
 			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
-			ImportSpecHandler handler = sgJson.getImportSpec();
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
 			String colNames[] = handler.getColNamesUsed();
 			
 			retval.addResult("columnNames", colNames);
@@ -549,7 +550,7 @@ public class NodeGroupServiceRestController {
 		try {
 			
 			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
-			ImportSpecHandler handler = sgJson.getImportSpec();
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
 			retval.addResult("columnNames", handler.getColNamesUsed());
 			retval.addResult("dataValidator", handler.getDataValidator().toJsonArray());
 			retval.setSuccess(true);
@@ -569,15 +570,25 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getSampleIngestionCSV", method=RequestMethod.POST)
-	public JSONObject getSampleIngestionCSV(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject getSampleIngestionCSV(@RequestBody SampleCsvRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {
 			
 			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
-			ImportSpecHandler handler = sgJson.getImportSpec();
-			String sampleCSV = handler.getSampleIngestionCSV();
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
+			
+			String sampleCSV="";
+			switch (requestBody.getFormat()) {
+			case("default"):
+				sampleCSV = handler.getSampleIngestionCSV();
+				break;
+			case "simple":
+				sampleCSV = handler.getSampleCSV();
+				break;
+			default:
+			} // getter threw exception
 			
 			retval.addResult("sampleCSV", sampleCSV);
 			retval.setSuccess(true);
@@ -641,7 +652,7 @@ public class NodeGroupServiceRestController {
 			SparqlGraphJson [] sgJsonArr = requestBody.getSparqlGraphJsonArray();
 			ArrayList<ImportSpecHandler> specList = new ArrayList<>();
 			for (int i=0; i < sgJsonArr.length; i++) {
-				specList.add(sgJsonArr[i].getImportSpec());
+				specList.add(sgJsonArr[i].getImportSpecHandler());
 			}
 			
 			String sampleCSV = ImportSpecHandler.getSampleIngestionCSV(specList);
@@ -769,6 +780,54 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 
+	@ApiOperation(
+			value="Build default importSpec from returns in nodegroup",
+			notes="Intended for use by the SPARQLgraph client.  Not too useful otherwise."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/setImportSpecFromReturns", method=RequestMethod.POST)
+	public JSONObject setImportSpecFromReturns(@RequestBody SetImportSpecRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try{
+			
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			NodeGroup ng = sgJson.getNodeGroup();
+			ImportSpecHandler isHandler = sgJson.getImportSpecHandler();
+			ImportSpec oldSpec = isHandler == null ? new ImportSpec() : isHandler.getImportSpec();
+			ImportSpec newSpec;
+			
+			// generate the columns  OR  copy the old spec
+			if (requestBody.getAction().equals("Build from nodegroup")) {
+				newSpec = ImportSpec.createSpecFromReturns(ng);
+			} else {
+				newSpec = oldSpec;
+			}
+			
+			// add URI Lookups
+			if (!requestBody.getLookupRegex().isEmpty()) {
+				newSpec.addURILookups(ng, requestBody.getLookupRegex(), requestBody.getLookupMode());
+			}
+			
+			// copy forward any options if importSpec was sent inside sgjson
+			if (isHandler != null) {
+				newSpec.setBaseURI(oldSpec.getBaseURI());
+			}
+			
+			// return
+			sgJson.setImportSpec(newSpec);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "setImportSpecFromReturns", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();		
+	}
 	
 	/**
 	 * Retrieve oInfo.

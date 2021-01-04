@@ -63,16 +63,9 @@ public class MappingItem {
 		return ret;
 	}
 	
-	public int getColumnIndex() {
-		return columnIndex;
-	}
-
-	public void setColumnIndex(int columnIndex) {
-		this.columnIndex = columnIndex;
-	}
-
-	public Transform[] getTransformList() {
-		return transformList;
+	
+	public MappingItem() {
+		super();
 	}
 	/**
 	 * Create from JSON with lots of help from hash tables to make this super-efficient
@@ -83,29 +76,25 @@ public class MappingItem {
 	 * @param transformHash transform id -> transform obj
 	 * @throws Exception
 	 */
-	public void fromJson(JSONObject mapItemJson, HashMap<String, String> colNameHash, HashMap<String, Integer> colNameToIndexHash, HashMap<String,String> textHash, HashMap<String,Transform> transformHash) throws Exception {
-		if (mapItemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_TEXT_ID)) {       
-			
-			String id = mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_TEXT_ID).toString();
-			
+	public MappingItem(String textId, String colId, ArrayList<String> transformList, HashMap<String, String> colNameHash, HashMap<String, Integer> colNameToIndexHash, HashMap<String,String> textHash, HashMap<String,Transform> transformHash) throws Exception {
+		if (textId != null) {       			
 			// look up text
 			try {
-				this.textVal = textHash.get(id);
+				this.textVal = textHash.get(textId);
 			} catch (Exception e) {
-				throw new Exception("Failed to look up textId: " + id);
+				throw new Exception("Failed to look up textId: " + textId);
 			}
 			
-		} else if (mapItemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID)) { 
+		} else if (colId != null) { 
 			
-			String id = mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID).toString();
 			String colName = null;
 			
 			// column name
 			try{
-				colName = colNameHash.get(id);
+				colName = colNameHash.get(colId);
 			}
 			catch(Exception e){
-				throw new Exception("Failed to look up columnId: " + id);
+				throw new Exception("Failed to look up columnId: " + colId);
 			}
 			
 			// change into columnIndex
@@ -117,20 +106,29 @@ public class MappingItem {
 			}
 			
 			// transforms
-			JSONArray transformJsonArr = (JSONArray) mapItemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_TRANSFORM_LIST);
-			if (transformJsonArr != null) {
-				this.transformList = new Transform[transformJsonArr.size()];
-				for(int i=0; i < transformJsonArr.size(); i++) {
-					this.transformList[i] = transformHash.get( (String)transformJsonArr.get(i) );
+			if (transformList != null) {
+				this.transformList = new Transform[transformList.size()];
+				for(int i=0; i < transformList.size(); i++) {
+					this.transformList[i] = transformHash.get(transformList.get(i) );
 				}
 			}
 			
 		} else {
-			throw new Exception("importSpec mapping item has no known type: " + mapItemJson.toString());
+			throw new Exception("importSpec mapping item has no known type");
 		}
 		
 	}
+	public int getColumnIndex() {
+		return columnIndex;
+	}
 
+	public void setColumnIndex(int columnIndex) {
+		this.columnIndex = columnIndex;
+	}
+
+	public Transform[] getTransformList() {
+		return transformList;
+	}
 	public boolean isColumnMapping() {
 		return this.textVal == null && this.columnIndex > -1;
 	}

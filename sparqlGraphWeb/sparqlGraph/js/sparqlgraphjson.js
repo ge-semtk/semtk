@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,56 +17,56 @@
  */
 
 /*
- * 
+ *
  * This is just for lumping a sparqlConnection with a SemanticNodeGroup so they can be stored and retrieved together
- * 
+ *
  */
 define([	// properly require.config'ed
-        		
+
 			// shimmed
         	'sparqlgraph/js/belmont'
 		],
 
 	function() {
-    
+
         /*
          * Each param may be missing or null
          */
-		var SparqlGraphJson = function(conn, nodegroup, mappingTab, deflateFlag) {
+		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag) {
 			var deflateFlag = (typeof deflateFlag == "undefined") ? true : deflateFlag;
-            			
+
 			this.jObj = {
                     version: 2,
 					sparqlConn: null,
 					sNodeGroup: null,
 					importSpec: null,
 			};
-			
-			if (typeof conn      != "undefined" && conn != null) { 
-				this.setSparqlConn(conn); 
+
+			if (typeof conn      != "undefined" && conn != null) {
+				this.setSparqlConn(conn);
 			}
-			
-			if (typeof nodegroup != "undefined" && nodegroup != null) { 
+
+			if (typeof nodegroup != "undefined" && nodegroup != null) {
 				if (deflateFlag) {
-					var undeflatablePropItems = (typeof mappingTab != "undefined" && mappingTab != null) ? mappingTab.getUndeflatablePropItems() : [];
-					this.jObj.sNodeGroup = nodegroup.toJson(true, undeflatablePropItems); 
+					var undeflatablePropItems = (typeof importSpec != "undefined" && importSpec != null) ? importSpec.getUndeflatablePropItems() : [];
+					this.jObj.sNodeGroup = nodegroup.toJson(true, undeflatablePropItems);
 				} else {
-					this.jObj.sNodeGroup = nodegroup.toJson(false, []); 
+					this.jObj.sNodeGroup = nodegroup.toJson(false, []);
 				}
 			}
-			
-			if (typeof mappingTab != "undefined" && mappingTab != null) { 
-				this.jObj.importSpec = mappingTab.toJson();
+
+			if (typeof importSpec != "undefined" && importSpec != null) {
+				this.jObj.importSpec = importSpec.toJson();
 			}
 
 		};
-	
+
 		SparqlGraphJson.prototype = {
-			
+
             setExtra : function(name, json) {
                 this.jObj[name] = json;
             },
-            
+
             /*
              * return extra field   or null
              */
@@ -77,7 +77,7 @@ define([	// properly require.config'ed
                     return null;
                 }
             },
-            
+
             /*
              * get version integer
              */
@@ -88,7 +88,7 @@ define([	// properly require.config'ed
                     return 0;
                 }
             },
-            
+
             /*
              * return the connection    or null if this is an old SparqlForm file
              */
@@ -101,13 +101,13 @@ define([	// properly require.config'ed
                     return null;
                 }
 			},
-			
+
             /*
              * return the nodegroup    never null
              */
 			getNodeGroup : function(ng, optInflateOInfo) {
 				// different from Java due to canvas stuff: takes ng param.
-				
+
 				ng.clear();
 				var json = this.getSNodeGroupJson();
 				if (json == null) {
@@ -117,7 +117,7 @@ define([	// properly require.config'ed
 					ng.setSparqlConnection(this.getSparqlConn());
 				}
 			},
-			
+
 			getSNodeGroupJson : function() {
                 if (this.jObj.hasOwnProperty("sNodeGroup")) {
                     return this.jObj.sNodeGroup;
@@ -126,38 +126,43 @@ define([	// properly require.config'ed
                 } else {
                     throw new Error("JSON has no nodegroup");
                 }
-				
+
 			},
-			
+
+            // horrible depricated name
 			getMappingTabJson : function() {
+				return this.getImportSpecJson();
+			},
+            
+            getImportSpecJson : function() {
 				if (this.jObj.hasOwnProperty("importSpec")) {
 					return this.jObj.importSpec;
 				} else {
 					return null;
 				}
 			},
-            
+
 			setSparqlConn : function(conn) {
 				this.jObj.sparqlConn = conn.toJson();
 			},
-			
+
 			stringify : function () {
 				return JSON.stringify(this.jObj, null, '\t');
 			},
-			
+
 			parse : function (jsonString) {
 				this.jObj = JSON.parse(jsonString);
 			},
-			
+
 			toJson : function () {
 				return this.jObj;
 			},
-			
+
 			fromJson : function (json) {
 				this.jObj = json;
 			}
-			
+
 		};
-		return SparqlGraphJson;            
+		return SparqlGraphJson;
 	}
 );

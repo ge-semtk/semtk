@@ -403,4 +403,16 @@ public class NgStore {
 		return ret;
 	}
 
+	
+	public static Table createEmptyStoreCsvTable() throws Exception {
+		Table outTable = new Table(
+				new String[] {"ID","comments","creator","jsonFile"},
+				new String[] {"unknown","unknown","unknown","unknown"});
+		return outTable;
+	}
+	
+	public static void addRowToStoreCsvTable(Table csvTable, String id, String comments, String creator, String jsonFileName) throws Exception {
+		csvTable.addRow(new String[] {id, comments, creator, jsonFileName});
+	}
+	
 }

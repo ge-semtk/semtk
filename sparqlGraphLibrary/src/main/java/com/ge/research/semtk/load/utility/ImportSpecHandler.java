@@ -61,11 +61,8 @@ import com.ge.research.semtk.utility.Utility;
  * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
  */
 public class ImportSpecHandler {
-	public static final String LOOKUP_MODE_NO_CREATE = 	   "noCreate";    // should be 'errorIfMissing'
-	public static final String LOOKUP_MODE_CREATE =        "createIfMissing";
-	public static final String LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";  // this is a place-holder, not implemented yet
 	
-	JSONObject importspec = null;
+	ImportSpec importspec = null;
 	
 	JSONObject nodegroupJson = null;    
 	NodeGroup ng = null;
@@ -94,7 +91,7 @@ public class ImportSpecHandler {
 	DataValidator dataValidator = null;
 	
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn, OntologyInfo oInfo) throws Exception {
-		this.importspec = importSpecJson; 
+		this.importspec = new ImportSpec(importSpecJson); 
 		
 		// reset the nodegroup and store as json (for efficient duplication)
 		this.ng = NodeGroup.getInstanceFromJson(ngJson);
@@ -106,18 +103,22 @@ public class ImportSpecHandler {
 		
 		this.lookupConn = lookupConn;
 		
-		this.colHashesFromJson(   (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_COLUMNS));
-		this.transformsFromJson((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TRANSFORMS));
-		this.textHashFromJson(     (JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_TEXTS));
-		this.nodesFromJson((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_NODES));
-		String userUriPrefixValue = (String) this.importspec.get(SparqlGraphJson.JKEY_IS_BASE_URI);
+		this.colHashesFromJson();
+		this.transformsFromJson();
+		this.textHashFromJson();
+		this.nodesFromJson();
+		String userUriPrefixValue = this.importspec.getBaseURI();
 	
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 		
 		this.uriCache = new UriCache(this.ng);
 		
-		this.dataValidator = new DataValidator((JSONArray) importSpecJson.get(SparqlGraphJson.JKEY_IS_DATA_VALIDATOR));
+		this.dataValidator = new DataValidator(this.importspec.getDataValidatorJson());
 		this.errorCheckImportSpec();
+	}
+	
+	public ImportSpec getImportSpec() {
+		return this.importspec;
 	}
 	
 	/**
@@ -127,13 +128,11 @@ public class ImportSpecHandler {
 	 * @return
 	 */
 	public static JSONObject overrideBaseURI(JSONObject importSpecJson, String override) {
-		importSpecJson.put(SparqlGraphJson.JKEY_IS_BASE_URI, override);
-		return importSpecJson;
+		ImportSpec tmp = new ImportSpec(importSpecJson);
+		tmp.setBaseURI(override);
+		return tmp.toJson();
 	}
 	
-	public JSONArray getColumnsJson() {
-		return (JSONArray) this.importspec.get(SparqlGraphJson.JKEY_IS_COLUMNS);
-	}
 
 	public void setEndpoint(SparqlEndpointInterface endpoint) {
 		this.nonThreadSafeEndpoint = endpoint;
@@ -204,17 +203,13 @@ public class ImportSpecHandler {
 	 * Populate the transforms with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void transformsFromJson(JSONArray transformsJsonArr) throws Exception{
+	private void transformsFromJson() throws Exception{
 		
-		if(transformsJsonArr == null){ 
-			// in the event there was no transform block found in the JSON, just return.
-			// thereafter, there are no transforms looked up or found.
-			return;}
+		int tcount = this.importspec.getNumTransforms();
 		
-		for (int j = 0; j < transformsJsonArr.size(); ++j) {
-			JSONObject xform = (JSONObject) transformsJsonArr.get(j);
-			String instanceID = (String) xform.get(SparqlGraphJson.JKEY_IS_TRANS_ID); // get the instanceID for the transform
-			String transType = (String) xform.get(SparqlGraphJson.JKEY_IS_TRANS_TYPE); // get the xform type 
+		for (int i = 0; i < tcount; ++i) {
+			String instanceID = this.importspec.getTransformId(i); 
+			String transType = this.importspec.getTransformType(i);  
 			
 			// go through all the entries besides "name", "transType", "transId" and 
 			// add them to the outgoing HashMap to be sent to the transform creation.
@@ -222,9 +217,9 @@ public class ImportSpecHandler {
 			
 			// get the args.
 			HashMap<String, String> args = new HashMap<String, String>();
-			for(int argCounter = 1; argCounter <= totalArgs; argCounter += 1){
-				// get the current argument
-				args.put("arg" + argCounter, (String) xform.get("arg" + argCounter));
+			if (totalArgs == 2) {
+				args.put("arg1", this.importspec.getTransformArg1(i));
+				args.put("arg2", this.importspec.getTransformArg2(i));
 			}
 			
 			// get the transform instance.
@@ -239,16 +234,13 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void textHashFromJson(JSONArray textsJsonArr) throws Exception{
+	private void textHashFromJson() throws Exception{
 		
-		if(textsJsonArr == null){ 
-			return;
-		}
+		int tcount = this.importspec.getNumTexts();
 		
-		for (int j = 0; j < textsJsonArr.size(); ++j) {
-			JSONObject textJson = (JSONObject) textsJsonArr.get(j);
-			String instanceID = (String) textJson.get(SparqlGraphJson.JKEY_IS_TEXT_ID); 
-			String textVal = (String) textJson.get(SparqlGraphJson.JKEY_IS_TEXT_TEXT);  
+		for (int i = 0; i < tcount; ++i) {
+			String instanceID = this.importspec.getTextId(i); 
+			String textVal = this.importspec.getTextText(i);  
 			this.textHash.put(instanceID, textVal);
 		}
 	}
@@ -257,22 +249,20 @@ public class ImportSpecHandler {
 	 * Populate the texts with the correct instances based on the importspec.
 	 * @throws Exception 
 	 */
-	private void colHashesFromJson(JSONArray columnsJsonArr) throws Exception{
+	private void colHashesFromJson() throws Exception{
 		
-		if(columnsJsonArr == null){ 
-			return;
-		}
+		int colCount = this.importspec.getNumColumns();
 		
-		for (int j = 0; j < columnsJsonArr.size(); ++j) {
-			JSONObject colsJson = (JSONObject) columnsJsonArr.get(j);
-			String colId = (String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_ID);      
-			String colName = ((String) colsJson.get(SparqlGraphJson.JKEY_IS_COL_COL_NAME)).toLowerCase().trim();  
+		for (int i = 0; i < colCount; ++i) {
+			
+			String colId = this.importspec.getColId(i);   
+			String colName = this.importspec.getColName(i).toLowerCase().trim();   
 			this.colNameHash.put(colId, colName);
 			
 			if (colNameToIndexHash.containsKey(colName)) {
 				throw new Exception("Duplicate column name in nodegroup import spec: " + colName);
 			}
-			this.colNameToIndexHash.put(colName, j);      // initialize colIndexHash with columns in the order provided
+			this.colNameToIndexHash.put(colName, i);      // initialize colIndexHash with columns in the order provided
 		}
 	}
 	
@@ -281,95 +271,92 @@ public class ImportSpecHandler {
 	 * @param nodesJsonArr
 	 * @throws Exception
 	 */
-	private void nodesFromJson(JSONArray nodesJsonArr) throws Exception {
+	private void nodesFromJson() throws Exception {
 		NodeGroup tmpImportNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
 		tmpImportNg.clearOrderBy();
 		ArrayList<ImportMapping> mappingsList = new ArrayList<ImportMapping>();
 		// clear cols used
 		colsUsed = new HashMap<String, Integer>();  
 		ImportMapping mapping = null;
-		
+		int numNodes = this.importspec.getNumNodes();
 		// loop through .nodes
-		for (int i = 0; i < nodesJsonArr.size(); i++){  
+		for (int n = 0; n < numNodes; n++){  
 			
 			// ---- URI ----
-			JSONObject nodeJson = (JSONObject) nodesJsonArr.get(i);
-			String nodeSparqlID = nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID).toString();
+			String nodeSparqlID = this.importspec.getNodeSparqlID(n);
 			int nodeIndex = tmpImportNg.getNodeIndexBySparqlID(nodeSparqlID);
 			if (nodeIndex == -1) {
 				throw new Exception("Error in ImportSpec JSON: can't find node in nodegroup: " + nodeSparqlID);
 			}
+			String mode = this.importspec.getNodeLookupMode(n);
 			// lookup mode
-			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE)) {
-				String mode = (String)nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE);
+			if (mode != null) {
 				switch (mode) {
-				case ImportSpecHandler.LOOKUP_MODE_CREATE:
-				case ImportSpecHandler.LOOKUP_MODE_NO_CREATE:
-				case ImportSpecHandler.LOOKUP_MODE_ERR_IF_EXISTS:
+				case ImportSpec.LOOKUP_MODE_CREATE:
+				case ImportSpec.LOOKUP_MODE_NO_CREATE:
+				case ImportSpec.LOOKUP_MODE_ERR_IF_EXISTS:
 					this.lookupMode.put(nodeSparqlID, mode);
 					break;
 				default:
-					throw new Exception("Unknown " + SparqlGraphJson.JKEY_IS_NODE_LOOKUP_MODE + ": " + mode);
+					throw new Exception("Unknown lookup mode: " + mode);
 				}
 			}
 			
 			// build mapping if it isn't empty AND it isn't a URILookup
-			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
-				JSONArray mappingJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_MAPPING);
-				if (mappingJsonArr.size() > 0) {
+			if (this.importspec.getNodeNumMappings(n) > 0) {
 					
-					mapping = new ImportMapping();
-					
-					// get node index
-					String type = (String) nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_TYPE);
-					mapping.setIsEnum(this.oInfo.classIsEnumeration(type));
-					mapping.setNodeSparqlID((String) nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID));
-					setupMappingItemList(mappingJsonArr, mapping);
-					
-					// add non-lookup mappings to mapping list
-					if (!nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-						mappingsList.add(mapping);
-					}
+				mapping = new ImportMapping();
+				
+				// get node index
+				String type = this.importspec.getNodeType(n);
+				mapping.setIsEnum(this.oInfo.classIsEnumeration(type));
+				mapping.setNodeSparqlID(this.importspec.getNodeSparqlID(n));
+				setupMappingItemList(n, mapping);
+				
+				// add non-lookup mappings to mapping list
+				if (this.importspec.getNodeNumURILookups(n)==0) {
+					mappingsList.add(mapping);
 				}
+				
 			}
 			// handle URILookup, even if mapping was missing or blank
-			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-				this.setupUriLookup(nodeJson, mapping, tmpImportNg);
+			if (this.importspec.getNodeNumURILookups(n) > 0) {
+				this.setupUriLookup(
+						this.importspec.getNodeSparqlID(n), this.importspec.getNodeURILookupList(n), 
+						mapping, tmpImportNg);
 			}
 			
 			// ---- Properties ----
-			if (nodeJson.containsKey(SparqlGraphJson.JKEY_IS_PROPS)) {
-				JSONArray propsJsonArr = (JSONArray) nodeJson.get(SparqlGraphJson.JKEY_IS_PROPS);
+			int numProps = this.importspec.getNodeNumProperties(n);
+			if (numProps > 0) {
 				Node snode = tmpImportNg.getNode(nodeIndex);
 				
-				for (int p=0; p < propsJsonArr.size(); p++) {
-					JSONObject propJson = (JSONObject) propsJsonArr.get(p);
+				for (int p=0; p < numProps; p++) {
 					
 					mapping = null;
 					// build mapping if it isn't empty
-					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING)) {
-						JSONArray mappingJsonArr = (JSONArray) propJson.get(SparqlGraphJson.JKEY_IS_MAPPING);	
-						if (mappingJsonArr.size() > 0) {
+					if (this.importspec.getNodePropNumMappings(n, p) > 0) {
 							
-							mapping = new ImportMapping();
-							
-							// populate the mapping
-							mapping.setNodeSparqlID((String) nodeJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID));
-							String uriRel = (String)propJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL);
-							
-							mapping.setPropURI(uriRel);
-							setupMappingItemList(mappingJsonArr, mapping);
-							
-							// add non-lookup mappings to mapping list
-							if (!propJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-								mappingsList.add(mapping);
-							}
+						mapping = new ImportMapping();
+						
+						// populate the mapping
+						mapping.setNodeSparqlID(this.importspec.getNodeSparqlID(n));						
+						mapping.setPropURI(this.importspec.getNodePropUriRel(n, p));
+						setupMappingItemList(n, p, mapping);
+						
+						// add non-lookup mappings to mapping list
+						if (this.importspec.getNodePropNumURILookups(n, p) == 0) {
+							mappingsList.add(mapping);
 						}
+						
 					}
 					
 					// handle URILookup, even if mapping was missing or blank
-					if (propJson.containsKey(SparqlGraphJson.JKEY_IS_URI_LOOKUP)) {
-						this.setupUriLookup(propJson, mapping, tmpImportNg);
+					if (this.importspec.getNodePropNumURILookups(n, p) > 0) {
+						this.setupUriLookup(
+								this.importspec.getNodePropUriRel(n, p), 
+								this.importspec.getNodePropURILookupList(n, p),
+								mapping, tmpImportNg);
 					}
 				}
 			}
@@ -384,17 +371,8 @@ public class ImportSpecHandler {
 	}
 	
 	private void errorCheckImportSpec() throws Exception {
-		// no longer illegal
-		// nothing at all to check right now
-		
-//		for (int i=0; i < this.importMappings.length; i++) {
-//			ImportMapping importMap = this.importMappings[i];
-//			if (importMap.isNode() && this.lookupMappings.containsKey(importMap.getImportNodeIndex())) {
-//				NodeGroup tmpImportNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
-//				Node node = tmpImportNg.getNode(importMap.getImportNodeIndex());
-//				throw new Exception("Node is slated for lookup and also has mapping for URI: " + node.getSparqlID());
-//			}
-//		}
+
+		// empty right now
 	}
 	
 	/**
@@ -472,16 +450,8 @@ public class ImportSpecHandler {
 	 * @param tmpNodegroup - example nodegroup
 	 * @throws Exception - lots of error checks for bad JSON
 	 */
-	private void setupUriLookup(JSONObject nodeOrPropJson, ImportMapping mapping, NodeGroup tmpNodegroup) throws Exception {
+	private void setupUriLookup(String name, ArrayList<String> uriLookupList, ImportMapping mapping, NodeGroup tmpNodegroup) throws Exception {
 			
-		
-		// get item name in case of error messages
-		String name;
-		if (nodeOrPropJson.containsKey(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID)) {
-			name = (String) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_NODE_SPARQL_ID);
-		} else {
-			name = (String) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_MAPPING_PROPS_URI_REL);
-		}
 		
 		// error check missing or empty mapping
 		if (mapping == null) {		
@@ -491,15 +461,14 @@ public class ImportSpecHandler {
 		}
 		
 		// 
-		JSONArray uriLookupJsonArr = (JSONArray) nodeOrPropJson.get(SparqlGraphJson.JKEY_IS_URI_LOOKUP);
-		if (uriLookupJsonArr.size() == 0) {
+		if (uriLookupList.size() == 0) {
 			throw new Exception("Error in ImportSpec: Empty URI lookup: " + name);
 				
 		} else {
 			
 			// loop through the sparql ID's of nodes this item is looking up
-			for (int j=0; j < uriLookupJsonArr.size(); j++) {
-				String lookupSparqlID = (String)uriLookupJsonArr.get(j);
+			for (int j=0; j < uriLookupList.size(); j++) {
+				String lookupSparqlID = uriLookupList.get(j);
 				
 				// add mapping to this.lookupMappings
 				if (!this.lookupMappings.containsKey(lookupSparqlID)) {
@@ -516,20 +485,53 @@ public class ImportSpecHandler {
 	 * @param mapping
 	 * @throws Exception 
 	 */
-	private void setupMappingItemList(JSONArray mappingJsonArr, ImportMapping mapping) throws Exception {
-		
-		for (int j=0; j < mappingJsonArr.size(); j++) {
-			JSONObject itemJson = (JSONObject) mappingJsonArr.get(j);
+	private void setupMappingItemList(int nodeIndex, ImportMapping mapping) throws Exception {
+		int mappingSize = this.importspec.getNodeNumMappings(nodeIndex);
+		for (int i=0; i < mappingSize; i++) {
 			
 			// mapping item
-			MappingItem mItem = new MappingItem();
-			mItem.fromJson(	itemJson, 
-							this.colNameHash, this.colNameToIndexHash, this.textHash, this.transformHash);
+			MappingItem mItem = new MappingItem(
+					this.importspec.getNodeMappingTextId(nodeIndex, i),
+					this.importspec.getNodeMappingColId(nodeIndex, i),
+					this.importspec.getNodeMappingTransformList(nodeIndex, i),
+					this.colNameHash, this.colNameToIndexHash, this.textHash, this.transformHash);
 			mapping.addItem(mItem);
 			
-			if (itemJson.containsKey(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID)) {
+			String colId = this.importspec.getNodeMappingColId(nodeIndex, i);
+			if (colId != null) {
 				// column item
-				String colId = (String) itemJson.get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID);
+				String colName = this.colNameHash.get(colId);
+				// colsUsed
+				if (this.colsUsed.containsKey(colName)) {
+					this.colsUsed.put(colName, this.colsUsed.get(colName) + 1);
+				} else {
+					this.colsUsed.put(colName, 1);
+				}
+			} 
+		}
+	}
+	
+	/**
+	 * Put mapping items from json into an ImportMapping and update colUsed
+	 * @param mappingJsonArr
+	 * @param mapping
+	 * @throws Exception 
+	 */
+	private void setupMappingItemList(int nodeIndex, int propIndex, ImportMapping mapping) throws Exception {
+		int mappingSize = this.importspec.getNodePropNumMappings(nodeIndex, propIndex);
+		for (int i=0; i < mappingSize; i++) {
+			
+			// mapping item
+			MappingItem mItem = new MappingItem(
+					this.importspec.getNodePropMappingTextId(nodeIndex, propIndex, i),
+					this.importspec.getNodePropMappingColId(nodeIndex, propIndex, i),
+					this.importspec.getNodePropMappingTransformList(nodeIndex, propIndex, i),
+					this.colNameHash, this.colNameToIndexHash, this.textHash, this.transformHash);
+			mapping.addItem(mItem);
+			
+			String colId = this.importspec.getNodePropMappingColId(nodeIndex, propIndex, i);
+			if (colId != null) {
+				// column item
 				String colName = this.colNameHash.get(colId);
 				// colsUsed
 				if (this.colsUsed.containsKey(colName)) {
@@ -746,7 +748,7 @@ public class ImportSpecHandler {
 		
 			// if "createIfMissing" and has a mapping and is a generated (not looked up) URI
 			if (this.lookupMode.containsKey(nodeID) && 
-					this.lookupMode.get(nodeID).equals(ImportSpecHandler.LOOKUP_MODE_CREATE) && 
+					this.lookupMode.get(nodeID).equals(ImportSpec.LOOKUP_MODE_CREATE) && 
 					this.getImportMapping(nodeID, ImportMapping.NO_PROPERTY) != null &&
 					this.uriCache.isGenerated(cachedUri)) {
 				
@@ -825,7 +827,7 @@ public class ImportSpecHandler {
 				
 			} else if (tab.getNumRows() == 0) {
 				// zero found
-				if (this.getLookupMode(nodeID).equals(LOOKUP_MODE_NO_CREATE)) {
+				if (this.getLookupMode(nodeID).equals(ImportSpec.LOOKUP_MODE_NO_CREATE)) {
 					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
 					throw new Exception("URI lookup on " + lookup + " failed on: " + String.join(",", builtStrings) );
 					
@@ -838,7 +840,7 @@ public class ImportSpecHandler {
 				
 			} else {
 				// 1 found:  cache and return
-				if (this.getLookupMode(nodeID).equals(LOOKUP_MODE_ERR_IF_EXISTS)) {
+				if (this.getLookupMode(nodeID).equals(ImportSpec.LOOKUP_MODE_ERR_IF_EXISTS)) {
 					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
 					throw new Exception("URI lookup on 'error if exists' " + lookup + " already exists for: " + String.join(",", builtStrings) );
 					
@@ -908,7 +910,7 @@ public class ImportSpecHandler {
 	private String getLookupMode(String nodeID) {
 		String mode = this.lookupMode.get(nodeID);
 		if (mode == null) {
-			return ImportSpecHandler.LOOKUP_MODE_NO_CREATE;   // default mode
+			return ImportSpec.LOOKUP_MODE_NO_CREATE;   // default mode
 		} else {
 			return mode;
 		}
@@ -957,16 +959,16 @@ public class ImportSpecHandler {
 	 */
 	public String[] getColNamesUsed(){
 		String ret [] = new String[this.colsUsed.size()];
-		int i=0;
+		int r = 0;
 		
-		// loop through columns in json order
-		for (Object o : this.getColumnsJson()) {
+		int numCols = this.importspec.getNumColumns();
+		for (int i=0; i < numCols; i++) {
 			// use col ids to get the properly-transformed name
-			String colId = (String) ((JSONObject) o).get(SparqlGraphJson.JKEY_IS_MAPPING_COL_ID);
+			String colId = this.importspec.getColId(i);
 			String colName = this.colNameHash.get(colId);
 			
 			if (this.colsUsed.containsKey(colName)) {
-				ret[i++] = colName;
+				ret[r++] = colName;
 			}
 		}
 		return ret;
@@ -990,7 +992,7 @@ public class ImportSpecHandler {
 	 */
 	public boolean containsLookupWithCreate() {
 		for (String id : this.lookupMode.keySet()) {
-			if (this.getLookupMode(id).equals(ImportSpecHandler.LOOKUP_MODE_CREATE) || this.getLookupMode(id).equals(ImportSpecHandler.LOOKUP_MODE_ERR_IF_EXISTS)) {
+			if (this.getLookupMode(id).equals(ImportSpec.LOOKUP_MODE_CREATE) || this.getLookupMode(id).equals(ImportSpec.LOOKUP_MODE_ERR_IF_EXISTS)) {
 				return true;
 			}
 		}
@@ -1230,6 +1232,28 @@ public class ImportSpecHandler {
 		return input;
 	}
 
+	/**
+	 * Return only column names, in order, with capitalization
+	 * @return comma-separated string
+	 */
+	public String getSampleCSV() {
+		StringBuilder ret =  new StringBuilder();
+		
+		for (int i=0; i < this.importspec.getNumColumns(); i++) {
+			ret.append( (i==0?"":",") + this.importspec.getColName(i));
+		}
+		ret.append('\n');
+		return ret.toString();
+	}
+	
+	/**
+	 * Historical version:
+	 * - loses order
+	 * - loses capitalization
+	 * - tries to add types
+	 * 
+	 * @return
+	 */
 	public String getSampleIngestionCSV() {
 		
 		HashMap<String,String> sampleHash = addSampleIngestionValues(null);
@@ -1336,7 +1360,7 @@ public class ImportSpecHandler {
 			ArrayList<MappingItem> items = mapping.getItemList();
 			
 			// if it is a single column mapping with no transforms, we can guess type
-			if (items.size() == 1 && items.get(0).isColumnMapping() && items.get(0).getTransformList() == null) {
+			if (items.size() == 1 && items.get(0).isColumnMapping() && items.get(0).getTransformList().length == 0) {
 				XSDSupportedType ngItemType = this.getNodegroupItemType(mapping);
 				Integer colIndex = items.get(0).getColumnIndex();
 				String sample = ngItemType.getSampleValue();

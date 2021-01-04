@@ -51,6 +51,11 @@ define([	// properly require.config'ed
             ImportMapping.LOOKUP_MODE_CREATE = "createIfMissing";
             ImportMapping.LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";
 
+            ImportMapping.LOOKUP_MODE_LIST = [
+                ImportMapping.LOOKUP_MODE_NO_CREATE,
+                ImportMapping.LOOKUP_MODE_CREATE,
+                ImportMapping.LOOKUP_MODE_ERR_IF_EXISTS
+            ]
 
 			ImportMapping.staticGenUniqueKey = function(sparqlId, propUri) {
 				return sparqlId + "." + (propUri != null ? propUri : "");

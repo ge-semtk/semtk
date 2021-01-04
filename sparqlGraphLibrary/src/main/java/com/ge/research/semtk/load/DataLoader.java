@@ -691,7 +691,7 @@ public class DataLoader implements Runnable {
 		}
 					
 		// get needed column names from the JSON template
-		String[] colNamesToIngest = sgJson.getImportSpec().getColNamesUsed();		
+		String[] colNamesToIngest = sgJson.getImportSpecHandler().getColNamesUsed();		
 		
 		// open the dataset, using only the needed column names
 		Dataset dataset = null;

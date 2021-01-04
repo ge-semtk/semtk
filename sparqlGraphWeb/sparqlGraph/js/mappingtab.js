@@ -33,11 +33,14 @@ define([	// properly require.config'ed
         	'sparqlgraph/js/importtext',
         	'sparqlgraph/js/importtrans',
         	'sparqlgraph/js/importmapping',
+            'sparqlgraph/js/msiclientnodegroupservice',
          	'sparqlgraph/js/modaliidx',
+            'sparqlgraph/js/modalimportspecwizarddialog',
             'sparqlgraph/js/modalvalidatecolumndialog',
             'sparqlgraph/js/importmappingmodal',
          	'sparqlgraph/js/importtransformmodal',
          	'sparqlgraph/js/iidxhelper',
+            'sparqlgraph/js/sparqlgraphjson',
 
          	'jquery',
 
@@ -46,13 +49,15 @@ define([	// properly require.config'ed
 
 		],
 
-	function(ImportColumn, ImportCsvSpec, MappingItem, ImportSpec, ImportText, ImportTransform, ImportMapping, ModalIidx, ModalValidateColumnDialog, ImportMappingModal, ImportTransformModal, IIDXHelper, $) {
+	function(ImportColumn, ImportCsvSpec, MappingItem, ImportSpec, ImportText, ImportTransform, ImportMapping, MsiClientNodeGroupService, ModalIidx, ModalImportSpecWizardDialog, ModalValidateColumnDialog, ImportMappingModal, ImportTransformModal, IIDXHelper, SparqlGraphJson, $) {
 
 
 		//============ local object  MappingTab =============
-		var MappingTab = function(optionsdiv, canvasdiv, colsdiv, csvCallback, alertCallback) {
+		var MappingTab = function(optionsdiv, canvasdiv, colsdiv, csvCallback, alertCallback, ngClient) {
 		    this.importCsvSpec = null;
 		    this.importSpec = new ImportSpec(alertCallback);
+            this.ngClient = ngClient;
+            this.conn = null;
 
 		    this.optionsdiv = optionsdiv;
 		    this.canvasDiv = canvasdiv;
@@ -123,10 +128,6 @@ define([	// properly require.config'ed
 				}
 			},
 
-			getUndeflatablePropItems : function () {
-				return this.importSpec.getUndeflatablePropItems();
-			},
-
 			getUniqueIndexStr : function () {
 				this.uniqueIndex += 1;
 				return this.uniqueIndex.toString();
@@ -140,7 +141,8 @@ define([	// properly require.config'ed
 				this.changedFlag = bool;
 			},
 
-			draw : function() {
+            // className will affect lookup buttons, mapping rows, column names
+			draw : function(highlightColor="") {
 				kdlLogEvent("Import Tab Draw");
 
 				// create an ImportSpec if there is none
@@ -164,6 +166,8 @@ define([	// properly require.config'ed
 				this.rightDiv.appendChild(this.colsToolsDiv);
 				this.colsToolsDiv.appendChild( this.createTrashCan() );
 				this.colsToolsDiv.appendChild( this.createClearAllBut() );
+                this.colsToolsDiv.appendChild( this.createWizardBut() );
+                this.colsToolsDiv.appendChild( this.createDownloadSampleCsvBut() );
 
 
 				// cols list div
@@ -197,6 +201,7 @@ define([	// properly require.config'ed
                     this.columnDiv.appendChild(but);
 
 					var span = this.createColElem(colList[i], false);
+                    span.style.background=highlightColor;
 					this.columnDiv.appendChild(span);
 
 					this.columnDiv.appendChild(document.createElement("br"));
@@ -284,7 +289,7 @@ define([	// properly require.config'ed
 					// rows
 					var rowList = this.importSpec.getSortedMappings();
 					for (var i=0; i < rowList.length; i++) {
-						this.drawMappingRow(table, rowList[i]);
+						this.drawMappingRow(table, rowList[i], highlightColor);
 					}
 
 					this.canvasDiv.appendChild(table);
@@ -339,6 +344,28 @@ define([	// properly require.config'ed
 				return elem;
 			},
 
+            createWizardBut : function () {
+				// create the "New" button for the text div
+				var elem = document.createElement("button");
+				elem.style.marginBottom = "0.5em";
+				elem.style.marginLeft = "0.5em";
+
+				elem.innerHTML = "<i class='icon-magic'></i> Wizard";
+				elem.onclick = this.launchWizard.bind(this);
+				return elem;
+			},
+
+            createDownloadSampleCsvBut : function () {
+				// create the "New" button for the text div
+				var elem = document.createElement("button");
+				elem.style.marginBottom = "0.5em";
+				elem.style.marginLeft = "0.5em";
+
+				elem.innerHTML = "<i class='icon-download-alt'></i> sample.csv";
+				elem.onclick = this.downloadSampleCsv.bind(this);
+				return elem;
+			},
+
 			clearAll : function () {
 
 				var doClearAll = function() {
@@ -355,8 +382,38 @@ define([	// properly require.config'ed
 									"Go Ahead");
 			},
 
+            launchWizard : function () {
+
+                var wizardCallback = function(ispecJson) {
+                    // flash old values gray
+                    this.draw("gray");
+
+                    // set new and draw at end of flash millisec
+                    this.importSpec.clearMost();
+                    this.importSpec.fromJson(ispecJson);
+                    setTimeout(this.draw.bind(this), 750);
+                }.bind(this);
+
+                var wizardDialog = new ModalImportSpecWizardDialog(this.importSpec, this.conn, this.importSpec.getNodegroup(), this.ngClient, wizardCallback);
+                wizardDialog.show();
+			},
+
+            downloadSampleCsv : function () {
+
+                var csvStringCallback = function(csvString) {
+                    IIDXHelper.downloadFile(csvString, "import.csv", "text/csv;charset=utf8");
+                }.bind(this);
+
+                this.ngClient.execAsyncGetSampleIngestionCSV(
+                    new SparqlGraphJson(this.conn, this.importSpec.getNodegroup(), this.importSpec, false),
+                    "simple",
+                    csvStringCallback,
+                    ModalIidx.alert.bind(this, "Nodegroup service failure")
+                )
+			},
+
             // initial draw of a mapping row
-			drawMappingRow : function (table, iMapping) {
+			drawMappingRow : function (table, iMapping, highlightColor="") {
 				// append one item row to an HTML table
 				var row = table.insertRow(-1);
 				var cell = null;
@@ -370,6 +427,7 @@ define([	// properly require.config'ed
 				}
 
                 cell = row.insertCell(-1);
+                cell.style.background=highlightColor;
 
                 // create mapping dialog button
                 var but = IIDXHelper.createIconButton("icon-tasks", function(){});
@@ -391,10 +449,12 @@ define([	// properly require.config'ed
 
                 // COL area for dropping things into
 				cell = row.insertCell(-1);
+
 				cell.id = MappingTab.PREFIX_ROW + this.getUniqueIndexStr();
 				this.iSpecHash[cell.id] = iMapping;
 
 				cell.style="border: 1px solid #aaaaaa";
+                cell.style.background=highlightColor;
 				cell.innerHTML="";
 				cell.ondragover = 	function (ev) {
 
@@ -686,6 +746,8 @@ define([	// properly require.config'ed
 
 				// appearance
 				span.className = MappingTab.classTransformUnused;
+                span.style.textTransform = "none";
+                span.style.fontSize = "12px";
 				span.innerHTML = IIDXHelper.htmlSafe(name);
 
 				// draggable
@@ -763,9 +825,9 @@ define([	// properly require.config'ed
 				kdlLogEvent("Import Tab Edit Transform OK");
 			},
 
-			load : function (nodegroup, importJson) {
+			load : function (nodegroup, conn, importJson) {
 				this.clear();
-
+                this.conn = gConn;
 				this.importSpec.updateNodegroup(nodegroup);
 
 				if (importJson !== null) {
@@ -773,8 +835,9 @@ define([	// properly require.config'ed
 				}
 			},
 
-			updateNodegroup : function (nodegroup) {
+			updateNodegroup : function (nodegroup, conn) {
 				this.importSpec.updateNodegroup(nodegroup);
+                this.conn = gConn;
 				this.draw();
 			},
 
@@ -970,6 +1033,8 @@ define([	// properly require.config'ed
 
 				// appearance
 				span.className = MappingTab.classColumnUnused;
+                span.style.textTransform = "none";
+                span.style.fontSize = "12px";
 				span.innerHTML = IIDXHelper.htmlSafe(iCol.getColName());
 
 				// draggable
@@ -1402,6 +1467,10 @@ define([	// properly require.config'ed
                 this.removeUriLookupsWithNoItems();
                 this.importSpec.updateEmptyUriLookupModes();
 			},
+
+            getImportSpec: function() {
+                return this.importSpec;
+            },
 
             toJson : function (optDeflateFlag) {
 				var deflateFlag = (typeof optDeflateFlag == "undefined") ? false : optDeflateFlag;

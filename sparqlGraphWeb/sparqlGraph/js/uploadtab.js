@@ -1013,24 +1013,24 @@ define([	// properly require.config'ed
                 this.importJsonConn = null;
 				this.conn = null;
 				this.nodegroup = null;
-				this.importTab = null;
+				this.mappingTab = null;
 				this.draw();
 			},
 
 			/**
 			 * Set up the connection and nodegroup
 			 */
-			setNodeGroup : function (conn, nodegroup, oInfo, importTab, oInfoLoadTime) {
+			setNodeGroup : function (conn, nodegroup, oInfo, mappingTab, oInfoLoadTime) {
 
-				if (importTab !== null && nodegroup !== null && conn !== null) {
+				if (mappingTab !== null && nodegroup !== null && conn !== null) {
 					// set json, data, and suggested Prefix
-					var sgjson = new SparqlGraphJson(conn, nodegroup, importTab);
+					var sgjson = new SparqlGraphJson(conn, nodegroup, mappingTab.getImportSpec());
 		    		this.importJsonFile = new Blob( [sgjson.stringify()], { type: "text/css"});
                     this.importJsonConn = conn;
 
 		    		//only change this when setDataFile is called.
-		    		//this.dataFile = importTab.getCsvFile();
-		    		this.suggestedPrefix = importTab.getBaseURI();
+		    		//this.dataFile = mappingTab.getCsvFile();
+		    		this.suggestedPrefix = mappingTab.getBaseURI();
 				} else {
 					this.importJsonFile = null;
                     this.importJsonConn = null;

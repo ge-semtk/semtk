@@ -45,36 +45,6 @@ public class SparqlGraphJson {
 	static final String JKEY_SPARQLCONN = "sparqlConn";
 	
 	public static final String JKEY_IMPORTSPEC = "importSpec";
-	public static final String JKEY_IS_VERSION = "version";
-	public static final String JKEY_IS_BASE_URI = "baseURI";
-	public static final String JKEY_IS_COLUMNS = "columns";
-	public static final String JKEY_IS_COL_COL_ID = "colId";
-	public static final String JKEY_IS_COL_COL_NAME = "colName";
-	public static final String JKEY_IS_DATA_VALIDATOR = "dataValidator";
-	public static final String JKEY_IS_TEXTS = "texts";
-	public static final String JKEY_IS_TEXT_ID = "textId";
-	public static final String JKEY_IS_TEXT_TEXT = "text";
-	public static final String JKEY_IS_TRANSFORMS = "transforms";
-	public static final String JKEY_IS_TRANS_ID = "transId";
-	public static final String JKEY_IS_TRANS_NAME = "name";
-	public static final String JKEY_IS_TRANS_TYPE = "transType";
-	public static final String JKEY_IS_TRANS_ARG1 = "arg1";
-	public static final String JKEY_IS_TRANS_ARG2 = "arg2";
-	public static final String JKEY_IS_NODES = "nodes";
-	public static final String JKEY_IS_NODE_SPARQL_ID = "sparqlID";
-	public static final String JKEY_IS_NODE_TYPE = "type";
-	public static final String JKEY_IS_NODE_LOOKUP_MODE = "URILookupMode";
-	public static final String JKEY_IS_URI_LOOKUP = "URILookup";
-	public static final String JKEY_IS_MAPPING = "mapping";
-	public static final String JKEY_IS_MAPPING_TEXT_ID = "textId";
-	public static final String JKEY_IS_MAPPING_TEXT = "text";
-	public static final String JKEY_IS_MAPPING_COL_ID = "colId";
-	public static final String JKEY_IS_MAPPING_COL_NAME = "colName";
-	public static final String JKEY_IS_MAPPING_TRANSFORM_LIST = "transformList";
-	public static final String JKEY_IS_PROPS = "props";
-	public static final String JKEY_IS_MAPPING_PROPS_URI_REL = "URIRelation";
-
-
 	
 	static final String JKEY_RUNTIMECONST = "RuntimeConstraints";
 	
@@ -203,6 +173,10 @@ public class SparqlGraphJson {
 		this.importSpec = null;   // wipe out any cached ImportSpecHandler
 	}
 	
+	public void setImportSpec(ImportSpec spec) {
+		this.setImportSpecJson(spec.toJson());
+	}
+	
 	/**
 	 * @return runtime constraints json or null
 	 */
@@ -325,7 +299,7 @@ public class SparqlGraphJson {
 	 * @return importSpecHandler, might be NULL
 	 * @throws Exception
 	 */
-	public ImportSpecHandler getImportSpec() throws Exception {
+	public ImportSpecHandler getImportSpecHandler() throws Exception {
 		JSONObject json = this.getImportSpecJson();
 		if (importSpec == null && json != null) {
 			importSpec =  new ImportSpecHandler(json, this.getSNodeGroupJson(), this.getSparqlConn(), this.getOntologyInfo());

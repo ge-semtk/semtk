@@ -58,34 +58,27 @@ define([	// properly require.config'ed   bootstrap-modal
 			m.showOK(titleTxt, div, function(){});
 		};
 
-		ModalIidx.okCancel = function (titleTxt, msgHtml, okCallback, optOkButtonText, optCancelCallback) {
+        //
+        // msgHtmlOrDom - can be an html string or a dom
+        //
+		ModalIidx.okCancel = function (titleTxt, msgHtmlOrDom, okCallback, optOkButtonText, optCancelCallback) {
 			// ok cancel
-		    kdlLogEvent("OkCancel", "title", titleTxt, "message", msgHtml);
+
+            var dom;
 
 			var m = new ModalIidx("ModalIidxOkCancel");
-			var div = document.createElement("div");
-			div.innerHTML = msgHtml;
+            if (typeof msgHtmlOrDom == "string") {
+    			dom = document.createElement("div");
+    			dom.innerHTML = msgHtmlOrDom;
+            } else {
+                dom = msgHtmlOrDom;
+            }
+            kdlLogEvent("OkCancel", "title", titleTxt, "message", dom.innerHTML.substr(0, 100));
 			m.showOKCancel(	titleTxt,
-							div,
+							dom,
 							function() {return null;}, // always validate
 							okCallback,
 							optCancelCallback,
-							optOkButtonText
-							);
-		};
-
-		// untested
-		ModalIidx.prompt = function (titleText, msgHtml, okCallback) {
-			kdlLogEvent("prompt", "title", titleTxt, "message", msgHtml);
-
-			var m = new ModalIidx("ModalIidxPrompt");
-			var div = document.createElement("div");
-			div.innerHTML = msgHtml + " " + '<input type="text" class="input-xlarge" id="modalIidxPrompt" >';
-			m.showOKCancel(	titleTxt,
-							div,
-							function() {return null;}, // always validate
-							okCallback(document.getElementById("modalIidxPrompt").value),
-							function () {},    // no cancel callback
 							optOkButtonText
 							);
 		};
@@ -218,8 +211,13 @@ define([	// properly require.config'ed   bootstrap-modal
 
         };
 
-        ModalIidx.createInfoButton = function(helpHTML, optId) {
-            return IIDXHelper.createIconButton("icon-info-sign", ModalIidx.alert.bind(this, "Info", helpHTML, false, function(){}), ["icon-white", "btn-small", "btn-info"], optId);
+
+        ModalIidx.createInfoButton = function(helpHTML, optId, optFloatRight) {
+            var button = IIDXHelper.createIconButton("icon-info-sign", ModalIidx.alert.bind(this, "Info", helpHTML, false, function(){}), ["icon-white", "btn-small", "btn-info"], optId);
+            if (optFloatRight) {
+                button.style.float="right";
+            }
+            return button;
         };
 
         ModalIidx.createWikiButton = function(page, optId) {

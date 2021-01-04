@@ -67,7 +67,7 @@ public class SparqlGraphJsonTest_IT {
 		// sampleBatteryTestDeflate.json is verified correctly deflated
 		// so deflate the re-inflation and check
 		NodeGroup nodegroupDeflated2 = new NodeGroup();
-		ArrayList<PropertyItem> mappedProps = sgJson.getImportSpec().getUndeflatablePropItems(nodegroupInflated);
+		ArrayList<PropertyItem> mappedProps = sgJson.getImportSpecHandler().getUndeflatablePropItems(nodegroupInflated);
 		mappedProps.size();
 		JSONArray generatedJSON = (JSONArray) (nodegroupInflated.toJson(mappedProps).get("sNodeList")) ;
 		nodegroupDeflated2.addJson( generatedJSON );

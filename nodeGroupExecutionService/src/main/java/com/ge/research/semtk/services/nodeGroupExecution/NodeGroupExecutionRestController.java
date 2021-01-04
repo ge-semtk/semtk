@@ -1422,7 +1422,7 @@ public class NodeGroupExecutionRestController {
 		try {
 			
 			SparqlGraphJson sgJson = this.getNodegroupById(requestBody.getId());
-			ImportSpecHandler handler = sgJson.getImportSpec();
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
 			String colNames[] = handler.getColNamesUsed();
 			
 			retval.addResult("columnNames", colNames);
@@ -1450,7 +1450,7 @@ public class NodeGroupExecutionRestController {
 
 		try {
 			SparqlGraphJson sgJson = this.getNodegroupById(requestBody.getId());
-			ImportSpecHandler handler = sgJson.getImportSpec();
+			ImportSpecHandler handler = sgJson.getImportSpecHandler();
 			retval.addResult("columnNames", handler.getColNamesUsed());
 			retval.addResult("dataValidator", handler.getDataValidator().toJsonArray());
 			retval.setSuccess(true);

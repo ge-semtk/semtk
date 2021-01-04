@@ -2471,7 +2471,7 @@ public class NodeGroup {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private ArrayList<Node> getOrderedNodeList()  {
+	public ArrayList<Node> getOrderedNodeList()  {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		
 		ArrayList<Node> headList = this.getHeadNodes();

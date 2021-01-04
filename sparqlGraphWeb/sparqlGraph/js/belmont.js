@@ -954,7 +954,7 @@ edgeIntermediate.prototype = {
 };
 
 /* the semantic node */
-var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
+var SemanticNode = function(nome, plist, nlist, fullName, subClassNamesUNUSED,
 		nodeGroup, jObj, optInflateOInfo) {
 
 	var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
@@ -967,7 +967,6 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNames,
 										// link to.
 		this.NodeName = nome; // a name to be used for the node.
 		this.fullURIName = fullName; // full name of the class
-		this.subClassNames = subClassNames ? subClassNames.slice() : []; // optional
 													// possible subclasses
 		this.SparqlID = new SparqlFormatter().genSparqlID(
                 nome,
@@ -1018,7 +1017,6 @@ SemanticNode.prototype = {
 			nodeList : [],
 			NodeName : this.NodeName,
 			fullURIName : this.fullURIName,
-			subClassNames : this.subClassNames ? this.subClassNames.slice() : [],
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
 			isRuntimeConstrained : this.isRuntimeConstrained,
@@ -1065,7 +1063,6 @@ SemanticNode.prototype = {
 		this.propList = [], this.nodeList = [];
 		this.NodeName = jObj.NodeName;
 		this.fullURIName = jObj.fullURIName;
-		this.subClassNames = jObj.subClassNames ? jObj.subClassNames.slice() : [];
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
