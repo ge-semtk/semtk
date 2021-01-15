@@ -45,7 +45,7 @@ define([	// properly require.config'ed
 		],
        function(IIDXHelper, ModalIidx, $) {
 
-    var ModalLoadDialog = function(document, varNameOBSOLETE) {
+    var ModalLoadDialog = function(document, varNameOBSOLETE, ngClient) {
 
         this.document = document;
         this.div = document.getElementById("modaldialog");
@@ -101,9 +101,7 @@ define([	// properly require.config'ed
                         <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Server URL:</label>      <div class="controls"><input type="text" class="input-xlarge"  id="mdServerURL" list="mdDatalistServers"></div></div>\
                         <div class="control-group" style="margin-right: 1ch;"><label class="control-label">Type:</label><div class="controls" align="left">\
                             <select id="mdSelectSeiType"> \
-                                <option value="F"         >fuseki</label></option>\
-                                <option value="N"         >neptune</label></option>\
-                                <option value="V" selected>virtuoso</label></option>\
+                                %%OPTIONS%%\
                             </select> \
                         </div></div> \
                         <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Graph:</label><div class="controls"><input type="text" class="input-xlarge" id="mdGraph" list="mdDatalistGraphs" ></div></div>\
@@ -125,6 +123,25 @@ define([	// properly require.config'ed
         <datalist id="mdDatalistServers"></datalist>\
         <datalist id="mdDatalistGraphs"></datalist>\
         '.replace(/%VAR/g, varNameOBSOLETE);
+
+        gotServerTypes = function(results) {
+            if (results.isSuccess()) {
+                var typeArr = results.getSimpleResultField("serverTypes");
+                var html = "";
+                for (var t of typeArr) {
+                    if (t == "virtuoso") {
+                        html += "<option selected>" + t + "</option>";
+                    } else {
+                        html += "<option>" + t + "</option>";
+                    }
+                }
+                this.html = this.html.replace("%%OPTIONS%%", html);
+            } else {
+                ModalIidx.alert("Error", results.getFailureHtml(), false);
+            }
+        }.bind(this);
+
+        ngClient.execGetServerTypes(gotServerTypes);
 
         this.hide();
     };
@@ -405,16 +422,11 @@ define([	// properly require.config'ed
             // set screen fields from memory
             if (seiIndex > -1) {
                 var sei = seiType == "m" ? this.conn.getModelInterface(seiIndex) : this.conn.getDataInterface(seiIndex);
-                switch (sei.getServerType()) {
-                	case SparqlConnection.FUSEKI_SERVER:
-                		document.getElementById("mdSelectSeiType").selectedIndex = 0;
-                		break;
-                	case SparqlConnection.NEPTUNE_SERVER:
-                		document.getElementById("mdSelectSeiType").selectedIndex = 1;
-                		break;
-                	case SparqlConnection.VIRTUOSO_SERVER:
-                		document.getElementById("mdSelectSeiType").selectedIndex = 2;
-                		break;
+                var selectType = document.getElementById("mdSelectSeiType");
+                for (var i=0; i < selectType.options.length; i++) {
+                    if (selectType.options[i].text == sei.getServerType()) {
+                        selectType.selectedIndex = i;
+                    }
                 }
                 document.getElementById("mdServerURL").value = sei.getServerURL();
                 document.getElementById("mdGraph").value = sei.getGraph();
@@ -846,17 +858,8 @@ define([	// properly require.config'ed
                 var oppSei0 = (this.currSeiType == "m") ? this.conn.getDataInterface(0) : this.conn.getModelInterface(0);
 
                 // set fields
-                switch (document.getElementById("mdSelectSeiType").value) {
-                	case "F":
-                		sei.setServerType(SparqlConnection.FUSEKI_SERVER);
-                		break;
-                	case "N":
-                		sei.setServerType(SparqlConnection.NEPTUNE_SERVER);
-                		break;
-                	case "V":
-                		sei.setServerType(SparqlConnection.VIRTUOSO_SERVER);
-                		break;
-                }
+                var serverTypeSelect = document.getElementById("mdSelectSeiType");
+                sei.setServerType(serverTypeSelect.options[serverTypeSelect.selectedIndex].text);
                 sei.setServerURL(this.document.getElementById("mdServerURL").value.trim());
                 sei.setGraph(this.document.getElementById("mdGraph").value.trim());
 

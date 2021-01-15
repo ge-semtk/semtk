@@ -221,6 +221,10 @@ public class SparqlToXUtils {
 	  return "CREATE GRAPH <" + sei.getGraph() + ">";
   }
   
+  public static String generateSelectSPOSparql(SparqlEndpointInterface sei, String clause) {
+	  return "SELECT ?s ?p ?o from <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + clause + "}";
+  }
+  
   /**
    * Delete all model triples given a list of prefixes.   Also deletes blank nodes.
    * @param prefixes

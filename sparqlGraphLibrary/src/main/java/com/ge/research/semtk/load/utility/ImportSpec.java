@@ -387,6 +387,10 @@ public class ImportSpec {
 		nodeArr.add(node);
 	}
 	
+	public void addLookupMode(String nodeSparqlId, String lookupMode) throws Exception {
+		JSONObject node = this.findNode(nodeSparqlId);
+		node.put(JKEY_IS_NODE_LOOKUP_MODE, lookupMode);
+	}
 	
 	/**
 	 * Add prop to a node in the importspec

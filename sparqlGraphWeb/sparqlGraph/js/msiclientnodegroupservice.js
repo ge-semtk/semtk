@@ -41,7 +41,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
 		MsiClientNodeGroupService.prototype = {
             /*
-             * Synchronous.  All these may use
+             * Async.  All these may use
              *     resultSet.isSuccess()
              *     this.getSuccessSparql(resultSet)
              *     this.getFailedResultHtml(resultSet)
@@ -54,6 +54,7 @@ define([	// properly require.config'ed   bootstrap-modal
             execGetRuntimeConstraints : function (nodegroup, conn, successCallback)    { return this.execNodegroupOnly("getRuntimeConstraints", nodegroup, conn, successCallback); },
 
             execGenerateFilter : function (nodegroup, conn, sparqlId, successCallback) { return this.execNodegroupSparqlId("generateFilter",    nodegroup, conn, sparqlId, successCallback); },
+            execGetServerTypes : function (successCallback) { return this.msi.postToEndpoint("getServerTypes", {}, "application/json", successCallback, this.optFailureCallback, this.optTimeout);},
 
             execSetImportSpecFromReturns : function (sgJson, action, lookupRegex, lookupMode, successCallback) {
                 var deflateFlag = false;

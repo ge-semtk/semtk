@@ -25,6 +25,9 @@ public class LocalLogger {
 		logToStdOut(s, true, true);
 	}
 	
+	public static void logElapsedToStdOut(String s, Long startNanoTime) {
+		logToStdOut(s + ", elapsed sec, " + Double.toString((System.nanoTime() - startNanoTime) / 1000000000.0), false, true);
+	}
 	/**
 	 * Log to standard out.
 	 * Deprecated because replaced with more flexible method below.
@@ -66,5 +69,4 @@ public class LocalLogger {
 		logToStdErr(e.getMessage());  // need this to get the timestamp.
 		e.printStackTrace();		
 	}
-	
 }

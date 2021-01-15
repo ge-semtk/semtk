@@ -27,6 +27,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
@@ -48,21 +49,19 @@ import com.ge.research.semtk.utility.Utility;
 /**
  * Interface to Fuseki SPARQL endpoint
  */
-public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
-
-	protected static final String CONTENTTYPE_X_JSON_LD = "application/ld+json";
+public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	
-	public FusekiSparqlEndpointInterface(String server, String graph)	throws Exception {
+	public BlazegraphSparqlEndpointInterface(String server, String graph)	throws Exception {
 		super(server, graph);
 		if (this.endpoint == null) {
-			throw new Exception("Fuseki URL is missing the dataset: " + server);
+			throw new Exception("Blazegraph URL is missing the namespace: " + server);
 		}
 	}
 
-	public FusekiSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
+	public BlazegraphSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
 		super(server, graph, user, pass);
 		if (this.endpoint == null) {
-			throw new Exception("Fuseki URL is missing the dataset: " + server);
+			throw new Exception("Blazegraph URL is missing the namespace: " + server);
 		}
 	}
 
@@ -83,32 +82,11 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		} else {
 			params.add(new BasicNameValuePair("update", query));
 		}
-		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
 
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
 	
-	/**
-	 * Override identical function of parent because some of the CONTENTTYPE_ constants are overriden
-	 */
-	@Override
-	protected String getContentType(SparqlResultTypes resultType) throws Exception{
-		if (resultType == null) {
-			return this.getContentType(getDefaultResultType());
-			
-		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
-			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
-			
-		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
-			return CONTENTTYPE_X_JSON_LD; 
-		} else if (resultType == SparqlResultTypes.HTML) { 
-			return CONTENTTYPE_HTML; 
-		} 
-		
-		// fail and throw an exception if the value was not valid.
-		throw new Exception("Cannot get content type for query type " + resultType);
-	}
 	/**
 	 * Build a GET URL
 	 */
@@ -118,13 +96,39 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
 
 	/**
+	 * build the HttpPost with headers
+	 * @param resultsFormat
+	 * @return
+	 */
+	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
+		
+		httppost.addHeader("Accept", this.getContentType(resultType));
+		httppost.addHeader("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
+		// not recognized by blazegraph: httppost.addHeader("X-Sparql-default-graph", this.graph);
+
+	}
+	
+	@Override
+	public boolean isExceptionRetryAble(Exception e) {
+		String msg = e.getMessage();
+		
+		if (msg.contains("Non-JSON response")) {
+			return false;
+		} else {
+			return super.isExceptionRetryAble(e);
+		}
+				
+	}
+	/**
 	 * Build a POST URL
 	 */
 	public String getPostURL(SparqlResultTypes resultType) {
 		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD) { 
-			return String.format("%s:%s/%s", this.server, this.port, this.endpoint);	
+			return String.format("%s:%s/%s/sparql", this.server, this.port, this.endpoint);	
 		} else{
-			return String.format("%s:%s/%s/update", this.server, this.port, this.endpoint);	
+			// context-uri trick is from
+			// https://github.com/blazegraph/database/issues/158
+			return String.format("%s:%s/%s/update?context-uri=%s", this.server, this.port, this.endpoint, this.graph);	
 
 		}
 	}	
@@ -154,38 +158,35 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 		HttpPost httppost = new HttpPost(this.getUploadURL());
 		
-		this.addHeaders(httppost, SparqlResultTypes.HTML);
-		 
-		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
-		
-		ContentBody fileBody = new ByteArrayBody(owl, filename);
-		builder.addPart("files[]", fileBody);
+		// NOTE: doing this instead of addHeaders because resultType isn't enough info to determine Content-type
+		httppost.addHeader("Accept", "*/*");
+		if (filename.toLowerCase().endsWith(".ttl")) {
+			httppost.addHeader("Content-type", "text/turtle");
+		} else {
+			httppost.addHeader("Content-type", "application/rdf+xml");
+		}
 
-		
-		HttpEntity entity = builder.build();
+		 
+		// NOTE: blazegraph technique is not using multi-part, just straight body
+		HttpEntity entity = new ByteArrayEntity(owl);
 		httppost.setEntity(entity);
-		
 		
 		executeTestQuery();
 
 		HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
 		HttpEntity resp_entity = response_http.getEntity();
 		// get response with HTML tags removed
-		String responseTxt = EntityUtils.toString(resp_entity, "UTF-8").replaceAll("\\<.*?>"," ");
+		String responseTxt = EntityUtils.toString(resp_entity, "UTF-8");
 
 		SimpleResultSet ret = new SimpleResultSet();
 		
-		Long count = 0L;
-		try {
-			JSONObject jObj = (JSONObject) new JSONParser().parse(responseTxt);
-			count = (Long) jObj.get("count");
-		} catch (Exception e) {}
-		
-		if(count > 0){
+		if(responseTxt.contains("<data modified=") &&
+		   !responseTxt.contains("<data modified=\"0\"") &&
+		   !responseTxt.contains("xception")) {
 			ret.setSuccess(true);
 		} else {
 			ret.setSuccess(false);
-			ret.addRationaleMessage("FusekiEndpointInterface.executeUpload", responseTxt);
+			ret.addRationaleMessage("BlazegraphEndpointInterface.executeUpload", responseTxt);
 		}
 		resp_entity.getContent().close();
 		return ret.toJson();
@@ -197,7 +198,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	@Override
 	public JSONObject handleEmptyResponse(SparqlResultTypes resultType) throws Exception {
-		throw new Exception("Fuseki query returned empty response");
+		throw new Exception("Blazegraph query returned empty response");
 	}
 	
 	@Override
@@ -222,7 +223,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 				return ret.getResultsJSON();
 				
 			} else {
-				throw new Exception("Fuseki non-JSON non-HTML reponse: " + responseTxt);
+				throw new Exception("Non-JSON non-HTML reponse: " + responseTxt);
 			}
 			
 		} else {
@@ -231,27 +232,26 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			} else if (responseTxt.contains("Error 404")) {
 				throw new DontRetryException(responseTxt + " server=" + this.getServerAndPort());
 			}
-			throw new Exception("Fuseki non-JSON response: " + responseTxt);
+			throw new Exception("Non-JSON response: " + responseTxt);
 		}
 	}
 
 	@Override
 	public String getUploadURL() throws Exception {
-		return String.format("%s:%s/%s/data?graph=%s", this.server, this.port, this.endpoint, this.graph);	
+		return String.format("%s:%s/%s/update?context-uri=%s", this.server, this.port, this.endpoint, this.graph);	
 	}
 
 	@Override
 	public String getServerType() {
-		return "fuseki";
+		return BLAZEGRAPH_SERVER;
 	}
 	
 	@Override
 	public SparqlEndpointInterface copy() throws Exception {
-		FusekiSparqlEndpointInterface retval = null;
+		BlazegraphSparqlEndpointInterface retval = null;
 		
-		retval = new FusekiSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
+		retval = new BlazegraphSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
 		retval.copyRest(this);
-		
 		return (SparqlEndpointInterface) retval;
 	}
 	

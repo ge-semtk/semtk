@@ -52,11 +52,6 @@ var SparqlConnection = function(jsonText) {
     }
 };
 
-SparqlConnection.QUERY_SERVER = "kdl";
-SparqlConnection.FUSEKI_SERVER = "fuseki";
-SparqlConnection.VIRTUOSO_SERVER = "virtuoso";
-SparqlConnection.NEPTUNE_SERVER = "neptune";
-
 
 SparqlConnection.prototype = {
 
@@ -300,15 +295,7 @@ SparqlConnection.prototype = {
 
 	//---------- private function
 	createInterface : function (stype, url, graph) {
-		if (stype == SparqlConnection.FUSEKI_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.FUSEKI_SERVER, url, graph);
-		} else if (stype == SparqlConnection.NEPTUNE_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.NEPTUNE_SERVER, url, graph);
-		} else if (stype == SparqlConnection.VIRTUOSO_SERVER) {
-			return new SparqlServerInterface(SparqlServerInterface.VIRTUOSO_SERVER, url, graph);
-		} else {
-			throw new Error("Unsupported SparqlConnection server type: " + stype);
-		}
+        return new SparqlServerInterface(stype, url, graph);
 	},
 
 	// DEPRECATED private

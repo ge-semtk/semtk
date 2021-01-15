@@ -8,24 +8,26 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.aws.S3Connector;
+import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 public class PerformanceTest {
 
@@ -35,37 +37,33 @@ public class PerformanceTest {
 	private static SparqlEndpointInterface sei;
 	private final static boolean NO_PRECHECK = false;
 	private final static boolean PRECHECK = true;
+	private final static boolean LOG_QUERY_PERFORMANCE = false;
 
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		if (args.length != 3) {
-			throw new Exception("Usage: PerformanceTest server_type server_url resource_folder");
+			throw new Exception("Usage: PerformanceTest server_type server_url sglib_src_test_resources");
 		}
-		
 		
 		String graph = "http://performance_test_0";
 		sei = SparqlEndpointInterface.getInstance(args[0], args[1], graph, "dba", "dba");
-		
+		sei.setLogPerformance(LOG_QUERY_PERFORMANCE);
 		log("graph: " + graph);
 		resourceFolder = args[2];
 		if (!Files.exists(Paths.get(resourceFolder))) {
 			throw new Exception("Resource folder doesn't exist: " + resourceFolder);
 		}
 		
-		Table table = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei));
-		long triples = table.getCellAsLong(0, 0);
-		if (triples > 0) {
-			System.err.println("Found " + triples + " triples in performance test graph.  Clearing them.");
-			System.err.println("Make sure there are not multiple performance tests running");
-		}
+		log("clearing graph");
+		sei.clearGraph();
 		
 		try {
 			
-			addSimpleRows(0, 10000); 
-			addBatteryDescriptions(0, 20000);   // 150,20000);
-			addBatteryDescriptionsVaryingThreadsAndSize(2000);
-			addSimpleBiggerRows(0, 50000);
+			//addSimpleRows(10, 10000); 
+			addBatteryDescriptions(1000, 2000000);  
+			//addBatteryDescriptionsVaryingThreadsAndSize(0);
+			//addSimpleBiggerRows(10, 50000);
 			
 		} finally {
 			sei.clearGraph();
@@ -75,6 +73,12 @@ public class PerformanceTest {
 		log("fine.");
 	}
 	
+	/**
+	 * Import rows and count
+	 * @param passes - how many passes
+	 * @param pass_size - rows per pass
+	 * @throws Exception
+	 */
 	private static void addSimpleRows(int passes, int pass_size) throws Exception {
 		
 		// setup
@@ -99,13 +103,13 @@ public class PerformanceTest {
 			Dataset ds0 = new CSVDataset(content.toString(), true);
 	
 			DataLoader dl0 = new DataLoader(sgJson, 30, ds0, "dba", "dba");
-			startTask("load " + pass_size + "  totaling," + (pass + 1) * pass_size);
+			startTask("addSimpleRows load " + pass_size + "  totaling," + (pass + 1) * pass_size);
 			dl0.importData(NO_PRECHECK);
 			endTask();
 			
 			// get new total triples twice
 			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			startTask("count triples, " + triples);
+			startTask("addSimpleRows count, " + triples);
 			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			endTask();
 		}
@@ -147,13 +151,13 @@ public class PerformanceTest {
 			Dataset ds0 = new CSVDataset(content.toString(), true);
 	
 			DataLoader dl0 = new DataLoader(sgJson, 30, ds0, "dba", "dba");
-			startTask("load " + pass_size + "  totaling," + (pass + 1) * pass_size);
+			startTask("addSimpleBiggerRows load " + pass_size + "  totaling," + (pass + 1) * pass_size);
 			dl0.importData(PRECHECK);
 			endTask();
 			
 			// get new total triples twice
 			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			startTask("count triples, " + triples);
+			startTask("addSimpleBiggerRows count triples, " + triples);
 			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			endTask();
 		}
@@ -165,58 +169,102 @@ public class PerformanceTest {
 	 * @param passes
 	 * @throws Exception
 	 */
-	private static void addBatteryDescriptions(int passes, int pass_size) throws Exception {
+	private static void addBatteryDescriptions(int rows_per_pass, int max_triples) throws Exception {
 		
-		// setup
+		// setup loads
 		SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
 		SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
+		
+		// set up a query
+		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("Perftest", sei));
+		NodeGroup ng2 = sgJson2.getNodeGroupNoInflateNorValidate(oInfo);
+		int limit = rows_per_pass;
+		ng2.setLimit(limit);
 		
 		sei.clearGraph();
 		uploadOwl(sei, "/loadTestDuraBattery.owl");
 		long triples = 0;
 
 		int pass = -1;
-		
-		while (++pass < passes) {
-			// build 10,000 rows
-			int i = 0;
+		int index = 0;
+		while (triples < max_triples) {
+			++pass;
+			int total_rows = (pass + 1) * rows_per_pass;
+			
+			// build some rows
 			StringBuilder content1 = new StringBuilder();
 			StringBuilder content2 = new StringBuilder();
 
 			content1.append("description_opt, batt_ID\n");
 			content2.append("description, batt_ID\n");
-			for (i=0; i < pass_size; i++) {
-				int index = pass * pass_size + i;
+			for (int i=0; i < rows_per_pass; i++) {
+				index++;
 				content1.append(",id_" + index + "\n");
 				content2.append("description_" + index + ",id_" + index + "\n");
 			}
 			
-			// create ids
+			// ingest rows
 			Dataset ds1 = new CSVDataset(content1.toString(), true);
-			DataLoader dl1 = new DataLoader(sgJson1, 30, ds1, "dba", "dba");
-			startTask("load simple " + pass_size + " total," + (pass + 1) * pass_size);
+			DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
+			startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
 			dl1.importData(NO_PRECHECK);
 			endTask();
 			
 			// add descriptions
 			Dataset ds2 = new CSVDataset(content2.toString(), true);
-			DataLoader dl2 = new DataLoader(sgJson2, 100, ds2, "dba", "dba");
-			startTask("load lookup " + pass_size + "total," + (pass + 1) * pass_size);
+			DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
+			dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
+			startTask("addBatteryDescriptions load lookup, rows," + rows_per_pass + ",total rows," + total_rows);
 			dl2.importData(NO_PRECHECK);
 			endTask();
 			
-			// get new total triples twice
-			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			startTask("count triples," + triples );
-			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+			// get new total triples
+			triples = countTriples("addBatteryDescriptions", total_rows);
+			
+			// create list of predicates
+			int SIZE = 10;
+			StringBuilder regex = new StringBuilder();
+			ArrayList<String> idList = new ArrayList<String>();
+			for (int i=index; i > index-SIZE; i--) {
+				idList.add("id_" + i);
+				regex.append( (i == index) ? "(" : "|");
+				regex.append("id_" + i);
+			}
+			regex.append(")");
+			
+			Table t;
+			
+			// Select filter in
+			startTask("addBatteryDescription select filter in 10, triples," + triples + ",total rows," + total_rows);
+			t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?p", idList, XSDSupportedType.STRING)));
 			endTask();
+			assert(t.getNumRows() == SIZE);
+			
+			// Select filter in
+			startTask("addBatteryDescription select filter regex 10, triples," + triples + ",total rows," + total_rows);
+			t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?p", regex.toString(), XSDSupportedType.STRING)));
+			endTask();
+			assert(t.getNumRows() == SIZE);
+			
+			// Select values
+			startTask("addBatteryDescription select values 10, triples," + triples + ",total rows," + total_rows);
+			t =sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?p", idList, XSDSupportedType.STRING)));
+			endTask();
+			assert(t.getNumRows() == SIZE);
 
 		}
 
 	}
 	
+	private static long countTriples(String name, int total_rows) throws Exception {
+		startTask(name + " count triples, rows," + total_rows);
+		long triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+		endTask();
+		return triples;
+	}
+	
 	/**
-	 
+	 * Muck with different number of threads and ideal query sizes
 	 * @param passes
 	 * @throws Exception
 	 */
@@ -252,7 +300,7 @@ public class PerformanceTest {
 				DataLoader dl1 = new DataLoader(sgJson1, 8, ds1, "dba", "dba");
 				dl1.overrideMaxThreads(threads);
 				dl1.overrideInsertQueryIdealSize(querySize);
-				startTask("load simple " + pass_size + " total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
+				startTask("addBatteryDescriptionsVaryingThreadsAndSize load simple " + pass_size + " total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
 				dl1.importData(NO_PRECHECK);
 				endTask();
 				
@@ -261,7 +309,7 @@ public class PerformanceTest {
 				DataLoader dl2 = new DataLoader(sgJson2, 8, ds2, "dba", "dba");
 				dl1.overrideMaxThreads(threads);
 				dl1.overrideInsertQueryIdealSize(querySize);
-				startTask("load lookup " + pass_size + "total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
+				startTask("addBatteryDescriptionsVaryingThreadsAndSize load lookup " + pass_size + "total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
 				dl2.importData(NO_PRECHECK);
 				endTask();
 				

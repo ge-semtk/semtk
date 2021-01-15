@@ -209,6 +209,7 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 	public SparqlEndpointInterface copy() throws Exception {
 		InMemoryInterface ret = new InMemoryInterface(this.graph);
 		ret.ds = this.ds;
+		ret.copyRest(this);
 		return ret;
 	}
 	

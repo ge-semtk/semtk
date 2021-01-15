@@ -81,7 +81,8 @@
 	    	console.log(".ready()");
 
 	    	// create the modal dialogue
-	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
+            var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog", ngClient);
 
 	    	 // set up the node group
 	        gNodeGroup = new SemanticNodeGroup();

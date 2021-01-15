@@ -1,0 +1,22 @@
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/belmont/ValueConstraint.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/ontologyTools/OntologyInfo.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/sparqlX/FusekiSparqlEndpointInterface.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/sparqlX/InMemoryInterface.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/sparqlX/NeptuneSparqlEndpointInterface.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/sparqlX/SparqlToXUtils.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphLibrary/src/main/java/com/ge/research/semtk/sparqlX/VirtuosoSparqlEndpointInterface.java.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphWeb/sparqlForm/main-oss/sparqlformlocal.js.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphWeb/sparqlGraph/js/modalloaddialog.js.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in sparqlGraphWeb/sparqlGraph/js/sparqlconnection.js.
+The file will have its original line endings in your working directory
+warning: CRLF will be replaced by LF in standaloneExecutables/src/main/java/com/ge/research/semtk/standaloneExecutables/PerformanceTest.java.
+The file will have its original line endings in your working directory

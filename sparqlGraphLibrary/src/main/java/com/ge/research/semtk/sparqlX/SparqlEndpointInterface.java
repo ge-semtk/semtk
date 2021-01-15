@@ -100,6 +100,7 @@ public abstract class SparqlEndpointInterface {
 	public final static String FUSEKI_SERVER = "fuseki";
 	public final static String VIRTUOSO_SERVER = "virtuoso";
 	public final static String NEPTUNE_SERVER = "neptune";
+	public final static String BLAZEGRAPH_SERVER = "blazegraph";
 	
 	// results types to request
 	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
@@ -126,6 +127,8 @@ public abstract class SparqlEndpointInterface {
 	protected String port = null;
 	protected String endpoint = null;    // null or everything "end/point" if url looks like http://server:8000/end/point
 	protected String graph = "";
+	
+	protected boolean logPerformance = false;
 	
 	protected int retries = 0;
 		
@@ -173,6 +176,17 @@ public abstract class SparqlEndpointInterface {
 			ret += "/" + this.endpoint;
 		}
 		return ret;
+	}
+	
+	/**
+	 * Print query content and execution time to stdout
+	 * 1) hurts performance (potentially a lot)
+	 * 2) printing queries to log might not be desirable for security (?)
+	 * 
+	 * @param flag
+	 */
+	public void setLogPerformance(boolean flag) {
+		this.logPerformance = flag;
 	}
 	
 	public void setServerAndPort(String serverAndPort) throws Exception {
@@ -279,6 +293,10 @@ public abstract class SparqlEndpointInterface {
 	public static void setUrlStreamHandler(URLStreamHandler handler) {
 		SparqlEndpointInterface.handler = handler;
 	}
+	
+	public static String [] getServerTypes() {
+		return new String [] {BLAZEGRAPH_SERVER, FUSEKI_SERVER, NEPTUNE_SERVER, VIRTUOSO_SERVER};
+	}
 
 	/**
 	 * Set the username and password
@@ -331,6 +349,9 @@ public abstract class SparqlEndpointInterface {
 			
 		}else if(serverTypeString.equalsIgnoreCase(NEPTUNE_SERVER)){
 			return new NeptuneSparqlEndpointInterface(server, graph, user, password);				
+		
+		}else if(serverTypeString.equalsIgnoreCase(BLAZEGRAPH_SERVER)){
+			return new BlazegraphSparqlEndpointInterface(server, graph, user, password);				
 		
 		}else{
 			throw new Exception("Invalid SPARQL server type : " + serverTypeString);
@@ -622,6 +643,7 @@ public abstract class SparqlEndpointInterface {
      
 		// create the HttpPost
 		HttpPost httppost = new HttpPost(this.getPostURL(resultType));
+		
 		this.addParams(httppost, query, resultType);
 		this.addHeaders(httppost, resultType);
 		
@@ -630,7 +652,19 @@ public abstract class SparqlEndpointInterface {
 		HttpEntity entity = null;
 		try {
 			// execute
+			long startTime=0;
+			if (this.logPerformance) { 
+				startTime = System.nanoTime();
+			}
+				
 			HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
+			
+			if (this.logPerformance) { 
+				LocalLogger.logToStdOut(query);
+				LocalLogger.logElapsedToStdOut("query timer", startTime);
+			}
+			
+				
 			entity = response_http.getEntity();
 			String responseTxt = EntityUtils.toString(entity, "UTF-8");
 		
@@ -1364,6 +1398,9 @@ public abstract class SparqlEndpointInterface {
 
 	public abstract SparqlEndpointInterface copy() throws Exception;
 	
+	public void copyRest(SparqlEndpointInterface other) {
+		this.logPerformance = other.logPerformance;
+	}
 	/**
 	 * Get query results as ints
 	* 

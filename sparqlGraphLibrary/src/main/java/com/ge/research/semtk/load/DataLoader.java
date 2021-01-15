@@ -114,6 +114,7 @@ public class DataLoader implements Runnable {
 	}
 
 	@Deprecated
+	// use vesrion without bSize
 	public DataLoader(SparqlGraphJson sgJson, int bSize, Dataset ds, String username, String password) throws Exception{
 		this(sgJson, ds, username, password);
 		this.batchSize = Math.min(100, bSize);
@@ -141,6 +142,10 @@ public class DataLoader implements Runnable {
 		this(new SparqlGraphJson(json),  ds, username, password);
 		this.batchSize = Math.min(100, bSize);
 		this.batchHandler.setBatchSize(this.batchSize);
+	}
+	
+	public void setLogPerformance(boolean logFlag) {
+		this.endpoint.setLogPerformance(logFlag);
 	}
 	
 	// for testing
@@ -226,6 +231,10 @@ public class DataLoader implements Runnable {
 		// neptune never
 		} else if (this.endpoint.getServerType().equals(SparqlEndpointInterface.NEPTUNE_SERVER) && 
 				false ) { 
+			this.cacheSei = new InMemoryInterface("http://cache");
+			
+		// fuseki and blazegraph and ???   Just repeat > 50 logic.
+		} else if (this.datasetNumRows > 50){
 			this.cacheSei = new InMemoryInterface("http://cache");
 			
 		} else {

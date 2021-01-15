@@ -37,6 +37,7 @@ import com.ge.research.semtk.belmont.BelmontUtil;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.DataValidator;
@@ -395,7 +396,7 @@ public class ImportSpecHandler {
 				Node node = lookupNg.getNodeBySparqlID(map.getNodeSparqlID());
 				
 				if (map.isNode()) {
-					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(node, sample)));
+					node.setValueConstraint(this.buildBestConstraint(node, sample));  
 				} else {
 					PropertyItem propItem = node.getPropertyByURIRelation(map.getPropURI());
 					
@@ -406,7 +407,7 @@ public class ImportSpecHandler {
 					}
 					
 					// apply value constraint so it isn't pruned
-					propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(propItem, sample)));
+					propItem.setValueConstraint(this.buildBestConstraint(propItem, sample));    
 				}
 			}
 			
@@ -796,11 +797,11 @@ public class ImportSpecHandler {
 						uri = builtString;
 					}
 					
-					node.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(node, uri)));
+					node.setValueConstraint(this.buildBestConstraint(node, uri));  
 					
 				} else {
 					PropertyItem prop = node.getPropertyByURIRelation(mapping.getPropURI());
-					prop.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterInConstraint(prop, builtString)));
+					prop.setValueConstraint(this.buildBestConstraint(prop, builtString));  
 				}
 			}
 			
@@ -853,6 +854,16 @@ public class ImportSpecHandler {
 			}
 		}
 	}
+	
+	private ValueConstraint buildBestConstraint(Returnable item, String val) throws Exception {
+		return new ValueConstraint(ValueConstraint.buildBestListConstraint(item, val, this.lookupConn.getDataInterface(0)));
+	}
+	
+	private ValueConstraint buildBestConstraint(Returnable item, ArrayList<String> valList) throws Exception {
+		return new ValueConstraint(ValueConstraint.buildBestListConstraint(item, valList, this.lookupConn.getDataInterface(0)));
+	}
+	
+	//---------------------------------------------
 	
 	
 	private long lookupCount(String nodeID, int maxCount) throws Exception {

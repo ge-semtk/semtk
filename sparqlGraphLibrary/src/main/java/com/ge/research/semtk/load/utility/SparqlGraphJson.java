@@ -217,9 +217,8 @@ public class SparqlGraphJson {
 	 * @throws Exception
 	 */
 	public NodeGroup getNodeGroupNoInflateNorValidate(OntologyInfoClient oClient) throws Exception {
-		NodeGroup ng = this.getNodeGroup(null);
-		ng.noInflateNorValidate(this.getOntologyInfo(oClient));
-		return ng;
+		return this.getNodeGroupNoInflateNorValidate(this.getOntologyInfo(oClient));
+
 	}
 	
 	/**
@@ -229,9 +228,7 @@ public class SparqlGraphJson {
 	 * @throws Exception
 	 */
 	public NodeGroup getNodeGroupValidate(OntologyInfoClient oClient) throws Exception {
-		NodeGroup ng = this.getNodeGroup(null);
-		ng.validateAgainstModel(this.getOntologyInfo(oClient));
-		return ng;
+		return this.getNodeGroupValidate(this.getOntologyInfo(oClient));
 	}
 	
 	/**
@@ -241,11 +238,45 @@ public class SparqlGraphJson {
 	 * @throws Exception
 	 */
 	public NodeGroup getNodeGroupInflateAndValidate(OntologyInfoClient oClient) throws Exception {
-		NodeGroup ng = this.getNodeGroup(null);
-		ng.inflateAndValidate(this.getOntologyInfo(oClient));
-		return ng;
+		return this.getNodeGroupInflateAndValidate(this.getOntologyInfo(oClient));
+
 	}
 
+	/**
+	 * Get the nodegroup loaded with it's conn and oInfo
+	 * @param oClient
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup getNodeGroupNoInflateNorValidate(OntologyInfo oInfo) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.noInflateNorValidate(oInfo);
+		return ng;
+	}
+	
+	/**
+	 * Get the validated nodegroup loaded with it's conn and oInfo
+	 * @param oClient
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup getNodeGroupValidate(OntologyInfo oInfo) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.validateAgainstModel(oInfo);
+		return ng;
+	}
+	
+	/**
+	 * Get the inflated and validated nodegroup loaded with it's conn and oInfo
+	 * @param oClient
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeGroup getNodeGroupInflateAndValidate(OntologyInfo oInfo) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.inflateAndValidate(oInfo);
+		return ng;
+	}
 	
 	/**
 	 * Gets nodegroup regardless of whether sgJson is a whole sgJson or just a nodegroup

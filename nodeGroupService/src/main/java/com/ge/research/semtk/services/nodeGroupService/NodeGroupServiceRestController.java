@@ -29,6 +29,7 @@ import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
@@ -826,6 +827,28 @@ public class NodeGroupServiceRestController {
 			LocalLogger.printStackTrace(e);
 		}
 		
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Get a list of supported server types.",
+			notes="return key is 'serverTypes'"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getServerTypes", method=RequestMethod.POST)
+	public JSONObject getServerTypes(@RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			retval.addResult("serverTypes", SparqlEndpointInterface.getServerTypes());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "getServerTypes", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
 		return retval.toJson();		
 	}
 	

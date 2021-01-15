@@ -477,6 +477,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		NeptuneSparqlEndpointInterface retval = null;
 		
 		retval = new NeptuneSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
+		retval.copyRest(this);
 		
 		return (SparqlEndpointInterface) retval;
 	}

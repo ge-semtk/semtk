@@ -28,6 +28,7 @@ var gQueryResults = null;
 require([	'local/sparqlformconfig',
 
          	'sparqlgraph/js/backcompatutils',
+            'sparqlgraph/js/msiclientnodegroupservice',
             'sparqlgraph/js/msiclientontologyinfo',
          	'sparqlgraph/js/msiclientquery',
          	'sparqlgraph/js/msiresultset',
@@ -46,7 +47,7 @@ require([	'local/sparqlformconfig',
 
 		],
 
-	function(Config, BackwardCompatibleUtil, MsiClientOntologyInfo, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, ModalLoadDialog, $) {
+	function(Config, BackwardCompatibleUtil, MsiClientNodeGroupService, MsiClientOntologyInfo, MsiClientQuery, MsiResultSet, ModalIidx, ModalItemDialog, ModalLoadDialog, $) {
 
 
 		//----- e d c ------/
@@ -199,7 +200,8 @@ require([	'local/sparqlformconfig',
 			initAvoidQueryMicroservice();
 
 			// globals
-			gLoadDialog = new ModalLoadDialog(document, "gLoadDialog");
+            var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
+			gLoadDialog = new ModalLoadDialog(document, "gLoadDialog", ngClient);
 
 			// load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();

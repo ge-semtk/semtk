@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.jena.sparql.lang.SPARQLParserFactory;
 
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
 import com.github.jsonldjava.shaded.com.google.common.base.Strings;
 
@@ -86,11 +87,39 @@ public class ValueConstraint {
 		}
 	}
 	
+	
+	
+	public static String buildBestListConstraint(Returnable item, String val, SparqlEndpointInterface sei) throws Exception {
+		ArrayList<String> valList = new ArrayList<String>();
+		valList.add(val);
+		return buildBestListConstraint(item, valList, sei);
+	}
+	
+	/**
+	 * Return the most performant list-matching constraint.  Based on Jan 2021 Testing
+	 * @param item
+	 * @param valList
+	 * @param sei
+	 * @return
+	 * @throws Exception
+	 */
+	public static String buildBestListConstraint(Returnable item, ArrayList<String> valList, SparqlEndpointInterface sei) throws Exception {
+		switch (sei.getServerType()) {
+		case SparqlEndpointInterface.NEPTUNE_SERVER:
+			return buildFilterInConstraint(item, valList);
+			
+		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
+		case SparqlEndpointInterface.FUSEKI_SERVER:
+		case SparqlEndpointInterface.VIRTUOSO_SERVER:
+		default:
+			return buildValuesConstraint(item, valList);
+		}
+	}
+	
 	//
 	//  Original ValueConstraint functions ported from javascript for use with NodegGroup items
 	//
 	//
-	
 	public static String buildValuesConstraint(Returnable item, String val) throws Exception {
 		ArrayList<String> valList = new ArrayList<String>();
 		valList.add(val);

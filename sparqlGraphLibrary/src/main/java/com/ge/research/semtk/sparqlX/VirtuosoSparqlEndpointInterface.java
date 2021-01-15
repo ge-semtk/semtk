@@ -241,6 +241,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		VirtuosoSparqlEndpointInterface retval = null;
 		
 		retval = new VirtuosoSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
+		retval.copyRest(this);
 		
 		return (SparqlEndpointInterface) retval;
 	}
