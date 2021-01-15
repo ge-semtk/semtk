@@ -847,7 +847,7 @@ public class OntologyInfo {
 				       	"select distinct ?subProp ?superProp from <" + graphName + "> where { " +
 				       	"?subProp rdfs:subPropertyOf ?superProp " +
 				       	getDomainFilterStatement("subProp", domain) +
-				       	getDomainFilterStatement("y", domain) + 
+				       	getDomainFilterStatement("superProp", domain) + 
 				        " filter (?subProp != ?superProp). } order by ?subProp";
 		
 		return retval;
