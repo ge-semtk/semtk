@@ -21,15 +21,13 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -54,6 +52,13 @@ public class OntologyInfoTests_IT {
 		TestGraph.syncOwlToItsGraph("src/test/resources/owl_import_LeafRange.owl");
 		
 	}
+	
+	@AfterClass
+	public static void cleanup() throws Exception {
+		TestGraph.clearSyncedGraph("src/test/resources/owl_import_Imported.owl");
+		TestGraph.clearSyncedGraph("src/test/resources/owl_import_Leaf.owl");
+		TestGraph.clearSyncedGraph("src/test/resources/owl_import_LeafRange.owl");
+	}
 
 	
 	@Test
@@ -61,7 +66,7 @@ public class OntologyInfoTests_IT {
 
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/Pet.owl");		
+		TestGraph.uploadOwlResource(this, "Pet.owl");		
 
 		// attempt the load
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
@@ -87,7 +92,7 @@ public class OntologyInfoTests_IT {
 
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/annotationBattery.owl");		
+		TestGraph.uploadOwlResource(this, "annotationBattery.owl");		
 
 		// attempt the load
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
@@ -107,7 +112,7 @@ public class OntologyInfoTests_IT {
 
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/annotationBattery.owl");		
+		TestGraph.uploadOwlResource(this, "annotationBattery.owl");		
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
 		
 		assertEquals(oInfo.getNumberOfEnum(), 1);
@@ -131,7 +136,7 @@ public class OntologyInfoTests_IT {
 		
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/annotationBattery.owl");		
+		TestGraph.uploadOwlResource(this, "annotationBattery.owl");		
 
 		// load from graph
 		OntologyInfo oInfo1 = new OntologyInfo(TestGraph.getSparqlConn());
@@ -180,9 +185,10 @@ public class OntologyInfoTests_IT {
 			
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/Pet.owl");		
+		TestGraph.uploadOwlResource(this, "Pet.owl");		
 
 		// attempt the load
+		@SuppressWarnings("deprecation")
 		OntologyInfo oInfo = new OntologyInfo(conf, TestGraph.getSparqlConn());
 
 		assertTrue("Expecting 0 enums.  found: " + oInfo.getNumberOfEnum(),              oInfo.getNumberOfEnum() == 0);
@@ -223,6 +229,7 @@ public class OntologyInfoTests_IT {
 				"empty");
 		
 		TestConnection testConn = setupDoubleModel();
+		@SuppressWarnings("deprecation")
 		OntologyInfo oInfo = new OntologyInfo(config, testConn.getSparqlConn());
 		OntologyClass cat = oInfo.getClass("http://research.ge.com/kdl/pet#Cat");
 		OntologyClass flower = oInfo.getClass("http://research.ge.com/kdl/plant#Flower");
@@ -241,7 +248,7 @@ public class OntologyInfoTests_IT {
 	public void testFullLoadDuplicateProp() throws Exception {
 
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/Pet.owl");
+		TestGraph.uploadOwlResource(this, "Pet.owl");
 
 		// attempt the load
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
@@ -271,11 +278,11 @@ public class OntologyInfoTests_IT {
 
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/owl_import_Leaf.owl");		
+		TestGraph.uploadOwlResource(this, "owl_import_Leaf.owl");		
 
 		// load should fail
 		try {
-			OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
+			new OntologyInfo(TestGraph.getSparqlConn());
 			fail("Missing exception for unknown superclass");
 		} catch (Exception e) {
 			assertTrue("Unknown superclass exception doesn't contain name of missing class:\n" + e.getMessage(),
@@ -291,7 +298,7 @@ public class OntologyInfoTests_IT {
 
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/owl_import_LeafRange.owl");		
+		TestGraph.uploadOwlResource(this, "owl_import_LeafRange.owl");		
 
 		// load should succeed
 		OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
@@ -368,9 +375,8 @@ public class OntologyInfoTests_IT {
 		query = sgJson.getNodeGroup(oInfo).generateSparqlSelect();
 		table = TestGraph.execTableSelect(query);
 	
-		NodeGroup ng = sgJson.getNodeGroup(oInfo);
+		sgJson.getNodeGroup(oInfo);
 
-		
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 	}
 	@Test
@@ -414,7 +420,7 @@ public class OntologyInfoTests_IT {
 		oInfo.load(TestGraph.getSei(), false);
 		assertFalse("oInfo magically contains made-up-class", oInfo.containsClassWithBase("http://made/up"));
 		
-		TestGraph.uploadOwl("src/test/resources/Pet.owl");
+		TestGraph.uploadOwlResource(this, "Pet.owl");
 		oInfo.load(TestGraph.getSei(), false);
 		InputStream is = this.getClass().getResourceAsStream("/Pet.owl");
 		assertTrue("can't find class with base that was just loaded", oInfo.containsClassWithBase(is));

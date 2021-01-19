@@ -322,6 +322,17 @@ public class TestGraph {
 		}
 	}
 	
+	public static void clearSyncedGraph(String owlFilename) throws Exception {
+		
+		String base = Utility.getXmlBaseFromOwlRdf(new FileInputStream(owlFilename));
+		
+		SparqlEndpointInterface sei = getSei();
+		
+		sei.setGraph(base);
+		sei.clearGraph();
+		
+	}
+	
 	public static void uploadTurtleResource(Object o, String resourceName) throws Exception {
 		uploadTurtleString(Utility.getResourceAsString(o.getClass(), resourceName));
 	}

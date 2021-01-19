@@ -107,6 +107,7 @@ public class OntologyInfo {
 	
 	/**
 	 * Load via the SparqlQueryClient 
+	 * Deprecated because of performance.  Not clear what the QueryClient adds except overhead.
 	 * @param clientConfig - query client config
 	 * @param conn
 	 * @throws Exception
