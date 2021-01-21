@@ -1664,18 +1664,15 @@
 
     };
 
-    var buildQueryFailure = function (msgHtml, param2NoSparqlOrCallback) {
-        // param2NoSparqlOrCallback is a hack due to bug found long after this was written
-        // second parameter by default might be a callback for after handling is done.
-        // seems like nodeGroupExecClient has a second parameter that explains why SPARQL is bad
+    var buildQueryFailure = function (msgHtml, sparqlMsgOrCallback) {
         var sparql = "";
-        if (typeof param2NoSparqlOrCallback == "string") {
-            sparql = "#" + param2NoSparqlOrCallback.replace(/\n/g, '#');
+        if (typeof sparqlMsgOrCallback == "string") {
+            sparql = "#" + sparqlMsgOrCallback.replace(/\n/g, '#');
 
         } else {
             require(['sparqlgraph/js/modaliidx'],
     	         function (ModalIidx) {
-					ModalIidx.alert("Query Generation Failed", msgHtml, false, param2NoSparqlOrCallback);
+					ModalIidx.alert("Query Generation Failed", msgHtml, false, sparqlMsgOrCallback);
 				});
 
         }

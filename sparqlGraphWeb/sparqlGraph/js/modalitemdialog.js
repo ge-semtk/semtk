@@ -151,11 +151,10 @@ define([	// properly require.config'ed
 					this.returnCheckOnClick();   // handles any disabling fields
 				}
 
-				// uncheck "optional"
+				// choose first (default) item in the union select
 				var optMinSelect = this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT);
 				if (optMinSelect != null) {
-                    IIDXHelper.selectFirstMatchingText(optMinSelect,
-                                                 this.getOptMinusText(PropertyItem.OPT_MINUS_NONE));
+                    optMinSelect.selectedIndex = "0";
             	}
 
 				// uncheck "runtime constrained"

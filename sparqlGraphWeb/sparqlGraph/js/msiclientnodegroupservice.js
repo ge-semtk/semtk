@@ -169,7 +169,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         failureCallback(resultSet.getFailureHtml("did not return a SparqlQuery"));
                     }
                 } else {
-                    failureCallback(this.getNoValidSparqlMessage(resultSet));
+                    failureCallback(resultSet.getFailureHtml(), this.getNoValidSparqlMessage(resultSet));
                 }
             },
 
