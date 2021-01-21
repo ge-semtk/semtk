@@ -1,0 +1,21 @@
+uri "http://paul/subprop" alias subproperties.
+
+ENTITY is a class.
+SUBENTITY is a type of ENTITY.
+
+superProp (note "object property") describes ENTITY with values of type ENTITY.
+
+subPropDomainRange (note "has both domain and range") is a type of superProp, describes SUBENTITY with values of type SUBENTITY.
+subPropDomainOnly (note "has no range") is a type of superProp, describes SUBENTITY.
+subPropRangeOnly (note "has no domain") is a type of superProp with values of type SUBENTITY.
+subPropOnly (note "naked subprop") is a type of superProp.
+
+// repeat with data property
+
+superDataProp (note "data property.") describes ENTITY with values of type double.
+
+subDataPropDomainRange (note "has both domain and range") is a type of superDataProp, describes SUBENTITY with values of type int.
+subDataPropDomainOnly (note "has no range") is a type of superDataProp, describes SUBENTITY.
+subDataPropRangeOnly (note "has no domain") is a type of superDataProp with values of type int.
+subDataPropOnly (note "naked subprop") is a type of superDataProp.
+

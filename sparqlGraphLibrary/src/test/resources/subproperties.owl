@@ -1,0 +1,72 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xml:base="http://paul/subprop">
+  <owl:Ontology rdf:about="http://paul/subprop">
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'subproperties.sadl' and should not be edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="SUBENTITY">
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="ENTITY"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="superProp">
+    <rdfs:comment>object property</rdfs:comment>
+    <rdfs:domain rdf:resource="http://paul/subprop#ENTITY"/>
+    <rdfs:range rdf:resource="http://paul/subprop#ENTITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="subPropDomainRange">
+    <rdfs:comment>has both domain and range</rdfs:comment>
+    <rdfs:domain rdf:resource="http://paul/subprop#SUBENTITY"/>
+    <rdfs:range rdf:resource="http://paul/subprop#SUBENTITY"/>
+    <rdfs:subPropertyOf rdf:resource="http://paul/subprop#superProp"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="subPropOnly">
+    <rdfs:comment>naked subprop</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://paul/subprop#superProp"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="subPropDomainOnly">
+    <rdfs:comment>has no range</rdfs:comment>
+    <rdfs:domain rdf:resource="http://paul/subprop#SUBENTITY"/>
+    <rdfs:subPropertyOf rdf:resource="http://paul/subprop#superProp"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="subPropRangeOnly">
+    <rdfs:comment>has no domain</rdfs:comment>
+    <rdfs:range rdf:resource="http://paul/subprop#SUBENTITY"/>
+    <rdfs:subPropertyOf rdf:resource="http://paul/subprop#superProp"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:ID="subDataPropDomainRange">
+    <rdfs:comment>has both domain and range</rdfs:comment>
+    <rdfs:domain rdf:resource="http://paul/subprop#SUBENTITY"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+    <rdfs:subPropertyOf>
+      <owl:DatatypeProperty rdf:ID="superDataProp"/>
+    </rdfs:subPropertyOf>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="subDataPropRangeOnly">
+    <rdfs:comment>has no domain</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+    <rdfs:subPropertyOf>
+      <owl:DatatypeProperty rdf:about="http://paul/subprop#superDataProp"/>
+    </rdfs:subPropertyOf>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="subDataPropDomainOnly">
+    <rdfs:comment>has no range</rdfs:comment>
+    <rdfs:domain rdf:resource="http://paul/subprop#SUBENTITY"/>
+    <rdfs:subPropertyOf>
+      <owl:DatatypeProperty rdf:about="http://paul/subprop#superDataProp"/>
+    </rdfs:subPropertyOf>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="subDataPropOnly">
+    <rdfs:comment>naked subprop</rdfs:comment>
+    <rdfs:subPropertyOf>
+      <owl:DatatypeProperty rdf:about="http://paul/subprop#superDataProp"/>
+    </rdfs:subPropertyOf>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://paul/subprop#superDataProp">
+    <rdfs:comment>data property.</rdfs:comment>
+    <rdfs:domain rdf:resource="http://paul/subprop#ENTITY"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#double"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>

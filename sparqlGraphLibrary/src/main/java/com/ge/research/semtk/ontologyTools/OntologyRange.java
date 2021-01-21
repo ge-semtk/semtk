@@ -19,7 +19,7 @@
 package com.ge.research.semtk.ontologyTools;
 
 public class OntologyRange {
-	private static final String CLASS = "http://www.w3.org/2002/07/owl#Class";
+	public static final String CLASS = "http://www.w3.org/2002/07/owl#Class";
 	private String name = "";
 	
 	public OntologyRange(String fullName) {

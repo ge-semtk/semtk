@@ -91,6 +91,8 @@ public class OntologyInfo {
 	private ArrayList<String> loadWarnings = new ArrayList<String>();
 	private ArrayList<String> importedGraphs = new ArrayList<String>();
 	
+	private HashMap<String, OntologyProperty> orphanProps = new HashMap<String, OntologyProperty>();
+	
 	/**
 	 * Default constructor
 	 */
@@ -866,17 +868,43 @@ public class OntologyInfo {
 				this.subpropHash.put(superPropNames[i], new ArrayList<String>());
 			}
 			
+			// add to subpropHash
 			ArrayList<String> subList = this.subpropHash.get(superPropNames[i]);
 			if (! subList.contains(subPropNames[i])) {
 				subList.add(subPropNames[i]);
 			}
 			
-			// If range is just "Class", infer Range of super property
+			// find existing subProp: has domain so loadProperties got it
 			OntologyProperty oSubProp = this.propertyHash.get(subPropNames[i]);
+			
+			// if subProp has no domain
+			if (oSubProp == null || this.orphanProps.containsKey(subPropNames[i])) {
+				
+				// if subProp is orphaned: has range and no domain, so loadProperties orphaned it
+				if (this.orphanProps.containsKey(subPropNames[i])) {
+					oSubProp = this.orphanProps.get(subPropNames[i]);
+					this.orphanProps.remove(subPropNames[i]);
+				
+				} else {
+					// new subprop: has neither domain nor range so loadProperties didn't find it
+					oSubProp = new OntologyProperty(subPropNames[i], "");
+					this.propertyHash.put(subPropNames[i], oSubProp);
+				} 
+				
+				// Inherit the super properties domain
+				OntologyProperty superProp = this.propertyHash.get(superPropNames[i]);	
+				ArrayList<OntologyClass> domainList = this.getPropertyDomain(superProp);
+				for (OntologyClass c : domainList) {
+					c.addProperty(oSubProp);
+				}
+			}
+			
+			// If range is "Class", inherit from super property
 			if (oSubProp.getRange().isDefaultClass()) {
 				OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 				oSubProp.setRange(oSuperProp.getRange().deepCopy());
 			}
+			
 		}
 	}
 	
@@ -1042,7 +1070,17 @@ public class OntologyInfo {
 	}
 	
 	/**
-	 * returns the sparql query used to get all of the properties in scope.
+	 * returns the sparql query used to get anything with a domain or a range.
+	 * 
+	 * Queries for ?Property rdfs:domain ?Class
+	 * 		or the equivalent using lists and/or restrictions.
+	 *		IGNORES:   owl:ObjectProperty  and  owl:DatatypeProperty
+	 *      USES:      rdfs:domain
+	 *
+	 * nb:
+	 *		- Range or domain may be empty
+	 *     
+	 * TODO:  extend the OPTIONAL to other clauses in the UNION
 	 */
 	private static String getLoadPropertiesQuery(String graphName, String domain){
 		
@@ -1051,14 +1089,13 @@ public class OntologyInfo {
 						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
 						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 						"PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " +
-						"select distinct ?Class ?Property ?Range from <" + graphName + "> { " + 
+						"select distinct ?Class ?Property ?Range from <" + graphName + "> where { " + 
 						"{" +
-							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
-							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+							"OPTIONAL { ?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". }\n" + 
+							"OPTIONAL { ?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". }\n" +
 						"} UNION { \n" +
-							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
-							// if SADL range is "class" then no range shows up in the owl
-							"MINUS { ?Property rdfs:range ?Range }. \n" +
+							"OPTIONAL { ?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". }\n" +
+							"OPTIONAL { ?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". }\n" + 
 						"} UNION { \n" +
 							"?Property rdfs:domain ?x. \n" +
 							"?x owl:unionOf ?y. \n" +
@@ -1114,6 +1151,8 @@ public class OntologyInfo {
 	/**
 	 * process the results of the properties sparql query and loads them into the properties hashmap
 	 * in the OntologyInfo object.
+	 * 
+	 * Properties (data or object) are attached to cl
 	 */
 	public void loadProperties(String classList[], String propertyList[], String rangeList[]) throws Exception{
 		 
@@ -1125,8 +1164,8 @@ public class OntologyInfo {
 			if (this.propertyHash.containsKey(propertyList[i])) {
 				prop = this.propertyHash.get(propertyList[i]);
 				
-				// if property exists, make sure range is the same
-				if (! prop.getRangeStr().equals(rangeList[i])) {
+				// if property exists, make sure range is the same (where defaultClass and Empty are also equal)
+				if (! prop.getRangeStr().equals(rangeList[i]) && !prop.getRange().isDefaultClass() && !rangeList[i].isEmpty()) {
 					String superClass = this.findCommonSuperclass(prop.getRangeStr(), rangeList[i]);
 					if (superClass != null) {
 						// ignore subclass restrictions on ranges for now, until complex ranges are implemented
@@ -1146,12 +1185,18 @@ public class OntologyInfo {
 				prop = new OntologyProperty(propertyList[i], rangeList[i]);
 			}
 
-			// Add property to the class
-			OntologyClass c = this.classHash.get(classList[i]);
-			if(c == null){
-				throw new Exception("Cannot find class " + classList[i] + " in the ontology");
-			}			
-			c.addProperty(prop);
+			if (classList[i].isBlank()) {
+				// Property has no domain/class.  Hopefully it is a subProp and will be resolved.
+				this.orphanProps.put(propertyList[i], prop);
+				
+			} else {
+				// Add property to the class
+				OntologyClass c = this.classHash.get(classList[i]);
+				if(c == null){
+					throw new Exception("Cannot find class " + classList[i] + " in the ontology");
+				}			
+				c.addProperty(prop);
+			}
 			
 			// Add property to propertyHash
 			this.propertyHash.put(propertyList[i], prop);
@@ -1172,6 +1217,11 @@ public class OntologyInfo {
 					throw new Exception("Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
 				}
 			}
+		}
+		
+		// check for orphaned properties not resolved by subProp query
+		for (String orphan : this.orphanProps.keySet()) {
+			this.loadWarnings.add("Property has no domain: " + orphan);
 		}
 		
 		// Note: Range names don't necessarily need to be valid.  As long as they aren't used.

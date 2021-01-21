@@ -28,6 +28,7 @@ import org.junit.Test;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -375,8 +376,6 @@ public class OntologyInfoTests_IT {
 		query = sgJson.getNodeGroup(oInfo).generateSparqlSelect();
 		table = TestGraph.execTableSelect(query);
 	
-		sgJson.getNodeGroup(oInfo);
-
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 	}
 	@Test
@@ -424,5 +423,41 @@ public class OntologyInfoTests_IT {
 		oInfo.load(TestGraph.getSei(), false);
 		InputStream is = this.getClass().getResourceAsStream("/Pet.owl");
 		assertTrue("can't find class with base that was just loaded", oInfo.containsClassWithBase(is));
+	}
+	
+	@Test
+	/**
+	 * Load ontology with subproperties
+	 * 		superProp
+	 *      subPropDomainRange
+	 *      subPropDomainOnly
+	 *      subPropRangeOnly
+	 *      subPropOnly
+	 */
+	public void testSubProperties() throws Exception {
+
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "subproperties.owl");		
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		
+		String propArr[] = new String[]   { "superProp", "subPropDomainRange", "subPropDomainOnly", "subPropRangeOnly", "subPropOnly", "superDataProp", "subDataPropDomainRange", "subDataPropDomainOnly", "subDataPropRangeOnly", "subDataPropOnly"};
+		String domainArr[] = new String[] { "ENTITY",    "SUBENTITY",          "SUBENTITY",         "ENTITY",           "ENTITY",      "ENTITY",        "SUBENTITY",              "SUBENTITY",             "ENTITY",               "ENTITY"};
+		String rangeArr[] = new String[]  { "ENTITY",    "SUBENTITY",          "ENTITY",            "SUBENTITY",        "ENTITY",      "double",        "int",                    "double",                "int",                  "double"};
+		
+		for (int i=0; i < propArr.length; i++) {
+			String propName = "http://paul/subprop#" + propArr[i];
+			OntologyProperty p = oInfo.getProperty(propName);
+			assertTrue("Can't find property: " + propName, p != null);
+			
+			String r = p.getRangeStr(true);
+			assertTrue(propArr[i] + " expected range " + rangeArr[i] + " found " + r, r.equals(rangeArr[i]));
+			
+			ArrayList<OntologyClass> domainList = oInfo.getPropertyDomain(p);
+			assertEquals("Size of domain of property " + propArr[i], 1, domainList.size());
+			String d = domainList.get(0).getNameString(true);
+			assertTrue(propArr[i] + " expected domain " + domainArr[i] + " found " + d, d.equals(domainArr[i]));
+		}
 	}
 }
