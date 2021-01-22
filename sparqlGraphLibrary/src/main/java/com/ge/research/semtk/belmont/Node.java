@@ -177,7 +177,7 @@ public class Node extends Returnable {
 		// build hash of suggested nodes for this class
 		HashMap<String, NodeItem> nodeItemHash = new HashMap<>();
 		for (NodeItem n : this.nodes) {
-			nodeItemHash.put(n.getKeyName(), n);
+			nodeItemHash.put(n.getUriConnectBy(), n);
 		}
 		
 		// get oInfo's version of the property list
@@ -213,7 +213,7 @@ public class Node extends Returnable {
 		    // Inflate (create) it.
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
 				
-				if (nodeItemHash.containsKey(oPropKeyname)) {
+				if (nodeItemHash.containsKey(oPropURI)) {
 					throw new ValidationException(String.format("Node property %s has range %s in the nodegroup, which can't be found in model.", oPropURI, oProp.getRangeStr()));
 				}
 				
@@ -224,9 +224,9 @@ public class Node extends Returnable {
 				newProps.add(propItem);
 				
 			// node, in hash
-			} else if (nodeItemHash.containsKey(oPropKeyname)) {
+			} else if (nodeItemHash.containsKey(oPropURI)) {
 				// regardless of connection, check range
-				NodeItem nodeItem = nodeItemHash.get(oPropKeyname);
+				NodeItem nodeItem = nodeItemHash.get(oPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
 				
@@ -267,7 +267,7 @@ public class Node extends Returnable {
 				// all is ok: add the propItem
 				newNodes.add(nodeItem);
 				
-				nodeItemHash.remove(oPropKeyname);
+				nodeItemHash.remove(oPropURI);
 				
 			// new node
 			} else {
@@ -448,21 +448,21 @@ public class Node extends Returnable {
 		return this.setConnection(curr,  connectionURI, NodeItem.OPTIONAL_FALSE, markForDeletion);
 	}
 	
-	public NodeItem setConnection(Node curr, String connectionURI, int opt, Boolean markedForDeletion) throws Exception {
+	public NodeItem setConnection(Node node, String connectionURI, int opt, Boolean markedForDeletion) throws Exception {
 		// create a display name. 
 		String connectionLocal = new OntologyName(connectionURI).getLocalName();
 
 		// actually set the connection. 
 		for(int i = 0; i < this.nodes.size(); i += 1){
-			NodeItem nd = this.nodes.get(i);
+			NodeItem nItem = this.nodes.get(i);
 			// did it match?
-			if(nd.getKeyName().equals(connectionLocal)){
-				nd.setConnected(true);
-				nd.setConnectBy(connectionLocal);
-				nd.setUriConnectBy(connectionURI);
-				nd.pushNode(curr, opt, markedForDeletion);
+			if(nItem.getUriConnectBy().equals(connectionURI)){
+				nItem.setConnected(true);
+				nItem.setConnectBy(connectionLocal);
+				nItem.setUriConnectBy(connectionURI);
+				nItem.pushNode(node, opt, markedForDeletion);
 				
-				return nd;
+				return nItem;
 			}
 		}
 		throw new Exception("Internal error in SemanticNode.setConnection().  Couldn't find node item connection: " + this.getSparqlID() + "->" + connectionURI);

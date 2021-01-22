@@ -326,7 +326,7 @@ SparqlFormatter.prototype = {
 };
 
 /* the node item */
-var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
+var NodeItem = function(uri, val, uriVal, jObj, nodeGroup) { // used for
 																// keeping track
 																// of details
 																// relating two
@@ -339,14 +339,14 @@ var NodeItem = function(nome, val, uriVal, jObj, nodeGroup) { // used for
 							// represented by this NodeItem.
 		this.OptionalMinus = [];
         this.Qualifiers = [];
-		this.KeyName = nome; // the name used to identify this node item
+		this.KeyName = new OntologyName(uri).getLocalName(); // the name used to identify this node item
 		this.ValueType = val; // the type given for the linked (linkable?) node
 
 		this.UriValueType = uriVal; // full name of val
 		this.ConnectBy = ''; // the connection link, such as "hasSessionCode"
 		this.Connected = false; // toggled if a connection between this node and
 								// the Semantic node owning the NodeItem list are linked.
-		this.UriConnectBy = '';
+		this.UriConnectBy = uri;
 		this.deletionFlags = [];
 	}
 };
@@ -1121,7 +1121,7 @@ SemanticNode.prototype = {
 		// build hash of suggested nodes for this class
 		var nodeItemHash = {};
 		for (var n=0; n < this.nodeList.length; n++) {
-			nodeItemHash[this.nodeList[n].getKeyName()] = this.nodeList[n];
+			nodeItemHash[this.nodeList[n].getURIConnectBy()] = this.nodeList[n];
 		}
 
 		// get oInfo's version of the property list
@@ -1151,10 +1151,10 @@ SemanticNode.prototype = {
 
 				delete propItemHash[oPropURI];
 
-			// else ontology property wasn't passed in.  AND its range is outside the model (it's a Property)
+            // else ontology property is not in this Node.  AND its range is outside the model (it's a Property)
 		    // Inflate (create) it.
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
-				if (oPropKeyname in nodeItemHash) {
+				if (oPropURI in nodeItemHash) {
                     throw "Node property " + oPropURI + " has range " + oProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
                 }
 				var propItem = new PropertyItem(oProp.getNameStr(true),
@@ -1165,10 +1165,10 @@ SemanticNode.prototype = {
 				newProps.push(propItem);
 
 		    // node, in hash
-			} else if (oPropKeyname in nodeItemHash) {
+			} else if (oPropURI in nodeItemHash) {
 
 				// regardless of connection, check range
-				var nodeItem = nodeItemHash[oPropKeyname];
+				var nodeItem = nodeItemHash[oPropURI];
 				var nRangeStr = nodeItem.getUriValueType();
 				var nRangeAbbr = nodeItem.getValueType();
 				if (nRangeStr != oProp.getRangeStr()) {
@@ -1208,11 +1208,11 @@ SemanticNode.prototype = {
 				// all is ok: add the propItem
 				newNodes.push(nodeItem);
 
-				delete nodeItemHash[oPropKeyname];
+				delete nodeItemHash[oPropURI];
 
 			// new node
 			} else {
-				var nodeItem = new NodeItem(oProp.getNameStr(true),
+				var nodeItem = new NodeItem(oProp.getNameStr(false),
 											oProp.getRangeStr(true),
 											oProp.getRangeStr(false)
 											);
@@ -1573,6 +1573,7 @@ SemanticNode.prototype = {
 		}
 		return null;
 	},
+    // Danger: deprecate this. It is "legal" for two nodeItems to share keyname
 	getNodeItemByKeyname : function(keyname) {
 		for (var i = 0; i < this.nodeList.length; i++) {
 			if (this.nodeList[i].getKeyName() == keyname) {
@@ -2030,7 +2031,7 @@ SemanticNodeGroup.prototype = {
 							var localName = new OntologyName(itemUri).getLocalName();
 							var fullRange = linkedSNode.getURI(false);
 							var localRange = linkedSNode.getURI(true);
-							currNodeItem = new NodeItem(localName, localRange, fullRange);
+							currNodeItem = new NodeItem(itemUri, localRange, fullRange);
 							// do not repeat this step.
 							createdNode = true;
 							currNodeItem.setConnected(true);
@@ -2922,7 +2923,7 @@ SemanticNodeGroup.prototype = {
 
 			// is the range a class ?
 			if (oInfo.containsClass(propRangeNameFull)) {
-				var p = new NodeItem(propNameLocal, propRangeNameLocal,
+				var p = new NodeItem(propNameFull, propRangeNameLocal,
 						propRangeNameFull);
 				belnodes.push(p);
 
