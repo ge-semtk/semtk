@@ -1736,6 +1736,7 @@ public class NodeGroup {
 		//    #Error: explanation
 		
 		this.buildPrefixHash();
+		this.updateUnionMemberships();
 		
 		String retval = "";
 		String tab = SparqlToXUtils.tabIndent("");
@@ -1798,7 +1799,7 @@ public class NodeGroup {
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 		
-			Integer unionKey = this.getUnionKey(headNode);
+			Integer unionKey = this.getSubGraphUnionKey(headNode);
 			if (unionKey == null) {
 				sparql.append(this.generateSparqlSubgraphClausesNode(	qt, 
 																		headNode, 
@@ -2790,6 +2791,27 @@ public class NodeGroup {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * For an island subgraph, find 0 or 1 nodes with a top-level union key.
+	 * That means that the whole island subgraph is a branch of a union.
+	 * 
+	 * @param startNode
+	 * @return unionKey or null
+	 */
+	private Integer getSubGraphUnionKey(Node startNode) {
+		
+		for (Node node : this.getSubGraph(startNode, new ArrayList<Node>())) {
+			Integer unionKey = this.getUnionKey(node);
+			if (unionKey != null) {
+				ArrayList<Integer> membership = this.getUnionMembershipList(node);
+				if (membership.size() == 1) {
+					return membership.get(0);
+				}
+			}
+		}
+		return null;
 	}
 	
 	/**
