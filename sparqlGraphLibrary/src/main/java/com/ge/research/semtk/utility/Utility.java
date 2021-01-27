@@ -93,13 +93,19 @@ public abstract class Utility {
 	
 	public static ArrayList<DateTimeFormatter> DATE_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 	public static ArrayList<DateTimeFormatter> DATETIME_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
+	public static ArrayList<DateTimeFormatter> ZONED_FORMATTERS = new ArrayList<DateTimeFormatter>(); 
 
+	
+	public static final DateTimeFormatter ZONED_FORMATTER_SADL = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy");	// SADL: Wed Mar 22 20:00:00 EDT 2017 
+	
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");	// e.g. 2014-12-01 00:00:00 
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmssSSS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");	// e.g. 2014-12-01 00:00:00.000 
 	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyhmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
 	public static final DateTimeFormatter DATETIME_FORMATTER_ISO8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");     // e.g. 2017-09-16T13:37:04Z
 	
 	public static final DateTimeFormatter DATE_FORMATTER_yyyyMMdd = DateTimeFormatter.ofPattern("yyyyMMdd");	// e.g. 20141031 
+	
+	
 	
 	private static StrSubstitutor envSubstitutor = new StrSubstitutor(new CaseInsensitiveMap(System.getenv()));
 	public static final Boolean ENV_TEST = ! envSubstitutor.replace("${HOST_IP}").equals("${HOST_IP}");
@@ -141,6 +147,8 @@ public abstract class Utility {
 		builder.parseCaseInsensitive().appendPattern("dd-MMM-yyyy HH:mm:ss");
 		dateFormat = builder.toFormatter();
 		DATETIME_FORMATTERS.add(dateFormat);
+		
+		ZONED_FORMATTERS.add(ZONED_FORMATTER_SADL);
 	}
 
 	/**
@@ -423,7 +431,7 @@ public abstract class Utility {
 	 */
 	public static String getSPARQLDateTimeString(String s) throws Exception{
 
-		// ISO_OFFSET_DATE_TIME is the only valid format with timezone
+		// ISO_OFFSET_DATE_TIME
 		// Try it first
 		// If it succeeds then return as-is, since it is also valid SPARQL
 		try{
@@ -432,6 +440,16 @@ public abstract class Utility {
 		} catch (Exception e) {
         	// move on
         }
+		
+		// try all zoned formatters until find one that works
+		for (DateTimeFormatter formatter : ZONED_FORMATTERS){  
+			try{        	
+				ZonedDateTime zoned = ZonedDateTime.parse(s, formatter);
+				return zoned.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);				 
+			}catch (Exception e) {
+				// try the next one
+			}
+		}	
 		
 		// try all formatters until find one that works
 		for (DateTimeFormatter formatter : DATETIME_FORMATTERS){  
