@@ -583,23 +583,23 @@ define([	// properly require.config'ed   bootstrap-modal
                 div.appendChild(configDiv);
 
                 var jsonLd = this.getGraphResultsJson();
-                var nodeList = [];
-                var edgeList = [];
+                var nodeDict = {};   // dictionary of nodes with @id as the key
+                var edgeList = [];   // "normal" list of edges
 
                 var network = new vis.Network(
                     canvasDiv,
-                    {nodes: nodeList, edges: edgeList },
+                    {nodes: Object.values(nodeDict), edges: edgeList },
                     VisJsHelper.getDefaultOptions(configDiv)
                 );
 
                 for (var i=0; i < jsonLd.length; i++) {
-                    VisJsHelper.addJsonLdObject(jsonLd[i], nodeList, edgeList);
+                    VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
                     if (i % 20 == 0) {
-                        network.body.data.nodes.update(nodeList);
+                        network.body.data.nodes.update(Object.values(nodeDict));
                         network.body.data.edges.update(edgeList);
                     }
                 }
-                network.body.data.nodes.update(nodeList);
+                network.body.data.nodes.update(Object.values(nodeDict));
                 network.body.data.edges.update(edgeList);
 
                 network.startSimulation();
