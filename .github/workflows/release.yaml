@@ -55,11 +55,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cp distribution/target/semtk-opensource-dist.tar.gz semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz
-        gh release upload ${{ github.event.release.upload_url }} semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz
+        gh release upload ${{ github.event.release.tag_name }} semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz --clobber
 
     - name: Upload SemTK fat standaloneExecutables jar
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cp standaloneExecutables/target/standaloneExecutables-jar-with-dependencies.jar semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar
-        gh release upload ${{ github.event.release.upload_url }} semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar
+        gh release upload ${{ github.event.release.tag_name }} semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar --clobber
