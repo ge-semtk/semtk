@@ -142,6 +142,10 @@ public abstract class Returnable {
 			this.binding = binding.startsWith("?") ? binding : "?" + binding;
 		}
 	}
+	
+	public void clearBinding() {
+		this.setBinding(null);
+	}
 
 	// Is binding returned (it must also exist)
 	public Boolean getIsBindingReturned() {

@@ -55,6 +55,8 @@ import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
+ * These are the main / large data loading tests.
+ * 
  * Testing data loading WITHOUT SERVICE LAYER.
  * This is only "_IT" integration test because of the triple-store
  * @author 200001934
@@ -1170,6 +1172,38 @@ public class DataLoaderTest_IT {
 		}
 
 		assertTrue(err.toCSVString().contains("ookup"));
+	}
+	
+	@Test
+	/**
+	 * Test URI Lookup when there are two copies of the identical lookup.
+	 * In this case: ingesting chain links that are connected
+	 * Both the "to" and "from" column are links that are looked up by name, create_if_missing
+	 * Ingestion should only create each link once.
+	 * Original implementation ingested each twice.
+	 * 
+	 * @throws Exception
+	 */
+	public void testLookupDuplicate() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_duplicate_lookup.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/chain_duplicate_lookup.json");
+
+		// load chain where links named A, B, and C appear in both "from" and "to" columns
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// test to see that only three links, A,B,C were created.  
+		Table res = TestGraph.execSelectFromResource(this, "chain_duplicate_lookup_results.json");
+		assertEquals("Import with identical lookups on two columns returned wrong number of results", 3, res.getNumRows());
 	}
 	
 	@Test

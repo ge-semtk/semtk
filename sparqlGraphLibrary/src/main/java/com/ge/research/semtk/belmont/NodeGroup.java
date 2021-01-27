@@ -3856,9 +3856,11 @@ public class NodeGroup {
 		int i=0;
 		for (Node n : this.getOrderedNodes()) {
 			this.changeSparqlID(n, n.getUri(true) + String.valueOf(i));
+			n.clearBinding();
 			for (PropertyItem p : n.getPropertyItems()) {
 				if (! p.getSparqlID().isEmpty()) {
 					this.changeSparqlID(p, p.getKeyName() + String.valueOf(i));
+					p.clearBinding();
 				}
 			}
 		}
