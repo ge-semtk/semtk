@@ -235,23 +235,38 @@ public class OntologyInfo {
 		return this.getSubclassNames(maybeSuper).contains(sub);
 	}
 	
-	public HashSet<String> getSubPropNames(String superPropertyName) {
+	public HashSet<String> getSubPropNames(String superPropertyName, String domainURI) {
 		HashSet<String> ret = new HashSet<String>();
-		this.addSubPropNames(superPropertyName, ret);
+		
+		// get list of domainURI class and all it's super classes
+		ArrayList<OntologyClass> domainClasses = new ArrayList<OntologyClass>();
+		domainClasses.add(this.classHash.get(domainURI));
+		for (String domainSuperName : this.getSuperclassNames(domainURI)) {
+			domainClasses.add(this.classHash.get(domainSuperName));
+		}
+		
+		this.addSubPropNames(superPropertyName, domainClasses, ret);
 		return ret;
 	}
 	/**
 	 * return a list of subclass names for a given class.
 	 * if there are no known subclasses, an empty list is returned.
 	 **/
-	public void addSubPropNames(String superPropertyName, HashSet<String> set){
+	private void addSubPropNames(String superPropertyName, ArrayList<OntologyClass> domainClasses, HashSet<String> set){
 		
+		// get list of candidate sub properties
 		ArrayList<String> subpropNames = this.subpropHash.get(superPropertyName);
 		if (subpropNames != null) {
-			set.addAll(subpropNames);
-		
 			for (String subName : subpropNames) {
-				this.addSubPropNames(subName, set);
+				
+				// if sub-property has domain in domainClasses, add it and it's sub props too
+				for (OntologyClass domain : domainClasses) {
+					if (domain.getProperty(subName) != null) {
+						set.add(subName);
+						this.addSubPropNames(subName, domainClasses, set);
+						break;
+					}
+				}
 			}
 		}
 	}

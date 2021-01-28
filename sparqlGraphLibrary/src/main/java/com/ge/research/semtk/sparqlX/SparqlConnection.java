@@ -419,10 +419,10 @@ public class SparqlConnection {
 	}
 	
 	/**
-	 * Do all data endpoints refer to the same server
+	 * Throw exception if connection contains multiple ServerURLs
 	 * @return
 	 */
-	public boolean isSingleDataServerURL() {
+	public void confirmSingleServerURL() throws Exception {
 		String url = "";
 		
 		// check data interfaces
@@ -431,16 +431,23 @@ public class SparqlConnection {
 			if (url.equals("")) {
 				url = e;
 			} else if (! e.equals(url)) {
-				return false;
+				throw new Exception("Connection has two different SPARQL endpoints: " + url + " and " + e);
+			}
+		}
+		// check model interfaces
+		for (int i=0; i < this.modelInterfaces.size(); i++) {
+			String e =  this.modelInterfaces.get(i).getServerAndPort();
+			if (url.equals("")) {
+				url = e;
+			} else if (! e.equals(url)) {
+				throw new Exception("Connection has two different SPARQL endpoints: " + url + " and " + e);
 			}
 		}
 		
 		// if there are no serverURLs then false
 		if (url.equals("")) {
-			return false;
-		} else {
-			return true;
-		}
+			throw new Exception("Connection has no SPARQL endpoints: " + this.toString());
+		} 
 	}
 	
 	/**

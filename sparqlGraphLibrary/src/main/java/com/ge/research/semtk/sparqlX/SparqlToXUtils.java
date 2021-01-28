@@ -274,7 +274,14 @@ public class SparqlToXUtils {
 		}
 	}
 	
-
+	/**
+	 * Build a safe variable name starting with ?
+	 * @param s
+	 * @return
+	 */
+	public static String safeSparqlVar(String s) {
+		return "?" + s.replaceAll("[^a-zA-Z0-9]+", "_");
+	}
 	
 	public static String safeSparqlString(String s) {
 		
@@ -353,9 +360,7 @@ public class SparqlToXUtils {
 		}
 		
 		// multiple ServerURLs is not implemented
-		if (! conn.isSingleDataServerURL() ) {
-			throw new Error("SPARQL generation across multiple data servers is not yet supported.");
-		}
+		conn.confirmSingleServerURL();
 		
 		// get graphs/datasets for first model server.  All others must be equal
 		ArrayList<String> datasets = conn.getAllGraphsForServer(conn.getDataInterface(0).getServerAndPort());
