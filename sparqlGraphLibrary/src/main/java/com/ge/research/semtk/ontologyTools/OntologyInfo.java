@@ -1185,7 +1185,7 @@ public class OntologyInfo {
 				prop = new OntologyProperty(propertyList[i], rangeList[i]);
 			}
 
-			if (classList[i].isBlank()) {
+			if (classList[i].trim().isEmpty()) {
 				// Property has no domain/class.  Hopefully it is a subProp and will be resolved.
 				this.orphanProps.put(propertyList[i], prop);
 				
