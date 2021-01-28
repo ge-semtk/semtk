@@ -137,21 +137,31 @@ OntologyTree.prototype = {
         }.bind(this, domainURI, propURI));
     },
 
+    // Property pair will be:
+    // namespace: null
+    // node:  [uri]
+    // prop:  [class uri, prop uri]
     getPropertyPair : function (node) {
         if (this.nodeIsClass(node)) {
             return [node.data.value];
-        } else {
+        } else if (this.nodeIsProperty(node)) {
             var parentClassNode = node;
             do {
                 parentClassNode = parentClassNode.getParent();
             } while (! this.nodeIsClass(parentClassNode));
 
             return [parentClassNode.data.value, node.data.value];
+        } else {
+            return null;
         }
     },
 
     getPropertyPairsFamily : function (node) {
-        var ret = [this.getPropertyPair(node)];
+        var ret = [];
+        var pair = this.getPropertyPair(node);
+        if (pair) {
+            ret.push(pair);
+        }
 
         node.visit(function(ret, child){
 			ret.push(this.getPropertyPair(child));
@@ -601,7 +611,7 @@ OntologyTree.prototype = {
     },
 
     nodeIsNamespace : function(node) {
-        return (this.node.value.indexOf('#') == -1);
+        return (node.value.indexOf('#') == -1);
     },
 
     nodeGetParent : function(node) {

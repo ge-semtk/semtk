@@ -45,6 +45,7 @@ define([	// properly require.config'ed
 
 		],
 
+    // TODO: this isn't leveraging VisJsHelper properly.  Code duplication.
 	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, OntologyInfo, VisJsHelper, $, vis) {
 
 
@@ -502,7 +503,7 @@ define([	// properly require.config'ed
                 var nodeHash = {};
                 var edgeList = [];
 
-                console.log("Adding to nodeJs START");
+                //console.log("Adding to nodeJs START");
                 for (var i=0; i < rows.length; i++) {
                     // read a row describing a triple
                     var s = rows[i][0];
@@ -549,7 +550,7 @@ define([	// properly require.config'ed
                 this.network.body.data.nodes.update(nodeList);
                 this.network.body.data.edges.update(edgeList);
                 this.updateInfo();
-                console.log("Adding to nodeJs END");
+                //console.log("Adding to nodeJs END");
 
             },
 
@@ -587,7 +588,7 @@ define([	// properly require.config'ed
                             if (++i % 100 == 1) {
                                 var percent = 0 + 40 * i++ / (workList.length * vEdgeList.length);
 
-                                console.log("first pass " + percent + "%");
+                                //console.log("first pass " + percent + "%");
                                 IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Removing_edges");
                             }
 
@@ -609,13 +610,13 @@ define([	// properly require.config'ed
                 }
                 this.network.body.data.edges.remove(vEdgesToDelete);
 
-                console.log("1st pass time: " + (performance.now() - START));
+                //console.log("1st pass time: " + (performance.now() - START));
                 START = performance.now();
 
                 // count edges for each node
                 var edgeCountHash = {};
                 for (var vEdge of this.network.body.data.edges.get()) {
-                    console.log("edge hash");
+                    //console.log("edge hash");
                     edgeCountHash[vEdge.from] = (edgeCountHash[vEdge.from] ? edgeCountHash[vEdge.from] : 0) + 1;
                     edgeCountHash[vEdge.to] = (edgeCountHash[vEdge.to] ? edgeCountHash[vEdge.to] : 0) + 1;
                 }
@@ -623,7 +624,7 @@ define([	// properly require.config'ed
                 // second pass: remove nodes (must also have no edges)
                 i=0;
                 for (var w of workList){
-                    console.log("remove nodes");
+                    //console.log("remove nodes");
                     // delete nodes
                     if (w.length == 1) {
                         var classUri = w[0];
@@ -649,7 +650,7 @@ define([	// properly require.config'ed
                     }
                 }
 
-                console.log("2nd pass time: " + (performance.now() - START));
+                //console.log("2nd pass time: " + (performance.now() - START));
                 START = performance.now();
 
                 var vNodesToRemove = [];
@@ -660,7 +661,7 @@ define([	// properly require.config'ed
                 for (var vNodeId of vNodesLostEdgesSet) {
                     if (++i % 200 == 1) {
                         var percent = 80 + 20 * i / vNodesLostEdgesSet.size;
-                        console.log("third pass " + percent + "%");
+                        //console.log("third pass " + percent + "%");
                         IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Removing_orphans");
                     }
                     var vNode = this.network.body.data.nodes.get(vNodeId);
@@ -670,7 +671,7 @@ define([	// properly require.config'ed
                     }
                 }
                 this.network.body.data.nodes.remove(vNodesToRemove);
-                console.log("3rd pass time: " + (performance.now() - START));
+                //console.log("3rd pass time: " + (performance.now() - START));
 
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
                 IIDXHelper.progressBarRemove(this.progressDiv);
@@ -726,11 +727,11 @@ define([	// properly require.config'ed
 
                 var instanceDataCallback = function(tableRes) {
                     var elapsed = performance.now() - CALL_NOW;
-                    console.log("query time: " + elapsed);
+                    //console.log("query time: " + elapsed);
 
                     this.addToNetwork(tableRes);
                     elapsed = performance.now() - CALL_NOW;
-                    console.log("query & work: " + elapsed);
+                    //console.log("query & work: " + elapsed);
 
                     if (tableRes.getRowCount() < LIMIT) {
                         workIndex += 1;
