@@ -143,8 +143,10 @@ public class NodeGroup {
 	 * @param jobj the output of a SPARQL construct query (assume key is @graph)
 	 * @return a NodeGroup containing the construct query results
 	 * @throws Exception 
-	 * @ 
+	 * 
+	 * Deprecated. Only Justin knows how this was supposed to work or precisely what it does.
 	 */
+	@Deprecated
 	public static NodeGroup fromConstructJSON(JSONObject jobj) throws Exception {
 				
 		if(jobj == null){
