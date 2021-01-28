@@ -41,7 +41,13 @@ define([	// properly require.config'ed
     // or has an array of types
     VisJsHelper.getShortType = function(j) {
         var typ = j.hasOwnProperty("@type") ? j["@type"] : "prefix#untyped";
-        typ = typ.replaceAll(":", "#");   // for fuseki, change ":" separator to "#"
+
+        // TODO: instead, we should be honoring fuseki's @prefix fields
+        // if there's no # and there is : then replace the last : with #
+        if (typ.indexOf("#") == -1 && typ.indexOf(":") > -1) {
+            var pos = typ.lastIndexOf(":");
+            typ = typ.slice(0,pos) + "#" + typ.slice(pos+1);
+        }
 
         if (Array.isArray(typ)) {
             ret = "";
