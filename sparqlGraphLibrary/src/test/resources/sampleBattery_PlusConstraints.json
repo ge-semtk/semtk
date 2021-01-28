@@ -58,7 +58,7 @@
 				"SparqlID": "?Cell",
 				"isReturned": true,
 				"isRuntimeConstrained": false,
-				"valueConstraint": "VALUES ?Cell { <belmont/generateSparqlInsert#Cell_cell300> } ",
+				"valueConstraint": "VALUES ?Cell { <http://semtk.research.ge.com/generated#Cell_cell300> } ",
 				"instanceValue": null
 			},
 			{

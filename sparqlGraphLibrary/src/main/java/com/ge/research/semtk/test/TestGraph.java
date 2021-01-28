@@ -496,6 +496,18 @@ public class TestGraph {
 	}
 	
 	@SuppressWarnings("rawtypes")
+	public static SparqlGraphJson addModelAndData(Class c, String baseName) throws Exception {
+		String jsonResource = String.format("/%s.json", baseName);
+		String owlResource = String.format("/%s.owl", baseName);
+		String csvResource = String.format("/%s.csv", baseName);
+
+		// load the model
+		TestGraph.uploadOwlContents(Utility.getResourceAsString(c, owlResource));
+		String csv = Utility.getResourceAsString(c, csvResource);
+		return ingestCsvString(c, jsonResource, csv);
+	}
+	
+	@SuppressWarnings("rawtypes")
 	public static SparqlGraphJson ingest(Class c, String sgjsonResource, String csvResource) throws Exception {
 		String csv = Utility.getResourceAsString(c, csvResource);
 		return ingestCsvString(c, sgjsonResource, csv, true);

@@ -44,6 +44,10 @@ public class QueryGenerationTest {
 	//
 	// When a test fails and we can point to an integration test that tests a query's output instead
 	// simple remove the test from here.  They are outdated.
+	//
+	// See LoadAndQueryGenTest_IT for better tests.
+	//
+	// TODO: consider deprecating this entire file and make sure functionality is covered in LoadAndQueryGenTest_IT
 	
 	@Test
 	public void generateInsertQuery() throws Exception {
