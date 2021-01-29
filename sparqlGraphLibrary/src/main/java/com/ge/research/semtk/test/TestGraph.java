@@ -237,12 +237,21 @@ public class TestGraph {
 		return SparqlGraphJson.executeSelectToTable(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
+	
 	public static Table execTableSelect(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
 		// execute a select query
 		// exception if there's any problem
 		// return the table
 		
 		return SparqlGraphJson.executeSelectToTable(sgJsonJson, getSparqlConn(), oInfoClient);
+	}
+	
+	public static JSONArray execJsonConstruct(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
+		// execute a construct query
+		// exception if there's any problem
+		// return the table
+		
+		return SparqlGraphJson.executeConstructToJson(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
 	
 	public static Table execSelectFromResource(Object o, String resourceName) throws Exception {
@@ -254,6 +263,18 @@ public class TestGraph {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
 		return execTableSelect(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
 	}
+	
+	
+	public static JSONArray execConstructFromResource(Object o, String resourceName) throws Exception {
+		return execConstructFromResource(o.getClass(), resourceName);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static JSONArray execConstructFromResource(Class c, String resourceName) throws Exception {
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
+		return execJsonConstruct(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
+	}
+	
 	
 	/**
 	 * Get the number of triples in the test graph.

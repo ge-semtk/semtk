@@ -244,6 +244,9 @@ public class OntologyInfo {
 		for (String domainSuperName : this.getSuperclassNames(domainURI)) {
 			domainClasses.add(this.classHash.get(domainSuperName));
 		}
+		for (String domainSubName : this.getSubclassNames(domainURI)) {
+			domainClasses.add(this.classHash.get(domainSubName));
+		}
 		
 		this.addSubPropNames(superPropertyName, domainClasses, ret);
 		return ret;

@@ -161,6 +161,13 @@ public class BelmontUtil {
 			return retval;
 	}
 
+	/**
+	 * This stopped being used in 2017.  Retained in case of compile errors.
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
+	@Deprecated
 	public static String prefixQuery(String query) throws Exception {
 			
 		String prefixes = "";

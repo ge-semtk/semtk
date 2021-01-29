@@ -7,11 +7,14 @@ Animal is a class,
 Dog is a type of Animal,
 	described by hasPuppies with values of type Dog.
 	hasPuppies is a type of hasChild.
-	
+
+hasKitties is a type of hasChild.
+hasDemons is a type of hasChild.	
 Cat is a type of Animal,
 	described by hasKitties with values of type Cat,
 	described by hasDemons.
-	hasKitties is a type of hasChild.
-	hasDemons is a type of hasChild.
-
-
+	
+scaryName is a type of name.	
+Tiger is a type of Cat,
+	described by scaryName.
+	

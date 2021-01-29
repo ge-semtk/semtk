@@ -39,17 +39,15 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 /**
- * As of Dec 2018, most advanced integration testing of ingestion and querying features.
+ * Testing of querying features.
  * 
  * Ingestion and queries are performed without REST calls (DataLoader and SparqlEndpointInterface).
  * "Integration" is the triplestore.
- * 
- * Test query functions by running them and checking the number of returns.  NOT by inspecting SPARQL.
- * 
+ *  * 
  * @author 200001934
  *
  */
-public class LoadAndQueryGenTest_IT {
+public class QueryGenTest_IT {
 		
 	private static SparqlGraphJson sgJsonChain = null;
 	private static SparqlGraphJson sgJsonBattery = null;
@@ -59,22 +57,24 @@ public class LoadAndQueryGenTest_IT {
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
 		
-		// This nodegroup includes multiple nodes with the same type
-		// and URI lookup where different nodes with the same type
-		// can represent the same URI on different lines of input.
+		// load Chain
+		sgJsonChain = TestGraph.initGraphWithData(QueryGenTest_IT.class, "chain");
 		
-		sgJsonChain = TestGraph.initGraphWithData(LoadAndQueryGenTest_IT.class, "chain");
-		
-		// load another model
-		TestGraph.uploadOwlContents(Utility.getResourceAsString(LoadAndQueryGenTest_IT.class, 
+		// load AnimalSubProps model 
+		// and data:  Cats and Tigers
+		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, 
 				"AnimalSubProps.owl"));
-		String csv = Utility.getResourceAsString(LoadAndQueryGenTest_IT.class, 
+		String csv = Utility.getResourceAsString(QueryGenTest_IT.class, 
 				"animalSubPropsCats.csv");
-		TestGraph.ingestCsvString(LoadAndQueryGenTest_IT.class, 
+		TestGraph.ingestCsvString(QueryGenTest_IT.class, 
 				"animalSubPropsCats.json", csv);
+		csv = Utility.getResourceAsString(QueryGenTest_IT.class, 
+				"animalSubPropsTigers.csv");
+		TestGraph.ingestCsvString(QueryGenTest_IT.class, 
+				"animalSubPropsTigers.json", csv);
 		
-		// load yet another
-		sgJsonBattery = TestGraph.addModelAndData(LoadAndQueryGenTest_IT.class, "sampleBattery");
+		// load Batttery
+		sgJsonBattery = TestGraph.addModelAndData(QueryGenTest_IT.class, "sampleBattery");
 
 	}
 	
@@ -361,8 +361,8 @@ public class LoadAndQueryGenTest_IT {
 	}
 	
 	@Test
-	public void constructQuery1() throws Exception{
-
+	public void constructQuery() throws Exception{
+		
 		NodeGroup ng = sgJsonBattery.getNodeGroup();
 		SparqlEndpointInterface sei = sgJsonBattery.getSparqlConn().getDefaultQueryInterface();
 
@@ -375,7 +375,7 @@ public class LoadAndQueryGenTest_IT {
 
 	
 	@Test
-	public void constructQuery2() throws Exception {		
+	public void constructQueryWithConstraints() throws Exception {		
 	
 		
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/sampleBattery_PlusConstraints.json");		
@@ -386,5 +386,52 @@ public class LoadAndQueryGenTest_IT {
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		JSONArray graph = (JSONArray)responseJson.get("@graph");
 		assertEquals("JSON-LD has wrong number of elements", 3, graph.size());
+	}
+	
+	@Test
+	public void superPropertyQueries() throws Exception {		
+		// granny mom, greymom, white are names of cats with kitties (a type of child)
+		// fluffy mom is a cat with a kitty nutter
+		//                          a demon (type of child) beelz
+		// tigger is a tiger (type of cat)
+		//       with demon (type of child) Animal tiger cub
+		// tigger also has a "scary name" (type of name) "scary tigger"
+		
+		// try it as select
+		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
+		assertEquals("Table has wrong number of rows", 6, res.getNumRows());
+		
+		// try it as construct
+		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
+		assertEquals("JSON-LD has wrong number of elements", 8, graph.size());
+	}
+	
+	@Test
+	public void subPropertyQueries() throws Exception {		
+		// Using superPropertyQueries data
+		//
+		// Only get "hasDemon" not parent property "hasChild"
+		// Since tigger also has "scary name" he will appear once for each name
+		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsCatHasDemon.json");
+		assertEquals("Table has wrong number of rows", 3, res.getNumRows());
+		
+		// try it as construct
+		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsCatHasDemon.json");
+		assertEquals("JSON-LD has wrong number of elements", 4, graph.size());
+	}
+	
+	@Test
+	public void subDataPropertyQueries() throws Exception {		
+		// Two tiggers have names (super prop) 
+		// and scary names (sub prop)
+		// get just the scary names
+		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsScaryNames.json");
+		assertEquals("Table has wrong number of rows", 2, res.getNumRows());
+		
+		// try it as construct
+		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsScaryNames.json");
+		assertEquals("JSON-LD has wrong number of elements", 2, graph.size());
+		
+		assertFalse("Construct query returned a super prop name Richard", graph.toJSONString().contains("Richard"));
 	}
 }

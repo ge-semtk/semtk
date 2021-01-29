@@ -394,6 +394,19 @@ public class SparqlGraphJson {
 	 * @return Table
 	 * @throws Exception
 	 */
+	public static JSONArray executeConstructToJson(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
+		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
+		sgjson.setSparqlConn(conn);
+		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct(true);
+		return conn.getDefaultQueryInterface().executeQueryToGraph(query);
+	}
+	/**
+	 * Execute a select query from a JSON representation of SparqlGraphJson and an override connection
+	 * @param sgJsonJson
+	 * @param conn - override and default query sei
+	 * @return Table
+	 * @throws Exception
+	 */
 	public static Table executeSelectToTable(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient, String filterSparqlId, String filterOp, String filterVal) throws Exception {
 		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
 		sgjson.setSparqlConn(conn);

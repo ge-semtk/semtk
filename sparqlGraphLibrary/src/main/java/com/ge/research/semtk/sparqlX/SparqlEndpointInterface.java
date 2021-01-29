@@ -496,6 +496,12 @@ public abstract class SparqlEndpointInterface {
 		return res.getTable();
 	}
 	
+	public JSONArray executeQueryToGraph(String query) throws Exception {
+		JSONObject responseJson = this.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
+		// TODO : how to : throwExceptionIfUnsuccessful();
+		return (JSONArray)responseJson.get("@graph");
+	}	
+	
 	/**
 	 * Executes a confirm query and throws exception
 	 * See "internal use" note
