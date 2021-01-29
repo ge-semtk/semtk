@@ -73,6 +73,8 @@ define([	// properly require.config'ed
 
             // data for click(), sorted by Y ascending
             this.nodeCallbackData = {};
+
+            this.edgeCallbackData = {};
         };
 
         NodegroupRenderer.OPTIONS_COOKIE = "ngrenderOptions";
@@ -218,12 +220,12 @@ define([	// properly require.config'ed
                     if (itemData.type == "SemanticNode") {
                         this.snodeEditorCallback(snode);
                     } else if (itemData.type == "PropertyItem") {
-                        this.propEditorCallback(snode.getPropertyByKeyname(itemData.value),
+                        this.propEditorCallback(snode.getPropertyByURIRelation(itemData.uri),
                                                 n.id);
                     }  else if (itemData.type == "NodeItem") {
                         this.linkBuilderCallback(snode,
-                                                snode.getNodeItemByKeyname(itemData.value));
-                    } else if (itemData.type = "header") {
+                                                snode.getNodeItemByURIConnectBy(itemData.uri));
+                    } else if (itemData.type == "header") {
                         if (x_perc > itemData.x_close_perc) {
                             this.snodeRemoverCallback(snode);
                         } else if (x_perc > itemData.x_expand_perc) {
@@ -235,7 +237,7 @@ define([	// properly require.config'ed
                 } else if (e.edges.length > 0) {
                     var edge = this.network.body.edges[e.edges[0]];
                     var snode = this.nodegroup.getNodeBySparqlID(edge.fromId);
-                    var nItem = snode.getNodeItemByKeyname(this.getEdgeKeyname(edge));
+                    var nItem = snode.getNodeItemByURIConnectBy(this.edgeCallbackData[edge.id].uri);
                     var targetSNode = this.nodegroup.getNodeBySparqlID(edge.toId);
                     this.linkEditorCallback(snode, nItem, targetSNode);
                 }
@@ -336,17 +338,6 @@ define([	// properly require.config'ed
                 return label;
             },
 
-            getEdgeKeyname : function(edge) {
-                var ret;
-                var words = edge.options.label.split(" ");
-
-                // get last word, e.g.: keyname+
-                ret = words[words.length - 1];
-                // strip out spaces and qualifiers
-                ret = ret.replace(/\W+$/, "");
-                return ret;
-            },
-
             drawEdges : function() {
                 // edges: update all since it is cheap
 
@@ -381,6 +372,7 @@ define([	// properly require.config'ed
                                 font :  edgeFont
                             };
                             edgeData.push(edge);
+                            this.edgeCallbackData[id] = {uri: nItem.getFullURIName()};
 
                             // remove this edge from edgeIDsToRemove
                             var removeIndex = edgeIDsToRemove.indexOf(id);
@@ -395,6 +387,9 @@ define([	// properly require.config'ed
 
                 // remove any edges no longer in the nodegroup
                 this.network.body.data.edges.remove(edgeIDsToRemove);
+                for (var id of edgeIDsToRemove) {
+                    delete this.edgeCallbackData[id];
+                }
             },
 
             // get deepest union item belongs to, or null
@@ -732,7 +727,7 @@ define([	// properly require.config'ed
 
                 var height = NodegroupRenderer.VSPACE + size;
                 var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
-                var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName() };
+                var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName(), uri: item.getFullURIName() };
 
                 return({"height":height, "width":width, "data":callbackData});
             },

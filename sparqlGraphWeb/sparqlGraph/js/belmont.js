@@ -590,6 +590,10 @@ NodeItem.prototype = {
 	getUriValueType : function() {
 		return this.UriValueType;
 	},
+    getFullURIName : function() {
+		// return the name of the property
+		return this.UriConnectBy;
+	},
 	getConnected : function() {
 		return this.Connected;
 	},
@@ -853,7 +857,7 @@ PropertyItem.prototype = {
         return (this.isBindingReturned && this.binding != null && this.binding != "");
 	},
 
-    getfullURIName : function() {
+    getFullURIName : function() {
 		// return the name of the property
 		return this.fullURIName;
 	},
