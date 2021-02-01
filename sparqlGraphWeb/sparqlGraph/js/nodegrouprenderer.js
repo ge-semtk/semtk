@@ -372,7 +372,7 @@ define([	// properly require.config'ed
                                 font :  edgeFont
                             };
                             edgeData.push(edge);
-                            this.edgeCallbackData[id] = {uri: nItem.getFullURIName()};
+                            this.edgeCallbackData[id] = {uri: nItem.getItemUri()};
 
                             // remove this edge from edgeIDsToRemove
                             var removeIndex = edgeIDsToRemove.indexOf(id);
@@ -727,7 +727,7 @@ define([	// properly require.config'ed
 
                 var height = NodegroupRenderer.VSPACE + size;
                 var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
-                var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName(), uri: item.getFullURIName() };
+                var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName(), uri: item.getItemUri() };
 
                 return({"height":height, "width":width, "data":callbackData});
             },

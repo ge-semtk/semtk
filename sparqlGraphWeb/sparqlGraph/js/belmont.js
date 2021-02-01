@@ -590,10 +590,6 @@ NodeItem.prototype = {
 	getUriValueType : function() {
 		return this.UriValueType;
 	},
-    getFullURIName : function() {
-		// return the name of the property
-		return this.UriConnectBy;
-	},
 	getConnected : function() {
 		return this.Connected;
 	},
@@ -646,6 +642,10 @@ NodeItem.prototype = {
 	getItemType : function () {
 		return "NodeItem";
 	},
+
+    getItemUri: function() {
+        return this.UriConnectBy;
+    },
 };
 
 /* the property item */
@@ -856,11 +856,6 @@ PropertyItem.prototype = {
     getIsBindingReturned : function() {
         return (this.isBindingReturned && this.binding != null && this.binding != "");
 	},
-
-    getFullURIName : function() {
-		// return the name of the property
-		return this.fullURIName;
-	},
 	getSparqlID : function() {
 		return this.SparqlID;
 	},
@@ -924,6 +919,10 @@ PropertyItem.prototype = {
 	getItemType : function () {
 		return "PropertyItem";
 	},
+
+    getItemUri: function() {
+        return this.UriRelationship;
+    },
 
 	setIsMarkedForDeletion : function(markToSet) {
 		this.isMarkedForDeletion = markToSet;
