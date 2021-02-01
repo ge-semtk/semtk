@@ -1292,8 +1292,7 @@ public class DataLoaderTest_IT {
 		dl.importData(true);
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+			fail(err.toCSVString());
 		}
 		
 		// the real test  
@@ -1303,8 +1302,7 @@ public class DataLoaderTest_IT {
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
 		if (err.getNumRows() != 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+			fail(err.toCSVString());
 		}
 
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate.json");
@@ -1556,9 +1554,9 @@ public class DataLoaderTest_IT {
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
 		err = dl.getLoadingErrorReport();
+		assertEquals("missing error", 1, err.getNumRows());
 		if (err.getNumRows() != 1 || !err.getCell(0, 4).contains("Can't create a URI with two different values")) {
-			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+			assertTrue("wrong error message:" + err.toCSVString(), false);
 		}
 		
 	}
