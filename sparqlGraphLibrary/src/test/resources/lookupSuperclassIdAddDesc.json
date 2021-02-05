@@ -1,0 +1,128 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "fuseki perf test",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test_persistent",
+				"graph": "http://performance_test_0"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test_persistent",
+				"graph": "http://performance_test_0"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 12,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"KeyName": "batteryDesc",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryDesc",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?batteryDesc",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"KeyName": "batteryId",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryId",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?batteryId",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"NodeName": "Battery",
+				"fullURIName": "http://kdl.ge.com/durabattery#Battery",
+				"SparqlID": "?Battery",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?Battery"
+			},
+			{
+				"sparqlID": "?batteryDesc"
+			},
+			{
+				"sparqlID": "?batteryId"
+			}
+		],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "batt_ID"
+			},
+			{
+				"colId": "col_1",
+				"colName": "description"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Battery",
+				"type": "http://kdl.ge.com/durabattery#Battery",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryDesc",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryId",
+						"URILookup": [
+							"?Battery"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
