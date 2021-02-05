@@ -207,6 +207,9 @@ public class OntologyInfo {
 			}
 		}
 	}
+	public boolean hasSubclass(String className) {
+		return this.subclassHash.get(className) != null;
+	}
 	
 	public ArrayList<String> getSubclassNames(String superClassName) {
 		return this.getSubclassNames(superClassName, null);
@@ -215,7 +218,7 @@ public class OntologyInfo {
 	 * return a list of subclass names for a given class.
 	 * if there are no known subclasses, an empty list is returned.
 	 **/
-	public ArrayList<String> getSubclassNames(String superClassName, ArrayList<String> retval){
+	private ArrayList<String> getSubclassNames(String superClassName, ArrayList<String> retval){
 		// return an arraylist of the subclasses, if any, of the given class.
 		if(retval == null){	retval = new ArrayList<String>(); } // if it was null, initialize it.
 		

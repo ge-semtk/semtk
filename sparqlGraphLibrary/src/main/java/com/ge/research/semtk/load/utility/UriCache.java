@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class UriCache {
 	static final String NOT_FOUND = "0-NOT-FOUND";
@@ -64,8 +65,30 @@ public class UriCache {
 	 */
 	public void putUri(String lookupNgMD5, ArrayList<String> builtStrings, String uri) {
 		this.uriCache.putIfAbsent(this.getKey(lookupNgMD5, builtStrings), uri);
+		//LocalLogger.logToStdErr("PUT   : " + this.getKey(lookupNgMD5, builtStrings) + "," + uri);
 	}
 	
+	/** 
+	 * Add if URI isn't already there.  If it is already there, delete it instead.
+	 * Intended to 
+	 * @param lookupNgMD5
+	 * @param builtStrings
+	 * @param uri
+	 */
+	public void putIfNewElseDelete(String lookupNgMD5, ArrayList<String> builtStrings, String uri) {
+		synchronized(this) {
+			String key = this.getKey(lookupNgMD5, builtStrings);
+		
+			String prev = this.uriCache.putIfAbsent(key, uri);
+			if (prev != null && !prev.equals(uri)) {
+				this.uriCache.remove(key);
+				//LocalLogger.logToStdErr("REMOVE: " + key + "," + uri);
+				
+			} else {
+				//LocalLogger.logToStdErr("PUT-2 : " + key + "," + uri);
+			}
+		}
+	}
 	/**
 	 * Get a URI given a unique lookup nodegroup and set of builtStrings
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
@@ -74,8 +97,10 @@ public class UriCache {
 	 */
 	public String getUri(String lookupNgMD5, ArrayList<String> builtStrings) {
 		try {
+			//LocalLogger.logToStdErr("GET  : " + this.getKey(lookupNgMD5, builtStrings));
 			return this.uriCache.get(this.getKey(lookupNgMD5, builtStrings));
 		} catch (Exception e) {
+			//LocalLogger.logToStdErr("...not found");
 			return null;
 		}
 	}

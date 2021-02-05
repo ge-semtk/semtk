@@ -116,6 +116,19 @@ public class ValueConstraint {
 		}
 	}
 	
+	public static String buildBestListConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception {
+		switch (sei.getServerType()) {
+		case SparqlEndpointInterface.NEPTUNE_SERVER:
+			return buildFilterInConstraint(sparqlId, valList, valType);
+			
+		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
+		case SparqlEndpointInterface.FUSEKI_SERVER:
+		case SparqlEndpointInterface.VIRTUOSO_SERVER:
+		default:
+			return buildValuesConstraint(sparqlId, valList, valType);
+		}
+	}
+	
 	//
 	//  Original ValueConstraint functions ported from javascript for use with NodegGroup items
 	//
