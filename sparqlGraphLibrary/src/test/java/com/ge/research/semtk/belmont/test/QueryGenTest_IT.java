@@ -370,6 +370,7 @@ public class QueryGenTest_IT {
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		
 		JSONArray graph = (JSONArray)responseJson.get("@graph");
+		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 9, graph.size());
 	}
 
@@ -385,6 +386,7 @@ public class QueryGenTest_IT {
 		
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		JSONArray graph = (JSONArray)responseJson.get("@graph");
+		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 3, graph.size());
 	}
 	
@@ -401,7 +403,7 @@ public class QueryGenTest_IT {
 		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
 		assertEquals("Table has wrong number of rows", 6, res.getNumRows());
 		
-		// try it as construct
+		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
 		assertEquals("JSON-LD has wrong number of elements", 8, graph.size());
 	}
@@ -415,7 +417,7 @@ public class QueryGenTest_IT {
 		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsCatHasDemon.json");
 		assertEquals("Table has wrong number of rows", 3, res.getNumRows());
 		
-		// try it as construct
+		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsCatHasDemon.json");
 		assertEquals("JSON-LD has wrong number of elements", 4, graph.size());
 	}
@@ -428,7 +430,7 @@ public class QueryGenTest_IT {
 		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsScaryNames.json");
 		assertEquals("Table has wrong number of rows", 2, res.getNumRows());
 		
-		// try it as construct
+		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsScaryNames.json");
 		assertEquals("JSON-LD has wrong number of elements", 2, graph.size());
 		
