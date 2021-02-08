@@ -147,7 +147,10 @@ public class ValueConstraint {
 		case SparqlEndpointInterface.FUSEKI_SERVER:
 		case SparqlEndpointInterface.VIRTUOSO_SERVER:
 		default:
-			return buildValuesConstraint(sparqlId, subclassList, XSDSupportedType.NODE_URI, sei);
+			ArrayList<String> classList = new ArrayList<String>();
+			classList.add(className);
+			classList.addAll(subclassList);
+			return buildValuesConstraint(sparqlId, classList, XSDSupportedType.NODE_URI, sei);
 		}
 	}
 	
