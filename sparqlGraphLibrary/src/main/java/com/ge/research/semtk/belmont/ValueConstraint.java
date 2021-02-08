@@ -106,26 +106,48 @@ public class ValueConstraint {
 	public static String buildBestListConstraint(Returnable item, ArrayList<String> valList, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
-			return buildFilterInConstraint(item, valList);
+			return buildFilterInConstraint(item, valList, sei);
 			
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
 		case SparqlEndpointInterface.FUSEKI_SERVER:
 		case SparqlEndpointInterface.VIRTUOSO_SERVER:
 		default:
-			return buildValuesConstraint(item, valList);
+			return buildValuesConstraint(item, valList, sei);
 		}
 	}
 	
 	public static String buildBestListConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
-			return buildFilterInConstraint(sparqlId, valList, valType);
+			return buildFilterInConstraint(sparqlId, valList, valType, sei);
 			
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
 		case SparqlEndpointInterface.FUSEKI_SERVER:
 		case SparqlEndpointInterface.VIRTUOSO_SERVER:
 		default:
-			return buildValuesConstraint(sparqlId, valList, valType);
+			return buildValuesConstraint(sparqlId, valList, valType, sei);
+		}
+	}
+	
+	/**
+	 * Special case of best list.  Blazegraph like subclassof* better than VALUES { }
+	 * @param sparqlId
+	 * @param className
+	 * @param subclassList
+	 * @param sei
+	 * @return
+	 * @throws Exception
+	 */
+	public static String buildBestSubclassConstraint(String sparqlId, String className, ArrayList<String> subclassList, SparqlEndpointInterface sei) throws Exception {
+		switch (sei.getServerType()) {
+		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
+			return sparqlId + " rdfs:subClassOf* " +  className;
+					
+		case SparqlEndpointInterface.NEPTUNE_SERVER:
+		case SparqlEndpointInterface.FUSEKI_SERVER:
+		case SparqlEndpointInterface.VIRTUOSO_SERVER:
+		default:
+			return buildValuesConstraint(sparqlId, subclassList, XSDSupportedType.NODE_URI, sei);
 		}
 	}
 	
@@ -133,10 +155,16 @@ public class ValueConstraint {
 	//  Original ValueConstraint functions ported from javascript for use with NodegGroup items
 	//
 	//
+	
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildValuesConstraint(Returnable item, String val) throws Exception {
+		return buildValuesConstraint(item, val, null);
+	}
+	public static String buildValuesConstraint(Returnable item, String val, SparqlEndpointInterface sei) throws Exception {
 		ArrayList<String> valList = new ArrayList<String>();
 		valList.add(val);
-		return buildValuesConstraint(item, valList);
+		return buildValuesConstraint(item, valList, sei);
 	}
 
 	/**
@@ -146,7 +174,14 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
+
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList) throws Exception {
+		return buildValuesConstraint(item, valList, null);
+	}
+	public static String buildValuesConstraint(Returnable item, ArrayList<String> valList, SparqlEndpointInterface sei) throws Exception {
+
 		// build a value constraint for an "item" (see item interface comment)
 		
 		String sparqlID = item.getSparqlID();
@@ -154,7 +189,7 @@ public class ValueConstraint {
 			throw new Error("Trying to build VALUES constraint for property with empty sparql ID");
 		}
 
-		return buildValuesConstraint(sparqlID, valList, item.getValueType());
+		return buildValuesConstraint(sparqlID, valList, item.getValueType(), sei);
 	}
 	
 	/**
@@ -261,7 +296,13 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+		return buildValuesConstraint(sparqlId, valList, valType, null);
+	}
+
+	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception{
 		
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
@@ -277,9 +318,11 @@ public class ValueConstraint {
 			
 			// for strings and numbers:  
 			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
-			if (valType == XSDSupportedType.STRING ||
-				valType.numericOperationAvailable()) {
-				retval.append(valType.buildTypedValueString(v) + " ");   
+			if (sei == null || sei.getServerType() == SparqlEndpointInterface.VIRTUOSO_SERVER ) {
+				if (valType == XSDSupportedType.STRING ||
+					valType.numericOperationAvailable()) {
+					retval.append(valType.buildTypedValueString(v) + " ");   
+				}
 			}
 		}
 		
@@ -296,7 +339,13 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+		return buildFilterInConstraint(sparqlId, valList, valType, null);
+	}
+
+	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		
@@ -312,8 +361,10 @@ public class ValueConstraint {
 			// for strings only:  
 			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
 			// TODO: remove this some day
-			if (valType == XSDSupportedType.STRING ) {
-				list.add(valType.buildTypedValueString(v));   
+			if (sei == null || sei.getServerType() == SparqlEndpointInterface.VIRTUOSO_SERVER ) {
+				if (valType == XSDSupportedType.STRING ) {
+					list.add(valType.buildTypedValueString(v));   
+				}
 			}
 		}
 		
@@ -328,30 +379,45 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildFilterInConstraint(String sparqlId, String val, XSDSupportedType valType) throws Exception{
+		return buildFilterInConstraint(sparqlId, val, valType, null);
+	}
+	public static String buildFilterInConstraint(String sparqlId, String val, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception{
 		
 		
 		// FILTER (?trNum IN ( 1278 )) 
 		
 		ArrayList<String> list = new ArrayList<String>();
 		list.add(val);
-		return ValueConstraint.buildFilterInConstraint(sparqlId, list, valType);
+		return ValueConstraint.buildFilterInConstraint(sparqlId, list, valType, sei);
 		
 	}
 	
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildFilterInConstraint(Returnable item, ArrayList<String> valList) throws Exception{
+		return buildFilterInConstraint(item, valList, null);
+	}
+	
+	public static String buildFilterInConstraint(Returnable item, ArrayList<String> valList, SparqlEndpointInterface sei) throws Exception{
 
-		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), valList, item.getValueType());
+		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), valList, item.getValueType(), sei);
 
 	}
 	
+	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
+	@Deprecated
 	public static String buildFilterInConstraint(Returnable item, String val) throws Exception{
-
-
+		return buildFilterInConstraint(item, val, null);
+	}
+	
+	public static String buildFilterInConstraint(Returnable item, String val, SparqlEndpointInterface sei) throws Exception{
 
 		ArrayList<String> list = new ArrayList<String>();
 		list.add(val);
-		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), list, item.getValueType());
+		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), list, item.getValueType(), sei);
 
 	}
 	

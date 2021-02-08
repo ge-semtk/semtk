@@ -2239,7 +2239,7 @@ public class NodeGroup {
 		ArrayList<String> propNames = new ArrayList<String>();
 		propNames.add(propUri);
 		propNames.addAll(subPropNames); 
-		return  ValueConstraint.buildValuesConstraint(varName, propNames, XSDSupportedType.NODE_URI);
+		return  ValueConstraint.buildValuesConstraint(varName, propNames, XSDSupportedType.NODE_URI, this.conn.getModelInterface(0));
 	}
 	
 	/**
@@ -2373,17 +2373,16 @@ public class NodeGroup {
 
 					// get a prefixed list of classNames
 					ArrayList<String> classNames = new ArrayList<String>();
-					classNames.add(node.getFullUriName());
 					classNames.addAll(this.oInfo.getSubclassNames(node.getFullUriName()));
 					for (int i=0; i < classNames.size(); i++) {
 						classNames.set(i, this.applyPrefixing(classNames.get(i)));
 					}
 					
-					retval += tab + ValueConstraint.buildBestListConstraint(
+					retval += tab + ValueConstraint.buildBestSubclassConstraint(
 							node.getTypeSparqlID(), 
+							this.applyPrefixing(node.getFullUriName()),
 							classNames, 
-							XSDSupportedType.NODE_URI, 
-							this.conn.getInsertInterface());
+							this.conn.getInsertInterface())+ " .\n";
 				}
 			} else {
 				// we know there are no subClasses
@@ -3137,7 +3136,7 @@ public class NodeGroup {
 	public Node addNodeInstance(String classUri, OntologyInfo oInfo, String instanceURI) throws Exception {
 		Node node = this.addNode(classUri, oInfo);
 		if (instanceURI != null && ! instanceURI.isEmpty()) {
-			node.addValueConstraint(ValueConstraint.buildFilterInConstraint(node, instanceURI));
+			node.addValueConstraint(ValueConstraint.buildFilterInConstraint(node, instanceURI, this.conn.getInsertInterface()));
 		}
 		return node;
 	}

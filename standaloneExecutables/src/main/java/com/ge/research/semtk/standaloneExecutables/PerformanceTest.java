@@ -16,6 +16,7 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.DataLoader;
@@ -38,6 +39,7 @@ public class PerformanceTest {
 	private final static boolean NO_PRECHECK = false;
 	private final static boolean PRECHECK = true;
 	private final static boolean LOG_QUERY_PERFORMANCE = false;
+	private final static Double  CIRCUIT_BREAKER_SEC = 60.0 * 3;
 
 	
 	public static void main(String[] args) throws Exception {
@@ -61,7 +63,7 @@ public class PerformanceTest {
 		try {
 			
 			//addSimpleRows(10, 10000); 
-			addBatteryDescriptions(1000, 2000000);  
+			addBatteryDescriptions(1000, 500000);  
 			//addBatteryDescriptionsVaryingThreadsAndSize(0);
 			//addSimpleBiggerRows(10, 50000);
 			
@@ -83,7 +85,6 @@ public class PerformanceTest {
 		
 		// setup
 		sei.clearGraph();
-		SparqlGraphJson sgJson = getSparqlGraphJsonFromFile("/loadTest.json", sei, sei);
 		uploadOwl(sei, "/loadTest.owl");
 		
 		int pass = -1;
@@ -92,7 +93,11 @@ public class PerformanceTest {
 		while (++pass < passes) {
 			// build 10,000 rows
 			int i = 0;
-
+			
+			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
+			SparqlGraphJson sgJson = getSparqlGraphJsonFromFile("/loadTest.json", sei, sei);
+			
+			// build the rows
 			StringBuilder content = new StringBuilder();
 			content.append("battery name, cell id, color\n");
 			for (i=0; i < pass_size; i++) {
@@ -102,7 +107,8 @@ public class PerformanceTest {
 			
 			Dataset ds0 = new CSVDataset(content.toString(), true);
 	
-			DataLoader dl0 = new DataLoader(sgJson, 30, ds0, "dba", "dba");
+			// ingest
+			DataLoader dl0 = new DataLoader(sgJson, ds0, "dba", "dba");
 			startTask("addSimpleRows load " + pass_size + "  totaling," + (pass + 1) * pass_size);
 			dl0.importData(NO_PRECHECK);
 			endTask();
@@ -120,7 +126,6 @@ public class PerformanceTest {
 		
 		// setup
 		sei.clearGraph();
-		SparqlGraphJson sgJson = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
 		uploadOwl(sei, "/loadTestDuraBattery.owl");
 		
 		int pass = -1;
@@ -130,6 +135,9 @@ public class PerformanceTest {
 			// build 10,000 rows
 			int i = 0;
 
+			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
+			SparqlGraphJson sgJson = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
+			
 			StringBuilder content = new StringBuilder();
 			content.append("batt_id,description_opt,cell1_id_opt,cell1_color,cell2_id_opt,cell2_color,cell3_id_opt,cell3_color,cell4_id_opt,cell4_color\n");
 			for (i=0; i < pass_size; i++) {
@@ -150,7 +158,7 @@ public class PerformanceTest {
 			
 			Dataset ds0 = new CSVDataset(content.toString(), true);
 	
-			DataLoader dl0 = new DataLoader(sgJson, 30, ds0, "dba", "dba");
+			DataLoader dl0 = new DataLoader(sgJson, ds0, "dba", "dba");
 			startTask("addSimpleBiggerRows load " + pass_size + "  totaling," + (pass + 1) * pass_size);
 			dl0.importData(PRECHECK);
 			endTask();
@@ -174,6 +182,7 @@ public class PerformanceTest {
 		// setup loads
 		SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
 		SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
+		SparqlGraphJson sgJson3 = getSparqlGraphJsonFromFile("/lookupSuperclassIdAddDesc.json", sei, sei);
 		
 		// set up a query
 		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("Perftest", sei));
@@ -187,36 +196,67 @@ public class PerformanceTest {
 
 		int pass = -1;
 		int index = 0;
+		Double lastSec[] = new Double[20];
+		for (int i=0; i < 20; i++) {
+			lastSec[i]=0.0;
+		}
+		
 		while (triples < max_triples) {
 			++pass;
 			int total_rows = (pass + 1) * rows_per_pass;
 			
+			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
+			sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
+			sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
+			sgJson3 = getSparqlGraphJsonFromFile("/lookupSuperclassIdAddDesc.json", sei, sei);
+			
 			// build some rows
 			StringBuilder content1 = new StringBuilder();
 			StringBuilder content2 = new StringBuilder();
+			StringBuilder content3 = new StringBuilder();
 
 			content1.append("description_opt, batt_ID\n");
 			content2.append("description, batt_ID\n");
+			content3.append("description, batt_ID\n");
 			for (int i=0; i < rows_per_pass; i++) {
 				index++;
 				content1.append(",id_" + index + "\n");
-				content2.append("description_" + index + ",id_" + index + "\n");
+				// send half the ingest data to each of 2 and 3
+				if (i % 2 == 0) {
+					content2.append("description_" + index + ",id_" + index + "\n");
+				} else {
+					content3.append("description_" + index + ",id_" + index + "\n");
+				}
 			}
 			
 			// ingest rows
-			Dataset ds1 = new CSVDataset(content1.toString(), true);
-			DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
-			startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
-			dl1.importData(NO_PRECHECK);
-			endTask();
+			if (lastSec[0] < CIRCUIT_BREAKER_SEC) {
+				Dataset ds1 = new CSVDataset(content1.toString(), true);
+				DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
+				startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
+				dl1.importData(NO_PRECHECK);
+				lastSec[0] = endTask();
+			}
 			
 			// add descriptions
-			Dataset ds2 = new CSVDataset(content2.toString(), true);
-			DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
-			dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
-			startTask("addBatteryDescriptions load lookup, rows," + rows_per_pass + ",total rows," + total_rows);
-			dl2.importData(NO_PRECHECK);
-			endTask();
+			if (lastSec[1] < CIRCUIT_BREAKER_SEC) {
+				Dataset ds2 = new CSVDataset(content2.toString(), true);
+				DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
+				dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
+				startTask("addBatteryDescriptions load lookup class, rows," + rows_per_pass/2 + ",total rows," + total_rows);
+				dl2.importData(NO_PRECHECK);
+				lastSec[1] = endTask();
+			}
+			
+			// add descriptions superclass
+			if (lastSec[2] < CIRCUIT_BREAKER_SEC) {
+				Dataset ds3 = new CSVDataset(content3.toString(), true);
+				DataLoader dl3 = new DataLoader(sgJson3, ds3, "dba", "dba");
+				dl3.setLogPerformance(LOG_QUERY_PERFORMANCE);
+				startTask("addBatteryDescriptions load lookup superclass, rows," + rows_per_pass /2 + ",total rows," + total_rows);
+				dl3.importData(NO_PRECHECK);
+				lastSec[2] = endTask();
+			}
 			
 			// get new total triples
 			triples = countTriples("addBatteryDescriptions", total_rows);
@@ -235,22 +275,39 @@ public class PerformanceTest {
 			Table t;
 			
 			// Select filter in
-			startTask("addBatteryDescription select filter in 10, triples," + triples + ",total rows," + total_rows);
-			t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?p", idList, XSDSupportedType.STRING)));
-			endTask();
-			assert(t.getNumRows() == SIZE);
+			if (lastSec[3] < CIRCUIT_BREAKER_SEC) {
+				startTask("addBatteryDescription select filter in 10, triples," + triples + ",total rows," + total_rows);
+				t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?p", idList, XSDSupportedType.STRING, sei)));
+				assert(t.getNumRows() == SIZE);
+				lastSec[3] = endTask();
+			}
 			
-			// Select filter in
-			startTask("addBatteryDescription select filter regex 10, triples," + triples + ",total rows," + total_rows);
-			t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?p", regex.toString(), XSDSupportedType.STRING)));
-			endTask();
-			assert(t.getNumRows() == SIZE);
+			// Select regex
+			if (lastSec[4] < CIRCUIT_BREAKER_SEC) {
+				startTask("addBatteryDescription select filter regex 10, triples," + triples + ",total rows," + total_rows);
+				t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?p", regex.toString(), XSDSupportedType.STRING)));
+				assert(t.getNumRows() == SIZE);
+				lastSec[4] = endTask();
+			}
 			
 			// Select values
-			startTask("addBatteryDescription select values 10, triples," + triples + ",total rows," + total_rows);
-			t =sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?p", idList, XSDSupportedType.STRING)));
-			endTask();
-			assert(t.getNumRows() == SIZE);
+			if (lastSec[5] < CIRCUIT_BREAKER_SEC) {
+				startTask("addBatteryDescription select values 10, triples," + triples + ",total rows," + total_rows);
+				t =sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?p", idList, XSDSupportedType.STRING, sei)));
+				assert(t.getNumRows() == SIZE);
+				lastSec[5] = endTask();
+			}
+			
+			// Select from subclass
+			if (lastSec[6] < CIRCUIT_BREAKER_SEC) {
+				startTask("addBatteryDescription select subclassOf* 10, triples," + triples + ",total rows," + total_rows);
+				NodeGroup ng = sgJson3.getNodeGroup();
+				PropertyItem item = ng.getPropertyItemBySparqlID("?batteryId");
+				item.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint("?batteryId", idList, XSDSupportedType.STRING, sei)));
+				t = sei.executeQueryToTable(ng.generateSparqlSelect());
+				assert(t.getNumRows() == SIZE);
+				lastSec[6] = endTask();
+			}
 
 		}
 
@@ -271,8 +328,6 @@ public class PerformanceTest {
 	private static void addBatteryDescriptionsVaryingThreadsAndSize(int pass_size) throws Exception {
 		
 		// setup
-		SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
-		SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
 		
 		sei.clearGraph();
 		uploadOwl(sei, "/loadTestDuraBattery.owl");
@@ -282,6 +337,11 @@ public class PerformanceTest {
 		
 		for (int threads = 1; threads < 10; threads += 1) {
 			for (int querySize = 500; querySize < 10000; querySize += 500) {
+				
+				// reload sgJson objects so it ImportSpec can't cheat or get bogged down between loads
+				SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
+				SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
+				
 				// build 10,000 rows
 				int i = 0;
 				StringBuilder content1 = new StringBuilder();
@@ -328,9 +388,13 @@ public class PerformanceTest {
 		startTime = System.nanoTime();
 	}
 	
-	private static void endTask() {
+	private static Double endTask() {
 		long elapsed = System.nanoTime() - startTime;
-		System.out.println("task, " + taskName + ", " + Double.toString(elapsed / 1000000000.0));
+		Double seconds = elapsed / 1000000000.0;
+		
+		System.out.println("task, " + taskName + ", " + Double.toString(seconds));
+		
+		return seconds;
 	}
 	
 	public static void uploadOwl(SparqlEndpointInterface sei, String filename) throws Exception {
