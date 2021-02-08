@@ -99,6 +99,19 @@ public class QueryGenTest_IT {
 	}
 	
 	@Test
+	public void selectSuperSubClass() throws Exception {
+		Table tab;
+		tab = TestGraph.execSelectFromResource(this.getClass(), "animalQuery.json");
+		assertEquals("Unexpected number of Animals", 12, tab.getNumRows());
+		
+		tab = TestGraph.execSelectFromResource(this.getClass(), "animalQueryCat.json");
+		assertEquals("Unexpected number of Cats", 10, tab.getNumRows());
+		
+		tab = TestGraph.execSelectFromResource(this.getClass(), "animalQueryTiger.json");
+		assertEquals("Unexpected number of Tigers", 4, tab.getNumRows());
+	}
+	
+	@Test
 	public void returnTypeSelectQuery() throws Exception {
 		
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/chain.json");

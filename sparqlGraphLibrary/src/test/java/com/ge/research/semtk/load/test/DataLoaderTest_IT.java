@@ -888,6 +888,43 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
+	public void test_LookupSuperBatteryIdAddDesc() throws Exception {
+		doLookupSuperBatteryIdAddDesc(true);  
+		doLookupSuperBatteryIdAddDesc(false);
+	}
+	
+	/**
+	 * Lookup is performed by superclass
+	 * @param cacheFlag
+	 * @throws Exception
+	 */
+	public void doLookupSuperBatteryIdAddDesc(boolean cacheFlag) throws Exception {
+		// setup
+		TestGraph.clearGraph();
+				
+		// ==== pre set some data =====
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
+
+		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		
+		loadData(dl0, "doLookupBatteryIdAddDesc PRELOAD", cacheFlag);	
+				
+		// Try URI lookup
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupSuperclassIdAddDesc.json");
+
+		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescData.csv", false);
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl, "doLookupBatteryIdAddDesc LOOKUP", cacheFlag);
+		
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescResults.csv");
+		
+	}
+	@Test
 	public void test_LookupBatteryIdAddDescShort() throws Exception {
 		doLookupBatteryIdAddDescShort(false);
 		doLookupBatteryIdAddDescShort(true);
