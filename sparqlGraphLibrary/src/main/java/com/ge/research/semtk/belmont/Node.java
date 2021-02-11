@@ -177,7 +177,18 @@ public class Node extends Returnable {
 		// build hash of suggested nodes for this class
 		HashMap<String, NodeItem> nodeItemHash = new HashMap<>();
 		for (NodeItem n : this.nodes) {
-			nodeItemHash.put(n.getUriConnectBy(), n);
+			// silently skip legacy node items that weren't compressed properly
+			if (n.getUriConnectBy() == null || n.getUriConnectBy().isEmpty()) {
+				if (n.getConnected()) {
+					// but fail if the legacy node is really messed up.
+					// If this haunts us and you're revisiting this code:
+					// Perhaps default the the Node's base URI plus the keyname == the UriConnectby
+					// Maybe this should be done when the json is loaded?  Or maybe here is ok.
+					throw new Exception("Nodegroup json error: Node item is connected by has empty UriConnectBy " + n.getKeyName());
+				}
+			} else {
+				nodeItemHash.put(n.getUriConnectBy(), n);
+			}
 		}
 		
 		// get oInfo's version of the property list
