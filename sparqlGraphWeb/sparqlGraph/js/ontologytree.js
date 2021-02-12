@@ -196,7 +196,7 @@ OntologyTree.prototype = {
 		}
 
 
-		this.tree.getRoot().sortChildren(this.cmp, true);
+		this.tree.getRoot().sortChildren(this.cmp.bind(this), true);
     	this.tree.enableUpdate(true);
 	},
 
@@ -208,7 +208,7 @@ OntologyTree.prototype = {
 			this.addOntClass(this.oInfo.getClass(names[i]));
 		}
 
-		this.tree.getRoot().sortChildren(this.cmp, true);
+		this.tree.getRoot().sortChildren(this.cmp.bind(this), true);
 		this.tree.enableUpdate(true);
 	},
 
@@ -688,7 +688,7 @@ OntologyTree.prototype = {
     },
     sortAll : function() {
     	this.tree.enableUpdate(false);
-    	this.tree.getRoot().sortChildren(this.cmp, true);
+    	this.tree.getRoot().sortChildren(this.cmp.bind(this), true);
     	this.tree.enableUpdate(true);
     },
 
@@ -736,9 +736,11 @@ OntologyTree.prototype = {
     },
 
     cmp : function(a,b) {
-    	if (a.hasChildren() && !b.hasChildren())
+        var aIsClass = this.oInfo.containsClass(a.data.value);
+        var bIsClass = this.oInfo.containsClass(b.data.value);
+    	if (aIsClass && !bIsClass)
     		return 1;
-    	else if (b.hasChildren() && !a.hasChildren())
+    	else if (bIsClass && !aIsClass)
     		return -1;
     	else if (a.data.value < b.data.value)
     		return -1;
