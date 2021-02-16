@@ -2178,7 +2178,12 @@ public class NodeGroup {
 		// get subPropNames or null for IDK
 		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.getSubPropNames(nItem.getUriConnectBy(), snode.getUri());
 		
-		if (subPropNames == null) {
+		// Virtuoso can't handle subPropertyOf:
+		// It is a messy presumption for sparql.
+		// For now, if there's no oInfo, there are no sub-properties.
+		boolean skip = true;
+		
+		if (!skip && subPropNames == null) {
 			// don't know if there are sub-props
 			String predVarName = SparqlToXUtils.safeSparqlVar(snode.getSparqlID() + "_" + nItem.getUriConnectBy()+ " " + targetNode.getSparqlID());
 			
@@ -2215,7 +2220,7 @@ public class NodeGroup {
 			}
 			
 	
-		} else if (subPropNames.size() == 0) {
+		} else if (subPropNames == null || subPropNames.size() == 0) {
 			// no subProperties: use the connecting URI
 			
 			// CONSTRUCT uses the binding, where others use the sparqlID 
@@ -2343,8 +2348,13 @@ public class NodeGroup {
 		
 		// get subPropNames or null for IDK
 		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.getSubPropNames(prop.getUriRelationship(), snode.getUri());
-		
-		if (subPropNames == null) {
+
+		// Virtuoso can't handle subPropertyOf:
+		// It is a messy presumption for sparql.
+		// For now, if there's no oInfo, there are no sub-properties.
+		boolean skip = true;
+
+		if (!skip && subPropNames == null) {
 			// don't know if there are sub-properties
 			String predVarName = SparqlToXUtils.safeSparqlVar(snode.getSparqlID() + "_" + prop.getUriRelationship());
 
@@ -2363,7 +2373,7 @@ public class NodeGroup {
 				sparql.append(tab + predVarName + " rdfs:subPropertyOf* " +  this.applyPrefixing(prop.getUriRelationship()) + " .\n");
 			} 
 			
-		} else if (subPropNames.size() == 0) {
+		} else if (subPropNames == null || subPropNames.size() == 0) {
 			// no sub-properties
 			
 			// CONSTRUCT uses the binding, where others use the sparqlID 
