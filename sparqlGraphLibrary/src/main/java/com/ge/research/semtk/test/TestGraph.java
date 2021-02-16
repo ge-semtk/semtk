@@ -245,6 +245,13 @@ public class TestGraph {
 		
 		return SparqlGraphJson.executeSelectToTable(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
+	public static JSONArray execJsonConstruct(SparqlGraphJson sgJson) throws Exception {
+		// execute a construct query
+		// exception if there's any problem
+		// return the table
+		
+		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+	}
 	
 	public static JSONArray execJsonConstruct(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
 		// execute a construct query

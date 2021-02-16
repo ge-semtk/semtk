@@ -16,6 +16,7 @@
  */
 
 package com.ge.research.semtk.belmont.test;
+import static org.junit.Assume.assumeFalse;
 
 import static org.junit.Assert.*;
 
@@ -78,6 +79,7 @@ public class QueryGenTest_IT {
 
 	}
 	
+	// TODO : all tests should have corresponding CONSTRUCT
 	
 	/**
 	 * Basic query of tricky load
@@ -274,6 +276,13 @@ public class QueryGenTest_IT {
 			int actualUnique2 = tab.getColumnUniqueValues("linkName_0").length;
 			assertEquals(msg + "returned unexpected number of unique values in linkName", unique1, actualUnique1);
 			assertEquals(msg + "returned unexpected number of unique values in linkName_0", unique2, actualUnique2);
+			
+			// TODO: what do * + ^ mean in a CONSTRUCT
+			// TODO: how should sparql-generation respond?
+			//
+			//String sparql = ng.generateSparqlConstruct();
+			//JSONArray graph =  sei.executeQueryToGraph(sparql);
+			//assertTrue(true);
 		}
 	}
 	
@@ -315,6 +324,45 @@ public class QueryGenTest_IT {
 	}
 	
 	@Test
+	public void constructPropertyOptionalMinus() throws Exception {
+		// virtuoso is unreliable with CONSTRUCT
+		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));SparqlEndpointInterface sei =  TestGraph.getSei();
+		
+		// get every pair of links that is NOT attached to a chain
+		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/chain_chain.json");
+		PropertyItem pItem = ng.getNode(0).getPropertyItemBySparqlID("?chainDesc");
+		
+		pItem.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+		String sparql = ng.generateSparqlConstruct();
+		JSONArray graph =  sei.executeQueryToGraph(sparql);
+		
+		assertEquals("JSON-LD has wrong number of elements", 1, graph.size());
+		assertEquals("Not all items have @types", 1, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 1, countAttributes(graph, "@id", null));
+		assertEquals("Wrong number of chainDesc attributes", 1, countAttributes(graph, "chainDesc", "descA"));
+		
+		// OPTIONAL
+		pItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
+		sparql = ng.generateSparqlConstruct();
+		graph =  sei.executeQueryToGraph(sparql);
+		
+		assertEquals("JSON-LD has wrong number of elements", 2, graph.size());
+		assertEquals("Not all items have @types", 2, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 2, countAttributes(graph, "@id", null));
+		assertEquals("Wrong number of chainDesc->descA attributes", 1, countAttributes(graph, "chainDesc", "descA"));
+		
+		// MINUS
+		pItem.setOptMinus(PropertyItem.OPT_MINUS_MINUS);
+		sparql = ng.generateSparqlConstruct();
+		graph =  sei.executeQueryToGraph(sparql);
+		
+		assertEquals("JSON-LD has wrong number of elements", 1, graph.size());
+		assertEquals("Not all items have @types", 1, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 1, countAttributes(graph, "@id", null));
+		assertEquals("Wrong number of chainDesc attributes", 0, countAttributes(graph, "chainDesc", null));
+	}
+	
+	@Test
 	public void unionTwoNodeItems() throws Exception {
 		
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/animalSubPropsCatNItemUnion.json");
@@ -327,6 +375,9 @@ public class QueryGenTest_IT {
 		assertEquals(2, tab.getNumRows());
 	}
 	
+	// TODO constructUnionTwoNodeItems()
+
+
 	@Test
 	/**
 	 * Union of two nodes, where one isn't the "head node" because it has an incoming reverse minus
@@ -344,6 +395,9 @@ public class QueryGenTest_IT {
 		assertEquals(9, tab.getNumRows());
 	}
 	
+	// TODO constructUnionTwoNodeItemsNonHead()
+
+	
 	@Test
 	public void unionTwoPropItems() throws Exception {
 		
@@ -356,6 +410,8 @@ public class QueryGenTest_IT {
 		Table tab = tRes.getTable();
 		assertEquals(2, tab.getNumRows());
 	}
+	
+	// TODO constructUnionTwoPropItems()
 	
 	@Test
 	public void unionTwoNodeSubgraphs() throws Exception {
@@ -373,8 +429,12 @@ public class QueryGenTest_IT {
 		assertEquals(3, tab.getNumRows());
 	}
 	
+	// TODO constructUnionTwoNodeSubgraphs()
+	
 	@Test
 	public void constructQuery() throws Exception{
+		// virtuoso is unreliable with CONSTRUCT
+		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));
 		
 		NodeGroup ng = sgJsonBattery.getNodeGroup();
 		SparqlEndpointInterface sei = sgJsonBattery.getSparqlConn().getDefaultQueryInterface();
@@ -385,6 +445,11 @@ public class QueryGenTest_IT {
 		JSONArray graph = (JSONArray)responseJson.get("@graph");
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 9, graph.size());
+		assertEquals("Not all items have @types", 9, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 9, countAttributes(graph, "@id", null));
+		assertEquals("Wrong number of cellId attributes", 4, countAttributes(graph, "cellId", null));
+		assertEquals("Wrong number of color attributes", 4, countAttributes(graph, "color", null));
+		assertEquals("Wrong number of name attributes", 2, countAttributes(graph, "name", null));
 	}
 
 	
@@ -401,6 +466,11 @@ public class QueryGenTest_IT {
 		JSONArray graph = (JSONArray)responseJson.get("@graph");
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 3, graph.size());
+		assertEquals("Not all items have @types", 3, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 3, countAttributes(graph, "@id", null));
+		assertEquals("Wrong number of name attributes", 1, countAttributes(graph, "name", null));
+		assertEquals("Wrong number of cellId attributes", 1, countAttributes(graph, "cellId", null));
+		assertEquals("Wrong number of color attributes", 1, countAttributes(graph, "color", null));
 	}
 	
 	@Test
@@ -415,10 +485,69 @@ public class QueryGenTest_IT {
 		// try it as select
 		Table res = TestGraph.execSelectFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
 		assertEquals("Table has wrong number of rows", 6, res.getNumRows());
+	}
+	
+	@Test
+	public void constructSuperPropertyQueries() throws Exception {		
+		// virtuoso is unreliable with CONSTRUCT
+		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));
 		
-		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
-		JSONArray graph = TestGraph.execConstructFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
+		// try it as construct
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
+		NodeGroup ng = sgJson.getNodeGroup();
+		testCatHasChildrenConstruct(ng);
+	}
+	
+	@Test
+	public void constructWithBinding() throws Exception {		
+		// virtuoso is unreliable with CONSTRUCT
+		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));
+				
+		// Prevent recurrence of bug in CONSTRUCT when nodes have bindings
+
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this.getClass(), "animalSubPropsCatHasChildAnimal.json");
+		NodeGroup ng = sgJson.getNodeGroup();
+		ng.getNodeBySparqlID("Animal").setBinding("ChildAnimal");
+		
+		testCatHasChildrenConstruct(ng);
+		
+	}
+	
+	/**
+	 * Test the nodegroup construct returns with and without oInfo
+	 * @param ng
+	 * @throws Exception
+	 */
+	private static void testCatHasChildrenConstruct(NodeGroup ng) throws Exception {
+		// make sure oInfo is associated
+		ng.noInflateNorValidate(TestGraph.getOInfo());
+		String sparql = ng.generateSparqlConstruct();
+		
+		// run construct:  subject to virtuoso incomplete results problem.  assume away if needed
+		JSONArray graph = TestGraph.getSei().executeQueryToGraph(sparql);
 		assertEquals("JSON-LD has wrong number of elements", 8, graph.size());
+		assertEquals("Not all items have @types", 8, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 8, countAttributes(graph, "@id", null));
+		assertEquals("Missing name attributes", 8, countAttributes(graph, "name", null));
+		assertEquals("Missing hasKitties attributes", 3, countAttributes(graph, "hasKitties", null));
+		assertEquals("Missing hasDemons attributes", 2, countAttributes(graph, "hasDemons", null));
+		assertEquals("Missing scaryName attributes", 1, countAttributes(graph, "scaryName", null));
+
+		
+		// try without oInfo
+		ng.getSparqlConnection().setOwlImportsEnabled(false);
+		ng.noInflateNorValidate(null);
+		sparql = ng.generateSparqlConstruct();
+		
+		// run construct:  subject to virtuoso incomplete results problem.  assume away if needed
+		graph = TestGraph.getSei().executeQueryToGraph(sparql);
+		assertEquals("JSON-LD has wrong number of elements", 8, graph.size());
+		assertEquals("Not all items have @types", 8, countAttributes(graph, "@type", null));
+		assertEquals("Not all items have @id", 8, countAttributes(graph, "@id", null));
+		assertEquals("Missing name attributes", 8, countAttributes(graph, "name", null));
+		assertEquals("Missing hasKitties attributes", 3, countAttributes(graph, "hasKitties", null));
+		assertEquals("Missing hasDemons attributes", 2, countAttributes(graph, "hasDemons", null));
+		assertEquals("Missing scaryName attributes", 1, countAttributes(graph, "scaryName", null));
 	}
 	
 	@Test
@@ -448,5 +577,27 @@ public class QueryGenTest_IT {
 		assertEquals("JSON-LD has wrong number of elements", 2, graph.size());
 		
 		assertFalse("Construct query returned a super prop name Richard", graph.toJSONString().contains("Richard"));
+	}
+	
+	/**
+	 * Count the number of attributes of items in a Graph where key.contains(keyContains) and value.contains(valContains)
+	 * Not recursive, checks each element in the graph array.
+	 * @param graph
+	 * @param keyContains
+	 * @param valContains
+	 * @return
+	 */
+	private static int countAttributes(JSONArray graph, String keyContains, String valContains) {
+		int ret = 0;
+		// loop through the graph array of objects
+		for (Object o : graph) {
+			JSONObject j = (JSONObject) o;
+			for (Object key : j.keySet()) {
+				if (keyContains == null || ((String) key).contains(keyContains)   &&  (valContains == null || ((String) j.get(key)).contains(valContains))) {
+					ret += 1;
+				}
+			}
+		}
+		return ret;
 	}
 }

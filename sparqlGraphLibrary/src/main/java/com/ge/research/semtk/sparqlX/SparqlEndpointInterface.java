@@ -498,8 +498,16 @@ public abstract class SparqlEndpointInterface {
 	
 	public JSONArray executeQueryToGraph(String query) throws Exception {
 		JSONObject responseJson = this.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
-		// TODO : how to : throwExceptionIfUnsuccessful();
-		return (JSONArray)responseJson.get("@graph");
+		
+		if (responseJson.containsKey("@graph")) {
+			return (JSONArray)responseJson.get("@graph");
+		} else if (responseJson.containsKey("@id")) {
+			JSONArray ret = new JSONArray();
+			ret.add(responseJson);
+			return ret;
+		} else {
+			throw new Exception("Invalid @graph response: " + responseJson.toJSONString());
+		}
 	}	
 	
 	/**

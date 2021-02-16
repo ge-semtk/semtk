@@ -60,7 +60,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 
             isJsonLdResults : function () {
-                return this.xhr.hasOwnProperty("@graph") || JSON.stringify(this.xhr) === "{}";
+                return this.xhr.hasOwnProperty("@graph") || this.xhr.hasOwnProperty("@id") || JSON.stringify(this.xhr) === "{}";
             },
 
 			getColumnName : function (x) {
@@ -93,7 +93,13 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 
             getGraphResultsJson : function () {
-                return this.xhr["@graph"] || {};
+                if (this.xhr.hasOwnProperty("@graph")) {
+                    return this.xhr["@graph"];
+                } else if (this.xhr.hasOwnProperty("@id")) {
+                    return [this.xhr];
+                } else {
+                    return {};
+                }
             },
 
             /*
