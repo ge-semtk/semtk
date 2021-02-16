@@ -406,5 +406,19 @@ public class IntegrationTestUtility{
 		return "((unix_timestamp(to_utc_timestamp(`ts_time_utc`,'Ect/GMT+0'), 'yyyy-MM-dd HH:mm:ss') >= unix_timestamp('2016-04-07 02:00:00','yyyy-MM-dd HH:mm:ss')) AND (unix_timestamp(to_utc_timestamp(`ts_time_utc`,'Ect/GMT+0'), 'yyyy-MM-dd HH:mm:ss') <= unix_timestamp('2016-04-09 04:00:00','yyyy-MM-dd HH:mm:ss')))";
 	}
 	
-	
+	public static int countSubstring(String str, String findStr) {
+		int lastIndex = 0;
+		int count = 0;
+
+		while(lastIndex != -1){
+
+		    lastIndex = str.indexOf(findStr,lastIndex);
+
+		    if(lastIndex != -1){
+		        count ++;
+		        lastIndex += findStr.length();
+		    }
+		}
+		return count;
+	}
 }
