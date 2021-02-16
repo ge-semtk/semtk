@@ -32,7 +32,9 @@ public class LoadTrackerTest_IT {
 
 		LoadTracker tracker = this.buildLoadTracker();
 		tracker.trackLoad("key1", "file1", TestGraph.getSei());
+		Thread.sleep(1200);
 		tracker.trackLoad("key2", "file2", sei2);
+		Thread.sleep(1200);
 		tracker.trackClear(TestGraph.getSei());
 		
 		Table tab = tracker.queryAll();
