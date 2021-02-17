@@ -502,8 +502,13 @@ public abstract class SparqlEndpointInterface {
 		if (responseJson.containsKey("@graph")) {
 			return (JSONArray)responseJson.get("@graph");
 		} else if (responseJson.containsKey("@id")) {
+			// only one object returned, no array (fuseki behavior)
 			JSONArray ret = new JSONArray();
 			ret.add(responseJson);
+			return ret;
+		} else if (responseJson.containsKey("@context")) {
+			// @context, but no @graph or @id: so empty (fuseki behavior)
+			JSONArray ret = new JSONArray();
 			return ret;
 		} else {
 			throw new Exception("Invalid @graph response: " + responseJson.toJSONString());
