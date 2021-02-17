@@ -28,7 +28,8 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 @CrossOrigin
 @RestController
-@RequestMapping("/serviceInfo")
+@RequestMapping(value={"/serviceInfo", "/fdcCache/serviceInfo"})
+
 public class ServiceAvailabilityInformation {
 
 	
