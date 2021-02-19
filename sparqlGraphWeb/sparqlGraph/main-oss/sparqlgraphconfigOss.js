@@ -66,9 +66,6 @@ var g = {
         dispatcher : {
 			"url" : "${WEB_PROTOCOL}://${WEB_DISPATCH_HOST}:${WEB_DISPATCH_PORT}/dispatcher/",
 		},
-        hive : {
-			"url" : "${WEB_PROTOCOL}://${WEB_HIVE_HOST}:${WEB_HIVE_PORT}/hiveService/",
-		},
 		nodeGroupStore:{
 			url : "${WEB_PROTOCOL}://${WEB_NODEGROUPSTORE_HOST}:${WEB_NODEGROUPSTORE_PORT}/nodeGroupStore/",
 		},
