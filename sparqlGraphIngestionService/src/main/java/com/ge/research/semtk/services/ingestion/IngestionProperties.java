@@ -96,7 +96,7 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 //		checkNotEmpty("sparqlUserName", sparqlUserName);
 //		checkNotEmptyMaskValue("sparqlPassword", sparqlPassword);
 		checkNone("sparqlUserName", sparqlUserName);
-		checkNone("sparqlPassword", sparqlPassword);
+		checkNoneMaskValue("sparqlPassword", sparqlPassword);
 		checkNone("batchSize", batchSize);
 	}
 }
