@@ -64,14 +64,13 @@ public class SparqlToXUtilsTest {
 		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance("virtuoso", "http://myserver:4242", "http://mygraph");
 		
 		String sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, prefixes, true);
-		
-		String expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing|nodeID://)\").}";
+		String expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z . FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing|nodeID://)\").}";
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
 		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
 		
 		// repeat with false
 		sparql = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, prefixes, false);
-		expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing)\").}";
+		expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z . FILTER regex(str(?x), \"^(http://kdl.ge.com/batterydemo|http://does/nothing)\").}";
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
 		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
 
