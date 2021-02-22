@@ -244,11 +244,14 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		        	loadId = this.uploadFromS3(keyName, format);
 		        	
 		        } catch (Exception e) {
-		        	// take 20 shots at concurrent load limit, sleeping 0-2 seconds between
-		        	if (tries < 20 && e.getMessage().contains("concurrent load limit")) {
+		        	// take 20 shots at concurrent load limit, sleeping between
+		        	if (tries < 20 && (
+		        			e.getMessage().contains("concurrent load limit") ||
+		        			e.getMessage().contains("LOAD_COMMITTED_W_WRITE_CONFLICTS")
+		        			)) {
 		        		LocalLogger.logToStdOut("Retrying: " + e.getMessage());
 		        		tries += 1;
-		        		Thread.sleep((long)(2.0 * Math.random()));
+		        		Thread.sleep((long)(2.0 * Math.random()) * tries);
 		        	} else {
 		        		// give up retrying
 		        		throw e;

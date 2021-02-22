@@ -67,6 +67,8 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
@@ -618,6 +620,56 @@ public abstract class SparqlEndpointInterface {
 			return executeQuery(sparql, resType);
 		} catch (Exception e) {
 			throw new Exception("Failure executing test query: " + e.toString());
+		}
+	}
+	
+	/**
+	 * Delete triples chunkSize at a time until the graph is empty.
+	 * Designed for Neptune.
+	 * @param chunkSize
+	 * @throws Exception
+	 */
+	public void clearGraphInChunks(int chunkSize) throws Exception {
+	
+		String sparql;
+		int count;
+		
+		while (true) {
+			// count all triples
+			count = this.executeToTable(SparqlToXUtils.generateCountTriplesSparql(this)).getCellAsInt(0, 0);
+			
+			if (count == 0) 
+				return;
+			
+			else if (count < chunkSize) {
+				// few enough, delete them all
+				sparql = SparqlToXUtils.generateDeleteAllQuery(this);
+				LocalLogger.logToStdOut(sparql);
+				this.executeQueryAndConfirm(sparql);
+				LocalLogger.logToStdOut("done deleting triples");
+				return;
+				
+			}  else {
+				LocalLogger.logToStdOut("Searching for " + count + " triples...");
+				
+				// get a random subject
+				String s = this.executeToTable(SparqlToXUtils.generateSelectTriplesSparql(this, 1)).getCell(0, 0);
+				
+				// count how many triples have a subject with this subject's last character, last two characters, last three characters...
+				// until the number is lower than chunk size
+				for (int i=1; i < s.length(); i++) {
+					String regex = s.substring(s.length() - i) + "$";
+					count = this.executeToTable(SparqlToXUtils.generateCountBySubjectRegexQuery(this, regex)).getCellAsInt(0, 0);
+					if (count < chunkSize) {
+						
+						// perform a delete
+						sparql = SparqlToXUtils.generateDeleteBySubjectRegexQuery(this, regex);
+						LocalLogger.logToStdOut(sparql);
+						this.executeQueryAndConfirm(sparql);
+						break;
+					}
+				}
+			}
 		}
 	}
 	

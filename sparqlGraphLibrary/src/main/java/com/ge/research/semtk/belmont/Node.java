@@ -209,7 +209,8 @@ public class Node extends Returnable {
 				// has range changed
 				PropertyItem propItem = propItemHash.get(oPropURI);
 				if (! propItem.getValueTypeURI().equals(oProp.getRangeStr())) {
-					throw new ValidationException(String.format("Property %s range of %s doesn't match model range of %s",
+					throw new ValidationException(String.format("%s property %s range of %s doesn't match model range of %s",
+														this.getFullUriName(),
 														oPropURI, 
 														propItem.getValueTypeURI(), 
 														oProp.getRangeStr() ));
@@ -225,7 +226,7 @@ public class Node extends Returnable {
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
 				
 				if (nodeItemHash.containsKey(oPropURI)) {
-					throw new ValidationException(String.format("Node property %s has range %s in the nodegroup, which can't be found in model.", oPropURI, oProp.getRangeStr()));
+					throw new ValidationException(String.format("%s node property %s has range %s in the nodegroup, which can't be found in model.", this.getFullUriName(), oPropURI, oProp.getRangeStr()));
 				}
 				
 				PropertyItem propItem = new PropertyItem(	oProp.getNameStr(true), 
@@ -242,10 +243,10 @@ public class Node extends Returnable {
 				String nRangeAbbr = nodeItem.getValueType();
 				
 				if (!nRangeStr.equals(oProp.getRangeStr())) {
-					throw new ValidationException("Node property " + oPropURI + " range of " + nRangeStr + " doesn't match model range of " + oProp.getRangeStr());
+					throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " range of " + nRangeStr + " doesn't match model range of " + oProp.getRangeStr());
 				}
 				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
-					throw new ValidationException("Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
+					throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
 				}
 				
 				// if connected 
@@ -254,7 +255,7 @@ public class Node extends Returnable {
 					// check full domain
 					String nDomainStr = nodeItem.getUriConnectBy();
 					if (!nDomainStr.equals(oProp.getNameStr())) {
-						throw new ValidationException("Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr());
+						throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr());
 					}
 					
 					// check all connected snode classes
@@ -266,11 +267,11 @@ public class Node extends Returnable {
 						OntologyClass snodeClass = oInfo.getClass(snodeURI);
 						
 						if (snodeClass == null) {
-							throw new ValidationException("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
+							throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
 						}
 						
 						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							throw new ValidationException("Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
+							throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
 
 						}
 					}
@@ -291,10 +292,10 @@ public class Node extends Returnable {
 		}
 		
 		if (!propItemHash.isEmpty()) {
-			throw new ValidationException("Property does not exist in the model: " + propItemHash.keySet().toString());
+			throw new ValidationException("Property does not exist in the model: " + this.getFullUriName() + "->" + propItemHash.keySet().toString());
 		}
 		if (!nodeItemHash.isEmpty()) {
-			throw new ValidationException("Node property does not exist in the model: " + nodeItemHash.keySet().toString());
+			throw new ValidationException("Node property does not exist in the model: " + this.getFullUriName() + "->" +  nodeItemHash.keySet().toString());
 		}
 		
 		this.props = newProps;

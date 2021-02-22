@@ -23,6 +23,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.LocalLogger;
 
 // nice tutorial
 // https://wiki.uib.no/info216/index.php/Java_Examples
@@ -37,14 +38,21 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 		
 	}
 
-	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws Exception {
+	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws DontRetryException, Exception {
 		
 		if (resultType == SparqlResultTypes.CONFIRM) {
 			this.ds.begin(ReadWrite.WRITE) ;
 			try {
 				UpdateAction.parseExecute(query, this.ds);
 
+			} catch (Exception e) {
+				// no in-memory exception is retry-able
+				// print the query too
+				LocalLogger.logToStdErr(e.getMessage() + "\nSPARQL=\n" + query);
+				throw new DontRetryException(e.getMessage());
+				
 			} finally { this.ds.commit(); this.ds.end() ; }
+			
 			
 			JSONObject ret = new JSONObject();
 			ret.put(SimpleResultSet.MESSAGE_JSONKEY, "success");

@@ -21,20 +21,18 @@ package com.ge.research.semtk.sparqlX;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class SparqlToXUtils {
 	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");
 	public static final String BLANK_NODE_PREFIX = "nodeID://";
+	public static final String UNRESERVED_URI_CHARS = "0123456789-_ABCDEFJHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.~";
 	
 	// check that the passed Sparql query references the appropriate manadate columns in the return.
 	public static void validateSparqlQuery(String query, String[] requiredCols) throws IOException {
@@ -189,7 +187,7 @@ public class SparqlToXUtils {
 	  // delete all triples containing any trace of the given prefix
 	  String sparql = String.format(
 			  generateWithDeleteWhereClause(sei, "{ ?x ?y ?z. }") +
-				" ?x ?y ?z FILTER strstarts(str(?x), \"%s\")." +
+				" ?x ?y ?z . FILTER strstarts(str(?x), \"%s\")." +
 				"}", 
 				prefix);
 	  
@@ -200,9 +198,18 @@ public class SparqlToXUtils {
 	  // delete all triples containing any trace of the given prefix
 	  String sparql = String.format(
 				generateWithDeleteWhereClause(sei, "{ ?x ?y ?z. }") +
-				" ?x ?y ?z FILTER regex(str(?x), \"%s\")." +
+				" ?x ?y ?z . FILTER regex(str(?x), \"%s\")." +
 				"}", 
 				regex);
+	  
+	  return sparql;
+  }
+  public static String generateDeleteAllQuery(SparqlEndpointInterface sei) {
+	  // delete all triples containing any trace of the given prefix
+	  String sparql =
+				generateWithDeleteWhereClause(sei, "{ ?x ?y ?z. }") +
+				" ?x ?y ?z " +
+				"}";
 	  
 	  return sparql;
   }
@@ -210,7 +217,16 @@ public class SparqlToXUtils {
 	  return "CLEAR GRAPH <" + sei.getGraph() + ">";
   }
   public static String generateCountTriplesSparql(SparqlEndpointInterface sei) {
-	  return "SELECT (COUNT(*) as ?count) from <" + sei.getGraph() + "> WHERE { ?x ?y ?z. }";
+	  return "SELECT (COUNT(*) as ?count) from <" + sei.getGraph() + "> WHERE { ?x ?y ?z }";
+  }
+  public static String generateSelectTriplesSparql(SparqlEndpointInterface sei, int limit) {
+	  return "SELECT ?x ?y ?z from <" + sei.getGraph() + "> WHERE { ?x ?y ?z } LIMIT " + limit;
+  }
+  
+  public static String generateCountBySubjectRegexQuery(SparqlEndpointInterface sei, String subjectRegex) {
+	  return String.format(
+			  "SELECT (COUNT(*) as ?count) from <" + sei.getGraph() + "> WHERE { ?x ?y ?z . FILTER regex(str(?x), \"%s\").}", 
+			  subjectRegex);
   }
   
   public static String generateDropGraphSparql(SparqlEndpointInterface sei) {
