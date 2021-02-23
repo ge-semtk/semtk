@@ -39,6 +39,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.propertygraph.SQLPropertyGraphUtils;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -256,6 +257,26 @@ public class Table {
 		}
 	}
 	
+	/**
+	 * insert a column of data at given pos
+	 * @param colName
+	 * @param colType
+	 * @param pos
+	 * @param defaultValue
+	 * @throws Exception
+	 */
+	public void appendColumn(String colName, String colType, String defaultValue) {
+		
+		// delete and rehash column header
+		this.columnNames = (String[])ArrayUtils.add(this.columnNames, colName);
+		this.columnTypes = (String[])ArrayUtils.add(this.columnTypes, colType);
+		this.hashColumnPositions();
+
+		// add data
+		for (ArrayList<String> row : this.rows) {
+			row.add(defaultValue);
+		}
+	}
 
 	 /**
 	  *  Replace the existing column names with a new set.
@@ -703,6 +724,67 @@ public class Table {
 		// get CSV for column names	
 		ArrayList<String> headers = new ArrayList<String>( Arrays.asList( this.getColumnNames() ) ); // gets col names in order
 		buf.append(Utility.getCSVString(headers));
+		buf.append("\n");
+
+		// get CSV for data rows
+		for(int i = 0; i < this.getNumRows(); i++){	
+			buf.append(getRowAsCSVString(i));			
+			buf.append("\n");
+		}		
+		
+		return buf.toString();
+	}
+	
+	/**
+	 * Create a CSV string containing the table rows and columns.
+	 */
+	
+	/**
+	 * 
+	 * @param idColumn
+	 * @param labelColumn
+	 * @return
+	 * @throws Exception
+	 * @throws IOException
+	 */
+	public String toGremlinCSVString(String idColumn, String labelColumn) throws Exception, IOException{
+		
+		if(this.getColumnNames().length == 0){
+			return "";
+		}
+		
+		StringBuffer buf = new StringBuffer();
+		
+		// get Gremlin for column names	
+		String [] colNames = this.getColumnNames(); 
+		String [] colTypes = this.getColumnTypes();
+		
+		// make sure idColumn and labelColumn are either null or match a real column
+		if (idColumn != null && !Arrays.stream(colNames).anyMatch(idColumn::equals)) {
+			throw new Exception("Column does not exist: " + idColumn);
+		}
+
+		if (labelColumn != null && !Arrays.stream(colNames).anyMatch(labelColumn::equals)) {
+			throw new Exception("Column does not exist: " + labelColumn);
+		}
+		
+		for (int i=0; i < colNames.length; i++) {
+			if (i>0) buf.append(",");
+			
+			if (colNames[i].equals(idColumn!=null?idColumn:"")) {
+				// change idColumn to ~id
+				buf.append("~id");
+			} else if (colNames[i].equals(labelColumn!=null?labelColumn:"")) {
+				// change labelColumn to ~label
+				buf.append("~label");
+			} else if (colNames[i].charAt(0) == '~') {
+				// leave alone any column starting with ~
+				buf.append(colNames[i]);
+			} else {
+				// append :gremlin-type to any other column
+				buf.append(colNames[i] + ":" + SQLPropertyGraphUtils.SQLtoGremlinType(colTypes[i]));
+			}
+		}
 		buf.append("\n");
 
 		// get CSV for data rows
