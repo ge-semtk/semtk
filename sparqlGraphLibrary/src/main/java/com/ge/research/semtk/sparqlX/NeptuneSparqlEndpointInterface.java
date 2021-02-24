@@ -250,7 +250,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlAndPropGraphEndpointIn
 		        			)) {
 		        		LocalLogger.logToStdOut("Retrying: " + e.getMessage());
 		        		tries += 1;
-		        		Thread.sleep((long)(2.0 * Math.random()) * tries);
+		        		Thread.sleep((long)(2000.0 * Math.random()) * tries);
 		        	} else {
 		        		// give up retrying
 		        		throw e;
