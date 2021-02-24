@@ -100,6 +100,7 @@ public abstract class Utility {
 	
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");	// e.g. 2014-12-01 00:00:00 
 	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmssSSS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");	// e.g. 2014-12-01 00:00:00.000 
+	public static final DateTimeFormatter DATETIME_FORMATTER_yyyyMMddHHmmssSSSSSS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");	// e.g. 2014-12-01 00:00:00.000000 
 	public static final DateTimeFormatter DATETIME_FORMATTER_MMddyyyyhmmssa = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a");	// e.g. 02/02/2018 4:00:00 AM
 	public static final DateTimeFormatter DATETIME_FORMATTER_ISO8601 = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");     // e.g. 2017-09-16T13:37:04Z
 	

@@ -771,6 +771,26 @@ public class Table {
 			}
 		}
 		
+		// format datetime (where needed)
+		// Gremlin supports the following formats: yyyy-MM-dd, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss, yyyy-MM-ddTHH:mm:ssZ (https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-format-gremlin.html)
+		for(int colIndex = 0; colIndex < colTypes.length;  colIndex++){
+			if(SQLPropertyGraphUtils.SQLtoGremlinType(colTypes[colIndex]).equals("Date")){
+				for(int rowIndex = 0; rowIndex < getNumRows(); rowIndex++){
+					String dateTimeOrig = getCell(rowIndex, colIndex);
+					String dateTimeStrFormatted;
+					if(dateTimeOrig == null){
+						continue;
+					}else if(dateTimeOrig.length() == 19){  						
+						dateTimeStrFormatted = Utility.formatDateTime(dateTimeOrig, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss, Utility.DATETIME_FORMATTER_ISO8601);  
+						setCell(rowIndex, colIndex, dateTimeStrFormatted);
+					}else if(dateTimeOrig.length() == 26){
+						dateTimeStrFormatted = Utility.formatDateTime(dateTimeOrig, Utility.DATETIME_FORMATTER_yyyyMMddHHmmssSSSSSS, Utility.DATETIME_FORMATTER_ISO8601);
+						setCell(rowIndex, colIndex, dateTimeStrFormatted);
+					}					
+				}
+			}
+		}
+		
 		// create column names
 		for (int i=0; i < colNames.length; i++) {
 			if (i>0) buf.append(",");
