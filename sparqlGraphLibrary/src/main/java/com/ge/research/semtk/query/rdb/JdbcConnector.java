@@ -157,8 +157,8 @@ public abstract class JdbcConnector extends Connector {
 		return this.query(SQLPropertyGraphUtils.genColumnInfoSQL(tableName));
 	}
 	
-	public Table queryAll(String tableName, int limit, int offset) throws Exception {
-		return this.query(SQLPropertyGraphUtils.genSelectStarSQL(tableName, limit, offset));
+	public Table queryAll(String tableName, String whereClause, String [] orderByColumns, Integer limit, Integer offset) throws Exception {
+		return this.query(SQLPropertyGraphUtils.genSelectStarSQL(tableName, whereClause, orderByColumns, limit, offset));
 	}
 	
 	/**

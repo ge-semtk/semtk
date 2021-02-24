@@ -1,5 +1,9 @@
 package com.ge.research.semtk.propertygraph;
 
+import java.util.ArrayList;
+
+import org.apache.commons.lang.StringUtils;
+
 public class SQLPropertyGraphUtils {
 	
 	public static String genColumnInfoSQL(String tableName) {
@@ -10,12 +14,26 @@ public class SQLPropertyGraphUtils {
 				tableName);
 	}
 
-	public static String genSelectStarSQL(String tableName, int limit, int offset) {
-		return String.format(
-				"SELECT * " +
-				" FROM %s " +
-				" LIMIT %d OFFSET %d",
-				tableName, limit, offset);
+	/**
+	 * 
+	 * @param tableName
+	 * @param whereClause or null
+	 * @param orderByColumns or null
+	 * @param limit or null
+	 * @param offset or null
+	 * @return
+	 */
+	public static String genSelectStarSQL(String tableName, String whereClause, String [] orderByColumns, Integer limit, Integer offset) {
+		
+		// create order string or ""
+		String order = String.join(",",  orderByColumns==null ? new String [] {} : orderByColumns);
+		
+		return 	"SELECT * " +
+				" FROM " + tableName +
+				(whereClause==null ? ""   : (" WHERE " + whereClause)) +
+				(order.length() == 0 ? "" : (" ORDER BY " + order)) +
+				(limit == null ? ""       : (" LIMIT " + limit)) +
+				(offset == null ? ""      : (" offset " + offset)) ;
 	}
 
 	/**
