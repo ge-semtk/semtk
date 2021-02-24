@@ -766,6 +766,11 @@ public class Table {
 		
 		// make sure special column names exist
 		for (String col : new String [] {idColumn, labelColumn, fromColumn, toColumn} ) {
+			
+			
+			
+			
+			
 			if (col != null && !Arrays.stream(colNames).anyMatch(col::equals)) {
 				throw new Exception("Column does not exist: " + col);
 			}
@@ -780,13 +785,15 @@ public class Table {
 					String dateTimeStrFormatted;
 					if(dateTimeOrig == null){
 						continue;
-					}else if(dateTimeOrig.length() == 19){  						
+					}else if(dateTimeOrig.length() >= 19){  			
+						if(dateTimeOrig.length() > 19){
+							dateTimeOrig = dateTimeOrig.substring(0, dateTimeOrig.indexOf("."));  // Gremlin does not support microseconds
+						}
 						dateTimeStrFormatted = Utility.formatDateTime(dateTimeOrig, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss, Utility.DATETIME_FORMATTER_ISO8601);  
 						setCell(rowIndex, colIndex, dateTimeStrFormatted);
-					}else if(dateTimeOrig.length() == 26){
-						dateTimeStrFormatted = Utility.formatDateTime(dateTimeOrig, Utility.DATETIME_FORMATTER_yyyyMMddHHmmssSSSSSS, Utility.DATETIME_FORMATTER_ISO8601);
-						setCell(rowIndex, colIndex, dateTimeStrFormatted);
-					}					
+					}else if(dateTimeOrig.length() != 10 && dateTimeOrig.length() != 15 && dateTimeOrig.length() != 18 && dateTimeOrig.length() != 20){
+						throw new Exception("Unrecognized date format: " + dateTimeOrig);
+					}				
 				}
 			}
 		}
