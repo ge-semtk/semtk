@@ -739,6 +739,10 @@ public class Table {
 	 * Create a CSV string containing the table rows and columns.
 	 */
 	
+	public String toGremlinCSVString(String idColumn, String labelColumn) throws Exception, IOException{
+		return this.toGremlinCSVString(idColumn, labelColumn, null, null);
+	}
+
 	/**
 	 * 
 	 * @param idColumn
@@ -747,7 +751,7 @@ public class Table {
 	 * @throws Exception
 	 * @throws IOException
 	 */
-	public String toGremlinCSVString(String idColumn, String labelColumn) throws Exception, IOException{
+	public String toGremlinCSVString(String idColumn, String labelColumn, String fromColumn, String toColumn) throws Exception, IOException{
 		
 		if(this.getColumnNames().length == 0){
 			return "";
@@ -759,15 +763,15 @@ public class Table {
 		String [] colNames = this.getColumnNames(); 
 		String [] colTypes = this.getColumnTypes();
 		
-		// make sure idColumn and labelColumn are either null or match a real column
-		if (idColumn != null && !Arrays.stream(colNames).anyMatch(idColumn::equals)) {
-			throw new Exception("Column does not exist: " + idColumn);
-		}
-
-		if (labelColumn != null && !Arrays.stream(colNames).anyMatch(labelColumn::equals)) {
-			throw new Exception("Column does not exist: " + labelColumn);
+		
+		// make sure special column names exist
+		for (String col : new String [] {idColumn, labelColumn, fromColumn, toColumn} ) {
+			if (col != null && !Arrays.stream(colNames).anyMatch(col::equals)) {
+				throw new Exception("Column does not exist: " + col);
+			}
 		}
 		
+		// create column names
 		for (int i=0; i < colNames.length; i++) {
 			if (i>0) buf.append(",");
 			
@@ -777,6 +781,12 @@ public class Table {
 			} else if (colNames[i].equals(labelColumn!=null?labelColumn:"")) {
 				// change labelColumn to ~label
 				buf.append("~label");
+			} else if (colNames[i].equals(fromColumn!=null?fromColumn:"")) {
+				// change fromColumn to ~label
+				buf.append("~from");
+			} else if (colNames[i].equals(toColumn!=null?toColumn:"")) {
+				// change toColumn to ~label
+				buf.append("~to");
 			} else if (colNames[i].charAt(0) == '~') {
 				// leave alone any column starting with ~
 				buf.append(colNames[i]);
