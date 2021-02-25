@@ -337,6 +337,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlAndPropGraphEndpointIn
 		parametersJSON.put("source", "s3://" + this.s3Conn.getName() + "/" + keyName);
 		parametersJSON.put("format", format);
 		parametersJSON.put("iamRoleArn", this.iamRoleArn);
+		parametersJSON.put("queueRequest", "TRUE");
 		parametersJSON.put("region", this.s3Conn.getRegion());
 		parametersJSON.put("failOnError", "TRUE");
 		
