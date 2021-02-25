@@ -1178,27 +1178,35 @@ public class ImportSpecHandler {
 			}
 			break;
 		case INT:
+		case INTEGER:
 			try{
 				Integer.parseInt(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
+				try {
+					double d = Double.parseDouble(input);
+					if (Math.ceil(d) != d) {
+						throw new Exception("Float is not equivalent to any integer");
+					}
+				} catch (Exception ee) {
+					throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
+				}
 			}
 			break;
-		case INTEGER:
-			try {
-				Integer.parseInt(input);
-			}
-			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
-			}
-			break;
+			
 		case LONG:
 			try {
 				Long.parseLong(input);
 			}
 			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
+				try {
+					double d = Double.parseDouble(input);
+					if (Math.ceil(d) != d) {
+						throw new Exception("Float is not equivalent to any long integer");
+					}
+				} catch (Exception ee) {
+					throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
+				}
 			}
 			break;
 		case FLOAT:
@@ -1227,10 +1235,20 @@ public class ImportSpecHandler {
 			break;
 		case NEGATIVEINTEGER:
 			try{
-				int test = Integer.parseInt(input);
+				int test = 0;
+				try {
+					test = Integer.parseInt(input);
+				} catch (Exception e){
+					double d = Double.parseDouble(input);
+					if (Math.ceil(d) != d) {
+						throw new Exception("Float is not equivalent to any  integer");
+					} else {
+						test = (int) d;
+					}
+				} 
 				if(test >= 0){
 					throw new Exception("value in model is negative integer. non-negative integer given as input");
-					}
+				}
 			}
 			catch(Exception e){
 				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
@@ -1238,9 +1256,19 @@ public class ImportSpecHandler {
 			break;
 		case NONNEGATIVEINTEGER:
 			try{
-				int test = Integer.parseInt(input);
+				int test = 0;
+				try {
+					test = Integer.parseInt(input);
+				} catch (Exception e){
+					double d = Double.parseDouble(input);
+					if (Math.ceil(d) != d) {
+						throw new Exception("Float is not equivalent to any  integer");
+					} else {
+						test = (int) d;
+					}
+				} 
 				if(test < 0){
-					throw new Exception("value in model is nonnegative integer. negative integer given as input");
+					throw new Exception("value in model is non-negative integer. negative integer given as input");
 				}
 			}
 			catch(Exception e){
@@ -1249,10 +1277,20 @@ public class ImportSpecHandler {
 			break;
 		case POSITIVEINTEGER:
 			try{
-				int test = Integer.parseInt(input);
-				if(test <= 0){
-					throw new Exception("value in model is positive integer. integer <= 0 given as input");
+				int test = 0;
+				try {
+					test = Integer.parseInt(input);
+				} catch (Exception e){
+					double d = Double.parseDouble(input);
+					if (Math.ceil(d) != d) {
+						throw new Exception("Float is not equivalent to any  integer");
+					} else {
+						test = (int) d;
+					}
 				} 
+				if(test <= 0){
+					throw new Exception("value in model is positive integer. negative integer given as input");
+				}
 			}
 			catch(Exception e){
 				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
@@ -1260,9 +1298,19 @@ public class ImportSpecHandler {
 			break;
 		case NONPOSISITIVEINTEGER:
 			try{
-				int test = Integer.parseInt(input);
+				int test = 0;
+				try {
+					test = Integer.parseInt(input);
+				} catch (Exception e){
+					double d = Double.parseDouble(input);
+					if (Math.ceil(d) != d) {
+						throw new Exception("Float is not equivalent to any  integer");
+					} else {
+						test = (int) d;
+					}
+				} 
 				if(test > 0){
-					throw new Exception("value in model is nonpositive integer. integer > 0 given as input");
+					throw new Exception("value in model is non-positive integer. positive integer given as input");
 				}
 			}
 			catch(Exception e){
