@@ -1112,11 +1112,11 @@ public class OntologyInfo {
 						"PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " +
 						"select distinct ?Class ?Property ?Range from <" + graphName + "> where { " + 
 						"{" +
+							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
 							"OPTIONAL { ?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". }\n" + 
-							"OPTIONAL { ?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". }\n" +
 						"} UNION { \n" +
-							"OPTIONAL { ?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". }\n" +
-							"OPTIONAL { ?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". }\n" + 
+							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
+							"OPTIONAL { ?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + "} \n" +
 						"} UNION { \n" +
 							"?Property rdfs:domain ?x. \n" +
 							"?x owl:unionOf ?y. \n" +

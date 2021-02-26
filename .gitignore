@@ -19,3 +19,4 @@ auth_settings.json
 *.rej
 *.class
 release.properties
+sparqlGraphLibrary/src/main/resources/semantics/OwlModels/ont-policy.rdf
