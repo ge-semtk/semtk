@@ -569,6 +569,39 @@ public class TableTest {
 	}
 	
 	@Test
+	public void testAppend() throws Exception{
+		
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("coconut");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("chester");
+		rows.add(rowNames);
+		
+		Table table = new Table(cols, colTypes, rows);
+		
+		table.appendColumn("colD", "String");
+		
+		assertTrue("appendColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD\napple,banana,coconut,\nadam,barbara,chester,\n"));
+		
+		table.appendJoinedColumn("joined", new String[] {"colA", "colD", "colB"}, "_" );
+		
+		assertTrue("appendJoinedColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD,joined\napple,banana,coconut,,apple__banana\nadam,barbara,chester,,adam__barbara\n"));
+	
+		Table sub = table.getSubTable(new String[] {"colA", "colD"});
+		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString().equals("colA,colD\napple,\nadam,\n"));
+
+		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString(1).equals("colA,colD\napple,\n"));
+	}
+	
+	@Test
 	public void testUniquify() throws Exception{
 		String jsonStr;
 		JSONObject jsonObj;

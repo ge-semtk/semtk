@@ -219,6 +219,40 @@ public class Table {
 	}
 	
 	/**
+	 * Return a sub-table containing only the st
+	 * @param colNames
+	 * @return
+	 * @throws Exception
+	 */
+	public Table getSubTable(String [] colNames) throws Exception {
+		int colIndices[] = new int[colNames.length];
+		
+		for (int i=0; i < colNames.length; i++) {
+			colIndices[i] = this.getColumnIndex(colNames[i]);
+			if (colIndices[i] == -1) {
+				throw new Exception("Column doesn't exist in table: " + colNames[i]);
+			}
+		}
+		
+		String names[] = new String[colNames.length];
+		String types[] = new String[colNames.length];
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		for (int r=0; r < this.getNumRows(); r++) {
+			rows.add(new ArrayList<String>());
+		}
+		
+		for (int c=0; c < colNames.length; c++) {
+			int col = colIndices[c];
+			names[c] = this.columnNames[col];
+			types[c] = this.columnTypes[col];
+			for (int r=0; r < this.getNumRows(); r++) {
+				rows.get(r).add(this.getCell(r, col));
+			}
+		}
+		return new Table(names, types, rows);
+	}
+	
+	/**
 	 * Append a column
 	 * @param colName
 	 * @param colType
@@ -226,14 +260,7 @@ public class Table {
 	 */
 	public void appendColumn(String colName, String colType) throws Exception {
 		
-		this.columnNames = (String[]) ArrayUtils.add(this.columnNames, colName);
-		this.columnTypes = (String[]) ArrayUtils.add(this.columnTypes, colType);
-		this.hashColumnPositions();
-
-		// add empty data
-		for (ArrayList<String> row : this.rows) {
-			row.add("");
-		}
+		this.insertColumn(colName, colType, this.getNumColumns(), "");
 	}
 	
 	/**
@@ -254,6 +281,45 @@ public class Table {
 		// add data
 		for (ArrayList<String> row : this.rows) {
 			row.add(pos, defaultValue);
+		}
+	}
+	
+	public void appendJoinedColumn(String colName, String[] colNames, String delim) throws Exception {
+		
+		this.insertJoinedColumn(colName, this.getNumColumns(), colNames, delim);
+	}
+	
+	/**
+	 * Insert a new column that is a concatenation of other column values
+	 * @param colName
+	 * @param colType
+	 * @param pos
+	 * @param colNames
+	 * @param delim
+	 */
+	public void insertJoinedColumn(String colName, int pos, String[] colNames, String delim) throws Exception {
+		int colIndices[] = new int[colNames.length];
+		
+		for (int i=0; i < colNames.length; i++) {
+			colIndices[i] = this.getColumnIndex(colNames[i]);
+			if (colIndices[i] == -1) {
+				throw new Exception("Column doesn't exist in table: " + colNames[i]);
+			}
+		}
+		
+		String colType = "String";
+		// delete and rehash column header
+		this.columnNames = (String[])ArrayUtils.add(this.columnNames, pos, colName);
+		this.columnTypes = (String[])ArrayUtils.add(this.columnTypes, pos, colType);
+		this.hashColumnPositions();
+
+		// add data
+		for (ArrayList<String> row : this.rows) {
+			String [] vals = new String[colNames.length];
+			for (int i=0; i < colNames.length; i++) {
+				vals[i] = row.get(colIndices[i]);
+			}
+			row.add(pos, String.join(delim, vals));
 		}
 	}
 	
@@ -710,10 +776,14 @@ public class Table {
 		return new Table(cols, colTypes, rows);
 	}
 	
+	public String toCSVString() throws IOException{
+		return this.toCSVString(-1);
+	}
+	
 	/**
 	 * Create a CSV string containing the table rows and columns.
 	 */
-	public String toCSVString() throws IOException{
+	public String toCSVString(int maxRows) throws IOException{
 		
 		if(this.getColumnNames().length == 0){
 			return "";
@@ -727,7 +797,7 @@ public class Table {
 		buf.append("\n");
 
 		// get CSV for data rows
-		for(int i = 0; i < this.getNumRows(); i++){	
+		for(int i = 0; i < this.getNumRows() && i != maxRows; i++){	
 			buf.append(getRowAsCSVString(i));			
 			buf.append("\n");
 		}		
