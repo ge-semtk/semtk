@@ -588,16 +588,13 @@ public class TableTest {
 		Table table = new Table(cols, colTypes, rows);
 		
 		table.appendColumn("colD", "String");
-		
 		assertTrue("appendColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD\napple,banana,coconut,\nadam,barbara,chester,\n"));
 		
-		table.appendJoinedColumn("joined", new String[] {"colA", "colD", "colB"}, "_" );
-		
+		table.appendJoinedColumn("joined", "String", new String[] {"colA", "colD", "colB"}, "_" );
 		assertTrue("appendJoinedColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD,joined\napple,banana,coconut,,apple__banana\nadam,barbara,chester,,adam__barbara\n"));
 	
 		Table sub = table.getSubTable(new String[] {"colA", "colD"});
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString().equals("colA,colD\napple,\nadam,\n"));
-
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString(1).equals("colA,colD\napple,\n"));
 	}
 	

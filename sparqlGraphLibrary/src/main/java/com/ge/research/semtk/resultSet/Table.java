@@ -18,7 +18,6 @@
 
 package com.ge.research.semtk.resultSet;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -34,11 +33,9 @@ import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.propertygraph.SQLPropertyGraphUtils;
 import com.ge.research.semtk.utility.Utility;
 
@@ -219,10 +216,7 @@ public class Table {
 	}
 	
 	/**
-	 * Return a sub-table containing only the st
-	 * @param colNames
-	 * @return
-	 * @throws Exception
+	 * Return a sub-table containing only the given columns
 	 */
 	public Table getSubTable(String [] colNames) throws Exception {
 		int colIndices[] = new int[colNames.length];
@@ -259,7 +253,6 @@ public class Table {
 	 * @throws Exception
 	 */
 	public void appendColumn(String colName, String colType) throws Exception {
-		
 		this.insertColumn(colName, colType, this.getNumColumns(), "");
 	}
 	
@@ -284,20 +277,17 @@ public class Table {
 		}
 	}
 	
-	public void appendJoinedColumn(String colName, String[] colNames, String delim) throws Exception {
-		
-		this.insertJoinedColumn(colName, this.getNumColumns(), colNames, delim);
+	/**
+	 * Insert a new column that is a concatenation of other column values
+	 */
+	public void appendJoinedColumn(String colName, String colType, String[] colNames, String delim) throws Exception {
+		this.insertJoinedColumn(colName, colType, this.getNumColumns(), colNames, delim);
 	}
 	
 	/**
 	 * Insert a new column that is a concatenation of other column values
-	 * @param colName
-	 * @param colType
-	 * @param pos
-	 * @param colNames
-	 * @param delim
 	 */
-	public void insertJoinedColumn(String colName, int pos, String[] colNames, String delim) throws Exception {
+	public void insertJoinedColumn(String colName, String colType, int pos, String[] colNames, String delim) throws Exception {
 		int colIndices[] = new int[colNames.length];
 		
 		for (int i=0; i < colNames.length; i++) {
@@ -307,7 +297,6 @@ public class Table {
 			}
 		}
 		
-		String colType = "String";
 		// delete and rehash column header
 		this.columnNames = (String[])ArrayUtils.add(this.columnNames, pos, colName);
 		this.columnTypes = (String[])ArrayUtils.add(this.columnTypes, pos, colType);
@@ -805,21 +794,26 @@ public class Table {
 		return buf.toString();
 	}
 	
-	/**
-	 * Create a CSV string containing the table rows and columns.
-	 */
 	
+	/**
+	 * Get the table as a Gremlin-loadable CSV string
+	 */
+	public String toGremlinCSVString() throws Exception, IOException{
+		return this.toGremlinCSVString(null, null, null, null);
+	}
+
+	/**
+	 * Get the table as a Gremlin-loadable CSV string
+	 */
+
 	public String toGremlinCSVString(String idColumn, String labelColumn) throws Exception, IOException{
 		return this.toGremlinCSVString(idColumn, labelColumn, null, null);
 	}
 
 	/**
-	 * 
-	 * @param idColumn
-	 * @param labelColumn
-	 * @return
-	 * @throws Exception
-	 * @throws IOException
+	 * Get the table as a Gremlin-loadable CSV string
+	 * @param idColumn  	column to rename "~id"
+	 * @param labelColumn	column to rename "~label"
 	 */
 	public String toGremlinCSVString(String idColumn, String labelColumn, String fromColumn, String toColumn) throws Exception, IOException{
 		
@@ -833,14 +827,8 @@ public class Table {
 		String [] colNames = this.getColumnNames(); 
 		String [] colTypes = this.getColumnTypes();
 		
-		
 		// make sure special column names exist
-		for (String col : new String [] {idColumn, labelColumn, fromColumn, toColumn} ) {
-			
-			
-			
-			
-			
+		for (String col : new String [] {idColumn, labelColumn, fromColumn, toColumn} ) {		
 			if (col != null && !Arrays.stream(colNames).anyMatch(col::equals)) {
 				throw new Exception("Column does not exist: " + col);
 			}
