@@ -426,7 +426,7 @@ public class TableTest {
 			String[] colTypes = {"String"};
 			ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
 			rows.add(null);
-			Table table = new Table(cols, colTypes, rows);
+			new Table(cols, colTypes, rows);
 		}catch(Exception e){
 			thrown = true;
 			assertTrue(e.getMessage().contains("Cannot create a Table: row is null"));
@@ -463,7 +463,7 @@ public class TableTest {
 			ArrayList<Table> tables = new ArrayList<Table>();		
 			tables.add(table1);
 			tables.add(table2);
-			Table tableMerged = Table.merge(tables);  // should fail, because col names don't match across tables
+			Table.merge(tables);  // should fail, because col names don't match across tables
 		}catch(Exception e){
 			thrown = true;
 		}
@@ -590,9 +590,36 @@ public class TableTest {
 		table.appendColumn("colD", "String");
 		assertTrue("appendColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD\napple,banana,coconut,\nadam,barbara,chester,\n"));
 		
+		// join a column using other columns
 		table.appendJoinedColumn("joined", "String", new String[] {"colA", "colD", "colB"}, "_" );
 		assertTrue("appendJoinedColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD,joined\napple,banana,coconut,,apple__banana\nadam,barbara,chester,,adam__barbara\n"));
-	
+		table.removeColumn("joined");
+		
+		// join a column using other columns, and a constant
+		table.appendJoinedColumn("joined_with_constant", "String", new String[] {"colA", "\"to\"", "colB"}, "_" );
+		assertTrue("appendJoinedColumn() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colB,colC,colD,joined_with_constant\napple,banana,coconut,,apple_to_banana\nadam,barbara,chester,,adam_to_barbara\n"));
+		table.removeColumn("joined_with_constant");
+		
+		// confirm error if give a column a name that already exists
+		boolean thrown = false;
+		try{
+			table.appendJoinedColumn("colA", "String", new String[] {"colA", "colB"}, "_" );
+		}catch(Exception e){
+			thrown = true;
+			assertTrue(e.getMessage().contains("already exists"));
+		}
+		assertTrue(thrown);
+		
+		// confirm error if give a nonexistent column that is also not in quotes
+		thrown = false;
+		try{
+			table.appendJoinedColumn("joined_nonexistentcolumn", "String", new String[] {"colA", "colZ"}, "_" );
+		}catch(Exception e){
+			thrown = true;
+			assertTrue(e.getMessage().contains("is not a column name or a quoted constant string"));
+		}
+		assertTrue(thrown);
+		
 		Table sub = table.getSubTable(new String[] {"colA", "colD"});
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString().equals("colA,colD\napple,\nadam,\n"));
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString(1).equals("colA,colD\napple,\n"));

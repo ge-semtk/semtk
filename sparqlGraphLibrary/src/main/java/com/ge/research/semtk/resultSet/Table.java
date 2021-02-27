@@ -193,6 +193,15 @@ public class Table {
 	}
 	
 	/**
+	 * Remove a set of columns
+	 */
+	public void removeColumns(String[] colNames) throws Exception{
+		for (String colName : colNames){
+			removeColumn(colName);
+		}
+	}
+	
+	/**
 	 * Remove the named column
 	 * @param colName
 	 * @throws Exception
@@ -280,37 +289,57 @@ public class Table {
 	/**
 	 * Insert a new column that is a concatenation of other column values
 	 */
-	public void appendJoinedColumn(String colName, String colType, String[] colNames, String delim) throws Exception {
-		this.insertJoinedColumn(colName, colType, this.getNumColumns(), colNames, delim);
+	public void appendJoinedColumn(String colName, String colType, String[] joinColNamesAndStrings, String delim) throws Exception {
+		this.insertJoinedColumn(colName, colType, this.getNumColumns(), joinColNamesAndStrings, delim);
 	}
 	
 	/**
-	 * Insert a new column that is a concatenation of other column values
+	 * Insert a new column that is a concatenation of other column values (and/or constant strings)
+	 * @param colName the name of the new column
+	 * @param colType the type of the new column
+	 * @param joinColNamesAndStrings column names (or quoted String constants) to join to populate the column (e.g. "col1" "\"to\"" "col2")
+	 * @param delim use to join the elements
 	 */
-	public void insertJoinedColumn(String colName, String colType, int pos, String[] colNames, String delim) throws Exception {
-		int colIndices[] = new int[colNames.length];
+	public void insertJoinedColumn(String colName, String colType, int pos, String[] joinColNamesAndStrings, String delim) throws Exception {
 		
-		for (int i=0; i < colNames.length; i++) {
-			colIndices[i] = this.getColumnIndex(colNames[i]);
-			if (colIndices[i] == -1) {
-				throw new Exception("Column doesn't exist in table: " + colNames[i]);
+		// error if trying to add a column name that is already in the table
+		if(this.hasColumn(colName)){
+			throw new Exception("Cannot add column \'" + colName + "\' (already exists)");
+		}
+		
+		// create array containing either Integer (column index) or String (constant) for the join elements
+		Object joinColIndicesAndStrings[] = new Object[joinColNamesAndStrings.length];
+		for (int i = 0; i < joinColNamesAndStrings.length; i++) {
+			String joinElement = joinColNamesAndStrings[i];
+			if(this.hasColumn(joinElement)){
+				joinColIndicesAndStrings[i] = new Integer(this.getColumnIndex(joinElement));  	// it's a column name
+			}else if (joinElement.startsWith("\"") && joinElement.endsWith("\"")){
+				joinElement = joinElement.substring(1, joinElement.length() - 1);  				// it's a quoted string (strip off the quotes)
+				joinColIndicesAndStrings[i] = joinElement; 
+			}else {
+				throw new Exception("Cannot add column \'" + colName + "\' (\'" + joinElement + "\' is not a column name or a quoted constant string)");  // it's neither
 			}
 		}
 		
-		// delete and rehash column header
+		// add the new column name/type to the table
 		this.columnNames = (String[])ArrayUtils.add(this.columnNames, pos, colName);
 		this.columnTypes = (String[])ArrayUtils.add(this.columnTypes, pos, colType);
 		this.hashColumnPositions();
 
-		// add data
+		// add the new column cells
 		for (ArrayList<String> row : this.rows) {
-			String [] vals = new String[colNames.length];
-			for (int i=0; i < colNames.length; i++) {
-				vals[i] = row.get(colIndices[i]);
+			String [] valsToJoin = new String[joinColIndicesAndStrings.length];
+			for (int i = 0; i < joinColIndicesAndStrings.length; i++) {
+				if(joinColIndicesAndStrings[i] instanceof Integer){
+					valsToJoin[i] = row.get(((Integer)(joinColIndicesAndStrings[i])).intValue());	// a column value
+				}else{
+					valsToJoin[i] = (String) joinColIndicesAndStrings[i];							// a string
+				}
 			}
-			row.add(pos, String.join(delim, vals));
+			row.add(pos, String.join(delim, valsToJoin));											// join the values and set as cell contents
 		}
 	}
+
 	
 	/**
 	 * insert a column of data at given pos
@@ -320,7 +349,12 @@ public class Table {
 	 * @param defaultValue
 	 * @throws Exception
 	 */
-	public void appendColumn(String colName, String colType, String defaultValue) {
+	public void appendColumn(String colName, String colType, String defaultValue) throws Exception {
+		
+		// error if trying to add a column name that is already in the table
+		if(this.hasColumn(colName)){
+			throw new Exception("Cannot add column \'" + colName + "\' (already exists)");
+		}
 		
 		// delete and rehash column header
 		this.columnNames = (String[])ArrayUtils.add(this.columnNames, colName);
