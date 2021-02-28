@@ -50,7 +50,9 @@ import com.ge.research.semtk.aws.AWSSessionTokenApacheInterceptor;
 import com.ge.research.semtk.aws.AwsCredentialsProviderAdaptor;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.aws.SemtkAwsCredentialsProviderBuilder;
+import com.ge.research.semtk.propertygraph.NeptunePropertyGraphUtils;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.LocalLogger;
 
 //import com.javaquery.aws.AWSV4Auth;
@@ -207,6 +209,12 @@ public class NeptuneSparqlEndpointInterface extends SparqlAndPropGraphEndpointIn
 	@Override
 	public JSONObject executeUpload(byte[] owl) throws Exception {
 		return this.executeUpload(owl, "rdfxml");
+	}
+	
+	public JSONObject executeUploadGremlinCSV(Table table, String partitionKey) throws Exception{
+		table.appendColumn("partition_key", "text", partitionKey);  // append column for partition key
+		String tableStr = NeptunePropertyGraphUtils.getGremlinCSVString(table);
+		return this.executeUploadGremlinCSV(tableStr);
 	}
 	
 	public JSONObject executeUpload(byte[] data, String format) throws Exception {
