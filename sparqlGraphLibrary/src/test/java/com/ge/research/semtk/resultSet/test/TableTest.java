@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.json.simple.JSONObject;
@@ -623,6 +624,18 @@ public class TableTest {
 		Table sub = table.getSubTable(new String[] {"colA", "colD"});
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString().equals("colA,colD\napple,\nadam,\n"));
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString(1).equals("colA,colD\napple,\n"));
+	}
+	
+	@Test
+	public void testRenameColumn() throws Exception{
+		String jsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"apple\",\"banana\",\"coconut\"],[\"adam\",\"barbara\",\"chester\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
+		JSONObject jsonObj = (JSONObject) new JSONParser().parse(jsonStr);
+		Table table = Table.fromJson(jsonObj);
+		
+		table.renameColumn("colB", "colBee");
+		System.out.println(Arrays.toString(table.getColumnNames()));
+		assertTrue(table.hasColumn("colBee"));
+		assertFalse(table.hasColumn("colB"));
 	}
 	
 	@Test

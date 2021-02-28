@@ -182,13 +182,26 @@ public class Table {
 	    }
 	    return new Table(colnames, coltypes, rows);
 	}
+	
 	private void hashColumnPositions() {
+		columnPositionInfo.clear();
 		int colNum = 0;
 		// add all of the columns to the hash so we can make lookups faster.
 		for(String c : this.columnNames){
 			columnPositionInfo.put(c, colNum);
 			colNum++;
 		}
+	}
+	
+	/**
+	 * Rename a column 
+	 */
+	public void renameColumn(String colName, String newColName) throws Exception{
+		if(this.hasColumn(newColName)){
+			throw new Exception("Cannot rename column to '" + newColName + "' because it already exists");
+		}
+		this.columnNames[this.getColumnIndex(colName)] = newColName;
+		this.hashColumnPositions();
 	}
 	
 	/**
