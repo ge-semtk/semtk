@@ -212,8 +212,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlAndPropGraphEndpointIn
 	}
 	
 	public JSONObject executeUploadGremlinCSV(Table table, String partitionKey) throws Exception{
-		table.appendColumn("partition_key", "text", partitionKey);  // append column for partition key
-		String tableStr = NeptunePropertyGraphUtils.getGremlinCSVString(table);
+		String tableStr = NeptunePropertyGraphUtils.getGremlinCSVString(table, partitionKey);
 		return this.executeUploadGremlinCSV(tableStr);
 	}
 	

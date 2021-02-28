@@ -60,8 +60,10 @@ public class NeptunePropertyGraphUtils {
 	/**
 	 * Convert a table into the Neptune Gremlin CSV load format
 	 * The table should already include columns ~id (for vertices and edges), ~from and ~to (for edges only), and ~label (optional for vertices and edges)
+	 * @param the table
+	 * @param partitionKey (optional)
 	 */
-	public static String getGremlinCSVString(Table table) throws Exception, IOException{
+	public static String getGremlinCSVString(Table table, String partitionKey) throws Exception, IOException{
 		
 		if(table == null || table.getColumnNames().length == 0){
 			throw new Exception("Table is null or empty");
@@ -72,6 +74,11 @@ public class NeptunePropertyGraphUtils {
 			throw new Exception("A Neptune Gremlin CSV table must include a column '~id'");
 		}
 	
+		// add partition_key column, and prepend ~id/~from/~to with partition key
+		if(partitionKey != null){
+			table = applyPartition(table, partitionKey);
+		}
+		
 		String [] colNames = table.getColumnNames(); 
 		String [] colTypes = table.getColumnTypes();
 		
@@ -119,6 +126,41 @@ public class NeptunePropertyGraphUtils {
 		}		
 		
 		return buf.toString();
+	}
+	
+	
+	/**
+	 * Apply a partition to a table (add partition_key column, prepend ~id/~from/~to with partition key
+	 * Note: it is not sufficient to just add the partition_key column, because id's must also be partition-specific
+	 */
+	private static Table applyPartition(Table table, String partitionKey) throws Exception{
+		
+		if(partitionKey == null || partitionKey.trim().isEmpty()){
+			throw new Exception("Partition key may not be null or empty");
+		}
+		
+		table.appendColumn("partition_key", "String", partitionKey);  // append column for partition key
+		
+		// prepend all ~id with partition key
+		table.renameColumn("~id","~idBeforePartition");
+		table.appendJoinedColumn("~id", "String", new String[]{"partition_key", "~idBeforePartition"}, "_");
+		table.removeColumn("~idBeforePartition");
+		
+		// prepend all ~from with partition key
+		if(table.hasColumn("~from")){
+			table.renameColumn("~from","~fromBeforePartition");
+			table.appendJoinedColumn("~from", "String", new String[]{"partition_key", "~fromBeforePartition"}, "_");
+			table.removeColumn("~fromBeforePartition");
+		}
+		
+		// prepend all ~to with partition key
+		if(table.hasColumn("~to")){
+			table.renameColumn("~to","~toBeforePartition");
+			table.appendJoinedColumn("~to", "String", new String[]{"partition_key", "~toBeforePartition"}, "_");
+			table.removeColumn("~toBeforePartition");
+		}
+		
+		return table;
 	}
 	
 	/**
