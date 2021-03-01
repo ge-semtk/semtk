@@ -50,9 +50,8 @@ import com.ge.research.semtk.aws.AWSSessionTokenApacheInterceptor;
 import com.ge.research.semtk.aws.AwsCredentialsProviderAdaptor;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.aws.SemtkAwsCredentialsProviderBuilder;
-import com.ge.research.semtk.propertygraph.NeptunePropertyGraphUtils;
+import com.ge.research.semtk.propertygraph.NeptuneGremlinTable;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.LocalLogger;
 
 //import com.javaquery.aws.AWSV4Auth;
@@ -68,7 +67,7 @@ import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
  * NOTE: The role NEPTUNE_UPLOAD_S3_AWS_IAM_ROLE_ARN is only used for uploading from the S3 bucket to Neptune - it is not used for placing the file in the S3 bucket.  
  * 		 The latter is enabled by an IAM role attached to the EC2 node.
  */
-public class NeptuneSparqlEndpointInterface extends SparqlAndPropGraphEndpointInterface {
+public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	protected static final String CONTENTTYPE_LD_JSON = "application/ld+json";
 
@@ -211,9 +210,16 @@ public class NeptuneSparqlEndpointInterface extends SparqlAndPropGraphEndpointIn
 		return this.executeUpload(owl, "rdfxml");
 	}
 	
-	public JSONObject executeUploadGremlinCSV(Table table, String partitionKey) throws Exception{
-		String tableStr = NeptunePropertyGraphUtils.getGremlinCSVString(table, partitionKey);
-		return this.executeUploadGremlinCSV(tableStr);
+	public JSONObject executeUploadGremlinCSV(byte[] csv) throws Exception {
+		return this.executeUploadAPI(csv, "csv");
+	}
+	
+	public JSONObject executeUploadGremlinCSV(String csv) throws Exception {
+		return this.executeUploadAPI(csv.getBytes(), "csv");
+	}
+	
+	public JSONObject executeUploadGremlinCSV(NeptuneGremlinTable table) throws Exception{
+		return this.executeUploadGremlinCSV(table.toGremlinCSVString());
 	}
 	
 	public JSONObject executeUpload(byte[] data, String format) throws Exception {

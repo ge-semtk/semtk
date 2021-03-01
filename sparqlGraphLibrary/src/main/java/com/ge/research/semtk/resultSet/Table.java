@@ -241,35 +241,30 @@ public class Table {
 		}
 	}
 	
+	
 	/**
-	 * Return a sub-table containing only the given columns
+	 * Remove all columns except the given ones
+	 */
+	public void toSubTable(String[] colNames) throws Exception {
+		for (String colName : colNames) {
+			if (!this.hasColumn(colName)) {
+				throw new Exception("Column doesn't exist in table: " + colName);
+			}
+		}
+		for(String existingColName : this.columnNames){
+			if(!Arrays.asList(colNames).contains(existingColName)){
+				this.removeColumn(existingColName);
+			}
+		}
+	}
+	
+	/**
+	 * Return a subtable containing only the given columns
 	 */
 	public Table getSubTable(String [] colNames) throws Exception {
-		int colIndices[] = new int[colNames.length];
-		
-		for (int i=0; i < colNames.length; i++) {
-			colIndices[i] = this.getColumnIndex(colNames[i]);
-			if (colIndices[i] == -1) {
-				throw new Exception("Column doesn't exist in table: " + colNames[i]);
-			}
-		}
-		
-		String names[] = new String[colNames.length];
-		String types[] = new String[colNames.length];
-		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-		for (int r=0; r < this.getNumRows(); r++) {
-			rows.add(new ArrayList<String>());
-		}
-		
-		for (int c=0; c < colNames.length; c++) {
-			int col = colIndices[c];
-			names[c] = this.columnNames[col];
-			types[c] = this.columnTypes[col];
-			for (int r=0; r < this.getNumRows(); r++) {
-				rows.get(r).add(this.getCell(r, col));
-			}
-		}
-		return new Table(names, types, rows);
+		Table copy = this.copy();
+		copy.toSubTable(colNames);
+		return copy;
 	}
 	
 	/**

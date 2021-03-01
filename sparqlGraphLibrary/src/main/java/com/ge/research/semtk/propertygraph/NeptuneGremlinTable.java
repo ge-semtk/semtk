@@ -8,86 +8,86 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.Utility;
 
 /**
- * Utilities for using the Neptune property graph.
+ * A table that can be loaded to a Neptune property graph.
  * TODO add tests
  */
-public class NeptunePropertyGraphUtils {
+public class NeptuneGremlinTable extends Table {
+
+	/**
+	 * Constructor
+	 */
+	public NeptuneGremlinTable(Table table) throws Exception {
+		super(table.getColumnNames(), table.getColumnTypes(), table.copy().getRows());
+	}
 	
 	/**
 	 * Create a vertex table with Neptune Gremlin CSV headers ~id (required), ~label (optional)
-	 * @param table 		a table containing the elements to load
 	 * @param idPattern 	columns/constants to create the ~id column
 	 * @param delimiter 	delimiter to join the columns/constants	(if null, defaults to "_")
 	 * @param label 		constant for the ~label column (if null, skips label)
-	 * @return 				a table with all original columns, plus ~id and ~label columns
+	 * @return 				the table with all original columns, plus ~id and ~label columns
 	 */
-	public static Table getVertexTable(Table table, String[] idPattern, String delimiter, String label) throws Exception{
-		if(table == null || idPattern == null || idPattern.length == 0){
+	public void toVertexTable(String[] idPattern, String delimiter, String label) throws Exception{
+		if(idPattern == null || idPattern.length == 0){
 			throw new Exception("Cannot create vertex table: must provide table, pattern for ~id");
 		}
 		delimiter = (delimiter != null) ? delimiter : "_";
-		table.appendJoinedColumn("~id", "String", idPattern, delimiter);
+		this.appendJoinedColumn("~id", "String", idPattern, delimiter);
 		if(label != null){
-			table.appendColumn("~label", "String", label);
+			this.appendColumn("~label", "String", label);
 		}
-		return table;
-	}	
+	}
 	
 	/**
 	 * Create an edge table with Neptune Gremlin CSV headers ~from, ~to, ~id (all required), and ~label (optional)
-	 * @param table 		a table containing the elements needed to create ~from and ~to columns
 	 * @param fromPattern 	columns/constants to create the ~from column
 	 * @param toPattern 	columns/constants to create the ~to column
 	 * @param delimiter 	delimiter to join the columns/constants (if null, defaults to "_")
 	 * @param label 		constant for the ~label column (if null, skips label)
 	 * @return 				a table with columns ~from, ~to, ~id, ~label
 	 */
-	public static Table getEdgeTable(Table table, String[] fromPattern, String[] toPattern, String delimiter, String label) throws Exception{
-		if(table == null || fromPattern == null || fromPattern.length == 0 || toPattern == null || toPattern.length == 0){
+	public void toEdgeTable(String[] fromPattern, String[] toPattern, String delimiter, String label) throws Exception{
+		if(fromPattern == null || fromPattern.length == 0 || toPattern == null || toPattern.length == 0){
 			throw new Exception("Cannot create edge table: must provide table, patterns for ~from and ~to");
 		}
 		delimiter = (delimiter != null) ? delimiter : "_";
-		table.appendJoinedColumn("~from", "String", fromPattern, delimiter);
-		table.appendJoinedColumn("~to", "String", toPattern, delimiter);
-		table.appendJoinedColumn("~id", "String", (String[])ArrayUtils.addAll(fromPattern, toPattern), delimiter);  // create the id as from-to
+		this.appendJoinedColumn("~from", "String", fromPattern, delimiter);
+		this.appendJoinedColumn("~to", "String", toPattern, delimiter);
+		this.appendJoinedColumn("~id", "String", (String[])ArrayUtils.addAll(fromPattern, toPattern), delimiter);  // create the id as from-to
 		if(label != null){
-			table.appendColumn("~label", "String", label); 
+			this.appendColumn("~label", "String", label); 
 		}
-		return table.getSubTable(new String[]{"~from","~to","~id","~label"});
+		this.toSubTable(new String[]{"~from","~to","~id","~label"});
 	}	
 	
 	
 	/**
-	 * Convert a table into the Neptune Gremlin CSV load format
+	 * Write the table to Neptune Gremlin CSV load format
 	 * The table should already include columns ~id (for vertices and edges), ~from and ~to (for edges only), and ~label (optional for vertices and edges)
-	 * @param the table
-	 * @param partitionKey (optional)
 	 */
-	public static String getGremlinCSVString(Table table, String partitionKey) throws Exception, IOException{
+	public String toGremlinCSVString() throws Exception, IOException{
 		
-		if(table == null || table.getColumnNames().length == 0){
+		if(this.getColumnNames().length == 0){
 			throw new Exception("Table is null or empty");
 		}
 		
 		// error if input does not include a ~id column - this is required for both vertices and edges
-		if(!table.hasColumn("~id")){
+		if(!this.hasColumn("~id")){
 			throw new Exception("A Neptune Gremlin CSV table must include a column '~id'");
 		}
-	
-		// add partition_key column, and prepend ~id/~from/~to with partition key
-		if(partitionKey != null){
-			table = applyPartition(table, partitionKey);
-		}
 		
-		String [] colNames = table.getColumnNames(); 
-		String [] colTypes = table.getColumnTypes();
+		// don't want to change the existing table
+		Table clone = this.copy();
+		
+		String [] colNames = clone.getColumnNames(); 
+		String [] colTypes = clone.getColumnTypes();
 		
 		// format datetime (where needed)
 		// Gremlin supports the following formats: yyyy-MM-dd, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss, yyyy-MM-ddTHH:mm:ssZ (https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-format-gremlin.html)
 		for(int colIndex = 0; colIndex < colTypes.length;  colIndex++){
 			if(getGremlinDataType(colTypes[colIndex]).equals("Date")){
-				for(int rowIndex = 0; rowIndex < table.getNumRows(); rowIndex++){
-					String dateTimeOrig = table.getCell(rowIndex, colIndex);
+				for(int rowIndex = 0; rowIndex < clone.getNumRows(); rowIndex++){
+					String dateTimeOrig = clone.getCell(rowIndex, colIndex);
 					String dateTimeStrFormatted;
 					if(dateTimeOrig == null){
 						continue;
@@ -96,7 +96,7 @@ public class NeptunePropertyGraphUtils {
 							dateTimeOrig = dateTimeOrig.substring(0, dateTimeOrig.indexOf("."));  // Gremlin does not support microseconds
 						}
 						dateTimeStrFormatted = Utility.formatDateTime(dateTimeOrig, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss, Utility.DATETIME_FORMATTER_ISO8601);  
-						table.setCell(rowIndex, colIndex, dateTimeStrFormatted);
+						clone.setCell(rowIndex, colIndex, dateTimeStrFormatted);
 					}else if(dateTimeOrig.length() != 10 && dateTimeOrig.length() != 15 && dateTimeOrig.length() != 18 && dateTimeOrig.length() != 20){
 						throw new Exception("Unrecognized date format: " + dateTimeOrig);
 					}				
@@ -104,9 +104,10 @@ public class NeptunePropertyGraphUtils {
 			}
 		}
 		
+		// write the modified clone to buffer as CSV
 		StringBuffer buf = new StringBuffer();
 		
-		// create column names
+		// write column names
 		for (int i=0; i < colNames.length; i++) {
 			if (i>0) buf.append(",");			
 			if (colNames[i].charAt(0) == '~') {
@@ -119,9 +120,9 @@ public class NeptunePropertyGraphUtils {
 		}
 		buf.append("\n");
 
-		// get CSV for data rows
-		for(int i = 0; i < table.getNumRows(); i++){	
-			buf.append(table.getRowAsCSVString(i));			
+		// write data rows
+		for(int i = 0; i < clone.getNumRows(); i++){	
+			buf.append(clone.getRowAsCSVString(i));			
 			buf.append("\n");
 		}		
 		
@@ -133,41 +134,40 @@ public class NeptunePropertyGraphUtils {
 	 * Apply a partition to a table (add partition_key column, prepend ~id/~from/~to with partition key
 	 * Note: it is not sufficient to just add the partition_key column, because id's must also be partition-specific
 	 */
-	private static Table applyPartition(Table table, String partitionKey) throws Exception{
+	public void setPartition(String partitionKey) throws Exception{
 		
 		if(partitionKey == null || partitionKey.trim().isEmpty()){
 			throw new Exception("Partition key may not be null or empty");
 		}
 		
-		table.appendColumn("partition_key", "String", partitionKey);  // append column for partition key
+		this.appendColumn("partition_key", "String", partitionKey);  // append column for partition key
 		
 		// prepend all ~id with partition key
-		table.renameColumn("~id","~idBeforePartition");
-		table.appendJoinedColumn("~id", "String", new String[]{"partition_key", "~idBeforePartition"}, "_");
-		table.removeColumn("~idBeforePartition");
+		this.renameColumn("~id","~idBeforePartition");
+		this.appendJoinedColumn("~id", "String", new String[]{"partition_key", "~idBeforePartition"}, "_");
+		this.removeColumn("~idBeforePartition");
 		
 		// prepend all ~from with partition key
-		if(table.hasColumn("~from")){
-			table.renameColumn("~from","~fromBeforePartition");
-			table.appendJoinedColumn("~from", "String", new String[]{"partition_key", "~fromBeforePartition"}, "_");
-			table.removeColumn("~fromBeforePartition");
+		if(this.hasColumn("~from")){
+			this.renameColumn("~from","~fromBeforePartition");
+			this.appendJoinedColumn("~from", "String", new String[]{"partition_key", "~fromBeforePartition"}, "_");
+			this.removeColumn("~fromBeforePartition");
 		}
 		
 		// prepend all ~to with partition key
-		if(table.hasColumn("~to")){
-			table.renameColumn("~to","~toBeforePartition");
-			table.appendJoinedColumn("~to", "String", new String[]{"partition_key", "~toBeforePartition"}, "_");
-			table.removeColumn("~toBeforePartition");
+		if(this.hasColumn("~to")){
+			this.renameColumn("~to","~toBeforePartition");
+			this.appendJoinedColumn("~to", "String", new String[]{"partition_key", "~toBeforePartition"}, "_");
+			this.removeColumn("~toBeforePartition");
 		}
-		
-		return table;
 	}
+	
 	
 	/**
 	 * Translate a data type to Neptune Gremlin type
 	 * https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-format-gremlin.html#bulk-load-tutorial-format-gremlin-datatypes
 	 */
-	public static String getGremlinDataType(String type) throws Exception {
+	private static String getGremlinDataType(String type) throws Exception {
 		switch (type) {
 			case "String":
 				return "String";			

@@ -624,6 +624,10 @@ public class TableTest {
 		Table sub = table.getSubTable(new String[] {"colA", "colD"});
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString().equals("colA,colD\napple,\nadam,\n"));
 		assertTrue("getSubTable() produced\n" + sub.toCSVString(), sub.toCSVString(1).equals("colA,colD\napple,\n"));
+		
+		table.toSubTable(new String[] {"colA", "colD"});
+		assertTrue("toSubTable() produced\n" + table.toCSVString(), table.toCSVString().equals("colA,colD\napple,\nadam,\n"));
+		assertTrue("toSubTable() produced\n" + table.toCSVString(), table.toCSVString(1).equals("colA,colD\napple,\n"));
 	}
 	
 	@Test
