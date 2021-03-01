@@ -26,7 +26,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import com.ge.research.semtk.propertygraph.SQLPropertyGraphUtils;
+import com.ge.research.semtk.propertygraph.SQLUtils;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -154,11 +154,11 @@ public abstract class JdbcConnector extends Connector {
 	 * @throws Exception
 	 */
 	public Table queryColumnInfo(String tableName) throws Exception {
-		return this.query(SQLPropertyGraphUtils.genColumnInfoSQL(tableName));
+		return this.query(SQLUtils.genColumnInfoSQL(tableName));
 	}
 	
 	public Table queryAll(String tableName, String whereClause, String [] orderByColumns, Integer limit, Integer offset) throws Exception {
-		return this.query(SQLPropertyGraphUtils.genSelectStarSQL(tableName, whereClause, orderByColumns, limit, offset));
+		return this.query(SQLUtils.genSelectStarSQL(tableName, whereClause, orderByColumns, limit, offset));
 	}
 	
 	/**

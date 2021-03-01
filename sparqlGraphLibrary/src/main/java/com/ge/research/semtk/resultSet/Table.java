@@ -36,7 +36,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.propertygraph.SQLPropertyGraphUtils;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -188,12 +187,34 @@ public class Table {
 	    }
 	    return new Table(colnames, coltypes, rows);
 	}
+	
 	private void hashColumnPositions() {
+		columnPositionInfo.clear();
 		int colNum = 0;
 		// add all of the columns to the hash so we can make lookups faster.
 		for(String c : this.columnNames){
 			columnPositionInfo.put(c, colNum);
 			colNum++;
+		}
+	}
+	
+	/**
+	 * Rename a column 
+	 */
+	public void renameColumn(String colName, String newColName) throws Exception{
+		if(this.hasColumn(newColName)){
+			throw new Exception("Cannot rename column to '" + newColName + "' because it already exists");
+		}
+		this.columnNames[this.getColumnIndex(colName)] = newColName;
+		this.hashColumnPositions();
+	}
+	
+	/**
+	 * Remove a set of columns
+	 */
+	public void removeColumns(String[] colNames) throws Exception{
+		for (String colName : colNames){
+			removeColumn(colName);
 		}
 	}
 	
@@ -285,37 +306,57 @@ public class Table {
 	/**
 	 * Insert a new column that is a concatenation of other column values
 	 */
-	public void appendJoinedColumn(String colName, String colType, String[] colNames, String delim) throws Exception {
-		this.insertJoinedColumn(colName, colType, this.getNumColumns(), colNames, delim);
+	public void appendJoinedColumn(String colName, String colType, String[] joinColNamesAndStrings, String delim) throws Exception {
+		this.insertJoinedColumn(colName, colType, this.getNumColumns(), joinColNamesAndStrings, delim);
 	}
 	
 	/**
-	 * Insert a new column that is a concatenation of other column values
+	 * Insert a new column that is a concatenation of other column values (and/or constant strings)
+	 * @param colName the name of the new column
+	 * @param colType the type of the new column
+	 * @param joinColNamesAndStrings column names (or quoted String constants) to join to populate the column (e.g. "col1" "\"to\"" "col2")
+	 * @param delim use to join the elements
 	 */
-	public void insertJoinedColumn(String colName, String colType, int pos, String[] colNames, String delim) throws Exception {
-		int colIndices[] = new int[colNames.length];
+	public void insertJoinedColumn(String colName, String colType, int pos, String[] joinColNamesAndStrings, String delim) throws Exception {
 		
-		for (int i=0; i < colNames.length; i++) {
-			colIndices[i] = this.getColumnIndex(colNames[i]);
-			if (colIndices[i] == -1) {
-				throw new Exception("Column doesn't exist in table: " + colNames[i]);
+		// error if trying to add a column name that is already in the table
+		if(this.hasColumn(colName)){
+			throw new Exception("Cannot add column \'" + colName + "\' (already exists)");
+		}
+		
+		// create array containing either Integer (column index) or String (constant) for the join elements
+		Object joinColIndicesAndStrings[] = new Object[joinColNamesAndStrings.length];
+		for (int i = 0; i < joinColNamesAndStrings.length; i++) {
+			String joinElement = joinColNamesAndStrings[i];
+			if(this.hasColumn(joinElement)){
+				joinColIndicesAndStrings[i] = new Integer(this.getColumnIndex(joinElement));  	// it's a column name
+			}else if (joinElement.startsWith("\"") && joinElement.endsWith("\"")){
+				joinElement = joinElement.substring(1, joinElement.length() - 1);  				// it's a quoted string (strip off the quotes)
+				joinColIndicesAndStrings[i] = joinElement; 
+			}else {
+				throw new Exception("Cannot add column \'" + colName + "\' (\'" + joinElement + "\' is not a column name or a quoted constant string)");  // it's neither
 			}
 		}
 		
-		// delete and rehash column header
+		// add the new column name/type to the table
 		this.columnNames = (String[])ArrayUtils.add(this.columnNames, pos, colName);
 		this.columnTypes = (String[])ArrayUtils.add(this.columnTypes, pos, colType);
 		this.hashColumnPositions();
 
-		// add data
+		// add the new column cells
 		for (ArrayList<String> row : this.rows) {
-			String [] vals = new String[colNames.length];
-			for (int i=0; i < colNames.length; i++) {
-				vals[i] = row.get(colIndices[i]);
+			String [] valsToJoin = new String[joinColIndicesAndStrings.length];
+			for (int i = 0; i < joinColIndicesAndStrings.length; i++) {
+				if(joinColIndicesAndStrings[i] instanceof Integer){
+					valsToJoin[i] = row.get(((Integer)(joinColIndicesAndStrings[i])).intValue());	// a column value
+				}else{
+					valsToJoin[i] = (String) joinColIndicesAndStrings[i];							// a string
+				}
 			}
-			row.add(pos, String.join(delim, vals));
+			row.add(pos, String.join(delim, valsToJoin));											// join the values and set as cell contents
 		}
 	}
+
 	
 	/**
 	 * insert a column of data at given pos
@@ -325,7 +366,12 @@ public class Table {
 	 * @param defaultValue
 	 * @throws Exception
 	 */
-	public void appendColumn(String colName, String colType, String defaultValue) {
+	public void appendColumn(String colName, String colType, String defaultValue) throws Exception {
+		
+		// error if trying to add a column name that is already in the table
+		if(this.hasColumn(colName)){
+			throw new Exception("Cannot add column \'" + colName + "\' (already exists)");
+		}
 		
 		// delete and rehash column header
 		this.columnNames = (String[])ArrayUtils.add(this.columnNames, colName);
@@ -792,103 +838,6 @@ public class Table {
 
 		// get CSV for data rows
 		for(int i = 0; i < this.getNumRows() && i != maxRows; i++){	
-			buf.append(getRowAsCSVString(i));			
-			buf.append("\n");
-		}		
-		
-		return buf.toString();
-	}
-	
-	
-	/**
-	 * Get the table as a Gremlin-loadable CSV string
-	 */
-	public String toGremlinCSVString() throws Exception, IOException{
-		return this.toGremlinCSVString(null, null, null, null);
-	}
-
-	/**
-	 * Get the table as a Gremlin-loadable CSV string
-	 */
-
-	public String toGremlinCSVString(String idColumn, String labelColumn) throws Exception, IOException{
-		return this.toGremlinCSVString(idColumn, labelColumn, null, null);
-	}
-
-	/**
-	 * Get the table as a Gremlin-loadable CSV string
-	 * @param idColumn  	column to rename "~id"
-	 * @param labelColumn	column to rename "~label"
-	 */
-	public String toGremlinCSVString(String idColumn, String labelColumn, String fromColumn, String toColumn) throws Exception, IOException{
-		
-		if(this.getColumnNames().length == 0){
-			return "";
-		}
-		
-		StringBuffer buf = new StringBuffer();
-		
-		// get Gremlin for column names	
-		String [] colNames = this.getColumnNames(); 
-		String [] colTypes = this.getColumnTypes();
-		
-		// make sure special column names exist
-		for (String col : new String [] {idColumn, labelColumn, fromColumn, toColumn} ) {		
-			if (col != null && !Arrays.stream(colNames).anyMatch(col::equals)) {
-				throw new Exception("Column does not exist: " + col);
-			}
-		}
-		
-		// format datetime (where needed)
-		// Gremlin supports the following formats: yyyy-MM-dd, yyyy-MM-ddTHH:mm, yyyy-MM-ddTHH:mm:ss, yyyy-MM-ddTHH:mm:ssZ (https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-format-gremlin.html)
-		for(int colIndex = 0; colIndex < colTypes.length;  colIndex++){
-			if(SQLPropertyGraphUtils.SQLtoGremlinType(colTypes[colIndex]).equals("Date")){
-				for(int rowIndex = 0; rowIndex < getNumRows(); rowIndex++){
-					String dateTimeOrig = getCell(rowIndex, colIndex);
-					String dateTimeStrFormatted;
-					if(dateTimeOrig == null){
-						continue;
-					}else if(dateTimeOrig.length() >= 19){  			
-						if(dateTimeOrig.length() > 19){
-							dateTimeOrig = dateTimeOrig.substring(0, dateTimeOrig.indexOf("."));  // Gremlin does not support microseconds
-						}
-						dateTimeStrFormatted = Utility.formatDateTime(dateTimeOrig, Utility.DATETIME_FORMATTER_yyyyMMddHHmmss, Utility.DATETIME_FORMATTER_ISO8601);  
-						setCell(rowIndex, colIndex, dateTimeStrFormatted);
-					}else if(dateTimeOrig.length() != 10 && dateTimeOrig.length() != 15 && dateTimeOrig.length() != 18 && dateTimeOrig.length() != 20){
-						throw new Exception("Unrecognized date format: " + dateTimeOrig);
-					}				
-				}
-			}
-		}
-		
-		// create column names
-		for (int i=0; i < colNames.length; i++) {
-			if (i>0) buf.append(",");
-			
-			if (colNames[i].equals(idColumn!=null?idColumn:"")) {
-				// change idColumn to ~id
-				buf.append("~id");
-			} else if (colNames[i].equals(labelColumn!=null?labelColumn:"")) {
-				// change labelColumn to ~label
-				buf.append("~label");
-			} else if (colNames[i].equals(fromColumn!=null?fromColumn:"")) {
-				// change fromColumn to ~label
-				buf.append("~from");
-			} else if (colNames[i].equals(toColumn!=null?toColumn:"")) {
-				// change toColumn to ~label
-				buf.append("~to");
-			} else if (colNames[i].charAt(0) == '~') {
-				// leave alone any column starting with ~
-				buf.append(colNames[i]);
-			} else {
-				// append :gremlin-type to any other column
-				buf.append(colNames[i] + ":" + SQLPropertyGraphUtils.SQLtoGremlinType(colTypes[i]));
-			}
-		}
-		buf.append("\n");
-
-		// get CSV for data rows
-		for(int i = 0; i < this.getNumRows(); i++){	
 			buf.append(getRowAsCSVString(i));			
 			buf.append("\n");
 		}		
