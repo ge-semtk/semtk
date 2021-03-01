@@ -613,4 +613,41 @@ public class TableTest {
 		assertEquals("uniquify did not remove last row", 3, table.getNumRows());
 
 	}
+	
+	@Test
+	public void testCopy() throws Exception{
+		
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"String","String","String"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> rowFruit = new ArrayList<String>();
+		rowFruit.add("apple");
+		rowFruit.add("banana");
+		rowFruit.add("coconut");
+		rows.add(rowFruit);
+		ArrayList<String> rowNames = new ArrayList<String>();
+		rowNames.add("adam");
+		rowNames.add("barbara");
+		rowNames.add("chester");
+		rows.add(rowNames);
+		
+		Table table = new Table(cols, colTypes, rows);
+		
+		final String EXPECTED = "colA,colB,colC\napple,banana,coconut\nadam,barbara,chester\n";
+		assertTrue("initial table incorrect: \n" + table.toCSVString(), table.toCSVString().equals(EXPECTED));
+		
+		Table copy = table.copy();
+		assertTrue("copy() changed initial table: \n" + table.toCSVString(), table.toCSVString().equals(EXPECTED));
+		
+		copy.removeColumn("colC");
+		assertTrue("copy.removeColumn() changed initial table: \n" + table.toCSVString(), table.toCSVString().equals(EXPECTED));
+		
+		copy.setCell(0, 0, "new");
+		assertTrue("copy.setCell() changed initial table: \n" + table.toCSVString(), table.toCSVString().equals(EXPECTED));
+		
+		assertTrue("copied table is incorrect: \n" + copy.toCSVString(), copy.toCSVString().equals("colA,colB\nnew,banana\nadam,barbara\n"));
+
+		
+
+	}
 }

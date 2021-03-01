@@ -148,6 +148,11 @@ public class Table {
 		
 	}
 	
+	public Table copy() throws Exception {
+		Table copy = new Table(this.columnNames, this.columnTypes);
+		copy.append(this);
+		return copy;
+	}
 
 	/**
 	 * Create from a csv file
