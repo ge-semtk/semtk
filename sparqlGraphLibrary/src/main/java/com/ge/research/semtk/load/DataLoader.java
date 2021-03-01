@@ -413,7 +413,7 @@ public class DataLoader implements Runnable {
 				}
 				
 				// if there is a cacheSei, make sure it isn't getting too large
-				if (!skipIngest && this.cacheSei != null) {
+				if (!skipIngest && this.cacheSei != null && this.cacheSei.dumpToTurtle().length() > 0) {
 					// after 100 rows, guess a good place to upload
 					if (dumpCacheRowInterval == 0 && startingRow > 100) {
 						long testSize = this.cacheSei.dumpToTurtle().length();
