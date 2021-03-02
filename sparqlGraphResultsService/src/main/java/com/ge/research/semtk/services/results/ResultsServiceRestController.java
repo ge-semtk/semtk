@@ -50,7 +50,6 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationException;
@@ -122,8 +121,9 @@ public class ResultsServiceRestController {
 		auth_prop.validateWithExit();
 		
 		AuthorizationManager.authorizeWithExit(auth_prop);
-
 	}
+	
+	
 	@CrossOrigin
 	@RequestMapping(value="/storeJsonLdResults", method=RequestMethod.POST)
 	public JSONObject storeJsonLdResults(@RequestBody JsonLdStoreRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -131,28 +131,28 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
-			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeJsonLdResults", "jobId", requestBody.jobId, "chars", String.valueOf(requestBody.getJsonRenderedGraph().length()));
-	    	LocalLogger.logToStdOut("Results Service storeJsonLdResults JobId=" + requestBody.jobId);
+	    	LocalLogger.logToStdOut(SERVICE_NAME + " storeJsonLdResults JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
 				URL url = getJsonLdResultsStorage().storeResults(requestBody.jobId, requestBody.getJsonRenderedHeader(), requestBody.getJsonRenderedGraph());
 				getJobTracker().setJobResultsURL(requestBody.jobId, url);  // store URL with the job
 			    res.setSuccess(true);
+			    LocalLogger.logToStdOut(SERVICE_NAME + " storeJsonLdResults JobId=" + requestBody.jobId + " completed");
 			} catch(Exception e){
 		    	res.setSuccess(false);
 		    	res.addRationaleMessage(SERVICE_NAME, "storeJsonLdResults", e);
 			    LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeJsonLdResults exception", "message", e.toString());
 			    LocalLogger.printStackTrace(e);
 			} 
-			
 			return res.toJson();
 			
 		} finally {
 			HeadersManager.clearHeaders();
 		}
 	}
+	
 
 	@CrossOrigin
 	@RequestMapping(value="/getJsonLdResults", method= RequestMethod.POST)
@@ -162,23 +162,22 @@ public class ResultsServiceRestController {
 		resp.addHeader("content-type", "application/json; charset=utf-8");
 
 		try {
+			LocalLogger.logToStdOut(SERVICE_NAME + " getJsonLdResults JobId=" + requestBody.jobId);
 			try{
 		    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 				JsonLdResultsSerializer retval = getJsonLdResultsStorage().getJsonLd(url);
-				
 				retval.writeToStream(resp.getWriter());
-				
+				LocalLogger.logToStdOut(SERVICE_NAME + " getJsonLdResults JobId=" + requestBody.jobId + " completed");
 		    } catch (Exception e) {
 			    LoggerRestClient.easyLog(logger, SERVICE_NAME, "getJsonLdResults exception", "message", e.toString());
 			    LocalLogger.printStackTrace(e);
 		    } 
-	
-			LocalLogger.logToStdErr("done writing output");
 			
 		} finally {
 			HeadersManager.clearHeaders();
 		}
 	}
+	
 
 	@CrossOrigin
 	@RequestMapping(value="/storeJsonBlobResults", method=RequestMethod.POST)
@@ -187,15 +186,16 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			String blobStr = requestBody.getJsonBlobString();
-			// logging
+
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeJsonBlobResults", "jobId", requestBody.jobId, "chars", String.valueOf(blobStr.length()));
-			LocalLogger.logToStdOut("Results Service storeJsonBlobResults JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut(SERVICE_NAME + " storeJsonBlobResults JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
 				URL url = getJsonBlobResultsStorage().storeResults(requestBody.jobId, blobStr);
 				getJobTracker().setJobResultsURL(requestBody.jobId, url);  // store URL with the job
 			    res.setSuccess(true);
+			    LocalLogger.logToStdOut(SERVICE_NAME + " storeJsonBlobResults JobId=" + requestBody.jobId + " completed");
 			} catch(Exception e){
 		    	res.setSuccess(false);
 		    	res.addRationaleMessage(SERVICE_NAME, "storeJsonBlobResults", e);
@@ -208,11 +208,10 @@ public class ResultsServiceRestController {
 			HeadersManager.clearHeaders();
 		}	
 	}
+	
+	
 	/**
 	 * Given a jobId, write back the raw json.  Empty if bad jobId.
-	 * @param requestBody
-	 * @param resp
-	 * @param headers
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/getJsonBlobResults", method=RequestMethod.POST)
@@ -221,23 +220,23 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		resp.addHeader("content-type", "application/json; charset=utf-8");
 		try {
+			
+			LocalLogger.logToStdOut(SERVICE_NAME + " getJsonBlobResults JobId=" + requestBody.jobId);
 			try{
 		    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 				GenericJsonBlobResultsSerializer retval = getJsonBlobResultsStorage().getJsonBlob(url);
-				
 				retval.writeToStream(resp.getWriter());
-				
+				LocalLogger.logToStdOut(SERVICE_NAME + " getJsonBlobResults JobId=" + requestBody.jobId + " completed");
 		    } catch (Exception e) {
 		    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getJsonBlobResults exception", "message", e.toString());
 			    LocalLogger.printStackTrace(e);
 		    } 
 	
-			LocalLogger.logToStdErr("done writing output");
-			
 		} finally {
 			HeadersManager.clearHeaders();
 		}
 	}
+	
 	
 	@ApiOperation(
 			value="Get fileIDs of all files in job",
@@ -250,6 +249,8 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
+			LocalLogger.logToStdOut(SERVICE_NAME + " getResultsFiles JobId=" + requestBody.jobId);
+			
 			final String ENDPOINT_NAME = "getResultsFiles";
 			final String STRING_TYPE = "http://www.w3.org/2001/XMLSchema#string";  // TODO create an enum in Belmont and using it everywhere
 			TableResultSet res = null;
@@ -261,7 +262,6 @@ public class ResultsServiceRestController {
 				Table table = new Table(new String[] {"name",      "fileId"}, 
 						                new String[] {STRING_TYPE, ResultType.BINARY_FILE_ID.getPrefixedName()});
 				
-				
 				// add rest of rows
 				for (JobFileInfo info : fileInfoList) {
 					table.addRow(new String[] {	info.getFileName(), info.getFileId() });
@@ -269,6 +269,7 @@ public class ResultsServiceRestController {
 				
 				res = new TableResultSet(true);
 				res.addResults(table);
+				LocalLogger.logToStdOut(SERVICE_NAME + " getResultsFiles JobId=" + requestBody.jobId + " completed");
 				
 		    } catch (Exception e) {
 		    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getResultsFiles exception", "message", e.toString());
@@ -304,8 +305,8 @@ public class ResultsServiceRestController {
 		try {
 			SimpleResultSet res = null;
 	
-			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeBinaryFile", "jobId", jobId, "bytes", String.valueOf(file.getSize()));
+			LocalLogger.logToStdOut(SERVICE_NAME + " storeBinaryFile JobId=" + jobId);
 	
 			try{
 				if (file != null) {
@@ -322,7 +323,7 @@ public class ResultsServiceRestController {
 	
 					res = this.addBinaryFile(jobId, fileId, originalFileName, storagePath.toString());
 					
-					LocalLogger.logToStdOut("done uploading file");
+					LocalLogger.logToStdOut(SERVICE_NAME + " storeBinaryFile JobId=" + jobId + " completed");
 				}
 	
 			} catch (Exception e) {
@@ -357,12 +358,10 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
-			LocalLogger.logToStdOut("storeBinaryFilePath as " + ThreadAuthenticator.getThreadUserName());
-			SimpleResultSet res = null;
-	
-			// logging
+			LocalLogger.logToStdOut(SERVICE_NAME + " storeBinaryFilePath JobId=" + requestBody.jobId + " as " + ThreadAuthenticator.getThreadUserName());
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeBinaryFilePath", "jobId", requestBody.getJobId(), "bytes", String.valueOf(new File(requestBody.getPath()).length()));
-	
+
+			SimpleResultSet res = null;
 			try{
 				// make sure file is readable
 				File f = new File(requestBody.getPath());
@@ -372,10 +371,8 @@ public class ResultsServiceRestController {
 				}
 				
 				String fileId = this.generateFileId();
-				res = this.addBinaryFile(requestBody.getJobId(), fileId, requestBody.getFilename(), requestBody.getPath());
-							
-				LocalLogger.logToStdOut("done uploading file");
-	
+				res = this.addBinaryFile(requestBody.getJobId(), fileId, requestBody.getFilename(), requestBody.getPath());							
+				LocalLogger.logToStdOut(SERVICE_NAME + " storeBinaryFilePath JobId=" + requestBody.jobId + " completed");
 			} catch (Exception e) {
 				res = new SimpleResultSet();
 				res.setSuccess(false);
@@ -401,6 +398,8 @@ public class ResultsServiceRestController {
 		res.addResult("fileId", fileId);
 		return res;
 	}
+	
+	
 	@ApiOperation(
 			value="Get binary file",
 			notes="On error, filename will be authorizationError.html or resultsExpired.html, with message inside."
@@ -413,9 +412,7 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
 			LocalLogger.logToStdOut("getBinaryFile as " + ThreadAuthenticator.getThreadUserName());
-		
-		
-	        // logging	        
+		        
 	        try {
 	        	JobFileInfo metaFile = this.getJobTracker().getBinaryFile(fileId);
 	            String originalFileName = metaFile.getFileName();
@@ -438,7 +435,6 @@ public class ResultsServiceRestController {
 			    LocalLogger.printStackTrace(e);
 	        	try {
 	        		// try to return an error
-	        		
 	        		String filename = "";
 	        		String message = "";
 	        		if (e instanceof AuthorizationException) {
@@ -465,7 +461,6 @@ public class ResultsServiceRestController {
 	    		    return null;
 	        	}
 	        } 
-			
 		} finally {
 			HeadersManager.clearHeaders();
 		} 
@@ -486,14 +481,12 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
-			// logging
 			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonInitialize", "jobId", requestBody.jobId);
-			LocalLogger.logToStdOut("Results Service storeTableResultsJsonInitialize JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut(SERVICE_NAME + " storeTableResultsJsonInitialize JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
 				getTableResultsStorage().storeTableResultsJsonInitialize(requestBody.jobId, requestBody.getJsonRenderedHeader());
-				
 			    res.setSuccess(true);
 			} catch(Exception e){
 		    	res.setSuccess(false);
@@ -535,9 +528,8 @@ public class ResultsServiceRestController {
 		try{
 			String decompressed = Utility.decompress(requestBody.getContents());
 
-			// logging
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonAddIncremental", "jobId", requestBody.jobId, "chars", String.valueOf(decompressed.length()) );
-			LocalLogger.logToStdOut("Results Service storeTableResultsJsonAddIncremental JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut(SERVICE_NAME + " storeTableResultsJsonAddIncremental JobId=" + requestBody.jobId);
 
 			getTableResultsStorage().storeTableResultsJsonAddIncremental(requestBody.jobId, decompressed);
 			res.setSuccess(true);
@@ -572,7 +564,7 @@ public class ResultsServiceRestController {
 		try {
 			// logging
 			//LoggerRestClient.easyLog(logger, SERVICE_NAME, "storeTableResultsJsonFinalize", "jobId", requestBody.jobId);
-			LocalLogger.logToStdOut("Results Service storeTableResultsJsonFinalize JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut(SERVICE_NAME + " storeTableResultsJsonFinalize JobId=" + requestBody.jobId);
 	
 			SimpleResultSet res = new SimpleResultSet();
 			try{
@@ -611,22 +603,18 @@ public class ResultsServiceRestController {
 		resp.addHeader("content-type", "text/plain; charset=utf-8");
 
 		try{			
-			
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsv JobId=" + requestBody.jobId);
 			try {
 				resp.setHeader("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
-
 				URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
-	    	
 				TableResultsSerializer retval = getTableResultsStorage().getCsvTable(url, requestBody.maxRows, requestBody.getStartRow()); 			
 				
 				if(requestBody.getAppendDownloadHeaders()){
-				
+					retval.writeToStream(resp.getWriter());
+				}else{
 					retval.writeToStream(resp.getWriter());
 				}
-				else{
-					retval.writeToStream(resp.getWriter());
-				}
-				LocalLogger.logToStdErr("done writing output");
+				LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsv JobId=" + requestBody.jobId + " completed");
 				
 			} catch (AuthorizationException ae) {
 			    LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsCsv exception", "message", ae.toString());
@@ -654,6 +642,7 @@ public class ResultsServiceRestController {
 		resp.addHeader("content-type", "application/json; charset=utf-8");
 
 		try{
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJsonForWebClient JobId=" + jobId);
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
@@ -661,17 +650,17 @@ public class ResultsServiceRestController {
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
 			retval.writeToStream(resp.getWriter());
 			
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJsonForWebClient JobId=" + jobId + " completed");
 	    } catch (Exception e) {
 	    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsJsonForWebClient exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
 	    } finally {
 	    	HeadersManager.clearHeaders();
 	    }
-		
-		LocalLogger.logToStdErr("done writing output");
 		return null;
 	}
 
+	
 	@ApiOperation(
 			value="Get CSV table results",
 			notes="GET triggers browser MIME type handling"
@@ -685,6 +674,8 @@ public class ResultsServiceRestController {
 		resp.addHeader("content-type", "text/plain; charset=utf-8");
 
 		try{
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsvForWebClient JobId=" + jobId);
+			
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
 
@@ -697,14 +688,17 @@ public class ResultsServiceRestController {
 		    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsCsvForWebClient exception", "message", ae.toString());
 				resp.getWriter().println("AuthorizationException\n" + ae.getMessage());
 			}
+	    	
+	    	LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsvForWebClient JobId=" + jobId + " completed");
+	    	
 	    } catch (Exception e) {
 	    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsCsvForWebClient exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
 	    }  finally {
 	    	HeadersManager.clearHeaders();
 	    } 
-		LocalLogger.logToStdErr("done writing output");
 	}
+	
 	
 	@ApiOperation(
 			value="Get table results row count",
@@ -716,6 +710,7 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try {
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsRowCount JobId=" + requestBody.getJobId());
 			SimpleResultSet retTrue = null;
 			
 			try{
@@ -724,6 +719,9 @@ public class ResultsServiceRestController {
 				
 				retTrue = new SimpleResultSet(true);
 				retTrue.addResult("rowCount", retval);
+				
+				LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsRowCount JobId=" + requestBody.getJobId() + " completed");
+				
 		    } catch (Exception e) {
 		    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsRowCount exception", "message", e.toString());
 			    retTrue = new SimpleResultSet(false);
@@ -754,11 +752,11 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		final String ENDPOINT = "getTableResultsJson";
 		try{
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJson JobId=" + requestBody.getJobId());
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows, requestBody.getStartRow());	
-			
-			
 			wrapJsonInTableToSend(retval, resp);
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJson JobId=" + requestBody.getJobId() + " completed");
 	    } catch (Exception e) {
 	    	try {
 	    		writeError(e, ENDPOINT, resp);
@@ -768,36 +766,26 @@ public class ResultsServiceRestController {
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
-		LocalLogger.logToStdErr("done writing output");
 	}
 	
 	// PEC TODO: shouldn't this be a TableResultSet.toJson()
 	private void writeError(Exception e, String endpoint, HttpServletResponse resp) throws Exception {
-		
 		PrintWriter outPrint = resp.getWriter();
-		
 		outPrint.write("\n\n==============\nInternal error in " + SERVICE_NAME + "/" + endpoint + "\n==============\n" );
 		e.printStackTrace(outPrint);
 		outPrint.write("\n==============\n" );
-
 		outPrint.flush();
 		outPrint.close();
 	}
 
 	private void wrapJsonInTableToSend(TableResultsSerializer trs, HttpServletResponse resp) throws Exception {
-		
 		PrintWriter outPrint = resp.getWriter();
-		
-		// write table result set preamble.
 		outPrint.write("{\"message\":\"operations succeeded.\",\"table\":{\"@table\":");
 		outPrint.flush();
-		
 		trs.writeToStream(resp.getWriter());
-		// close table result set.
 		outPrint.write("},\"status\":\"success\"}");
 		outPrint.flush();
 		outPrint.close();
-		
 	}
 	
 	/**
@@ -818,12 +806,10 @@ public class ResultsServiceRestController {
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		try { 
-		    SimpleResultSet res = new SimpleResultSet();
-	    	//LoggerRestClient.easyLog(logger, "Results Service", "getResults", "JobId", requestBody.jobId);    	
-	    	LocalLogger.logToStdOut("Results Service getResults JobId=" + requestBody.jobId);
+		    SimpleResultSet res = new SimpleResultSet(); 	
+	    	LocalLogger.logToStdOut(SERVICE_NAME + " getResults JobId=" + requestBody.jobId);
 	    	
 		    try {
-		    	
 		    	// check that the job id exists
 		    	if(!getJobTracker().jobExists(requestBody.jobId)){
 		    		throw new Exception("No job exists with id " + requestBody.jobId);
@@ -834,7 +820,9 @@ public class ResultsServiceRestController {
 			    LoggerRestClient.easyLog(logger, SERVICE_NAME, "getResults URLs", 
 			    		"sampleURL", this.getSampleJsonUserURL(requestBody.jobId), 
 			    		"fullURL", this.getFullCsvUserURL(requestBody.jobId));
-			    res.setSuccess(true);		    
+			    res.setSuccess(true);	
+			    
+			    LocalLogger.logToStdOut(SERVICE_NAME + " getResults JobId=" + requestBody.jobId + " completed");
 		    } catch (Exception e) {
 		    	res.setSuccess(false);
 		    	res.addRationaleMessage(SERVICE_NAME, "getResults", e);
@@ -862,10 +850,9 @@ public class ResultsServiceRestController {
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		
 		try {
-			LocalLogger.logToStdOut("Results Service deleteStorage JobId=" + requestBody.jobId);
+			LocalLogger.logToStdOut(SERVICE_NAME + " deleteStorage JobId=" + requestBody.jobId);
 	
 		    SimpleResultSet res = new SimpleResultSet();
-	    	//LoggerRestClient.easyLog(logger, "Results Service", "deleteStorage", "JobId", requestBody.jobId);
 	    	
 		    try {   	
 		    	getJobTracker().deleteJob(requestBody.jobId, getTableResultsStorage()); 
