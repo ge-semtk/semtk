@@ -943,7 +943,7 @@ public abstract class Utility {
 	/**
 	 * Get seconds since a given time
 	 */
-	public static double getSecondsSince(long timeMillis) {
-		return (System.currentTimeMillis() - timeMillis) / 1000000.0;
+	public static String getSecondsSince(long timeMillis) {
+		return String.format("%.3f", (System.currentTimeMillis() - timeMillis) / 1000000.0);
 	}
 }

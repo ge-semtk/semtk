@@ -86,7 +86,8 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 			JSONObject extConstraintsJson = (JSONObject) extConstraintsJsonObj;
 			QueryFlags flags = (QueryFlags) flagsObj;
 		
-			LocalLogger.logToStdErr("Job " + this.jobID + ": dispatcher start");
+			LocalLogger.logToStdOut("Job " + this.jobID + " dispatch...");
+			long startTimeMillis = System.currentTimeMillis();
 
 			if (this.dispatchServiceMgr.getServiceMnemonic() == null) {
 				String sparqlQuery = this.getSparqlQuery(qt, targetSparqlID);
@@ -127,7 +128,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 //				retval.addResults(trueRetTable);
 //			}
 
-			LocalLogger.logToStdErr("Job " + this.jobID + ": dispatcher end");
+			LocalLogger.logToStdOut("Job " + this.jobID + " dispatch completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec (total)");
 
 		}
 		catch(Exception e){
@@ -159,17 +160,22 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 	 */
 	private TableResultSet executeEdcSelect(JSONObject extConstraintsJson, QueryFlags flags) throws Exception{
 		TableResultSet retval = null;
+		long startTimeMillis;
 		
 		try{
 
 			// get service info and augmented nodegroup from dispatch service manager
-			LocalLogger.logToStdErr("Job " + this.jobID + ": dispatch service manager start");
+			LocalLogger.logToStdOut("Job " + this.jobID + ": dispatch service manager");
+			startTimeMillis = System.currentTimeMillis();
 			NodeGroup edcNodegroup = this.dispatchServiceMgr.getEdcNodegroup();
 			QueryGenClient edcGenerateClient = this.dispatchServiceMgr.getGenerateClient();
-
+			LocalLogger.logToStdOut("Job " + this.jobID + ": dispatch service manager completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
+			
 			// get the table to send to the query generation service
-			LocalLogger.logToStdErr("Job " + this.jobID + ": dispatcher prep binning start");
+			LocalLogger.logToStdOut("Job " + this.jobID + ": prep binning");
+			startTimeMillis = System.currentTimeMillis();
 			Table locationAndValueTable = this.performEdcPrepBinning(edcNodegroup);	
+			LocalLogger.logToStdOut("Job " + this.jobID + ": prep binning completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
 			
 			if(locationAndValueTable.getNumRows() == 0) {
 				// handle empty results
@@ -181,14 +187,15 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 				this.updateStatus(10);
 				
 				// generate queries
-				LocalLogger.logToStdErr("Job " + this.jobID + ": generate external queries start");
+				LocalLogger.logToStdOut("Job " + this.jobID + ": generate external queries");
+				startTimeMillis = System.currentTimeMillis();
 				TableResultSet queryGenResultSet = edcGenerateClient.execute(locationAndValueTable,extConstraintsJson,flags);
 				if(!queryGenResultSet.getSuccess()){
 					throw new Exception("Could not generate queries: " + queryGenResultSet.getRationaleAsString(","));
 				}
 				Table queryGenResultTable = queryGenResultSet.getResults();			
-				LocalLogger.logToStdErr("Job " + this.jobID + ": generate external queries end");			
 				LocalLogger.logToStdOut(queryGenResultTable.toCSVString());
+				LocalLogger.logToStdOut("Job " + this.jobID + ": generate external queries completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");	
 				retval = new TableResultSet(true);
 				
 				if (flags != null && flags.isSet(AsynchronousNodeGroupBasedQueryDispatcher.FLAG_DISPATCH_RETURN_QUERIES)) {
@@ -203,29 +210,36 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 					this.updateStatus(20);
 					
 					// execute queries
-					LocalLogger.logToStdErr("Job " + this.jobID + ": execute external queries start");			
+					LocalLogger.logToStdOut("Job " + this.jobID + ": execute external queries");
+					startTimeMillis = System.currentTimeMillis();
 					this.runEdcThreads(queryGenResultTable, 20, 70);
+					LocalLogger.logToStdOut("Job " + this.jobID + ": execute external queries completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
 					
 					// update status
 					this.updateStatus(75);
 					
 					// merge results
-					LocalLogger.logToStdErr("Job " + this.jobID + ": fuse results start");	
+					LocalLogger.logToStdOut("Job " + this.jobID + ": fuse results");	
+					startTimeMillis = System.currentTimeMillis();
 					String[] columnNamesInOrder = this.queryGroupColl.getColumnNames();
 					String[] columnTypesInNameOrder = this.getColumnTypes(columnNamesInOrder);  // TODO: figure out how to get column types. they are elusive...
 					Table retTable = this.fuseResults(columnNamesInOrder, columnTypesInNameOrder);
+					LocalLogger.logToStdOut("Job " + this.jobID + ": fuse results completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
 					
+					LocalLogger.logToStdOut("Job " + this.jobID + ": add results to table");	
+					startTimeMillis = System.currentTimeMillis();
 					retval.addResults(retTable);    // this is a slow line because it involves making potentially a lot of JSON never used in this case.
+					LocalLogger.logToStdOut("Job " + this.jobID + ": add results to table completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
 				}
 			}
 			this.updateStatus(95);		
 
 			// send to results service
-			LocalLogger.logToStdErr("Job " + this.jobID + ": write results start");			
+			LocalLogger.logToStdOut("Job " + this.jobID + ": write results");	
+			startTimeMillis = System.currentTimeMillis();
 			this.sendResultsToService(retval); 			
+			LocalLogger.logToStdOut("Job " + this.jobID + ": write results completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
 			
-			// done
-			LocalLogger.logToStdErr("operations completed");
 			this.updateStatus(100);		
 
 		}catch(Exception e){

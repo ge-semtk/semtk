@@ -678,6 +678,7 @@ public class ResultsServiceRestController {
 
 		try{
 			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsvForWebClient JobId=" + jobId);
+			long startTimeMillis = System.currentTimeMillis();
 			
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".csv" + "\"; filename*=\"" + jobId + ".csv" +"\"");
@@ -692,7 +693,7 @@ public class ResultsServiceRestController {
 				resp.getWriter().println("AuthorizationException\n" + ae.getMessage());
 			}
 	    	
-	    	LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsvForWebClient JobId=" + jobId + " completed");
+	    	LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsvForWebClient JobId=" + jobId + "completed in " + Utility.getSecondsSince(startTimeMillis) + " sec");
 	    	
 	    } catch (Exception e) {
 	    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsCsvForWebClient exception", "message", e.toString());
@@ -753,10 +754,12 @@ public class ResultsServiceRestController {
 		final String ENDPOINT = "getTableResultsJson";
 		try{
 			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJson JobId=" + requestBody.getJobId());
+			long startTimeMillis = System.currentTimeMillis();
+			
 	    	URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
 			TableResultsSerializer retval = getTableResultsStorage().getJsonTable(url, requestBody.maxRows, requestBody.getStartRow());	
 			wrapJsonInTableToSend(retval, resp);
-			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJson JobId=" + requestBody.getJobId() + " completed");
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJson JobId=" + requestBody.getJobId() + " completed in " + Utility.getSecondsSince(startTimeMillis) + " sec");
 	    } catch (Exception e) {
 	    	try {
 	    		writeError(e, ENDPOINT, resp);
