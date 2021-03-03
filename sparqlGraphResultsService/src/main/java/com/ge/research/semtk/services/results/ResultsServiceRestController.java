@@ -604,6 +604,7 @@ public class ResultsServiceRestController {
 
 		try{			
 			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsv JobId=" + requestBody.jobId);
+			long startTimeMillis = System.currentTimeMillis();
 			try {
 				resp.setHeader("Content-Disposition", "attachment; filename=\"" + requestBody.jobId + ".csv" + "\"; filename*=\"" + requestBody.jobId + ".csv" +"\"");
 				URL url = getJobTracker().getFullResultsURL(requestBody.jobId);  
@@ -614,7 +615,7 @@ public class ResultsServiceRestController {
 				}else{
 					retval.writeToStream(resp.getWriter());
 				}
-				LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsv JobId=" + requestBody.jobId + " completed");
+				LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsCsv JobId=" + requestBody.jobId + " completed in " + Utility.getSecondsSince(startTimeMillis) + " sec");
 				
 			} catch (AuthorizationException ae) {
 			    LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsCsv exception", "message", ae.toString());
@@ -643,6 +644,8 @@ public class ResultsServiceRestController {
 
 		try{
 			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJsonForWebClient JobId=" + jobId);
+			long startTimeMillis = System.currentTimeMillis();
+			
 			if(jobId == null){ throw new Exception("no jobId passed to endpoint."); }
 			
 	    	URL url = getJobTracker().getFullResultsURL(jobId);  
@@ -650,7 +653,7 @@ public class ResultsServiceRestController {
 			resp.setHeader("Content-Disposition", "attachment; filename=\"" + jobId + ".json" + "\"; filename*=\"" + jobId + ".json" +"\"");
 			retval.writeToStream(resp.getWriter());
 			
-			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJsonForWebClient JobId=" + jobId + " completed");
+			LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsJsonForWebClient JobId=" + jobId + " completed in " + Utility.getSecondsSince(startTimeMillis) + " sec");
 	    } catch (Exception e) {
 	    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsJsonForWebClient exception", "message", e.toString());
 		    LocalLogger.printStackTrace(e);
@@ -718,10 +721,7 @@ public class ResultsServiceRestController {
 				int retval = getTableResultsStorage().getResultsRowCount(url);	
 				
 				retTrue = new SimpleResultSet(true);
-				retTrue.addResult("rowCount", retval);
-				
-				LocalLogger.logToStdOut(SERVICE_NAME + " getTableResultsRowCount JobId=" + requestBody.getJobId() + " completed");
-				
+				retTrue.addResult("rowCount", retval);				
 		    } catch (Exception e) {
 		    	LoggerRestClient.easyLog(logger, SERVICE_NAME, "getTableResultsRowCount exception", "message", e.toString());
 			    retTrue = new SimpleResultSet(false);

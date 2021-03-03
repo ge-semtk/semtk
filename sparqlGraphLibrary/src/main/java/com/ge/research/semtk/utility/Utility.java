@@ -939,4 +939,11 @@ public abstract class Utility {
 				.replaceAll(" +", " ")
 				.replaceAll("\n+", "\n");
 	}
+
+	/**
+	 * Get seconds since a given time
+	 */
+	public static double getSecondsSince(long timeMillis) {
+		return (System.currentTimeMillis() - timeMillis) / 1000000.0;
+	}
 }

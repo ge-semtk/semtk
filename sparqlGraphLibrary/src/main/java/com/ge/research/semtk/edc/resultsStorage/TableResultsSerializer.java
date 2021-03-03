@@ -20,7 +20,6 @@ package com.ge.research.semtk.edc.resultsStorage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -41,11 +40,10 @@ public class TableResultsSerializer {
 	private Integer cutoffValue = null;
 	private Integer startingRowNumber = 0;	// all tables are based on row 0.
 	
-	public TableResultsSerializer(){
-		
+	public TableResultsSerializer(){	
 	}
+	
 	public TableResultsSerializer(JSONObject headerInfo, String dataFileLocation, TableResultsStorageTypes serializationType, Integer cutoff, Integer startingRow){
-		 
 		this.headerInfo = headerInfo;
 		this.dataFile = new File(dataFileLocation);
 		this.frmt = serializationType;
@@ -57,6 +55,7 @@ public class TableResultsSerializer {
 	public void writeToStream(PrintWriter printWriter ) throws IOException, UnsupportedOperationException {
 		this.writeObject(printWriter);
 	}
+	
 	private void writeObject( PrintWriter aOutputStream ) throws IOException, UnsupportedOperationException {
 	
 		// this method actually cheats and writes the output as the desired type... 
@@ -70,22 +69,15 @@ public class TableResultsSerializer {
 		else if(this.cutoffValue >  totalRowsExpected - this.startingRowNumber)
 		{ this.cutoffValue = totalRowsExpected - this.startingRowNumber; }
 		
-		LocalLogger.logToStdErr("requested file record size = " + cutoffValue);
-		
 		if(this.frmt.equals(TableResultsStorageTypes.JSON)){
-			// json code call.
-			
 			this.writeJSON(aOutputStream, cutoffValue);
 		}
 		else if(this.frmt.equals(TableResultsStorageTypes.CSV)){
-			// csv code call
-			
 			this.writeCSV(aOutputStream, cutoffValue);
 		}
 		else{
 			throw new UnsupportedOperationException("TableResultsSerializer.serializationFormat." + this.frmt.name() + " is not supported for serialization. version mismatch?");
 		}
-		
     }
 	
 	private void writeCSV( PrintWriter aOutputStream, Integer stopRowNumber ) throws UnsupportedOperationException, IOException{
@@ -135,7 +127,7 @@ public class TableResultsSerializer {
 			processedRows += 1;
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
-				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
+				LocalLogger.logToStdOut("writeCSV finished row " +  processedRows + " of " + stopRowNumber);
 				aOutputStream.flush();
 			}
 		}
@@ -143,7 +135,7 @@ public class TableResultsSerializer {
 		
 		// done with rows. flush.
 		aOutputStream.flush();
-		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdOut("writeCSV finished after " +  processedRows + " rows");
 	}
 	
 	private void writeJSON( PrintWriter aOutputStream, Integer stopRowNumber) throws UnsupportedOperationException, IOException{
@@ -156,8 +148,6 @@ public class TableResultsSerializer {
 		
 		// write the metadata to the stream
 		int columnCount = Integer.parseInt( "" + this.headerInfo.get(Table.JSON_KEY_COL_COUNT));
-		
-		LocalLogger.logToStdErr("requested row count : " + stopRowNumber);
 		
 		aOutputStream.write("{" + quote + Table.JSON_KEY_ROW_COUNT + quote + " : "  + stopRowNumber + ",");
 		aOutputStream.write(quote + Table.JSON_KEY_COL_COUNT + quote + " : "  + columnCount + ",");
@@ -214,7 +204,7 @@ public class TableResultsSerializer {
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
 				aOutputStream.flush();
-				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
+				LocalLogger.logToStdOut("writeJSON finished row " +  processedRows + " of " + stopRowNumber);
 			}
 		}
 		bfr.close();
@@ -222,7 +212,7 @@ public class TableResultsSerializer {
 		aOutputStream.write("]}");
 		// done with rows. flush.
 		aOutputStream.flush();
-		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdOut("writeJSON finished after " +  processedRows + " rows");
 		
 	}
 	

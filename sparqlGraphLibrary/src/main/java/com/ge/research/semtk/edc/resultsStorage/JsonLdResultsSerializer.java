@@ -71,14 +71,14 @@ public class JsonLdResultsSerializer {
 			processedRows += 1;
 			
 			if(processedRows % FLUSHFREQUENCY == 0){
-				LocalLogger.logToStdErr("flushing after row: " +  processedRows);
+				LocalLogger.logToStdOut("writeJSON finished row " +  processedRows);
 				aOutputStream.flush();
 			}
 		}
 		
 		// done with rows. flush.
 		aOutputStream.flush();
-		LocalLogger.logToStdErr("flushing after completion: " +  processedRows);
+		LocalLogger.logToStdOut("writeJSON finished after " +  processedRows + " rows");
 	}
 
 	
