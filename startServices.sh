@@ -77,97 +77,134 @@ echo "=== START MICROSERVICES... ==="
 
 PID_ARRAY=()
 PROC_ARRAY=()
+PORT_ARRAY=()
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("ontologyInfoService");
+if [[ "$ENABLED_SERVICES" == *ontologyInfoService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/ontologyInfoService/target/ontologyInfoService-*.jar > "$LOGS"/ontologyInfoService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("ontologyInfoService");
+	PORT_ARRAY+=($PORT_ONTOLOGYINFO_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar > "$LOGS"/nodeGroupStoreService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("nodeGroupStoreService");
+if [[ "$ENABLED_SERVICES" == *nodeGroupStoreService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupStoreService/target/nodeGroupStoreService-*.jar > "$LOGS"/nodeGroupStoreService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("nodeGroupStoreService");
+	PORT_ARRAY+=($PORT_NODEGROUPSTORE_SERVICE)
+	
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("sparqlGraphStatusService");
+if [[ "$ENABLED_SERVICES" == *sparqlGraphStatusService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphStatusService/target/sparqlGraphStatusService-*.jar > "$LOGS"/sparqlGraphStatusService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("sparqlGraphStatusService");
+	PORT_ARRAY+=($PORT_SPARQLGRAPH_STATUS_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("sparqlGraphResultsService");
+if [[ "$ENABLED_SERVICES" == *sparqlGraphResultsService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -jar "$SEMTK"/sparqlGraphResultsService/target/sparqlGraphResultsService-*.jar > "$LOGS"/sparqlGraphResultsService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("sparqlGraphResultsService");
+	PORT_ARRAY+=($PORT_SPARQLGRAPH_RESULTS_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("hiveService");
+if [[ "$ENABLED_SERVICES" == *hiveService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("hiveService");
+	PORT_ARRAY+=($PORT_HIVE_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("sparqlExtDispatchService");
+if [[ "$ENABLED_SERVICES" == *sparqlExtDispatchService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("sparqlExtDispatchService");
+	PORT_ARRAY+=($PORT_DISPATCH_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar > "$LOGS"/nodeGroupExecutionService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("nodeGroupExecutionService");
+if [[ "$ENABLED_SERVICES" == *nodeGroupExecutionService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupExecutionService/target/nodeGroupExecutionService-*.jar > "$LOGS"/nodeGroupExecutionService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("nodeGroupExecutionService");
+	PORT_ARRAY+=($PORT_NODEGROUPEXECUTION_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-*.jar > "$LOGS"/sparqlQueryService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("sparqlQueryService");
+if [[ "$ENABLED_SERVICES" == *sparqlQueryService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlQueryService/target/sparqlQueryService-*.jar > "$LOGS"/sparqlQueryService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("sparqlQueryService");
+	PORT_ARRAY+=($PORT_SPARQL_QUERY_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("sparqlGraphIngestionService");
+if [[ "$ENABLED_SERVICES" == *sparqlGraphIngestionService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/sparqlGraphIngestionService/target/sparqlGraphIngestionService-*.jar > "$LOGS"/sparqlGraphIngestionService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("sparqlGraphIngestionService");
+	PORT_ARRAY+=($PORT_INGESTION_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar > "$LOGS"/nodeGroupService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("nodeGroupService");
+if [[ "$ENABLED_SERVICES" == *nodeGroupService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/nodeGroupService/target/nodeGroupService-*.jar > "$LOGS"/nodeGroupService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("nodeGroupService");
+	PORT_ARRAY+=($PORT_NODEGROUP_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fdcSampleService/target/fdcSampleService-*.jar > "$LOGS"/fdcSampleService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("fdcSampleService");
+if [[ "$ENABLED_SERVICES" == *fdcSampleService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fdcSampleService/target/fdcSampleService-*.jar > "$LOGS"/fdcSampleService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("fdcSampleService");
+	PORT_ARRAY+=($PORT_FDCSAMPLE_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fdcCacheService/target/fdcCacheService-*.jar > "$LOGS"/fdcCacheService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("fdcCacheService");
+if [[ "$ENABLED_SERVICES" == *fdcCacheService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fdcCacheService/target/fdcCacheService-*.jar > "$LOGS"/fdcCacheService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("fdcCacheService");
+	PORT_ARRAY+=($PORT_FDCCACHE_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/edcQueryGenerationService/target/edcQueryGenerationService-*.jar > "$LOGS"/edcQueryGenerationService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("edcQueryGenerationService");
+if [[ "$ENABLED_SERVICES" == *edcQueryGenerationService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/edcQueryGenerationService/target/edcQueryGenerationService-*.jar > "$LOGS"/edcQueryGenerationService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("edcQueryGenerationService");
+	PORT_ARRAY+=($PORT_EDCQUERYGEN_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -jar "$SEMTK"/athenaService/target/athenaService-*.jar > "$LOGS"/athenaService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("athenaService");
+if [[ "$ENABLED_SERVICES" == *athenaService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -jar "$SEMTK"/athenaService/target/athenaService-*.jar > "$LOGS"/athenaService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("athenaService");
+	PORT_ARRAY+=($PORT_ATHENA_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java -jar "$SEMTK"/arangoDbService/target/arangoDbService-*.jar > "$LOGS"/arangoDbService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("arangoDbService");
+if [[ "$ENABLED_SERVICES" == *arangoDbService* ]]; then
+	"$JAVA_HOME"/bin/java -jar "$SEMTK"/arangoDbService/target/arangoDbService-*.jar > "$LOGS"/arangoDbService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("arangoDbService");
+	PORT_ARRAY+=($PORT_ARANGODB_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/utilityService/target/utilityService-*.jar > "$LOGS"/utilityService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("utilityService");
+if [[ "$ENABLED_SERVICES" == *utilityService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/utilityService/target/utilityService-*.jar > "$LOGS"/utilityService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("utilityService");
+	PORT_ARRAY+=($PORT_UTILITY_SERVICE)
+fi
 
-"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fileStagingService/target/fileStagingService-*.jar > "$LOGS"/fileStagingService.log 2>&1 &
-PID_ARRAY+=($!)
-PROC_ARRAY+=("fileStagingService");
+if [[ "$ENABLED_SERVICES" == *fileStagingService* ]]; then
+	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/fileStagingService/target/fileStagingService-*.jar > "$LOGS"/fileStagingService.log 2>&1 &
+	PID_ARRAY+=($!)
+	PROC_ARRAY+=("fileStagingService");
+	PORT_ARRAY+=($PORT_FILESTAGING_SERVICE)
+fi
 
 #
 # wait for services
 #
 MAX_SEC=300
-declare -a PORTS=($PORT_SPARQLGRAPH_STATUS_SERVICE
-                  $PORT_SPARQLGRAPH_RESULTS_SERVICE
-                  $PORT_DISPATCH_SERVICE
-                  $PORT_HIVE_SERVICE
-                  $PORT_NODEGROUPSTORE_SERVICE
-                  $PORT_ONTOLOGYINFO_SERVICE
-                  $PORT_NODEGROUPEXECUTION_SERVICE
-                  $PORT_SPARQL_QUERY_SERVICE
-                  $PORT_INGESTION_SERVICE
-                  $PORT_NODEGROUP_SERVICE
-                  $PORT_FDCSAMPLE_SERVICE
-                  $PORT_FDCCACHE_SERVICE
-				  $PORT_EDCQUERYGEN_SERVICE
-				  $PORT_ATHENA_SERVICE
-                  $PORT_ARANGODB_SERVICE
-				  $PORT_UTILITY_SERVICE
-				  $PORT_FILESTAGING_SERVICE
-                 )
+
+
 # protocol for ping
 if [ "$SSL_ENABLED" == "false" ]; then
     PROTOCOL="http"
@@ -178,7 +215,7 @@ fi
 echo Using no_proxy: $no_proxy
 
 # check for each service				 
-for port in "${PORTS[@]}"; do
+for port in "${PORT_ARRAY[@]}"; do
    while ! curl --insecure --noproxy $no_proxy -X POST ${PROTOCOL}://${HOST_NAME}:${port}/serviceInfo/ping 2>>/dev/null | grep -q yes ; do
 
 	echo waiting for service at ${PROTOCOL}://${HOST_NAME}:${port}

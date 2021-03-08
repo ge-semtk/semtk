@@ -59,13 +59,15 @@ source .env
 
 for dir in *Service; do
   (
-    cd "$dir"
-    SERVICE=$(basename "${PWD}")
-    export SERVICE
-    unzip -q target/*.jar
-    rm -rf pom.xml target
-    envsubst <../service.unit >/etc/systemd/system/"${SERVICE}".service
-    systemctl enable "${SERVICE}"
+    if [[ "$ENABLED_SERVICES" == *"$dir"* ]]; then
+       cd "$dir"
+       SERVICE=$(basename "${PWD}")
+       export SERVICE
+       unzip -q target/*.jar
+       rm -rf pom.xml target
+       envsubst <../service.unit >/etc/systemd/system/"${SERVICE}".service
+       systemctl enable "${SERVICE}"
+    fi
   )
 done
 
