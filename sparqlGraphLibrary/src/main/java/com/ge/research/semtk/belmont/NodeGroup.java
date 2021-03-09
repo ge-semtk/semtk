@@ -25,10 +25,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.UUID;
 
-import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -40,7 +38,6 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintMetaData;
-import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.load.NothingToInsertException;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
@@ -1026,7 +1023,7 @@ public class NodeGroup {
 	// not sure if this will be needed on java side
 	// ported from js  aug 2020 Paul
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public void updateUnionMemberships() {
+	public void updateUnionMemberships() throws Exception {
 
         this.tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();  // hash entry str (3 tuple, not 4) to a list of unions
 
@@ -1151,18 +1148,19 @@ public class NodeGroup {
 	 * @param nItem
 	 * @param target
 	 * @return
+	 * @throws Exception 
 	 */
-	 public ArrayList<Integer> getLegalUnions(Node snode, NodeItem nItem, Node target) {
+	 public ArrayList<Integer> getLegalUnions(Node snode, NodeItem nItem, Node target) throws Exception {
 	    	return this.getLegalUnions(this.getUnionKey(snode, nItem, target), new UnionKeyStr(snode, nItem, target));
 	 }
-	 public ArrayList<Integer> getLegalUnions(Node snode, PropertyItem pItem) {
+	 public ArrayList<Integer> getLegalUnions(Node snode, PropertyItem pItem) throws Exception {
 		 return this.getLegalUnions(this.getUnionKey(snode, pItem), new UnionKeyStr(snode, pItem));
 	 }
-	 public ArrayList<Integer> getLegalUnions(Node snode) {
+	 public ArrayList<Integer> getLegalUnions(Node snode) throws Exception {
 		 return this.getLegalUnions(this.getUnionKey(snode), new UnionKeyStr(snode));
 	 }
 	
-	 private ArrayList<Integer> getLegalUnions(Integer key, UnionKeyStr uKeyStr) {
+	 private ArrayList<Integer> getLegalUnions(Integer key, UnionKeyStr uKeyStr) throws Exception {
 		 String keyStr = uKeyStr.getStr();
 		 ArrayList<Integer> membershipList = this.tmpUnionMemberHash.get(keyStr);
 		 Integer k = key != null ? Math.abs(key) : null;
@@ -1288,7 +1286,7 @@ public class NodeGroup {
 		
 	}
 
-	private void legalizeSparqlIDs(Node node) {
+	private void legalizeSparqlIDs(Node node) throws Exception {
 		String ID = node.getSparqlID();
 		HashSet<String> nameHash = this.getAllVariableNames(node);
 		if(nameHash.contains(ID)){	// this name was already used. 
@@ -1532,7 +1530,7 @@ public class NodeGroup {
 		return this.getAllVariableNames((Returnable) null, (Integer) null, (String) null);
 	}
 	
-	public HashSet<String> getAllVariableNames(Node targetSNode) {
+	public HashSet<String> getAllVariableNames(Node targetSNode) throws Exception {
 		this.updateUnionMemberships();
 
 		Integer targetUnion = this.getUnionMembership(targetSNode);
@@ -1540,7 +1538,7 @@ public class NodeGroup {
 		return this.getAllVariableNames(targetSNode, targetUnion, targetParentStr);
 	}
 	
-	public HashSet<String> getAllVariableNames(Node targetSNode, PropertyItem targetPItem) {
+	public HashSet<String> getAllVariableNames(Node targetSNode, PropertyItem targetPItem) throws Exception {
 		this.updateUnionMemberships();
 
 		Integer targetUnion = this.getUnionMembership(targetSNode, targetPItem);
@@ -2766,15 +2764,16 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	public void pruneAllUnused () {
+	public void pruneAllUnused () throws Exception {
 		this.pruneAllUnused(false);
 	}
 
 	/**
 	 * Prune all unUsed subgraphs off the nodegroup
 	 * @param instanceOnly - use instance data check in node.isUsed
+	 * @throws Exception 
 	 */
-	public void pruneAllUnused (boolean instanceOnly) {
+	public void pruneAllUnused (boolean instanceOnly) throws Exception {
 		// prune all unused subgraphs
 		ArrayList<Node> pruned = new ArrayList<Node>();
 		boolean prunedSomething = true;
@@ -2800,8 +2799,9 @@ public class NodeGroup {
 	 * @param node
 	 * @param instanceOnly
 	 * @return
+	 * @throws Exception 
 	 */
-	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) {
+	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) throws Exception {
 		
 		if (! node.isUsed(instanceOnly)) {
 			ArrayList<Node> subNodes = this.getAllConnectedNodes(node);
@@ -2878,8 +2878,9 @@ public class NodeGroup {
 	 * Delete a node and of all the remaining disconnected islands, keep the one containing keepIslandContaining
 	 * @param delNode
 	 * @param keepIslandContaining
+	 * @throws Exception 
 	 */
-	public void deleteNode(Node delNode, Node keepIslandContaining) {
+	public void deleteNode(Node delNode, Node keepIslandContaining) throws Exception {
 		// delete node, potentially leaving multiple disconnected islands
 		this.deleteNode(delNode, false);
 		
@@ -2898,7 +2899,7 @@ public class NodeGroup {
 		}
 	}
 	
-	public void deleteSubGraph(Node n, Node stopNode) {
+	public void deleteSubGraph(Node n, Node stopNode) throws Exception {
 		ArrayList<Node> stopList = new ArrayList<Node>();
 		stopList.add(stopNode);
 		this.deleteSubGraph(n, stopList);
@@ -2909,8 +2910,9 @@ public class NodeGroup {
 	 * Delete a subgraph 
 	 * @param n - start deleting here
 	 * @param excludeNode - don't delete this one or "cross" it to find more nodes
+	 * @throws Exception 
 	 */
-	public void deleteSubGraph(Node n, ArrayList<Node> stopList) {
+	public void deleteSubGraph(Node n, ArrayList<Node> stopList) throws Exception {
 		ArrayList<String> sparqlIds = new ArrayList<String>();
 		
 		// remove nodes
@@ -3054,8 +3056,9 @@ public class NodeGroup {
 	 * 
 	 * @param startNode
 	 * @return unionKey or null
+	 * @throws Exception 
 	 */
-	private Integer getSubGraphUnionKey(Node startNode) {
+	private Integer getSubGraphUnionKey(Node startNode) throws Exception {
 		
 		for (Node node : this.getSubGraph(startNode, new ArrayList<Node>())) {
 			Integer unionKey = this.getUnionKey(node);
@@ -3074,8 +3077,9 @@ public class NodeGroup {
 	 * @param startNode
 	 * @param stopList
 	 * @return
+	 * @throws Exception 
 	 */
-	private ArrayList<Node> getSubGraph(Node startNode, ArrayList<Node> stopList) {
+	private ArrayList<Node> getSubGraph(Node startNode, ArrayList<Node> stopList) throws Exception {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		
 		ret.add(startNode);
@@ -3391,8 +3395,9 @@ public class NodeGroup {
 	 * @param pItem
 	 * @param val
 	 * @return the sparqlId
+	 * @throws Exception 
 	 */
-	public String setIsReturned(Node node, boolean val) {
+	public String setIsReturned(Node node, boolean val) throws Exception {
 		String ret = null;
 		if (val && node.getSparqlID().isEmpty()) {
 			ret = this.changeSparqlID(node, node.getUri(true));
@@ -3422,8 +3427,9 @@ public class NodeGroup {
 	 * @param obj
 	 * @param requestID
 	 * @return the actual new requestID
+	 * @throws Exception 
 	 */
-	public String changeSparqlID(Returnable obj, String requestID) {
+	public String changeSparqlID(Returnable obj, String requestID) throws Exception {
 
 		// bail if this is a no-op
 		String oldID = obj.getSparqlID();
@@ -3670,8 +3676,9 @@ public class NodeGroup {
 	 * Get all nodes one-hop from given node, regardless of direction
 	 * @param node
 	 * @return
+	 * @throws Exception 
 	 */
-	private ArrayList<Node> getAllConnectedNodes(Node node) {
+	private ArrayList<Node> getAllConnectedNodes(Node node) throws Exception {
 		ArrayList<Node> ret = new ArrayList<Node>();
 		ret.addAll(node.getConnectedNodes());
 		ret.addAll(this.getConnectingNodes(node));
@@ -3703,15 +3710,20 @@ public class NodeGroup {
 	 * Get all nodes that have nodeItems pointing to node
 	 * @param sNode
 	 * @return
+	 * @throws Exception 
 	 */
-	private ArrayList<Node> getConnectingNodes(Node sNode) {
-		ArrayList<Node> ret = new ArrayList<Node>();
-		for (Node n : this.nodes) {
-			if (n.getConnectingNodeItems(sNode).size() > 0 ) {
-				ret.add(n);
+	private ArrayList<Node> getConnectingNodes(Node sNode) throws Exception {
+		try{
+			ArrayList<Node> ret = new ArrayList<Node>();
+			for (Node n : this.nodes) {
+				if (n.getConnectingNodeItems(sNode).size() > 0 ) {
+					ret.add(n);
+				}
 			}
+			return ret;
+		}catch(StackOverflowError soe){
+			throw new Exception ("SemTK does not support cyclic paths");
 		}
-		return ret;
 	}
 
 	/**

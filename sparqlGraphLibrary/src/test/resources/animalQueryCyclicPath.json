@@ -1,0 +1,156 @@
+{
+	"version": 2,
+	"sparqlConn": {
+		"name": "JUnit_Test",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"graph": "http://dataset"
+			}
+		],
+		"data": [
+			{
+				"type": "virtuoso",
+				"url": "http://localhost:2420",
+				"graph": "http://dataset"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 12,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"NodeName": "Animal",
+				"fullURIName": "http://AnimalSubProps#Animal",
+				"SparqlID": "?Animal_1",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Animal_1"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"KeyName": "hasChild",
+						"ValueType": "Animal",
+						"UriValueType": "http://AnimalSubProps#Animal",
+						"ConnectBy": "hasChild",
+						"Connected": true,
+						"UriConnectBy": "http://AnimalSubProps#hasChild"
+					}
+				],
+				"NodeName": "Animal",
+				"fullURIName": "http://AnimalSubProps#Animal",
+				"SparqlID": "?Animal_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"KeyName": "name",
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://AnimalSubProps#name",
+						"Constraints": "",
+						"fullURIName": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Animal_0",
+							"?Animal_1"
+						],
+						"OptionalMinus": [
+							0,
+							0
+						],
+						"Qualifiers": [
+							"",
+							""
+						],
+						"DeletionMarkers": [
+							false,
+							false
+						],
+						"KeyName": "hasChild",
+						"ValueType": "Animal",
+						"UriValueType": "http://AnimalSubProps#Animal",
+						"ConnectBy": "hasChild",
+						"Connected": true,
+						"UriConnectBy": "http://AnimalSubProps#hasChild"
+					}
+				],
+				"NodeName": "Animal",
+				"fullURIName": "http://AnimalSubProps#Animal",
+				"SparqlID": "?Animal",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Animal",
+				"type": "http://AnimalSubProps#Animal",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Animal_0",
+				"type": "http://AnimalSubProps#Animal",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Animal_1",
+				"type": "http://AnimalSubProps#Animal",
+				"mapping": [],
+				"props": []
+			}
+		]
+	}
+}
