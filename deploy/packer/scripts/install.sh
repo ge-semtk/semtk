@@ -57,17 +57,13 @@ source .env
 
 # Set up each SemTK system service
 
-for dir in *Service; do
+for service in ${ENABLED_SERVICES}; do
   (
-    if [[ "$ENABLED_SERVICES" == *"$dir"* ]]; then
-       cd "$dir"
-       SERVICE=$(basename "${PWD}")
-       export SERVICE
-       unzip -q target/*.jar
-       rm -rf pom.xml target
-       envsubst <../service.unit >/etc/systemd/system/"${SERVICE}".service
-       systemctl enable "${SERVICE}"
-    fi
+     cd "$service"
+     unzip -q target/*.jar
+     rm -rf pom.xml target
+     envsubst <../service.unit >/etc/systemd/system/"${service}".service
+     systemctl enable "${service}"
   )
 done
 
