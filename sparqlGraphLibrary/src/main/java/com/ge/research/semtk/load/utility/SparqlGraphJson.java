@@ -34,6 +34,10 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 /*
  * JSON handler for sparqlGraph.json files
@@ -116,6 +120,12 @@ public class SparqlGraphJson {
 	}
 	public JSONObject toJson() {
 		return this.jObj;
+	}
+	
+	public String prettyPrint() {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		JsonElement je = JsonParser.parseString(this.jObj.toJSONString());
+		return gson.toJson(je);
 	}
 	
 	/**
