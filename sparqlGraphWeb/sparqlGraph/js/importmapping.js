@@ -147,6 +147,8 @@ define([	// properly require.config'ed
                 fromJsonUriLookup : function (jObj, ng) {
                     if (jObj.hasOwnProperty(ImportMapping.JKEY_IS_URI_LOOKUP)) {
                         var sparqlIDs = jObj[ImportMapping.JKEY_IS_URI_LOOKUP];
+                        if (sparqlIDs == null)
+                            throw "Error in nodegroup JSON: " + ImportMapping.JKEY_IS_URI_LOOKUP + "==null" + "\n" + JSON.stringify(jObj);
                         for (var i=0; i < sparqlIDs.length; i++) {
                             var snode = ng.getNodeBySparqlID(sparqlIDs[i]);
                             if (snode == null) {

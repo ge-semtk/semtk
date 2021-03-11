@@ -24,6 +24,7 @@ import java.util.Date;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -32,22 +33,16 @@ public class DeleteThread extends Thread {
 	private int runFrequencyInMilliseconds;
 	private int frequencyInMinutes;
 	private File locationToDeleteFrom;	
-	private JobTracker jTracker;
 	private TableResultsStorage trstore;
+	private ServicesGraphProperties edcProp;
 	
 	public DeleteThread(String fileStorageLocation, int frequencyInMinutes, ServicesGraphProperties edcProp){
 		this.locationToDeleteFrom = new File(fileStorageLocation);
 		this.runFrequencyInMilliseconds = frequencyInMinutes * 60 * 1000;
 		this.frequencyInMinutes = frequencyInMinutes;
 		this.trstore = new TableResultsStorage(fileStorageLocation);
-		try {
-			this.jTracker = new JobTracker(edcProp.buildSei());
-
-		} catch (Exception e) {
-			// something failed when getting the jobtracker. report it but continue anyway
-			LocalLogger.logToStdErr("unable to get a job tracker instance. reason given: " + e.getMessage());
-			LocalLogger.printStackTrace(e);
-		}
+		this.edcProp = edcProp;
+		
 	}
 			
     public void run() {
@@ -56,6 +51,8 @@ public class DeleteThread extends Thread {
     	
     	while(true){
     		try{
+    			JobTracker jTracker = new JobTracker(this.edcProp.buildSei());
+
     			Calendar cal = Calendar.getInstance();
     			cal.add(Calendar.MILLISECOND, -1 * this.runFrequencyInMilliseconds);
     			Date cutoff = cal.getTime();
@@ -68,7 +65,7 @@ public class DeleteThread extends Thread {
     			// clean up the official way
     			try {
 	    			AuthorizationManager.setSemtkSuper();
-	    			this.jTracker.deleteJobsAndFiles(cutoff, this.trstore);
+	    			jTracker.deleteJobsAndFiles(cutoff, this.trstore);
     			} finally {
     				AuthorizationManager.clearSemtkSuper();
     			}
@@ -86,13 +83,12 @@ public class DeleteThread extends Thread {
 	                	 }
 	                 }
                 }
-    			
-    			
-    			
     		}
     		catch(Exception iei){
     			LocalLogger.printStackTrace(iei);
     		}
+    		
+    		// Sleep before repeating
     		try {
     			LocalLogger.logToStdErr("Clean up about to sleep for " + (double)runFrequencyInMilliseconds/(60 * 1000) + " minutes. ");
 				Thread.sleep(runFrequencyInMilliseconds);

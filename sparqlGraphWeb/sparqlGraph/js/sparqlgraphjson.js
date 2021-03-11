@@ -105,7 +105,7 @@ define([	// properly require.config'ed
             /*
              * return the nodegroup    never null
              */
-			getNodeGroup : function(ng, optInflateOInfo) {
+			getNodeGroup : function(ng) {
 				// different from Java due to canvas stuff: takes ng param.
 
 				ng.clear();
@@ -113,7 +113,7 @@ define([	// properly require.config'ed
 				if (json == null) {
 					return null;
 				} else {
-					ng.addJson(json, optInflateOInfo);
+					ng.addJson(json);
 					ng.setSparqlConnection(this.getSparqlConn());
 				}
 			},
@@ -133,7 +133,7 @@ define([	// properly require.config'ed
 			getMappingTabJson : function() {
 				return this.getImportSpecJson();
 			},
-            
+
             getImportSpecJson : function() {
 				if (this.jObj.hasOwnProperty("importSpec")) {
 					return this.jObj.importSpec;

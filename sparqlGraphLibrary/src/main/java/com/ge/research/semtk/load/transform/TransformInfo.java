@@ -21,6 +21,7 @@ package com.ge.research.semtk.load.transform;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.ge.research.semtk.load.transform.Transform;
 
@@ -37,6 +38,10 @@ public class TransformInfo {
 		
 		// add to the static mapping. 
 		transformList = tMap; // set it.
+	}
+	
+	public static Set<String> getTypes() {
+		return transformList.keySet();
 	}
 	
 	public static int getArgCount(String transformName) throws Exception{

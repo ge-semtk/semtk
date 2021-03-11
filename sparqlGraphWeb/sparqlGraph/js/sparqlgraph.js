@@ -24,6 +24,7 @@
     var gQueryClient = null;
     var gTimeseriesResults = null;
     var gQueryResults = null;
+    var gNodegroupInvalidItems = [];   // nodegroup does not match the model
 
     // drag stuff
     var gDragLabel = null;
@@ -134,7 +135,7 @@
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
 
                                         var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);   // PEC TODO +
+                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);
                                     }
                                   );
 
@@ -392,6 +393,16 @@
     };
 
     var launchPropertyItemDialog1 = function (propItem, snodeID) {
+        // TODO temporary test
+        // This is not working, and leaves two properties with the same name.
+        // Should somehow delete existing property and combine fields.
+        if (false && gNodegroupInvalidItems.length > 0) {
+            propItem.setKeyName("identifier");
+            propItem.relation("http://arcos.rack/PROV-S#identifier");
+            reValidateNodegroup();
+            return;
+        }
+
     	require([ 'sparqlgraph/js/modalitemdialog',
 	            ], function (ModalItemDialog) {
 
@@ -445,6 +456,18 @@
 
     var launchLinkEditor1 = function(snode, nItem, targetSNode) {
 
+        // TODO temporary test
+        // this changes all the links, and prabably leaves two node items with the same name
+        // should somehow combine existing
+        // do we want to allow creation of new invalid node?
+        // should inflateAndValidate silently tolerate-and-remove invalid unused things
+        if (false && gNodegroupInvalidItems.length > 0) {
+            nItem.setKeyName("employedBy");
+            nItem.setConnectBy("employedBy");
+            nItem.setUriConnectBy("http://arcos.rack/AGENTS#employedBy");
+            reValidateNodegroup();
+            return;
+        }
 		require([ 'sparqlgraph/js/modallinkdialog',
 		            ], function (ModalLinkDialog) {
 
@@ -800,7 +823,7 @@
                 // generate sparql and send to sparqlCallback
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
-                // PEC TODO:  Jira PESQS-281   no way to get query with runtime constraints
+                // NOTE: Jira PESQS-281   no way to get query with runtime constraints
                 ngClient.execAsyncGenerateFilter(runNodegroup, conn, runId, sparqlCallback, failureCallback);
 
             } else {
@@ -825,8 +848,7 @@
     	var r = new FileReader();
 
     	r.onload = function (name) {
-
-                checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, r.result, name));    // PEC TODO +
+                checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, r.result, name));
 
     	}.bind(this, file.name);
 	    r.readAsText(file);
@@ -997,14 +1019,16 @@
      * loads a nodegroup and importspec onto the graph
      * part of doQueryLoadJsonStr callback chain
      *
+     * All nodegroup loading passes through here
+     *
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
     var doQueryLoadFile2 = function(sgJson, optNgName) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
-    	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper'],
-                function(ModalIidx, IIDXHelper) {
+    	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
+                function(ModalIidx, IIDXHelper, MsiClientNodeGroupService, SparqlGraphJson) {
 
             clearGraph();
             logEvent("SG Loaded Nodegroup");
@@ -1013,27 +1037,81 @@
             gNodeGroupChangedFlag = false;
 
             try {
-                sgJson.getNodeGroup(gNodeGroup, gOInfo);
+                // get nodegroup explicitly w/o the oInfo
+                sgJson.getNodeGroup(gNodeGroup);
                 gNodeGroup.setSparqlConnection(gConn);
-            } catch (e) {
-                console.log(e.stack);
-                ModalIidx.choose("Error loading nodegroup",
-                                 (e.hasOwnProperty("message") ? e.message : e) + "<br><hr>Would you like to save a copy of the nodegroup?",
-                                 ["Yes", "No"],
-                                 [IIDXHelper.downloadFile.bind(this, sgJson.stringify(), "nodegroup_err.json", "text/csv;charset=utf8"), function(){}]
-                                 );
 
+
+            } catch (e) {
+                // real non-model error loading the nodegroup
+                console.log(e.stack);
+                clearGraph();
+                ModalIidx.choose("Error reading nodegroup JSON",
+                 (e.hasOwnProperty("message") ? e.message : e) + "<br><hr>Would you like to save a copy of the nodegroup?",
+                 ["Yes", "No"],
+                 [IIDXHelper.downloadFile.bind(this, sgJson.stringify(), "nodegroup_err.json", "text/csv;charset=utf8"), function(){}]
+                 );
                 return;
             }
 
+            // get ready to draw, and set mapping tab
             guiGraphNonEmpty();
-            nodeGroupChanged(false);
-
-            buildQuery();
-
             gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
 
+            // inflate and validate the nodegroup
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
+            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), validateCallback, validateFailure)
         });
+    };
+    var validateFailure = function(msgHtml) {
+        require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+            nodeGroupChanged(false);
+            ModalIidx.alert("Nodegroup validation call failed", msgHtml, false);
+        });
+    };
+
+    // callback: successfully determined whether there are modelErrors
+    var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings) {
+
+        if (modelErrors.length > 0) {
+            require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+                var msgHtml = "<list>Nodegroup validation errors:<li>" + modelErrors.join("</li><li>") + "</li></list>";
+                ModalIidx.alert("Nodegroup / model mismatch", msgHtml, false);
+            });
+            gNodegroupInvalidItems = invalidItemStrings;
+        } else {
+            gNodegroupInvalidItems = [];
+        }
+        gNodeGroup = gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup.addJson(nodegroupJson);
+        nodeGroupChanged(false);
+        buildQuery();
+    };
+
+    var reValidateNodegroup = function() {
+        require(['sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
+                function(MsiClientNodeGroupService, SparqlGraphJson) {
+            // inflate and validate the nodegroup
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
+            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), reValidateCallback, validateFailure);
+        });
+    };
+
+    // callback: successfully determined whether there are modelErrors
+    var reValidateCallback = function(nodegroupJson, modelErrors, invalidItemStrings) {
+
+
+        if (modelErrors.length == 0) {
+            require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+                ModalIidx.alert("Validation success", "Nodegroup is now valid against ontology", false);
+            });
+
+        }
+        gNodegroupInvalidItems = invalidItemStrings;
+        gNodeGroup = gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup.addJson(nodegroupJson);
+        nodeGroupChanged(true);
+        buildQuery();
     };
 
     var doNodeGroupUpload = function () {
@@ -1393,7 +1471,7 @@
         // callback to the dialog is doQueryLoadJsonStr
         checkAnythingUnsavedThen(
             gStoreDialog.launchRetrieveDialog.bind(gStoreDialog, doQueryLoadJsonStr)
-        );                                                                                        // PEC TODO +
+        );
     };
 
    	var doDeleteFromNGStore = function() {
@@ -1486,7 +1564,7 @@
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
-        gRenderer.draw(gNodeGroup);
+        gRenderer.draw(gNodeGroup, gNodegroupInvalidItems);
         if (flag) {
             buildQuery();
         } else {
@@ -1593,33 +1671,6 @@
 				+ '%;"></div></div>';
 	};
 
-    // PEC TODO
-    // build query using javascript
-    var buildQueryLocal = function() {
-            console.log("sparqlgraph.js: Called DEPRECATED buildQueryLocal");
-            logEvent("SG Build Local");
-            var sparql = "";
-            switch (getQueryType()) {
-            case "SELECT":
-                sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_DISTINCT, false, -1);
-                break;
-            case "COUNT":
-                sparql = gNodeGroup.generateSparql(SemanticNodeGroup.QUERY_COUNT, false, -1);
-                break;
-            case "CONSTRUCT":
-                sparql = gNodeGroup.generateSparqlConstruct();
-                break;
-            case "DELETE":
-                sparql = gNodeGroup.generateSparqlDelete("", null);
-                break;
-            default:
-                throw new Error("Unknown query type.");
-            }
-
-            document.getElementById('queryText').value = sparql;
-            guiQueryNonEmpty();
-    };
-
     var buildQuery = function() {
 
         if (gNodeGroup.getNodeCount() == 0) {
@@ -1679,26 +1730,6 @@
 
         document.getElementById('queryText').value = sparql;
         guiQueryEmpty();
-    }
-
-    // PEC TODO unused
-    var constructQryCallback = function(qsresult) {
-    	// HTML: tell user query is done
-		setStatus("");
-
-		if (qsresult.isSuccess()) {
-			// try drawing the result to the graph
-			this.gNodeGroup.clear();
-            this.gNodeGroup.setSparqlConn(gConn);
-
-			this.gNodeGroup.fromConstructJson(qsresult.getAtGraph(), gOInfo);
-			nodeGroupChanged(true);
-		}
-		else {
-			logAndAlert(qsresult.getStatusMessage());
-		}
-
-
     };
 
 
@@ -1932,6 +1963,7 @@
 
 	var clearGraph = function () {
     	gNodeGroup.clear();
+        gNodegroupInvalidItems = [];
         gNodeGroup.setSparqlConnection(gConn);
         gMappingTab.clear();
         gNodeGroupName = null;
@@ -2029,7 +2061,6 @@
 
         gExploreTab.stopLayout();
 
-		// PEC TODO: this overwrites everything each time
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
         resizeWindow();
