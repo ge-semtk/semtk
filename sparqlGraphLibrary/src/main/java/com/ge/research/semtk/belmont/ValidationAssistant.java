@@ -17,22 +17,49 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 
-import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 
 public class ValidationAssistant {
 	
 	static ArrayList<String> suggestNodeClass(OntologyInfo oInfo, NodeGroup ng, NodeGroupItemStr itemStr) {
-		ArrayList<String> ret = new ArrayList<String>();
+		
 		assert(itemStr.getType() == Node.class);
 		Node snode = itemStr.getSnode();
 		
-		ArrayList<String> allClasses = oInfo.getClassNames();
-		allClasses.sort(null);
+		// get return array and score everything 0
+		ArrayList<String> ret = oInfo.getClassNames();
+		HashMap<String, Integer> score = new HashMap<String,Integer>();
+		for (String name : oInfo.getClassNames()) {
+			score.put(name, 0);
+		}
 		
-		ArrayList<NodeItem> ng.getConnectingNodeItems(snode);
+		// look through incoming edges.  Score above 1000, grouped by class hier
+		int localScore = 1000;
+		ArrayList<NodeItem> incoming = ng.getConnectingNodeItems(snode);
+		for (NodeItem nItem : incoming) {
+			String range = nItem.getUriValueType();
+			// add incoming node range
+			score.put(range, ++localScore);
+			// also add range's superclasses
+			
+			for (String rangeSuper : oInfo.getSuperclassNames(range)) {
+				score.put(rangeSuper, ++localScore);
+			}
+		}
 		
+		// look for other classes in ontology that share props/nodes
+		// HERE
+		
+		// sort by score descending
+		ret.sort(new Comparator<String>() {
+		    @Override
+		    public int compare(String o1, String o2) {
+		        return score.get(o2).compareTo(score.get(o1));
+		    }
+		});
 		return ret;
 	}
 }
