@@ -1074,14 +1074,20 @@
     var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings) {
 
         if (modelErrors.length > 0) {
+            // some errors
             require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
                 var msgHtml = "<list>Nodegroup validation errors:<li>" + modelErrors.join("</li><li>") + "</li></list>";
                 ModalIidx.alert("Nodegroup / model mismatch", msgHtml, false);
             });
             gNodegroupInvalidItems = invalidItemStrings;
+            setStatus("Nodegroup is not valid to ontology");
         } else {
+            // no errors
             gNodegroupInvalidItems = [];
+            setStatus("");
         }
+
+        // do either way
         gNodeGroup = gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
@@ -1889,7 +1895,7 @@
     };
 
     var guiUpdateGraphRunButton = function () {
-        var d = gNodeGroup == null || gNodeGroup.getSNodeList().length < 1 || getQuerySource() == "DIRECT";
+        var d = gNodeGroup == null || gNodeGroup.getSNodeList().length < 1 || getQuerySource() == "DIRECT" || gNodegroupInvalidItems.length > 0;
         document.getElementById("btnGraphExecute").disabled = d;
     };
 
