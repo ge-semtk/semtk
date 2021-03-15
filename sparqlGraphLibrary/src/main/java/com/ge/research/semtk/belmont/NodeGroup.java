@@ -3711,7 +3711,7 @@ public class NodeGroup {
 	 * @param sNode
 	 * @return
 	 */
-	private ArrayList<NodeItem> getConnectingNodeItems(Node sNode) {
+	public ArrayList<NodeItem> getConnectingNodeItems(Node sNode) {
 		// get any nodeItem in the nodeGroup that points to sNode
 		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
 		for (Node n : this.nodes) {
@@ -3721,31 +3721,6 @@ public class NodeGroup {
 		}
 		return ret;
 	}
-	
-//	private ArrayList<NodeItem> getAllConnectedNodeItems (Node sNode) {
-//		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
-//		
-//		// SNode knows who it points too
-//      // PEC LOOKS BUGGY: no check that nodeItems are connected
-//		ret.addAll(sNode.getNodeItemList());
-//		
-//		// nodegroup knows which nodes point to startSNode
-//		ret.addAll(this.getConnectingNodeItems(sNode));
-//
-//		return ret;
-//	}
-//	
-//	public ArrayList<NodeItem> getAllConnectedConnectedNodeItems (Node sNode) {
-//		// get the connectedNodeItems that are actually in use
-//		ArrayList<NodeItem> ret = new ArrayList<NodeItem>();
-//		ArrayList<NodeItem> temp = this.getAllConnectedNodeItems(sNode);
-//		for (NodeItem nItem : temp) {
-//			if (nItem.getConnected()) {
-//				ret.add(nItem);
-//			}
-//		}
-//		return ret;
-//	}
 	
 	private ArrayList<Node> getSubNodes(Node topNode) {
 		ArrayList<Node> subNodes = new ArrayList<Node>();
