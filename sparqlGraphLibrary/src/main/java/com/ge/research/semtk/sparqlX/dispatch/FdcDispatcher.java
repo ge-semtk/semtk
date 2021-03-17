@@ -161,9 +161,9 @@ public class FdcDispatcher extends EdcDispatcher {
 				
 				// log inputs
 				LocalLogger.logToStdErr("FDC call: " + this.fdcServiceManager.getCurrentServiceUrl());
-				for (Table t : paramSetTables.values()) {
-					LocalLogger.logToStdErr("Input table: \n" + (t == null ? "null" : t.toCSVString()));
-				}
+				//for (Table t : paramSetTables.values()) {
+				//	LocalLogger.logToStdErr("Input table: \n" + (t == null ? "null" : t.toCSVString()));
+				//}
 				
 				// if nodegroup had subgraphs available to generate all parameter tables
 				// run the FDC service
@@ -178,8 +178,7 @@ public class FdcDispatcher extends EdcDispatcher {
 					String fdcCsv = fdcResults.toCSVString();
 					
 					// log outputs
-					LocalLogger.logToStdErr("FDC results " + String.valueOf(fdcResults.getNumRows()) + " rows: ");
-					LocalLogger.logToStdErr(fdcCsv);
+					LocalLogger.logToStdOut("FDC results returned " + String.valueOf(fdcResults.getNumRows()) + " rows");
 					
 					// ingest
 					percentComplete += statusIncrement; // 2 of FDC - finished running FDC client

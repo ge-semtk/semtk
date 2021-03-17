@@ -20,11 +20,9 @@ import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
-import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.dispatch.QueryGroup.DispatchQueryGroup;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -76,16 +74,14 @@ public class DispatcherWorkThread extends Thread {
 				while (percent < 100) {
 					percent = this.tracker.waitForPercentOrMsec(jobId, 100, 27000);
 					totalSeconds += 27;
-					LocalLogger.logToStdOut("waitForPercentOrMsec " + jobId + " = " + percent);
 				}
 				
 				// TODO:  This doesn't check for success
 				
 				// TODO: this allows a string overflow to happen and generate an error
 				//t = this.resultsClient.getTableResultsJson(jobId, Integer.MAX_VALUE);
-				LocalLogger.logToStdOut("Getting blob results from: " + jobId);
 				t = Table.fromJson(this.resultsClient.execGetBlobResult(jobId));
-				LocalLogger.logToStdOut("rows: " + t.getNumRows());
+				LocalLogger.logToStdOut("Job " + jobId + ": DispatcherWorkThread returning " + t.getNumRows() + " rows");
 			}
 			// end of consider replacing
 			

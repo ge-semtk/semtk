@@ -19,7 +19,6 @@ package com.ge.research.semtk.sparqlX.dispatch.QueryGroup;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -248,10 +247,6 @@ public class QueryGroupCollection {
 		for(DispatchQueryGroup d : this.dispatchQueryGroupHash.values()){
 			fullSet += d.getTotalResultOffset();
 		}
-		
-		LocalLogger.logToStdOut("full result set size is expected to be: " + fullSet);
-	
-		LocalLogger.logToStdErr("about to start running fusion threads @ " + dateFormat.format(Calendar.getInstance().getTime()));
 
 		// create results as array instead of ArrayList so threads don't compete
 		// WARNING:  MEMORY CRUNCH OCCURS HERE
@@ -283,21 +278,15 @@ public class QueryGroupCollection {
 				LocalLogger.printStackTrace(e);
 			}
 		}
-		LocalLogger.logToStdErr("done running fusion threads. about to add all rows to result set. @ " + dateFormat.format(Calendar.getInstance().getTime()));
 		
 		// add everything from tempStorage to tableRows...
 		for(Object n : tempStorage){
 			ArrayList<String> currRow = (ArrayList<String>)n;
 			tableRows.add(currRow);
 		}
-		
-		LocalLogger.logToStdErr("done adding results to set.@ " + dateFormat.format(Calendar.getInstance().getTime()));
-		
+				
 		// create a new table containing tableRows 
-		retval = new Table(columnNamesInOrder, columnTypesInNameOrder, tableRows);
-		
-		LocalLogger.logToStdErr("Result table build finished @ " + dateFormat.format(Calendar.getInstance().getTime()));
-		
+		retval = new Table(columnNamesInOrder, columnTypesInNameOrder, tableRows);		
 		return retval;
 	}
 	

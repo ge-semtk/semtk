@@ -41,6 +41,7 @@ import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.edc.services.hive.HiveProperties;
 
 /**
@@ -50,7 +51,8 @@ import com.ge.research.semtk.edc.services.hive.HiveProperties;
 @RestController
 @RequestMapping("/hiveService")
 public class HiveServiceRestController {
-
+ 	private static final String SERVICE_NAME = "HiveService";
+ 	
 	private static String setStmt = "set hive.exec.stagingdir=/tmp/hive-staging;";
 
 	private boolean ASYNC = true;	// true for asynchronous mode (returns job id), false for synchronous mode (returns query results)
@@ -80,9 +82,12 @@ public class HiveServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/queryHive", method= RequestMethod.POST)
 	public JSONObject queryHive(@RequestBody DatabaseQueryRequest requestBody, @RequestHeader HttpHeaders headers){
+		long startTimeMillis = System.currentTimeMillis();
 		HeadersManager.setHeaders(headers); // add security to async job
 		String query = requestBody.query;
-		return runQuery (requestBody, query);
+		JSONObject ret = runQuery(requestBody, query);
+		LocalLogger.logToStdOut(SERVICE_NAME + " queryHive completed in " + Utility.getSecondsSince(startTimeMillis) + " sec for query " + query);
+		return ret;
 	}
 	
 	/**
@@ -92,8 +97,11 @@ public class HiveServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/queryHiveSync", method= RequestMethod.POST)
 	public JSONObject queryHiveSync(@RequestBody DatabaseQueryRequest requestBody){
+		long startTimeMillis = System.currentTimeMillis();
 		String query = requestBody.query;
-		return runQuery (requestBody, query, false);
+		JSONObject ret =  runQuery(requestBody, query, false);
+		LocalLogger.logToStdOut(SERVICE_NAME + " queryHiveSync completed in " + Utility.getSecondsSince(startTimeMillis) + " sec for query " + query);
+		return ret;
 	}
 
 	/**
@@ -319,13 +327,11 @@ public class HiveServiceRestController {
 				HiveQueryThread queryThread = new HiveQueryThread(oc, query, statusProps, resultsProps);
 				queryThread.start();
 				resultSet.addResults(queryThread.getJobId());
-				
 			} else {
 				LocalLogger.logToStdOut("Hive query: " + query);
 				Table table = oc.query(query);
 				LocalLogger.logToStdOut("Returning num rows: " + (table != null ? String.valueOf(table.getNumRows()) : "<null>"));
 				resultSet.addResults(table);
-				
 			}
 			resultSet.setSuccess(true);
 
@@ -334,7 +340,6 @@ public class HiveServiceRestController {
 			resultSet.setSuccess(false);
 			resultSet.addRationaleMessage("Failed executing query " + query + ": " + e.getMessage());
 		}
-
 		
 		return resultSet.toJson();
 	}
