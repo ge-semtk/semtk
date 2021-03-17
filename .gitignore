@@ -3,6 +3,7 @@ conf/maven/settings.xml
 .project
 .classpath
 .settings
+.factorypath
 .gitignore
 *.iml
 target
