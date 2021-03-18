@@ -18,18 +18,15 @@
 
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/iidxhelper',
-            'sparqlgraph/js/msiresultset'
+            'sparqlgraph/js/msiresultset',
 
-            //'visjs/vis.min'   <- should we duplicate this (download stable version of plotly)
+            'plotly/plotly-latest.min'
             //                       OR should we presume the internet is available?  and pull from there?
 			// shimmed
 
 		],
-    // sample of how 'vis' was used
-    // function(IIDXHelper, MsiResultSet, vis) {
-    // TODO: Plotly is MIT licensed.  There's a list somewhere in code and wiki?
 
-    function(IIDXHelper, MsiResultSet) {
+    function(IIDXHelper, MsiResultSet, Plotly) {
 
         var PlotlyPlotter = function (plotSpec) {
             this.spec = plotSpec;
@@ -44,7 +41,10 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             addPlotToDiv : function(div, tableRes) {
-                div.innerHTML = "Change this into a plot<br>" + tableRes.tableGetHtml();
+                Plotly.newPlot( div, [{
+                	x: [1, 2, 3, 4, 5],
+                	y: [1, 2, 4, 8, 16] }], {
+                	margin: { t: 0 } } );
             }
         };
 
