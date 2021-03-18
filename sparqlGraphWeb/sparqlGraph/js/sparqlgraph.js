@@ -1344,7 +1344,7 @@
      * @private
      */
     var queryTableResCallback = function (csvFilename, fullURL, tableResults) {
-        require(['sparqlgraph/js/msiclientresults'], function(MsiClientResults) {
+        require(['sparqlgraph/js/msiclientresults', 'sparqlgraph/js/plotlyplotter'], function(MsiClientResults, PlotlyPlotter) {
             var headerHtml = "";
             if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
                 headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
@@ -1356,7 +1356,13 @@
             var resultsClient = new MsiClientResults(g.service.results.url, "no_job");
             tableResults.tableApplyTransformFunctions(resultsClient.getResultTransformFunctions());
             var noSort = [];
-            tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml, undefined, undefined, undefined, noSort);
+
+            var targetDiv = document.getElementById("resultsParagraph");
+
+            var plotter = new PlotlyPlotter({"spec" : "whatever"});
+            plotter.addPlotToDiv(targetDiv, tableResults);
+
+            // tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);
 
             guiUnDisableAll();
             guiResultsNonEmpty();
