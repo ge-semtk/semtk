@@ -1359,7 +1359,8 @@
 
             var targetDiv = document.getElementById("resultsParagraph");
 
-            var plotter = new PlotlyPlotter({"spec" : "whatever"});
+            var layout = { margin: { t: 0 } }  // TODO get this from nodegroup
+            var plotter = new PlotlyPlotter({"layout" : layout});
             plotter.addPlotToDiv(targetDiv, tableResults);
 
             // tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);

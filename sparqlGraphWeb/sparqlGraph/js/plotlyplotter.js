@@ -29,7 +29,7 @@ define([	// properly require.config'ed   bootstrap-modal
     function(IIDXHelper, MsiResultSet, Plotly) {
 
         var PlotlyPlotter = function (plotSpec) {
-            this.spec = plotSpec;
+            this.spec = plotSpec;   // TODO formalize this - must have "layout" and what else?
         };
 
 
@@ -51,7 +51,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var trace2 = { x: [1, 2], y: row2, type: 'scatter', mode: 'lines+markers' };
                 var data = [trace0, trace1, trace2];
 
-                var layout = { margin: { t: 0 } };
+                var layout = this.spec.layout;
 
                 Plotly.newPlot( div, data, layout, {editable: true} );
             }
