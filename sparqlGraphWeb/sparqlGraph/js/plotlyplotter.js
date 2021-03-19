@@ -45,14 +45,23 @@ define([	// properly require.config'ed   bootstrap-modal
                 row0 = tableRes.tableGetRows()[0];
                 row1 = tableRes.tableGetRows()[1];
                 row2 = tableRes.tableGetRows()[2];
- 
-                var trace0 = { x: [1, 2], y: row0, type: 'bar' };
-                var trace1 = { x: [1, 2], y: row1, type: 'scatter', mode: 'lines+markers' };
-                var trace2 = { x: [1, 2], y: row2, type: 'scatter', mode: 'lines+markers' };
+
+                // create a trace for each row of data
+                // TODO not all plot types take x and y
+                var trace0 = { x: [1, 2], y: row0 };
+                var trace1 = { x: [1, 2], y: row1 };
+                var trace2 = { x: [1, 2], y: row2 };
+
+                // for each trace, add the trace add-on (e.g. { type: 'scatter', mode: 'lines+markers' })
+                // TODO allow different trace add-ons for different traces?
+                var traceAddOn = this.spec.traceAddOn;
+                $.extend( true, trace0, traceAddOn );
+                $.extend( true, trace1, traceAddOn );
+                $.extend( true, trace2, traceAddOn );
+
                 var data = [trace0, trace1, trace2];
 
                 var layout = this.spec.layout;
-
                 Plotly.newPlot( div, data, layout, {editable: true} );
             }
         };
