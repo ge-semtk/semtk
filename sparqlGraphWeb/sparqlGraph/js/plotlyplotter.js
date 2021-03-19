@@ -29,7 +29,7 @@ define([	// properly require.config'ed   bootstrap-modal
     function(IIDXHelper, MsiResultSet, Plotly) {
 
         var PlotlyPlotter = function (plotSpec) {
-            this.spec = plotSpec;   // TODO formalize this - must have "layout" and what else?
+            this.spec = plotSpec;
         };
 
 
@@ -42,32 +42,23 @@ define([	// properly require.config'ed   bootstrap-modal
 
             addPlotToDiv : function(div, tableRes) {
 
-                row0 = tableRes.tableGetRows()[0];
-                row1 = tableRes.tableGetRows()[1];
-                row2 = tableRes.tableGetRows()[2];
-                // col0 = tableRes.tableGetCols()[0];
-                // col1 = tableRes.tableGetCols()[1];
+                // TODO "graphRows" is just a placeholder - decide what to support in dataSpec
+                var graphRows = this.spec.dataSpec.graphRows;  
 
-                // create a trace for each row of data
-                // TODO not all plot types take x and y
-                var trace0 = { x: [1, 2], y: row0 };
-                var trace1 = { x: [1, 2], y: row1 };
-                var trace2 = { x: [1, 2], y: row2 };
-
-                // for each trace, add the trace base (e.g. { type: 'scatter', mode: 'lines+markers' })
-                // TODO allow different "trace bases" for different traces?
-                var traceBase = this.spec.traceBase;
-                $.extend( true, trace0, traceBase );
-                $.extend( true, trace1, traceBase );
-                $.extend( true, trace2, traceBase );
-
-                var data = [trace0, trace1, trace2];
+                // create traces
+                var data = [];
+                for (var i = 0; i < graphRows.length; i++){
+                    row = tableRes.tableGetRows()[graphRows[i]];    // get the row of data      TODO graph by columns, not rows
+                    trace = { x: [1, 2], y: row };                  // add data to trace        TODO not all plot types take x and y
+                    var traceBase = this.spec.traceBase;
+                    $.extend( true, trace, traceBase );             // add base to trace
+                    data.push(trace);                               // add the trace to the data object
+                }
 
                 var layout = this.spec.layout;
                 Plotly.newPlot( div, data, layout, {editable: true} );
             }
         };
-
 
         return PlotlyPlotter;            // return the constructor
 	}
