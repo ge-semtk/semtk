@@ -382,9 +382,7 @@ OntologyTree.prototype = {
         var topLevelProps = propList.slice();
         var otherLevelProps = [];
         for (var p of propList) {
-            if (p.getNameStr() == "http://arcos.rack/PROV-S#wasAssociatedWith") {
-                console.log("test here");
-            }
+            
             var subProps = this.oInfo.getSubProperties(p);
             for (var s of subProps) {
                 var i = topLevelProps.indexOf(s);
