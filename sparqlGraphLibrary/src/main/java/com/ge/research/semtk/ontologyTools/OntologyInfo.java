@@ -241,12 +241,12 @@ public class OntologyInfo {
 	}
 	
 	/**
-	 * Get sub properties given valid for all super and sub properties of the domain class URI
+	 * Get sub properties given valid for all super and sub properties of the domain class URI.
 	 * @param superPropertyName
 	 * @param domainClassURI
 	 * @return
 	 */
-	public HashSet<String> getSubPropNames(String superPropertyName, String domainClassURI) {
+	public HashSet<String> inferSubPropertyNames(String superPropertyName, String domainClassURI) {
 		HashSet<String> ret = new HashSet<String>();
 		
 		// get list of domainURI class and all it's super classes
@@ -914,6 +914,12 @@ public class OntologyInfo {
 			}
 			
 			// If range is "Class", inherit from super property
+			// TODO: this is a "bug" or unclear area for SemTK.
+			// we are inferring the Range if it isn't specified
+			// because otherwise we'll have #Class as a new classURI in oInfo
+			// and path-finding issues, etc.
+			// We'll come back to this later.
+			// Jira:  PESQS-724
 			if (oSubProp.getRange().isDefaultClass()) {
 				OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 				oSubProp.setRange(oSuperProp.getRange().deepCopy());

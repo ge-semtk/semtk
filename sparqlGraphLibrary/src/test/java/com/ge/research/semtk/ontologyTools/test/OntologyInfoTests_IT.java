@@ -442,9 +442,12 @@ public class OntologyInfoTests_IT {
 		OntologyInfo oInfo = new OntologyInfo();
 		oInfo.load(TestGraph.getSei(), false);
 		
+		// Jira:  PESQS-724
+		// Range should not be inferred, but it is.
+		// So *PropOnly and *DomainOnly should eventually be "Class" or something generic.
 		String propArr[] = new String[]   { "superProp", "subPropDomainRange", "subPropDomainOnly", "subPropRangeOnly", "subPropOnly", "superDataProp", "subDataPropDomainRange", "subDataPropDomainOnly", "subDataPropRangeOnly", "subDataPropOnly"};
-		String domainArr[] = new String[] { "ENTITY",    "SUBENTITY",          "SUBENTITY",         "ENTITY",           "ENTITY",      "ENTITY",        "SUBENTITY",              "SUBENTITY",             "ENTITY",               "ENTITY"};
-		String rangeArr[] = new String[]  { "ENTITY",    "SUBENTITY",          "ENTITY",            "SUBENTITY",        "ENTITY",      "double",        "int",                    "double",                "int",                  "double"};
+		String domainArr[] = new String[] { "ENTITY",    "SUBENTITY",          "SUBENTITY",         null,                null,         "ENTITY",        "SUBENTITY",              "SUBENTITY",             null,                   null};
+		String rangeArr[] = new String[]  { "ENTITY",    "SUBENTITY",          "ENTITY",            "SUBENTITY",        "ENTITY",      "double",        "int",                    "double",                 "int",               "double"};
 		
 		for (int i=0; i < propArr.length; i++) {
 			String propName = "http://paul/subprop#" + propArr[i];
@@ -454,10 +457,15 @@ public class OntologyInfoTests_IT {
 			String r = p.getRangeStr(true);
 			assertTrue(propArr[i] + " expected range " + rangeArr[i] + " found " + r, r.equals(rangeArr[i]));
 			
+			int expectDomainSize = (domainArr[i] == null) ? 0 : 1;
+			
 			ArrayList<OntologyClass> domainList = oInfo.getPropertyDomain(p);
-			assertEquals("Size of domain of property " + propArr[i], 1, domainList.size());
-			String d = domainList.get(0).getNameString(true);
-			assertTrue(propArr[i] + " expected domain " + domainArr[i] + " found " + d, d.equals(domainArr[i]));
+			assertEquals("Size of domain of property " + propArr[i], expectDomainSize, domainList.size());
+			
+			if (expectDomainSize > 0) {
+				String d0 = domainList.get(0).getNameString(true);
+				assertTrue(propArr[i] + " expected domain " + domainArr[i] + " found " + d0, d0.equals(domainArr[i]));
+			}
 		}
 	}
 }

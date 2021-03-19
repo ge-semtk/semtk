@@ -2224,7 +2224,7 @@ public class NodeGroup {
 		// prepare propStr for nodeItem connection clause
 		
 		// get subPropNames or null for IDK
-		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.getSubPropNames(nItem.getUriConnectBy(), snode.getUri());
+		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.inferSubPropertyNames(nItem.getUriConnectBy(), snode.getUri());
 		
 		/**
 		// Virtuoso can't handle subPropertyOf:
@@ -2404,7 +2404,7 @@ public class NodeGroup {
 		}
 		
 		// get subPropNames or null for IDK
-		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.getSubPropNames(prop.getUriRelationship(), snode.getUri());
+		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.inferSubPropertyNames(prop.getUriRelationship(), snode.getUri());
 		
 		/**
 		// Virtuoso can't handle subPropertyOf:
@@ -3955,7 +3955,7 @@ public class NodeGroup {
 			// check the properties.
 			for( PropertyItem pi : n.getPropertyItems() ){
 				if(pi.getIsMarkedForDeletion()){
-					HashSet<String> subPropNames = (this.oInfo == null) ? new HashSet<String>() : this.oInfo.getSubPropNames(pi.getUriRelationship(), n.getUri());
+					HashSet<String> subPropNames = (this.oInfo == null) ? new HashSet<String>() : this.oInfo.inferSubPropertyNames(pi.getUriRelationship(), n.getUri());
 					if (subPropNames.size() == 0) {
 						// no sub-props: use prefixed property uri
 						retval.append("   " + n.sparqlID + " " +  this.applyPrefixing( pi.getUriRelationship() ) + " " +  pi.sparqlID + " . \n");
@@ -3970,7 +3970,7 @@ public class NodeGroup {
 			for( NodeItem ni : n.getNodeItemList() ) {
 				ArrayList<Node> nic = ni.getSnodesWithDeletionFlagsEnabledOnThisNodeItem();
 				// get subPropNames or null for IDK
-				HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.getSubPropNames(ni.getUriConnectBy(), n.getUri());
+				HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.inferSubPropertyNames(ni.getUriConnectBy(), n.getUri());
 				for( Node connected : nic ){
 					if (subPropNames != null && subPropNames.size() == 0) {
 						// no subproperties: use prefixed propURI
