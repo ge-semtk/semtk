@@ -340,7 +340,7 @@ var NodeItem = function(uri, val, uriVal, jObj, nodeGroup) { // used for
 		this.OptionalMinus = [];
         this.Qualifiers = [];
 		this.KeyName = new OntologyName(uri).getLocalName(); // the name used to identify this node item
-		this.ValueType = val; // the type given for the linked (linkable?) node
+		this.valueType = val; // the type given for the linked (linkable?) node
 
 		this.UriValueType = uriVal; // full name of val
 		this.ConnectBy = ''; // the connection link, such as "hasSessionCode"
@@ -369,7 +369,7 @@ NodeItem.prototype = {
             Qualifiers : [],
 			DeletionMarkers : [],
 			KeyName : this.KeyName,
-			ValueType : this.ValueType,
+			ValueType : this.valueType,
 			UriValueType : this.UriValueType,
 			ConnectBy : this.ConnectBy,
 			Connected : this.Connected,
@@ -455,7 +455,7 @@ NodeItem.prototype = {
 		}
 
 		this.KeyName = jObj.KeyName;
-		this.ValueType = jObj.ValueType;
+		this.valueType = jObj.ValueType;
 		this.UriValueType = jObj.UriValueType;
 		this.ConnectBy = jObj.ConnectBy;
 		this.Connected = jObj.Connected;
@@ -472,7 +472,7 @@ NodeItem.prototype = {
 		this.KeyName = strName;
 	},
 	setValueType : function(strValType) {
-		this.ValueType = strValType;
+		this.valueType = strValType;
 	},
 	setUriValueType : function(strUriValType) {
 		this.UriValueType = strUriValType;
@@ -585,7 +585,7 @@ NodeItem.prototype = {
 		return this.KeyName;
 	},
 	getValueType : function() {
-		return this.ValueType;
+		return this.valueType;
 	},
 	getUriValueType : function() {
 		return this.UriValueType;
@@ -649,15 +649,15 @@ NodeItem.prototype = {
 };
 
 /* the property item */
-var PropertyItem = function(keyname, valType, relationship, UriRelationship, jObj) {
+var PropertyItem = function(keyname, valType, valueTypeURI, UriRelationship, jObj) {
 
 	if (jObj) {
 		this.fromJson(jObj);
 	} else {
 		this.KeyName = keyname; // the name used to identify the property
-		this.ValueType = valType; // the type of the value associated with
+		this.valueType = valType; // the type of the value associated with
 								// property in the ontology.
-		this.relationship = relationship;
+		this.valueTypeURI = valueTypeURI;
 		this.UriRelationship = UriRelationship;
 		this.Constraints = ''; // the constraints are represented as a str and
 								// will be used in the
@@ -684,11 +684,10 @@ PropertyItem.prototype = {
 		// return a JSON object of things needed to serialize
 		var ret = {
 			KeyName : this.KeyName,
-			ValueType : this.ValueType,
-			relationship : this.relationship,
+			ValueType : this.valueType,
+			relationship : this.valueTypeURI,    // json field is horribly misnamed
 			UriRelationship : this.UriRelationship,
 			Constraints : this.Constraints,
-			fullURIName : this.fullURIName,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
 			optMinus : this.getOptMinus(),
@@ -707,11 +706,10 @@ PropertyItem.prototype = {
 	fromJson : function(jObj) {
 		// presumes SparqlID's in jObj are already reconciled with the nodeGroup
 		this.KeyName = jObj.KeyName;
-		this.ValueType = jObj.ValueType;
-		this.relationship = jObj.relationship;
+		this.valueType = jObj.ValueType;
+		this.valueTypeURI = jObj.relationship;  // JSON field is horribly misnamed
 		this.UriRelationship = jObj.UriRelationship;
 		this.Constraints = jObj.Constraints;
-		this.fullURIName = jObj.fullURIName;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
 
@@ -790,11 +788,9 @@ PropertyItem.prototype = {
 	clearInstanceValues : function() {
 		this.instanceValues = [];
 	},
-	setfullURIName : function(nome) {
-		this.fullURIName = nome;
-	},
+
 	setValueType : function(typ) {
-		this.ValueType = typ;
+		this.valueType = typ;
 	},
 	setSparqlID : function(id) {
 		if (this.SparqlID != null && this.hasConstraints()) {
@@ -812,9 +808,15 @@ PropertyItem.prototype = {
 
 		this.Constraints = f.tagSparqlID(con, this.SparqlID);
 	},
+
+    // old/new name
 	setRelation : function(rel) {
-		this.relationship = rel;
+		this.valueTypeURI = rel;
 	},
+    setValueTypeUri : function(rel) {
+		this.valueTypeURI = rel;
+	},
+
 	setIsReturned : function(val) {
         if (val == true && this.SparqlID == "") {
             throw new Error("Internal: trying to return a property whose sparqlID is empty.");
@@ -875,14 +877,14 @@ PropertyItem.prototype = {
 		return this.KeyName;
 	},
 	getRelation : function() {
-		return this.relationship;
+		return this.valueTypeURI;
 	},
 	getUriRelation : function() {
 		return this.UriRelationship;
 	},
 	getValueType : function() {
 		// return the type, as determined by the ontology
-		return this.ValueType;
+		return this.valueType;
 	},
 	getIsReturned : function() {
 		return this.isReturned;
@@ -958,12 +960,10 @@ edgeIntermediate.prototype = {
 
 /* the semantic node */
 var SemanticNode = function(nome, plist, nlist, fullName, subClassNamesUNUSED,
-		nodeGroup, jObj, optInflateOInfo) {
-
-	var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
+		nodeGroup, jObj) {
 
 	if (jObj) {
-		this.fromJson(jObj, nodeGroup, inflateOInfo);
+		this.fromJson(jObj, nodeGroup);
 	} else {
 		this.propList = plist.slice(); // a list of properties
 		this.nodeList = nlist.slice(); // a list of the nodes that this can
@@ -1057,9 +1057,10 @@ SemanticNode.prototype = {
 		return ret;
 	},
 
-	fromJson : function(jObj, nodeGroup, optInflateOInfo) {
+	fromJson : function(jObj, nodeGroup, optOInfo_GONE) {
 
-		var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
+		if (optOInfo_GONE !== undefined)
+            throw "SemTK version error.  SemanticNode.fromJson no longer inflatesAndValidates based on oInfo.  Refresh your browser.  Check your versions."
 
 		// presumes SparqlID's are reconciled already
 		// presumes that SNodes pointed to by NodeItems already exist
@@ -1099,140 +1100,14 @@ SemanticNode.prototype = {
 			this.nodeList.push(n);
 		}
 
-		if (inflateOInfo != null) {
-			this.inflateAndValidate(inflateOInfo);
-		}
-
 	},
 
 	/*
-	 * Expand props to full set of properties for this classURI in oInfo
-	 * and validates all props
-	 * Throws errors that user interface really wants.
+     * Removed 3/10/2021 in deference to API call on the Java side (msiNodegroupService)
+     * which will collect all errors and build the nodegroup regardless.
 	 */
-	inflateAndValidate : function(oInfo) {
-		var newProps = [];
-		var newNodes = [];
+	// inflateAndValidate : function(oInfo) {
 
-
-		// build hash of suggested properties for this class
-		var propItemHash = {};
-		for (var p=0; p < this.propList.length; p++) {
-			propItemHash[this.propList[p].getUriRelation()] = this.propList[p];
-		}
-
-		// build hash of suggested nodes for this class
-		var nodeItemHash = {};
-		for (var n=0; n < this.nodeList.length; n++) {
-			nodeItemHash[this.nodeList[n].getURIConnectBy()] = this.nodeList[n];
-		}
-
-		// get oInfo's version of the property list
-		var ontClass = oInfo.getClass(this.fullURIName);
-		if (ontClass == null) {
-			throw "Class does not exist in the model: " + this.fullURIName;
-		}
-		var ontProps = oInfo.getInheritedProperties(ontClass);
-
-		// loop through oInfo's version
-		for (var i=0; i < ontProps.length; i++) {
-			var oProp = ontProps[i];
-			var oPropURI = oProp.getNameStr();
-			var oPropKeyname = oProp.getNameStr(true);
-
-			// if ontology property is one of the prop parameters, then check it over
-			if (oPropURI in propItemHash) {
-
-				// has range changed
-				var propItem = propItemHash[oPropURI];
-				if (propItem.getRelation() != oProp.getRangeStr()) {
-					throw this.getSparqlID() + " property " + oPropURI + " range of " + propItem.getRelation() + " doesn't match model range of " + oProp.getRangeStr();
-				}
-
-				// all is ok: add the propItem
-				newProps.push(propItem);
-
-				delete propItemHash[oPropURI];
-
-            // else ontology property is not in this Node.  AND its range is outside the model (it's a Property)
-		    // Inflate (create) it.
-			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
-				if (oPropURI in nodeItemHash) {
-                    throw "Node property " + oPropURI + " has range " + oProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
-                }
-				var propItem = new PropertyItem(oProp.getNameStr(true),
-												oProp.getRangeStr(true),
-												oProp.getRangeStr(false),
-												oProp.getNameStr(false)
-												);
-				newProps.push(propItem);
-
-		    // node, in hash
-			} else if (oPropURI in nodeItemHash) {
-
-				// regardless of connection, check range
-				var nodeItem = nodeItemHash[oPropURI];
-				var nRangeStr = nodeItem.getUriValueType();
-				var nRangeAbbr = nodeItem.getValueType();
-				if (nRangeStr != oProp.getRangeStr()) {
-					throw this.getSparqlID() + " Node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
-				}
-				if (nRangeAbbr != oProp.getRangeStr(true)) {
-					throw this.getSparqlID() + " Node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
-				}
-
-				// if connected
-				if (nodeItem.getConnected()) {
-
-					// check full domain
-					var nDomainStr = nodeItem.getURIConnectBy();
-					if (nDomainStr != oProp.getNameStr()) {
-						throw this.getSparqlID() + " Node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr();
-					}
-
-					// check all connected snode classes
-					var nRangeClass = oInfo.getClass(nRangeStr);
-
-					var snodeList = nodeItem.getSNodes();
-					for (var j=0; j < snodeList.length; j++) {
-						var snodeURI = snodeList[j].getURI();
-						var snodeClass = oInfo.getClass(snodeURI);
-
-						if (snodeClass == null) {
-							throw this.getSparqlID() + " Node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model";
-						}
-
-						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							throw this.getSparqlID() + " Node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model";
-
-						}
-					}
-				}
-				// all is ok: add the propItem
-				newNodes.push(nodeItem);
-
-				delete nodeItemHash[oPropURI];
-
-			// new node
-			} else {
-				var nodeItem = new NodeItem(oProp.getNameStr(false),
-											oProp.getRangeStr(true),
-											oProp.getRangeStr(false)
-											);
-				newNodes.push(nodeItem);
-			}
-		}
-
-		if (Object.keys(propItemHash).length > 0) {
-			throw this.getSparqlID() + " Property does not exist in the model: " + Object.keys(propItemHash);
-		}
-		if (Object.keys(nodeItemHash).length > 0) {
-			throw this.getSparqlID() + " Node property does not exist in the model: " + Object.keys(nodeItemHash);
-		}
-
-		this.propList = newProps;
-		this.nodeList = newNodes;
-	},
 
 	setInstanceValue : function(inval){
 		this.instanceValue = inval;
@@ -1851,6 +1726,8 @@ SemanticNodeGroup.XMLSCHEMA_FULL = "http://www.w3.org/2001/XMLSchema#";
 SemanticNodeGroup.INSERT_PREFIX = "generateSparqlInsert:";
 SemanticNodeGroup.INSERT_FULL = "belmont/generateSparqlInsert#";
 
+SemanticNodeGroup.NULL_TARGET = "Nu11T@rG3t";
+
 SemanticNodeGroup.prototype = {
 
 
@@ -1889,8 +1766,7 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
-	addJson : function(jObj, optInflateOInfo) {
-		var inflateOInfo = (optInflateOInfo === undefined) ? null : optInflateOInfo;
+	addJson : function(jObj) {
 
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
 			throw new Error("belmont.js:SemanticNodeGroup.addJson() only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
@@ -1907,7 +1783,7 @@ SemanticNodeGroup.prototype = {
 		// loop through SNodes in the json
 		for (var i = 0; i < jObj.sNodeList.length; i++) {
 			var newNode = new SemanticNode(null, null, null, null, null, this,
-					jObj.sNodeList[i], inflateOInfo);
+					jObj.sNodeList[i]);
 
 			// add the node without messing with any connections...they are
 			// already there.
@@ -2115,8 +1991,11 @@ SemanticNodeGroup.prototype = {
     },
 
     // get [snode, node_item, target, reverse_flag]
+    //     [snode, node_item, target]
     //     [snode, prop_item]
     //     [snode]
+    //
+    //  node_item target can be null if non-union-related item string
     getEntryTuple : function(str) {
         var entry = str.split("|");
         var snode = this.getNodeBySparqlID(entry[0]);
@@ -2125,11 +2004,17 @@ SemanticNodeGroup.prototype = {
         } else if (entry.length == 2) {
             return [snode, snode.getPropertyByURIRelation(entry[1])];
         } else if (entry.length == 3) {
-            return [snode, snode.getNodeItemByURIConnectBy(entry[1]), this.getNodeBySparqlID(entry[2])];
+            return [snode,
+                    snode.getNodeItemByURIConnectBy(entry[1]),
+                    entry[2] == SemanticNodeGroup.NULL_TARGET ? null : this.getNodeBySparqlID(entry[2])];
         } else {
-            return [snode, snode.getNodeItemByURIConnectBy(entry[1]), this.getNodeBySparqlID(entry[2]), entry[3] == "true"];
+            return [snode,
+                    snode.getNodeItemByURIConnectBy(entry[1]),
+                    entry[2] == SemanticNodeGroup.NULL_TARGET ? null : this.getNodeBySparqlID(entry[2]),
+                    entry[3] == "true"];
         }
     },
+
 
     // get an id for a new union
     newUnion : function () {

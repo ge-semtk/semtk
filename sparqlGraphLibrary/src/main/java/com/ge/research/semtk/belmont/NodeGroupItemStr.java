@@ -7,7 +7,8 @@ package com.ge.research.semtk.belmont;
  * @author 200001934
  *
  */
-public class UnionKeyStr {
+public class NodeGroupItemStr {
+	private final String NULL_TARGET = "Nu11T@rG3t";
 	String str = null;   // string representation
 	
 	Node snode = null;    // all the components optional except snode
@@ -16,7 +17,7 @@ public class UnionKeyStr {
 	Node target = null;
 	Boolean reverseFlag = null;
 	
-	public UnionKeyStr(String str, NodeGroup ng) {
+	public NodeGroupItemStr(String str, NodeGroup ng) {
 		this.str = str;
 		String[] list = str.split("\\|");
 		this.snode = ng.getNodeBySparqlID(list[0]);
@@ -26,7 +27,7 @@ public class UnionKeyStr {
 			
 		} else if (list.length > 2) {
 			this.nItem = snode.getNodeItem(list[1]);
-			this.target = ng.getNodeBySparqlID(list[2]);
+			this.target = list[2].equals(NULL_TARGET) ? null : ng.getNodeBySparqlID(list[2]);
 			if (list.length > 3) {
 				this.reverseFlag = Boolean.parseBoolean(list[3]);
 			}
@@ -34,27 +35,34 @@ public class UnionKeyStr {
 		}
 	}
 
-	public UnionKeyStr(Node snode, NodeItem item, Node target, Boolean reverseFlag) {
+	/**
+	 * 
+	 * @param snode
+	 * @param item
+	 * @param target - or null to refer to the entire NodeItem
+	 * @param reverseFlag
+	 */
+	public NodeGroupItemStr(Node snode, NodeItem item, Node target, Boolean reverseFlag) {
 		this.snode = snode;
 		this.nItem = item;
 		this.target = target;
 		this.reverseFlag = reverseFlag;
-		this.str = snode.getSparqlID() + "|" + item.getUriConnectBy() + "|" + target.getSparqlID() + "|" + reverseFlag.toString();  
+		this.str = snode.getSparqlID() + "|" + item.getUriConnectBy() + "|" + ((target==null)? NULL_TARGET: target.getSparqlID()) + "|" + reverseFlag.toString();  
     }
 	
-	public UnionKeyStr(Node snode, NodeItem item, Node target) {
+	public NodeGroupItemStr(Node snode, NodeItem item, Node target) {
 		this.snode = snode;
 		this.nItem = item;
 		this.target = target;
-		this.str = snode.getSparqlID() + "|" + item.getUriConnectBy() + "|" + target.getSparqlID();
+		this.str = snode.getSparqlID() + "|" + item.getUriConnectBy() + "|" + ((target==null)? NULL_TARGET: target.getSparqlID());
 	}
 	
-	public UnionKeyStr(Node snode, PropertyItem item) {
+	public NodeGroupItemStr(Node snode, PropertyItem item) {
 		this.snode = snode;
 		this.pItem = item;
 		this.str = snode.getSparqlID() + "|" + item.getUriRelationship();
 	}
-	public UnionKeyStr(Node snode) {
+	public NodeGroupItemStr(Node snode) {
 		this.snode = snode;
 		this.str = snode.getSparqlID();
     }

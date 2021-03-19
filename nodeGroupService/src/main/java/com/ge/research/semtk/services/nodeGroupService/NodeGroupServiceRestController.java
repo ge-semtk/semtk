@@ -852,6 +852,46 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	@ApiOperation(
+			value="Inflate a nodegroup, return validation errors.",
+			notes="returns 'nodegroup' 'modelErrorMessages' and 'invalidItemStrings'"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/inflateAndValidate", method=RequestMethod.POST)
+	public JSONObject inflateAndValidate(@RequestBody NodegroupRequest ngRequest, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			SparqlConnection conn = ngRequest.buildConnection();
+			OntologyInfo oInfo = this.retrieveOInfo(conn);
+			NodeGroup ng = ngRequest.buildNodeGroup();
+			ArrayList<String> modelErrorMessages = new ArrayList<String>();
+			ArrayList<NodeGroupItemStr> invalidNodeGroupItems = new ArrayList<NodeGroupItemStr>();
+			
+			// do the work
+			ng.inflateAndValidate(oInfo, modelErrorMessages, invalidNodeGroupItems);
+			
+			// translate invalid items
+			String invalidItemStrings[] = new String[invalidNodeGroupItems.size()];
+			for (int i=0; i < invalidNodeGroupItems.size(); i++) {
+				invalidItemStrings[i] = invalidNodeGroupItems.get(i).getStr();
+			}
+			
+			// build the return
+			retval.addResult("nodegroup", ng.toJson());
+			retval.addResult("modelErrorMessages", modelErrorMessages.toArray(new String[modelErrorMessages.size()]));
+			retval.addResult("invalidItemStrings", invalidItemStrings);
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "inflateAndValidate", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();		
+	}
+	
 	/**
 	 * Retrieve oInfo.
 	 * @param conn
