@@ -1361,8 +1361,8 @@
 
             // create and display a plot
             var plotlySpecLayout = { margin: { t: 0 } };                            // TODO get this from nodegroup
-            var plotlySpecTraceAddon = { type: 'scatter', mode: 'lines+markers' };  // TODO get this from nodegroup
-            var plotter = new PlotlyPlotter({"layout" : plotlySpecLayout, "traceAddOn" : plotlySpecTraceAddon });  // TODO make a PlotlyPlotSpec object to hold these
+            var plotlySpecTraceBase = { type: 'scatter', mode: 'lines+markers' };   // TODO get this from nodegroup
+            var plotter = new PlotlyPlotter({"layout" : plotlySpecLayout, "traceBase" : plotlySpecTraceBase });  // TODO make a PlotlyPlotSpec object to hold these
             plotter.addPlotToDiv(targetDiv, tableResults);
 
             // tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);

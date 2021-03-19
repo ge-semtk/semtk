@@ -45,6 +45,8 @@ define([	// properly require.config'ed   bootstrap-modal
                 row0 = tableRes.tableGetRows()[0];
                 row1 = tableRes.tableGetRows()[1];
                 row2 = tableRes.tableGetRows()[2];
+                // col0 = tableRes.tableGetCols()[0];
+                // col1 = tableRes.tableGetCols()[1];
 
                 // create a trace for each row of data
                 // TODO not all plot types take x and y
@@ -52,12 +54,12 @@ define([	// properly require.config'ed   bootstrap-modal
                 var trace1 = { x: [1, 2], y: row1 };
                 var trace2 = { x: [1, 2], y: row2 };
 
-                // for each trace, add the trace add-on (e.g. { type: 'scatter', mode: 'lines+markers' })
-                // TODO allow different trace add-ons for different traces?
-                var traceAddOn = this.spec.traceAddOn;
-                $.extend( true, trace0, traceAddOn );
-                $.extend( true, trace1, traceAddOn );
-                $.extend( true, trace2, traceAddOn );
+                // for each trace, add the trace base (e.g. { type: 'scatter', mode: 'lines+markers' })
+                // TODO allow different "trace bases" for different traces?
+                var traceBase = this.spec.traceBase;
+                $.extend( true, trace0, traceBase );
+                $.extend( true, trace1, traceBase );
+                $.extend( true, trace2, traceBase );
 
                 var data = [trace0, trace1, trace2];
 
