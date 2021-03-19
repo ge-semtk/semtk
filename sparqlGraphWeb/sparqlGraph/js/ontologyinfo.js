@@ -1387,12 +1387,16 @@ OntologyInfo.prototype = {
     },
 
     // returns a list, possibly []
-    getSubProperties : function(superPropUri) {
+    getSubProperties : function(superProp) {
+        var superPropUri = superProp.getNameStr();
+        var ret = [];
+
         if (this.subPropHash[superPropUri]) {
-            return this.subPropHash[superPropUri]
-        } else {
-            return [];
+            for (var uri of this.subPropHash[superPropUri]) {
+                ret.push(this.propertyHash[uri]);
+            }
         }
+        return ret;
     },
 
     /* =========== Edit functions =============== */
