@@ -1363,7 +1363,7 @@
             // TODO retrieve from nodegroup instead of hardcoding
             var plotlySpecLayout = { margin: { t: 0 } };                            // the Plotly "layout" object      
             var plotlySpecTraceBase = { type: 'scatter', mode: 'lines+markers' };   // the Plotly "trace" object (minus the data)
-            var plotDataSpec = { graphRows : [0, 2, 5] }                            // SemTK-specific object used to add data to traces   TODO "graphRows" is a placeholder - decide what to support for real
+            var plotDataSpec = { graphRowNums : [0, 2, 3, 4, 5, 6] }                   // SemTK-specific object used to add data to traces   TODO "graphRowNums" is a placeholder - decide what to support for real
             var plotter = new PlotlyPlotter({"layout" : plotlySpecLayout, "traceBase" : plotlySpecTraceBase, "dataSpec" : plotDataSpec });  // TODO make a PlotlyPlotSpec object to hold these
             plotter.addPlotToDiv(targetDiv, tableResults);
 

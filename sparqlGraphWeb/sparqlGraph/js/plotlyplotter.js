@@ -42,17 +42,17 @@ define([	// properly require.config'ed   bootstrap-modal
 
             addPlotToDiv : function(div, tableRes) {
 
-                // TODO "graphRows" is just a placeholder - decide what to support in dataSpec
-                var graphRows = this.spec.dataSpec.graphRows;  
+                // TODO "graphRowNums" is just a placeholder - decide what to support in dataSpec
+                var graphRowNums = this.spec.dataSpec.graphRowNums;  
 
                 // create traces
                 var data = [];
-                for (var i = 0; i < graphRows.length; i++){
-                    row = tableRes.tableGetRows()[graphRows[i]];    // get the row of data      TODO graph by columns, not rows
-                    trace = { x: [1, 2], y: row };                  // add data to trace        TODO not all plot types take x and y
-                    var traceBase = this.spec.traceBase;
-                    $.extend( true, trace, traceBase );             // add base to trace
-                    data.push(trace);                               // add the trace to the data object
+                for (var rowNum of graphRowNums){
+                    var row = tableRes.tableGetRows()[rowNum];                      // get the row of data      TODO graph by columns, not rows
+                    var trace = JSON.parse(JSON.stringify(this.spec.traceBase));    // start with traceBase (copy it)
+                    trace.x = [1,2];                                                // add data to trace        TODO not all plot types take x and y
+                    trace.y = row;
+                    data.push(trace);                                               // add the trace to the data object
                 }
 
                 var layout = this.spec.layout;
