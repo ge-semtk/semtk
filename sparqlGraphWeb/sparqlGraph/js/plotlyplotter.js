@@ -41,10 +41,19 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             addPlotToDiv : function(div, tableRes) {
-                Plotly.newPlot( div, [{
-                	x: [1, 2, 3, 4, 5],
-                	y: [1, 2, 4, 8, 16] }], {
-                	margin: { t: 0 } } );
+
+                row0 = tableRes.tableGetRows()[0];
+                row1 = tableRes.tableGetRows()[1];
+                row2 = tableRes.tableGetRows()[2];
+
+                var trace0 = { x: [1, 2], y: row0 };
+                var trace1 = { x: [1, 2], y: row1 };
+                var trace2 = { x: [1, 2], y: row2 };
+                var data = [trace0, trace1, trace2];
+
+                var layout = { margin: { t: 0 } };
+
+                Plotly.newPlot( div, data, layout );
             }
         };
 
