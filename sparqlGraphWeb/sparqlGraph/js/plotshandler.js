@@ -45,7 +45,7 @@ define([	// properly require.config'ed   bootstrap-modal
              */
             getName : function(index) {
                 var json = this.plots[index];
-                if (! json.hasOwnProeprty("name")) {
+                if (! json.hasOwnProperty("name")) {
                     throw "Plots json item has no name";
                 }
                 return json.name;
