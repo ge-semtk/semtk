@@ -37,7 +37,7 @@ public class PlotlyPlotSpecHandler {
 	 * NOTES:
 	 *     sparqlgraphjson might have:
 	 *     	   .plots: [
-	 *     		>>	{ type: plotly,
+	 *     		>>	{   type: plotly,
 	 *	 	    >>      name: "line 1",
 	 *          >>      spec: { data: [{},{}], layout: {}, config: {} }    
 	 *          >>    },

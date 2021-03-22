@@ -32,6 +32,7 @@
 
     var gNodeGroup = null;
     var gOInfoLoadTime = "";
+    var gPlotsHandler = null;
 
     var gCurrentTab = g.tab.query ;
 
@@ -1015,6 +1016,7 @@
             try {
                 sgJson.getNodeGroup(gNodeGroup, gOInfo);
                 gNodeGroup.setSparqlConnection(gConn);
+                gPlotsHandler = sgJson.getPlotsHandler();
             } catch (e) {
                 console.log(e.stack);
                 ModalIidx.choose("Error loading nodegroup",
@@ -1359,17 +1361,12 @@
 
             var targetDiv = document.getElementById("resultsParagraph");
 
-            // create and display a plot
-            var plotlyData = [
-                    { type: 'scatter', x: [1, 2, 3], y: [3, 1, 6], marker: { color: 'rgb(16, 32, 77)' } },
-                    { type: 'bar', x: [1, 2, 3], y: [3, 1, 6], name: 'bar chart example' }
-            ];            
-            var plotlyLayout = { margin: { t: 0 } };       
-            var plotlyConfig = { editable: true };
-            var plotter = new PlotlyPlotter({ "data" : plotlyData, "layout" : plotlyLayout, "config" : plotlyConfig });
-            plotter.addPlotToDiv(targetDiv, tableResults);
-
-            // tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);
+            var plotter = gPlotsHandler.getDefaultPlotter();
+            if (plotter != null) {
+                plotter.addPlotToDiv(targetDiv, tableResults);
+            } else {
+                tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);
+            }
 
             guiUnDisableAll();
             guiResultsNonEmpty();

@@ -28,6 +28,9 @@ define([	// properly require.config'ed   bootstrap-modal
 
     function(IIDXHelper, MsiResultSet, Plotly) {
 
+        /*
+             spec: { data: [{},{}], layout: {}, config: {} }
+         */
         var PlotlyPlotter = function (plotSpec) {
             this.spec = plotSpec;
         };

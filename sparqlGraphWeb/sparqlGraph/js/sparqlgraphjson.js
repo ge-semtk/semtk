@@ -22,12 +22,14 @@
  *
  */
 define([	// properly require.config'ed
+            'sparqlgraph/js/plotshandler',
 
 			// shimmed
-        	'sparqlgraph/js/belmont'
+        	'sparqlgraph/js/belmont',
+
 		],
 
-	function() {
+	function(PlotsHandler) {
 
         /*
          * Each param may be missing or null
@@ -36,10 +38,11 @@ define([	// properly require.config'ed
 			var deflateFlag = (typeof deflateFlag == "undefined") ? true : deflateFlag;
 
 			this.jObj = {
-                    version: 2,
+                    version: 3,
 					sparqlConn: null,
 					sNodeGroup: null,
 					importSpec: null,
+                    plots: null
 			};
 
 			if (typeof conn      != "undefined" && conn != null) {
@@ -118,6 +121,17 @@ define([	// properly require.config'ed
 				}
 			},
 
+            /*
+             * returns a (possibly empty) PlotsHandler
+             */
+            getPlotsHandler : function() {
+                if (this.jObj.hasOwnProperty("plots")) {
+                    return new PlotsHandler(this.jObj.plots);
+                } else if (this.jObj.hasOwnProperty("nodeGroup")) {
+                    return new PlotsHandler([]);
+                }
+            },
+
 			getSNodeGroupJson : function() {
                 if (this.jObj.hasOwnProperty("sNodeGroup")) {
                     return this.jObj.sNodeGroup;
@@ -133,7 +147,7 @@ define([	// properly require.config'ed
 			getMappingTabJson : function() {
 				return this.getImportSpecJson();
 			},
-            
+
             getImportSpecJson : function() {
 				if (this.jObj.hasOwnProperty("importSpec")) {
 					return this.jObj.importSpec;
