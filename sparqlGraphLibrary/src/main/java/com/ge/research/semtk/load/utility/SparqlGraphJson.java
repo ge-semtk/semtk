@@ -26,14 +26,11 @@ import org.json.simple.parser.ParseException;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
-import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.plotting.PlotsHandler;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.utility.Utility;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -43,10 +40,11 @@ import com.google.gson.JsonParser;
  * JSON handler for sparqlGraph.json files
  * 
  */
+@SuppressWarnings("unchecked")
 public class SparqlGraphJson {
 	static final String JKEY_NODEGROUP = "sNodeGroup";
-	
 	static final String JKEY_SPARQLCONN = "sparqlConn";
+	static final String JKEY_PLOTS = "plots";
 	
 	public static final String JKEY_IMPORTSPEC = "importSpec";
 	
@@ -57,6 +55,7 @@ public class SparqlGraphJson {
 	private SparqlConnection conn = null;
 	private OntologyInfo oInfo = null;
 	private ImportSpecHandler importSpec = null;
+	private PlotsHandler plots = null;
 	
 	public SparqlGraphJson() {
 		// nothing
@@ -186,6 +185,20 @@ public class SparqlGraphJson {
 	public void setImportSpec(ImportSpec spec) {
 		this.setImportSpecJson(spec.toJson());
 	}
+	
+	public JSONArray getPlotsJson() {
+		if (jObj.containsKey(JKEY_PLOTS)) {
+			return (JSONArray) jObj.get(JKEY_PLOTS);
+		} else {
+			return null;
+		}
+	}
+	
+	public void setPlotsJson(JSONArray plotsJson) {
+		this.jObj.put(JKEY_PLOTS, plotsJson);
+		this.plots = null;   // wipe out any cached ImportSpecHandler
+	}
+	
 	
 	/**
 	 * @return runtime constraints json or null
@@ -348,6 +361,19 @@ public class SparqlGraphJson {
 		return importSpec;
 	}
 	
+	/**
+	 * 
+	 * @return importSpecHandler, might be NULL
+	 * @throws Exception
+	 */
+	public PlotsHandler getPlotsHandler() throws Exception {
+		JSONArray json = this.getPlotsJson();
+		if (plots == null && json != null) {
+			plots =  new PlotsHandler(json);
+		}
+		return plots;
+	}
+	
 	// ------ end new convenience functions ----------------
 	
 	
@@ -369,11 +395,6 @@ public class SparqlGraphJson {
 			this.conn = conn;							// insert the new one.
 			this.oInfo = null;
 		}
-	}
-	
-	public void parse(String jsonString) throws Exception {
-		JSONParser parser = new JSONParser();
-		JSONObject jObj = (JSONObject) parser.parse(jsonString);
 	}
 	
 	public Table executeSelectToTable() throws Exception {
@@ -407,7 +428,7 @@ public class SparqlGraphJson {
 	public static JSONArray executeConstructToJson(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
 		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
 		sgjson.setSparqlConn(conn);
-		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct(true);
+		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct();
 		return conn.getDefaultQueryInterface().executeQueryToGraph(query);
 	}
 	/**

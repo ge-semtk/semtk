@@ -46,7 +46,7 @@ public class PlotlyPlotSpecHandler {
 	 *                },
 	 *                { type: plotly,
 	 *                  spec: { data, layout, config }
-	 *                },
+	 *              },
 	 *              
 	 */
 	
