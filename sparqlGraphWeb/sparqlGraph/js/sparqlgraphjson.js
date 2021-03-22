@@ -34,7 +34,7 @@ define([	// properly require.config'ed
         /*
          * Each param may be missing or null
          */
-		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag) {
+		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag, plotsHandler) {
 			var deflateFlag = (typeof deflateFlag == "undefined") ? true : deflateFlag;
 
 			this.jObj = {
@@ -60,6 +60,10 @@ define([	// properly require.config'ed
 
 			if (typeof importSpec != "undefined" && importSpec != null) {
 				this.jObj.importSpec = importSpec.toJson();
+			}
+
+            if (typeof plotsHandler != "undefined" && plotsHandler != null) {
+				this.jObj.plots = plotsHandler.toJson();
 			}
 
 		};

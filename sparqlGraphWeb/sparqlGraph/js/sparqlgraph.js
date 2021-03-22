@@ -1059,7 +1059,7 @@
     			// make sure importSpec is in sync
     			gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotsHandler);
 
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
@@ -1422,7 +1422,7 @@
                 nodeGroupChanged(false);
             }
 
-            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true);
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotsHandler);
             gStoreDialog.launchStoreDialog(sgJson, doneCallback);
 
         });

@@ -74,6 +74,10 @@ define([	// properly require.config'ed   bootstrap-modal
                 if (json.type == "plotly") {
                     return new PlotlyPlotter(json.spec);
                 }
+            },
+
+            toJson : function() {
+                return this.plots;
             }
         };
 
