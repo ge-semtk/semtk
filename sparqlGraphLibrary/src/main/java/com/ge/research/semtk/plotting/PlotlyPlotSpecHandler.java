@@ -1,9 +1,12 @@
 package com.ge.research.semtk.plotting;
 
+import java.util.Arrays;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.Utility;
 
 /**
  ** Copyright 2021 General Electric Company
@@ -28,10 +31,11 @@ public class PlotlyPlotSpecHandler {
 	private static String JKEY_LAYOUT = "layout";
 	private static String JKEY_CONFIG = "config";
 	
-	private static String PREFIX = "SEMTK_TABLE.";     // x: "SEMTK_TABLE.column[col_name]"
+	private static String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
 	private static String CMD_COL = "col";
 	
 	JSONObject plotSpecJson = null;
+	String plotSpecJsonStrTemp = null;	// temp string to use while creating a replacement plotSpecJson
 	
 	/**
 	 * NOTES:
@@ -56,6 +60,7 @@ public class PlotlyPlotSpecHandler {
 	 */
 	public PlotlyPlotSpecHandler(JSONObject plotSpecJson) {
 		this.plotSpecJson = plotSpecJson;
+
 	}
 	
 	/**
@@ -72,12 +77,15 @@ public class PlotlyPlotSpecHandler {
 	 * @throws Exception
 	 */
 	public void applyTable(Table table) throws Exception {
-		JSONObject spec = (JSONObject) this.plotSpecJson.get(JKEY_SPEC);
-		if (spec == null) return;
-		JSONObject data = (JSONObject) spec.get(JKEY_DATA);
-		if (data == null) return;
 		
+		JSONObject spec = (JSONObject) this.plotSpecJson.get(JKEY_SPEC);
+		if (spec == null) throw new Exception("Plotly spec json needs a " + JKEY_SPEC + " element");
+		JSONArray data = (JSONArray) spec.get(JKEY_DATA);
+		if (data == null) throw new Exception("Plotly spec json needs a " + JKEY_DATA + " element");
+
+		this.plotSpecJsonStrTemp = plotSpecJson.toJSONString();  // create a temp string in which to make substitutions (cannot iterate + modify JSON at the same time)
 		walkToApplyTable(data, table);
+		this.plotSpecJson = Utility.getJsonObjectFromString(plotSpecJsonStrTemp);
 	}
 	
 	/**
@@ -90,7 +98,6 @@ public class PlotlyPlotSpecHandler {
 			JSONObject jObj = (JSONObject) json;
 			for (Object key : jObj.keySet()) {
 				Object member = jObj.get(key);
-				
 				if (member instanceof JSONObject || member instanceof JSONArray) {
 					// if member is more json, then recurse
 					this.walkToApplyTable(member, table);
@@ -112,18 +119,25 @@ public class PlotlyPlotSpecHandler {
 	
 	/**
 	 * Process the given existing string field of a JSON object
-	 * @param jObj - json 
-	 * @param key - key of a known existing string in json
-	 * @param table - table to apply
+	 * @param jObj the containing JSON object 
+	 * @param key the key of a known string field
+	 * @param table replace the string field with data from this table
 	 * @throws Exception
 	 */
 	private void applyTableToJsonStringField(JSONObject jObj, String key, Table table) throws Exception {
-		String field = (String) jObj.get(key);
-		if (!field.startsWith(PREFIX)) return;
 		
-		String [] s = field.replaceAll("\\s","").split("[\\.\\[\\]]");
-		// s == "SEMTK_TABLE"  "col"  "col_name" ]
+		String s = (String) jObj.get(key);	// e.g. SEMTK_TABLE.col[colA]
+		if (!s.startsWith(PREFIX + ".")) return;
 		
-		// PEC HERE TODO do the work.  jObj.put(key, some_transformed)
+		// TODO if already replaced this field, then return
+				
+		String[] sSplit = s.replaceAll("\\s","").split("[\\.\\[\\]]");  // e.g. split SEMTK_TABLE.col[colA] into ["SEMTK_TABLE", "col", "colA"]
+		if(sSplit[0].equals(PREFIX) && sSplit[1].equals(CMD_COL)){
+			String colName = sSplit[2];
+			String columnDataStr = Arrays.toString(table.getColumn(colName));
+			plotSpecJsonStrTemp = plotSpecJsonStrTemp.replace("\"" + s + "\"", columnDataStr);
+		}else{
+			throw new Exception("Unsupported data specification for plotting: " + s);
+		}
 	}
 }
