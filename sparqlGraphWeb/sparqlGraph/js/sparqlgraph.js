@@ -1360,11 +1360,13 @@
             var targetDiv = document.getElementById("resultsParagraph");
 
             // create and display a plot
-            // TODO retrieve from nodegroup instead of hardcoding
-            var plotlySpecLayout = { margin: { t: 0 } };                            // the Plotly "layout" object      
-            var plotlySpecTraceBase = { type: 'scatter', mode: 'lines+markers' };   // the Plotly "trace" object (minus the data)
-            var plotDataSpec = { graphRowNums : [0, 2, 3, 4, 5, 6] }                   // SemTK-specific object used to add data to traces   TODO "graphRowNums" is a placeholder - decide what to support for real
-            var plotter = new PlotlyPlotter({"layout" : plotlySpecLayout, "traceBase" : plotlySpecTraceBase, "dataSpec" : plotDataSpec });  // TODO make a PlotlyPlotSpec object to hold these
+            var plotlyData = [
+                    { type: 'scatter', x: [1, 2, 3], y: [3, 1, 6], marker: { color: 'rgb(16, 32, 77)' } },
+                    { type: 'bar', x: [1, 2, 3], y: [3, 1, 6], name: 'bar chart example' }
+            ];            
+            var plotlyLayout = { margin: { t: 0 } };       
+            var plotlyConfig = { editable: true };
+            var plotter = new PlotlyPlotter({ "data" : plotlyData, "layout" : plotlyLayout, "config" : plotlyConfig });
             plotter.addPlotToDiv(targetDiv, tableResults);
 
             // tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);

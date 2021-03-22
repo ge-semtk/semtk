@@ -42,21 +42,11 @@ define([	// properly require.config'ed   bootstrap-modal
 
             addPlotToDiv : function(div, tableRes) {
 
-                // TODO "graphRowNums" is just a placeholder - decide what to support in dataSpec
-                var graphRowNums = this.spec.dataSpec.graphRowNums;  
-
-                // create traces
-                var data = [];
-                for (var rowNum of graphRowNums){
-                    var row = tableRes.tableGetRows()[rowNum];                      // get the row of data      TODO graph by columns, not rows
-                    var trace = JSON.parse(JSON.stringify(this.spec.traceBase));    // start with traceBase (copy it)
-                    trace.x = [1,2];                                                // add data to trace        TODO not all plot types take x and y
-                    trace.y = row;
-                    data.push(trace);                                               // add the trace to the data object
-                }
-
+                var data = this.spec.data;
                 var layout = this.spec.layout;
-                Plotly.newPlot( div, data, layout, {editable: true} );
+                var config = this.spec.config;
+
+                Plotly.newPlot( div, data, layout, config );
             }
         };
 
