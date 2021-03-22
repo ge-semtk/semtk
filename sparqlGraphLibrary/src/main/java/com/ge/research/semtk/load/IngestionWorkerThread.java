@@ -88,6 +88,7 @@ public class IngestionWorkerThread extends Thread {
 				int targetMax = (int) (this.optimalQueryChars * 1.25);
 				
 				if (queryLen >= targetMin && queryLen <= targetMax) {
+					System.err.println("query: " + query);
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 					
 				} else {
@@ -96,6 +97,7 @@ public class IngestionWorkerThread extends Thread {
 					
 					// run queryList
 					for (String q : queryList) {
+						System.err.println("q: " + q);
 						this.endpoint.executeQuery(q, SparqlResultTypes.CONFIRM);
 					}
 				}
@@ -150,13 +152,13 @@ public class IngestionWorkerThread extends Thread {
 					queryList.add(subQuery);
 					longestQueryLen = Math.max(longestQueryLen, subQuery.length());
 					
-					// get ready for next iteration
-					index0 += this.recommendedBatchSize;
-					indexN = Math.min(nodeGroupList.size(), indexN + this.recommendedBatchSize);
-					
 				} catch (NothingToInsertException e) {
 					// silently skip
 				}
+				
+				// get ready for next iteration
+				index0 += this.recommendedBatchSize;
+				indexN = Math.min(nodeGroupList.size(), indexN + this.recommendedBatchSize);
 			}
 			
 		} while (longestQueryLen > targetMax && this.recommendedBatchSize > 1);
