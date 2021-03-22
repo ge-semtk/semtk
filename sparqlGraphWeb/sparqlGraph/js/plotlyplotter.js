@@ -19,6 +19,7 @@
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/msiresultset',
+            'sparqlgraph/js/msiclientutility',
 
             'plotly/plotly-latest.min'
             //                       OR should we presume the internet is available?  and pull from there?
@@ -26,7 +27,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
 		],
 
-    function(IIDXHelper, MsiResultSet, Plotly) {
+    function(IIDXHelper, MsiResultSet, MsiClientUtility, Plotly) {
 
         /*
              spec: { data: [{},{}], layout: {}, config: {} }
@@ -45,9 +46,12 @@ define([	// properly require.config'ed   bootstrap-modal
 
             addPlotToDiv : function(div, tableRes) {
 
-                var data = this.spec.data;
-                var layout = this.spec.layout;
-                var config = this.spec.config;
+                var utilityClient = new MsiClientUtility(g.service.utility.url);
+                var plotSpecProcessed = utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable());
+
+                var data = plotSpecProcessed.data;
+                var layout = plotSpecProcessed.layout;
+                var config = plotSpecProcessed.config;
 
                 Plotly.newPlot( div, data, layout, config );
             }

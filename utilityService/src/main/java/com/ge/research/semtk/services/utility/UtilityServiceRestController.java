@@ -313,12 +313,15 @@ public class UtilityServiceRestController {
 	@CrossOrigin
 	@RequestMapping(value="/processPlotSpec", method= RequestMethod.POST)
 	public JSONObject processPlotSpec(@RequestBody ProcessPlotSpecRequest requestBody){
+		LocalLogger.logToStdOut(SERVICE_NAME + " processPlotSpec");
     	SimpleResultSet res = new SimpleResultSet();	
 		try {
-
+							
 			requestBody.validate();
 			JSONObject plotSpecJson = requestBody.getPlotSpecJson();	// the plot spec with placeholders e.g. x: "SEMTK_TABLE.col[col_name]"
+			LocalLogger.logToStdOut(plotSpecJson.toJSONString());	// TODO REMOVE
 			Table table = Table.fromJson(requestBody.getTableJson());	// the data table
+			LocalLogger.logToStdOut(table.toCSVString());  // TODO REMOVE
 			
 			if(!plotSpecJson.containsKey("type")){
 				throw new Exception("Plot type not specified");

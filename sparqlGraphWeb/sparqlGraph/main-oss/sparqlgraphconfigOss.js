@@ -78,6 +78,9 @@ var g = {
         nodeGroup:{
 			url : "${WEB_PROTOCOL}://${WEB_NODEGROUP_HOST}:${WEB_NODEGROUP_PORT}/nodeGroup/",
 		},
+		utility:{
+			url : "${WEB_PROTOCOL}://${WEB_UTILITY_HOST}:${WEB_UTILITY_PORT}/utility/",
+		},
 	},
 	tab : {
 		query : "queryTab",
