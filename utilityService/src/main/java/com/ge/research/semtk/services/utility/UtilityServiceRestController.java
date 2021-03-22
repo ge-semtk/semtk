@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -34,7 +35,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
@@ -312,12 +312,13 @@ public class UtilityServiceRestController {
 	@ApiOperation(value="Process a plot specification")
 	@CrossOrigin
 	@RequestMapping(value="/processPlotSpec", method= RequestMethod.POST)
-	public JSONObject processPlotSpec(@RequestParam String plotSpecJsonStr, @RequestParam String tableJsonStr){	// TODO use RequestBody with custom object containing spec/table
+	public JSONObject processPlotSpec(@RequestBody ProcessPlotSpecRequest requestBody){
     	SimpleResultSet res = new SimpleResultSet();	
 		try {
 
-			JSONObject plotSpecJson = Utility.getJsonObjectFromString(plotSpecJsonStr);			// the plot spec with placeholders e.g. x: "SEMTK_TABLE.col[col_name]"
-			Table table = Table.fromJson((JSONObject) new JSONParser().parse(tableJsonStr));	// the data table
+			requestBody.validate();
+			JSONObject plotSpecJson = requestBody.getPlotSpecJson();	// the plot spec with placeholders e.g. x: "SEMTK_TABLE.col[col_name]"
+			Table table = Table.fromJson(requestBody.getTableJson());	// the data table
 			
 			if(!plotSpecJson.containsKey("type")){
 				throw new Exception("Plot type not specified");
@@ -339,6 +340,7 @@ public class UtilityServiceRestController {
 		}
 		return res.toJson();	
 	}	
+	
 	
 	/**
 	 * Determine if an EDC mnemonic exists in the services config
