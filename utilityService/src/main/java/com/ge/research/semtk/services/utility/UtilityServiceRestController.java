@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
@@ -42,6 +43,7 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.plotting.PlotlyPlotSpecHandler;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -303,6 +305,40 @@ public class UtilityServiceRestController {
 	
 	}
 	
+	
+	/**
+	 * Process a plot specification (e.g. fill in data values from table)
+	 */
+	@ApiOperation(value="Process a plot specification")
+	@CrossOrigin
+	@RequestMapping(value="/processPlotSpec", method= RequestMethod.POST)
+	public JSONObject processPlotSpec(@RequestParam String plotSpecJsonStr, @RequestParam String tableJsonStr){	// TODO use RequestBody with custom object containing spec/table
+    	SimpleResultSet res = new SimpleResultSet();	
+		try {
+
+			JSONObject plotSpecJson = Utility.getJsonObjectFromString(plotSpecJsonStr);			// the plot spec with placeholders e.g. x: "SEMTK_TABLE.col[col_name]"
+			Table table = Table.fromJson((JSONObject) new JSONParser().parse(tableJsonStr));	// the data table
+			
+			if(!plotSpecJson.containsKey("type")){
+				throw new Exception("Plot type not specified");
+			}
+			if(plotSpecJson.get("type").equals("plotly")){
+				PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
+				specHandler.applyTable(table);
+				JSONObject plotSpecJsonProcessed = specHandler.getJSON();	
+				res.addResult("spec", plotSpecJsonProcessed);
+				res.setSuccess(true);
+			}else{
+				throw new Exception("Unsupported plot type");
+			}
+
+		} catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, "processPlotSpec", e);
+	    	LocalLogger.printStackTrace(e);
+		}
+		return res.toJson();	
+	}	
 	
 	/**
 	 * Determine if an EDC mnemonic exists in the services config
