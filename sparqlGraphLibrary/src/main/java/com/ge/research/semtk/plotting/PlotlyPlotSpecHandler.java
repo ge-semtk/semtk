@@ -23,24 +23,36 @@ import com.ge.research.semtk.resultSet.Table;
  */
 
 public class PlotlyPlotSpecHandler {
+	private static String JKEY_SPEC = "spec";
 	private static String JKEY_DATA = "data";
 	private static String JKEY_LAYOUT = "layout";
 	private static String JKEY_CONFIG = "config";
-	private static String JKEY_SEMTK = "semtk";
 	
-	private static String PREFIX = "SEMTK_TABLE.";
+	private static String PREFIX = "SEMTK_TABLE.";     // x: "SEMTK_TABLE.column[col_name]"
+	private static String CMD_COL = "col";
 	
 	JSONObject plotSpecJson = null;
 	
 	/**
 	 * NOTES:
 	 *     sparqlgraphjson might have:
-	 *         plotly : [ { plotSpecJson }, {plotSpecJson} ],
+	 *     	   .plots: [
+	 *     		>>	{ type: plotly,
+	 *	 	    >>      name: "line 1",
+	 *          >>      spec: { data: [{},{}], layout: {}, config: {} }    
+	 *          >>    },
+	 *                { type: visjs,
+	 *                  spec: { vsJsSpecJson }
+	 *                },
+	 *                { type: plotly,
+	 *                  spec: { data, layout, config }
+	 *                },
+	 *              
 	 */
 	
 	/**
 	 * 
-	 * @param plotSpecJson - JSON to specify a single plotly plot.  {  "data": [{},{}], "layout": {}, "config": {}, "semtk":{} }
+	 * @param plotSpecJson - JSON to specify a single plotly plot.
 	 */
 	public PlotlyPlotSpecHandler(JSONObject plotSpecJson) {
 		this.plotSpecJson = plotSpecJson;
@@ -60,7 +72,9 @@ public class PlotlyPlotSpecHandler {
 	 * @throws Exception
 	 */
 	public void applyTable(Table table) throws Exception {
-		JSONObject data = (JSONObject) this.plotSpecJson.get(JKEY_DATA);
+		JSONObject spec = (JSONObject) this.plotSpecJson.get(JKEY_SPEC);
+		if (spec == null) return;
+		JSONObject data = (JSONObject) spec.get(JKEY_DATA);
 		if (data == null) return;
 		
 		walkToApplyTable(data, table);
@@ -106,6 +120,9 @@ public class PlotlyPlotSpecHandler {
 	private void applyTableToJsonStringField(JSONObject jObj, String key, Table table) throws Exception {
 		String field = (String) jObj.get(key);
 		if (!field.startsWith(PREFIX)) return;
+		
+		String [] s = field.replaceAll("\\s","").split("[\\.\\[\\]]");
+		// s == "SEMTK_TABLE"  "col"  "col_name" ]
 		
 		// PEC HERE TODO do the work.  jObj.put(key, some_transformed)
 	}
