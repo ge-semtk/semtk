@@ -131,7 +131,7 @@ define([	// properly require.config'ed
             getPlotsHandler : function() {
                 if (this.jObj.hasOwnProperty("plots")) {
                     return new PlotsHandler(this.jObj.plots);
-                } else if (this.jObj.hasOwnProperty("nodeGroup")) {
+                } else {
                     return new PlotsHandler([]);
                 }
             },
