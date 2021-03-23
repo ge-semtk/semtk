@@ -49,6 +49,7 @@ define([	// properly require.config'ed
             this.ctx = document.createElement("canvas").getContext("2d");
 
             this.nodegroup = null;
+            this.invalidItemTuples = [];    // NodeGroup entryTuple for each item invalid re the model
             this.propEditorCallback = null;
             this.snodeEditorCallback = null;  //done
             this.snodeRemoverCallback = null;
@@ -91,6 +92,8 @@ define([	// properly require.config'ed
         NodegroupRenderer.COLOR_CONSTRAINED = "#0077bb"; //<-tol '#3b73b9';  // 'blue'
         NodegroupRenderer.COLOR_RET_CONST = "#009988"; //<-tol '#3ca17a';    // 'green'
         NodegroupRenderer.INDENT = 6;
+        NodegroupRenderer.COLOR_INVALID_FOREGROUND = 'red';
+        NodegroupRenderer.COLOR_INVALID_BACKGROUND = 'pink';
 
         // https://davidmathlogic.com/colorblind/
         // vibrant
@@ -264,10 +267,15 @@ define([	// properly require.config'ed
 
             // Update the display to reflect the nodegroup
 
-            draw : function (nodegroup) {
+            draw : function (nodegroup, invalidItemStrings) {
 
-                this.nodegroup = nodegroup;  // mostly for callbacks
+                this.nodegroup = nodegroup;
                 this.nodegroup.updateUnionMemberships();  // do this expensive operation once per draw
+
+                this.invalidItemTuples = [];
+                for (let itemStr of invalidItemStrings) {
+                    this.invalidItemTuples.push(nodegroup.getEntryTuple(itemStr));
+                }
 
                 this.drawNodes();
                 this.drawEdges();
@@ -352,6 +360,12 @@ define([	// properly require.config'ed
                             var label = this.buildEdgeLabel(nItem, snode2);
 
                             var edgeFont = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
+
+                            // color invalid
+                            if (this.edgeIsInvalid(nItem, snode2)) {
+                                edgeFont = {color: NodegroupRenderer.COLOR_INVALID_FOREGROUND, background: NodegroupRenderer.COLOR_INVALID_BACKGROUND};
+                            }
+
                             //var edgeFont;
                             //if (nItem.getOptionalMinus(snode2) != NodeItem.OPTIONAL_FALSE) {
                             //    edgeFont = {color: 'red', background: 'lightgray'};
@@ -424,6 +438,29 @@ define([	// properly require.config'ed
                 }
             },
 
+            nodeIsInvalid : function(snode) {
+                for (let t of this.invalidItemTuples) {
+                    if (t.length == 1 && t[0] == snode)
+                        return true;
+                }
+                return false;
+            },
+
+            propIsInvalid : function(nodeOrPropItem) {
+                for (let t of this.invalidItemTuples) {
+                    if (t.length > 1 && t[1] == nodeOrPropItem)
+                        return true;
+                }
+                return false;
+            },
+
+            edgeIsInvalid : function(nodeItem, target ) {
+                for (let t of this.invalidItemTuples) {
+                    if (t.length > 2 && t[1] == nodeItem && t[2] == target)
+                        return true;
+                }
+                return false;
+            },
 
             //
             // Change an snode to a network node and call nodes.update
@@ -619,6 +656,8 @@ define([	// properly require.config'ed
                 var size = NodegroupRenderer.SIZE * 1.5;
 
                 var checked = false;
+                var x1 = x;
+                var y1 = y;
 
                 // add the union symbol
                 var unionColor = this.getUnionColor(snode);
@@ -658,11 +697,16 @@ define([	// properly require.config'ed
                 var uri = snode.getURI(true);
                 var binding = snode.getBindingOrSparqlID();
                 text.innerHTML = uri + ((binding != "?"+uri) ? (" - " + snode.getBindingOrSparqlID()) : "");
-                svg.appendChild(text);
 
                 var height = NodegroupRenderer.VSPACE + size;
-                var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
+                var width = x + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
                 var callbackData = { y: y, type: snode.getItemType(), value: text.innerHTML };
+
+                // draw invalid box
+                if (this.nodeIsInvalid(snode)) {
+                    this.drawBox(svg, x1, y1, x1+width, y1+height,NodegroupRenderer.COLOR_INVALID_BACKGROUND, NodegroupRenderer.COLOR_INVALID_FOREGROUND);
+                }
+                svg.appendChild(text);
 
                 return({"height":height, "width":width, "data":callbackData});
             },
@@ -673,7 +717,8 @@ define([	// properly require.config'ed
                 var bot = y + NodegroupRenderer.VSPACE + NodegroupRenderer.SIZE;
                 var x = NodegroupRenderer.INDENT;
                 var size = NodegroupRenderer.SIZE;
-
+                var x1 = x;
+                var y1 = y + NodegroupRenderer.VSPACE;
                 // add the union symbol to propertyItems where needed
                 if (item instanceof PropertyItem) {
                     var unionColor = this.getUnionColor(item);
@@ -723,11 +768,18 @@ define([	// properly require.config'ed
                         text.innerHTML += " - " + retName;
                     }
                 }
-                svg.appendChild(text);
+
 
                 var height = NodegroupRenderer.VSPACE + size;
-                var width = NodegroupRenderer.INDENT + size + NodegroupRenderer.INDENT + this.measureTextWidth(text);
+                var width = x + this.measureTextWidth(text);
                 var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName(), uri: item.getItemUri() };
+
+                // draw invalid box
+                if (item instanceof PropertyItem && this.propIsInvalid(item)) {
+                    this.drawBox(svg, x1, y1, x1+width, y1+height, NodegroupRenderer.COLOR_INVALID_BACKGROUND, NodegroupRenderer.COLOR_INVALID_FOREGROUND);
+                }
+
+                svg.appendChild(text);
 
                 return({"height":height, "width":width, "data":callbackData});
             },

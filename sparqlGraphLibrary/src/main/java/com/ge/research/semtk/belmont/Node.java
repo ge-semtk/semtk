@@ -26,12 +26,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.belmont.BelmontUtil;
-import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.belmont.NodeItem;
-import com.ge.research.semtk.belmont.PropertyItem;
-import com.ge.research.semtk.belmont.Returnable;
-import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
@@ -122,7 +116,7 @@ public class Node extends Returnable {
 		// add nodes
 		for (int i = 0; i < this.nodes.size(); i++) {
 			// if we're deflating, only add connected nodes
-			if (dontDeflatePropItems == null || this.nodes.get(i).getConnected()) {
+			if (dontDeflatePropItems == null || this.nodes.get(i).isUsed()) {
 				jNodeList.add(this.nodes.get(i).toJson());
 			}
 		}
@@ -154,15 +148,29 @@ public class Node extends Returnable {
 	}
 
 	/**
-	 * Expand props to full set of properties for this classURI in oInfo 
-	 * and validates all props
-	 * @param classURI
-	 * @param props
-	 * @param oInfo - if non-null then inflate and validate
-	 * @return
+	 * Inflate (add any missing properties) and validate against model
+	 * This version throws an Exception on the first model error.
+	 * @param oInfo
 	 * @throws Exception
 	 */
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception {
+		this.inflateAndValidate(oInfo, null, null);
+	}
+	
+	/**
+	 * Expand props to full set of properties for this classURI in oInfo 
+	 * and validates all props
+	 * 
+	 * If modelErrList is given, an invalid nodegroup will be expanded and returned.
+	 * Otherwise an exception is thrown at the first model error.
+	 *
+	 * @param oInfo - if non-null then inflate and validate
+	 * @param modelErrList - if null, throw exception on first error : else collect a list of text model errors
+	 * @param itemStrList - if null, nothing, else list will have a NodeGroupItemStr for each invalid item found
+	 * @return
+	 * @throws Exception
+	 */
+	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrList, ArrayList<NodeGroupItemStr> itemStrList) throws Exception {
 		if (oInfo == null) { return; }
 		
 		ArrayList<PropertyItem> newProps = new ArrayList<PropertyItem>();
@@ -193,70 +201,133 @@ public class Node extends Returnable {
 		
 		// get oInfo's version of the property list
 		OntologyClass ontClass = oInfo.getClass(this.getFullUriName());
+		ArrayList<OntologyProperty> ontProps = new ArrayList<OntologyProperty>();
 		if (ontClass == null) {
-			throw new ValidationException("Class does not exist in the model:  " + this.getFullUriName() + "   existing classes: " + oInfo.getClassNames().toString());
+			ontClass = new OntologyClass(this.fullURIname);
+			// ERROR: node class is unknown
+			String msg = this.getSparqlID() + "'s class does not exist in the model:  " + this.getFullUriName();
+			if (modelErrList == null) {
+				throw new ValidationException(msg);
+			} else {
+				modelErrList.add(msg);
+				if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this));
+			}
+		} else {
+			ontProps = oInfo.getInheritedProperties(ontClass);
 		}
-		ArrayList<OntologyProperty> ontProps = oInfo.getInheritedProperties(ontClass);
 		
-		// loop through oInfo's version	
+		// loop through oInfo's version
+		// Remember: oProp can be propItem or nodeItem
 		for (OntologyProperty oProp : ontProps) {
 			String oPropURI = oProp.getNameStr();
 			String oPropKeyname = oProp.getNameStr(true);
 			
-			// if ontology property is one of the prop parameters, then check it over
+			
 			if (propItemHash.containsKey(oPropURI)) {
+				// if ontology property is an existing propItem
 				
-				// has range changed
 				PropertyItem propItem = propItemHash.get(oPropURI);
 				if (! propItem.getValueTypeURI().equals(oProp.getRangeStr())) {
-					throw new ValidationException(String.format("%s property %s range of %s doesn't match model range of %s",
-														this.getFullUriName(),
-														oPropURI, 
-														propItem.getValueTypeURI(), 
-														oProp.getRangeStr() ));
+					// ERROR property range doesn't match
+					String msg = this.getSparqlID() + " property " + oPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + oProp.getRangeStr();
+
+					if (modelErrList == null) {
+						throw new ValidationException(msg);
+					} else {
+						modelErrList.add(msg);
+						if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this, propItem));
+					}
 				}
 				
-				// all is ok: add the propItem
+				// add the propItem
 				newProps.add(propItem);
 				
 				propItemHash.remove(oPropURI);
 				
-			// else ontology property is not in this Node.  AND its range is outside the model (it's a Property)  
-		    // Inflate (create) it.
+		
 			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
+				// Range class is not found so must be either:
+				//      1. node with a bad range
+				//      2. property deflated out of the nodegroup
+				PropertyItem propItem = new PropertyItem(	
+						oProp.getNameStr(true), 
+						oProp.getRangeStr(true), 
+						oProp.getRangeStr(false),
+						oProp.getNameStr(false));
 				
 				if (nodeItemHash.containsKey(oPropURI)) {
-					throw new ValidationException(String.format("%s node property %s has range %s in the nodegroup, which can't be found in model.", this.getFullUriName(), oPropURI, oProp.getRangeStr()));
+					// choice 1:  node with a bad range
+					String msg = this.getSparqlID() + " node property " + oPropURI + " has range " + oProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
+
+					NodeItem nodeItem = nodeItemHash.get(oPropURI);
+					if (nodeItem.isUsed()) {
+						// nItem is used, so the bad range is an error
+						if (modelErrList == null) {
+							throw new ValidationException(msg);
+						} else {
+							modelErrList.add(msg);
+							if (itemStrList != null) {
+								// add an itemStr error for each nItem/target combo
+								for (Node target : nodeItem.getNodeList()) {
+									itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
+								}
+							}
+						}
+					} else {
+						// bad nItem was not used: just fix it (should have been deflated)
+						nodeItem.setUriValueType(oProp.getRangeStr());
+						nodeItem.setValueType(oProp.getRangeStr(true));
+					}
+				} else {
+					// choice 2: deflated propItem
+					newProps.add(propItem);
 				}
 				
-				PropertyItem propItem = new PropertyItem(	oProp.getNameStr(true), 
-															oProp.getRangeStr(true), 
-															oProp.getRangeStr(false),
-															oProp.getNameStr(false));
-				newProps.add(propItem);
-				
-			// node, in hash
+			
 			} else if (nodeItemHash.containsKey(oPropURI)) {
-				// regardless of connection, check range
+				// nodeItem, and range is found in the model
+				
 				NodeItem nodeItem = nodeItemHash.get(oPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
+				boolean rangeErrFlag = false;
 				
-				if (!nRangeStr.equals(oProp.getRangeStr())) {
-					throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " range of " + nRangeStr + " doesn't match model range of " + oProp.getRangeStr());
+				if (!nRangeStr.equals(oProp.getRangeStr())) {	
+					if (nodeItem.isUsed()) {
+						String msg = this.getSparqlID() + " node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
+	
+						if (modelErrList == null) {
+							throw new ValidationException(msg);
+						} else {
+							modelErrList.add(msg);
+							rangeErrFlag = true;
+						}
+					} else {
+						// node is unused: just fix impropertly deflated
+			        	// TODO warn?
+						nodeItem.setUriValueType(oProp.getRangeStr());
+					}
 				}
 				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
-					throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
+					if (nodeItem.isUsed()) {
+						String msg = this.getSparqlID() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
+					
+
+						if (modelErrList == null) {
+							throw new ValidationException(msg);
+						} else {
+							modelErrList.add(msg);
+							rangeErrFlag = true;
+						}
+					} else {
+						// node is unused: just fix impropertly deflated
+			        	// TODO warn?
+						nodeItem.setValueType(oProp.getRangeStr(true));
+					}
 				}
 				
 				// if connected 
 				if (nodeItem.getConnected()) {
-					
-					// check full domain
-					String nDomainStr = nodeItem.getUriConnectBy();
-					if (!nDomainStr.equals(oProp.getNameStr())) {
-						throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " domain of " + nDomainStr + " doesn't match model domain of " + oProp.getNameStr());
-					}
 					
 					// check all connected snode classes
 					OntologyClass nRangeClass = oInfo.getClass(nRangeStr);
@@ -265,24 +336,45 @@ public class Node extends Returnable {
 					for (int j=0; j < snodeList.size(); j++) {
 						String snodeURI = snodeList.get(j).getUri();
 						OntologyClass snodeClass = oInfo.getClass(snodeURI);
+						boolean targetErrFlag = false;
 						
 						if (snodeClass == null) {
-							throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
+							String msg = this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model";
+
+							if (modelErrList == null) {
+								throw new ValidationException(msg);
+							} else {
+								modelErrList.add(msg);
+								targetErrFlag = true;
+							}
 						}
 						
 						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							throw new ValidationException(this.getFullUriName() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
+							String msg = this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model";
 
+							if (modelErrList == null) {
+								throw new ValidationException(msg);
+							} else {
+								modelErrList.add(msg);
+								targetErrFlag = true;
+							}
+						}
+						
+						if (rangeErrFlag || targetErrFlag) {
+							// add itemStrList item for nodeItem with target
+							if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this, nodeItem, snodeList.get(j)));
 						}
 					}
-				}
-				// all is ok: add the propItem
+				} 
+				
+				// add the nodeItem
 				newNodes.add(nodeItem);
 				
 				nodeItemHash.remove(oPropURI);
 				
-			// new node
+			
 			} else {
+				// Unused node: inflate
 				NodeItem nodeItem = new NodeItem(	oProp.getNameStr(false), 
 													oProp.getRangeStr(true),
 													oProp.getRangeStr(false)
@@ -291,12 +383,52 @@ public class Node extends Returnable {
 			}
 		}
 		
-		if (!propItemHash.isEmpty()) {
-			throw new ValidationException("Property does not exist in the model: " + this.getFullUriName() + "->" + propItemHash.keySet().toString());
-		}
-		if (!nodeItemHash.isEmpty()) {
-			throw new ValidationException("Node property does not exist in the model: " + this.getFullUriName() + "->" +  nodeItemHash.keySet().toString());
-		}
+		// Check if anything is left in propItemHash, meaning it wasn't found in the model
+		for (String key : propItemHash.keySet()) {
+			PropertyItem propItem = propItemHash.get(key);
+			if (propItem.isUsed()) {
+				String msg = this.getSparqlID() + " has property that isn't in the model: " + key;
+				if (modelErrList == null) {
+					throw new ValidationException(msg);
+				} else {
+					modelErrList.add(msg);
+					if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this, propItem));
+				}
+	            // add it anyway
+	            newProps.add(propItemHash.get(key));
+			}
+			// else throw away unused improperly deflated prop Item
+        	// TODO warn?
+        }
+
+		// Check if anything is left in nodeItemHash, meaning it wasn't found in the model
+        for (String key : nodeItemHash.keySet()) {
+        	NodeItem nodeItem = nodeItemHash.get(key);
+        	if (nodeItem.isUsed()) {
+	        	String msg = this.getSparqlID() + " has edge that isn't in the model: " + key;
+	        	if (modelErrList == null) {
+					throw new ValidationException(msg);
+				} else {
+					modelErrList.add(msg);
+					if (itemStrList != null) {
+						NodeItem nItem = nodeItemHash.get(key);
+						if (nItem.getConnected()) {
+							for (Node target : nItem.getNodeList() ) {
+								// add every nodeItem/target combo
+								itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
+							}
+						} else {
+							// add nodeItem with null target
+							itemStrList.add(new NodeGroupItemStr(this, nodeItemHash.get(key), null));
+						}
+					}
+				}
+	            // add it anyway
+	            newNodes.add(nodeItemHash.get(key));
+        	}
+        	// else throw away unused improperly deflated node Item
+        	// TODO warn?
+        }
 		
 		this.props = newProps;
 		this.nodes = newNodes;

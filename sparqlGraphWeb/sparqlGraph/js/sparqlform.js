@@ -1047,7 +1047,7 @@ require([	'local/sparqlformconfig',
         restoreQueryFromJson2 = function(sgJson) {
 
             try {
-                sgJson.getNodeGroup(gNodeGroup, gOInfo);
+                sgJson.getNodeGroup(gNodeGroup);
             } catch (e) {
                 ModalIidx.alert("Error loading nodegroup",
                                  e.hasOwnProperty("message") ? e.message : e
@@ -1056,7 +1056,30 @@ require([	'local/sparqlformconfig',
                 return;
             }
 
-            var formRows = sgJson.getExtra("formRows");
+            var ngClient = new MsiClientNodeGroupService(Config.services.nodeGroup.url);
+            ngClient.execAsyncInflateAndValidate(sgJson,
+                                                validateCallback.bind(this, sgJson.getExtra("formRows"), sgJson.getExtra("constraintSet")),
+                                                validateFailure);
+        };
+
+        validateFailure = function(msgHtml) {
+            ModalIidx.alert("Nodegroup validation call failed", msgHtml, false);
+            doClearFormBut();
+        };
+
+        var validateCallback = function(formRows, constraintSet, nodegroup, modelErrors, invalidItemStrings) {
+
+            // successfully determined there were model errors
+            if (modelErrors.length > 0) {
+                var msgHtml = "<list>Nodegroup validation errors:<li>" + modelErrors.join("</li><li>") + "</li></list>";
+                ModalIidx.alert("Nodegroup / model mismatch", msgHtml, false);
+                doClearFormBut();
+                return;
+            }
+
+            // set validated/expanded nodegroup
+            gNodegroup = nodegroup;
+
             if (formRows == null) formRows = [];
 
 			// fill up the form
@@ -1113,8 +1136,6 @@ require([	'local/sparqlformconfig',
             addMissingFormRows();
 
             // if there are constraints, load them
-            var constraintSet = sgJson.getExtra("constraintSet");
-
 			if (constraintSet != null ) {
 				formConstraintSetFromJson(constraintSet);
 			}
@@ -1140,11 +1161,12 @@ require([	'local/sparqlformconfig',
                             ModalIidx.alert("Error",
                                             "Having trouble adding return to form: " + id +
                                             "<br><br>Expecting a single incoming connection:" + id);
-                        }
+                        } else {
 
-                        addFormRow( gNodeGroup.getNodeItemParentSNode(nodeItems[0]),
-                                    nodeItems[0].getKeyName(),
-                                    sNodeList[i]);
+                            addFormRow( gNodeGroup.getNodeItemParentSNode(nodeItems[0]),
+                                        nodeItems[0].getKeyName(),
+                                        sNodeList[i]);
+                        }
                     }
                 }
 

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -91,6 +92,7 @@ public class OntologyInfo {
 	private ArrayList<String> loadWarnings = new ArrayList<String>();
 	private ArrayList<String> importedGraphs = new ArrayList<String>();
 	
+	// props found with no Domain.
 	private HashMap<String, OntologyProperty> orphanProps = new HashMap<String, OntologyProperty>();
 	
 	/**
@@ -238,16 +240,22 @@ public class OntologyInfo {
 		return this.getSubclassNames(maybeSuper).contains(sub);
 	}
 	
-	public HashSet<String> getSubPropNames(String superPropertyName, String domainURI) {
+	/**
+	 * Get sub properties given valid for all super and sub properties of the domain class URI.
+	 * @param superPropertyName
+	 * @param domainClassURI
+	 * @return
+	 */
+	public HashSet<String> inferSubPropertyNames(String superPropertyName, String domainClassURI) {
 		HashSet<String> ret = new HashSet<String>();
 		
 		// get list of domainURI class and all it's super classes
 		ArrayList<OntologyClass> domainClasses = new ArrayList<OntologyClass>();
-		domainClasses.add(this.classHash.get(domainURI));
-		for (String domainSuperName : this.getSuperclassNames(domainURI)) {
+		domainClasses.add(this.classHash.get(domainClassURI));
+		for (String domainSuperName : this.getSuperclassNames(domainClassURI)) {
 			domainClasses.add(this.classHash.get(domainSuperName));
 		}
-		for (String domainSubName : this.getSubclassNames(domainURI)) {
+		for (String domainSubName : this.getSubclassNames(domainClassURI)) {
 			domainClasses.add(this.classHash.get(domainSubName));
 		}
 		
@@ -898,29 +906,20 @@ public class OntologyInfo {
 			// find existing subProp: has domain so loadProperties got it
 			OntologyProperty oSubProp = this.propertyHash.get(subPropNames[i]);
 			
-			// if subProp has no domain
-			if (oSubProp == null || this.orphanProps.containsKey(subPropNames[i])) {
-				
-				// if subProp is orphaned: has range and no domain, so loadProperties orphaned it
-				if (this.orphanProps.containsKey(subPropNames[i])) {
-					oSubProp = this.orphanProps.get(subPropNames[i]);
-					this.orphanProps.remove(subPropNames[i]);
-				
-				} else {
-					// new subprop: has neither domain nor range so loadProperties didn't find it
-					oSubProp = new OntologyProperty(subPropNames[i], "");
-					this.propertyHash.put(subPropNames[i], oSubProp);
-				} 
-				
-				// Inherit the super properties domain
-				OntologyProperty superProp = this.propertyHash.get(superPropNames[i]);	
-				ArrayList<OntologyClass> domainList = this.getPropertyDomain(superProp);
-				for (OntologyClass c : domainList) {
-					c.addProperty(oSubProp);
-				}
+			// if we found a new orphan: has neither domain nor range so loadProperties didn't find it
+			if (oSubProp == null) {
+				oSubProp = new OntologyProperty(subPropNames[i], "");
+				this.propertyHash.put(subPropNames[i], oSubProp);
+				this.orphanProps.put(subPropNames[i], oSubProp);
 			}
 			
 			// If range is "Class", inherit from super property
+			// TODO: this is a "bug" or unclear area for SemTK.
+			// we are inferring the Range if it isn't specified
+			// because otherwise we'll have #Class as a new classURI in oInfo
+			// and path-finding issues, etc.
+			// We'll come back to this later.
+			// Jira:  PESQS-724
 			if (oSubProp.getRange().isDefaultClass()) {
 				OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 				oSubProp.setRange(oSuperProp.getRange().deepCopy());
@@ -1204,10 +1203,11 @@ public class OntologyInfo {
 			} else {
 				// if property doesn't exist, create it
 				prop = new OntologyProperty(propertyList[i], rangeList[i]);
+				this.propertyHash.put(propertyList[i], prop);
 			}
 
 			if (classList[i].trim().isEmpty()) {
-				// Property has no domain/class.  Hopefully it is a subProp and will be resolved.
+				// Property has no domain/class. 
 				this.orphanProps.put(propertyList[i], prop);
 				
 			} else {
@@ -1217,12 +1217,22 @@ public class OntologyInfo {
 					throw new Exception("Cannot find class " + classList[i] + " in the ontology");
 				}			
 				c.addProperty(prop);
+			}			
+		}
+		
+		// clean up orphans.  Owl may  it once with no domain, and another time with.
+		Set<String> toDel = new HashSet<String>();
+		for (String orphan : this.orphanProps.keySet()) {
+			if (this.getPropertyDomain(this.orphanProps.get(orphan)).size() > 0) {
+				toDel.add(orphan);
 			}
-			
-			// Add property to propertyHash
-			this.propertyHash.put(propertyList[i], prop);
+		}
+		
+		for (String k : toDel) {
+			this.orphanProps.remove(k);
 		}
 	}
+	
 
 	/**
 	 * Check validity of the OntologyInfo

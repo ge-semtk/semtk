@@ -212,6 +212,9 @@ public class NodeItem {
 		return this.keyName;
 	}
 	
+	public boolean isUsed() {
+		return this.getConnected();
+	}
 	public boolean getConnected() {
 		return this.connected;
 	}
@@ -265,6 +268,13 @@ public class NodeItem {
 	}
 	public String getValueType() {
 		return this.valueType;
+	}
+	
+	public void setUriValueType(String uri) {
+		this.valueTypeURI = uri;
+	}
+	public void setValueType(String name) {
+		this.valueType = name;
 	}
 	
 	public String getUriConnectBy() {

@@ -40,12 +40,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
 		MsiClientNodeGroupService.prototype = {
-            /*
-             * Async.  All these may use
-             *     resultSet.isSuccess()
-             *     this.getSuccessSparql(resultSet)
-             *     this.getFailedResultHtml(resultSet)
-             */
+
             execGenerateAsk : function (nodegroup, conn, successCallback)              { return this.execNodegroupOnly("generateAsk",           nodegroup, conn, successCallback); },
             execGenerateConstruct : function (nodegroup, conn, successCallback)        { return this.execNodegroupOnly("generateConstruct",     nodegroup, conn, successCallback); },
             execGenerateCountAll : function (nodegroup, conn, successCallback)         { return this.execNodegroupOnly("generateCountAll",      nodegroup, conn, successCallback); },
@@ -72,6 +67,13 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.msi.postToEndpoint("setImportSpecFromReturns", JSON.stringify (data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            execInflateAndValidate : function (sgJson, successCallback) {
+                var data = JSON.stringify ({
+                      "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson())
+                    });
+                this.msi.postToEndpoint("inflateAndValidate", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
             execGetSampleIngestionCSV : function (sgJson, format, successCallback) {
                 var data = JSON.stringify ({
 					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
@@ -81,7 +83,7 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             /*
-            **  Asynchronous functions
+            **  Asynchronous functions: throw errors unless successful
             */
             execAsyncGenerateFilter : function (nodegroup, conn, sparqlId, sparqlCallback, failureCallback) {
                 this.execGenerateFilter(nodegroup, conn, sparqlId,
@@ -119,8 +121,12 @@ define([	// properly require.config'ed   bootstrap-modal
                                         this.asyncSimpleValueCallback.bind(this, "sampleCSV", csvTextCallback, failureCallback));
             },
 
-
-
+            // Success calls ngMessagesItemsCallback(nodegroup, modelErrorMessages, invalidItemStrings)
+            // FailureCallback(html) if not successful
+            execAsyncInflateAndValidate : function (sgjson, ngMessagesItemsCallback, failureCallback) {
+                this.execInflateAndValidate(sgjson,
+                                            this.asyncInflateAndValidateCallback.bind(this, ngMessagesItemsCallback, failureCallback));
+            },
 
             /*
              * @private
@@ -144,7 +150,7 @@ define([	// properly require.config'ed   bootstrap-modal
              */
             asyncSimpleValueCallback(valueName, simpleValueCallback, failureCallback, resultSet) {
                 if (resultSet.isSuccess()) {
-                    // get the jobId
+                    // get the field
                     var value = resultSet.getSimpleResultField(valueName);
                     if (value) {
                         simpleValueCallback(value);
@@ -153,6 +159,28 @@ define([	// properly require.config'ed   bootstrap-modal
                     }
                 } else {
                     failureCallback(resultSet.getFailureHtml());
+                }
+            },
+
+            /*
+             * Check for success and all proper return fields
+             * @private
+             */
+            asyncInflateAndValidateCallback(ngMessagesItemsCallback, failureCallback, resultSet) {
+                if (! resultSet.isSuccess()) {
+                    failureCallback(resultSet.getFailureHtml());
+                } else {
+                    var f = ["nodegroup", "modelErrorMessages", "invalidItemStrings"];
+                    for (var field of f) {
+                        if (resultSet.getSimpleResultField(field) == null) {
+                            failureCallback("InflateAndValidate return did not contain field: " + field);
+                        }
+                    }
+                    ngMessagesItemsCallback(
+                        resultSet.getSimpleResultField(f[0]),
+                        resultSet.getSimpleResultField(f[1]),
+                        resultSet.getSimpleResultField(f[2])
+                    );
                 }
             },
 

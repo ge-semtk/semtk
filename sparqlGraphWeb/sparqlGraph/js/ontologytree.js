@@ -377,20 +377,28 @@ OntologyTree.prototype = {
 	addNodeProps : function(node, ontClass, propList) {
 		// add propList to node if they are not already there
 
-        var propListSubUris = [];   // URS's of properties in propList, that are subprops of others
-
-        // fill in propListSubUris
-        for (var oProp of propList) {
-            var propName = oProp.getNameStr();
-            var subs = this.oInfo.getSubProperties(propName);
-            for (var subPropName of subs) {
-                propListSubUris.push(subPropName);
+        // build topLevelProps:  all propList which are NOT subprops of other props in propList
+        //       subProps:       all propList which ARE subprops of other props in propList
+        var topLevelProps = propList.slice();
+        var otherLevelProps = [];
+        for (var p of propList) {
+            
+            var subProps = this.oInfo.getSubProperties(p);
+            for (var s of subProps) {
+                var i = topLevelProps.indexOf(s);
+                if (i > -1) {
+                    // found that s is a subprop of p
+                    // remove s from topLevelProps
+                    // add s to otherLevelProps
+                    topLevelProps.splice(i, 1);
+                    otherLevelProps.push(s);
+                }
             }
         }
 
         var title = "";
-        for (var i=0; i < propList.length; i++) {
-        	var propName = propList[i].getNameStr();
+        for (var prop of topLevelProps) {
+        	var propName = prop.getNameStr();
 
         	// add property if it don't exist yet under this class
         	var nodeList = this.getNodesByURI(propName);
@@ -402,43 +410,46 @@ OntologyTree.prototype = {
         		}
         	}
 
-            // if prop is not already added, and if it is not a subProp
-            // then add it
-        	if (propNode == null && propListSubUris.indexOf(propName) == -1 ) {
-                this.addPropToNode(node, propList[i], ontClass, propList);
-
+            // if prop is not already added, then add it
+        	if (propNode == null) {
+                var newNode = this.addPropToNode(node, prop, ontClass);
+                // otherLevelProps are sub to SOME property, maybe this one, maybe not
+                this.recursivelyAddSubpropsIn(newNode, prop, ontClass, otherLevelProps);
         	}
         }
 
 	},
 
-    addPropToNode : function(node, ontProp, ontClass, propList) {
+    recursivelyAddSubpropsIn : function(node, prop, ontClass, possibleSubProps) {
+        // Recursively add any members of possibleSubProps that are actually subProps of prop
+        //
+        // node - a property node to add subProps
+        // prop - the prop shown in node
+        // ontClass - the parent Class
+        // possibleSubProps - list of possible subProps
+
+        var subProps = this.oInfo.getSubProperties(prop);
+        for (var sub of possibleSubProps) {
+            if (subProps.indexOf(sub) > -1) {
+                // sub is a valid subProp
+                var newNode = this.addPropToNode(node, sub, ontClass);
+                this.recursivelyAddSubpropsIn(newNode, sub, ontClass, possibleSubProps);
+            }
+        }
+    },
+
+    addPropToNode : function(node, ontProp, ontClass) {
         // format local properties different than inherited
-        if (ontClass.getProperties().indexOf(ontProp) > -1) {
-            title = "<i>" + ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true) + "</i>";
-
-        } else {
+        var inheritedFlag = (ontClass.getProperties().indexOf(ontProp) == -1)
+        if (inheritedFlag) {
             title = ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true);
-
+        } else {
+            title = "<i>" + ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true) + "</i>";
         }
 
         // highlight if range is a special class
         if (this.classIsSpecial(ontProp.getRangeStr())) {
             title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
-        }
-
-        // build list of subProps
-        var subPropUris = this.oInfo.getSubProperties(ontProp.getNameStr());
-        var subProps = [];
-        for (var subUri of subPropUris) {
-
-            // find subProp in original propList
-            var subProp = null;
-            for (var p of propList) {
-                if (p.getNameStr() == subUri) {
-                    subProps.push(p);
-                }
-            }
         }
 
         // add
@@ -453,12 +464,7 @@ OntologyTree.prototype = {
             expand: true
         });
         child.data.value = propName;
-
-        // recursively add any subProps
-        for (var subProp of subProps) {
-            // call recursively
-            this.addPropToNode(child, subProp, ontClass, propList);
-        }
+        return child;
     },
 
 	// keys are now randomly generated

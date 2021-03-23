@@ -25,6 +25,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.load.transform.TransformInfo;
 
 /** 
  * Handles the JSON for an importSpec.
@@ -119,6 +120,52 @@ public class ImportSpec {
 		return transforms == null ? 0 : transforms.size();
 	}
 	
+	/**
+	 * 
+	 * @param name
+	 * @param type
+	 * @param arg1
+	 * @param arg2
+	 * @return the new transform's ID
+	 */
+	public String addTransform(String name, String type, String arg1, String arg2) throws Exception {
+		// build id
+		String id = "trans_" + String.valueOf(this.getNumTransforms());
+		
+		// error check
+		if (this.getTransform(name) != null) 
+			throw new Exception("Transform already exists with name: " + name);
+		if (!TransformInfo.getTypes().contains(type)) 
+			throw new Exception("Invalid transform type: " + type);
+		if (arg2 != null && TransformInfo.getArgCount(type) < 2)
+			throw new Exception("Transform " + name + " does not accept arg2");
+		if (arg1 != null && TransformInfo.getArgCount(type) < 1)
+			throw new Exception("Transform " + name + " does not accept args");
+		
+		// build transform json
+		JSONObject transform = new JSONObject();
+		transform.put(JKEY_IS_TRANS_ID, id);
+		transform.put(JKEY_IS_TRANS_NAME, name);
+		transform.put(JKEY_IS_TRANS_TYPE, type);
+		transform.put(JKEY_IS_TRANS_ARG1, arg1);
+		transform.put(JKEY_IS_TRANS_ARG2, arg2);
+		
+		// add
+		JSONArray transforms = (JSONArray) this.json.get(JKEY_IS_TRANSFORMS);
+		transforms.add(transform);
+		
+		return id;
+	}
+	
+	private JSONObject getTransform(String name) {
+		for (Object o : (JSONArray) this.json.get(JKEY_IS_TRANSFORMS)) {
+			JSONObject j = (JSONObject) o;
+			if (j.get(JKEY_IS_TRANS_NAME).equals(name)) {
+				return j;
+			}
+		}
+		return null;
+	}
 	private JSONObject getTransform(int index) {
 		return (JSONObject) ((JSONArray) this.json.get(JKEY_IS_TRANSFORMS)).get(index);
 
@@ -421,6 +468,19 @@ public class ImportSpec {
 		
 		JSONObject ret = new JSONObject();
 		ret.put(JKEY_IS_COL_COL_ID, colId);
+		return ret;
+	}
+	
+	public JSONObject buildMappingWithCol(String colName, String[] transformIds) throws Exception {
+		
+		JSONObject ret = this.buildMappingWithCol(colName);
+		
+		JSONArray transformList = new JSONArray();
+		for (String id : transformIds) {
+			transformList.add(id);
+		}
+		ret.put(JKEY_IS_MAPPING_TRANSFORM_LIST, transformList);
+		
 		return ret;
 	}
 	

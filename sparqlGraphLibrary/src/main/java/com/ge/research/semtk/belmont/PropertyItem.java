@@ -24,10 +24,6 @@ import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.belmont.Returnable;
-import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.utility.LocalLogger;
-
 public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_NONE = 0;
 	public static final int OPT_MINUS_OPTIONAL = 1;
@@ -38,7 +34,6 @@ public class PropertyItem extends Returnable {
 	private String valueTypeURI = null;  
 	private String uriRelationship = null; // the full URI of the relationship
 	
-	private String fullURIName = "";
 	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
 	
@@ -82,9 +77,7 @@ public class PropertyItem extends Returnable {
 		
 		this.valueTypeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
 		this.uriRelationship = jObj.get("UriRelationship").toString();
-		
-		this.fullURIName = (String) jObj.get("fullURIName");
-		
+				
 		this.optMinus = OPT_MINUS_NONE;
 		if (jObj.containsKey("isOptional")) {
 			this.optMinus = ((Boolean) jObj.get("isOptional")) ? OPT_MINUS_OPTIONAL : OPT_MINUS_NONE;
@@ -121,7 +114,6 @@ public class PropertyItem extends Returnable {
 		ret.put("ValueType", this.valueType.getSimpleName());
 		ret.put("relationship", this.valueTypeURI);
 		ret.put("UriRelationship", this.uriRelationship);
-		ret.put("fullURIName", this.fullURIName);
 		ret.put("optMinus", this.optMinus);
 		ret.put("isMarkedForDeletion", this.isMarkedForDeletion);
 		ret.put("instanceValues", iVals);
