@@ -330,8 +330,9 @@ public class UtilityServiceRestController {
 				PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
 				specHandler.applyTable(table);
 				JSONObject plotSpecJsonProcessed = specHandler.getJSON();	
-				res.addResult("spec", plotSpecJsonProcessed);
+				res.addResult("plot", plotSpecJsonProcessed);
 				res.setSuccess(true);
+				LocalLogger.logToStdOut("Returning " + res.toJson().toJSONString());
 			}else{
 				throw new Exception("Unsupported plot type");
 			}
