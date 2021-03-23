@@ -24,18 +24,16 @@ define([	// properly require.config'ed   bootstrap-modal
             'plotly/plotly-latest.min'
             //                       OR should we presume the internet is available?  and pull from there?
 			// shimmed
-
 		],
 
     function(IIDXHelper, MsiResultSet, MsiClientUtility, Plotly) {
 
         /*
-             spec: { data: [{},{}], layout: {}, config: {} }
+            Plot Spec = { name: "", type: "", spec: { data: [{},{}], layout: {}, config: {} } }
          */
         var PlotlyPlotter = function (plotSpec) {
             this.spec = plotSpec;
         };
-
 
         PlotlyPlotter.prototype = {
             CONSTANT : 1,
@@ -45,14 +43,14 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             addPlotToDiv : function(div, tableRes) {
-
                 var utilityClient = new MsiClientUtility(g.service.utility.url);
-                var plotSpecProcessed = utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable());
+                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div));
+            },
 
-                var data = plotSpecProcessed.data;
-                var layout = plotSpecProcessed.layout;
-                var config = plotSpecProcessed.config;
-
+            processSpecSuccess : function(div, msiRes) {
+                var data = msiRes.getSimpleResultField("plot").spec.data;
+                var layout = msiRes.getSimpleResultField("plot").spec.layout;
+                var config = msiRes.getSimpleResultField("plot").spec.config;
                 Plotly.newPlot( div, data, layout, config );
             }
         };
