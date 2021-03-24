@@ -1,7 +1,10 @@
 package com.ge.research.semtk.plotting;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -134,8 +137,14 @@ public class PlotlyPlotSpecHandler {
 		String[] sSplit = s.replaceAll("\\s","").split("[\\.\\[\\]]");  // e.g. split SEMTK_TABLE.col[colA] into ["SEMTK_TABLE", "col", "colA"]
 		if(sSplit[0].equals(PREFIX) && sSplit[1].equals(CMD_COL)){
 			String colName = sSplit[2];
-			String columnDataStr = Arrays.toString(table.getColumn(colName));
-			plotSpecJsonStrTemp = plotSpecJsonStrTemp.replace("\"" + s + "\"", columnDataStr);
+			ArrayList<String> list = new ArrayList<>(Arrays.asList(table.getColumn(colName)));
+			String columnDataStr;
+			if(NumberUtils.isNumber(table.getCell(0, colName))){
+				columnDataStr = "[" + list.stream().collect(Collectors.joining(", ")) + "]";							// no quotes needed, e.g. [11.1,11.5]
+			}else{
+				columnDataStr = "[" + list.stream().map(t -> "\"" + t + "\"").collect(Collectors.joining(", ")) + "]";  // surround each entry in quotes (e.g. e.g. ["2020-01-24T00:00:00","2020-01-23T00:00:00"])
+			}
+			plotSpecJsonStrTemp = plotSpecJsonStrTemp.replace("\"" + s + "\"", columnDataStr);  	// replace the SEMTK_TABLE instruction with the data
 		}else{
 			throw new Exception("Unsupported data specification for plotting: " + s);
 		}
