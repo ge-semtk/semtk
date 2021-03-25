@@ -35,7 +35,7 @@ public class NodegroupRequest {
 	private String jsonRenderedNodeGroup;
 	
 	/**
-	 * Get just the nodegroup out of the json
+	 * Get just the nodegroup out of the json with no validation
 	 * @return
 	 * @throws Exception
 	 */

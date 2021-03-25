@@ -58,26 +58,28 @@ public class ValidationAssistantTest_IT {
 	public void test() throws Exception {
 		// animal should match itself
 		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/animalQuery.json");
-		Node animal = ng.getNodeBySparqlID("?Animal");
-		ArrayList<String> suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(animal));
-		String expect = animal.getUri();
+		Node node = ng.getNodeBySparqlID("?Animal");
+		ArrayList<String> suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
+		String expect = node.getUri();
 		String actual = suggestions.get(0);
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 		
 		// change #name property to #scaryName and we should get Tiger
 		ng = this.getNodegroupWithUriReplaced("animalquery.json", "#name", "#scaryName");
-		animal = ng.getNodeBySparqlID("?Animal");
-		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(animal));
+		node = ng.getNodeBySparqlID("?Animal");
+		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
 		expect = "http://AnimalSubProps#Tiger";
 		actual = suggestions.get(0);
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 		
 		// try one where incoming nodeItem chooses
 		// HERE
-		ng = this.getNodegroupWithUriReplaced("animalSubPropsCats.json", "#name", "#scaryName");
-		animal = ng.getNodeBySparqlID("?Animal");
-		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(animal));
-		expect = "http://AnimalSubProps#Tiger";
+		ng = this.getNodegroupWithUriReplaced("animalSubPropsCats.json", 
+				"\"fullURIName\": \"http://AnimalSubProps#Animal\"", 
+				"\"fullURIName\": \"http://AnimalSubProps#Invalid\"");     // change the type of the Demon node
+		node = ng.getNodeBySparqlID("?Demon");
+		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
+		expect = "http://AnimalSubProps#Animal";
 		actual = suggestions.get(0);
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 	}

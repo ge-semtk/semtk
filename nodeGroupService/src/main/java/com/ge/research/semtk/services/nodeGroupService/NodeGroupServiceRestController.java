@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.services.nodeGroupService;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -885,6 +887,35 @@ public class NodeGroupServiceRestController {
 		}
 		catch(Exception e){
 			retval.addRationaleMessage(SERVICE_NAME, "inflateAndValidate", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Suggest a valid class URI for a node",
+			notes="returns classList = array of class URI's sorted from best to worst match"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/suggestNodeClass", method=RequestMethod.POST)
+	public JSONObject suggestNodeClass(@RequestBody NodegroupItemStrRequest request, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			OntologyInfo oInfo = this.retrieveOInfo(request.buildConnection());
+			NodeGroup ng = request.buildNodeGroup();
+			NodeGroupItemStr itemStr = new NodeGroupItemStr(request.getItemStr(), ng);
+			if (itemStr.getType() != Node.class)
+				throw new Exception("Invalid itemStr param.  Expecting a Node URI");
+				
+			ArrayList<String> classList = ValidationAssistant.suggestNodeClass(oInfo, ng, itemStr);
+			retval.addResult("classList", classList.toArray(new String[0]));
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "suggestNodeClass", e);
 			retval.setSuccess(false);
 			LocalLogger.printStackTrace(e);
 		}

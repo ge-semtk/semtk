@@ -357,7 +357,7 @@ define([// properly require.config'ed
 			},
 
 			// get list of all PropertyItems that have mappings
-			getUndeflatablePropItems() {
+			getUndeflatablePropItems : function() {
 				var ret = [];
 				for (var i=0; i < this.mapList.length; i++) {
 					var map = this.mapList[i];

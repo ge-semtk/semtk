@@ -876,9 +876,17 @@ PropertyItem.prototype = {
 		// return the name of the property
 		return this.KeyName;
 	},
+    getValueTypeURI : function() {
+        return this.valueTypeURI;
+    },
+    // horrible old name
 	getRelation : function() {
 		return this.valueTypeURI;
 	},
+    // duplicate name for items
+    getURI : function() {
+        return this.UriRelationship;
+    },
 	getUriRelation : function() {
 		return this.UriRelationship;
 	},
@@ -1298,6 +1306,10 @@ SemanticNode.prototype = {
 		if (localFlag) return new OntologyName(this.fullURIName).getLocalName();
 		else           return this.fullURIName;
 	},
+
+    changeURI : function(newURI) {
+        this.fullURIName = newURI;
+    },
 
 	getConnections : function(connList) {
 		// return a list of connections as edges.
@@ -1969,6 +1981,11 @@ SemanticNodeGroup.prototype = {
             // node
             return snode.getSparqlID();
         }
+    },
+
+    // Named to match Java for service calls
+    buildItemStr : function (snode, optItem, optTarget) {
+        return this.buildUnionMemberStr(snode, optItem, optTarget);
     },
 
     buildUnionMemberStr : function(snode, optItem, optTarget) {

@@ -41,6 +41,9 @@ define([	// properly require.config'ed   bootstrap-modal
 
 		MsiClientNodeGroupService.prototype = {
 
+            /**#
+                These return result sets.   Look to execAsync*() below for more complete functionality
+            ***/
             execGenerateAsk : function (nodegroup, conn, successCallback)              { return this.execNodegroupOnly("generateAsk",           nodegroup, conn, successCallback); },
             execGenerateConstruct : function (nodegroup, conn, successCallback)        { return this.execNodegroupOnly("generateConstruct",     nodegroup, conn, successCallback); },
             execGenerateCountAll : function (nodegroup, conn, successCallback)         { return this.execNodegroupOnly("generateCountAll",      nodegroup, conn, successCallback); },
@@ -82,9 +85,18 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getSampleIngestionCSV", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
-            /*
-            **  Asynchronous functions: throw errors unless successful
-            */
+            execSuggestNodeClass : function (nodegroup, conn, snode, classListCallback) {
+                var sgJson = new SparqlGraphJson(conn, nodegroup);
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "itemStr": nodegroup.buildItemStr(snode)
+					});
+                this.msi.postToEndpoint("suggestNodeClass", data, "application/json", classListCallback, this.optFailureCallback, this.optTimeout);
+            },
+
+            /***
+                    Asynchronous functions: These check for success and unpack results
+            ***/
             execAsyncGenerateFilter : function (nodegroup, conn, sparqlId, sparqlCallback, failureCallback) {
                 this.execGenerateFilter(nodegroup, conn, sparqlId,
                                         this.asyncSparqlCallback.bind(this, "generateFilter", sparqlCallback, failureCallback));
@@ -119,6 +131,11 @@ define([	// properly require.config'ed   bootstrap-modal
             execAsyncGetSampleIngestionCSV : function (sgjson, format, csvTextCallback, failureCallback) {
                 this.execGetSampleIngestionCSV(sgjson, format,
                                         this.asyncSimpleValueCallback.bind(this, "sampleCSV", csvTextCallback, failureCallback));
+            },
+
+            execAsyncSuggestNodeClass : function (nodegroup, conn, snode, classListCallback, failureCallback) {
+                this.execSuggestNodeClass(nodegroup, conn, snode,
+                                        this.asyncSimpleValueCallback.bind(this, "classList", classListCallback, failureCallback));
             },
 
             // Success calls ngMessagesItemsCallback(nodegroup, modelErrorMessages, invalidItemStrings)

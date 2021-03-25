@@ -393,26 +393,32 @@
     };
 
     var launchPropertyItemDialog1 = function (propItem, snodeID) {
-        // TODO temporary test
-        // This is not working, and leaves two properties with the same name.
-        // Should somehow delete existing property and combine fields.
-        if (false && gNodegroupInvalidItems.length > 0) {
-            propItem.setKeyName("identifier");
-            propItem.relation("http://arcos.rack/PROV-S#identifier");
-            reValidateNodegroup();
-            return;
-        }
+
 
     	require([ 'sparqlgraph/js/modalitemdialog',
-	            ], function (ModalItemDialog) {
+                  'sparqlgraph/js/modalinvaliditemdialog',
+                  'sparqlgraph/js/msiclientnodegroupservice'
+              ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
 
-    		var dialog= new ModalItemDialog(propItem,
-                                            gNodeGroup,
-                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, propItem),
-                                            propertyItemDialogCallback,
-    				                        {"snodeID" : snodeID}
-    		                                );
-    		dialog.show();
+            if (gNodegroupInvalidItems.length > 0) {
+
+                var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
+                                                        propItem,
+                                                        gNodeGroup,
+                                                        gConn,
+                                                        gOInfo,
+                                                        changeItemURI
+                                                        );
+                dialog.show();
+            } else {
+    		    var dialog= new ModalItemDialog(propItem,
+                                                gNodeGroup,
+                                                this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, propItem),
+                                                propertyItemDialogCallback,
+    				                            {"snodeID" : snodeID}
+    		                                    );
+    		        dialog.show();
+            }
 		});
     };
 
@@ -509,16 +515,41 @@
 
     var launchSNodeItemDialog1 = function (snodeItem) {
         require([ 'sparqlgraph/js/modalitemdialog',
-                ], function (ModalItemDialog) {
+                  'sparqlgraph/js/modalinvaliditemdialog',
+                  'sparqlgraph/js/msiclientnodegroupservice',
+              ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
 
-            var dialog= new ModalItemDialog(snodeItem,
-                                            gNodeGroup,
-                                            this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, snodeItem),
-                                            snodeItemDialogCallback,
-                                            {} // no data
-                                            );
-            dialog.show();
+            if (gNodegroupInvalidItems.length > 0) {
+                var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+
+                var dialog= new ModalInvalidItemDialog( ngClient,
+                                                        snodeItem,
+                                                        gNodeGroup,
+                                                        gConn,
+                                                        gOInfo,
+                                                        changeItemURI
+                                                        );
+                dialog.show();
+            } else {
+                var dialog= new ModalItemDialog(snodeItem,
+                                                gNodeGroup,
+                                                this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, snodeItem),
+                                                snodeItemDialogCallback,
+                                                {} // no data
+                                                );
+                dialog.show();
+            }
         });
+    };
+
+    var changeItemURI = function(item, newUri) {
+        if (item.getItemType() == "SemanticNode") {
+            item.changeURI(newUri);
+            gMappingTab.updateNodegroup(gNodeGroup, gConn);
+        } else {
+            alert("Not implemented at sparqlgraph.js changeItemURI()");
+        }
+        reValidateNodegroup();
     };
 
     var snodeRemover = function (snode) {
