@@ -64,6 +64,8 @@ public class DataLoader implements Runnable {
 	
 	int totalRecordsProcessed = 0;
 	
+	private int maxCacheLength = (int) (Integer.MAX_VALUE / 4);
+	
 	// async information
 	Boolean asyncSkipIngest = null;
 	Boolean asyncPrecheck = null;
@@ -214,31 +216,30 @@ public class DataLoader implements Runnable {
 	 * @throws Exception
 	 */
 	public int importData(Boolean precheck, Boolean skipIngest) throws Exception{
-
+		
 		// set up information for percent complete
 		this.datasetNumRows = batchHandler.getDsRows();
 		long cellCount = this.datasetNumRows * batchHandler.getImportColNames().length;
 
-		// don't cache
+		// default: no cache
+		this.cacheSei = null;
+
 		if (skipIngest || this.doNotCache) {
-			this.cacheSei = null;
-			
-		// virtuoso rows > 50
-		} else if (this.endpoint.getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER) && 
-				this.datasetNumRows > 50 ) {
-			this.cacheSei = new InMemoryInterface("http://cache");
+			;
+		// virtuoso 
+		} else if (this.endpoint.getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER) ) {
+			if (this.datasetNumRows > 50) {
+				this.cacheSei = new InMemoryInterface("http://cache");
+				this.maxCacheLength = 5000000;   // 1/100 of MAX_INT
+			}
 			
 		// neptune never
-		} else if (this.endpoint.getServerType().equals(SparqlEndpointInterface.NEPTUNE_SERVER) && 
-				false ) { 
-			this.cacheSei = new InMemoryInterface("http://cache");
+		} else if (this.endpoint.getServerType().equals(SparqlEndpointInterface.NEPTUNE_SERVER)) { 
+			;
 			
 		// fuseki and blazegraph and ???   Just repeat > 50 logic.
 		} else if (this.datasetNumRows > 50){
 			this.cacheSei = new InMemoryInterface("http://cache");
-			
-		} else {
-			this.cacheSei = null;
 		}
 		
 		// check the nodegroup for consistency before continuing.			
@@ -327,7 +328,6 @@ public class DataLoader implements Runnable {
 		int startingRow = 1;
 		int dumpCacheRowInterval = 0;
 		int dumpCacheNext = 0;
-		final int MAX_CACHE_LENGTH = (int) (Integer.MAX_VALUE * 0.5);
 		
 		String mode = "";
 		if (skipIngest && skipCheck) {
@@ -413,12 +413,17 @@ public class DataLoader implements Runnable {
 				}
 				
 				// if there is a cacheSei, make sure it isn't getting too large
-				if (!skipIngest && this.cacheSei != null && this.cacheSei.dumpToTurtle().length() > 0) {
+				if (!skipIngest && this.cacheSei != null) {
 					// after 100 rows, guess a good place to upload
 					if (dumpCacheRowInterval == 0 && startingRow > 100) {
 						long testSize = this.cacheSei.dumpToTurtle().length();
-						dumpCacheRowInterval = (int) ((startingRow * MAX_CACHE_LENGTH) / testSize);
-						dumpCacheNext = dumpCacheRowInterval;
+						if (testSize == 0) {
+							dumpCacheRowInterval = 100;
+							dumpCacheNext = 100;
+						} else {
+							dumpCacheRowInterval = (int) ((startingRow * this.maxCacheLength) / testSize);
+							dumpCacheNext = dumpCacheRowInterval;
+						}
 					}
 					// do upload when needed
 					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
@@ -453,10 +458,12 @@ public class DataLoader implements Runnable {
 	}
 	
 	private void uploadTempGraph() throws Exception {
-		LocalLogger.logToStdOut("Uploading temporary graph...");
+		LocalLogger.logToStdErr("Generating temporary graph turtle...");
 		String s = this.cacheSei.dumpToTurtle();
-		this.endpoint.executeAuthUploadTurtle(s.getBytes());
-		LocalLogger.logToStdErr("size " + s.length());
+		LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
+		this.endpoint.authUploadTurtle(s.getBytes());
+		LocalLogger.logToStdErr("upload complete");
+		
 	}
 	
 	public int getMaxThreads() {
