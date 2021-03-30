@@ -835,6 +835,14 @@ define([	// properly require.config'ed
 				}
 			},
 
+            /*
+                In order that the next updateNodegroup doesn't throw out a merged property,
+                change the name of a property that has been merged in the nodegroup.
+            */
+            mergeProperty : function (snode, oldURI, mergedProp) {
+                this.importSpec.mergeProperty(snode, oldURI, mergedProp);
+            },
+
 			updateNodegroup : function (nodegroup, conn) {
 				this.importSpec.updateNodegroup(nodegroup);
                 this.conn = gConn;

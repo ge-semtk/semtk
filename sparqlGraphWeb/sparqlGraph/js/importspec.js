@@ -372,6 +372,66 @@ define([// properly require.config'ed
 				return ret;
 			},
 
+            /*
+                For a class snode, get a list of properties which are mapped.
+            */
+            getMappedProperties : function (snode) {
+                var ret = [];
+
+                for (var map of this.mapList) {
+                    var prop = map.getPropItem();
+                    if (map.getNode().getSparqlID() == snode.getSparqlID() && prop != null && map.getItemList().length > 0) {
+                        ret.push(prop.getURI());
+                    }
+                }
+                return ret;
+            },
+
+            mergeProperty : function (snode, oldURI, mergedProp) {
+                var ret = [];
+                var found = 0;
+                var delIndex = -1;
+
+                var newMapItemCount = 0;
+                var oldMap = undefined;
+
+                for (var i=0; i < this.mapList.length && found < 2; i++) {
+                    var map = this.mapList[i];
+                    var mapPropURI = map.getPropItem() == null ? "" : map.getPropItem().getURI();
+                    if (map.getNode().getSparqlID() == snode.getSparqlID() && mapPropURI == mergedProp.getURI()) {
+                        newMapItemCount = map.getItemList().length;
+                        delIndex = i;
+    				} else if (map.getNode().getSparqlID() == snode.getSparqlID() && mapPropURI == oldURI) {
+                        oldMap = map;
+                    }
+                }
+
+                if (oldMap) {
+                    // put merged property (with new/valid prop URI) into the old mapping row
+
+                    var oldKey = oldMap.genUniqueKey();
+                    oldMap.setPropItem(mergedProp);
+
+                    // the oldMap now applies to the new merged property withthe coreect name
+                    var newKey = oldMap.genUniqueKey();
+                    this.mapHash[newKey] = oldMap;
+                    delete this.mapHash[oldKey];
+
+                    if (newMapItemCount > 0) {
+                        this.alert( "Overwrote information that used to be on the mapping tab in row" +
+                                    "<list><li>" + snode.getSparqlID() + "->" + mergedProp.getKeyName() + "</li></list>" +
+                                    "<br>With the mappings that were in " +
+                                    "<list><li>" + snode.getSparqlID() + "->" + oldURI.split("#")[1] + "</li></list>" +
+
+                                    "<br><br>Consider manually checking for lost information."
+                                    );
+                        this.mapList.slice(delIndex,1);
+                    }
+                }
+
+
+            },
+
 			updateNodegroup : function (nodegroup) {
 				// Build new mapList and mapHash based on this.nodegroup
 				// saving any existing itemLists

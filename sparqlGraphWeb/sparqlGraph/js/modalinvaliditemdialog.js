@@ -38,27 +38,33 @@ define([	// properly require.config'ed
 		],
 	function(IIDXHelper, ModalIidx, $) {
 
-		var ModalInvalidItemDialog = function(nodeGroupServiceClient, item, nodegroup, conn, oInfo, itemUriCallback) {
+		var ModalInvalidItemDialog = function(nodeGroupServiceClient, item, targetSNode, nodegroup, conn, oInfo, importSpec, itemUriCallback) {
 			// callback(snode, item, data, optionalFlag, deleteFlag)
 
             this.ngClient = nodeGroupServiceClient;
 			this.item = item;            // item which failed validation
+            this.target = targetSNode;   // null except for nodeItems
             this.nodegroup = nodegroup;  // nodegroup which failed validation
             this.conn = conn;            // to get oInfo for model
             this.oInfo = oInfo;
 			this.callback = itemUriCallback;
+
+            // if item is a prop, find props that are already mapped.  Merging with these would lose information.
+            this.mergeConflictURIs = (this.item.getItemType() == "PropertyItem") ? importSpec.getMappedProperties(this.nodegroup.getPropertyItemParentSNode(this.item)) : [];
 		};
 
 		ModalInvalidItemDialog.prototype = {
-
-
 			clear : function () {
 
 			},
 
-			submit : function () {
+            getSelectedURI : function() {
                 var select  = document.getElementById("ModalInvalidItemDialog.URISelect");
-                this.callback(this.item, IIDXHelper.getSelectValues(select)[0]);
+                return IIDXHelper.getSelectValues(select)[0];
+            },
+
+			submit : function () {
+                this.callback(this.item, this.target, this.getSelectedURI());
 			},
 
             show : function () {
@@ -78,6 +84,29 @@ define([	// properly require.config'ed
                     }
                     this.show2(uriList);
 
+                } else if (this.item.getItemType() == "NodeItem") {
+                    // find all nodes for this CLASS
+                    var snode = this.nodegroup.getNodeItemParentSNode(this.item);
+                    var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
+                    var uriList = [];
+                    var targetClass = new OntologyClass(this.target.getURI());
+
+                    for (var op of oPropList) {
+                        // separate propItems from nodeItems
+                        var rangeStr = op.getRangeStr();
+                        if (this.oInfo.containsClass(rangeStr)) {
+                            var rangeClass = new OntologyClass(rangeStr);
+
+                            // if link to target node valid, put it at the top of the list, else on bottom
+                            if (this.oInfo.classIsA(targetClass, rangeClass)) {
+                                uriList.unshift(op.getNameStr());
+                            } else {
+                                uriList.push(op.getNameStr());
+                            }
+                        }
+                    }
+                    this.show2(uriList);
+
                 } else {
                     alert("Not implemented in ModalInvalidItemDialog.show()");
                 }
@@ -93,20 +122,20 @@ define([	// properly require.config'ed
                 var fieldset = IIDXHelper.addFieldset(form);
 
                 // title and headers
+
                 var title = "unknown item type";
+                var s = document.createElement("span");
                 if (this.item.getItemType() == "SemanticNode") {
                     title = "Change Class URI of " + this.item.getSparqlID();
-                    var s = document.createElement("span");
                     s.innerHTML = this.item.getURI();
-                    fieldset.appendChild(IIDXHelper.buildControlGroup("Current URI: ", s));
-
                 } else if (this.item.getItemType() == "PropertyItem") {
                     title = "Change relationship URI of " + this.item.getIsReturned() ? this.item.getBindingOrSparqlID() : this.item.getKeyName();
-                    var s = document.createElement("span");
                     s.innerHTML = this.item.getURI();
-                    fieldset.appendChild(IIDXHelper.buildControlGroup("Current URI: ", s));
+                } else if (this.item.getItemType() == "NodeItem") {
+                    title = "Change relationship URI of " + this.item.getKeyName();
+                    s.innerHTML = this.item.getURI();
                 }
-
+                fieldset.appendChild(IIDXHelper.buildControlGroup("Current URI: ", s));
 
                 // URI select
                 var selectList = uriList;
@@ -119,14 +148,45 @@ define([	// properly require.config'ed
                         width = c.length;
                 }
 				select.style.width = width + "ch";
+                select.onchange = this.updateAll.bind(this);
+
                 var span = document.createElement("span");
                 span.appendChild(select);
 				fieldset.appendChild(IIDXHelper.buildControlGroup("New URI: ", span));
 
 				// *********** end form ***********
 
-				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this), "OK", 85);
+                // status
+				elem = document.createElement("div");
+				elem.id = "miistatus";
+				elem.style.textAlign = "left";
+				dom.appendChild(elem);
+
+				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this), "OK", 85, this.validate.bind(this));
 			},
+
+            setStatus : function (msg) {
+				document.getElementById("miistatus").innerHTML= "<font color='red'>" + msg + "</font>";
+			},
+
+            updateAll : function (e, proposedURI) {
+                var errMsg = this.validate();
+                if (errMsg != null) {
+                    this.setStatus(errMsg.replaceAll("\n", "<br>"));
+                } else {
+                    this.setStatus("");
+                }
+            },
+
+            validate : function() {
+                var uri = this.getSelectedURI();
+                if (this.mergeConflictURIs.indexOf(uri) > -1) {
+                    return this.item.getSparqlID() + "->" + uri.split("#")[1] + " has import mappings, which would be overwritten by this change." +
+                            "\nResolve this conflict before continuing.";
+                } else {
+                    return null;
+                }
+            },
 
 		};
 

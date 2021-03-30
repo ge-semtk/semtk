@@ -83,8 +83,8 @@ define([	// properly require.config'ed   bootstrap-modal
 							);
 		};
 
-		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent) {
-
+		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent, optValidateCallback) {
+            var validateCallback = optValidateCallback ? optValidateCallback : function(){return null;};
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
 
 			var div = document.createElement("div");
@@ -93,7 +93,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			var m = new ModalIidx("clearCancelSubmit");
 			m.showClearCancelSubmit(titleTxt,
 									div,
-									function() {return null;},     // validation is not implemented for this one
+									validateCallback,
 									clearCallback,
 									submitCallback,
 									optOKButText,

@@ -403,10 +403,11 @@
             if (gNodegroupInvalidItems.length > 0) {
 
                 var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
-                                                        propItem,
+                                                        propItem, null,
                                                         gNodeGroup,
                                                         gConn,
                                                         gOInfo,
+                                                        gMappingTab.getImportSpec(),
                                                         changeItemURI
                                                         );
                 dialog.show();
@@ -462,24 +463,25 @@
 
     var launchLinkEditor1 = function(snode, nItem, targetSNode) {
 
-        // TODO temporary test
-        // this changes all the links, and prabably leaves two node items with the same name
-        // should somehow combine existing
-        // do we want to allow creation of new invalid node?
-        // should inflateAndValidate silently tolerate-and-remove invalid unused things
-        if (false && gNodegroupInvalidItems.length > 0) {
-            nItem.setKeyName("employedBy");
-            nItem.setConnectBy("employedBy");
-            nItem.setUriConnectBy("http://arcos.rack/AGENTS#employedBy");
-            reValidateNodegroup();
-            return;
-        }
-		require([ 'sparqlgraph/js/modallinkdialog',
-		            ], function (ModalLinkDialog) {
-
+        if (gNodegroupInvalidItems.length > 0) {
+            require([ 'sparqlgraph/js/modalinvaliditemdialog', 'sparqlgraph/js/msiclientnodegroupservice'],
+                    function (ModalInvalidItemDialog, MsiClientNodeGroupService) {
+                        var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
+                                                        nItem, targetSNode,
+                                                        gNodeGroup,
+                                                        gConn,
+                                                        gOInfo,
+                                                        gMappingTab.getImportSpec(),
+                                                        changeItemURI
+                                                        );
+                        dialog.show();
+            });
+        } else {
+    		require([ 'sparqlgraph/js/modallinkdialog',], function (ModalLinkDialog) {
 	    		var dialog= new ModalLinkDialog(nItem, snode, targetSNode, gNodeGroup, linkEditorCallback, {});
 	    		dialog.show();
 			});
+        }
 	};
 
 	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, union, unionReverse, deleteMarkerVal, deleteFlag) {
@@ -523,10 +525,11 @@
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
                 var dialog= new ModalInvalidItemDialog( ngClient,
-                                                        snodeItem,
+                                                        snodeItem, null,
                                                         gNodeGroup,
                                                         gConn,
                                                         gOInfo,
+                                                        gMappingTab.getImportSpec(),
                                                         changeItemURI
                                                         );
                 dialog.show();
@@ -542,12 +545,33 @@
         });
     };
 
-    var changeItemURI = function(item, newUri) {
+    /*
+        ModalInvalidItemDialog callback:
+        item = node, propItem, nodeItem
+        target = target snode if nodeItem
+        newURI = new URI
+    */
+    var changeItemURI = function(item, target, newURI) {
         if (item.getItemType() == "SemanticNode") {
-            item.changeURI(newUri);
+            item.changeURI(newURI);
+            // mapping only cares about nodes' ?SparqlIDs, so there should be nothing to do
             gMappingTab.updateNodegroup(gNodeGroup, gConn);
-        } else {
-            alert("Not implemented at sparqlgraph.js changeItemURI()");
+
+        } else if (item.getItemType() == "PropertyItem") {
+            var oldURI = item.getURI();
+            var snode = gNodeGroup.getPropertyItemParentSNode(item);
+            var mergedProp = gNodeGroup.mergeProperty(item, newURI);
+            gMappingTab.mergeProperty(snode, oldURI, mergedProp);
+
+        } else if (item.getItemType() == "NodeItem") {
+            var snode = gNodeGroup.getPropertyItemParentSNode(item);
+            var oldURI = item.getURI();
+            gNodeGroup.mergeNodeItem(item, target, newURI);
+            gNodeGroup.removeLink(item, target);
+            if (item.getSNodes().length == 0 && !this.oInfo.classHasProp(oldURI)) {
+                // TODO remove : it isn't this simple
+            }
+            // no import spec needed
         }
         reValidateNodegroup();
     };

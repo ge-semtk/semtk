@@ -149,12 +149,19 @@ public class Node extends Returnable {
 
 	/**
 	 * Inflate (add any missing properties) and validate against model
-	 * This version throws an Exception on the first model error.
+	 * This legacy version throws an Exception on the first model error.
 	 * @param oInfo
 	 * @throws Exception
 	 */
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception {
-		this.inflateAndValidate(oInfo, null, null);
+		ArrayList<String> modelErrList = new ArrayList<String>();
+		ArrayList<NodeGroupItemStr> itemStrList = new ArrayList<NodeGroupItemStr>();
+		
+		this.inflateAndValidate(oInfo, modelErrList, itemStrList);
+		
+		if (modelErrList.size() > 0) {
+			throw new ValidationException(modelErrList.get(0));
+		}
 	}
 	
 	/**
@@ -206,12 +213,8 @@ public class Node extends Returnable {
 			ontClass = new OntologyClass(this.fullURIname);
 			// ERROR: node class is unknown
 			String msg = this.getSparqlID() + "'s class does not exist in the model:  " + this.getFullUriName();
-			if (modelErrList == null) {
-				throw new ValidationException(msg);
-			} else {
-				modelErrList.add(msg);
-				if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this));
-			}
+			modelErrList.add(msg);
+			itemStrList.add(new NodeGroupItemStr(this));
 		} else {
 			ontProps = oInfo.getInheritedProperties(ontClass);
 		}
@@ -231,12 +234,8 @@ public class Node extends Returnable {
 					// ERROR property range doesn't match
 					String msg = this.getSparqlID() + " property " + oPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + oProp.getRangeStr();
 
-					if (modelErrList == null) {
-						throw new ValidationException(msg);
-					} else {
-						modelErrList.add(msg);
-						if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this, propItem));
-					}
+					modelErrList.add(msg);
+					itemStrList.add(new NodeGroupItemStr(this, propItem));
 				}
 				
 				// add the propItem
@@ -262,17 +261,11 @@ public class Node extends Returnable {
 					NodeItem nodeItem = nodeItemHash.get(oPropURI);
 					if (nodeItem.isUsed()) {
 						// nItem is used, so the bad range is an error
-						if (modelErrList == null) {
-							throw new ValidationException(msg);
-						} else {
-							modelErrList.add(msg);
-							if (itemStrList != null) {
-								// add an itemStr error for each nItem/target combo
-								for (Node target : nodeItem.getNodeList()) {
-									itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
-								}
-							}
+						modelErrList.add(msg);
+						for (Node target : nodeItem.getNodeList()) {
+							itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 						}
+						
 					} else {
 						// bad nItem was not used: just fix it (should have been deflated)
 						nodeItem.setUriValueType(oProp.getRangeStr());
@@ -296,12 +289,8 @@ public class Node extends Returnable {
 					if (nodeItem.isUsed()) {
 						String msg = this.getSparqlID() + " node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
 	
-						if (modelErrList == null) {
-							throw new ValidationException(msg);
-						} else {
-							modelErrList.add(msg);
-							rangeErrFlag = true;
-						}
+						modelErrList.add(msg);
+						rangeErrFlag = true;
 					} else {
 						// node is unused: just fix impropertly deflated
 			        	// TODO warn?
@@ -310,17 +299,10 @@ public class Node extends Returnable {
 				}
 				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
 					if (nodeItem.isUsed()) {
-						String msg = this.getSparqlID() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
-					
-
-						if (modelErrList == null) {
-							throw new ValidationException(msg);
-						} else {
-							modelErrList.add(msg);
-							rangeErrFlag = true;
-						}
+						modelErrList.add(this.getSparqlID() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
+						rangeErrFlag = true;
 					} else {
-						// node is unused: just fix impropertly deflated
+						// node is unused: just fix improperly deflated
 			        	// TODO warn?
 						nodeItem.setValueType(oProp.getRangeStr(true));
 					}
@@ -339,30 +321,18 @@ public class Node extends Returnable {
 						boolean targetErrFlag = false;
 						
 						if (snodeClass == null) {
-							String msg = this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model";
-
-							if (modelErrList == null) {
-								throw new ValidationException(msg);
-							} else {
-								modelErrList.add(msg);
-								targetErrFlag = true;
-							}
+							modelErrList.add(this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
+							targetErrFlag = true;
 						}
 						
 						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							String msg = this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model";
-
-							if (modelErrList == null) {
-								throw new ValidationException(msg);
-							} else {
-								modelErrList.add(msg);
-								targetErrFlag = true;
-							}
+							modelErrList.add(this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
+							targetErrFlag = true;
 						}
 						
 						if (rangeErrFlag || targetErrFlag) {
 							// add itemStrList item for nodeItem with target
-							if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this, nodeItem, snodeList.get(j)));
+							itemStrList.add(new NodeGroupItemStr(this, nodeItem, snodeList.get(j)));
 						}
 					}
 				} 
@@ -388,12 +358,9 @@ public class Node extends Returnable {
 			PropertyItem propItem = propItemHash.get(key);
 			if (propItem.isUsed()) {
 				String msg = this.getSparqlID() + " has property that isn't in the model: " + key;
-				if (modelErrList == null) {
-					throw new ValidationException(msg);
-				} else {
-					modelErrList.add(msg);
-					if (itemStrList != null) itemStrList.add(new NodeGroupItemStr(this, propItem));
-				}
+				modelErrList.add(msg);
+				itemStrList.add(new NodeGroupItemStr(this, propItem));
+	
 	            // add it anyway
 	            newProps.add(propItemHash.get(key));
 			}
@@ -406,23 +373,18 @@ public class Node extends Returnable {
         	NodeItem nodeItem = nodeItemHash.get(key);
         	if (nodeItem.isUsed()) {
 	        	String msg = this.getSparqlID() + " has edge that isn't in the model: " + key;
-	        	if (modelErrList == null) {
-					throw new ValidationException(msg);
-				} else {
-					modelErrList.add(msg);
-					if (itemStrList != null) {
-						NodeItem nItem = nodeItemHash.get(key);
-						if (nItem.getConnected()) {
-							for (Node target : nItem.getNodeList() ) {
-								// add every nodeItem/target combo
-								itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
-							}
-						} else {
-							// add nodeItem with null target
-							itemStrList.add(new NodeGroupItemStr(this, nodeItemHash.get(key), null));
-						}
+	        	modelErrList.add(msg);
+				NodeItem nItem = nodeItemHash.get(key);
+				if (nItem.getConnected()) {
+					for (Node target : nItem.getNodeList() ) {
+						// add every nodeItem/target combo
+						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
+				} else {
+					// add nodeItem with null target
+					itemStrList.add(new NodeGroupItemStr(this, nodeItemHash.get(key), null));
 				}
+				
 	            // add it anyway
 	            newNodes.add(nodeItemHash.get(key));
         	}

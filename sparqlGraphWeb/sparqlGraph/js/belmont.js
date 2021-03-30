@@ -461,6 +461,23 @@ NodeItem.prototype = {
 		this.Connected = jObj.Connected;
 		this.UriConnectBy = jObj.UriConnectBy;
 	},
+
+    /*
+        Fill in this property with all the non-model values of another property
+     */
+    merge : function(other, target) {
+        var i = other.SNodes.indexOf(target);
+        if (i == -1) throw "Can't find connection to " + target.getSparqlID() + " in " + this.KeyName;
+
+        this.SNodes.push(target);
+		this.OptionalMinus.push(other.OptionalMinus[i]);
+        this.Qualifiers.push(other.Qualifiers[i]);
+        this.deletionFlags.push(other.deletionFlags[i]);
+
+		this.Connected = true;
+
+    },
+
     getIsReturned : function() {
         return false;
     },
@@ -599,6 +616,9 @@ NodeItem.prototype = {
 	getSNodes : function() {
 		return this.SNodes;
 	},
+    getURI : function() {
+        return this.getURIConnectBy();
+    },
 	getURIConnectBy : function() {
 		return this.UriConnectBy;
 	},
@@ -744,6 +764,22 @@ PropertyItem.prototype = {
 
 
 	},
+
+    /*
+        Fill in this property with all the non-model values of another property
+     */
+    merge : function(other) {
+
+        this.Constraints = other.Constraints;
+        this.SparqlID = other.SparqlID;
+        this.isReturned = other.isReturned;
+        this.optMinus = other.optMinus;
+        this.isRuntimeConstrained = other.isRuntimeConstrained;
+        // instanceValues,
+        this.isMarkedForDeletion = other.isMarkedForDeletion;
+        this.binding = other.binding;
+    },
+
 	buildFilterConstraint : function(op, val) {
 		//  build but don't set  a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -1116,6 +1152,11 @@ SemanticNode.prototype = {
 	 */
 	// inflateAndValidate : function(oInfo) {
 
+    rmPropItem : function(prop) {
+        var i = this.propList.indexOf(prop);
+        if (i == -1) throw "Can't find property to remove: " + prop.getKeyName();
+        this.propList.splice(i,1);
+    },
 
 	setInstanceValue : function(inval){
 		this.instanceValue = inval;
@@ -2335,6 +2376,45 @@ SemanticNodeGroup.prototype = {
         return ret;
     },
 
+    /*
+        Move all the non-model-related content of prop into
+        an existing prop newURI.
+        Remove prop from it's parent.
+     */
+    mergeProperty : function(prop, mergeIntoURI) {
+        var snode = this.getPropertyItemParentSNode(prop);
+        var mergeIntoProp = snode.getPropertyByURIRelation(mergeIntoURI);
+        if (mergeIntoProp == null) throw "Can't find property to merge into: " + mergeIntoURI;
+
+        mergeIntoProp.merge(prop);
+        snode.rmPropItem(prop);
+
+        return mergeIntoProp;
+    },
+
+    /*
+        Move all the non-model-related content of prop into
+        an existing prop newURI.
+        Remove prop from it's parent.
+     */
+    mergeNodeItem : function(nodeItem, target, mergeIntoURI) {
+        var snode = this.getNodeItemParentSNode(nodeItem);
+        var mergeIntoNItem = snode.getNodeItemByURIConnectBy(mergeIntoURI);
+        if (mergeIntoNItem == null) throw "Can't find node item edge to merge into: " + mergeIntoURI;
+
+        mergeIntoNItem.merge(nodeItem, target);
+
+        // here: todo doesn't merge incorrect range.
+        //    1 - how did inflate and validate leave things?
+        //    2 - shouldn't we do this in java
+        //    3 - needs oinfo?
+        //    4 - should also delete the nodeItem if it is incorrect and no longer connected
+        //    5 - repeat for mergeProperty (pls "mergePropItem") and mergeIntoURI ("mergeSNode")
+
+        //snode.rmPropItem(prop);
+
+        return mergeIntoNItem;
+    },
     /**
 	 * Get all variable names in the nodegroup except those in same union and different parent as targetItem
      * and not my object's own name
