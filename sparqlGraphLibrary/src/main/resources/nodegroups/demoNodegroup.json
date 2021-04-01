@@ -3,23 +3,24 @@
 	"sparqlConn": {
 		"name": "iswc",
 		"domain": "http://com.ge.research",
+		"enableOwlImports": false,
 		"model": [
 			{
 				"type": "virtuoso",
 				"url": "http://localhost:2420",
-				"dataset": "http://iswc/model"
+				"graph": "http://iswc/model"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
 				"url": "http://localhost:2420",
-				"dataset": "http://iswc/data"
+				"graph": "http://iswc/data"
 			}
 		]
 	},
 	"sNodeGroup": {
-		"version": 8,
+		"version": 12,
 		"limit": 0,
 		"offset": 0,
 		"sNodeList": [
@@ -31,10 +32,9 @@
 						"relationship": "http://www.w3.org/2001/XMLSchema#float",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#hasValue",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?Value",
 						"isReturned": true,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -45,10 +45,9 @@
 						"relationship": "http://www.w3.org/2001/XMLSchema#dateTime",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#timestamp",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?timestamp",
 						"isReturned": true,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -57,7 +56,6 @@
 				"nodeList": [],
 				"NodeName": "MeasurementValue",
 				"fullURIName": "http://com.ge.research/sample/testconfig#MeasurementValue",
-				"subClassNames": [],
 				"SparqlID": "?MeasurementValue",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -73,10 +71,9 @@
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#hasUnits",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "",
 						"isReturned": false,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -87,10 +84,9 @@
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#tag",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "",
 						"isReturned": false,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -100,11 +96,10 @@
 						"ValueType": "string",
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#variableName",
-						"Constraints": "",
-						"fullURIName": "",
-						"SparqlID": "",
-						"isReturned": false,
-						"isOptional": false,
+						"Constraints": "FILTER regex(%id, \"temperature\")",
+						"SparqlID": "?variableName",
+						"isReturned": true,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -115,8 +110,11 @@
 						"SnodeSparqlIDs": [
 							"?MeasurementValue"
 						],
-						"SnodeOptionals": [
+						"OptionalMinus": [
 							0
+						],
+						"Qualifiers": [
+							""
 						],
 						"DeletionMarkers": [
 							false
@@ -131,7 +129,6 @@
 				],
 				"NodeName": "Measurement",
 				"fullURIName": "http://com.ge.research/sample/testconfig#Measurement",
-				"subClassNames": [],
 				"SparqlID": "?Measurement",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -146,8 +143,11 @@
 						"SnodeSparqlIDs": [
 							"?Measurement"
 						],
-						"SnodeOptionals": [
+						"OptionalMinus": [
 							0
+						],
+						"Qualifiers": [
+							""
 						],
 						"DeletionMarkers": [
 							false
@@ -162,7 +162,6 @@
 				],
 				"NodeName": "MeasurementMap",
 				"fullURIName": "http://com.ge.research/sample/testconfig#MeasurementMap",
-				"subClassNames": [],
 				"SparqlID": "?MeasurementMap",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -177,8 +176,11 @@
 						"SnodeSparqlIDs": [
 							"?MeasurementMap"
 						],
-						"SnodeOptionals": [
+						"OptionalMinus": [
 							0
+						],
+						"Qualifiers": [
+							""
 						],
 						"DeletionMarkers": [
 							false
@@ -193,7 +195,6 @@
 				],
 				"NodeName": "Table",
 				"fullURIName": "http://com.ge.research/sample/testconfig#Table",
-				"subClassNames": [],
 				"SparqlID": "?Table",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -209,10 +210,9 @@
 						"relationship": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#code",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "",
 						"isReturned": false,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -223,8 +223,11 @@
 						"SnodeSparqlIDs": [
 							"?Table"
 						],
-						"SnodeOptionals": [
+						"OptionalMinus": [
 							0
+						],
+						"Qualifiers": [
+							""
 						],
 						"DeletionMarkers": [
 							false
@@ -239,7 +242,6 @@
 				],
 				"NodeName": "Layer",
 				"fullURIName": "http://com.ge.research/sample/testconfig#Layer",
-				"subClassNames": [],
 				"SparqlID": "?Layer",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -255,10 +257,9 @@
 						"relationship": "http://www.w3.org/2001/XMLSchema#int",
 						"UriRelationship": "http://com.ge.research/sample/testconfig#testNum",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?testNum",
 						"isReturned": true,
-						"isOptional": false,
+						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
@@ -269,8 +270,11 @@
 						"SnodeSparqlIDs": [
 							"?Layer"
 						],
-						"SnodeOptionals": [
+						"OptionalMinus": [
 							0
+						],
+						"Qualifiers": [
+							""
 						],
 						"DeletionMarkers": [
 							false
@@ -285,7 +289,6 @@
 				],
 				"NodeName": "Test",
 				"fullURIName": "http://com.ge.research/sample/testconfig#Test",
-				"subClassNames": [],
 				"SparqlID": "?Test",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -294,7 +297,8 @@
 				"deletionMode": "NO_DELETE"
 			}
 		],
-		"orderBy": []
+		"orderBy": [],
+		"unionHash": {}
 	},
 	"importSpec": {
 		"version": "1",
@@ -329,6 +333,7 @@
 				"colName": "value"
 			}
 		],
+		"dataValidator": [],
 		"texts": [
 			{
 				"textId": "text_0",
