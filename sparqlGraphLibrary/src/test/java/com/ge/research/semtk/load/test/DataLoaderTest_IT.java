@@ -620,6 +620,17 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson, this, "/testPrecheckOnlyResults.csv");
 	}
 	
+	/*
+	 * What-were-we-thinking alert:
+	 * loadTestDuraBattery.json creates Battery URI's or the form: Batt_<hash>_<batteryId>
+	 * lookupBatteryIdAddDesc.json adds descriptions and queries
+	 * 	BatteryURI
+	 *  batteryId
+	 *  desc
+	 *  
+	 *  So it is sorting on BatteryURI, a hash value.  This is deterministic/repeatable, but confusing.  Why?
+	 * 
+	 */
 	@Test
 	public void test_LoadDataDuraBattery() throws Exception {
 		doLoadDataDuraBattery(false);
@@ -953,6 +964,39 @@ public class DataLoaderTest_IT {
 		loadData(dl, "testLookupBatteryIdAddDescShort", cacheFlag);
 
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescShortResults.csv");
+		
+	}
+	
+	@Test
+	public void test_LookupBatteryIdAddDescUTF8() throws Exception {
+		doLookupBatteryIdAddDescUTF8(false);
+		doLookupBatteryIdAddDescUTF8(true);
+	}
+
+	public void doLookupBatteryIdAddDescUTF8(boolean cacheFlag) throws Exception {
+		// setup
+		TestGraph.clearGraph();
+				
+		// ==== pre set some data =====
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryUTF8Data.csv", false);
+
+		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl0, "testLookupBatteryIdAddDescUTF8 preload", cacheFlag);
+				
+		LocalLogger.logToStdErr("------ done import 1 -------");	
+		
+		// Try URI lookup
+		// lookupBatteryIdAddDescAndRetThem:  does not return the Battery URI.  (See "what-were-we-thinking" above)
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDescAndRetThem.json");
+		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescUTF8Data.csv", false);
+		
+		// import the actual test: lookup URI and add description
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl, "testLookupBatteryIdAddDescUTF8", cacheFlag);
+
+		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescUTF8Results.csv");
 		
 	}
 	

@@ -1,0 +1,4 @@
+description_opt,batt_ID,assembly_date_opt,cell1_ID_opt, cell1_color, cell2_ID_opt, cell2_color, cell3_ID_opt,cell3_color,cell4_ID_opt,cell4_color
+,id_a,,id1_646135965,white,id2_957917158,white,id3_903697719,blue,id4_982587889,white
+,id_b,,id1_460261650,white,id2_863783956,blue,id3_779418008,red,id4_457337622,red
+,id_c_utf8−hyphen,,id1_569220613,white,id2_78842122,blue,id3_172576603,blue,id4_32633260,white

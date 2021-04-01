@@ -986,6 +986,33 @@ public abstract class SparqlEndpointInterface {
 		return true;
 	}
 	
+	public void uploadOwl(byte [] owl) throws Exception {
+		SimpleResultSet res = new SimpleResultSet(
+				this.executeUpload(owl)
+				);
+		res.throwExceptionIfUnsuccessful("Error uploading owl");
+	}
+	
+	public void authUploadOwl(byte [] owl) throws Exception {
+		SimpleResultSet res = new SimpleResultSet(
+				this.executeAuthUploadOwl(owl)
+				);
+		res.throwExceptionIfUnsuccessful("Error uploading owl");
+	}
+	public void uploadTurtle(byte [] turtle) throws Exception {
+		SimpleResultSet res = new SimpleResultSet(
+				this.executeUploadTurtle(turtle)
+				);
+		res.throwExceptionIfUnsuccessful("Error uploading turtle");
+	}
+	
+	public void authUploadTurtle(byte [] turtle) throws Exception {
+		SimpleResultSet res = new SimpleResultSet(
+				this.executeAuthUploadTurtle(turtle)
+				);
+		res.throwExceptionIfUnsuccessful("Error uploading turtle");
+	}
+	
 	/**
 	 * Upload turtle.  Many triplestores treat ttl and owl the same.
 	 * See "internal use" note
