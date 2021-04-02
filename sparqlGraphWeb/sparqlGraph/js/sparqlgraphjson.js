@@ -22,19 +22,19 @@
  *
  */
 define([	// properly require.config'ed
-            'sparqlgraph/js/plotshandler',
+            'sparqlgraph/js/plotspecshandler',
 
 			// shimmed
         	'sparqlgraph/js/belmont',
 
 		],
 
-	function(PlotsHandler) {
+	function(PlotSpecsHandler) {
 
         /*
          * Each param may be missing or null
          */
-		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag, plotsHandler) {
+		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag, plotSpecsHandler) {
 			var deflateFlag = (typeof deflateFlag == "undefined") ? true : deflateFlag;
 
 			this.jObj = {
@@ -62,8 +62,8 @@ define([	// properly require.config'ed
 				this.jObj.importSpec = importSpec.toJson();
 			}
 
-            if (typeof plotsHandler != "undefined" && plotsHandler != null) {
-				this.jObj.plots = plotsHandler.toJson();
+            if (typeof plotSpecsHandler != "undefined" && plotSpecsHandler != null) {
+				this.jObj.plots = plotSpecsHandler.toJson();
 			}
 
 		};
@@ -126,13 +126,13 @@ define([	// properly require.config'ed
 			},
 
             /*
-             * returns a (possibly empty) PlotsHandler
+             * returns a (possibly empty) PlotSpecsHandler
              */
-            getPlotsHandler : function() {
+            getPlotSpecsHandler : function() {
                 if (this.jObj.hasOwnProperty("plots")) {
-                    return new PlotsHandler(this.jObj.plots);
+                    return new PlotSpecsHandler(this.jObj.plots);
                 } else {
-                    return new PlotsHandler([]);
+                    return new PlotSpecsHandler([]);
                 }
             },
 
