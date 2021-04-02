@@ -42,7 +42,7 @@ define([	// properly require.config'ed
 					sparqlConn: null,
 					sNodeGroup: null,
 					importSpec: null,
-                    plots: null
+                    plotSpecs: null
 			};
 
 			if (typeof conn      != "undefined" && conn != null) {
@@ -129,7 +129,7 @@ define([	// properly require.config'ed
              * returns a (possibly empty) PlotSpecsHandler
              */
             getPlotSpecsHandler : function() {
-                if (this.jObj.hasOwnProperty("plots")) {
+                if (this.jObj.hasOwnProperty("plotSpecs")) {
                     return new PlotSpecsHandler(this.jObj.plotSpecs);
                 } else {
                     return new PlotSpecsHandler([]);
