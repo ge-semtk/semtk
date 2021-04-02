@@ -63,7 +63,7 @@ define([	// properly require.config'ed
 			}
 
             if (typeof plotSpecsHandler != "undefined" && plotSpecsHandler != null) {
-				this.jObj.plots = plotSpecsHandler.toJson();
+				this.jObj.plotSpecs = plotSpecsHandler.toJson();
 			}
 
 		};
@@ -130,7 +130,7 @@ define([	// properly require.config'ed
              */
             getPlotSpecsHandler : function() {
                 if (this.jObj.hasOwnProperty("plots")) {
-                    return new PlotSpecsHandler(this.jObj.plots);
+                    return new PlotSpecsHandler(this.jObj.plotSpecs);
                 } else {
                     return new PlotSpecsHandler([]);
                 }
