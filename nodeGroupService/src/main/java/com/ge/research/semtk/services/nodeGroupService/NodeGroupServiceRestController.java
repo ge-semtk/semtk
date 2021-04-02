@@ -892,6 +892,38 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	
+	@ApiOperation(
+			value="Get list of plot names"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getPlotNames", method=RequestMethod.POST)
+	public JSONObject getPlotNames(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		TableResultSet retval = new TableResultSet(false);
+
+		try {
+			requestBody.validate();
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			String[] names = sgJson.getPlotsHandler().getPlotNames();
+
+			// create a table to return
+			Table table = new Table(new String[]{"plotName"}, new String[]{"string"});
+			for (String name : names) {
+				table.addRow(new String[] { name } );
+			}
+			retval.addResults(table);
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval = new TableResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "getPlotNames", e);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();	
+	}
+	
 	/**
 	 * Retrieve oInfo.
 	 * @param conn
