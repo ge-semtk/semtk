@@ -905,7 +905,7 @@ public class NodeGroupServiceRestController {
 		try {
 			requestBody.validate();
 			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
-			String[] names = sgJson.getPlotsHandler().getPlotNames();
+			String[] names = sgJson.getPlotSpecsHandler().getPlotSpecNames();
 
 			// create a table to return
 			Table table = new Table(new String[]{"plotName"}, new String[]{"string"});

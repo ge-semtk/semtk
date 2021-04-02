@@ -28,7 +28,7 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.plotting.PlotsHandler;
+import com.ge.research.semtk.plotting.PlotSpecsHandler;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.google.gson.Gson;
@@ -44,7 +44,7 @@ import com.google.gson.JsonParser;
 public class SparqlGraphJson {
 	static final String JKEY_NODEGROUP = "sNodeGroup";
 	static final String JKEY_SPARQLCONN = "sparqlConn";
-	static final String JKEY_PLOTS = "plots";
+	static final String JKEY_PLOTSPECS = "plotSpecs";
 	
 	public static final String JKEY_IMPORTSPEC = "importSpec";
 	
@@ -55,7 +55,7 @@ public class SparqlGraphJson {
 	private SparqlConnection conn = null;
 	private OntologyInfo oInfo = null;
 	private ImportSpecHandler importSpec = null;
-	private PlotsHandler plots = null;
+	private PlotSpecsHandler plots = null;
 	
 	public SparqlGraphJson() {
 		// nothing
@@ -186,16 +186,16 @@ public class SparqlGraphJson {
 		this.setImportSpecJson(spec.toJson());
 	}
 	
-	public JSONArray getPlotsJson() {
-		if (jObj.containsKey(JKEY_PLOTS)) {
-			return (JSONArray) jObj.get(JKEY_PLOTS);
+	public JSONArray getPlotSpecsJson() {
+		if (jObj.containsKey(JKEY_PLOTSPECS)) {
+			return (JSONArray) jObj.get(JKEY_PLOTSPECS);
 		} else {
 			return null;
 		}
 	}
 	
 	public void setPlotsJson(JSONArray plotsJson) {
-		this.jObj.put(JKEY_PLOTS, plotsJson);
+		this.jObj.put(JKEY_PLOTSPECS, plotsJson);
 		this.plots = null;   // wipe out any cached ImportSpecHandler
 	}
 	
@@ -366,10 +366,10 @@ public class SparqlGraphJson {
 	 * @return importSpecHandler, might be NULL
 	 * @throws Exception
 	 */
-	public PlotsHandler getPlotsHandler() throws Exception {
-		JSONArray json = this.getPlotsJson();
+	public PlotSpecsHandler getPlotSpecsHandler() throws Exception {
+		JSONArray json = this.getPlotSpecsJson();
 		if (plots == null && json != null) {
-			plots =  new PlotsHandler(json);
+			plots =  new PlotSpecsHandler(json);
 		}
 		return plots;
 	}

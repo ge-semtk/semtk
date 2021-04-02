@@ -36,22 +36,22 @@ import org.json.simple.JSONObject;
              },
 	 */
 
-public class PlotsHandler {
+public class PlotSpecsHandler {
 	
 	private static String JKEY_NAME = "name";
 	private static String JKEY_TYPE = "type";
 	
 	private JSONArray jsonArr = null;
 
-	public PlotsHandler(JSONArray json) {
+	public PlotSpecsHandler(JSONArray json) {
 		super();
 		this.jsonArr = json;
 	}
 	
 	/**
-	 * Get number of plots
+	 * Get number of plot specs
 	 */
-	public int getNumPlots() {
+	public int getNumPlotSpecs() {
 		if (jsonArr == null) {
 			return 0;
 		} else {
@@ -60,11 +60,11 @@ public class PlotsHandler {
 	}
 	
 	/**
-	 * Get plot names 
+	 * Get plot spec names 
 	 * @return an array of names (empty if no plot specs present)
 	 * @throws Exception if there is a plot spec with no name key
 	 */
-	public String[] getPlotNames() throws Exception {
+	public String[] getPlotSpecNames() throws Exception {
 		ArrayList<String> namesList = new ArrayList<String>();
 		if(jsonArr != null){
 			for(Object o : jsonArr){
@@ -79,9 +79,9 @@ public class PlotsHandler {
 	}
 	
 	/**
-	 * Get handler for a given plot
+	 * Get handler for a given plot spec
 	 */
-	public PlotlyPlotSpecHandler getPlot(int index) throws Exception {
+	public PlotlyPlotSpecHandler getPlotSpec(int index) throws Exception {
 		JSONObject plot = (JSONObject) this.jsonArr.get(index);
 		String t = (String) plot.get(JKEY_TYPE);
 		if (t == null) 
