@@ -1,5 +1,7 @@
 package com.ge.research.semtk.plotting;
 
+import java.util.ArrayList;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -35,28 +37,55 @@ import org.json.simple.JSONObject;
 	 */
 
 public class PlotsHandler {
+	
+	private static String JKEY_NAME = "name";
 	private static String JKEY_TYPE = "type";
 	
-	JSONArray json = null;
+	private JSONArray jsonArr = null;
 
 	public PlotsHandler(JSONArray json) {
 		super();
-		this.json = json;
+		this.jsonArr = json;
 	}
 	
+	/**
+	 * Get number of plots
+	 */
 	public int getNumPlots() {
-		if (json == null) {
+		if (jsonArr == null) {
 			return 0;
 		} else {
-			return this.json.size();
+			return this.jsonArr.size();
 		}
 	}
 	
+	/**
+	 * Get plot names 
+	 * @return an array of names (empty if no plot specs present)
+	 * @throws Exception if there is a plot spec with no name key
+	 */
+	public String[] getPlotNames() throws Exception {
+		ArrayList<String> namesList = new ArrayList<String>();
+		if(jsonArr != null){
+			for(Object o : jsonArr){
+				JSONObject jsonObject = (JSONObject)o;
+				String name = (String) jsonObject.get(JKEY_NAME);
+				if(name == null) throw new Exception("Plot spec is missing 'name'");
+				namesList.add(name);
+			}
+		}
+		String[] ret = new String[namesList.size()];
+		return namesList.toArray(ret);
+	}
+	
+	/**
+	 * Get handler for a given plot
+	 */
 	public PlotlyPlotSpecHandler getPlot(int index) throws Exception {
-		JSONObject plot = (JSONObject) this.json.get(index);
+		JSONObject plot = (JSONObject) this.jsonArr.get(index);
 		String t = (String) plot.get(JKEY_TYPE);
 		if (t == null) 
-			throw new Exception("Plot spec is missing type");
+			throw new Exception("Plot spec is missing 'type'");
 		
 		switch ((String) plot.get(JKEY_TYPE)) {
 			case "plotly":
