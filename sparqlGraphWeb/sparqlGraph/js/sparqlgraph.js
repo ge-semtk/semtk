@@ -33,7 +33,7 @@
 
     var gNodeGroup = null;
     var gOInfoLoadTime = "";
-    var gPlotsHandler = null;
+    var gPlotSpecsHandler = null;
 
     var gCurrentTab = g.tab.query ;
 
@@ -1041,7 +1041,7 @@
                 // get nodegroup explicitly w/o the oInfo
                 sgJson.getNodeGroup(gNodeGroup);
                 gNodeGroup.setSparqlConnection(gConn);
-                gPlotsHandler = sgJson.getPlotsHandler();
+                gPlotSpecsHandler = sgJson.getPlotSpecsHandler();
             } catch (e) {
                 // real non-model error loading the nodegroup
                 console.log(e.stack);
@@ -1141,7 +1141,7 @@
     			// make sure importSpec is in sync
     			gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotsHandler);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotSpecsHandler);
 
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
@@ -1443,7 +1443,7 @@
 
             var targetDiv = document.getElementById("resultsParagraph");
 
-            var plotter = gPlotsHandler.getDefaultPlotter();
+            var plotter = gPlotSpecsHandler.getDefaultPlotter();
             if (plotter != null) {
                 plotter.addPlotToDiv(targetDiv, tableResults);
             } else {
@@ -1504,7 +1504,7 @@
                 nodeGroupChanged(false);
             }
 
-            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotsHandler);
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
             gStoreDialog.launchStoreDialog(sgJson, doneCallback);
 
         });

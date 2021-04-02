@@ -24,27 +24,27 @@ define([	// properly require.config'ed   bootstrap-modal
 		],
 
     /*
-     *   Handles the entire sparqlgraphjson.plots JSON
+     *   Handles the entire sparqlgraphjson.plotSpecs JSON
      */
     function(PlotlyPlotter) {
 
-        var PlotsHandler = function (plotsJson) {
-            this.plots = plotsJson;
+        var PlotSpecsHandler = function (plotSpecsJson) {
+            this.plotSpecs = plotSpecsJson;
         };
 
 
-        PlotsHandler.prototype = {
+        PlotSpecsHandler.prototype = {
             CONSTANT : 1,
 
             getNumPlots : function () {
-                return this.plots.length;
+                return this.plotSpecs.length;
             },
 
             /*
              * return name = or throw exception
              */
             getName : function(index) {
-                var json = this.plots[index];
+                var json = this.plotSpecs[index];
                 if (! json.hasOwnProperty("name")) {
                     throw "Plots json item has no name";
                 }
@@ -61,7 +61,7 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             getPlotter : function (index) {
-                var json = this.plots[index];
+                var json = this.plotSpecs[index];
 
                 if (! json.hasOwnProperty("type")) {
                     throw "Plots json item has no type";
@@ -77,10 +77,10 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             toJson : function() {
-                return this.plots;
+                return this.plotSpecs;
             }
         };
 
-        return PlotsHandler;            // return the constructor
+        return PlotSpecsHandler;            // return the constructor
 	}
 );
