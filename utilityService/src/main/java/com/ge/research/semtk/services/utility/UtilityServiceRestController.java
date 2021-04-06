@@ -329,7 +329,7 @@ public class UtilityServiceRestController {
 			if(plotSpecJson.get("type").equals("plotly")){
 				PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
 				specHandler.applyTable(table);
-				JSONObject plotSpecJsonProcessed = specHandler.getJSON();	
+				JSONObject plotSpecJsonProcessed = specHandler.toJson();	
 				res.addResult("plot", plotSpecJsonProcessed);
 				res.setSuccess(true);
 				LocalLogger.logToStdOut("Returning " + res.toJson().toJSONString());

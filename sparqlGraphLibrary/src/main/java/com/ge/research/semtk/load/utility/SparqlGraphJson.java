@@ -28,6 +28,7 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.plotting.PlotSpecHandler;
 import com.ge.research.semtk.plotting.PlotSpecsHandler;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -194,9 +195,29 @@ public class SparqlGraphJson {
 		}
 	}
 	
-	public void setPlotsJson(JSONArray plotsJson) {
-		this.jObj.put(JKEY_PLOTSPECS, plotsJson);
-		this.plots = null;   // wipe out any cached ImportSpecHandler
+	public void setPlotSpecsJson(JSONArray plotSpecsJson) {
+		this.jObj.put(JKEY_PLOTSPECS, plotSpecsJson);
+		this.plots = null;   // wipe out any cached PlotSpecsHandler
+	}
+	
+	/**
+	 * Add a plot spec
+	 */
+	public void addPlotSpec(PlotSpecHandler newPlot) throws Exception{
+		// get existing plot specs, create if null
+		JSONArray plotSpecsJson = getPlotSpecsJson();
+		if(plotSpecsJson == null){
+			plotSpecsJson = new JSONArray();
+		}
+		
+		// confirm that doesn't already have one with the same name as the new plot
+		if(plots.getPlotSpecNames().contains(newPlot.getName())){
+			throw new Exception("Cannot add plot '" + newPlot.getName() + "': a plot with this name already exists in the nodegroup");
+		}
+		
+		// add the new plot
+		plotSpecsJson.add(newPlot.toJson());
+		this.setPlotSpecsJson(plotSpecsJson);
 	}
 	
 	
@@ -363,7 +384,7 @@ public class SparqlGraphJson {
 	
 	/**
 	 * 
-	 * @return importSpecHandler, might be NULL
+	 * @return plotSpecsHandler, might be NULL
 	 * @throws Exception
 	 */
 	public PlotSpecsHandler getPlotSpecsHandler() throws Exception {

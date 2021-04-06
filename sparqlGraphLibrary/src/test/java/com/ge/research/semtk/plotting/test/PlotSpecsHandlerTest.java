@@ -14,9 +14,9 @@ public class PlotSpecsHandlerTest {
 		
 		PlotSpecsHandler plotSpecsHandler = new PlotSpecsHandler(Utility.getJSONArrayFromFilePath("src/test/resources/plots-spec.json"));
 		assertEquals(plotSpecsHandler.getNumPlotSpecs(), 2);
-		assertEquals(plotSpecsHandler.getPlotSpecNames().length, 2);
-		assertEquals(plotSpecsHandler.getPlotSpecNames()[0], "Plotly Chart 1");
-		assertEquals(plotSpecsHandler.getPlotSpecNames()[1], "Plotly Chart 2");
+		assertEquals(plotSpecsHandler.getPlotSpecNames().size(), 2);
+		assertEquals(plotSpecsHandler.getPlotSpecNames().get(0), "Plotly Chart 1");
+		assertEquals(plotSpecsHandler.getPlotSpecNames().get(1), "Plotly Chart 2");
 		
 		
 		try{

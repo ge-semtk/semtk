@@ -22,24 +22,27 @@ import org.json.simple.JSONObject;
  ** limitations under the License.
  */
 
-/**    sparqlgraphjson might have:
-    .plots: [
-    		{ type: plotly,
+/**    
+ * Information for multiple plots.
+ * 
+ * Example:
+ * [
+    		{ type: "plotly",
 	 	      name: "line 1",
               spec: { data: [{},{}], layout: {}, config: {} }    
             },
-               { type: visjs,
-                 spec: { vsJsSpecJson }
-               },
-               { type: plotly,
-                 spec: { data, layout, config }
-             },
-	 */
+            { type: "visjs",
+              name: "scatter 1",
+              spec: { vsJsSpecJson }
+            },
+            { type: "plotly",
+              name: "line 2",
+              spec: { data, layout, config }
+            }
+       ]
+*/
 
 public class PlotSpecsHandler {
-	
-	private static String JKEY_NAME = "name";
-	private static String JKEY_TYPE = "type";
 	
 	private JSONArray jsonArr = null;
 
@@ -61,21 +64,20 @@ public class PlotSpecsHandler {
 	
 	/**
 	 * Get plot spec names 
-	 * @return an array of names (empty if no plot specs present)
+	 * @return an list of names (empty if no plot specs present)
 	 * @throws Exception if there is a plot spec with no name key
 	 */
-	public String[] getPlotSpecNames() throws Exception {
+	public ArrayList<String> getPlotSpecNames() throws Exception {
 		ArrayList<String> namesList = new ArrayList<String>();
 		if(jsonArr != null){
 			for(Object o : jsonArr){
 				JSONObject jsonObject = (JSONObject)o;
-				String name = (String) jsonObject.get(JKEY_NAME);
+				String name = (String) jsonObject.get(PlotSpecHandler.JKEY_NAME);
 				if(name == null) throw new Exception("Plot spec is missing 'name'");
 				namesList.add(name);
 			}
 		}
-		String[] ret = new String[namesList.size()];
-		return namesList.toArray(ret);
+		return namesList;
 	}
 	
 	/**
@@ -83,11 +85,11 @@ public class PlotSpecsHandler {
 	 */
 	public PlotlyPlotSpecHandler getPlotSpec(int index) throws Exception {
 		JSONObject plot = (JSONObject) this.jsonArr.get(index);
-		String t = (String) plot.get(JKEY_TYPE);
+		String t = (String) plot.get(PlotSpecHandler.JKEY_TYPE);
 		if (t == null) 
 			throw new Exception("Plot spec is missing 'type'");
 		
-		switch ((String) plot.get(JKEY_TYPE)) {
+		switch ((String) plot.get(PlotSpecHandler.JKEY_TYPE)) {
 			case "plotly":
 				return new PlotlyPlotSpecHandler(plot);
 			default:

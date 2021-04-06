@@ -1,3 +1,19 @@
+/**
+ ** Copyright 2021 General Electric Company
+ **
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ ** 
+ **     http://www.apache.org/licenses/LICENSE-2.0
+ ** 
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ */
 package com.ge.research.semtk.plotting.test;
 
 import static org.junit.Assert.*;
@@ -11,13 +27,24 @@ import com.ge.research.semtk.plotting.PlotlyPlotSpecHandler;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.Utility;
 
-public class PlotlyPlotSpecHandlerTest {
+public class PlotSpecHandlerTest {
 
-	private String tableJsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"11.1\",\"22.2\",\"33.3\"],[\"11.5\",\"22.5\",\"33.5\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
-
+	private String tableJsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
 	
 	@Test
 	public void test() throws Exception {
+		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");		
+		PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
+		assertTrue(specHandler.getType().equals("plotly"));
+		assertTrue(specHandler.getName().equals("Plotly Chart 1"));
+		assertTrue(specHandler.getSpec().containsKey("data"));
+		assertTrue(specHandler.getSpec().containsKey("layout"));
+		assertTrue(specHandler.getSpec().containsKey("config"));
+	}
+	
+	
+	@Test
+	public void testApplyTable() throws Exception {
 
 		// the plot spec
 		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");
@@ -28,28 +55,7 @@ public class PlotlyPlotSpecHandlerTest {
 		PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
 		specHandler.applyTable(table);
 		
-		JSONObject resultJson = specHandler.getJSON();	
-		assertFalse(resultJson.toJSONString().contains("SEMTK_TABLE"));
-		assertTrue(resultJson.toJSONString().contains("\"x\":[11.1,11.5]"));
-		assertTrue(resultJson.toJSONString().contains("\"y\":[22.2,22.5]"));
-		assertTrue(resultJson.toJSONString().contains("\"y\":[33.3,33.5]"));
-	}
-	
-	
-	@Test
-	public void testTimestampValues() throws Exception {
-
-		// the plot spec
-		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");
-	
-		// a table
-		String tableJsonStr_Timestamps = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
-		Table table = Table.fromJson((JSONObject) new JSONParser().parse(tableJsonStr_Timestamps));
-		
-		PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
-		specHandler.applyTable(table);
-		
-		JSONObject resultJson = specHandler.getJSON();	
+		JSONObject resultJson = specHandler.toJson();	
 		System.out.println(resultJson.toJSONString());
 		assertFalse(resultJson.toJSONString().contains("SEMTK_TABLE"));
 		assertTrue(resultJson.toJSONString().contains("\"x\":[\"2020-01-24T00:00:00\",\"2020-01-25T00:00:00\"]"));
@@ -57,8 +63,9 @@ public class PlotlyPlotSpecHandlerTest {
 		assertTrue(resultJson.toJSONString().contains("\"y\":[33.3,33.5]"));
 	}
 	
+	
 	@Test
-	public void testError() throws Exception {
+	public void testApplyTableError() throws Exception {
 		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly-unsupported.json");  // contains SEMTK_TABLE.unsupported[colA]
 		Table table = Table.fromJson((JSONObject) new JSONParser().parse(tableJsonStr));
 

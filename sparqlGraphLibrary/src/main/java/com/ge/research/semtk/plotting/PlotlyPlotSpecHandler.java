@@ -1,16 +1,3 @@
-package com.ge.research.semtk.plotting;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang.math.NumberUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-
-import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.utility.Utility;
-
 /**
  ** Copyright 2021 General Electric Company
  **
@@ -27,9 +14,30 @@ import com.ge.research.semtk.utility.Utility;
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
+package com.ge.research.semtk.plotting;
 
-public class PlotlyPlotSpecHandler {
-	private static String JKEY_SPEC = "spec";
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang.math.NumberUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.utility.Utility;
+
+/**
+ * Information for a single Plotly plot spec
+ * 
+ * Example:
+ *     	{   type: "plotly",
+ *          name: "line 1",
+ *          spec: { data: [{},{}], layout: {}, config: {} }    
+ *      }
+ */
+public class PlotlyPlotSpecHandler extends PlotSpecHandler {
+
 	private static String JKEY_DATA = "data";
 	private static String JKEY_LAYOUT = "layout";
 	private static String JKEY_CONFIG = "config";
@@ -37,63 +45,32 @@ public class PlotlyPlotSpecHandler {
 	private static String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
 	private static String CMD_COL = "col";
 	
-	JSONObject plotSpecJson = null;
 	String plotSpecJsonStrTemp = null;	// temp string to use while creating a replacement plotSpecJson
-	
+		
 	/**
-	 * NOTES:
-	 *     sparqlgraphjson might have:
-	 *     	   .plots: [
-	 *     		>>	{   type: plotly,
-	 *	 	    >>      name: "line 1",
-	 *          >>      spec: { data: [{},{}], layout: {}, config: {} }    
-	 *          >>    },
-	 *                { type: visjs,
-	 *                  spec: { vsJsSpecJson }
-	 *                },
-	 *                { type: plotly,
-	 *                  spec: { data, layout, config }
-	 *              },
-	 *              
+	 * Constructor
 	 */
-	
-	/**
-	 * 
-	 * @param plotSpecJson - JSON to specify a single plotly plot.
-	 */
-	public PlotlyPlotSpecHandler(JSONObject plotSpecJson) {
-		this.plotSpecJson = plotSpecJson;
-
-	}
-	
-	/**
-	 * Get json, could be null
-	 * @return
-	 */
-	public JSONObject getJSON() {
-		return this.plotSpecJson;
+	public PlotlyPlotSpecHandler(JSONObject plotSpecJson) throws Exception {
+		super(plotSpecJson);
 	}
 	
 	/**
 	 * Substitute data and info from a table into a data spec
-	 * @param table
-	 * @throws Exception
 	 */
 	public void applyTable(Table table) throws Exception {
 		
-		JSONObject spec = (JSONObject) this.plotSpecJson.get(JKEY_SPEC);
+		JSONObject spec = (JSONObject) this.getSpec();
 		if (spec == null) throw new Exception("Plotly spec json needs a " + JKEY_SPEC + " element");
 		JSONArray data = (JSONArray) spec.get(JKEY_DATA);
 		if (data == null) throw new Exception("Plotly spec json needs a " + JKEY_DATA + " element");
 
-		this.plotSpecJsonStrTemp = plotSpecJson.toJSONString();  // create a temp string in which to make substitutions (cannot iterate + modify JSON at the same time)
+		this.plotSpecJsonStrTemp = json.toJSONString();  // create a temp string in which to make substitutions (cannot iterate + modify JSON at the same time)
 		walkToApplyTable(data, table);
-		this.plotSpecJson = Utility.getJsonObjectFromString(plotSpecJsonStrTemp);
+		this.json = Utility.getJsonObjectFromString(plotSpecJsonStrTemp);
 	}
 	
 	/**
 	 * Recursively walk json and apply table
-	 * @param json
 	 */
 	private void walkToApplyTable(Object json, Table table) throws Exception {
 		if (json instanceof JSONObject) {
