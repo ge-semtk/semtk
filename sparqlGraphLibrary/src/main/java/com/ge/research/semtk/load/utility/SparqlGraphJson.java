@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.load.utility;
 
+import java.util.Arrays;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -203,7 +205,8 @@ public class SparqlGraphJson {
 	/**
 	 * Add a plot spec
 	 */
-	public void addPlotSpec(PlotSpecHandler newPlot) throws Exception{
+	public void addPlotSpec(PlotSpecHandler newPlotSpec) throws Exception{
+		
 		// get existing plot specs, create if null
 		JSONArray plotSpecsJson = getPlotSpecsJson();
 		if(plotSpecsJson == null){
@@ -211,12 +214,12 @@ public class SparqlGraphJson {
 		}
 		
 		// confirm that doesn't already have one with the same name as the new plot
-		if(plots.getPlotSpecNames().contains(newPlot.getName())){
-			throw new Exception("Cannot add plot '" + newPlot.getName() + "': a plot with this name already exists in the nodegroup");
+		if(plots != null && plots.getPlotSpecNames().contains(newPlotSpec.getName())){
+			throw new Exception("Cannot add plot '" + newPlotSpec.getName() + "': a plot with this name already exists in the nodegroup");
 		}
 		
 		// add the new plot
-		plotSpecsJson.add(newPlot.toJson());
+		plotSpecsJson.add(newPlotSpec.toJson());
 		this.setPlotSpecsJson(plotSpecsJson);
 	}
 	
