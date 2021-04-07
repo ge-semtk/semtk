@@ -41,7 +41,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     "plotSpecJson": JSON.stringify(plotSpecJson),
                     "tableJson": JSON.stringify(tableJson),
                 });
-				this.msi.postToEndpoint("processPlotSpec", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+				this.msi.postAndCheckSuccess("processPlotSpec", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
 		};

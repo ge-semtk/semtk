@@ -6,9 +6,9 @@
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,11 +21,11 @@ define([	'sparqlgraph/js/msiresultset',
         	'sparqlgraph/js/modaliidx',
         	'jquery',
 			// shimmed
-			
+
 		],
 
 	function(MsiResultSet, ModalIidx, $) {
-	
+
 		/*
 		 *    A column name or text or some item used to build a triple value
 		 */
@@ -46,60 +46,60 @@ define([	'sparqlgraph/js/msiresultset',
 										};
 			this.userSuccessCallback = null;
 		};
-				
+
 		MicroServiceInterface.FORM_CONTENT = false;  // 3rd param to postToEndpoint
-		
+
 		MicroServiceInterface.prototype = {
 				getServiceName : function () {
 					return this.url.slice(0,-1).split('/').pop();
 				},
-				
-				errorCallback : function (xhr, status, err) { 
+
+				errorCallback : function (xhr, status, err) {
                     if (xhr.hasOwnProperty("status") && xhr.status == 401) {
                         // attempt to reauthenticate, presuming the window.location.origin has a /login
                         var alertCallback = function () {
                              window.open(window.location.origin + '/login', "_blank", "location=yes");
                         };
-                        var html = "<h3>403 Forbidden: token may have expired" + 
+                        var html = "<h3>403 Forbidden: token may have expired" +
                                   "<p>Click OK to attempt re-authentication in another tab." +
                                   "<br>(if pop-ups are not blocked)" +
                                   "<br><br>After re-authenticating, return and try again."
                         this.userFailureCallback(html, alertCallback);
-                        
+
                     } else  {
                         // normal error
                         this.userFailureCallback(this.generatePostFailureHtml(xhr, status, err));
                     }
 				},
-				
+
 				statusCodeCallback : function (statusCode, object) {
 					// never called because ajax stinks
 					var html =  "<h3>Call to" + this.getServiceName() + " failed</h3>";
 					html += "<br><b>HTTP status: &nbsp</b>" + statusCode;
-					
+
 					if (statusCode == 403) {
 						html += "<br><b>meaning: &nbsp</b>" + status;
 					}
 					this.userFailureCallback(html);
 				},
-				
-				successCallback : function (xhr, status, err) { 
-					// call to the service succeeded.   
+
+				successCallback : function (xhr, status, err) {
+					// call to the service succeeded.
 					// The service itself might have succeeded or failed.
 					var resultSet = new MsiResultSet(this.lastUrl, xhr);
-				
+
 					this.userSuccessCallback(resultSet);
-					
+
 				},
-				
-				generatePostFailureHtml : function (xhr, status, err) { 
+
+				generatePostFailureHtml : function (xhr, status, err) {
 					// make a message out of failure callback parameters
-					var ret = ""; 
-                    
+					var ret = "";
+
                     if (xhr.hasOwnProperty("status") && xhr.status == 0 &&
-                        xhr.hasOwnProperty("readyState") && xhr.readyState == "" && 
+                        xhr.hasOwnProperty("readyState") && xhr.readyState == "" &&
                         xhr.hasOwnProperty("statusText") && xhr.statusText == "error"  ) {
-                        
+
                         ret = "<h3>Service may be down: " + this.getServiceName() + "</h3>";
                     } else {
                         ret = "<h3>" + this.getServiceName() + " service failed</h3>";
@@ -112,20 +112,20 @@ define([	'sparqlgraph/js/msiresultset',
 					   ret += "<br><b>error: &nbsp</b>" + err;
                     }
 					ret += this.generateXhrHtml(xhr);
-					
+
 					return ret;
 				},
-				
-				
+
+
 				generateXhrHtml : function (xhr) {
                     var MAX_LEN = 128;
-                    
+
 					// pull anything we can find out of xhr and make it html
 					ret = "";
 					for (var key in xhr) {
 						if (xhr.hasOwnProperty(key)) {
 							var s = JSON.stringify(xhr[key]);
-                            
+
 							// skip weird entries and functions
 							if (typeof s !== "undefined" && s.slice(0,8) !== "function") {
 								if (key == "responseJSON") {
@@ -147,20 +147,20 @@ define([	'sparqlgraph/js/msiresultset',
 					}
 					return ret;
 				},
-				
-				
+
+
 				serviceSucceeded : function (xhr, status) {
 					// POST was successful, but did the service also return success
 					return (JSON.stringify(xhr.status).indexOf("success") == 1);
 				},
-				
+
 				checkFormData : function (formdata) {
 					// check whether form contains errors
 					//    (1) file over 1 meg
 					// Return errorHTML or null
 					var errorHTML = null;
 					var value;
-					
+
 					for (value of formdata.values()) {
 						if (value instanceof File) {
 							var file = value;
@@ -172,17 +172,17 @@ define([	'sparqlgraph/js/msiresultset',
 							}
 						}
 					}
-					
+
 					return errorHTML;
 				},
-				
+
                 /*
                  * shortcut to ping endpoing
                  * successCallback(resultSet) is only called if success and availability is "yes"
                  * failureCallback(htmlMsg)
                  */
                 ping : function (successCallback, optFailureCallback, optTimeout) {
-                    
+
                     var success = function (successCall0, res) {
                         if (res.isSuccess() && res.getSimpleResultField("available") == "yes") {
                             successCall0(res);
@@ -190,23 +190,38 @@ define([	'sparqlgraph/js/msiresultset',
                             this.userFailureCallback(res.getFailureHtml());
                         }
                     }.bind(this, successCallback);
-                    
+
                     var saveUrl = this.url;
                     // change the service name to serviceInfo
                     this.url = this.url + 'serviceInfo/';
                     this.postToEndpoint("ping", "", "application/json", success, optFailureCallback, optTimeout);
                     this.url = saveUrl;
                 },
-            
+
+                postAndCheckSuccess : function (endpoint, data, contentType, successOnlyCallback, optFailureCallback, optTimeout) {
+                    // post to an endpoint that returns an MsiResultSet
+                    // NEWER: check the return for success before calling successOnlyCallback
+
+                    var checkCallback = function(resultSet) {
+                        if (resultSet.isSuccess()) {
+                            successOnlyCallback(resultSet);
+                        } else {
+                            this.userFailureCallback(resultSet.getFailureHtml());
+                        }
+                    }.bind(this);
+
+                    this.postToEndpoint(endpoint, data, contentType, checkCallback, optFailureCallback, optTimeout);
+                },
+
 				postToEndpoint : function (endpoint, data, contentType, successCallback, optFailureCallback, optTimeout) {
-					// contentType:  
+					// contentType:
 					//      false - when data is a FormData()
 					//      otherwise normal such as 'application/json'
 					//
-					// successCallback(resultSet) 
+					// OLDER: successCallback(resultSet) - the resultSet might still be failed
 					//
 					// optFailureCallback(HTML) - defaults to form of ModalIidx.alert()
-					//                    
+					//
 					if (typeof optFailureCallback !== 'undefined') {
 						this.userFailureCallback = optFailureCallback;
 					}
@@ -215,7 +230,7 @@ define([	'sparqlgraph/js/msiresultset',
 					}
 					this.lastUrl = this.url.slice(0, this.url.lastIndexOf("/")) + '/' + endpoint;
 					this.userSuccessCallback = successCallback;
-					
+
 					// check form data: (size of files)
 					if (contentType === false) {
 						var errorHTML = this.checkFormData(data);
@@ -224,7 +239,7 @@ define([	'sparqlgraph/js/msiresultset',
 							return;
 						}
 					}
-					
+
 					$.ajax({
 						url: this.lastUrl,
 						type: 'POST',
@@ -233,7 +248,7 @@ define([	'sparqlgraph/js/msiresultset',
 						data: data,
 						timeout: this.timeout,
 						processData: false,  // isn't this a BUG for non form data??
-					    
+
 						success: this.successCallback.bind(this),
 						error:   this.errorCallback.bind(this),
 						statusCode: {
@@ -241,22 +256,22 @@ define([	'sparqlgraph/js/msiresultset',
                           // 401: function() {
                           //    this.userFailureCallback("Authorization failure.<br>(Token may have expired.)");
                           // }.bind(this),
-						   403: function() { 
+						   403: function() {
 							   // never happens
-							   this.statusCodeCallback(403);        
-							   alert("403 was caught.  Miracle.");  
+							   this.statusCodeCallback(403);
+							   alert("403 was caught.  Miracle.");
 						   }.bind(this),
 						}
 					});
-					
+
 				},
-				
+
 				post : function (formdata, successCallback, failureCallback) {
 					// ORIGINAL multi-part form data function retained for backward compatibility
 					//
 					// success (xhr, status) - call to the service succeeded...Actual service might have failed
 					//    Use this.isSuccess()
-					// failure (xhr, status, err) - call to the service failed.  
+					// failure (xhr, status, err) - call to the service failed.
 					//    Use this.generatePostFailureMsg()
 					console.log("MicroServiceInterface:post() is deprecated.  Use postToEndpoint() or other post methods.")
 					this.lastUrl = this.url;
@@ -267,38 +282,38 @@ define([	'sparqlgraph/js/msiresultset',
 						data: formdata,
 						timeout: 60000,
 						processData: false,
-					    contentType: false,   
-					    
+					    contentType: false,
+
 						success: successCallback,
 						error:   failureCallback,
-						
+
 					});
-					
+
 				},
-				
+
 				get : function (successCallback, failureCallback) {
 					// success (xhr, status) - call to the service succeeded...Actual service might have failed
 					//    Use this.isSuccess()
-					// failure (xhr, status, err) - call to the service failed.  
+					// failure (xhr, status, err) - call to the service failed.
 					//    Use this.generatePostFailureMsg()
 					console.log("MicroServiceInterface.get() is deprecated");
 					$.ajax({
 						url: this.url,
 						type: 'GET',
-						
+
 						timeout: 10000,
 						processData: false,
 					    contentType: false,
-					    
+
 						success: successCallback,
 						error:   failureCallback,
-						
+
 					});
-					
+
 				},
-				
+
 		};
-	
+
 		return MicroServiceInterface;            // return the constructor
 	}
 );

@@ -1471,6 +1471,9 @@
             select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
             select.onchange = function(select) {
                 var i = parseInt(select.value);
+
+                // empty w/o shrinking so screen might now bounce
+                resultsDiv.style.minHeight = resultsDiv.offsetHeight + "px";
                 resultsDiv.innerHTML = "";
 
                 if (i < 0) {
@@ -2025,6 +2028,7 @@
         gMappingTab.clear();
         gNodeGroupName = null;
         gNodeGroupChangedFlag = false;
+        gPlotSpecsHandler = null;
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();

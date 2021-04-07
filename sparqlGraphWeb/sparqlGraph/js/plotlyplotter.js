@@ -44,19 +44,30 @@ define([	// properly require.config'ed   bootstrap-modal
 
             addPlotToDiv : function(div, tableRes) {
 
-                var plotDiv = document.createElement("div");
-                div.appendChild(plotDiv);
-
                 var utilityClient = new MsiClientUtility(g.service.utility.url);
-                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, plotDiv));
+                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div));
             },
 
             processSpecSuccess : function(div, msiRes) {
                 var data = msiRes.getSimpleResultField("plot").spec.data;
                 var layout = msiRes.getSimpleResultField("plot").spec.layout;
                 var config = msiRes.getSimpleResultField("plot").spec.config;
-                Plotly.newPlot( div, data, layout, config );
-            }
+
+                var plotDiv = document.createElement("div");
+                this.adjustLayoutDimensions(layout, plotDiv);
+
+                Plotly.newPlot( plotDiv, data, layout, config );
+
+                div.appendChild(plotDiv);
+            },
+
+            adjustLayoutDimensions : function(layout, div) {
+                if (layout.height || layout.width)
+                    return;
+                var size = Math.min(window.innerWidth, div.offsetWidth);
+                layout.height = size * 0.80;
+                layout.width = size;
+            },
         };
 
         return PlotlyPlotter;            // return the constructor
