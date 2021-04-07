@@ -129,10 +129,10 @@ define([	// properly require.config'ed
              * returns a (possibly empty) PlotSpecsHandler
              */
             getPlotSpecsHandler : function() {
-                if (this.jObj.hasOwnProperty("plotSpecs")) {
+                if (this.jObj.hasOwnProperty("plotSpecs") && this.jObj.plotSpecs) {
                     return new PlotSpecsHandler(this.jObj.plotSpecs);
                 } else {
-                    return new PlotSpecsHandler([]);
+                    return new PlotSpecsHandler();
                 }
             },
 

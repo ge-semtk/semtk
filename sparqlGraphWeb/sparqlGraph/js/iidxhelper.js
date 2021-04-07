@@ -878,7 +878,7 @@ define([	// properly require.config'ed
         return anchor;
     };
 
-    IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList) {
+    IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList, formDom) {
         var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
 
         // header Table
@@ -898,14 +898,14 @@ define([	// properly require.config'ed
         } else {
             td.appendChild(header);
         }
-
         tr.appendChild(td);
 
-        // search cell (moved into the grid)
-        //td = document.createElement("td");
-        //td.align="right";
-        //td.innerHTML = searchHTML;
-        //tr.appendChild(td);
+        // chooser dom
+        if (formDom) {
+            td = document.createElement("td");
+            td.appendChild(formDom);
+            tr.appendChild(td);
+        }
 
         // menu cell
         td = document.createElement("td");
@@ -915,7 +915,7 @@ define([	// properly require.config'ed
         return headerTable;
     };
 
-    IIDXHelper.buildDatagridInDiv = function (div, headerHTML, colsCallback, dataCallback, menuLabelList, menuCallbackList, optFinishedCallback, optSortList) {
+    IIDXHelper.buildDatagridInDiv = function (div, colsCallback, dataCallback, optFinishedCallback, optSortList) {
         //
         // PARAMS:
         //   div - html div in which to put the menu and table
@@ -935,15 +935,6 @@ define([	// properly require.config'ed
 
         var finishedCallback = (typeof optFinishedCallback == 'undefined' || optFinishedCallback == null) ? function(){} : optFinishedCallback;
         var sortList = (typeof optSortList == 'undefined') ? [[ 0, 'asc' ]] : optSortList;
-
-        // search (moved into the grid)
-        // var searchHTML = '<input type="text" id="table_filter" class="input-medium search-query" data-filter-table="' + dataTableName + '"><button class="btn btn-icon"><i class="icon-search"></i></button>';
-
-        var headerTable = IIDXHelper.buildResultsHeaderTable(headerHTML, menuLabelList, menuCallbackList);
-
-        // add row to table & table to div
-        div.innerHTML = "";
-        div.appendChild(headerTable);
 
         // grid
         var gridTable = document.createElement("table");

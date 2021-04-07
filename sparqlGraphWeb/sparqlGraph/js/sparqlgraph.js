@@ -1428,12 +1428,14 @@
      * @private
      */
     var queryTableResCallback = function (csvFilename, fullURL, tableResults) {
-        require(['sparqlgraph/js/msiclientresults', 'sparqlgraph/js/plotlyplotter'], function(MsiClientResults, PlotlyPlotter) {
+        require(['sparqlgraph/js/iidxhelper', 'sparqlgraph/js/msiclientresults', 'sparqlgraph/js/plotlyplotter'],
+                function(IIDXHelper, MsiClientResults, PlotlyPlotter) {
             var headerHtml = "";
             if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
                 headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
             }
             headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
+
             tableResults.setLocalUriFlag(! getQueryShowNamespace());
             tableResults.setEscapeHtmlFlag(true);
             tableResults.setAnchorFlag(true);
@@ -1441,13 +1443,54 @@
             tableResults.tableApplyTransformFunctions(resultsClient.getResultTransformFunctions());
             var noSort = [];
 
-            var targetDiv = document.getElementById("resultsParagraph");
+            var resultsPara = document.getElementById("resultsParagraph");
+            var resultsDiv = document.createElement("div");
 
-            var plotter = gPlotSpecsHandler.getDefaultPlotter();
+            // build the table/plot select
+            var plotter = null;
+            var select = undefined;
+            var textValArray = [["table", -1]];
+            var selectedTexts = ["table"];
+
+            // add plots if any
+            if (gPlotSpecsHandler) {
+                // get plotter or null
+                plotter = gPlotSpecsHandler.getDefaultPlotter();
+                var plotNames = gPlotSpecsHandler.getNames();
+
+                for (var i=0; i < plotNames.length; i++) {
+                    textValArray.push([plotNames[i], i]);
+                }
+
+                if (plotter) {
+                    selectedTexts = [plotter.getName()];
+                }
+            }
+
+            // finish the table/plot select
+            select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
+            select.onchange = function(select) {
+                var i = parseInt(select.value);
+                resultsDiv.innerHTML = "";
+
+                if (i < 0) {
+                    tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                } else {
+                    gPlotSpecsHandler.getPlotter(i).addPlotToDiv(resultsDiv, tableResults);
+                }
+            }.bind(this, select);
+
+            // add header to results
+            var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], select);
+            resultsPara.innerHTML = "";
+            resultsPara.appendChild(headerTable);
+            resultsPara.appendChild(resultsDiv);
+
+            // display results
             if (plotter != null) {
-                plotter.addPlotToDiv(targetDiv, tableResults);
+                plotter.addPlotToDiv(resultsDiv, tableResults);
             } else {
-                tableResults.putTableResultsDatagridInDiv(targetDiv, headerHtml, undefined, undefined, undefined, noSort);
+                tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
             }
 
             guiUnDisableAll();

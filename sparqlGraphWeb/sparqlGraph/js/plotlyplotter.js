@@ -38,13 +38,17 @@ define([	// properly require.config'ed   bootstrap-modal
         PlotlyPlotter.prototype = {
             CONSTANT : 1,
 
-            sample : function () {
-                return 1;
+            getName : function () {
+                return this.spec.name;
             },
 
             addPlotToDiv : function(div, tableRes) {
+
+                var plotDiv = document.createElement("div");
+                div.appendChild(plotDiv);
+
                 var utilityClient = new MsiClientUtility(g.service.utility.url);
-                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div));
+                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, plotDiv));
             },
 
             processSpecSuccess : function(div, msiRes) {

@@ -29,7 +29,7 @@ define([	// properly require.config'ed   bootstrap-modal
     function(PlotlyPlotter) {
 
         var PlotSpecsHandler = function (plotSpecsJson) {
-            this.plotSpecs = plotSpecsJson;
+            this.plotSpecs = plotSpecsJson ? plotSpecsJson : [];
         };
 
 
@@ -49,6 +49,14 @@ define([	// properly require.config'ed   bootstrap-modal
                     throw "Plots json item has no name";
                 }
                 return json.name;
+            },
+
+            getNames : function(index) {
+                var ret = [];
+                for (var i=0; i < this.getNumPlots(); i++) {
+                    ret[i] = this.getName(i);
+                }
+                return ret;
             },
 
             /*
