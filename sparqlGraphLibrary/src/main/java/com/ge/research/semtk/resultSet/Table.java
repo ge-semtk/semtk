@@ -466,7 +466,7 @@ public class Table {
 	
 	/**
 	 * Return the values for a particular column
-	 * @param columnName
+	 * @param columnName or -1
 	 * @return
 	 */
 	public String[] getColumn(String columnName){

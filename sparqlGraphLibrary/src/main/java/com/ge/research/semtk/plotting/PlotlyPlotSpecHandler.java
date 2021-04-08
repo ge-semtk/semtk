@@ -113,10 +113,16 @@ public class PlotlyPlotSpecHandler extends PlotSpecHandler {
 				
 		String[] sSplit = s.replaceAll("\\s","").split("[\\.\\[\\]]");  // e.g. split SEMTK_TABLE.col[colA] into ["SEMTK_TABLE", "col", "colA"]
 		if(sSplit[0].equals(PREFIX) && sSplit[1].equals(CMD_COL)){
-			String colName = sSplit[2];
-			ArrayList<String> list = new ArrayList<>(Arrays.asList(table.getColumn(colName)));
+			String colName = sSplit[2].trim();
+			int colIndex = table.getColumnIndex(colName);
+			if (colIndex == -1) {
+				throw new Exception("Plot spec contains column which does not exist in table: '" + colName + "'");
+			}
+			ArrayList<String> list = new ArrayList<>(Arrays.asList(table.getColumn(colIndex)));
 			String columnDataStr;
-			if(NumberUtils.isNumber(table.getCell(0, colName))){
+			if (table.getNumRows() == 0) {
+				columnDataStr = "[]";
+			} else if(NumberUtils.isNumber(table.getCell(0, colName))){
 				columnDataStr = "[" + list.stream().collect(Collectors.joining(", ")) + "]";							// no quotes needed, e.g. [11.1,11.5]
 			}else{
 				columnDataStr = "[" + list.stream().map(t -> "\"" + t + "\"").collect(Collectors.joining(", ")) + "]";  // surround each entry in quotes (e.g. e.g. ["2020-01-24T00:00:00","2020-01-23T00:00:00"])
