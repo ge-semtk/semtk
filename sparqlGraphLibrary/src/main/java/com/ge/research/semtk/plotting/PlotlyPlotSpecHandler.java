@@ -38,18 +38,18 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class PlotlyPlotSpecHandler extends PlotSpecHandler {
 
-	private static String JKEY_DATA = "data";
-	private static String JKEY_LAYOUT = "layout";
-	private static String JKEY_CONFIG = "config";
+	public static final String TYPE = "plotly";
 	
-	private static String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
-	private static String CMD_COL = "col";
+	private static final String JKEY_DATA = "data";
+	private static final String JKEY_LAYOUT = "layout";
+	private static final String JKEY_CONFIG = "config";
+	
+	private static final String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
+	private static final String CMD_COL = "col";
 	
 	String plotSpecJsonStrTemp = null;	// temp string to use while creating a replacement plotSpecJson
 		
-	/**
-	 * Constructor
-	 */
+
 	public PlotlyPlotSpecHandler(JSONObject plotSpecJson) throws Exception {
 		super(plotSpecJson);
 	}

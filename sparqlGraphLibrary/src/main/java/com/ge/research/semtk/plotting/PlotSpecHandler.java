@@ -27,11 +27,14 @@ import org.json.simple.JSONObject;
  *     		spec: { spec specific to the type }    
  * 		}
  */
+@SuppressWarnings("unchecked")
 public abstract class PlotSpecHandler {
 	
-	protected static String JKEY_TYPE = "type";  // e.g. "plotly"
-	protected static String JKEY_NAME = "name";  // display name
-	protected static String JKEY_SPEC = "spec";
+	protected static String TYPE;
+	
+	protected static final String JKEY_TYPE = "type";  // e.g. "plotly"
+	protected static final String JKEY_NAME = "name";  // display name
+	protected static final String JKEY_SPEC = "spec";
 
 	JSONObject json = null;
 	
@@ -40,6 +43,11 @@ public abstract class PlotSpecHandler {
 			throw new Exception("Cannot create PlotSpecHandler with null JSON");
 		}
 		this.json = json;
+	}
+	
+	public PlotSpecHandler(String name){
+		setName(name);
+		setType(TYPE);
 	}
 	
 	public JSONObject toJson(){
@@ -65,5 +73,21 @@ public abstract class PlotSpecHandler {
 			throw new Exception("Plot spec has no spec");
 		}
 		return (JSONObject) this.json.get(JKEY_SPEC);
+	}
+	
+	// this should only be called internally
+	private void setType(String type){
+		this.json.remove(JKEY_TYPE);
+		this.json.put(JKEY_TYPE, type);
+	}
+	
+	public void setName(String name){
+		this.json.remove(JKEY_NAME);
+		this.json.put(JKEY_NAME, name);
+	}
+	
+	public void setSpec(JSONObject specJson){
+		this.json.remove(JKEY_SPEC);
+		this.json.put(JKEY_SPEC, specJson);
 	}
 }

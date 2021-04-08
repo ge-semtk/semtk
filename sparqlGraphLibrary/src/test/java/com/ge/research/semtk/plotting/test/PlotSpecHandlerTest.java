@@ -35,11 +35,15 @@ public class PlotSpecHandlerTest {
 	public void test() throws Exception {
 		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");		
 		PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
-		assertTrue(specHandler.getType().equals("plotly"));
+		assertTrue(specHandler.getType().equals(PlotlyPlotSpecHandler.TYPE));
 		assertTrue(specHandler.getName().equals("Plotly Chart 1"));
 		assertTrue(specHandler.getSpec().containsKey("data"));
 		assertTrue(specHandler.getSpec().containsKey("layout"));
 		assertTrue(specHandler.getSpec().containsKey("config"));
+		
+		specHandler.setName("Plotly Modified Name");
+		assertEquals(specHandler.getName(),"Plotly Modified Name");
+				
 	}
 	
 	

@@ -52,6 +52,13 @@ public class PlotSpecsHandler {
 	}
 	
 	/**
+	 * Get the json
+	 */
+	public JSONArray toJson(){
+		return this.jsonArr;
+	}
+	
+	/**
 	 * Get number of plot specs
 	 */
 	public int getNumPlotSpecs() {
