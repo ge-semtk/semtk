@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.load.utility;
 
-import java.util.Arrays;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -30,7 +28,6 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.plotting.PlotSpecHandler;
 import com.ge.research.semtk.plotting.PlotSpecsHandler;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -200,29 +197,7 @@ public class SparqlGraphJson {
 	public void setPlotSpecsJson(JSONArray plotSpecsJson) {
 		this.jObj.put(JKEY_PLOTSPECS, plotSpecsJson);
 		this.plots = null;   // wipe out any cached PlotSpecsHandler
-	}
-	
-	/**
-	 * Add a plot spec
-	 */
-	public void addPlotSpec(PlotSpecHandler newPlotSpec) throws Exception{
-		
-		// get existing plot specs, create if null
-		JSONArray plotSpecsJson = getPlotSpecsJson();
-		if(plotSpecsJson == null){
-			plotSpecsJson = new JSONArray();
-		}
-		
-		// confirm that doesn't already have one with the same name as the new plot
-		if(plots != null && plots.getPlotSpecNames().contains(newPlotSpec.getName())){
-			throw new Exception("Cannot add plot '" + newPlotSpec.getName() + "': a plot with this name already exists in the nodegroup");
-		}
-		
-		// add the new plot
-		plotSpecsJson.add(newPlotSpec.toJson());
-		this.setPlotSpecsJson(plotSpecsJson);
-	}
-	
+	}	
 	
 	/**
 	 * @return runtime constraints json or null

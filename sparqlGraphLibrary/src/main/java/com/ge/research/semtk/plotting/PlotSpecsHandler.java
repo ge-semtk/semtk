@@ -80,6 +80,25 @@ public class PlotSpecsHandler {
 		return namesList;
 	}
 	
+	
+	/**
+	 * Add a plot spec
+	 */
+	public void addPlotSpec(PlotSpecHandler newPlotSpec) throws Exception{
+		
+		if(jsonArr == null){
+			jsonArr = new JSONArray();
+		}
+		
+		// confirm that doesn't already have one with the same name as the new plot
+		if(getPlotSpecNames().contains(newPlotSpec.getName())){
+			throw new Exception("Cannot add plot '" + newPlotSpec.getName() + "': a plot with this name already exists in the nodegroup");
+		}
+		
+		// add the new plot
+		jsonArr.add(newPlotSpec.toJson());
+	}
+	
 	/**
 	 * Get handler for a given plot spec
 	 */

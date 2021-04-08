@@ -121,34 +121,6 @@ public class SparqlGraphJsonTest_IT {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	@Test
-	public void test_addPlot() throws Exception{
-		
-		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");
-		PlotlyPlotSpecHandler plotSpec = new PlotlyPlotSpecHandler(plotSpecJson);
-		SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/demoNodegroup.json"));  // TODO this file is from src/main/resources - need a copy in src/test/resources?
-		
-		// add the plot spec
-		sgJson.addPlotSpec(plotSpec);
-		assertEquals(sgJson.getPlotSpecsHandler().getNumPlotSpecs(), 1);
-		
-		// confirm can add it with a different name
-		plotSpecJson = (JSONObject) plotSpecJson.clone();  // TODO clone this in the method?
-		plotSpecJson.remove("name");
-		plotSpecJson.put("name", "Plot 2");
-		sgJson.addPlotSpec(new PlotlyPlotSpecHandler(plotSpecJson));
-		assertEquals(sgJson.getPlotSpecsHandler().getNumPlotSpecs(), 2);
-		
-		// confirm can't re-add it (same name)
-		try{
-			sgJson.addPlotSpec(plotSpec);
-			fail("Missing an expected exception");
-		}catch(Exception e){
-			assertTrue(e.getMessage().contains("a plot with this name already exists"));
-		}
-		
-	}
 }
 
 
