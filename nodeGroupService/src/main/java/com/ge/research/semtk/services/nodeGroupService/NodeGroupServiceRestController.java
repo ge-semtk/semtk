@@ -869,9 +869,10 @@ public class NodeGroupServiceRestController {
 			NodeGroup ng = ngRequest.buildNodeGroup();
 			ArrayList<String> modelErrorMessages = new ArrayList<String>();
 			ArrayList<NodeGroupItemStr> invalidNodeGroupItems = new ArrayList<NodeGroupItemStr>();
+			ArrayList<String> warnings = new ArrayList<String>();
 			
 			// do the work
-			ng.inflateAndValidate(oInfo, modelErrorMessages, invalidNodeGroupItems);
+			ng.inflateAndValidate(oInfo, modelErrorMessages, invalidNodeGroupItems, warnings);
 			
 			// translate invalid items
 			String invalidItemStrings[] = new String[invalidNodeGroupItems.size()];
@@ -883,6 +884,7 @@ public class NodeGroupServiceRestController {
 			retval.addResult("nodegroup", ng.toJson());
 			retval.addResult("modelErrorMessages", modelErrorMessages.toArray(new String[modelErrorMessages.size()]));
 			retval.addResult("invalidItemStrings", invalidItemStrings);
+			retval.addResult("warnings", warnings.toArray(new String[warnings.size()]));
 			retval.setSuccess(true);
 		}
 		catch(Exception e){

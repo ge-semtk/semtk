@@ -408,9 +408,18 @@ public class TestGraph {
 	 * @return
 	 * @throws Exception
 	 */
+	// use getNodeGroupFromResource
+	@Deprecated
 	public static NodeGroup getNodeGroup(String jsonFilename) throws Exception {
 		// get nodegroup with TestGraph's oInfo
 		return getSparqlGraphJsonFromFile(jsonFilename).getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
+	}
+	
+	public static NodeGroup getNodeGroupFromResource(Object o, String jsonResourceName) throws Exception {
+		return getSparqlGraphJsonFromResource(o, jsonResourceName).getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
+	}
+	public static NodeGroup getNodeGroupFromResource(Class c, String jsonResourceName) throws Exception {
+		return getSparqlGraphJsonFromResource(c, jsonResourceName).getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
 	public static NodeGroup getNodeGroupWithOInfo(SparqlGraphJson sgjson) throws Exception {

@@ -4384,7 +4384,7 @@ public class NodeGroup {
 	 * @throws Exception - if validation fails
 	 */
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception  {
-		this.inflateAndValidate(oInfo, null, null);
+		this.inflateAndValidate(oInfo, null, null, null);
 	}
 	
 	/**
@@ -4394,14 +4394,14 @@ public class NodeGroup {
 	 * @param invalidItems - populated with NodeGroupItemStr for invalid items, if not null
 	 * @throws Exception - non-model errors, or first model error if modelErrMsgs is null
 	 */
-	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrMsgs, ArrayList<NodeGroupItemStr> invalidItems) throws Exception  {
+	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrMsgs, ArrayList<NodeGroupItemStr> invalidItems, ArrayList<String> warnings) throws Exception  {
 		this.oInfo = oInfo;
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
 			throw new ValidationException("Model contains no classes. Nodegroup can't be validated.");
 		}
 		
 		for (Node n : this.getNodeList()) {
-			n.inflateAndValidate(oInfo, modelErrMsgs, invalidItems);
+			n.inflateAndValidate(oInfo, modelErrMsgs, invalidItems, warnings);
 		}
 	}
 	

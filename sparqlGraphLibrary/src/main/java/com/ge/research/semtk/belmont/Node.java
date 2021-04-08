@@ -156,8 +156,9 @@ public class Node extends Returnable {
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception {
 		ArrayList<String> modelErrList = new ArrayList<String>();
 		ArrayList<NodeGroupItemStr> itemStrList = new ArrayList<NodeGroupItemStr>();
+		ArrayList<String> warningList = new ArrayList<String>();
 		
-		this.inflateAndValidate(oInfo, modelErrList, itemStrList);
+		this.inflateAndValidate(oInfo, modelErrList, itemStrList, warningList);
 		
 		if (modelErrList.size() > 0) {
 			throw new ValidationException(modelErrList.get(0));
@@ -170,27 +171,40 @@ public class Node extends Returnable {
 	 * 
 	 * If modelErrList is given, an invalid nodegroup will be expanded and returned.
 	 * Otherwise an exception is thrown at the first model error.
+	 * 
+	 * Expanding an invalid node:
+	 * 		Type * may be unknown
+	 * 	
+	 * 		PropItem * may be unknown (illegal domain)
+	 * 				 - may have wrong range
+	 * 				 - WARNING - delete bad property (domain) if the property is unused
+	 * 				 - WARNING - silently fix wrong range if there are no constraints
 	 *
+	 * 		NodeItem - may be unknown (illegal domain)
+	 * 				 - may have wrong range
+	 * 				 - may be connected to nodes that violate the range
+	 *               - QUICK FIX - silently fix wrong range if connected nodes all legal
+	 * 
 	 * @param oInfo - if non-null then inflate and validate
 	 * @param modelErrList - if null, throw exception on first error : else collect a list of text model errors
 	 * @param itemStrList - if null, nothing, else list will have a NodeGroupItemStr for each invalid item found
 	 * @return
 	 * @throws Exception
 	 */
-	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrList, ArrayList<NodeGroupItemStr> itemStrList) throws Exception {
+	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrList, ArrayList<NodeGroupItemStr> itemStrList, ArrayList<String> warningList) throws Exception {
 		if (oInfo == null) { return; }
 		
-		ArrayList<PropertyItem> newProps = new ArrayList<PropertyItem>();
-		ArrayList<NodeItem> newNodes = new ArrayList<NodeItem>();
+		ArrayList<PropertyItem> inflatedPItems = new ArrayList<PropertyItem>();
+		ArrayList<NodeItem> inflatedNItems = new ArrayList<NodeItem>();
 		
 		// build hash of suggested properties for this class
-		HashMap<String, PropertyItem> propItemHash = new HashMap<>();
+		HashMap<String, PropertyItem> inputPItemHash = new HashMap<>();
 		for (PropertyItem p : this.props) {
-			propItemHash.put(p.getUriRelationship(), p);
+			inputPItemHash.put(p.getUriRelationship(), p);
 		}
 		
 		// build hash of suggested nodes for this class
-		HashMap<String, NodeItem> nodeItemHash = new HashMap<>();
+		HashMap<String, NodeItem> inputNItemHash = new HashMap<>();
 		for (NodeItem n : this.nodes) {
 			// silently skip legacy node items that weren't compressed properly
 			if (n.getUriConnectBy() == null || n.getUriConnectBy().isEmpty()) {
@@ -202,7 +216,7 @@ public class Node extends Returnable {
 					throw new Exception("Nodegroup json error: Node item is connected by has empty UriConnectBy " + n.getKeyName());
 				}
 			} else {
-				nodeItemHash.put(n.getUriConnectBy(), n);
+				inputNItemHash.put(n.getUriConnectBy(), n);
 			}
 		}
 		
@@ -221,44 +235,48 @@ public class Node extends Returnable {
 		
 		// loop through oInfo's version
 		// Remember: oProp can be propItem or nodeItem
-		for (OntologyProperty oProp : ontProps) {
-			String oPropURI = oProp.getNameStr();
-			String oPropKeyname = oProp.getNameStr(true);
+		for (OntologyProperty ontProp : ontProps) {
+			String ontPropURI = ontProp.getNameStr();			
 			
-			
-			if (propItemHash.containsKey(oPropURI)) {
-				// if ontology property is an existing propItem
+			if (inputPItemHash.containsKey(ontPropURI)) {
+				// if input nodegroup contains this property
 				
-				PropertyItem propItem = propItemHash.get(oPropURI);
-				if (! propItem.getValueTypeURI().equals(oProp.getRangeStr())) {
-					// ERROR property range doesn't match
-					String msg = this.getSparqlID() + " property " + oPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + oProp.getRangeStr();
-
-					modelErrList.add(msg);
-					itemStrList.add(new NodeGroupItemStr(this, propItem));
+				PropertyItem propItem = inputPItemHash.get(ontPropURI);
+				if (! propItem.getValueTypeURI().equals(ontProp.getRangeStr())) {
+					if (propItem.getConstraints() == null) {
+						// WARNING property range doesn't match
+						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " automatically changed to proper range of " + ontProp.getRangeStr();
+						warningList.add(msg);
+						
+					} else {
+						// ERROR property range doesn't match
+						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + ontProp.getRangeStr();
+						modelErrList.add(msg);
+						itemStrList.add(new NodeGroupItemStr(this, propItem));
+					}
 				}
 				
 				// add the propItem
-				newProps.add(propItem);
+				inflatedPItems.add(propItem);
 				
-				propItemHash.remove(oPropURI);
+				inputPItemHash.remove(ontPropURI);
 				
 		
-			} else if (!oInfo.containsClass(oProp.getRangeStr())) {
+			} else if (!oInfo.containsClass(ontProp.getRangeStr())) {
 				// Range class is not found so must be either:
 				//      1. node with a bad range
 				//      2. property deflated out of the nodegroup
 				PropertyItem propItem = new PropertyItem(	
-						oProp.getNameStr(true), 
-						oProp.getRangeStr(true), 
-						oProp.getRangeStr(false),
-						oProp.getNameStr(false));
+						ontProp.getNameStr(true), 
+						ontProp.getRangeStr(true), 
+						ontProp.getRangeStr(false),
+						ontProp.getNameStr(false));
 				
-				if (nodeItemHash.containsKey(oPropURI)) {
+				if (inputNItemHash.containsKey(ontPropURI)) {
 					// choice 1:  node with a bad range
-					String msg = this.getSparqlID() + " node property " + oPropURI + " has range " + oProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
+					String msg = this.getSparqlID() + " node property " + ontPropURI + " has range " + ontProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
 
-					NodeItem nodeItem = nodeItemHash.get(oPropURI);
+					NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 					if (nodeItem.isUsed()) {
 						// nItem is used, so the bad range is an error
 						modelErrList.add(msg);
@@ -268,43 +286,43 @@ public class Node extends Returnable {
 						
 					} else {
 						// bad nItem was not used: just fix it (should have been deflated)
-						nodeItem.setUriValueType(oProp.getRangeStr());
-						nodeItem.setValueType(oProp.getRangeStr(true));
+						nodeItem.setUriValueType(ontProp.getRangeStr());
+						nodeItem.setValueType(ontProp.getRangeStr(true));
 					}
 				} else {
 					// choice 2: deflated propItem
-					newProps.add(propItem);
+					inflatedPItems.add(propItem);
 				}
 				
 			
-			} else if (nodeItemHash.containsKey(oPropURI)) {
+			} else if (inputNItemHash.containsKey(ontPropURI)) {
 				// nodeItem, and range is found in the model
 				
-				NodeItem nodeItem = nodeItemHash.get(oPropURI);
+				NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
 				boolean rangeErrFlag = false;
 				
-				if (!nRangeStr.equals(oProp.getRangeStr())) {	
+				if (!nRangeStr.equals(ontProp.getRangeStr())) {	
 					if (nodeItem.isUsed()) {
-						String msg = this.getSparqlID() + " node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
+						String msg = this.getSparqlID() + " node property " + ontPropURI + " range of " + nRangeStr+ " doesn't match model range of " + ontProp.getRangeStr();
 	
 						modelErrList.add(msg);
 						rangeErrFlag = true;
 					} else {
 						// node is unused: just fix impropertly deflated
 			        	// TODO warn?
-						nodeItem.setUriValueType(oProp.getRangeStr());
+						nodeItem.setUriValueType(ontProp.getRangeStr());
 					}
 				}
-				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
+				if (!nRangeAbbr.equals(ontProp.getRangeStr(true))) {
 					if (nodeItem.isUsed()) {
-						modelErrList.add(this.getSparqlID() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true));
+						modelErrList.add(this.getSparqlID() + " node property " + ontPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + ontProp.getRangeStr(true));
 						rangeErrFlag = true;
 					} else {
 						// node is unused: just fix improperly deflated
 			        	// TODO warn?
-						nodeItem.setValueType(oProp.getRangeStr(true));
+						nodeItem.setValueType(ontProp.getRangeStr(true));
 					}
 				}
 				
@@ -321,12 +339,12 @@ public class Node extends Returnable {
 						boolean targetErrFlag = false;
 						
 						if (snodeClass == null) {
-							modelErrList.add(this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
+							modelErrList.add(this.getSparqlID() + " node property " + ontPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
 							targetErrFlag = true;
 						}
 						
 						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							modelErrList.add(this.getSparqlID() + " node property " + oPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
+							modelErrList.add(this.getSparqlID() + " node property " + ontPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
 							targetErrFlag = true;
 						}
 						
@@ -338,43 +356,44 @@ public class Node extends Returnable {
 				} 
 				
 				// add the nodeItem
-				newNodes.add(nodeItem);
+				inflatedNItems.add(nodeItem);
 				
-				nodeItemHash.remove(oPropURI);
+				inputNItemHash.remove(ontPropURI);
 				
 			
 			} else {
 				// Unused node: inflate
-				NodeItem nodeItem = new NodeItem(	oProp.getNameStr(false), 
-													oProp.getRangeStr(true),
-													oProp.getRangeStr(false)
+				NodeItem nodeItem = new NodeItem(	ontProp.getNameStr(false), 
+													ontProp.getRangeStr(true),
+													ontProp.getRangeStr(false)
 													);
-				newNodes.add(nodeItem);
+				inflatedNItems.add(nodeItem);
 			}
 		}
 		
 		// Check if anything is left in propItemHash, meaning it wasn't found in the model
-		for (String key : propItemHash.keySet()) {
-			PropertyItem propItem = propItemHash.get(key);
+		for (String key : inputPItemHash.keySet()) {
+			PropertyItem propItem = inputPItemHash.get(key);
 			if (propItem.isUsed()) {
 				String msg = this.getSparqlID() + " has property that isn't in the model: " + key;
 				modelErrList.add(msg);
 				itemStrList.add(new NodeGroupItemStr(this, propItem));
 	
 	            // add it anyway
-	            newProps.add(propItemHash.get(key));
+	            inflatedPItems.add(inputPItemHash.get(key));
+			} else {
+				warningList.add("Deleted invalid and unused property: " + this.getBindingOrSparqlID() + "->" + key);
 			}
-			// else throw away unused improperly deflated prop Item
-        	// TODO warn?
+			
         }
 
 		// Check if anything is left in nodeItemHash, meaning it wasn't found in the model
-        for (String key : nodeItemHash.keySet()) {
-        	NodeItem nodeItem = nodeItemHash.get(key);
+        for (String key : inputNItemHash.keySet()) {
+        	NodeItem nodeItem = inputNItemHash.get(key);
         	if (nodeItem.isUsed()) {
 	        	String msg = this.getSparqlID() + " has edge that isn't in the model: " + key;
 	        	modelErrList.add(msg);
-				NodeItem nItem = nodeItemHash.get(key);
+				NodeItem nItem = inputNItemHash.get(key);
 				if (nItem.getConnected()) {
 					for (Node target : nItem.getNodeList() ) {
 						// add every nodeItem/target combo
@@ -382,18 +401,18 @@ public class Node extends Returnable {
 					}
 				} else {
 					// add nodeItem with null target
-					itemStrList.add(new NodeGroupItemStr(this, nodeItemHash.get(key), null));
+					itemStrList.add(new NodeGroupItemStr(this, inputNItemHash.get(key), null));
 				}
 				
 	            // add it anyway
-	            newNodes.add(nodeItemHash.get(key));
+	            inflatedNItems.add(inputNItemHash.get(key));
         	}
         	// else throw away unused improperly deflated node Item
         	// TODO warn?
         }
 		
-		this.props = newProps;
-		this.nodes = newNodes;
+		this.props = inflatedPItems;
+		this.nodes = inflatedNItems;
 		
 	}
 	
