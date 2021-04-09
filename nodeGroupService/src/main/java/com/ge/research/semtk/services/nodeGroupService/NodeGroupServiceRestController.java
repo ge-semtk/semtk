@@ -55,6 +55,9 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.plotting.PlotSpec;
+import com.ge.research.semtk.plotting.PlotSpecs;
+import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -892,6 +895,49 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	
+	@ApiOperation(
+			value="Add a sample plot to a nodegroup"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/plot/addSamplePlot", method=RequestMethod.POST)
+	public JSONObject addSamplePlot(@RequestBody NodegroupPlotRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		
+		try {
+			requestBody.validate();
+			String plotType = requestBody.getPlotType(); 		// e.g. plotly
+			String plotName = requestBody.getPlotName();
+			String graphType = requestBody.getGraphType(); 		// e.g. scatter
+			String[] columnNames = requestBody.getColumnNames();
+			
+			if(!plotType.equals(PlotlyPlotSpec.TYPE)){
+				throw new Exception("Cannot add sample plot of type '" + plotType + "': only '" + PlotlyPlotSpec.TYPE + "' is supported");
+			}
+			
+			// create the plot spec
+			PlotSpec plotSpec = PlotlyPlotSpec.getSample(plotName, graphType, columnNames);
+			
+			// add it to the json
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			PlotSpecs plotSpecs = sgJson.getPlotSpecs() != null ? sgJson.getPlotSpecs() : new PlotSpecs();
+			plotSpecs.addPlotSpec(plotSpec);
+			sgJson.setPlotSpecsJson(plotSpecs.toJson());
+			
+			// build the return
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "addSamplePlot", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();	
+	}
+
 	
 	/**
 	 * Retrieve oInfo.

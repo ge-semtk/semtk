@@ -18,6 +18,7 @@ package com.ge.research.semtk.plotting.test;
 
 import static org.junit.Assert.*;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.Test;
@@ -55,6 +56,18 @@ public class PlotSpecTest {
 		}catch(Exception e){
 			assertTrue(e.getMessage().contains("Cannot create PlotlyPlotSpec with type visjs"));
 		}
+	}
+	
+	@Test
+	public void testGetSample() throws Exception{
+		PlotlyPlotSpec sample = PlotlyPlotSpec.getSample("Sample Plot", "scatter", new String[]{"timestamp", "score"});
+				
+		System.out.println(sample.toJson());
+		assertEquals(sample.getName(), "Sample Plot");
+		assertEquals(sample.getType(), "plotly");
+		assertEquals(((JSONArray)sample.getSpec().get(PlotlyPlotSpec.JKEY_DATA)).size(), 1); // one trace
+		assertTrue(sample.toJson().toJSONString().contains("SEMTK_TABLE.col[timestamp]"));
+		assertTrue(sample.toJson().toJSONString().contains("SEMTK_TABLE.col[score]"));
 	}
 	
 	

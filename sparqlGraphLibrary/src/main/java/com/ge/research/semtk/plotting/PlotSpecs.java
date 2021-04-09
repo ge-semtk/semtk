@@ -47,8 +47,11 @@ public class PlotSpecs {
 	private JSONArray jsonArr = null;
 
 	public PlotSpecs(JSONArray json) {
-		super();
 		this.jsonArr = json;
+	}
+	
+	public PlotSpecs() {
+		this(new JSONArray());
 	}
 	
 	/**

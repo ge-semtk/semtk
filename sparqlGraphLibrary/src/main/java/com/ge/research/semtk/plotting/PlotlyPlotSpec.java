@@ -40,9 +40,9 @@ public class PlotlyPlotSpec extends PlotSpec {
 
 	public static final String TYPE = "plotly";
 	
-	private static final String JKEY_DATA = "data";
-	private static final String JKEY_LAYOUT = "layout";
-	private static final String JKEY_CONFIG = "config";
+	public static final String JKEY_DATA = "data";
+	public static final String JKEY_LAYOUT = "layout";
+	public static final String JKEY_CONFIG = "config";
 	
 	private static final String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
 	private static final String CMD_COL = "col";
@@ -134,4 +134,48 @@ public class PlotlyPlotSpec extends PlotSpec {
 		}
 	}
 	
+	/**
+	 * Create a sample plot
+	 */
+	@SuppressWarnings("unchecked")
+	public static PlotlyPlotSpec getSample(String name, String graphType, String[] columnNames) throws Exception{
+		
+		final String[] SUPPORTED_GRAPH_TYPES = {"scatter", "bar"};
+		
+		// validate
+		if(name == null || name.trim().isEmpty()){
+			throw new Exception("Cannot create sample plot with no name");
+		}
+		if(graphType == null || !Arrays.asList(SUPPORTED_GRAPH_TYPES).contains(graphType)){
+			throw new Exception("Cannot create sample plot with graph type '" + graphType + "': supported types are " + Arrays.toString(SUPPORTED_GRAPH_TYPES));
+		}
+		if(columnNames == null || columnNames.length < 2){
+			throw new Exception("Cannot create sample plot with fewer than 2 column names");
+		}
+		
+		// create trace using first 2 columns	 TODO could add more traces
+		JSONObject traceJson = new JSONObject();
+		traceJson.put("type", graphType);
+		traceJson.put("x", "SEMTK_TABLE.col[" + columnNames[0] + "]");
+		traceJson.put("y", "SEMTK_TABLE.col[" + columnNames[1] + "]");
+		
+		// add trace(s) to data object 
+		JSONArray dataJsonArr = new JSONArray();
+		dataJsonArr.add(traceJson);
+		
+		// add data, config, layout to spec object
+		JSONObject specJson = new JSONObject();
+		specJson.put(JKEY_DATA, dataJsonArr);
+		specJson.put(JKEY_CONFIG, Utility.getJsonObjectFromString("{ \"editable\": true }"));
+		specJson.put(JKEY_LAYOUT, Utility.getJsonObjectFromString("{ \"title\": \"Sample Plot\" }"));
+		
+		// add type, name, spec to plotSpec object
+		JSONObject plotSpecJson = new JSONObject();
+		plotSpecJson.put(JKEY_TYPE, TYPE);
+		plotSpecJson.put(JKEY_NAME, name);
+		plotSpecJson.put(JKEY_SPEC, specJson);
+		
+		return new PlotlyPlotSpec(plotSpecJson);
+	}
+
 }
