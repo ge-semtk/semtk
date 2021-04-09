@@ -172,18 +172,26 @@ public class Node extends Returnable {
 	 * If modelErrList is given, an invalid nodegroup will be expanded and returned.
 	 * Otherwise an exception is thrown at the first model error.
 	 * 
+	 * All ERRORS are inflated into the nodegroup in their bad state
+	 * All WARNINGS are fixed
+	 * 
 	 * Expanding an invalid node:
-	 * 		Type * may be unknown
+	 * 		Type     * ERROR unknown URI
 	 * 	
-	 * 		PropItem * may be unknown (illegal domain)
-	 * 				 - may have wrong range
-	 * 				 - WARNING - delete bad property (domain) if the property is unused
-	 * 				 - WARNING - silently fix wrong range if there are no constraints
+	 * 		PropItem * ERROR - bad uri (domain) if used
+	 * 				 * WARNING - bad uri (domain) if unused
+	 * 				 * ERROR - wrong range if used
+	 * 				 * WARNING - wrong range if unused
 	 *
-	 * 		NodeItem - may be unknown (illegal domain)
-	 * 				 - may have wrong range
-	 * 				 - may be connected to nodes that violate the range
-	 *               - QUICK FIX - silently fix wrong range if connected nodes all legal
+	 * 		NodeItem * ERROR bad uri (domain)         items:  all targets
+	 *               * WARNING bad uri (domain) but unused
+	 *               
+	 * 				 * ERROR  wrong range and connected to any illegal items:  all targets
+	 *               * WARNING wrong range but unused
+	 *               * WARNING wrong range but connected nodes all legal to model so fix is easy
+	 *               
+	 * 				 * ERROR connected to nodes that violate the (correct) range   items: targets that don't match range
+	 *              
 	 * 
 	 * @param oInfo - if non-null then inflate and validate
 	 * @param modelErrList - if null, throw exception on first error : else collect a list of text model errors
@@ -243,16 +251,17 @@ public class Node extends Returnable {
 				
 				PropertyItem propItem = inputPItemHash.get(ontPropURI);
 				if (! propItem.getValueTypeURI().equals(ontProp.getRangeStr())) {
-					if (propItem.getConstraints() == null) {
-						// WARNING property range doesn't match
-						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " automatically changed to proper range of " + ontProp.getRangeStr();
-						warningList.add(msg);
-						
-					} else {
+					if (propItem.isUsed()) {
 						// ERROR property range doesn't match
 						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + ontProp.getRangeStr();
 						modelErrList.add(msg);
 						itemStrList.add(new NodeGroupItemStr(this, propItem));
+					} else {
+						// WARNING property range doesn't match
+						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " automatically changed to proper range of " + ontProp.getRangeStr();
+						warningList.add(msg);
+						// fix range
+						propItem.changeValueType(XSDSupportedType.getMatchingValue(ontProp.getRangeStr(true)));
 					}
 				}
 				
@@ -296,79 +305,80 @@ public class Node extends Returnable {
 				
 			
 			} else if (inputNItemHash.containsKey(ontPropURI)) {
-				// nodeItem, and range is found in the model
+				// nodeItem
 				
 				NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
-				boolean rangeErrFlag = false;
+				String correctRangeStr = ontProp.getRangeStr();
+				String correctRangeAbbrev = ontProp.getRangeStr(true);
 				
-				if (!nRangeStr.equals(ontProp.getRangeStr())) {	
-					if (nodeItem.isUsed()) {
-						String msg = this.getSparqlID() + " node property " + ontPropURI + " range of " + nRangeStr+ " doesn't match model range of " + ontProp.getRangeStr();
-	
-						modelErrList.add(msg);
-						rangeErrFlag = true;
-					} else {
-						// node is unused: just fix impropertly deflated
-			        	// TODO warn?
-						nodeItem.setUriValueType(ontProp.getRangeStr());
-					}
-				}
-				if (!nRangeAbbr.equals(ontProp.getRangeStr(true))) {
-					if (nodeItem.isUsed()) {
-						modelErrList.add(this.getSparqlID() + " node property " + ontPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + ontProp.getRangeStr(true));
-						rangeErrFlag = true;
-					} else {
-						// node is unused: just fix improperly deflated
-			        	// TODO warn?
-						nodeItem.setValueType(ontProp.getRangeStr(true));
-					}
-				}
+				// is range incorrect
+				boolean rangeErrFlag = !nRangeStr.equals(correctRangeStr);
 				
-				// if connected 
+				// check for targets with classes that aren't a type of the CORRECT range
+				ArrayList<Node> targetErrList = new ArrayList<Node>();
 				if (nodeItem.getConnected()) {
+					OntologyClass correctRangeClass = oInfo.getClass(correctRangeStr);
 					
-					// check all connected snode classes
-					OntologyClass nRangeClass = oInfo.getClass(nRangeStr);
-					
-					ArrayList<Node> snodeList = nodeItem.getNodeList();
-					for (int j=0; j < snodeList.size(); j++) {
-						String snodeURI = snodeList.get(j).getUri();
-						OntologyClass snodeClass = oInfo.getClass(snodeURI);
-						boolean targetErrFlag = false;
+					for (Node target : nodeItem.getNodeList()) {
+						OntologyClass targetClass = oInfo.getClass(target.getUri());
 						
-						if (snodeClass == null) {
-							modelErrList.add(this.getSparqlID() + " node property " + ontPropURI + " is connected to node with class " + snodeURI + " which can't be found in model");
-							targetErrFlag = true;
-						}
-						
-						if (!oInfo.classIsA(snodeClass, nRangeClass)) {
-							modelErrList.add(this.getSparqlID() + " node property " + ontPropURI + " is connected to node with class " + snodeURI + " which is not a type of " + nRangeStr + " in model");
-							targetErrFlag = true;
-						}
-						
-						if (rangeErrFlag || targetErrFlag) {
-							// add itemStrList item for nodeItem with target
-							itemStrList.add(new NodeGroupItemStr(this, nodeItem, snodeList.get(j)));
+						if (!oInfo.classIsA(targetClass, correctRangeClass)) {
+							targetErrList.add(target);
 						}
 					}
 				} 
 				
+				// range of nodeItem is wrong
+				if (rangeErrFlag) {
+					// if there are no bad targets: fix & warn
+					if (targetErrList.size() == 0) {
+						warningList.add( this.getSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " corrected to model value " + correctRangeStr);
+						nodeItem.changeUriValueType(correctRangeStr);
+					} else {
+						
+						// else bad connections
+						modelErrList.add( this.getSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " doesn't match to model range of " + correctRangeStr);
+
+						// all targets are bad items
+						for (Node target : nodeItem.getNodeList()) {
+							itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
+						}
+					}
+					
+				} else {
+					// range is ok
+					
+					// somewhat randomly, check for keyname errors
+					if (!nRangeAbbr.equals(correctRangeAbbrev)) {
+						warningList.add(this.getSparqlID() + " node property property " + ontPropURI + " abbrev " + nRangeAbbr + " corrected to match model abbrev of " + ontProp.getRangeStr(true));
+						nodeItem.setValueType(ontProp.getRangeStr(true));
+					}
+				
+				
+					// report any bad connections 
+					for (Node target : targetErrList) {
+						modelErrList.add( this.getSparqlID() + " edge " + ontPropURI + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
+						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
+					}
+					
+	
+					
+				}
+				
 				// add the nodeItem
 				inflatedNItems.add(nodeItem);
-				
 				inputNItemHash.remove(ontPropURI);
-				
 			
-			} else {
-				// Unused node: inflate
-				NodeItem nodeItem = new NodeItem(	ontProp.getNameStr(false), 
-													ontProp.getRangeStr(true),
-													ontProp.getRangeStr(false)
-													);
-				inflatedNItems.add(nodeItem);
-			}
+            } else {
+                // Unused node: inflate
+                NodeItem nodeItem = new NodeItem(   ontProp.getNameStr(false), 
+                                                    ontProp.getRangeStr(true),
+                                                    ontProp.getRangeStr(false)
+                                                    );
+                inflatedNItems.add(nodeItem);
+            }
 		}
 		
 		// Check if anything is left in propItemHash, meaning it wasn't found in the model
@@ -391,7 +401,7 @@ public class Node extends Returnable {
         for (String key : inputNItemHash.keySet()) {
         	NodeItem nodeItem = inputNItemHash.get(key);
         	if (nodeItem.isUsed()) {
-	        	String msg = this.getSparqlID() + " has edge that isn't in the model: " + key;
+	        	String msg = this.getSparqlID() + " has edge that isn't in the model: " + this.getSparqlID() + "->" + key;
 	        	modelErrList.add(msg);
 				NodeItem nItem = inputNItemHash.get(key);
 				if (nItem.getConnected()) {
@@ -400,15 +410,15 @@ public class Node extends Returnable {
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 				} else {
-					// add nodeItem with null target
+					// add nodeItem with null target: not likely since isUsed() means isConnected()
 					itemStrList.add(new NodeGroupItemStr(this, inputNItemHash.get(key), null));
 				}
 				
 	            // add it anyway
 	            inflatedNItems.add(inputNItemHash.get(key));
+        	} else {
+        		warningList.add("Removed invalid unused edge that isn't in the model" + this.getSparqlID() + "->" + key);
         	}
-        	// else throw away unused improperly deflated node Item
-        	// TODO warn?
         }
 		
 		this.props = inflatedPItems;

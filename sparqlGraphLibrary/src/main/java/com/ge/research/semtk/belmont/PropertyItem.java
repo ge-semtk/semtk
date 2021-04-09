@@ -32,7 +32,7 @@ public class PropertyItem extends Returnable {
 	private String keyName = null;
 	private XSDSupportedType valueType = null;
 	private String valueTypeURI = null;  
-	private String uriRelationship = null; // the full URI of the relationship
+	private String uriRelationship = null; // obsolete, should always be this.valueType.getFullName()
 	
 	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
@@ -50,7 +50,7 @@ public class PropertyItem extends Returnable {
 	public PropertyItem(String nome, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
 		this.keyName = nome;
 		this.valueType = valueType;
-		this.valueTypeURI = valueTypeURI;
+		this.valueTypeURI = valueTypeURI;   
 		this.uriRelationship = uriRelationship;
 	}
 	
@@ -182,6 +182,11 @@ public class PropertyItem extends Returnable {
 
 	public void addInstanceValue(String value) {
 		this.instanceValues.add(value);
+	}
+	
+	public void changeValueType(XSDSupportedType type) {
+		this.valueType = type;
+		this.valueTypeURI = type.getFullName();
 	}
 	
 	public void setIsReturned(boolean b) throws Exception {

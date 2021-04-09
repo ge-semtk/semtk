@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
+import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -29,6 +30,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.NodeGroupItemStr;
 import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -108,48 +110,35 @@ public class NodeGroupTest_IT {
 	/*
 	 * Helper to run inflate and Validate and check expected results
 	 */
-	private void inflateAndValidate(NodeGroup ng, String [] expectErrors, Object [] expectItems, String [] expectWarnings) throws Exception {
+	private void inflateAndValidate(NodeGroup ng, String [] expectErrors, NodeGroupItemStr [] expectItems, String [] expectWarnings) throws Exception {
 		ArrayList<String> modelErrMsgs = new ArrayList<String>();
 		ArrayList<NodeGroupItemStr> invalidItems = new  ArrayList<NodeGroupItemStr>();
 		ArrayList<String> warnings = new ArrayList<String>();
 
 		ng.inflateAndValidate(oInfo, modelErrMsgs, invalidItems, warnings);
 		
-		assertEquals("wrong number of error messages", expectErrors.length, modelErrMsgs.size());
+		assertEquals("wrong number of error messages\n" + String.join(",", modelErrMsgs) + "\n", expectErrors.length, modelErrMsgs.size());
 		assertEquals("wrong number of invalid items", expectItems.length, invalidItems.size());
-		assertEquals("wrong number of error warnings", expectWarnings.length, warnings.size());
+		assertEquals("wrong number of warnings\n" + String.join(",", warnings)+ "\n", expectWarnings.length, warnings.size());
 		
-		for (String err : expectErrors) {
+		for (String expectErr : expectErrors) {
 			boolean found = false;
 			for (String modelErr : modelErrMsgs) {
-				if (modelErr.contains(err)) {
+				if (modelErr.contains(expectErr)) {
 					found = true;
 				}
 			}
-			assertTrue("Expected error was not generated: " + err, found);
+			assertTrue("Expected error was not generated: " + expectErr, found);
 		}
 		
-		for (Object item : expectItems) {
+		for (NodeGroupItemStr expectItem : expectItems) {
 			boolean found = false;
-			for (NodeGroupItemStr itemStr : invalidItems) {
-				if (item instanceof Node && itemStr.getSnode() == item) {
-					found = true;
-				} else if (item instanceof PropertyItem && itemStr.getpItem() == item) {
-					found = true;
-				} else if (item instanceof NodeItem && itemStr.getnItem() == item) {
+			for (NodeGroupItemStr modelItem : invalidItems) {
+				if (modelItem.getStr().equals(expectItem.getStr())) {
 					found = true;
 				}
 			}
-			String name = "";
-			if (item instanceof Node) {
-				name = ((Node)item).getSparqlID();
-			} else if (item instanceof PropertyItem) {
-				name = ((PropertyItem)item).getKeyName();
-			} else if (item instanceof NodeItem) {
-				name = ((NodeItem)item).getUriConnectBy();
-			}
-			
-			assertTrue("Expected invalid item was not generated: " + name, found);
+			assertTrue("Expected error item was not generated: " + expectItem.getStr(), found);
 		}
 		
 		for (String expectWarn : expectWarnings) {
@@ -166,8 +155,9 @@ public class NodeGroupTest_IT {
 	
 	@Test
 	/**
-	 * inflateAndValidate: Node with bad URI and no properties or nodes
-	 *    	error, added
+	 * inflateAndValidate: 
+	 * 		Node with bad URI and no properties or nodes
+	 *    		error, added
 	 */
 	public void testValidateBadNodeURI() throws Exception {
 		String jsonPath = "/sampleBattery.json";
@@ -179,7 +169,7 @@ public class NodeGroupTest_IT {
 		nodegroup.addOneNode(n, null, null, null);
 		inflateAndValidate(nodegroup, 
 				new String [] {badURI} , 
-				new Object [] {n}, 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(n)}, 
 				new String [] {});
 		assertTrue("Invalid node was not inflated into nodegroup", nodegroup.getNodeBySparqlID("?Invalid") != null);
 
@@ -187,9 +177,10 @@ public class NodeGroupTest_IT {
 	
 	@Test
 	/**
-	 * inflateAndValidate: Property item unknown (domain)
-	 * 		error if used, added
-	 *  	warning if not used, deleted
+	 * inflateAndValidate: 
+	 * 		Property item unknown (domain)
+	 * 			if used:  error, added
+	 *  		not used: warning, deleted
 	 */
 	public void testValidateBadPropItemDomain() throws Exception {
 		String jsonPath = "/sampleBattery.json";
@@ -208,7 +199,7 @@ public class NodeGroupTest_IT {
 		// used: error
 		inflateAndValidate(nodegroup, 
 				new String [] {badURI} , 
-				new Object [] {pi}, 
+				new NodeGroupItemStr [] { new NodeGroupItemStr(n, pi)}, 
 				new String [] {});
 		assertTrue("Invalid property item was not inflated into nodegroup", n.getPropertyItemBySparqlID("?random") != null);
 		
@@ -216,11 +207,208 @@ public class NodeGroupTest_IT {
 		pi.setIsReturned(false);
 		inflateAndValidate(nodegroup, 
 				new String [] {} , 
-				new Object [] {}, 
+				new NodeGroupItemStr [] {}, 
 				new String [] {badKeyname});
 		assertTrue("Invalid unused property item was not removed from nodegroup", n.getPropertyItemBySparqlID("?random") == null);
 
 	}
 	
+	@Test
+	/**
+	 * inflateAndValidate: 
+	 * 		Property item unknown (range)
+	 * 			if used:  error, added
+	 *  		not used: warning, corrected
+	 */
+	public void testValidateBadPropItemRange() throws Exception {
+		String jsonPath = "/sampleBattery.json";
 
+		NodeGroup nodegroup = TestGraph.getNodeGroupFromResource(this, jsonPath); 
+		
+		String badKeyname = "birthday";
+		Node n = nodegroup.getNodeBySparqlID("?Battery");
+		
+		// find "birthday" propItem, and change range
+		PropertyItem pi = null;
+		for (PropertyItem p : n.getPropertyItems()) {
+			if (p.getKeyName().equals(badKeyname)) {
+				p.changeValueType(XSDSupportedType.DOUBLE);
+				pi = p;
+				break;
+			}
+		}
+		pi.setValueConstraint(new ValueConstraint("filter(whatever)"));
+		
+		// used: error
+		inflateAndValidate(nodegroup, 
+				new String [] {badKeyname} , 
+				new NodeGroupItemStr [] { new NodeGroupItemStr(n, pi)}, 
+				new String [] {});
+		assertTrue("Invalid property item range was not inflated into nodegroup", n.getPropertyByKeyname(badKeyname) != null);
+		
+		// unused: warning 
+		pi.setValueConstraint(null);
+		inflateAndValidate(nodegroup, 
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {badKeyname});
+		
+		// unused: still there, and fixed range
+		pi = n.getPropertyByKeyname(badKeyname);
+		assertTrue("Invalid unused property item range was not inflated into nodegroup", pi != null);
+		assertEquals("Invid unused property item range was not corrected", XSDSupportedType.DATETIME, pi.getValueType());
+
+	}
+	
+	@Test
+	/**
+	 * inflateAndValidate: 
+	 * 		Node item unknown (domain)
+	 * 			if used:  error, added,  items all targets
+	 *  		not used: warning, deleted
+	 */
+	public void testValidateBadNodeItemDomain() throws Exception {
+
+		// build a nodegroup
+		NodeGroup nodegroup = new NodeGroup();
+		
+		String cellURI = "http://kdl.ge.com/batterydemo#Cell";
+		String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
+		String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
+		String badURI = "http://kdl.ge.com/batterydemo#bad";
+		
+		// add Battery
+		// change cell nodeitem to bad
+		nodegroup.addNode(batteryURI, oInfo);
+		Node batteryNode = nodegroup.getNode(0);
+		NodeItem cellItem = batteryNode.getNodeItem(cellItemURI);
+		cellItem.changeUriConnect(badURI);
+		
+		// unused: warning, delete
+		inflateAndValidate(nodegroup, 
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {badURI});
+	
+		assertEquals("Invalid unused node item domain was not removed", null, batteryNode.getNodeItem(badURI));
+		cellItem = batteryNode.getNodeItem(cellItemURI);
+		assertTrue("Missing Node item was not inflated", cellItem != null);
+
+
+		// used: error 
+		Node cell1 = nodegroup.addClassFirstPath(cellURI, oInfo);
+		Node cell2 = nodegroup.addClassFirstPath(cellURI, oInfo);
+		cellItem.changeUriConnect(badURI);
+		
+		inflateAndValidate(nodegroup, 
+				new String [] {badURI} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, cell1), new NodeGroupItemStr(batteryNode, cellItem, cell1)}, 
+				new String [] {});
+		
+		// used: still there
+		cellItem = batteryNode.getNodeItem(badURI);
+		assertTrue("Invalid unused property item range was not inflated into nodegroup", cellItem != null);
+
+	}
+	
+
+	@Test
+	/**
+	 * inflateAndValidate: 
+	 * 		Node item bad range
+	 * 			if connected to model-correct targets: warn, fix
+	 *          if connected to nothing, warn, fix
+	 *          if connected to model-good & model-bad:  error, added, items all targets
+	 */
+	public void testValidateBadNodeItemRange() throws Exception {
+
+		// build a nodegroup
+		NodeGroup nodegroup = new NodeGroup();
+		
+		String colorURI = "http://kdl.ge.com/batterydemo#Color";
+		String cellNodeURI = "http://kdl.ge.com/batterydemo#Cell";
+		String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
+		String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
+		String badURI = "http://kdl.ge.com/batterydemo#bad";
+		
+		Node batteryNode = nodegroup.addNode(batteryURI, oInfo);
+
+		// targets are model-correct, range wrong: warn and fix 
+		Node cell1 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
+		Node cell2 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
+		NodeItem ni = batteryNode.getNodeItem(cellItemURI);
+		ni.changeUriValueType(badURI);
+		
+		inflateAndValidate(nodegroup, 
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {badURI});
+		assertTrue("Invalid node item range connected to model-valid nodes did not get its range corrected", batteryNode.getNodeItem(cellItemURI) != null);
+
+		// Delete the target connections and results should be the same
+		nodegroup.deleteNode(cell1, false);
+		nodegroup.deleteNode(cell2, false);
+		ni.changeUriValueType(badURI);
+		
+		inflateAndValidate(nodegroup, 
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {badURI});
+		assertTrue("Invalid node item range un-connected did not get its range corrected", batteryNode.getNodeItem(cellItemURI) != null);
+		
+		// connect to a bad node colorNode, and a good node cell1, with bad range
+		Node colorNode = nodegroup.addNode(colorURI, oInfo);
+		batteryNode.setConnection(colorNode, cellItemURI);  // bad target
+		cell1 = nodegroup.addNode(cellNodeURI, oInfo);
+		batteryNode.setConnection(cell1, cellItemURI); // good target
+		ni.changeUriValueType(badURI);  // bad range too
+		
+		inflateAndValidate(nodegroup, 
+				new String [] {badURI} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, ni, colorNode), new NodeGroupItemStr(batteryNode, ni, cell1)}, 
+				new String [] {});
+		
+		// used: still there with bad URI
+		ni = batteryNode.getNodeItem(cellItemURI);
+		assertTrue("Invalid ranged node item with one good, one bad connection was removed from nodegroup", ni != null);
+
+	}
+	
+	@Test
+	/**
+	 * inflateAndValidate: 
+	 * 		Node item ok range
+	 * 			connected to targets which don't match range:  Error, added, items
+	 */
+	public void testValidateBadNodeItemTargets() throws Exception {
+
+		// build a nodegroup
+		NodeGroup nodegroup = new NodeGroup();
+		
+		String colorURI = "http://kdl.ge.com/batterydemo#Color";
+		String cellNodeURI = "http://kdl.ge.com/batterydemo#Cell";
+		String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
+		String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
+		String badURI = "http://kdl.ge.com/batterydemo#bad";
+		
+		Node batteryNode = nodegroup.addNode(batteryURI, oInfo);
+
+		
+		// connect battery through cell to a color (bad) and a cell (ok)
+		Node colorNode = nodegroup.addNode(colorURI, oInfo);
+		batteryNode.setConnection(colorNode, cellItemURI);  // bad target
+		Node cell1 = nodegroup.addNode(cellNodeURI, oInfo);
+		batteryNode.setConnection(cell1, cellItemURI); // good target
+		NodeItem ni = batteryNode.getNodeItem(cellItemURI);
+		
+		inflateAndValidate(nodegroup, 
+				new String [] {colorNode.getSparqlID()} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, ni, colorNode)}, 
+				new String [] {});
+		
+		// used: still there with bad URI
+		ni = batteryNode.getNodeItem(cellItemURI);
+		assertTrue("Correctly ranged node item with one good, one bad connection was removed from nodegroup", ni != null);
+
+	}
 }

@@ -230,6 +230,12 @@ public class NodeItem {
 	public void setUriConnectBy(String connectionURI) {
 		this.uriConnectBy = connectionURI;		
 	}
+	
+	public void changeUriConnect(String connectionURI) {
+		OntologyName name = new OntologyName(connectionURI);
+		this.uriConnectBy = name.getFullName();
+		this.keyName = name.getLocalName();
+	}
 
 	public void pushNode(Node curr) {
 		this.nodes.add(curr);
@@ -275,6 +281,12 @@ public class NodeItem {
 	}
 	public void setValueType(String name) {
 		this.valueType = name;
+	}
+	
+	public void changeUriValueType(String rangeURI) {
+		OntologyName name = new OntologyName(rangeURI);
+		this.valueTypeURI = name.getFullName();
+		this.valueType = name.getLocalName();
 	}
 	
 	public String getUriConnectBy() {
