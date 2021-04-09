@@ -42,11 +42,11 @@ import org.json.simple.JSONObject;
        ]
 */
 
-public class PlotSpecsHandler {
+public class PlotSpecs {
 	
 	private JSONArray jsonArr = null;
 
-	public PlotSpecsHandler(JSONArray json) {
+	public PlotSpecs(JSONArray json) {
 		super();
 		this.jsonArr = json;
 	}

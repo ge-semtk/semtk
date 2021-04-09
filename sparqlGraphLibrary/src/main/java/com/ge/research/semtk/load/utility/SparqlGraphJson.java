@@ -28,7 +28,7 @@ import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.plotting.PlotSpecsHandler;
+import com.ge.research.semtk.plotting.PlotSpecs;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.google.gson.Gson;
@@ -55,7 +55,6 @@ public class SparqlGraphJson {
 	private SparqlConnection conn = null;
 	private OntologyInfo oInfo = null;
 	private ImportSpecHandler importSpec = null;
-	private PlotSpecsHandler plots = null;
 	
 	public SparqlGraphJson() {
 		// nothing
@@ -196,7 +195,6 @@ public class SparqlGraphJson {
 	
 	public void setPlotSpecsJson(JSONArray plotSpecsJson) {
 		this.jObj.put(JKEY_PLOTSPECS, plotSpecsJson);
-		this.plots = null;   // wipe out any cached PlotSpecsHandler
 	}	
 	
 	/**
@@ -362,15 +360,15 @@ public class SparqlGraphJson {
 	
 	/**
 	 * 
-	 * @return plotSpecsHandler, might be NULL
+	 * @return plotSpecs, might be NULL
 	 * @throws Exception
 	 */
-	public PlotSpecsHandler getPlotSpecsHandler() throws Exception {
+	public PlotSpecs getPlotSpecs() throws Exception {
 		JSONArray json = this.getPlotSpecsJson();
-		if (plots == null && json != null) {
-			plots =  new PlotSpecsHandler(json);
+		if (json != null) {
+			return new PlotSpecs(json);
 		}
-		return plots;
+		return null;
 	}
 	
 	// ------ end new convenience functions ----------------
