@@ -51,7 +51,8 @@ public class PlotlyPlotSpec extends PlotSpec {
 		
 
 	public PlotlyPlotSpec(JSONObject plotSpecJson) throws Exception {
-		super(plotSpecJson);
+		super(plotSpecJson);	
+		if(!getType().equals(TYPE)){ throw new Exception("Cannot create PlotlyPlotSpec with type " + getType() + ": expected type " + TYPE); }	
 	}
 	
 	/**
@@ -132,4 +133,5 @@ public class PlotlyPlotSpec extends PlotSpec {
 			throw new Exception("Unsupported data specification for plotting: " + s);
 		}
 	}
+	
 }

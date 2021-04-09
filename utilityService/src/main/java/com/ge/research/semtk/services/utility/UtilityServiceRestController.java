@@ -326,7 +326,7 @@ public class UtilityServiceRestController {
 			if(!plotSpecJson.containsKey("type")){
 				throw new Exception("Plot type not specified");
 			}
-			if(plotSpecJson.get("type").equals("plotly")){
+			if(plotSpecJson.get("type").equals(PlotlyPlotSpec.TYPE)){
 				PlotlyPlotSpec spec = new PlotlyPlotSpec(plotSpecJson);
 				spec.applyTable(table);
 				JSONObject plotSpecJsonProcessed = spec.toJson();	

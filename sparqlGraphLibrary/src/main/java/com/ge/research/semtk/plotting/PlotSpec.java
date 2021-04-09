@@ -30,24 +30,21 @@ import org.json.simple.JSONObject;
 @SuppressWarnings("unchecked")
 public abstract class PlotSpec {
 	
-	protected static String TYPE;
-	
-	protected static final String JKEY_TYPE = "type";  // e.g. "plotly"
-	protected static final String JKEY_NAME = "name";  // display name
-	protected static final String JKEY_SPEC = "spec";
+	public static final String JKEY_TYPE = "type";  // e.g. "plotly"
+	public static final String JKEY_NAME = "name";  // display name
+	public static final String JKEY_SPEC = "spec";
 
 	JSONObject json = null;
 	
 	public PlotSpec(JSONObject json) throws Exception {
-		if(json == null){
-			throw new Exception("Cannot create PlotSpec with null JSON");
-		}
+		
+		// validate
+		if(json == null){ throw new Exception("Cannot create PlotSpec with null JSON"); }
+		if(json.get(JKEY_NAME) == null){ throw new Exception("Cannot create PlotSpec without a name"); }
+		if(json.get(JKEY_TYPE) == null){ throw new Exception("Cannot create PlotSpec without a type"); }	
+		if(json.get(JKEY_SPEC) == null){ throw new Exception("Cannot create PlotSpec without a spec"); }
+
 		this.json = json;
-	}
-	
-	public PlotSpec(String name){
-		setName(name);
-		setType(TYPE);
 	}
 	
 	public JSONObject toJson(){
@@ -73,12 +70,6 @@ public abstract class PlotSpec {
 			throw new Exception("Plot spec has no spec");
 		}
 		return (JSONObject) this.json.get(JKEY_SPEC);
-	}
-	
-	// this should only be called internally
-	private void setType(String type){
-		this.json.remove(JKEY_TYPE);
-		this.json.put(JKEY_TYPE, type);
 	}
 	
 	public void setName(String name){

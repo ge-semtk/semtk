@@ -22,7 +22,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.Test;
 
-
+import com.ge.research.semtk.plotting.PlotSpec;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.Utility;
@@ -31,6 +31,7 @@ public class PlotSpecTest {
 
 	private String tableJsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
 	
+	@SuppressWarnings("unchecked")
 	@Test
 	public void test() throws Exception {
 		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");		
@@ -43,6 +44,17 @@ public class PlotSpecTest {
 		
 		spec.setName("Plotly Modified Name");
 		assertEquals(spec.getName(),"Plotly Modified Name");
+		
+		// confirm errors if try to create PlotlyPlotSpec with type "visjs"
+		JSONObject plotSpecJsonWrongType = (JSONObject) plotSpecJson.clone();
+		plotSpecJsonWrongType.remove(PlotSpec.JKEY_TYPE);
+		plotSpecJsonWrongType.put(PlotSpec.JKEY_TYPE, "visjs");
+		try{
+			new PlotlyPlotSpec(plotSpecJsonWrongType);
+			fail("Missed expected exception"); // shouldn't get here
+		}catch(Exception e){
+			assertTrue(e.getMessage().contains("Cannot create PlotlyPlotSpec with type visjs"));
+		}
 	}
 	
 	

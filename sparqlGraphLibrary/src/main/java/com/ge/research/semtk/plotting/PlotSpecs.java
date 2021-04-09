@@ -116,7 +116,7 @@ public class PlotSpecs {
 			throw new Exception("Plot spec is missing 'type'");
 		
 		switch ((String) plot.get(PlotSpec.JKEY_TYPE)) {
-			case "plotly":
+			case PlotlyPlotSpec.TYPE:
 				return new PlotlyPlotSpec(plot);
 			default:
 				throw new Exception("Unknown plot type: " + t);
