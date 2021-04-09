@@ -6,7 +6,7 @@ import org.json.simple.JSONObject;
 import org.junit.Test;
 
 import com.ge.research.semtk.plotting.PlotSpecsHandler;
-import com.ge.research.semtk.plotting.PlotlyPlotSpecHandler;
+import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.utility.Utility;
 
 public class PlotSpecsHandlerTest {
@@ -36,7 +36,7 @@ public class PlotSpecsHandlerTest {
 	public void test_addPlot() throws Exception{
 		
 		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");
-		PlotlyPlotSpecHandler plotSpec = new PlotlyPlotSpecHandler(plotSpecJson);
+		PlotlyPlotSpec plotSpec = new PlotlyPlotSpec(plotSpecJson);
 
 		// add the plot spec
 		PlotSpecsHandler plotSpecs = new PlotSpecsHandler(null);
@@ -47,7 +47,7 @@ public class PlotSpecsHandlerTest {
 		plotSpecJson = (JSONObject) plotSpecJson.clone();  // TODO clone this in the method?
 		plotSpecJson.remove("name");
 		plotSpecJson.put("name", "Plot 2");
-		plotSpecs.addPlotSpec(new PlotlyPlotSpecHandler(plotSpecJson));
+		plotSpecs.addPlotSpec(new PlotlyPlotSpec(plotSpecJson));
 		assertEquals(plotSpecs.getNumPlotSpecs(), 2);
 		
 		// confirm can't re-add it (same name)

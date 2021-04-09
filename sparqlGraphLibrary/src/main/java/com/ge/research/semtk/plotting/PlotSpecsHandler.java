@@ -79,7 +79,7 @@ public class PlotSpecsHandler {
 		if(jsonArr != null){
 			for(Object o : jsonArr){
 				JSONObject jsonObject = (JSONObject)o;
-				String name = (String) jsonObject.get(PlotSpecHandler.JKEY_NAME);
+				String name = (String) jsonObject.get(PlotSpec.JKEY_NAME);
 				if(name == null) throw new Exception("Plot spec is missing 'name'");
 				namesList.add(name);
 			}
@@ -91,7 +91,7 @@ public class PlotSpecsHandler {
 	/**
 	 * Add a plot spec
 	 */
-	public void addPlotSpec(PlotSpecHandler newPlotSpec) throws Exception{
+	public void addPlotSpec(PlotSpec newPlotSpec) throws Exception{
 		
 		if(jsonArr == null){
 			jsonArr = new JSONArray();
@@ -109,15 +109,15 @@ public class PlotSpecsHandler {
 	/**
 	 * Get handler for a given plot spec
 	 */
-	public PlotlyPlotSpecHandler getPlotSpec(int index) throws Exception {
+	public PlotlyPlotSpec getPlotSpec(int index) throws Exception {
 		JSONObject plot = (JSONObject) this.jsonArr.get(index);
-		String t = (String) plot.get(PlotSpecHandler.JKEY_TYPE);
+		String t = (String) plot.get(PlotSpec.JKEY_TYPE);
 		if (t == null) 
 			throw new Exception("Plot spec is missing 'type'");
 		
-		switch ((String) plot.get(PlotSpecHandler.JKEY_TYPE)) {
+		switch ((String) plot.get(PlotSpec.JKEY_TYPE)) {
 			case "plotly":
-				return new PlotlyPlotSpecHandler(plot);
+				return new PlotlyPlotSpec(plot);
 			default:
 				throw new Exception("Unknown plot type: " + t);
 		}

@@ -43,7 +43,7 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.plotting.PlotlyPlotSpecHandler;
+import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -327,9 +327,9 @@ public class UtilityServiceRestController {
 				throw new Exception("Plot type not specified");
 			}
 			if(plotSpecJson.get("type").equals("plotly")){
-				PlotlyPlotSpecHandler specHandler = new PlotlyPlotSpecHandler(plotSpecJson);
-				specHandler.applyTable(table);
-				JSONObject plotSpecJsonProcessed = specHandler.toJson();	
+				PlotlyPlotSpec spec = new PlotlyPlotSpec(plotSpecJson);
+				spec.applyTable(table);
+				JSONObject plotSpecJsonProcessed = spec.toJson();	
 				res.addResult("plot", plotSpecJsonProcessed);
 				res.setSuccess(true);
 				LocalLogger.logToStdOut("Returning " + res.toJson().toJSONString());

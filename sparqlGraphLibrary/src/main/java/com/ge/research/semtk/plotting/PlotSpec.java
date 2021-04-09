@@ -28,7 +28,7 @@ import org.json.simple.JSONObject;
  * 		}
  */
 @SuppressWarnings("unchecked")
-public abstract class PlotSpecHandler {
+public abstract class PlotSpec {
 	
 	protected static String TYPE;
 	
@@ -38,14 +38,14 @@ public abstract class PlotSpecHandler {
 
 	JSONObject json = null;
 	
-	public PlotSpecHandler(JSONObject json) throws Exception {
+	public PlotSpec(JSONObject json) throws Exception {
 		if(json == null){
-			throw new Exception("Cannot create PlotSpecHandler with null JSON");
+			throw new Exception("Cannot create PlotSpec with null JSON");
 		}
 		this.json = json;
 	}
 	
-	public PlotSpecHandler(String name){
+	public PlotSpec(String name){
 		setName(name);
 		setType(TYPE);
 	}

@@ -22,24 +22,16 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
-import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.plotting.PlotSpecHandler;
-import com.ge.research.semtk.plotting.PlotlyPlotSpecHandler;
-import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 public class SparqlGraphJsonTest_IT {
 

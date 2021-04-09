@@ -36,7 +36,7 @@ import com.ge.research.semtk.utility.Utility;
  *          spec: { data: [{},{}], layout: {}, config: {} }    
  *      }
  */
-public class PlotlyPlotSpecHandler extends PlotSpecHandler {
+public class PlotlyPlotSpec extends PlotSpec {
 
 	public static final String TYPE = "plotly";
 	
@@ -50,7 +50,7 @@ public class PlotlyPlotSpecHandler extends PlotSpecHandler {
 	String plotSpecJsonStrTemp = null;	// temp string to use while creating a replacement plotSpecJson
 		
 
-	public PlotlyPlotSpecHandler(JSONObject plotSpecJson) throws Exception {
+	public PlotlyPlotSpec(JSONObject plotSpecJson) throws Exception {
 		super(plotSpecJson);
 	}
 	
