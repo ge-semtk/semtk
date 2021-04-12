@@ -1446,7 +1446,8 @@
             var resultsPara = document.getElementById("resultsParagraph");
             var resultsDiv = document.createElement("div");
 
-            // build the table/plot select
+
+
             var plotter = null;
             var select = undefined;
             var textValArray = [["table", -1]];
@@ -1467,7 +1468,7 @@
                 }
             }
 
-            // finish the table/plot select
+            // build select
             select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
             select.onchange = function(select) {
                 var i = parseInt(select.value);
@@ -1483,13 +1484,26 @@
                 }
             }.bind(this, select);
 
+            // build button
+            var graphCallback = function() {alert("hi");};
+            var but = IIDXHelper.createIconButton("icon-picture", graphCallback, undefined, undefined, "Graphs");
+
+            // assemble the span
+            var span = document.createElement("span");
+            span.style.margin="2";
+            select.style.margin="0";
+            span.appendChild(select);
+            span.appendChild(document.createTextNode(" "));
+            span.appendChild(but);
+
             // add header to results
-            var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], select);
+            var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], span);
             resultsPara.innerHTML = "";
             resultsPara.appendChild(headerTable);
             resultsPara.appendChild(resultsDiv);
 
             // display results
+            var plotter = gPlotSpecsHandler == null ? null : gPlotSpecsHandler.getDefaultPlotter();
             if (plotter != null) {
                 plotter.addPlotToDiv(resultsDiv, tableResults);
             } else {
@@ -1501,6 +1515,8 @@
             setStatus("");
          });
     };
+
+
 
     var queryJsonLdCallback = function(jsonLdResults) {
         require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {

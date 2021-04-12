@@ -440,9 +440,12 @@ define([	// properly require.config'ed
         return ret;
     };
 
-    IIDXHelper.createIconButton = function(iconClass, callback, optClassList, optId) {
+    IIDXHelper.createIconButton = function(iconClass, callback, optClassList, optId, optText) {
         var butElem = document.createElement("button");
         butElem.appendChild(IIDXHelper.createIcon(iconClass));
+        if (optText) {
+            butElem.innerHTML += " " + optText;
+        }
         butElem.onclick = callback;
         if (typeof optClassList != "undefined") {
             for (var i=0; i < optClassList.length; i++) {
@@ -878,7 +881,7 @@ define([	// properly require.config'ed
         return anchor;
     };
 
-    IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList, formDom) {
+    IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList, optFormDom) {
         var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
 
         // header Table
@@ -901,9 +904,9 @@ define([	// properly require.config'ed
         tr.appendChild(td);
 
         // chooser dom
-        if (formDom) {
+        if (optFormDom) {
             td = document.createElement("td");
-            td.appendChild(formDom);
+            td.appendChild(optFormDom);
             tr.appendChild(td);
         }
 
