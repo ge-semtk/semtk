@@ -56,6 +56,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			div.innerHTML = msgHtml2;
             m.onHide(optHideCallback);
 			m.showOK(titleTxt, div, function(){});
+            return m;
 		};
 
         //
@@ -81,6 +82,7 @@ define([	// properly require.config'ed   bootstrap-modal
 							optCancelCallback,
 							optOkButtonText
 							);
+            return m;
 		};
 
 		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent) {
@@ -99,6 +101,7 @@ define([	// properly require.config'ed   bootstrap-modal
 									optOKButText,
 									optWidthPercent
 									);
+            return m;
 		};
 
 		/**
@@ -574,7 +577,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var butList = this.div.getElementsByClassName("btn");
                 for (var i=0; i < butList.length; i++) {
                     butList[i].disabled = true;
-                    butList[i].classList.add("btn-disabled");
+                    butList[i].style.backgroundColor="lightgray";  // .classList.add("btn-disabled") doesn't seem to work on these since they can be <a>
                     this.butCallbacks[i] = butList[i].onclick
                     butList[i].onclick = function(){};
                 }
@@ -587,7 +590,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var butList = this.div.getElementsByClassName("btn");
                 for (var i=0; i < butList.length; i++) {
                     butList[i].disabled = false;
-                    butList[i].classList.remove("btn-disabled");
+                    butList[i].style.backgroundColor="";
                     butList[i].onclick = this.butCallbacks[i]
                 }
             },

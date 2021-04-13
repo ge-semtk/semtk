@@ -46,6 +46,7 @@ define([	// properly require.config'ed
             this.tableResults = tableResults;
 			this.callback = successCallback;
 
+            this.m = null;
             this.select = null;
             this.displayIndex = -1;
             this.text = null;
@@ -100,7 +101,8 @@ define([	// properly require.config'ed
                     this.displayIndex = index;
                 }
 
-				ModalIidx.okCancel("Edit Plots", dom, this.submit.bind(this), undefined, undefined, this.validateAndStorePlot.bind(this));
+				this.m =  ModalIidx.okCancel("Edit Plots", dom, this.submit.bind(this), undefined, undefined, this.validateAndStorePlot.bind(this));
+
                 this.updateAll(true);
             },
 
@@ -126,11 +128,21 @@ define([	// properly require.config'ed
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Name: ", this.addModalElemName));
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Type: ", this.addModalElemType));
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Columns: ", this.addModalElemCols));
-                ModalIidx.okCancel("Add Plot", div, this.addCallbackCallNgs.bind(this), undefined, undefined, this.addCallbackValidate.bind(this));
+                ModalIidx.okCancel("Add Plot", div, this.addCallbackCallNgs.bind(this), undefined, this.unstack.bind(this), this.addCallbackValidate.bind(this));
+                this.stack();
             },
 
             resetCallback : function() {
                 this.text.value = JSON.stringify(this.sgJson.getPlotSpecsHandler().getPlotter(this.displayIndex).getSpec(), null, 4);
+            },
+
+            // disable buttons when another dialog is stacked over
+            stack : function () {
+                this.m.disableButtons();
+            },
+
+            unstack : function () {
+                this.m.enableButtons();
             },
 
             addCallbackValidate : function() {
@@ -152,6 +164,8 @@ define([	// properly require.config'ed
             },
 
             addCallbackCallNgs : function() {
+                this.unstack();
+
                 var name = this.addModalElemName.value;
                 var graphType = this.addModalElemType.value;
                 var cols = IIDXHelper.getSelectValues(this.addModalElemCols);
