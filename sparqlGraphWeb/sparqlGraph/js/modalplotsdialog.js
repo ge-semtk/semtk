@@ -88,6 +88,13 @@ define([	// properly require.config'ed
                 span.appendChild(document.createTextNode(" "));
                 span.appendChild(IIDXHelper.createIconButton("icon-refresh", this.resetCallback.bind(this), undefined, undefined, "Reset"));
 
+                // info button
+                span.appendChild(document.createTextNode(" "));
+                var msg =  "JSON docs are at <a href='https://plotly.com/javascript/#basic-charts' target='_blank'>plotly.com/javascript</a><br><br>" +
+                            "SemTK will replace values into the JSON.  See the wiki <a href='https://github.com/ge-semtk/semtk/wiki/Plotting' target='_blank'>Plotting page</a>";
+                span.appendChild(ModalIidx.createInfoButton(msg, undefined, true));
+
+
                 var text = document.createElement("textarea");
                 text.classList.add("input-xlarge");
                 text.rows=25;
