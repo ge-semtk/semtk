@@ -32,7 +32,7 @@ define([	// properly require.config'ed   bootstrap-modal
             this.plotSpecs = plotSpecsJson ? plotSpecsJson : [];
 
             // not saved with Json
-            this.defaultIndex = plotSpecsJson.length > 0 ? 0 : -1;
+            this.defaultIndex = this.plotSpecs.length > 0 ? 0 : -1;
         };
 
 
