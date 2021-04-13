@@ -70,6 +70,13 @@ define([	// properly require.config'ed
 
 		SparqlGraphJson.prototype = {
 
+            deepCopy : function() {
+                var j = JSON.parse(JSON.stringify(this.jObj));
+                var ret = new SparqlGraphJson(undefined, undefined, undefined, false, undefined);
+                ret.jObj = j;
+                return ret;
+            },
+
             setExtra : function(name, json) {
                 this.jObj[name] = json;
             },
@@ -163,6 +170,10 @@ define([	// properly require.config'ed
 			setSparqlConn : function(conn) {
 				this.jObj.sparqlConn = conn.toJson();
 			},
+
+            setPlotSpecsHandler : function(handler) {
+                this.jObj.plotSpecs = handler.toJson();
+            },
 
 			stringify : function () {
 				return JSON.stringify(this.jObj, null, '\t');

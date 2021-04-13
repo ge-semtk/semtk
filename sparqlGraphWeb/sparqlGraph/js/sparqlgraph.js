@@ -1428,8 +1428,15 @@
      * @private
      */
     var queryTableResCallback = function (csvFilename, fullURL, tableResults) {
-        require(['sparqlgraph/js/iidxhelper', 'sparqlgraph/js/msiclientresults', 'sparqlgraph/js/plotlyplotter'],
-                function(IIDXHelper, MsiClientResults, PlotlyPlotter) {
+        require([   'sparqlgraph/js/iidxhelper',
+                    'sparqlgraph/js/modaliidx',
+                    'sparqlgraph/js/modalplotsdialog',
+                    'sparqlgraph/js/msiclientresults',
+                    'sparqlgraph/js/msiclientnodegroupservice',
+                    'sparqlgraph/js/plotlyplotter',
+                    'sparqlgraph/js/sparqlgraphjson'
+                ],
+                function(IIDXHelper, ModalIidx, ModalPlotsDialog, MsiClientResults, MsiClientNodeGroupService, PlotlyPlotter, SparqlGraphJson) {
             var headerHtml = "";
             if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
                 headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
@@ -1485,8 +1492,20 @@
             }.bind(this, select);
 
             // build button
-            var graphCallback = function() {alert("hi");};
-            var but = IIDXHelper.createIconButton("icon-picture", graphCallback, undefined, undefined, "Graphs");
+            var plotsCallback = function(plotSpecsHandler) {
+                gPlotSpecsHandler = plotSpecsHandler;
+                queryTableResCallback(csvFilename, fullURL, tableResults);
+            }.bind(this);
+
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
+            var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, ModalIidx.alert.bind(this, "NodeGroup Service failure"));
+            var plotsDialog = new ModalPlotsDialog(ngsClient, sgJson, tableResults, plotsCallback);
+
+            var plotsLauncher = function(dialog, sel) {
+                dialog.show(parseInt(sel.value));
+            }.bind(this, plotsDialog, select);
+
+            var but = IIDXHelper.createIconButton("icon-picture", plotsLauncher, undefined, undefined, "Plots");
 
             // assemble the span
             var span = document.createElement("span");

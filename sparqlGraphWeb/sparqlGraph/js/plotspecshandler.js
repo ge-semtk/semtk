@@ -30,6 +30,9 @@ define([	// properly require.config'ed   bootstrap-modal
 
         var PlotSpecsHandler = function (plotSpecsJson) {
             this.plotSpecs = plotSpecsJson ? plotSpecsJson : [];
+
+            // not saved with Json
+            this.defaultIndex = plotSpecsJson.length > 0 ? 0 : -1;
         };
 
 
@@ -51,7 +54,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 return json.name;
             },
 
-            getNames : function(index) {
+            getNames : function() {
                 var ret = [];
                 for (var i=0; i < this.getNumPlots(); i++) {
                     ret[i] = this.getName(i);
@@ -63,9 +66,20 @@ define([	// properly require.config'ed   bootstrap-modal
              * return default plotter or null
              */
             getDefaultPlotter : function() {
-                if (this.getNumPlots() > 0) {
-                    return this.getPlotter(0);
+                if (this.defaultIndex != -1) {
+                    return this.getPlotter(this.defaultIndex);
+                } else {
+                    return null;
                 }
+            },
+
+            // default plot index or -1
+            getDefaultIndex : function () {
+                return this.defaultIndex;
+            },
+
+            setDefaultIndex : function(i) {
+                this.defaultIndex = i;
             },
 
             getPlotter : function (index) {
@@ -81,6 +95,24 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 if (json.type == "plotly") {
                     return new PlotlyPlotter(json);
+                }
+            },
+
+            setPlotter : function (index, plotter) {
+                this.plotSpecs[index] = plotter.toJson();
+            },
+
+            addPlotter : function (plotter) {
+                this.plotSpecs.push(plotter.toJson());
+                if (this.defaultIndex == -1) {
+                    this.defaultIndex = 0;
+                }
+            },
+
+            delPlotter : function (index) {
+                this.plotSpecs.splice(index, 1);
+                if (this.defaultIndex >= index) {
+                    this.defaultIndex--;
                 }
             },
 

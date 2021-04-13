@@ -29,7 +29,15 @@ define([	// properly require.config'ed   bootstrap-modal
     function(IIDXHelper, MsiResultSet, MsiClientUtility, Plotly) {
 
         /*
-            Plot Spec = { name: "", type: "", spec: { data: [{},{}], layout: {}, config: {} } }
+            Plot Spec = {
+                name: "",
+                type: "",
+                spec: {
+                    data: [{},{}],
+                    layout: {},
+                    config: {}
+                }
+            }
          */
         var PlotlyPlotter = function (plotSpec) {
             this.spec = plotSpec;
@@ -40,6 +48,14 @@ define([	// properly require.config'ed   bootstrap-modal
 
             getName : function () {
                 return this.spec.name;
+            },
+
+            getSpec : function() {
+                return this.spec.spec;
+            },
+
+            setSpec : function(specJson) {
+                this.spec.spec = specJson;
             },
 
             addPlotToDiv : function(div, tableRes) {
@@ -68,6 +84,10 @@ define([	// properly require.config'ed   bootstrap-modal
                 layout.height = size * 0.80;
                 layout.width = size;
             },
+
+            toJson : function() {
+                return this.spec;
+            }
         };
 
         return PlotlyPlotter;            // return the constructor

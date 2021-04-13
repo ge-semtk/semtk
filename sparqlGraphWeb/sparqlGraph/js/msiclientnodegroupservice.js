@@ -82,6 +82,17 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getSampleIngestionCSV", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            execAddSamplePlot : function (sgJson, columnNames, graphType, plotName, plotType, successCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "columnNames" : columnNames,
+                      "graphType" : graphType,
+                      "plotName" : plotName,
+                      "plotType" : plotType
+					});
+				this.msi.postToEndpoint("plot/addSamplePlot", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
             /*
             **  Asynchronous functions: throw errors unless successful
             */
@@ -126,6 +137,11 @@ define([	// properly require.config'ed   bootstrap-modal
             execAsyncInflateAndValidate : function (sgjson, ngMessagesItemsCallback, failureCallback) {
                 this.execInflateAndValidate(sgjson,
                                             this.asyncInflateAndValidateCallback.bind(this, ngMessagesItemsCallback, failureCallback));
+            },
+
+            execAsyncAddSamplePlot : function (sgjson, columnNames, graphType, plotName, plotType, sgjsonCallback, failureCallback) {
+                this.execAddSamplePlot(sgjson, columnNames, graphType, plotName, plotType,
+                                        this.asyncSimpleValueCallback.bind(this, "nodegroup", sgjsonCallback, failureCallback));
             },
 
             /*
