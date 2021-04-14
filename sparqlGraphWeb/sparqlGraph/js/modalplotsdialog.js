@@ -229,7 +229,9 @@ define([	// properly require.config'ed
                     IIDXHelper.removeAllOptions(this.select);
                     var handler = this.sgJson.getPlotSpecsHandler();
                     var names = handler.getNames();
-                    IIDXHelper.addOptions(this.select, names, [handler.getDefaultPlotter().getName()] );
+                    var defaultPlotter = handler.getDefaultPlotter();
+                    var defaultName = defaultPlotter != null ? [defaultPlotter.getName()] : [];
+                    IIDXHelper.addOptions(this.select, names, defaultName);
                 }
 
                 // success: show possibly new json
