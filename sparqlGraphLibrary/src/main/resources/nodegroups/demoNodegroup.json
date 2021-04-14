@@ -1,21 +1,21 @@
 {
-	"version": 2,
+	"version": 3,
 	"sparqlConn": {
-		"name": "iswc",
-		"domain": "http://com.ge.research",
+		"name": "demoConn",
+		"domain": "",
 		"enableOwlImports": false,
 		"model": [
 			{
 				"type": "virtuoso",
 				"url": "http://localhost:2420",
-				"graph": "http://iswc/model"
+				"graph": "http://semtk/demo"
 			}
 		],
 		"data": [
 			{
 				"type": "virtuoso",
 				"url": "http://localhost:2420",
-				"graph": "http://iswc/data"
+				"graph": "http://semtk/demo"
 			}
 		]
 	},
@@ -297,7 +297,11 @@
 				"deletionMode": "NO_DELETE"
 			}
 		],
-		"orderBy": [],
+		"orderBy": [
+			{
+				"sparqlID": "?timestamp"
+			}
+		],
 		"unionHash": {}
 	},
 	"importSpec": {
@@ -457,5 +461,45 @@
 				]
 			}
 		]
-	}
+	},
+	"plotSpecs": [
+		{
+			"name": "Demo Plot - Scatter",
+			"type": "plotly",
+			"spec": {
+				"layout": {
+					"title": "Sample Scatter Plot"
+				},
+				"data": [
+					{
+						"x": "SEMTK_TABLE.col[?timestamp]",
+						"y": "SEMTK_TABLE.col[?Value]",
+						"type": "scatter"
+					}
+				],
+				"config": {
+					"editable": true
+				}
+			}
+		},
+		{
+			"name": "Demo Plot - Bar",
+			"type": "plotly",
+			"spec": {
+				"layout": {
+					"title": "Sample Bar Graph"
+				},
+				"data": [
+					{
+						"x": "SEMTK_TABLE.col[?timestamp]",
+						"y": "SEMTK_TABLE.col[?Value]",
+						"type": "bar"
+					}
+				],
+				"config": {
+					"editable": true
+				}
+			}
+		}
+	]
 }
