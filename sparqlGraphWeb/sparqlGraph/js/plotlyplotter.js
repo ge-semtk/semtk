@@ -21,7 +21,7 @@ define([	// properly require.config'ed   bootstrap-modal
             'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/msiclientutility',
 
-            'plotly/plotly-latest.min'
+            'plotly/plotly-basic-2.0.0-rc.0.min'
             //                       OR should we presume the internet is available?  and pull from there?
 			// shimmed
 		],

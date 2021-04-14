@@ -1,0 +1,12 @@
+ISSUE:
+https://github.com/plotly/plotly.js/issues/897
+
+Our 42000 SharedUAA has this security policy problem with the full plotly 2.0.0.
+We're trying just the basic module instead.
+
+BUNDLES:
+https://github.com/plotly/plotly.js/blob/master/dist/README.md#partial-bundles
+
+https://cdn.plot.ly/plotly-basic-latest-v2.js download does not succeed.
+Got plotly-basic-2.0.0-rc.0.min.js instead.
+This is referenced from plotlyplotter.js 
