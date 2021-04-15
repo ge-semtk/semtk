@@ -157,7 +157,7 @@ public class NodeGroupTest_IT {
 	/**
 	 * inflateAndValidate: 
 	 * 		Node with bad URI and no properties or nodes
-	 *    		error, added
+	 *    		1a. error, added
 	 */
 	public void testValidateBadNodeURI() throws Exception {
 		String jsonPath = "/sampleBattery.json";
@@ -179,8 +179,8 @@ public class NodeGroupTest_IT {
 	/**
 	 * inflateAndValidate: 
 	 * 		Property item unknown (domain)
-	 * 			if used:  error, added
-	 *  		not used: warning, deleted
+	 * 			2a. if used:  error, added
+	 *  		2b. not used: warning, deleted
 	 */
 	public void testValidateBadPropItemDomain() throws Exception {
 		String jsonPath = "/sampleBattery.json";
@@ -217,8 +217,8 @@ public class NodeGroupTest_IT {
 	/**
 	 * inflateAndValidate: 
 	 * 		Property item unknown (range)
-	 * 			if used:  error, added
-	 *  		not used: warning, corrected
+	 * 			3a. if used:  error, added
+	 *  		3b. not used: warning, corrected
 	 */
 	public void testValidateBadPropItemRange() throws Exception {
 		String jsonPath = "/sampleBattery.json";
@@ -264,8 +264,8 @@ public class NodeGroupTest_IT {
 	/**
 	 * inflateAndValidate: 
 	 * 		Node item unknown (domain)
-	 * 			if used:  error, added,  items all targets
-	 *  		not used: warning, deleted
+	 * 			4a. if used:  error, added,  items all targets
+	 *  		4b. not used: warning, deleted
 	 */
 	public void testValidateBadNodeItemDomain() throws Exception {
 
@@ -297,7 +297,6 @@ public class NodeGroupTest_IT {
 
 		// used: error 
 		Node cell1 = nodegroup.addClassFirstPath(cellURI, oInfo);
-		Node cell2 = nodegroup.addClassFirstPath(cellURI, oInfo);
 		cellItem.changeUriConnect(badURI);
 		
 		inflateAndValidate(nodegroup, 
@@ -316,9 +315,9 @@ public class NodeGroupTest_IT {
 	/**
 	 * inflateAndValidate: 
 	 * 		Node item bad range
-	 * 			if connected to model-correct targets: warn, fix
-	 *          if connected to nothing, warn, fix
-	 *          if connected to model-good & model-bad:  error, added, items all targets
+	 * 			5a. if connected to model-correct targets: warn, fix
+	 *          5b. if connected to nothing, warn, fix
+	 *          5c. if connected to model-good & model-bad:  error, added, items all targets
 	 */
 	public void testValidateBadNodeItemRange() throws Exception {
 
@@ -378,7 +377,7 @@ public class NodeGroupTest_IT {
 	/**
 	 * inflateAndValidate: 
 	 * 		Node item ok range
-	 * 			connected to targets which don't match range:  Error, added, items
+	 * 			6a. connected to targets which don't match range:  Error, added, items
 	 */
 	public void testValidateBadNodeItemTargets() throws Exception {
 
