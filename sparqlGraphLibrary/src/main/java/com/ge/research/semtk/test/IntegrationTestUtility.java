@@ -19,6 +19,7 @@ package com.ge.research.semtk.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -307,7 +308,7 @@ public class IntegrationTestUtility{
 				}
 				
 				if (! actualVal.equals(expectedVal)) {
-					assertTrue("At return line " + String.valueOf(i) + " expected val '" + expectedVal + "' did not match actual '" + actualVal + "'", false);
+					fail("At return line " + String.valueOf(i) + " expected val '" + expectedVal + "' did not match actual '" + actualVal + "'");
 				}
 			}
 		}

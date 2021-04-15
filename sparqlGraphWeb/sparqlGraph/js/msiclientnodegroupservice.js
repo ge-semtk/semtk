@@ -85,6 +85,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getSampleIngestionCSV", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+
             execSuggestNodeClass : function (nodegroup, conn, snode, classListCallback) {
                 var sgJson = new SparqlGraphJson(conn, nodegroup);
                 var data = JSON.stringify ({
@@ -97,6 +98,22 @@ define([	// properly require.config'ed   bootstrap-modal
             /***
                     Asynchronous functions: These check for success and unpack results
             ***/
+
+            execAddSamplePlot : function (sgJson, columnNames, graphType, plotName, plotType, successCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "columnNames" : columnNames,
+                      "graphType" : graphType,
+                      "plotName" : plotName,
+                      "plotType" : plotType
+					});
+				this.msi.postToEndpoint("plot/addSamplePlot", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
+            /*
+            **  Asynchronous functions: throw errors unless successful
+            */
+
             execAsyncGenerateFilter : function (nodegroup, conn, sparqlId, sparqlCallback, failureCallback) {
                 this.execGenerateFilter(nodegroup, conn, sparqlId,
                                         this.asyncSparqlCallback.bind(this, "generateFilter", sparqlCallback, failureCallback));
@@ -143,6 +160,11 @@ define([	// properly require.config'ed   bootstrap-modal
             execAsyncInflateAndValidate : function (sgjson, ngMessagesItemsCallback, failureCallback) {
                 this.execInflateAndValidate(sgjson,
                                             this.asyncInflateAndValidateCallback.bind(this, ngMessagesItemsCallback, failureCallback));
+            },
+
+            execAsyncAddSamplePlot : function (sgjson, columnNames, graphType, plotName, plotType, sgjsonCallback, failureCallback) {
+                this.execAddSamplePlot(sgjson, columnNames, graphType, plotName, plotType,
+                                        this.asyncSimpleValueCallback.bind(this, "nodegroup", sgjsonCallback, failureCallback));
             },
 
             /*

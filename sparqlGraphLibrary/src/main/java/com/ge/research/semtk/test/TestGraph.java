@@ -589,52 +589,5 @@ public class TestGraph {
 		IntegrationTestUtility.querySeiAndCheckResults(ng, TestGraph.getSei(), caller, expectedFileName);
 	}
 	
-	/**
-	 * Compare results to those in expectedFileName
-	 * @param results\
-	 * @param caller - whose resources should be checked for expectedFileName
-	 * @param expectedFileName
-	 * @throws Exception 
-	 */
-	public static void compareResultsOLD(String results, Object caller, String expectedFileName) throws Exception {
-		String actual =  results.replaceAll("\r\n", "\n");
-		String expected = null;
-		try {
-			expected = Utility.getResourceAsString(caller, expectedFileName).replaceAll("\r\n", "\n");
-		} catch (Exception e) {
-			throw new Exception ("Error retrieving file: " + expectedFileName, e);
-		}
-		
-		actual = Utility.replaceUUIDs(actual);
-		expected = Utility.replaceUUIDs(expected);
-				
-		// if not equal, print them out
-		if (! actual.equals(expected)) {
-			System.out.print("Expected:\n--------\n" + StringEscapeUtils.escapeJava(expected) + "\n--------\n");
-			System.out.print("Actual:\n--------\n" + StringEscapeUtils.escapeJava(actual) + "\n--------\n");
-			
-			// print message if lengths are different
-			int actualLen = actual.length();
-			int expectedLen = expected.length();
-			
-			if (actualLen != expectedLen) {
-				System.out.print(String.format("Expected len: %d.  Actual len: %d\n", expectedLen, actualLen));
-			}
-			
-			// print first 10 differences
-			int found = 0;
-			for (int i=0; found < 10 && i < Math.min(actualLen, expectedLen); i++) {
-				if (actual.charAt(i) != expected.charAt(i)) {
-					found ++;
-					System.out.print(String.format("Char %d: expected: '%c' actual: '%c'\n", i, expected.charAt(i), actual.charAt(i)));
-				}
-			}
-			
-			// fail
-			assertTrue("Actual results did not match expected (see stdout)", false);
-		}
-	}
-	
-	
 
 }

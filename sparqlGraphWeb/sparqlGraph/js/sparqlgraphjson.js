@@ -22,24 +22,27 @@
  *
  */
 define([	// properly require.config'ed
+            'sparqlgraph/js/plotspecshandler',
 
 			// shimmed
-        	'sparqlgraph/js/belmont'
+        	'sparqlgraph/js/belmont',
+
 		],
 
-	function() {
+	function(PlotSpecsHandler) {
 
         /*
          * Each param may be missing or null
          */
-		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag) {
+		var SparqlGraphJson = function(conn, nodegroup, importSpec, deflateFlag, plotSpecsHandler) {
 			var deflateFlag = (typeof deflateFlag == "undefined") ? true : deflateFlag;
 
 			this.jObj = {
-                    version: 2,
+                    version: 3,
 					sparqlConn: null,
 					sNodeGroup: null,
 					importSpec: null,
+                    plotSpecs: null
 			};
 
 			if (typeof conn      != "undefined" && conn != null) {
@@ -59,9 +62,20 @@ define([	// properly require.config'ed
 				this.jObj.importSpec = importSpec.toJson();
 			}
 
+            if (typeof plotSpecsHandler != "undefined" && plotSpecsHandler != null) {
+				this.jObj.plotSpecs = plotSpecsHandler.toJson();
+			}
+
 		};
 
 		SparqlGraphJson.prototype = {
+
+            deepCopy : function() {
+                var j = JSON.parse(JSON.stringify(this.jObj));
+                var ret = new SparqlGraphJson(undefined, undefined, undefined, false, undefined);
+                ret.jObj = j;
+                return ret;
+            },
 
             setExtra : function(name, json) {
                 this.jObj[name] = json;
@@ -118,6 +132,17 @@ define([	// properly require.config'ed
 				}
 			},
 
+            /*
+             * returns a (possibly empty) PlotSpecsHandler
+             */
+            getPlotSpecsHandler : function() {
+                if (this.jObj.hasOwnProperty("plotSpecs") && this.jObj.plotSpecs) {
+                    return new PlotSpecsHandler(this.jObj.plotSpecs);
+                } else {
+                    return new PlotSpecsHandler();
+                }
+            },
+
 			getSNodeGroupJson : function() {
                 if (this.jObj.hasOwnProperty("sNodeGroup")) {
                     return this.jObj.sNodeGroup;
@@ -145,6 +170,10 @@ define([	// properly require.config'ed
 			setSparqlConn : function(conn) {
 				this.jObj.sparqlConn = conn.toJson();
 			},
+
+            setPlotSpecsHandler : function(handler) {
+                this.jObj.plotSpecs = handler.toJson();
+            },
 
 			stringify : function () {
 				return JSON.stringify(this.jObj, null, '\t');

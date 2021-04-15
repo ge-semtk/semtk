@@ -466,7 +466,7 @@ public class Table {
 	
 	/**
 	 * Return the values for a particular column
-	 * @param columnName
+	 * @param columnName or -1
 	 * @return
 	 */
 	public String[] getColumn(String columnName){
@@ -772,6 +772,7 @@ public class Table {
 		
 		// gather columns
 		JSONArray colNamesJson = (JSONArray) jsonObj.get(JSON_KEY_COL_NAMES);
+		if(colNamesJson == null) throw new Exception("Cannot create Table from json: no column names specified");
 		String[] cols = new String[colNamesJson.size()];
 		for(int i = 0; i < colNamesJson.size(); i++){
 			cols[i] = colNamesJson.get(i).toString();

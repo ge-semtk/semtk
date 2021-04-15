@@ -33,6 +33,7 @@
 
     var gNodeGroup = null;
     var gOInfoLoadTime = "";
+    var gPlotSpecsHandler = null;
 
     var gCurrentTab = g.tab.query ;
 
@@ -1095,8 +1096,7 @@
                 // get nodegroup explicitly w/o the oInfo
                 sgJson.getNodeGroup(gNodeGroup);
                 gNodeGroup.setSparqlConnection(gConn);
-
-
+                gPlotSpecsHandler = sgJson.getPlotSpecsHandler();
             } catch (e) {
                 // real non-model error loading the nodegroup
                 console.log(e.stack);
@@ -1196,7 +1196,7 @@
     			// make sure importSpec is in sync
     			gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
-				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag);
+				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotSpecsHandler);
 
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
@@ -1483,25 +1483,114 @@
      * @private
      */
     var queryTableResCallback = function (csvFilename, fullURL, tableResults) {
-        require(['sparqlgraph/js/msiclientresults'], function(MsiClientResults) {
+        require([   'sparqlgraph/js/iidxhelper',
+                    'sparqlgraph/js/modaliidx',
+                    'sparqlgraph/js/modalplotsdialog',
+                    'sparqlgraph/js/msiclientresults',
+                    'sparqlgraph/js/msiclientnodegroupservice',
+                    'sparqlgraph/js/plotlyplotter',
+                    'sparqlgraph/js/sparqlgraphjson'
+                ],
+                function(IIDXHelper, ModalIidx, ModalPlotsDialog, MsiClientResults, MsiClientNodeGroupService, PlotlyPlotter, SparqlGraphJson) {
             var headerHtml = "";
             if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
                 headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
             }
             headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
+
             tableResults.setLocalUriFlag(! getQueryShowNamespace());
             tableResults.setEscapeHtmlFlag(true);
             tableResults.setAnchorFlag(true);
             var resultsClient = new MsiClientResults(g.service.results.url, "no_job");
             tableResults.tableApplyTransformFunctions(resultsClient.getResultTransformFunctions());
             var noSort = [];
-            tableResults.putTableResultsDatagridInDiv(document.getElementById("resultsParagraph"), headerHtml, undefined, undefined, undefined, noSort);
+
+            var resultsPara = document.getElementById("resultsParagraph");
+            var resultsDiv = document.createElement("div");
+
+
+
+            var plotter = null;
+            var select = undefined;
+            var textValArray = [["table", -1]];
+            var selectedTexts = ["table"];
+
+            // add plots if any
+            if (gPlotSpecsHandler) {
+                // get plotter or null
+                plotter = gPlotSpecsHandler.getDefaultPlotter();
+                var plotNames = gPlotSpecsHandler.getNames();
+
+                for (var i=0; i < plotNames.length; i++) {
+                    textValArray.push([plotNames[i], i]);
+                }
+
+                if (plotter) {
+                    selectedTexts = [plotter.getName()];
+                }
+            }
+
+            // build select
+            select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
+            select.onchange = function(select) {
+                var i = parseInt(select.value);
+
+                // empty w/o shrinking so screen might now bounce
+                resultsDiv.style.minHeight = resultsDiv.offsetHeight + "px";
+                resultsDiv.innerHTML = "";
+
+                if (i < 0) {
+                    tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                } else {
+                    gPlotSpecsHandler.getPlotter(i).addPlotToDiv(resultsDiv, tableResults);
+                }
+            }.bind(this, select);
+
+            // build button
+            var plotsCallback = function(plotSpecsHandler) {
+                gPlotSpecsHandler = plotSpecsHandler;
+                queryTableResCallback(csvFilename, fullURL, tableResults);
+            }.bind(this);
+
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
+            var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, ModalIidx.alert.bind(this, "NodeGroup Service failure"));
+            var plotsDialog = new ModalPlotsDialog(ngsClient, sgJson, tableResults, plotsCallback);
+
+            var plotsLauncher = function(dialog, sel) {
+                dialog.show(parseInt(sel.value));
+            }.bind(this, plotsDialog, select);
+
+            var but = IIDXHelper.createIconButton("icon-picture", plotsLauncher, undefined, undefined, "Plots");
+
+            // assemble the span
+            var span = document.createElement("span");
+            span.style.margin="2";
+            select.style.margin="0";
+            span.appendChild(select);
+            span.appendChild(document.createTextNode(" "));
+            span.appendChild(but);
+
+            // add header to results
+            var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], span);
+            resultsPara.innerHTML = "";
+            resultsPara.appendChild(headerTable);
+            resultsPara.appendChild(resultsDiv);
+
+            // display results
+            var plotter = gPlotSpecsHandler == null ? null : gPlotSpecsHandler.getDefaultPlotter();
+            if (plotter != null) {
+                plotter.addPlotToDiv(resultsDiv, tableResults);
+            } else {
+                tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+            }
 
             guiUnDisableAll();
             guiResultsNonEmpty();
             setStatus("");
          });
     };
+
+
 
     var queryJsonLdCallback = function(jsonLdResults) {
         require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
@@ -1551,7 +1640,7 @@
                 nodeGroupChanged(false);
             }
 
-            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true);
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
             gStoreDialog.launchStoreDialog(sgJson, doneCallback);
 
         });
@@ -2029,6 +2118,7 @@
         gMappingTab.clear();
         gNodeGroupName = null;
         gNodeGroupChangedFlag = false;
+        gPlotSpecsHandler = null;
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();

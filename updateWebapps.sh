@@ -44,6 +44,7 @@ done
 
 # get list of dirs to copy to webapps
 COPYDIRS=( "iidx-oss"
+           "plotly"
            "sparqlForm/main-oss"
            "sparqlGraph/css"
            "sparqlGraph/dynatree-1.2.5"

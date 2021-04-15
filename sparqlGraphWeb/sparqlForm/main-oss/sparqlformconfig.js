@@ -46,6 +46,9 @@ define([], function() {
 			ontologyInfo:{
 				url : "${WEB_PROTOCOL}://${WEB_ONTOLOGYINFO_HOST}:${WEB_ONTOLOGYINFO_PORT}/ontologyinfo/",
             },
+			utility:{
+				url : "${WEB_PROTOCOL}://${WEB_UTILITY_HOST}:${WEB_UTILITY_PORT}/utility/",
+            },
 		},
 		"help" : {
 			"aboutHtml" : '<b>SparqlForm Opensource build 2.0</b><br>\

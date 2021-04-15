@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -42,6 +43,7 @@ import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -302,6 +304,46 @@ public class UtilityServiceRestController {
 		return ret;
 	
 	}
+	
+	
+	/**
+	 * Process a plot specification (e.g. fill in data values from table)
+	 */
+	@ApiOperation(value="Process a plot specification")
+	@CrossOrigin
+	@RequestMapping(value="/processPlotSpec", method= RequestMethod.POST)
+	public JSONObject processPlotSpec(@RequestBody ProcessPlotSpecRequest requestBody){
+		LocalLogger.logToStdOut(SERVICE_NAME + " processPlotSpec");
+    	SimpleResultSet res = new SimpleResultSet();	
+		try {
+							
+			requestBody.validate();
+			JSONObject plotSpecJson = requestBody.getPlotSpecJson();	// the plot spec with placeholders e.g. x: "SEMTK_TABLE.col[col_name]"
+			LocalLogger.logToStdOut(plotSpecJson.toJSONString());	// TODO REMOVE
+			Table table = Table.fromJson(requestBody.getTableJson());	// the data table
+			LocalLogger.logToStdOut(table.toCSVString());  // TODO REMOVE
+			
+			if(!plotSpecJson.containsKey("type")){
+				throw new Exception("Plot type not specified");
+			}
+			if(plotSpecJson.get("type").equals(PlotlyPlotSpec.TYPE)){
+				PlotlyPlotSpec spec = new PlotlyPlotSpec(plotSpecJson);
+				spec.applyTable(table);
+				JSONObject plotSpecJsonProcessed = spec.toJson();	
+				res.addResult("plot", plotSpecJsonProcessed);
+				res.setSuccess(true);
+				LocalLogger.logToStdOut("Returning " + res.toJson().toJSONString());
+			}else{
+				throw new Exception("Unsupported plot type");
+			}
+
+		} catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, "processPlotSpec", e);
+	    	LocalLogger.printStackTrace(e);
+		}
+		return res.toJson();	
+	}	
 	
 	
 	/**

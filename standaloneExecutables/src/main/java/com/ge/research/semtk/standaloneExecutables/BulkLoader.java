@@ -71,10 +71,10 @@ public class BulkLoader {
 				byte[] data = Files.readAllBytes(dataFile.toPath());
 
 				if (dataFilePath.endsWith(".ttl")) {
-					sei.executeAuthUploadTurtle(data);
+					sei.authUploadTurtle(data);
 					
 				} else if (dataFilePath.endsWith(".owl")) {
-					sei.executeAuthUploadOwl(data);	
+					sei.authUploadOwl(data);	
 					
 				} else {
 					throw new Exception("Error: Data file " + dataFilePath + " is not an OWL or TURTLE file");

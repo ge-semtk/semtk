@@ -108,7 +108,7 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 			       ]
 		};
 
-	config.waitseconds = 45;
+	config.waitSeconds = 45;
 
 	require.config(config);
 

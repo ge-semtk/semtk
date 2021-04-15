@@ -19,3 +19,5 @@ Includes other open source code:
   See https://github/visjs/vis-network/blob/master/LICENSE-MIT
 - jgit  Licensed under Eclipse Distribution License v1.0.  
   See https://github.com/eclipse/jgit/blob/master/LICENSE 
+- plot.ly (c) 2021 Plotly, Inc.  Licensed under MIT
+  See https://github.com/plotly/plotly.js

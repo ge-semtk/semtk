@@ -51,22 +51,23 @@ define([	// properly require.config'ed   bootstrap-modal
 			// simple alert dialog
 		    kdlLogEvent("Alert", "title", titleTxt, "message", msgHtml);
 
-			var m = new ModalIidx("ModalIidxAlert");
+			var m = new ModalIidx("ModalIidxAlert" + Math.random());
 			var div = document.createElement("div");
 			div.innerHTML = msgHtml2;
             m.onHide(optHideCallback);
 			m.showOK(titleTxt, div, function(){});
+            return m;
 		};
 
         //
         // msgHtmlOrDom - can be an html string or a dom
         //
-		ModalIidx.okCancel = function (titleTxt, msgHtmlOrDom, okCallback, optOkButtonText, optCancelCallback) {
+		ModalIidx.okCancel = function (titleTxt, msgHtmlOrDom, okCallback, optOkButtonText, optCancelCallback, optValidate) {
 			// ok cancel
 
             var dom;
 
-			var m = new ModalIidx("ModalIidxOkCancel");
+			var m = new ModalIidx("ModalIidxOkCancel" + Math.random());
             if (typeof msgHtmlOrDom == "string") {
     			dom = document.createElement("div");
     			dom.innerHTML = msgHtmlOrDom;
@@ -76,11 +77,12 @@ define([	// properly require.config'ed   bootstrap-modal
             kdlLogEvent("OkCancel", "title", titleTxt, "message", dom.innerHTML.substr(0, 100));
 			m.showOKCancel(	titleTxt,
 							dom,
-							function() {return null;}, // always validate
+							optValidate ? optValidate : function() {return null;},
 							okCallback,
 							optCancelCallback,
 							optOkButtonText
 							);
+            return m;
 		};
 
 		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent, optValidateCallback) {
@@ -90,7 +92,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			var div = document.createElement("div");
 			div.appendChild(dom);
 
-			var m = new ModalIidx("clearCancelSubmit");
+			var m = new ModalIidx("clearCancelSubmit" + Math.random());
 			m.showClearCancelSubmit(titleTxt,
 									div,
 									validateCallback,
@@ -99,6 +101,7 @@ define([	// properly require.config'ed   bootstrap-modal
 									optOKButText,
 									optWidthPercent
 									);
+            return m;
 		};
 
 		/**
@@ -113,7 +116,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			select.style.width = "95%";
 			div.appendChild(select);
 
-			var m = new ModalIidx("selectOption");
+			var m = new ModalIidx("selectOption" + Math.random());
 			m.showClearCancelSubmit(titleTxt,
 									div,
 									function() {return null;},
@@ -574,7 +577,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var butList = this.div.getElementsByClassName("btn");
                 for (var i=0; i < butList.length; i++) {
                     butList[i].disabled = true;
-                    butList[i].classList.add("btn-disabled");
+                    butList[i].style.backgroundColor="lightgray";  // .classList.add("btn-disabled") doesn't seem to work on these since they can be <a>
                     this.butCallbacks[i] = butList[i].onclick
                     butList[i].onclick = function(){};
                 }
@@ -587,7 +590,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var butList = this.div.getElementsByClassName("btn");
                 for (var i=0; i < butList.length; i++) {
                     butList[i].disabled = false;
-                    butList[i].classList.remove("btn-disabled");
+                    butList[i].style.backgroundColor="";
                     butList[i].onclick = this.butCallbacks[i]
                 }
             },

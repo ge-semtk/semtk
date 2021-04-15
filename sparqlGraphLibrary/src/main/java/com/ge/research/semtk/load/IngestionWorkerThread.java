@@ -74,6 +74,7 @@ public class IngestionWorkerThread extends Thread {
 	 * It is more efficient to use this value when sizing future threads.
 	 */
 	public void run(){
+		final boolean DEBUG_QUERIES = false;
 		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		
 		try {
@@ -88,7 +89,8 @@ public class IngestionWorkerThread extends Thread {
 				int targetMax = (int) (this.optimalQueryChars * 1.25);
 				
 				if (queryLen >= targetMin && queryLen <= targetMax) {
-					System.err.println("query: " + query);
+					if (DEBUG_QUERIES) System.err.println("query: " + query);
+					
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
 					
 				} else {
@@ -97,7 +99,8 @@ public class IngestionWorkerThread extends Thread {
 					
 					// run queryList
 					for (String q : queryList) {
-						System.err.println("q: " + q);
+						if (DEBUG_QUERIES) System.err.println("q: " + q);
+						
 						this.endpoint.executeQuery(q, SparqlResultTypes.CONFIRM);
 					}
 				}

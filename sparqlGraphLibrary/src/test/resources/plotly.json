@@ -1,0 +1,29 @@
+{
+	"type": "plotly",
+	"name": "Plotly Chart 1",
+	"spec": 	{  
+		"data": [ 
+			{
+				"type": "scatter",
+				"x": "SEMTK_TABLE.col[colA]",
+				"y": "SEMTK_TABLE.col[colB]",
+				"marker": {
+					"color": "rgb(16, 32, 77)" 
+				}
+			},
+			{
+				"type": "bar", 
+				"x": "SEMTK_TABLE.col[colA]",
+				"y": "SEMTK_TABLE.col[colC]",
+				"name": "bar chart example" 
+			}
+		],
+		"layout": { 
+			"title": "simple example",  
+			"xaxis": {                  
+				"title": "time"         
+			}
+		},
+		"config": { "editable": true }
+	}
+}

@@ -61,18 +61,18 @@
 <link href="../../iidx-oss/css/iids.css" rel="stylesheet" type="text/css">
 <link href="../../iidx-oss/css/responsive.css" rel="stylesheet"
 	type="text/css">
-    
-    
+
+
     <!-- Include the required JavaScript libraries: -->
     <script type="text/javascript" src="../../sparqlGraph/jquery/jquery.js"></script>
     <script type="text/javascript" src="../../sparqlGraph/jquery/jquery-ui-1.10.4.min.js"></script>
-	<script type="text/javascript" src='../../sparqlGraph/jquery/jquery.cookie.js'></script>	
+	<script type="text/javascript" src='../../sparqlGraph/jquery/jquery.cookie.js'></script>
 	<script type="text/javascript" src='../../sparqlGraph/jquery/jquery.jsonp-2.3.0.min.js'></script>
-    
+
     <!-- long-term trouble with require.js unless I do this -->
 	<script src="../../iidx-2.0.3/components/bootstrap/js/bootstrap-tooltip.js"></script>
-	  
-    
+
+
 <!--  PEC TODO use the iids modal dialog.  This action item is a carry-over from sparqlGraph.html -->
 <link rel="stylesheet" type="text/css" href="../../sparqlGraph/css/modaldialog.css" />
 
@@ -90,17 +90,18 @@
 
 <!-- logging -->
 <script type="text/javascript" src="KDLEasyLoggerConfig.js"></script>
-    
+
 <script type="text/javascript" src="../../sparqlGraph/js/requiresetup.js"></script>
 <script>
-requireConfigSparqlgraph( 
+requireConfigSparqlgraph(
 		"../sparqlGraph",
 		{
 			baseUrl : '../../iidx-oss',
 			paths : {
 				"sparqlform" : "../sparqlForm",
 				"local" :      "../sparqlForm/main-oss",
-				"visjs" :      "../vis-4.21.0/dist"
+				"visjs" :      "../vis-4.21.0/dist",
+        "plotly":      "../plotly"
 		}
 });
 
@@ -112,10 +113,8 @@ toggleCheckbox = function(id) {
 		elem.checked = true;
 	}
 };
-
 </script>
 
-<!--  main javascript for this page -->
 <script src="../../sparqlGraph/js/sparqlform.js"></script>
 <script src="./sparqlformlocal.js"></script>
 
@@ -134,11 +133,11 @@ toggleCheckbox = function(id) {
 		<!--  Header -->
 		<div class="navbar-inner">
 			<div class="container">
-				<a class="brand" href="#"></span> <span id="titleSpan">SPARQLform <small><i>powered by</i> GE Research Knowledge Discovery Lab</small></span></a>  
+				<a class="brand" href="#"></span> <span id="titleSpan">SPARQLform <small><i>powered by</i> GE Research Knowledge Discovery Lab</small></span></a>
 			</div>
 		</div>
 
-		<!---------------  Menu ---------------> 
+		<!---------------  Menu --------------->
 		<div class="primary-navbar nav-collapse">
 			<div class="container">
 				<ul class="nav">
@@ -154,7 +153,7 @@ toggleCheckbox = function(id) {
 							<li class="divider"></li>
 							<li><a href="javascript:doRetrieveFromNGStore();">Load from store...</a></li>
 							<li><a href="javascript:doStoreNodeGroup();"     >Save to store...</a></li>
-							<li><a href="javascript:doDeleteFromNGStore();"  >Delete from store...</a></li>		
+							<li><a href="javascript:doDeleteFromNGStore();"  >Delete from store...</a></li>
 							<li class="divider"></li>
 							<li><a href="javascript:chkboxAvoidMicroSvc.checked = ! chkboxAvoidMicroSvc.checked; doAvoidQueryMicroservice(chkboxAvoidMicroSvc.checked);"><input type="checkbox" disabled="disabled" id="chkboxAvoidMicroSvc" style="vertical-align:top;"> Query Directly</a></li>
 						</ul>
@@ -170,7 +169,7 @@ toggleCheckbox = function(id) {
 			</div>
 		</div>
 	</div>
-    
+
 	<!-- This container will hold our primary page content. -->
 	<div id="pageContainer" class="container">
 
@@ -209,7 +208,7 @@ toggleCheckbox = function(id) {
 									<button class="btn btn-disabled" id="btnTreeCollapse"
 										onclick="javascript:doTreeCollapse(); return false;" disabled>Collapse</button>
 									<input type="checkbox" class='checkbox' id="chkShowAll" onclick="javascript:doTreeShowAllButton();" unchecked >
-									Show All 
+									Show All
                                     </input>
 								</td>
 
@@ -240,8 +239,8 @@ toggleCheckbox = function(id) {
 						<table id='formTable' cellpadding="5"></table>
 						<datalist id='varNameDatalist'></datalist>
 						<div id='constraintsHeaderDiv'></div>
-						<table id='constraintsTable' cellpadding="0"></table>   
-					
+						<table id='constraintsTable' cellpadding="0"></table>
+
 						<hr>
 						<div class="btn-group">
 							<button class="btn"              id="btnFormClear"   onclick="javascript:doClearFormBut(); return false;"   >Clear</button>
@@ -293,7 +292,7 @@ toggleCheckbox = function(id) {
 
 
 		<script src="../../iidx-oss/components/respond/respond.src.js"></script>
-        
+
 		<!------------ canvas ------------>
 		<style>
 div.treewrap {
@@ -338,9 +337,9 @@ div.canvas {
 
 		<!-- DEBUG Section -->
 		<div id="canvas" style="display:none"></div>
-			
+
 		<div><footer class="module-footer"><small><center>
-		<a href="https://github.com/ge-semtk/semtk" target="_blank">Github</a> 
+		<a href="https://github.com/ge-semtk/semtk" target="_blank">Github</a>
 			&nbsp;&nbsp;|&nbsp;&nbsp;
 			<a href="https://github.com/ge-semtk/semtk/issues" target="_blank">Issues</a>
 			&nbsp;&nbsp;|&nbsp;&nbsp;
