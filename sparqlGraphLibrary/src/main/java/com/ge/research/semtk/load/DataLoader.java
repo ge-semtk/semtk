@@ -416,20 +416,25 @@ public class DataLoader implements Runnable {
 				if (!skipIngest && this.cacheSei != null) {
 					// after 100 rows, guess a good place to upload
 					if (dumpCacheRowInterval == 0 && startingRow > 100) {
-						long testSize = this.cacheSei.dumpToTurtle().length();
-						if (testSize == 0) {
-							dumpCacheRowInterval = 100;
-							dumpCacheNext = 100;
-						} else {
-							dumpCacheRowInterval = (int) ((startingRow * this.maxCacheLength) / testSize);
-							dumpCacheNext = dumpCacheRowInterval;
-						}
+						int testSize = this.cacheSei.dumpToTurtle().length();
+						
+						dumpCacheRowInterval = (int) (this.maxCacheLength) / Math.max(50000, testSize) * startingRow;
+						dumpCacheRowInterval = Math.min(15000, dumpCacheRowInterval);
+						dumpCacheNext = dumpCacheRowInterval;
+						
 					}
 					// do upload when needed
 					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
-						uploadTempGraph();
+						// upload and clear
+						int len = uploadTempGraph();
 						this.cacheSei.clearGraph();
+						
+						// check size and adjust dumpCacheRowInterval with 1/3 weighted average
+						int newInterval = (int) (this.maxCacheLength) / Math.max(50000, len) * dumpCacheRowInterval;
+						newInterval = Math.min(15000, newInterval);
+						dumpCacheRowInterval = (int) (((dumpCacheRowInterval * 2) + newInterval)/3);  
 						dumpCacheNext += dumpCacheRowInterval;
+						
 					}
 				}
 			}
@@ -457,13 +462,17 @@ public class DataLoader implements Runnable {
 		return recordsProcessed;
 	}
 	
-	private void uploadTempGraph() throws Exception {
+	private int uploadTempGraph() throws Exception {
 		LocalLogger.logToStdErr("Generating temporary graph turtle...");
 		String s = this.cacheSei.dumpToTurtle();
-		LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
-		this.endpoint.authUploadTurtle(s.getBytes());
-		LocalLogger.logToStdErr("upload complete");
+		int len = s.length();
+		if (len > 0) {
+			LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
+			this.endpoint.authUploadTurtle(s.getBytes());
+			LocalLogger.logToStdErr("upload complete");
+		}
 		
+		return len;
 	}
 	
 	public int getMaxThreads() {
