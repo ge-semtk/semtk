@@ -135,7 +135,9 @@ define([	// properly require.config'ed
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Name: ", this.addModalElemName));
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Type: ", this.addModalElemType));
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Columns: ", this.addModalElemCols));
-                ModalIidx.okCancel("Add Plot", div, this.addCallbackCallNgs.bind(this), undefined, this.unstack.bind(this), this.addCallbackValidate.bind(this));
+
+                var m = new ModalIidx("ModalIidxOkCancel-AddPlot");
+                m.showOKCancel("Add Plot", div,  this.addCallbackValidate.bind(this), this.addCallbackCallNgs.bind(this), this.unstack.bind(this));
                 this.stack();
             },
 

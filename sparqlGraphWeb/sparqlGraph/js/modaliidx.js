@@ -51,7 +51,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			// simple alert dialog
 		    kdlLogEvent("Alert", "title", titleTxt, "message", msgHtml);
 
-			var m = new ModalIidx("ModalIidxAlert" + Math.random());
+			var m = new ModalIidx("ModalIidxAlert");
 			var div = document.createElement("div");
 			div.innerHTML = msgHtml2;
             m.onHide(optHideCallback);
@@ -67,7 +67,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
             var dom;
 
-			var m = new ModalIidx("ModalIidxOkCancel" + Math.random());
+			var m = new ModalIidx("ModalIidxOkCancel");
             if (typeof msgHtmlOrDom == "string") {
     			dom = document.createElement("div");
     			dom.innerHTML = msgHtmlOrDom;
@@ -92,7 +92,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			var div = document.createElement("div");
 			div.appendChild(dom);
 
-			var m = new ModalIidx("clearCancelSubmit" + Math.random());
+			var m = new ModalIidx("clearCancelSubmit");
 			m.showClearCancelSubmit(titleTxt,
 									div,
 									function() {return null;},     // validation is not implemented for this one
@@ -116,7 +116,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			select.style.width = "95%";
 			div.appendChild(select);
 
-			var m = new ModalIidx("selectOption" + Math.random());
+			var m = new ModalIidx("selectOption");
 			m.showClearCancelSubmit(titleTxt,
 									div,
 									function() {return null;},
