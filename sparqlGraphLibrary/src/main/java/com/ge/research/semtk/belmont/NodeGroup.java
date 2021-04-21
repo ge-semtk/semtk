@@ -2733,9 +2733,12 @@ public class NodeGroup {
 		Hashtable hash = new Hashtable();
 		
 		// remove duplicates from ret
-		for (Node n : ret) {
+		// build backwards so the last duplicate is the one that remains
+		// similar to javascript lastIndexOf approach
+		for (int i=ret.size()-1; i >=0 ; i--) {
+			Node n = ret.get(i);
 			if (hash.get(n.getSparqlID()) == null) {
-				ret2.add(n);
+				ret2.add(0, n);
 				hash.put(n.getSparqlID(), 1);
 			}
 		}

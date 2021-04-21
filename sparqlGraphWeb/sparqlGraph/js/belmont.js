@@ -391,8 +391,7 @@ NodeItem.prototype = {
 		for (var i = 0; i < jObj.SnodeSparqlIDs.length; i++) {
 			var snode = nodeGroup.getNodeBySparqlID(jObj.SnodeSparqlIDs[i]);
 			if (!snode) {
-				alert("Assertion Failed in NodeItem.fromJson: "
-						+ jObj.SnodeSparqlIDs[i]);
+                throw new Error("Error reading JSON in NodeItem.fromJson.  Can't find node: " + jObj.SnodeSparqlIDs[i]);
 			}
 			this.SNodes.push(snode);
 		}

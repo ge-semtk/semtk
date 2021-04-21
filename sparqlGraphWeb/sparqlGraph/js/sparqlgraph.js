@@ -1067,6 +1067,7 @@
         require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
             nodeGroupChanged(false);
             ModalIidx.alert("Nodegroup validation call failed", msgHtml, false);
+            clearGraph();
         });
     };
 
@@ -1088,7 +1089,7 @@
         }
 
         // do either way
-        gNodeGroup = gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup.clear();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
         buildQuery();
@@ -1114,7 +1115,7 @@
 
         }
         gNodegroupInvalidItems = invalidItemStrings;
-        gNodeGroup = gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup.clear();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(true);
         buildQuery();
