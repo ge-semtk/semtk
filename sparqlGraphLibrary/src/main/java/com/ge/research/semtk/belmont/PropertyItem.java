@@ -24,6 +24,8 @@ import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.ontologyTools.OntologyName;
+
 public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_NONE = 0;
 	public static final int OPT_MINUS_OPTIONAL = 1;
@@ -148,6 +150,12 @@ public class PropertyItem extends Returnable {
 	public String getUriRelationship() {
 		return this.uriRelationship;
 	}
+	
+	public void setUriRelationship(String uriRelationship) {
+		this.uriRelationship = uriRelationship;
+		this.keyName = new OntologyName(uriRelationship).getLocalName();
+	}
+
 
 	/**
 	 * Return constraints SPARQL or null
@@ -178,6 +186,16 @@ public class PropertyItem extends Returnable {
 	
 	public String getValueTypeURI() {
 		return this.valueTypeURI;
+	}
+	
+	/**
+	 * Newer-fangled way to change the range
+	 * @param uri
+	 * @throws Exception
+	 */
+	public void setRange(String uri) throws Exception {
+		this.valueTypeURI = uri;
+		this.valueType =  XSDSupportedType.getMatchingValue(new OntologyName(uri).getLocalName());
 	}
 
 	public void addInstanceValue(String value) {
@@ -231,6 +249,27 @@ public class PropertyItem extends Returnable {
 	
 	public boolean getIsMarkedForDeletion(){
 		return this.isMarkedForDeletion;
+	}
+
+	/**
+	 * Set this property with all the values from other except URIRelationship
+	 * @param other
+	 * @exception if this property isn't empty
+	 */
+	public void merge(PropertyItem other) throws Exception {
+		if (this.isUsed() || this.getBindingOrSparqlID().length() > 0 ) {
+        	throw new Exception ("Target of property merge is not empty: " + this.getKeyName());
+        }
+		
+		this.constraints = other.constraints;
+        this.sparqlID = other.sparqlID;
+        this.isReturned = other.isReturned;
+        this.optMinus = other.optMinus;
+        this.isRuntimeConstrained = other.isRuntimeConstrained;
+        // instanceValues,
+        this.isMarkedForDeletion = other.isMarkedForDeletion;
+        this.binding = other.binding;
+		
 	}
 
 }

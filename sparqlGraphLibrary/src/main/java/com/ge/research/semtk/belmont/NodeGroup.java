@@ -34,6 +34,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintMetaData;
 import com.ge.research.semtk.load.NothingToInsertException;
+import com.ge.research.semtk.load.utility.ImportSpec;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -55,7 +56,8 @@ public class NodeGroup {
 	// version 10: accidentally wasted in a push
 	// version 11: importSpec dataValidator
 	// version 12: unions
-	private static final int VERSION = 12;
+	// version 13: removed node.nodeName
+	private static final int VERSION = 13;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -86,7 +88,6 @@ public class NodeGroup {
 	private HashMap<String, ArrayList<Integer>> tmpUnionMemberHash = new HashMap<String, ArrayList<Integer>>();
 	// same key as tmpUnionMemberHash.  Val us a hash from unionKey to parentStr.  Parent is the branch in tmpUnionMemberHash
 	private HashMap<String, HashMap<Integer, String>> tmpUnionParentHash = new HashMap<String, HashMap<Integer, String>>();
-	private int nextQueryInt;
 	
 	public NodeGroup(){
 	}
@@ -2057,7 +2058,6 @@ public class NodeGroup {
 		
 		String QUERY_CONSTRUCT_FOR_INSTANCE_MANIPULATION_POSTFIX = "___QCfIMP";
 		String SPARQLID_BINDING_TAG = "<@Original-SparqlId>";
-		this.nextQueryInt = 0;
 		
 		// check to see if this node has already been processed. 
 		if(doneNodes.contains(snode)){
@@ -4384,7 +4384,7 @@ public class NodeGroup {
 	 * @throws Exception - if validation fails
 	 */
 	public void inflateAndValidate(OntologyInfo oInfo) throws Exception  {
-		this.inflateAndValidate(oInfo, null, null, null);
+		this.inflateAndValidate(oInfo, null, null, null, null);
 	}
 	
 	/**
@@ -4394,14 +4394,14 @@ public class NodeGroup {
 	 * @param invalidItems - populated with NodeGroupItemStr for invalid items, if not null
 	 * @throws Exception - non-model errors, or first model error if modelErrMsgs is null
 	 */
-	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrMsgs, ArrayList<NodeGroupItemStr> invalidItems, ArrayList<String> warnings) throws Exception  {
+	public void inflateAndValidate(OntologyInfo oInfo, ImportSpec importSpec, ArrayList<String> modelErrMsgs, ArrayList<NodeGroupItemStr> invalidItems, ArrayList<String> warnings) throws Exception  {
 		this.oInfo = oInfo;
 		if (oInfo.getNumberOfClasses() == 0 && this.getNodeList().size() > 0) {
 			throw new ValidationException("Model contains no classes. Nodegroup can't be validated.");
 		}
 		
 		for (Node n : this.getNodeList()) {
-			n.inflateAndValidate(oInfo, modelErrMsgs, invalidItems, warnings);
+			n.inflateAndValidate(oInfo, importSpec, modelErrMsgs, invalidItems, warnings);
 		}
 	}
 	
@@ -4440,4 +4440,83 @@ public class NodeGroup {
 			}
 		}
 	}
+	
+	/**
+	 * Change a node URI
+	 * Note this is the simplest.
+	 * @param node
+	 * @param newURI
+	 */
+	public void changeItemDomain(Node node, String newURI) {
+		node.setFullURIname(newURI);
+	}
+
+	/**
+	 * Change invalid property to a valid one, MERGING with what's already there.
+	 * Note: in a normal inflateAndValidate the correct one will be empty
+	 * @param batteryNode
+	 * @param prop
+	 * @param newURI
+	 * @throws Exception
+	 */
+	public PropertyItem changeItemDomain(Node node, PropertyItem prop, String newURI) throws Exception {
+		
+        PropertyItem mergeIntoProp = node.getPropertyByURIRelation(newURI);
+        if (mergeIntoProp == null) throw new Exception ("Can't find property to merge into: " + newURI);
+
+        String oldItemStr = (new NodeGroupItemStr(node, prop)).getStr();
+        String newItemStr = (new NodeGroupItemStr(node, mergeIntoProp)).getStr();
+        
+        mergeIntoProp.merge(prop);   // throws exception if prop is not empty
+        node.rmPropItem(prop);
+       
+        this.updateUnionHash(oldItemStr, newItemStr);
+
+        return mergeIntoProp;
+		
+	}
+
+	public void deleteProperty(Node node, PropertyItem prop) {
+		node.rmPropItem(prop);
+		String itemStr = (new NodeGroupItemStr(node, prop)).getStr();
+		this.updateUnionHash(itemStr, null);
+	}
+	
+	/**
+	 * Change range of a property item
+	 * @param pItem
+	 * @param newURI
+	 * @throws Exception
+	 */
+	public void changeItemRange(PropertyItem pItem, String newURI) throws Exception {
+		// very simple
+		pItem.setRange(newURI);
+	}
+	
+	/**
+	 * Update the union hash when a property has changed URI domain
+	 * Not necessary to call this for Nodes
+	 * @param oldItemStr
+	 * @param newItemStr - or null to delete
+	 */
+	private void updateUnionHash(String oldItemStr, String newItemStr) {
+		for (Integer key : this.unionHash.keySet()) {
+			ArrayList<String> val = this.unionHash.get(key);
+			for (int i=0; i < val.size(); i++) {
+				if (val.get(i).equals(oldItemStr)) {
+					if (newItemStr != null) {
+						val.set(i, newItemStr);
+						break;
+					} else {
+						val.remove(i);
+						break;
+					}
+				}
+			}
+		}
+		
+	}
+
+	
+
 }

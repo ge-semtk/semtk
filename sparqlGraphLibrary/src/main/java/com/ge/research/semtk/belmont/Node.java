@@ -26,6 +26,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.load.utility.ImportSpec;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
@@ -44,7 +45,6 @@ public class Node extends Returnable {
 	private ArrayList<NodeItem> nodes = new ArrayList<NodeItem>();
 	
 	// basic information required to be a node
-	private String nodeName = null;
 	private String fullURIname = null;
 	private String instanceValue = null;
 	private boolean instanceLookedUp = false;
@@ -55,7 +55,6 @@ public class Node extends Returnable {
 	// Left-over from confused port from javascript
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, NodeGroup ng){
 		// just create the basic node.
-		this.nodeName = name;
 		this.fullURIname = URI;
 		if(n != null){ this.nodes = n;}
 		if(p != null){ this.props = p;}
@@ -86,6 +85,10 @@ public class Node extends Returnable {
 
 	}
 	
+	public void setFullURIname(String fullURIname) {
+		this.fullURIname = fullURIname;
+	}
+
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		return this.toJson(null);
@@ -123,7 +126,6 @@ public class Node extends Returnable {
 				
 		ret.put("propList", jPropList);
 		ret.put("nodeList", jNodeList);
-		ret.put("NodeName", this.nodeName);
 		ret.put("fullURIName", this.fullURIname);
 		ret.put("valueConstraint", this.constraints != null ? this.constraints.toString(): "");
 		
@@ -158,7 +160,7 @@ public class Node extends Returnable {
 		ArrayList<NodeGroupItemStr> itemStrList = new ArrayList<NodeGroupItemStr>();
 		ArrayList<String> warningList = new ArrayList<String>();
 		
-		this.inflateAndValidate(oInfo, modelErrList, itemStrList, warningList);
+		this.inflateAndValidate(oInfo, null, modelErrList, itemStrList, warningList);
 		
 		if (modelErrList.size() > 0) {
 			throw new ValidationException(modelErrList.get(0));
@@ -176,30 +178,32 @@ public class Node extends Returnable {
 	 * All WARNINGS are fixed
 	 * 
 	 * Expanding an invalid node:
-	 * 		Type     * ERROR unknown URI
+	 * 
+	 * 		Type     * 1a ERROR unknown URI
 	 * 	
-	 * 		PropItem * ERROR - bad uri (domain) if used
-	 * 				 * WARNING - bad uri (domain) if unused
-	 * 				 * ERROR - wrong range if used
-	 * 				 * WARNING - wrong range if unused
+	 * 		PropItem * 2a ERROR - bad uri (domain) if used
+	 * 				 * 2b WARNING - bad uri (domain) if unused
+	 * 				 * 3a ERROR - wrong range if used
+	 * 				 * 3b WARNING - wrong range if unused
 	 *
-	 * 		NodeItem * ERROR bad uri (domain)         items:  all targets
-	 *               * WARNING bad uri (domain) but unused
+	 * 		NodeItem * 4a ERROR bad uri (domain)         items:  all targets
+	 *               * 4b WARNING bad uri (domain) but unused
 	 *               
-	 * 				 * ERROR  wrong range and connected to any illegal items:  all targets
-	 *               * WARNING wrong range but unused
-	 *               * WARNING wrong range but connected nodes all legal to model so fix is easy
+	 * 				 * 5a ERROR  wrong range and connected to any illegal items:  all targets
+	 *               * 5b WARNING wrong range but unused
+	 *               * 5c WARNING wrong range but connected nodes all legal to model so fix is easy
 	 *               
-	 * 				 * ERROR connected to nodes that violate the (correct) range   items: targets that don't match range
+	 * 				 * 6 ERROR connected to nodes that violate the (correct) range   items: targets that don't match range
 	 *              
 	 * 
 	 * @param oInfo - if non-null then inflate and validate
+	 * @param importSpec - if non-null then check for isUsed() before refusing to inflate invalid
 	 * @param modelErrList - if null, throw exception on first error : else collect a list of text model errors
 	 * @param itemStrList - if null, nothing, else list will have a NodeGroupItemStr for each invalid item found
 	 * @return
 	 * @throws Exception
 	 */
-	public void inflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrList, ArrayList<NodeGroupItemStr> itemStrList, ArrayList<String> warningList) throws Exception {
+	public void inflateAndValidate(OntologyInfo oInfo, ImportSpec importSpec, ArrayList<String> modelErrList, ArrayList<NodeGroupItemStr> itemStrList, ArrayList<String> warningList) throws Exception {
 		if (oInfo == null) { return; }
 		
 		ArrayList<PropertyItem> inflatedPItems = new ArrayList<PropertyItem>();
@@ -233,8 +237,9 @@ public class Node extends Returnable {
 		ArrayList<OntologyProperty> ontProps = new ArrayList<OntologyProperty>();
 		if (ontClass == null) {
 			ontClass = new OntologyClass(this.fullURIname);
-			// ERROR: node class is unknown
-			String msg = this.getSparqlID() + "'s class does not exist in the model:  " + this.getFullUriName();
+			// ERROR: node class is unknown.  
+			// In message to user, use Binding even if it isn't unique.  SparqlID may not make sense to user.
+			String msg = this.getBindingOrSparqlID() + "'s class does not exist in the model:  " + this.getFullUriName();
 			modelErrList.add(msg);
 			itemStrList.add(new NodeGroupItemStr(this));
 		} else {
@@ -251,14 +256,14 @@ public class Node extends Returnable {
 				
 				PropertyItem propItem = inputPItemHash.get(ontPropURI);
 				if (! propItem.getValueTypeURI().equals(ontProp.getRangeStr())) {
-					if (propItem.isUsed()) {
+					if (propItem.isUsed() || (importSpec != null && importSpec.isUsed(this.getSparqlID(), ontPropURI))) {
 						// ERROR property range doesn't match
-						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + ontProp.getRangeStr();
+						String msg = this.getBindingOrSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + ontProp.getRangeStr();
 						modelErrList.add(msg);
 						itemStrList.add(new NodeGroupItemStr(this, propItem));
 					} else {
 						// WARNING property range doesn't match
-						String msg = this.getSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " automatically changed to proper range of " + ontProp.getRangeStr();
+						String msg = this.getBindingOrSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " automatically changed to proper range of " + ontProp.getRangeStr();
 						warningList.add(msg);
 						// fix range
 						propItem.changeValueType(XSDSupportedType.getMatchingValue(ontProp.getRangeStr(true)));
@@ -283,7 +288,7 @@ public class Node extends Returnable {
 				
 				if (inputNItemHash.containsKey(ontPropURI)) {
 					// choice 1:  node with a bad range
-					String msg = this.getSparqlID() + " node property " + ontPropURI + " has range " + ontProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
+					String msg = this.getBindingOrSparqlID() + " node property " + ontPropURI + " has range " + ontProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
 
 					NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 					if (nodeItem.isUsed()) {
@@ -334,12 +339,12 @@ public class Node extends Returnable {
 				if (rangeErrFlag) {
 					// if there are no bad targets: fix & warn
 					if (targetErrList.size() == 0) {
-						warningList.add( this.getSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " corrected to model value " + correctRangeStr);
+						warningList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " corrected to model value " + correctRangeStr);
 						nodeItem.changeUriValueType(correctRangeStr);
 					} else {
 						
 						// else bad connections
-						modelErrList.add( this.getSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " doesn't match to model range of " + correctRangeStr);
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " doesn't match to model range of " + correctRangeStr);
 
 						// all targets are bad items
 						for (Node target : nodeItem.getNodeList()) {
@@ -352,14 +357,14 @@ public class Node extends Returnable {
 					
 					// somewhat randomly, check for keyname errors
 					if (!nRangeAbbr.equals(correctRangeAbbrev)) {
-						warningList.add(this.getSparqlID() + " node property property " + ontPropURI + " abbrev " + nRangeAbbr + " corrected to match model abbrev of " + ontProp.getRangeStr(true));
+						warningList.add(this.getBindingOrSparqlID() + " node property property " + ontPropURI + " abbrev " + nRangeAbbr + " corrected to match model abbrev of " + ontProp.getRangeStr(true));
 						nodeItem.setValueType(ontProp.getRangeStr(true));
 					}
 				
 				
 					// report any bad connections 
 					for (Node target : targetErrList) {
-						modelErrList.add( this.getSparqlID() + " edge " + ontPropURI + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 					
@@ -384,8 +389,8 @@ public class Node extends Returnable {
 		// Check if anything is left in propItemHash, meaning it wasn't found in the model
 		for (String key : inputPItemHash.keySet()) {
 			PropertyItem propItem = inputPItemHash.get(key);
-			if (propItem.isUsed()) {
-				String msg = this.getSparqlID() + " has property that isn't in the model: " + key;
+			if (propItem.isUsed() || (importSpec != null && importSpec.isUsed(this.getSparqlID(), key))) {
+				String msg = this.getBindingOrSparqlID() + " has property that isn't in the model: " + key;
 				modelErrList.add(msg);
 				itemStrList.add(new NodeGroupItemStr(this, propItem));
 	
@@ -401,7 +406,7 @@ public class Node extends Returnable {
         for (String key : inputNItemHash.keySet()) {
         	NodeItem nodeItem = inputNItemHash.get(key);
         	if (nodeItem.isUsed()) {
-	        	String msg = this.getSparqlID() + " has edge that isn't in the model: " + this.getSparqlID() + "->" + key;
+	        	String msg = this.getBindingOrSparqlID() + " has edge that isn't in the model: " + key;
 	        	modelErrList.add(msg);
 				NodeItem nItem = inputNItemHash.get(key);
 				if (nItem.getConnected()) {
@@ -417,7 +422,7 @@ public class Node extends Returnable {
 	            // add it anyway
 	            inflatedNItems.add(inputNItemHash.get(key));
         	} else {
-        		warningList.add("Removed invalid unused edge that isn't in the model" + this.getSparqlID() + "->" + key);
+        		warningList.add("Removed invalid unused edge that isn't in the model" + this.getBindingOrSparqlID() + "->" + key);
         	}
         }
 		
@@ -523,14 +528,12 @@ public class Node extends Returnable {
 		// blank existing 
 		props = new ArrayList<PropertyItem>();
 		nodes = new ArrayList<NodeItem>();
-		nodeName = null;
 		fullURIname = null;
 		instanceValue = null;		
 		
 		this.fromReturnableJson(nodeEncoded);
 
 		// build all the parts we need from this incoming JSON Object...
-		this.nodeName = nodeEncoded.get("NodeName").toString();
 		this.fullURIname = nodeEncoded.get("fullURIName").toString();
 		
 				
@@ -971,6 +974,10 @@ public class Node extends Returnable {
 	
 	public NodeDeletionTypes getDeletionMode(){
 		return this.deletionMode;
+	}
+
+	public void rmPropItem(PropertyItem prop) {
+		this.props.remove(prop);
 	}
 
 }

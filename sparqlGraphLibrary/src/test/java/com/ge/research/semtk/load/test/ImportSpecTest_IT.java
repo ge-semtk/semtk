@@ -63,7 +63,7 @@ public class ImportSpecTest_IT {
 		ImportSpec emptySpec = ImportSpec.createEmptySpec(sgJson.getNodeGroup());
 		
 		assertEquals("Empty spec has wrong number of nodes", 3, emptySpec.getNumNodes());
-		int i = emptySpec.getNode("?Battery");
+		int i = emptySpec.getNodeIndex("?Battery");
 		assertTrue("Battery node was not found", i > -1);
 		assertEquals("Battery node has properties", 0, emptySpec.getNodeNumProperties(i));
 		assertEquals("Battery node has mappings", 0, emptySpec.getNodeNumMappings(i));

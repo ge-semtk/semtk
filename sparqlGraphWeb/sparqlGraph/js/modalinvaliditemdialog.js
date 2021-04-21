@@ -58,13 +58,13 @@ define([	// properly require.config'ed
 
 			},
 
-            getSelectedURI : function() {
-                var select  = document.getElementById("ModalInvalidItemDialog.URISelect");
+            getSelectedDomain : function() {
+                var select  = document.getElementById("ModalInvalidItemDialog.DomainSelect");
                 return IIDXHelper.getSelectValues(select)[0];
             },
 
 			submit : function () {
-                this.callback(this.item, this.target, this.getSelectedURI());
+                this.callback(this.item, this.target, this.getSelectedDomain(), "domain");
 			},
 
             show : function () {
@@ -75,20 +75,20 @@ define([	// properly require.config'ed
                     // find all properties for this CLASS
                     var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
                     var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
-                    var uriList = [];
+                    var domainList = [];
                     for (var op of oPropList) {
                         // separate propItems from nodeItems
                         if (! this.oInfo.containsClass(op.getRangeStr())) {
-                            uriList.push(op.getNameStr());
+                            domainList.push(op.getNameStr());
                         }
                     }
-                    this.show2(uriList);
+                    this.show2(domainList);
 
                 } else if (this.item.getItemType() == "NodeItem") {
                     // find all nodes for this CLASS
                     var snode = this.nodegroup.getNodeItemParentSNode(this.item);
                     var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
-                    var uriList = [];
+                    var domainList = [];
                     var targetClass = new OntologyClass(this.target.getURI());
 
                     for (var op of oPropList) {
@@ -99,20 +99,20 @@ define([	// properly require.config'ed
 
                             // if link to target node valid, put it at the top of the list, else on bottom
                             if (this.oInfo.classIsA(targetClass, rangeClass)) {
-                                uriList.unshift(op.getNameStr());
+                                domainList.unshift(op.getNameStr());
                             } else {
-                                uriList.push(op.getNameStr());
+                                domainList.push(op.getNameStr());
                             }
                         }
                     }
-                    this.show2(uriList);
+                    this.show2(domainList);
 
                 } else {
                     alert("Not implemented in ModalInvalidItemDialog.show()");
                 }
             },
 
-			show2 : function (uriList) {
+			show2 : function (domainList) {
 				var dom = document.createElement("fieldset");
 				dom.id = "ModalInvalidItemDialogdom";
 
@@ -129,21 +129,22 @@ define([	// properly require.config'ed
                     title = "Change Class URI of " + this.item.getSparqlID();
                     s.innerHTML = this.item.getURI();
                 } else if (this.item.getItemType() == "PropertyItem") {
-                    title = "Change relationship URI of " + this.item.getIsReturned() ? this.item.getBindingOrSparqlID() : this.item.getKeyName();
+                    title = "Change data property " + this.item.getIsReturned() ? this.item.getBindingOrSparqlID() : this.item.getKeyName();
                     s.innerHTML = this.item.getURI();
+                    domainList.push("<delete property>");
                 } else if (this.item.getItemType() == "NodeItem") {
-                    title = "Change relationship URI of " + this.item.getKeyName();
+                    title = "Change object property " + this.item.getKeyName();
                     s.innerHTML = this.item.getURI();
                 }
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Current URI: ", s));
 
-                // URI select
-                var selectList = uriList;
-                var selected = uriList.length > 0 ? [uriList[0]] : [];
+                // domain select
+                var selectList = domainList;
+                var selected = domainList.length > 0 ? [domainList[0]] : [];
 
-				var select = IIDXHelper.createSelect("ModalInvalidItemDialog.URISelect", selectList, selected, false, "input-xlarge");
+				var select = IIDXHelper.createSelect("ModalInvalidItemDialog.DomainSelect", selectList, selected, false, "input-xlarge");
                 var width = 20;
-                for (var c of uriList) {
+                for (var c of domainList) {
                     if (c.length > width)
                         width = c.length;
                 }
@@ -162,7 +163,8 @@ define([	// properly require.config'ed
 				elem.style.textAlign = "left";
 				dom.appendChild(elem);
 
-				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this), "OK", 85, this.validate.bind(this));
+				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this), "OK", 65, this.validate.bind(this));
+                this.updateAll();
 			},
 
             setStatus : function (msg) {
@@ -173,13 +175,29 @@ define([	// properly require.config'ed
                 var errMsg = this.validate();
                 if (errMsg != null) {
                     this.setStatus(errMsg.replaceAll("\n", "<br>"));
+                } else if (this.item.getItemType() == "PropertyItem" && this.item.hasConstraints()) {
+                    var currRange = this.item.getValueTypeURI();
+                    var oClass = this.oInfo.getClass(this.nodegroup.getPropertyItemParentSNode(this.item).getURI());
+                    var oProp = oClass.getProperty(this.getSelectedDomain());
+                    var oRange = (oProp != null) ? oProp.getRange() : null;
+                    var rangeUri = (oRange != null) ? oRange.getFullName() : null;
+                    if (rangeUri != currRange) {
+                        if (oRange != null) {
+                            this.setStatus("Property has constraints.  Make sure they are compatible with change to " + oRange.getLocalName());
+                        } else {
+                            this.setStatus("Note: Property to be deleted has constraints.");
+                        }
+                    } else {
+                        this.setStatus("");
+                    }
+
                 } else {
                     this.setStatus("");
                 }
             },
 
             validate : function() {
-                var uri = this.getSelectedURI();
+                var uri = this.getSelectedDomain();
                 if (this.mergeConflictURIs.indexOf(uri) > -1) {
                     return this.item.getSparqlID() + "->" + uri.split("#")[1] + " has import mappings, which would be overwritten by this change." +
                             "\nResolve this conflict before continuing.";

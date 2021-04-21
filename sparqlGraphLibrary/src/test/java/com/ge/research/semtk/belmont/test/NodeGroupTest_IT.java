@@ -32,12 +32,21 @@ import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
+import com.ge.research.semtk.load.utility.ImportSpec;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 public class NodeGroupTest_IT {
 	private static OntologyInfo oInfo = null;
+	private static String colorURI = "http://kdl.ge.com/batterydemo#Color";
+	private static String cellNodeURI = "http://kdl.ge.com/batterydemo#Cell";
+	private static String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
+	private static String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
+	private static String nameItemURI = "http://kdl.ge.com/batterydemo#name";
+	private static String badURI = "http://kdl.ge.com/batterydemo#bad";
 	
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -46,6 +55,7 @@ public class NodeGroupTest_IT {
 		String owlPath = "/sampleBattery.owl";
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(NodeGroupTest_IT.class, owlPath);
+		TestGraph.ingest(NodeGroupTest_IT.class, "/sampleBattery.json", "/sampleBattery.csv");
 		
 		oInfo = new OntologyInfo();
 		oInfo.load(TestGraph.getSei(), false);
@@ -110,12 +120,12 @@ public class NodeGroupTest_IT {
 	/*
 	 * Helper to run inflate and Validate and check expected results
 	 */
-	private void inflateAndValidate(NodeGroup ng, String [] expectErrors, NodeGroupItemStr [] expectItems, String [] expectWarnings) throws Exception {
+	private void inflateAndValidate(NodeGroup ng, ImportSpec importSpec, String [] expectErrors, NodeGroupItemStr [] expectItems, String [] expectWarnings) throws Exception {
 		ArrayList<String> modelErrMsgs = new ArrayList<String>();
 		ArrayList<NodeGroupItemStr> invalidItems = new  ArrayList<NodeGroupItemStr>();
 		ArrayList<String> warnings = new ArrayList<String>();
 
-		ng.inflateAndValidate(oInfo, modelErrMsgs, invalidItems, warnings);
+		ng.inflateAndValidate(oInfo, importSpec, modelErrMsgs, invalidItems, warnings);
 		
 		assertEquals("wrong number of error messages\n" + String.join(",", modelErrMsgs) + "\n", expectErrors.length, modelErrMsgs.size());
 		assertEquals("wrong number of invalid items", expectItems.length, invalidItems.size());
@@ -168,6 +178,7 @@ public class NodeGroupTest_IT {
 		Node n = new Node("?Invalid", null, null, badURI, nodegroup);
 		nodegroup.addOneNode(n, null, null, null);
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {badURI} , 
 				new NodeGroupItemStr [] {new NodeGroupItemStr(n)}, 
 				new String [] {});
@@ -198,6 +209,7 @@ public class NodeGroupTest_IT {
 		
 		// used: error
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {badURI} , 
 				new NodeGroupItemStr [] { new NodeGroupItemStr(n, pi)}, 
 				new String [] {});
@@ -206,6 +218,7 @@ public class NodeGroupTest_IT {
 		// unused: warning and delete
 		pi.setIsReturned(false);
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
 				new String [] {badKeyname});
@@ -241,6 +254,7 @@ public class NodeGroupTest_IT {
 		
 		// used: error
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {badKeyname} , 
 				new NodeGroupItemStr [] { new NodeGroupItemStr(n, pi)}, 
 				new String [] {});
@@ -249,6 +263,7 @@ public class NodeGroupTest_IT {
 		// unused: warning 
 		pi.setValueConstraint(null);
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
 				new String [] {badKeyname});
@@ -272,11 +287,6 @@ public class NodeGroupTest_IT {
 		// build a nodegroup
 		NodeGroup nodegroup = new NodeGroup();
 		
-		String cellURI = "http://kdl.ge.com/batterydemo#Cell";
-		String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
-		String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
-		String badURI = "http://kdl.ge.com/batterydemo#bad";
-		
 		// add Battery
 		// change cell nodeitem to bad
 		nodegroup.addNode(batteryURI, oInfo);
@@ -284,8 +294,9 @@ public class NodeGroupTest_IT {
 		NodeItem cellItem = batteryNode.getNodeItem(cellItemURI);
 		cellItem.changeUriConnect(badURI);
 		
-		// unused: warning, delete
+		// 4b unused: warning, delete
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
 				new String [] {badURI});
@@ -296,12 +307,13 @@ public class NodeGroupTest_IT {
 
 
 		// used: error 
-		Node cell1 = nodegroup.addClassFirstPath(cellURI, oInfo);
+		Node cell1 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		cellItem.changeUriConnect(badURI);
 		
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {badURI} , 
-				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, cell1), new NodeGroupItemStr(batteryNode, cellItem, cell1)}, 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, cell1)}, 
 				new String [] {});
 		
 		// used: still there
@@ -324,12 +336,6 @@ public class NodeGroupTest_IT {
 		// build a nodegroup
 		NodeGroup nodegroup = new NodeGroup();
 		
-		String colorURI = "http://kdl.ge.com/batterydemo#Color";
-		String cellNodeURI = "http://kdl.ge.com/batterydemo#Cell";
-		String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
-		String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
-		String badURI = "http://kdl.ge.com/batterydemo#bad";
-		
 		Node batteryNode = nodegroup.addNode(batteryURI, oInfo);
 
 		// targets are model-correct, range wrong: warn and fix 
@@ -339,6 +345,7 @@ public class NodeGroupTest_IT {
 		ni.changeUriValueType(badURI);
 		
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
 				new String [] {badURI});
@@ -350,6 +357,7 @@ public class NodeGroupTest_IT {
 		ni.changeUriValueType(badURI);
 		
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
 				new String [] {badURI});
@@ -363,6 +371,7 @@ public class NodeGroupTest_IT {
 		ni.changeUriValueType(badURI);  // bad range too
 		
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {badURI} , 
 				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, ni, colorNode), new NodeGroupItemStr(batteryNode, ni, cell1)}, 
 				new String [] {});
@@ -384,11 +393,7 @@ public class NodeGroupTest_IT {
 		// build a nodegroup
 		NodeGroup nodegroup = new NodeGroup();
 		
-		String colorURI = "http://kdl.ge.com/batterydemo#Color";
-		String cellNodeURI = "http://kdl.ge.com/batterydemo#Cell";
-		String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
-		String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
-		String badURI = "http://kdl.ge.com/batterydemo#bad";
+		
 		
 		Node batteryNode = nodegroup.addNode(batteryURI, oInfo);
 
@@ -401,6 +406,7 @@ public class NodeGroupTest_IT {
 		NodeItem ni = batteryNode.getNodeItem(cellItemURI);
 		
 		inflateAndValidate(nodegroup, 
+				null,
 				new String [] {colorNode.getSparqlID()} , 
 				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, ni, colorNode)}, 
 				new String [] {});
@@ -409,5 +415,106 @@ public class NodeGroupTest_IT {
 		ni = batteryNode.getNodeItem(cellItemURI);
 		assertTrue("Correctly ranged node item with one good, one bad connection was removed from nodegroup", ni != null);
 
+	}
+	
+	@Test
+	public void testRepair1a_BadNodeURI() throws Exception {		
+		// bad ?Battery URI
+		// battery name is unused except importSpec
+		
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_invalid_1a.json");
+		NodeGroup nodegroup = sgjson.getNodeGroup();
+		ImportSpec importSpec = sgjson.getImportSpec();
+		Node batteryNode = nodegroup.getNodeBySparqlID("?Battery");
+		Node cellNode = nodegroup.getNodeBySparqlID("?Cell");
+		PropertyItem name = batteryNode.getPropertyByKeyname("name");
+		NodeItem cell = batteryNode.getNodeItem(cellItemURI);
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {"class", "property", "edge"} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode), new NodeGroupItemStr(batteryNode, name), new NodeGroupItemStr(batteryNode, cell, cellNode)}, 
+				new String [] {});
+		
+		// make sure propItem name was not deflated
+		assertTrue("Property 'name' which is only used in import was not inflated into invalid Battery node", batteryNode.getPropertyByKeyname("name") != null);
+		
+		// fix
+		nodegroup.changeItemDomain(batteryNode, batteryURI);
+		
+		// no validation errors remain
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {});
+	}
+	
+	
+	
+	@Test
+	public void testRepair2a_PropBadDomain() throws Exception {		
+		// bad ?Battery->name_BAD
+		// Property is part of union that when working, should return three rows
+		// Property is also in the importSpec
+		
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_invalid_2a.json");
+		NodeGroup nodegroup = sgjson.getNodeGroup();
+		ImportSpec importSpec = sgjson.getImportSpec();
+		Node batteryNode = nodegroup.getNodeBySparqlID("?Battery");
+		PropertyItem nameProp = batteryNode.getPropertyByKeyname("name_BAD");
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {"_BAD"} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, nameProp)}, 
+				new String [] {});
+		
+		// fix
+		nodegroup.changeItemDomain(batteryNode, nameProp, nameItemURI);
+		importSpec.changePropertyDomain(batteryNode.getSparqlID(), "name_BAD", nameItemURI);
+		
+		// no validation errors remain
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {});
+		
+		// union query still works
+		sgjson.setNodeGroup(nodegroup);
+		Table resTab = TestGraph.execTableSelect(sgjson);
+		assertEquals("Corrected nodegroup did not return correct rows of data", 3, resTab.getNumRows());
+	}
+	
+	@Test
+	public void testRepair3a_PropBadRange() throws Exception {		
+		// bad ?Battery->name range set to int
+		// Property is part of union that when working, should return three rows
+		// Property is also in the importSpec
+		
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_invalid_3a.json");
+		NodeGroup nodegroup = sgjson.getNodeGroup();
+		ImportSpec importSpec = sgjson.getImportSpec();
+		Node batteryNode = nodegroup.getNodeBySparqlID("?Battery");
+		PropertyItem nameProp = batteryNode.getPropertyByKeyname("name");
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {"name"} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, nameProp)}, 
+				new String [] {});
+		
+		// fix
+		nodegroup.changeItemRange(nameProp, "http://www.w3.org/2001/XMLSchema#string");
+		
+		// no validation errors remain
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {});
+		
+		// union query still works
+		sgjson.setNodeGroup(nodegroup);
+		Table resTab = TestGraph.execTableSelect(sgjson);
+		assertEquals("Corrected nodegroup did not return correct rows of data", 3, resTab.getNumRows());
 	}
 }

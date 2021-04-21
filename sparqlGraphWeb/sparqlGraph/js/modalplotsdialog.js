@@ -183,10 +183,7 @@ define([	// properly require.config'ed
             },
 
             addCallbackNgsCallback : function(sgJson) {
-                // set this.sgJson
-                var ret = new SparqlGraphJson();
-                ret.fromJson(sgJson);
-                this.sgJson = ret;
+                this.sgJson = sgJson;
 
                 // set default plot to last one (newly added)
                 this.displayIndex = this.sgJson.getPlotSpecsHandler().getNumPlots() - 1;

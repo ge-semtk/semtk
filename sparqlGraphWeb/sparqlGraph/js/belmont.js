@@ -765,21 +765,6 @@ PropertyItem.prototype = {
 
 	},
 
-    /*
-        Fill in this property with all the non-model values of another property
-     */
-    merge : function(other) {
-
-        this.Constraints = other.Constraints;
-        this.SparqlID = other.SparqlID;
-        this.isReturned = other.isReturned;
-        this.optMinus = other.optMinus;
-        this.isRuntimeConstrained = other.isRuntimeConstrained;
-        // instanceValues,
-        this.isMarkedForDeletion = other.isMarkedForDeletion;
-        this.binding = other.binding;
-    },
-
 	buildFilterConstraint : function(op, val) {
 		//  build but don't set  a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -1012,7 +997,6 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNamesUNUSED,
 		this.propList = plist.slice(); // a list of properties
 		this.nodeList = nlist.slice(); // a list of the nodes that this can
 										// link to.
-		this.NodeName = nome; // a name to be used for the node.
 		this.fullURIName = fullName; // full name of the class
 													// possible subclasses
 		this.SparqlID = new SparqlFormatter().genSparqlID(
@@ -1062,7 +1046,6 @@ SemanticNode.prototype = {
 		var ret = {
 			propList : [],
 			nodeList : [],
-			NodeName : this.NodeName,
 			fullURIName : this.fullURIName,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
@@ -1109,7 +1092,6 @@ SemanticNode.prototype = {
 		// presumes SparqlID's are reconciled already
 		// presumes that SNodes pointed to by NodeItems already exist
 		this.propList = [], this.nodeList = [];
-		this.NodeName = jObj.NodeName;
 		this.fullURIName = jObj.fullURIName;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
@@ -1145,18 +1127,6 @@ SemanticNode.prototype = {
 		}
 
 	},
-
-	/*
-     * Removed 3/10/2021 in deference to API call on the Java side (msiNodegroupService)
-     * which will collect all errors and build the nodegroup regardless.
-	 */
-	// inflateAndValidate : function(oInfo) {
-
-    rmPropItem : function(prop) {
-        var i = this.propList.indexOf(prop);
-        if (i == -1) throw "Can't find property to remove: " + prop.getKeyName();
-        this.propList.splice(i,1);
-    },
 
 	setInstanceValue : function(inval){
 		this.instanceValue = inval;
@@ -1261,12 +1231,6 @@ SemanticNode.prototype = {
 	},
 	getIsRuntimeConstrained : function() {
 		return this.isRuntimeConstrained;
-	},
-	setNodeName : function(nome) {
-		this.NodeName = nome;
-	},
-	getNode : function() {
-		// deleted
 	},
 
 	isUsed : function (optInstanceOnly) {
@@ -1545,9 +1509,7 @@ SemanticNode.prototype = {
 	getNodeList : function() {
 		return this.nodeList;
 	},
-	getNodeName : function() {
-		return this.NodeName;
-	},
+
 	ownsNodeItem : function (nodeItem) {
 		return this.nodeList.indexOf(nodeItem) > -1;
 	},
@@ -1761,7 +1723,8 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 12;
+SemanticNodeGroup.JSON_VERSION = 13;
+// version 13 - removed node.NodeName
 // version 12 - unionHash
 // version 11 - import spec has dataValidator
 // version 10 - (accidentally wasted in a push)
@@ -2024,12 +1987,11 @@ SemanticNodeGroup.prototype = {
         }
     },
 
-    // Named to match Java for service calls
-    buildItemStr : function (snode, optItem, optTarget) {
-        return this.buildUnionMemberStr(snode, optItem, optTarget);
+    buildPropItemStr : function(prop) {
+        return this.buildItemStr(this.getPropertyItemParentSNode(prop), prop);
     },
 
-    buildUnionMemberStr : function(snode, optItem, optTarget) {
+    buildItemStr : function(snode, optItem, optTarget) {
         if (optTarget !== undefined) {
             // nodeItem
             return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID();
@@ -2192,7 +2154,7 @@ SemanticNodeGroup.prototype = {
     },
 
     addtoUnionMembershipHashes : function(key, parentEntryStr, snode, optItem, optTarget) {
-        var entryStr = this.buildUnionMemberStr(snode, optItem, optTarget);
+        var entryStr = this.buildItemStr(snode, optItem, optTarget);
 
         if (this.tmpUnionMembersHash[entryStr] == undefined) {
             this.tmpUnionMembersHash[entryStr] = [];
@@ -2274,11 +2236,11 @@ SemanticNodeGroup.prototype = {
 
     getUnionDepth : function(unionKey) {
         var firstEntry = this.getEntryTuple(this.unionHash[unionKey][0]);
-        return this.tmpUnionMembersHash[this.buildUnionMemberStr(firstEntry[0], firstEntry[1], firstEntry[2])].length;
+        return this.tmpUnionMembersHash[this.buildItemStr(firstEntry[0], firstEntry[1], firstEntry[2])].length;
     },
 
     getUnionMembershipList : function(snode, optItem, optTarget) {
-        var keyVal = this.buildUnionMemberStr(snode, optItem, optTarget);
+        var keyVal = this.buildItemStr(snode, optItem, optTarget);
         return this.tmpUnionMembersHash[keyVal] || [];
     },
     // Get the most deeply nested union to which this item belongs, or null
@@ -2297,7 +2259,7 @@ SemanticNodeGroup.prototype = {
 		if (unionKey == null) {
 			return null;
 		} else {
-            var keyStr = this.buildUnionMemberStr(snode, optProp);
+            var keyStr = this.buildItemStr(snode, optProp);
 			return this.tmpUnionParentHash[keyStr][unionKey];
 		}
     },
@@ -2374,22 +2336,6 @@ SemanticNodeGroup.prototype = {
         }
 
         return ret;
-    },
-
-    /*
-        Move all the non-model-related content of prop into
-        an existing prop newURI.
-        Remove prop from it's parent.
-     */
-    mergeProperty : function(prop, mergeIntoURI) {
-        var snode = this.getPropertyItemParentSNode(prop);
-        var mergeIntoProp = snode.getPropertyByURIRelation(mergeIntoURI);
-        if (mergeIntoProp == null) throw "Can't find property to merge into: " + mergeIntoURI;
-
-        mergeIntoProp.merge(prop);
-        snode.rmPropItem(prop);
-
-        return mergeIntoProp;
     },
 
     /*
@@ -3435,19 +3381,6 @@ SemanticNodeGroup.prototype = {
 				}
 			}
 		}
-	},
-
-	alreadyExists : function(SNode) {
-		var retval = false;
-		var namedSNode = SNode.getNodeName();
-		var t = this.SNodeList.length;
-		for (var l = 0; l < t; l++) {
-			if (this.SNodeList[l].getNodeName() == namedSNode) {
-				retval = true;
-				break;
-			}
-		}
-		return retval;
 	},
 
 	getNodesByURI : function(uri) {

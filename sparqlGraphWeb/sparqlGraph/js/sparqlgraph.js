@@ -24,7 +24,7 @@
     var gQueryClient = null;
     var gTimeseriesResults = null;
     var gQueryResults = null;
-    var gNodegroupInvalidItems = [];   // nodegroup does not match the model
+    var gInvalidItems = [];   // nodegroup does not match the model
 
     // drag stuff
     var gDragLabel = null;
@@ -388,6 +388,12 @@
 
     };
 
+    var alertNodegroupInvalid = function () {
+        require(['sparqlgraph/js/modaliidx'], function(ModalIidx) {
+            ModalIidx.alert("Invalid Nodegroup", "Fix invalid items before editing the nodegroup");
+        });
+    };
+
     // application-specific property editing
     var launchPropertyItemDialog = function (propItem, snodeID) {
         checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, snodeID));
@@ -396,30 +402,74 @@
     var launchPropertyItemDialog1 = function (propItem, snodeID) {
 
 
-    	require([ 'sparqlgraph/js/modalitemdialog',
+    	require([ 'sparqlgraph/js/modaliidx',
+                  'sparqlgraph/js/modalitemdialog',
                   'sparqlgraph/js/modalinvaliditemdialog',
                   'sparqlgraph/js/msiclientnodegroupservice'
-              ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
+              ], function (ModalIidx, ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
 
-            if (gNodegroupInvalidItems.length > 0) {
+            var raisePropItemDialog = function () {
+                // javascript black magic:
+                // when this is finally called, propItem and gNodeGroup have changed
+                // gNodeGroup - fine, it's a global
+                // propItem - need to find it in the current gNodeGroup
+                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
 
-                var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
-                                                        propItem, null,
-                                                        gNodeGroup,
-                                                        gConn,
-                                                        gOInfo,
-                                                        gMappingTab.getImportSpec(),
-                                                        changeItemURI
-                                                        );
-                dialog.show();
-            } else {
-    		    var dialog= new ModalItemDialog(propItem,
+                var dialog= new ModalItemDialog(p,
                                                 gNodeGroup,
-                                                this.runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, propItem),
+                                                runSuggestValuesQuery.bind(this, g, gConn, gNodeGroup, null, p),
                                                 propertyItemDialogCallback,
-    				                            {"snodeID" : snodeID}
-    		                                    );
-    		        dialog.show();
+                                                {"snodeID" : snodeID}
+                                                );
+                dialog.show();
+            };
+
+            if (gInvalidItems.length > 0) {
+                var parentNode = gNodeGroup.getNodeBySparqlID(snodeID);
+                var itemStr = gNodeGroup.buildItemStr(parentNode, propItem);
+
+                if (gInvalidItems.indexOf(itemStr) > -1) {
+                    // this property item is invalid
+
+
+                    var oClass = gOInfo.getClass(gNodeGroup.getPropertyItemParentSNode(propItem).getURI());
+                    if (oClass.getProperty(propItem.getURI()) != null) {
+                        // Domain is already correct.   Range is wrong.
+                        // There must be constraints or else this wouldn't have been flagged as an error.
+                        var oRangeStr = oClass.getProperty(propItem.getURI()).getRange().getFullName();
+                        var pRangeStr = propItem.getValueTypeURI();
+
+                        // call REST to make the change, then raise the good dialog
+                        var changePropItemURI = function() {
+                            // same javascript black magic
+                            // propItem - need to find it in the current gNodeGroup
+                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
+                            changeItemURI(p, undefined, oRangeStr, "range", raisePropItemDialog);
+                        };
+
+                        var msg = "Repairing property range<list><li>from " + pRangeStr + "</li><li>to " + oRangeStr + "</li></list><br>" +
+                                  "Review constraints to make sure they are compatible.";
+                        ModalIidx.alert("Repair property range", msg, false, changePropItemURI);
+                    } else {
+                        // Domain is illegal
+                        var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
+                                                                propItem, null,
+                                                                gNodeGroup,
+                                                                gConn,
+                                                                gOInfo,
+                                                                gMappingTab.getImportSpec(),
+                                                                changeItemURI
+                                                                );
+                        dialog.show();
+                    }
+
+
+                } else {
+                    // property item is valid, nodegroup has errors
+                    alertNodegroupInvalid();
+                }
+            } else {
+    		    raisePropItemDialog();
             }
 		});
     };
@@ -464,7 +514,7 @@
 
     var launchLinkEditor1 = function(snode, nItem, targetSNode) {
 
-        if (gNodegroupInvalidItems.length > 0) {
+        if (gInvalidItems.length > 0) {
             require([ 'sparqlgraph/js/modalinvaliditemdialog', 'sparqlgraph/js/msiclientnodegroupservice'],
                     function (ModalInvalidItemDialog, MsiClientNodeGroupService) {
                         var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
@@ -522,7 +572,7 @@
                   'sparqlgraph/js/msiclientnodegroupservice',
               ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
 
-            if (gNodegroupInvalidItems.length > 0) {
+            if (gInvalidItems.length > 0) {
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
                 var dialog= new ModalInvalidItemDialog( ngClient,
@@ -552,29 +602,42 @@
         target = target snode if nodeItem
         newURI = new URI
     */
-    var changeItemURI = function(item, target, newURI) {
-        if (item.getItemType() == "SemanticNode") {
-            item.changeURI(newURI);
-            // mapping only cares about nodes' ?SparqlIDs, so there should be nothing to do
-            gMappingTab.updateNodegroup(gNodeGroup, gConn);
+    var changeItemURI = function(item, optTarget, newURI, domainOrRange, optSuccessCallback) {
+        require(['sparqlgraph/js/modaliidx',
+                 'sparqlgraph/js/msiclientnodegroupservice',
+                 'sparqlgraph/js/sparqlgraphjson'],
+    	            function (ModalIidx, MsiClientNodeGroupService, SparqlGraphJson) {
 
-        } else if (item.getItemType() == "PropertyItem") {
-            var oldURI = item.getURI();
-            var snode = gNodeGroup.getPropertyItemParentSNode(item);
-            var mergedProp = gNodeGroup.mergeProperty(item, newURI);
-            gMappingTab.mergeProperty(snode, oldURI, mergedProp);
+            var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), false, undefined);
 
-        } else if (item.getItemType() == "NodeItem") {
-            var snode = gNodeGroup.getPropertyItemParentSNode(item);
-            var oldURI = item.getURI();
-            gNodeGroup.mergeNodeItem(item, target, newURI);
-            gNodeGroup.removeLink(item, target);
-            if (item.getSNodes().length == 0 && !this.oInfo.classHasProp(oldURI)) {
-                // TODO remove : it isn't this simple
+            if (item.getItemType() == "SemanticNode") {
+
+                ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(item),  newURI, domainOrRange, changeItemURICallback.bind(this, optSuccessCallback), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
+
+            } else if (item.getItemType() == "PropertyItem") {
+                var parent = gNodeGroup.getPropertyItemParentSNode(item);
+                ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(parent, item),  newURI, domainOrRange, changeItemURICallback.bind(this, optSuccessCallback), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
+
+            } else if (item.getItemType() == "NodeItem") {
+                var snode = gNodeGroup.getPropertyItemParentSNode(item);
+                var oldURI = item.getURI();
+                gNodeGroup.mergeNodeItem(item, optTarget, newURI);
+                gNodeGroup.removeLink(item, optTarget);
+                if (item.getSNodes().length == 0 && !this.oInfo.classHasProp(oldURI)) {
+                    // TODO remove : it isn't this simple
+                }
+                // no import spec needed
             }
-            // no import spec needed
-        }
-        reValidateNodegroup();
+        });
+
+    };
+
+    var changeItemURICallback = function(optCallback, sgJson) {
+        sgJson.getNodeGroup(gNodeGroup);
+        gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
+
+        reValidateNodegroup(optCallback);
     };
 
     var snodeRemover = function (snode) {
@@ -583,7 +646,12 @@
 
     var snodeRemover1 = function (snode) {
         snode.removeFromNodeGroup(false);
-        nodeGroupChanged(true)
+
+        if (gInvalidItems.length > 0) {
+            reValidateNodegroup();
+        } else {
+            nodeGroupChanged(true)
+        }
     };
 
     /**
@@ -1115,7 +1183,7 @@
 
             // inflate and validate the nodegroup
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
-            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), validateCallback, validateFailure)
+            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback, validateFailure)
         });
     };
     var validateFailure = function(msgHtml) {
@@ -1134,45 +1202,48 @@
                 var msgHtml = "<list>Nodegroup validation errors:<li>" + modelErrors.join("</li><li>") + "</li></list>";
                 ModalIidx.alert("Nodegroup / model mismatch", msgHtml, false);
             });
-            gNodegroupInvalidItems = invalidItemStrings;
+            gInvalidItems = invalidItemStrings;
             setStatus("Nodegroup is not valid to ontology");
         } else {
             // no errors
-            gNodegroupInvalidItems = [];
+            gInvalidItems = [];
             setStatus("");
         }
 
         // do either way
-        gNodeGroup = gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
         buildQuery();
     };
 
-    var reValidateNodegroup = function() {
+    var reValidateNodegroup = function(successCallback) {
         require(['sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
                 function(MsiClientNodeGroupService, SparqlGraphJson) {
             // inflate and validate the nodegroup
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
-            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), reValidateCallback, validateFailure);
+            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), reValidateCallback.bind(this, successCallback), validateFailure);
         });
     };
 
     // callback: successfully determined whether there are modelErrors
-    var reValidateCallback = function(nodegroupJson, modelErrors, invalidItemStrings) {
+    var reValidateCallback = function(callback, nodegroupJson, modelErrors, invalidItemStrings) {
 
-
-        if (modelErrors.length == 0) {
-            require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
-                ModalIidx.alert("Validation success", "Nodegroup is now valid against ontology", false);
-            });
-
-        }
-        gNodegroupInvalidItems = invalidItemStrings;
-        gNodeGroup = gNodeGroup = new SemanticNodeGroup();
+        gInvalidItems = invalidItemStrings;
+        gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(true);
         buildQuery();
+
+        if (modelErrors.length == 0) {
+            require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+                setStatus("");
+                ModalIidx.alert("Validation success", "Nodegroup is now valid against ontology", false, callback);
+            });
+
+        } else if (callback != undefined) {
+            callback();
+        }
     };
 
     var doNodeGroupUpload = function () {
@@ -1714,9 +1785,11 @@
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
-        gRenderer.draw(gNodeGroup, gNodegroupInvalidItems);
+        gRenderer.draw(gNodeGroup, gInvalidItems);
         if (flag) {
             buildQuery();
+            gMappingTab.updateNodegroup(gNodeGroup, gConn);
+            gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
         } else {
             gMappingTab.setChangedFlag(false);
             queryTextChanged(false);
@@ -2039,7 +2112,7 @@
     };
 
     var guiUpdateGraphRunButton = function () {
-        var d = gNodeGroup == null || gNodeGroup.getSNodeList().length < 1 || getQuerySource() == "DIRECT" || gNodegroupInvalidItems.length > 0;
+        var d = gNodeGroup == null || gNodeGroup.getSNodeList().length < 1 || getQuerySource() == "DIRECT" || gInvalidItems.length > 0;
         document.getElementById("btnGraphExecute").disabled = d;
     };
 
@@ -2113,7 +2186,7 @@
 
 	var clearGraph = function () {
     	gNodeGroup.clear();
-        gNodegroupInvalidItems = [];
+        gInvalidItems = [];
         gNodeGroup.setSparqlConnection(gConn);
         gMappingTab.clear();
         gNodeGroupName = null;

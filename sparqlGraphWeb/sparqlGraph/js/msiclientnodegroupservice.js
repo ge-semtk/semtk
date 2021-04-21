@@ -95,9 +95,13 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.msi.postToEndpoint("suggestNodeClass", data, "application/json", classListCallback, this.optFailureCallback, this.optTimeout);
             },
 
-            /***
-                    Asynchronous functions: These check for success and unpack results
-            ***/
+            execGetSampleIngestionCSV : function (sgJson, format, successCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "format": format
+					});
+				this.msi.postToEndpoint("getSampleIngestionCSV", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
 
             execAddSamplePlot : function (sgJson, columnNames, graphType, plotName, plotType, successCallback) {
                 var data = JSON.stringify ({
@@ -110,8 +114,19 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("plot/addSamplePlot", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            execChangeItemURI : function (sgJson, itemStr, newURI, domainOrRange, successCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "itemStr" : itemStr,
+                      "newURI" : newURI,
+                      "domainOrRange" : domainOrRange
+					});
+				this.msi.postToEndpoint("changeItemURI", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
             /*
-            **  Asynchronous functions: throw errors unless successful
+            **  Asynchronous functions: perform the whole async chain and return a "real" value.  failureCalback on any error.
+            **  (Name is confusing. All these functions in the file are Async.)
             */
 
             execAsyncGenerateFilter : function (nodegroup, conn, sparqlId, sparqlCallback, failureCallback) {
@@ -164,7 +179,12 @@ define([	// properly require.config'ed   bootstrap-modal
 
             execAsyncAddSamplePlot : function (sgjson, columnNames, graphType, plotName, plotType, sgjsonCallback, failureCallback) {
                 this.execAddSamplePlot(sgjson, columnNames, graphType, plotName, plotType,
-                                        this.asyncSimpleValueCallback.bind(this, "nodegroup", sgjsonCallback, failureCallback));
+                                        this.asyncSgJsonCallback.bind(this, "plot/addSamplePlot", sgjsonCallback, failureCallback));
+            },
+
+            execAsyncChangeItemURI : function (sgJson, itemStr, newURI, domainOrRange, sgjsonCallback, failureCallback) {
+                this.execChangeItemURI(sgJson, itemStr, newURI, domainOrRange,
+                                        this.asyncSgJsonCallback.bind(this, "changeItemURI", sgjsonCallback, failureCallback));
             },
 
             /*
@@ -173,8 +193,10 @@ define([	// properly require.config'ed   bootstrap-modal
             asyncSgJsonCallback(endpoint, sgjsonCallback, failureCallback, resultSet) {
                 if (resultSet.isSuccess()) {
                     // get the jobId
-                    var sgjson = resultSet.getSimpleResultField("nodegroup");
-                    if (sgjson) {
+                    var sgJsonJson = resultSet.getSimpleResultField("nodegroup");
+                    if (sgJsonJson) {
+                        var sgjson = new SparqlGraphJson();
+                        sgjson.fromJson(sgJsonJson);
                         sgjsonCallback(sgjson);
                     } else {
                         failureCallback(resultSet.getFailureHtml("did not return a nodegroup"));

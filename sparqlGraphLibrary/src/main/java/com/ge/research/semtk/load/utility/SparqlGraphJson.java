@@ -359,6 +359,22 @@ public class SparqlGraphJson {
 	}
 	
 	/**
+	 * Get import spec with no validating or storing (only validated importSpecHandler is stored)
+	 *
+	 * @return or null
+	 * @throws Exception
+	 */
+	public ImportSpec getImportSpec() throws Exception {
+		JSONObject json = this.getImportSpecJson();
+		if (json != null) {
+			return new ImportSpec(json);
+		} else {
+			return null;
+		}
+	}
+	
+	
+	/**
 	 * 
 	 * @return plotSpecs, might be NULL
 	 * @throws Exception
